@@ -202,18 +202,21 @@
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Index">Purchase Order</a>
                                                 </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
+                                                </li>
                                             }
                                             else if (selectedCompany == "Mobility")
                                             {
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index">Purchase Order</a>
                                                 </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
+                                                </li>
                                             }
-                                           
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Index">Receiving Report</a>
-                                            </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item dropend">
                                                 <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

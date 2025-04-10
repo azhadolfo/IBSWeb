@@ -11,10 +11,12 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task PostAsync(MobilityReceivingReport receivingReport, CancellationToken cancellationToken = default);
 
-        Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken);
+        Task UpdateAsync(ReceivingReportViewModel viewModel, string stationCodeClaim, CancellationToken cancellationToken);
 
         Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, CancellationToken cancellationToken = default);
 
         Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default);
+
+        Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default);
     }
 }

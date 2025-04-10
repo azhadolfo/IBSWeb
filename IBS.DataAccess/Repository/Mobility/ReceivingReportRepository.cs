@@ -4,6 +4,7 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Google.Apis.Drive.v3.Data;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
@@ -11,6 +12,8 @@ using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Status = IBS.Utility.Enums.Status;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -82,6 +85,8 @@ namespace IBS.DataAccess.Repository.Mobility
         public override async Task<IEnumerable<MobilityReceivingReport>> GetAllAsync(Expression<Func<MobilityReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MobilityReceivingReport> query = dbSet
+                .Include(rr => rr.PurchaseOrder)
+                .ThenInclude(dr => dr.Product)
                 .Include(rr => rr.FilprideDeliveryReceipt)
                 .ThenInclude(dr => dr.CustomerOrderSlip)
                 .ThenInclude(cos => cos.PurchaseOrder)
@@ -98,6 +103,8 @@ namespace IBS.DataAccess.Repository.Mobility
         public override async Task<MobilityReceivingReport> GetAsync(Expression<Func<MobilityReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
+                .Include(po => po.PurchaseOrder)
+                .ThenInclude(po => po.Product)
                 .Include(po => po.FilprideDeliveryReceipt)
                 .ThenInclude(dr => dr.CustomerOrderSlip)
                 .ThenInclude(cos => cos.PurchaseOrder)
@@ -112,17 +119,79 @@ namespace IBS.DataAccess.Repository.Mobility
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdateAsync(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
+        public async Task UpdateAsync(ReceivingReportViewModel viewModel, string stationCodeClaim, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.MobilityReceivingReports
                 .FindAsync(viewModel.ReceivingReportId, cancellationToken);
 
+            #region --Retrieve PO
+
+            var existingPo = await _db.MobilityPurchaseOrders
+                .Include(po => po.Product)
+                .Include(po => po.Supplier)
+                .Include(po => po.PickUpPoint)
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+            #endregion --Retrieve PO
+
+            var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
+
+            if (viewModel.QuantityDelivered > totalAmountRR)
+            {
+                viewModel.DrList = await _db.FilprideDeliveryReceipts
+                    .OrderBy(dr => dr.DeliveryReceiptId)
+                    .Where(dr => dr.DeliveredDate != null)
+                    .Select(dr => new SelectListItem
+                    {
+                        Value = dr.DeliveryReceiptId.ToString(),
+                        Text = dr.DeliveryReceiptNo
+                    })
+                    .ToListAsync(cancellationToken);
+                viewModel.PurchaseOrders = await _db.MobilityPurchaseOrders
+                    .Where(po =>
+                        po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                    .Select(po => new SelectListItem
+                    {
+                        Value = po.PurchaseOrderId.ToString(),
+                        Text = po.PurchaseOrderNo
+                    })
+                    .ToListAsync(cancellationToken);
+
+                throw new InvalidOperationException("Input is exceed to remaining quantity delivered");
+            }
+
+            var deliveryReceipt = await _db.FilprideDeliveryReceipts
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.Hauler)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
+                .Include(dr => dr.Customer)
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
+                .FirstOrDefaultAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+            var freight = deliveryReceipt?.CustomerOrderSlip?.DeliveryOption == SD.DeliveryOption_DirectDelivery
+                ? deliveryReceipt.Freight
+                : 0;
+
             existingRecord.Date = viewModel.Date;
-            existingRecord.Driver = viewModel.Driver;
-            existingRecord.PlateNo = viewModel.PlateNo;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.DeliveryReceiptId = viewModel.DeliveryReceiptId;
-            existingRecord.ReceivedQuantity = viewModel.ReceivedQuantity;
+            existingRecord.StationCode = stationCodeClaim;
+            existingRecord.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
+            existingRecord.PurchaseOrderNo = existingPo.PurchaseOrderNo;
+            existingRecord.Type = existingPo.Type;
+            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
+            existingRecord.ReceivedDate = viewModel.ReceivedDate;
+            existingRecord.SupplierInvoiceNumber = viewModel.SupplierInvoiceNumber;
+            existingRecord.SupplierInvoiceDate = viewModel.SupplierInvoiceDate;
+            existingRecord.SupplierDrNo = viewModel.SupplierDrNo;
+            existingRecord.WithdrawalCertificate = viewModel.WithdrawalCertificate;
+            existingRecord.TruckOrVessels = viewModel.TruckOrVessels;
+            existingRecord.QuantityDelivered = viewModel.QuantityDelivered;
+            existingRecord.QuantityReceived = viewModel.QuantityReceived;
+            existingRecord.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
+            existingRecord.Amount = viewModel.QuantityReceived * (existingPo.UnitPrice + freight);
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -227,7 +296,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 .FirstOrDefaultAsync(p => p.PurchaseOrderNo == deliveryReceipt.CustomerOrderSlip.CustomerPoNo, cancellationToken);
             MobilityReceivingReport model = new()
             {
-                DeliveryReceiptId = 0,
+                DeliveryReceiptId = null,
                 Date = deliveredDate,
                 PurchaseOrderId = getPurchasOrder.PurchaseOrderId,
                 PurchaseOrderNo = getPurchasOrder.PurchaseOrderNo,
@@ -235,8 +304,6 @@ namespace IBS.DataAccess.Repository.Mobility
                 QuantityReceived = deliveryReceipt.Quantity,
                 TruckOrVessels = getPurchasOrder.PickUpPoint.Depot,
                 AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
-                Driver = String.Empty,
-                PlateNo = String.Empty,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
                 CreatedBy = "SYSTEM GENERATED",
@@ -290,6 +357,33 @@ namespace IBS.DataAccess.Repository.Mobility
             //await PostAsync(model, cancellationToken);
 
             return model.ReceivingReportNo;
+        }
+
+        public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        {
+            var po = await _db.MobilityPurchaseOrders
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+
+            if (po != null)
+            {
+                po.QuantityReceived -= quantityReceived;
+
+                if (po.IsReceived)
+                {
+                    po.IsReceived = false;
+                    po.ReceivedDate = DateTime.MaxValue;
+                }
+                if (po.QuantityReceived > po.Quantity)
+                {
+                    throw new ArgumentException("Input is exceed to remaining quantity received");
+                }
+
+                return await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No record found.");
+            }
         }
     }
 }
