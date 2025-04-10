@@ -382,7 +382,7 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            // list of dispatch numbers
+            // list of dispatch numbers(to be used in selectlist2, multiselect)
             model.ToBillDispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == model.MMSIBillingId.ToString())
                 .Select(dt => dt.DispatchNumber.ToString())

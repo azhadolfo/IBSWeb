@@ -152,7 +152,7 @@
                                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                 <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a></li>
-                                                <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.UploadName"><i class="bi bi-eye"></i> View File</a></li>
+                                                <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.SignedUrl"><i class="bi bi-eye"></i> View File</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -299,7 +299,7 @@
                                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                                         <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
                                                             <li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
-                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.uploadName}"><i class="bi bi-eye"></i> View File</a></li>
+                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View File</a></li>
                                                         </ul>
                                                     </div>
                                                 ` : `
@@ -403,7 +403,7 @@
 
                 const maxHeight = window.innerHeight * 0.8;
                 Swal.fire({
-                    imageUrl: '@Url.Content("~/Dispatch_Ticket_Uploads/")' + uploadName,
+                    imageUrl: uploadName,
                     imageAlt: "Dispatch Ticket Upload",
                     showConfirmButton: false,
                     background: "transparent",

@@ -2,6 +2,7 @@ using System.Globalization;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
+using IBS.Services;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,12 +19,14 @@ namespace IBSWeb.Areas.MMSI
         public readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ICloudStorageService _cloudStorageService;
 
-        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _cloudStorageService = clousStorageService;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -165,8 +168,9 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync();
 
-            return View(model);
+            await GenerateSignedUrl(model);
 
+            return View(model);
         }
 
         [HttpGet]
@@ -563,6 +567,15 @@ namespace IBSWeb.Areas.MMSI
                 };
 
                 return Json(result);
+            }
+        }
+
+        private async Task GenerateSignedUrl(MMSIDispatchTicket model)
+        {
+            // Get Signed URL only when Saved File Name is available.
+            if (!string.IsNullOrWhiteSpace(model.UploadName))
+            {
+                model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.UploadName);
             }
         }
     }

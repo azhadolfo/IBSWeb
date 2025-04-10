@@ -117,6 +117,10 @@ namespace IBS.Models.MMSI
 
         public string? UploadName { get; set; }
 
+        public string? SavedUrl { get; set; }
+
+        public string? SignedUrl { get; set; }
+
         public string? BillingId { get; set; }
 
         #region ---Columns with Table relations---

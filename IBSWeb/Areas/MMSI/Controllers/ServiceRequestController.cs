@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
+using IBS.Services;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,24 +18,14 @@ namespace IBSWeb.Areas.MMSI
         public readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ICloudStorageService _cloudStorageService;
 
-        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
-        }
-
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
-        private async Task<string> GetUserNameAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            return user.UserName;
+            _cloudStorageService = cloudStorageService;
         }
 
         public async Task<IActionResult> Index()
@@ -47,6 +38,11 @@ namespace IBSWeb.Areas.MMSI
                 .Include(sq => sq.TugMaster)
                 .Include(sq => sq.Vessel)
                 .ToListAsync();
+
+            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.UploadName)))
+            {
+                await GenerateSignedUrl(dispatchTicket);
+            }
 
             return View(dispatchTickets);
         }
@@ -80,31 +76,38 @@ namespace IBSWeb.Areas.MMSI
 
                 if (ModelState.IsValid)
                 {
+
                     if (model.DateLeft < model.DateArrived || (model.TimeLeft != model.TimeArrived && model.TimeLeft < model.TimeArrived))
                     {
                         model.CreatedBy = await GetUserNameAsync();
                         model.CreatedDate = DateTime.Now;
 
-                        string uploadFolder = "wwwroot/Dispatch_Ticket_Uploads";
+                        // string uploadFolder = "wwwroot/Dispatch_Ticket_Uploads";
+                        // string cloudUploadDirectory = "";
 
+                        // upload file if something is submitted
                         if (file != null && file.Length > 0)
                         {
-                            if (!Directory.Exists(uploadFolder))
-                            {
-                                Directory.CreateDirectory(uploadFolder);
-                            }
 
-                            var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
-                            var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
-                            var fullPath = Path.Combine("wwwroot", filePath);
-                            model.UploadName = customFileName;
-
-                            using (var stream = new FileStream(fullPath, FileMode.Create))
-                            {
-                                await file.CopyToAsync(stream);
-                            }
+                            model.UploadName = GenerateFileNameToSave(file.FileName);
+                            model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.UploadName);
 
                             ViewBag.Message = "Image uploaded successfully!";
+
+                            // if (!Directory.Exists(uploadFolder))
+                            // {
+                            //     Directory.CreateDirectory(uploadFolder);
+                            // }
+                            //
+                            // var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
+                            // var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
+                            // var fullPath = Path.Combine("wwwroot", filePath);
+                            // model.UploadName = customFileName;
+                            //
+                            // using (var stream = new FileStream(fullPath, FileMode.Create))
+                            // {
+                            //     await file.CopyToAsync(stream);
+                            // }
                         }
 
                         model.Status = "For Posting";
@@ -205,24 +208,27 @@ namespace IBSWeb.Areas.MMSI
 
                         if (file != null)
                         {
-                            if (currentModel.UploadName != null)
-                            {
-                                string destinationPath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", currentModel.UploadName);
+                            model.UploadName = GenerateFileNameToSave(file.FileName);
+                            model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.UploadName);
 
-                                if (System.IO.File.Exists(destinationPath))
-                                {
-                                    System.IO.File.Delete(destinationPath);
-                                }
-                            }
+                            // if (currentModel.UploadName != null)
+                            // {
+                            //     string destinationPath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", currentModel.UploadName);
+                            //
+                            //     if (System.IO.File.Exists(destinationPath))
+                            //     {
+                            //         System.IO.File.Delete(destinationPath);
+                            //     }
+                            // }
 
-                            var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
-                            var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
-                            var itemPath = Path.Combine("wwwroot", filePath);
-                            model.UploadName = customFileName;
-                            await using (var stream = new FileStream(itemPath, FileMode.Create))
-                            {
-                                await file.CopyToAsync(stream, cancellationToken);
-                            }
+                            // var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
+                            // var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
+                            // var itemPath = Path.Combine("wwwroot", filePath);
+                            // model.UploadName = customFileName;
+                            // await using (var stream = new FileStream(itemPath, FileMode.Create))
+                            // {
+                            //     await file.CopyToAsync(stream, cancellationToken);
+                            // }
                         }
 
                         #region -- Changes
@@ -566,6 +572,34 @@ namespace IBSWeb.Areas.MMSI
             }
             TempData["error"] = "Passed record list is empty";
             return RedirectToAction(nameof(Index));
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+        }
+
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private async Task<string> GetUserNameAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return user.UserName;
+        }
+
+        private async Task GenerateSignedUrl(MMSIDispatchTicket model)
+        {
+            // Get Signed URL only when Saved File Name is available.
+            if (!string.IsNullOrWhiteSpace(model.UploadName))
+            {
+                model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.UploadName);
+            }
         }
     }
 }
