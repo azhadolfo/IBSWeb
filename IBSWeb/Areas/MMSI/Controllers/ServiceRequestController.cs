@@ -182,8 +182,14 @@ namespace IBSWeb.Areas.MMSI
                 .FirstOrDefaultAsync(cancellationToken);
 
             model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
-            model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
-            model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
+            if (!string.IsNullOrEmpty(model.ImageName))
+            {
+                model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
+            }
+            if (!string.IsNullOrEmpty(model.VideoName))
+            {
+                model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
+            }
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -191,7 +197,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? imageFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.GetUserAsync(User);
             try
@@ -206,19 +212,24 @@ namespace IBSWeb.Areas.MMSI
                         if (imageFile != null)
                         {
                             // delete existing before replacing
-                            if (!string.IsNullOrEmpty(model.ImageName))
+                            if (!string.IsNullOrEmpty(currentModel.ImageName))
                             {
-                                await _cloudStorageService.DeleteFileAsync(model.ImageName);
-                                model.ImageName = null;
-                            }
-                            if (!string.IsNullOrEmpty(model.VideoName))
-                            {
-                                await _cloudStorageService.DeleteFileAsync(model.VideoName);
-                                model.VideoName = null;
+                                await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
                             }
 
                             model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
                             model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
+                        }
+
+                        if (videoFile != null)
+                        {
+                            if (!string.IsNullOrEmpty(currentModel.VideoName))
+                            {
+                                await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
+                            }
+
+                            model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                            model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
                         }
 
                         #region -- Changes
@@ -240,6 +251,7 @@ namespace IBSWeb.Areas.MMSI
                         if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                         if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); } if (currentModel.BaseOrStation != model.BaseOrStation) { changes.Add($"BaseOrStation: {currentModel.BaseOrStation} -> {model.BaseOrStation}"); }
                         if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
+                        if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
 
                         #endregion -- Changes
 
@@ -264,6 +276,14 @@ namespace IBSWeb.Areas.MMSI
                         if (imageFile != null)
                         {
                             currentModel.ImageName = model.ImageName;
+                            currentModel.ImageSignedUrl = model.ImageSignedUrl;
+                            currentModel.ImageSavedUrl = model.ImageSavedUrl;
+                        }
+                        if (videoFile != null)
+                        {
+                            currentModel.VideoName = model.VideoName;
+                            currentModel.VideoSignedUrl = model.VideoSignedUrl;
+                            currentModel.VideoSavedUrl = model.VideoSavedUrl;
                         }
 
                         #region -- Audit Trail
@@ -402,8 +422,34 @@ namespace IBSWeb.Areas.MMSI
                 // }
 
                 model.ImageName = null;
+                model.ImageSignedUrl = null;
+                model.ImageSavedUrl = null;
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
+
+                return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                return RedirectToAction(nameof(Edit), new { id = id });
+            }
+        }
+
+        public async Task<IActionResult> DeleteVideo(int id, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+
+                await _cloudStorageService.DeleteFileAsync(model.VideoName);
+
+                model.VideoName = null;
+                model.VideoSignedUrl = null;
+                model.VideoSavedUrl = null;
+                await _db.SaveChangesAsync(cancellationToken);
+                TempData["success"] = "Video Deleted Successfully!";
 
                 return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
             }

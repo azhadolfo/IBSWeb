@@ -130,29 +130,47 @@
                         <span asp-validation-for="VesselId" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="form-floating col-12 my-2">
-                    <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
-                    <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
-                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                <div class="row">
+                    <div class="form-floating col-12 my-2">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="form-group col-12 my-2">
-                    <label for="file" class="form-label">Upload image of Dispatch Ticket</label>
-                    <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' accept="image/png, image/jpg, image/jpeg"/>
+                <div class="row">
+                    <div class="form-group col-6 my-2">
+                        <label for="imageFile" class="form-label">Upload image of Dispatch Ticket</label>
+                        <input class="form-control form-control-sm" id="imageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
+                    </div>
+                    <div class="form-group col-6 my-2">
+                        <label for="videoFile" class="form-label">Upload video of Service Operation</label>
+                        <input class="form-control form-control-sm" id="videoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg" />
+                    </div>
                 </div>
-                
-                
             </div>
             
             <div class="row col-12 justify-content-end my-2">
 
                 @if (!string.IsNullOrEmpty(Model.ImageName))
                 {
-                    <div class="text-center" style="width: 250px">
-                        <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewUpload"><i class="bi bi-eye"></i> View Image</button>
+                    <div class="text-center" style="width: 200px">
+                        <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewImage"><i class="bi bi-eye"></i> View Image</button>
                     </div>
-                    <div class="text-center" style="width: 250px">
+                    <div class="text-center" style="width: 200px">
                         <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.DispatchTicketId">
                             <i class="bi bi-trash-fill"></i> Delete Image
+                        </a>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.VideoName))
+                {
+                    <div class="text-center" style="width: 200px">
+                        <button class="btn btn-primary custom-btn col-12 align-content-center my-1 view-video" data-videolink="@Model.VideoSignedUrl" type="button"><i class="bi bi-eye"></i> Play Video</button>
+                    </div>
+                    <div class="text-center" style="width: 200px">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteVideo" data-video-id="@Model.DispatchTicketId">
+                            <i class="bi bi-trash-fill"></i> Delete Video
                         </a>
                     </div>
                 }
@@ -174,7 +192,7 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            document.getElementById('viewUpload')?.addEventListener('click', function () {
+            document.getElementById('viewImage')?.addEventListener('click', function () {
                 var maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
@@ -243,20 +261,38 @@
 
             });
 
+            // swal asking if sure to delete image
+            document.getElementById('deleteVideo')?.addEventListener('click', function () {
+                var videoId = this.getAttribute('data-video-id');
+
+                Swal.fire({
+                    title: "Do you want to delete the video?",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/MMSI/ServiceRequest/DeleteVideo/${videoId}`;
+                    }
+                });
+
+            });
+
             // will ask if you want to replace existing image
             document.getElementById('submitButton')?.addEventListener('click', function (event) {
 
                 event.preventDefault();
-                var existingFileName = '@Model.ImageName';
-                var newFile = document.getElementById('fileUpload').files.length > 0;
+                var existingImageName = '@Model.ImageName';
+                var existingVideoName = '@Model.VideoName';
+                var newImage = document.getElementById('imageUpload').files.length > 0;
+                var newVideo = document.getElementById('videoUpload').files.length > 0;
 
-                if (existingFileName && existingFileName !== "" && newFile) {
+                if ((existingImageName && existingImageName !== "" && newImage) || (existingVideoName && existingVideoName !== "" && newVideo)) {
                     Swal.fire({
-                        title: "Do you want to replace the existing image?",
-                        text: "The current image will be replaced with the new one.",
+                        title: "Do you want to replace existing file(s)?",
+                        text: "Current file(s) will be replaced with new one(s).",
                         showCancelButton: true,
-                        confirmButtonText: "Yes, replace it!",
-                        cancelButtonText: "No, keep it"
+                        confirmButtonText: "Confirm",
+                        cancelButtonText: "Cancel"
                     }).then((result) => {
                         if (result.isConfirmed) {
                             document.getElementById('submitButton').form.submit();
@@ -270,6 +306,35 @@
 
             // if port changes, proc terminal choice change function
             $("#PortSelect").change(HandlePortChange);
+
+            $(document).on("click", ".view-video", function () {
+                const videoLink = this.getAttribute("data-videolink");
+                if (!videoLink) {
+                    console.error("No video found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    html: `
+                            <video width="1280" height="720" controls>
+                                <source src="${videoLink}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            `,
+                    showConfirmButton: false,
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    background: "transparent",
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
+                    }
+                });
+            });
 
         });
     </script>
