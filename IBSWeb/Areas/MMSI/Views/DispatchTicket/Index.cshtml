@@ -103,16 +103,16 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@(item.CreateDate.ToString("yyyy-MM-dd"))</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.COSNumber</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DispatchNumber</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.ActivityService.ActivityServiceName</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Tugboat.TugboatName</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.TugMaster.TugMasterName</pre></td>
-                            <td class="text-center align-content-center"><pre class="m-0 p-0">@item.Vessel.VesselName</pre></td>
+                            <td class="text-center align-content-center">@(item.CreateDate.ToString("yyyy-MM-dd"))</td>
+                            <td class="text-center align-content-center">@item.COSNumber</td>
+                            <td class="text-center align-content-center">@item.DispatchNumber</td>
+                            <td class="text-center align-content-center">@item.DateLeft.ToString("yyyy-MM-dd") @item.TimeLeft</td>
+                            <td class="text-center align-content-center">@item.DateArrived.ToString("yyyy-MM-dd") @item.TimeArrived</td>
+                            <td class="text-center align-content-center">@item.ActivityService.ActivityServiceName</td>
+                            <td class="text-center align-content-center">@item.Terminal.Port.PortName-@item.Terminal.TerminalName</td>
+                            <td class="text-center align-content-center">@item.Tugboat.TugboatName</td>
+                            <td class="text-center align-content-center">@item.TugMaster.TugMasterName</td>
+                            <td class="text-center align-content-center">@item.Vessel.VesselName</td>
 
                             <td class="text-center align-content-center">
                                 @{
@@ -213,16 +213,16 @@
                             }
                             $('#dataTable tbody').append(`
                                     <tr>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.createDate}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.cosNumber || ""}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dispatchNumber}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateLeft} ${value.timeLeft}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.dateArrived} ${value.timeArrived}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.activityService.activityServiceName}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.terminal.port.portName}-${value.terminal.terminalName}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugboat.tugboatName}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.tugMaster.tugMasterName}</pre></td>
-                                        <td class="text-center align-content-center"><pre class="m-0 p-0">${value.vessel.vesselName}</pre></td>
+                                        <td class="text-center align-content-center">${value.createDate}</td>
+                                        <td class="text-center align-content-center">${value.cosNumber || ""}</td>
+                                        <td class="text-center align-content-center">${value.dispatchNumber}</td>
+                                        <td class="text-center align-content-center">${value.dateLeft} ${value.timeLeft}</td>
+                                        <td class="text-center align-content-center">${value.dateArrived} ${value.timeArrived}</td>
+                                        <td class="text-center align-content-center">${value.activityService.activityServiceName}</td>
+                                        <td class="text-center align-content-center">${value.terminal.port.portName}-${value.terminal.terminalName}</td>
+                                        <td class="text-center align-content-center">${value.tugboat.tugboatName}</td>
+                                        <td class="text-center align-content-center">${value.tugMaster.tugMasterName}</td>
+                                        <td class="text-center align-content-center">${value.vessel.vesselName}</td>
                                         <td class="text-center align-content-center">
                                         <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
                                             ${value.status}
