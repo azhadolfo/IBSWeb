@@ -333,8 +333,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var receivingReports = await _db.FilprideReceivingReports
                 .Where(rr => rr.Company == company
-                             && rr.SupplierInvoiceDate >= dateFrom
-                             && rr.SupplierInvoiceDate <= dateTo
+                             && rr.Date >= dateFrom
+                             && rr.Date <= dateTo
                              && rr.Status == nameof(Status.Posted))
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(po => po.Supplier)

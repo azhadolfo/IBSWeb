@@ -3423,7 +3423,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["B4"].Value = $"{companyClaims}";
 
                     purchaseReportWorksheet.Cells["A7"].Value = "TRANSACTION DATE";
-                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVED DATE"; // move down from here:
+                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVED DATE";
                     purchaseReportWorksheet.Cells["C7"].Value = "SUPPLIER NAME";
                     purchaseReportWorksheet.Cells["D7"].Value = "SUPPLIER TIN";
                     purchaseReportWorksheet.Cells["E7"].Value = "SUPPLIER ADDRESS";

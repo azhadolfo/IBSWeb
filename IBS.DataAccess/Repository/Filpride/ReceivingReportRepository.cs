@@ -278,7 +278,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
                 Type = deliveryReceipt.PurchaseOrder.Type,
-                SupplierInvoiceDate = liftingDate,
             };
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
