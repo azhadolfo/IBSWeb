@@ -312,19 +312,19 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var checkVoucherHeader = _db.FilprideCheckVoucherHeaders
+            var checkVoucherHeader = await _db.FilprideCheckVoucherHeaders
                 .Where(cd =>
                     cd.Company == company && cd.DcrDate >= dateFrom && cd.DcrDate <= dateTo &&
                     cd.Status == nameof(Status.Posted) &&
                     cd.CvType != nameof(CVType.Invoicing))
                 .Include(cd => cd.BankAccount)
                 .OrderBy(cd => cd.Date)
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             return checkVoucherHeader;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -335,7 +335,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(rr => rr.Company == company
                              && rr.Date >= dateFrom
                              && rr.Date <= dateTo
-                             && rr.Status == nameof(Status.Posted))
+                             && rr.Status == nameof(Status.Posted)
+                             && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt.CustomerId)))
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(po => po.Supplier)
                 .Include(rr => rr.PurchaseOrder)
@@ -357,7 +358,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var additionalDeliveryReceipts = await _db.FilprideDeliveryReceipts
                 .Where(dr => dr.Date >= dateFrom
                              && dr.Date <= dateTo
-                             && dr.Status == nameof(DRStatus.PendingDelivery))
+                             && dr.Status == nameof(DRStatus.PendingDelivery)
+                             && (customerIds == null || customerIds.Contains(dr.CustomerId)))
                 .Include(dr => dr.CustomerOrderSlip)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler)

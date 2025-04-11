@@ -707,9 +707,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(PurchaseReport));
         }
 
-        public IActionResult GmReport()
+        public async Task<IActionResult> GmReport()
         {
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            ViewModelBook viewmodel = new()
+            {
+                CustomerList = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims)
+            };
+
+            return View(viewmodel);
         }
 
         [HttpPost]
@@ -724,7 +731,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     // get data by chosen date
-                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers);
 
                     return View(purchaseReport);
                 }
@@ -4528,7 +4535,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
 
                 if (purchaseReport.Count == 0)
                 {
