@@ -6,67 +6,6 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<style>
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    /* Custom styles for professional look */
-    .table th {
-        font-weight: 600;
-        color: #374151;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        letter-spacing: 0.025em;
-    }
-
-    .table tbody tr {
-        transition: all 0.2s;
-    }
-
-        .table tbody tr:hover {
-            background-color: rgba(59, 130, 246, 0.05);
-        }
-
-    .table-loading {
-        position: relative;
-        opacity: 0.6;
-    }
-
-    .badge {
-        font-weight: 500;
-        padding: 0.35em 0.8em;
-        font-size: 0.75rem;
-    }
-
-    .actions-dropdown .dropdown-item {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-    }
-
-        .actions-dropdown .dropdown-item:hover {
-            background-color: #f3f4f6;
-        }
-
-
-
-    table {
-        font-size: 10px !important;
-        table-layout: auto !important;
-    }
-
-        table td {
-            font-size: 12px !important;
-            padding-left: 10px !important;
-        }
-
-    .card-body {
-        margin: 5px !important;
-        padding: 5px !important;
-    }
-</style>
-
 <div class="card text-dark bg-white  m-4">
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -77,202 +16,128 @@
         </div>
     </div>
     
-    <div class="card-body">
-        <div class="p-3">
-
-            <div class="row mb-2 justify-content-end">
-                <div class="col-12 d-flex justify-content-end">
-                    <h2><strong>DISPATCH TICKET DETAILS</strong></h2>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-12 d-flex flex-column justify-content-end">
-                    <div class="row d-flex align-content-center text-center mb-2">   
-                            <div class="col-2 text-start small-text">
-                                <span><b>Create Date:</b> @Model.CreateDate</span>
-                            </div>
-                            <div class="col-2 text-start small-text">
-                                <span><b>Dispatch Ticket#:</b> @Model.DispatchNumber</span>
-                            </div>
-                            <div class="col-2 text-start small-text">
-                                <span><b>Total Hours:</b> @Model.TotalHours?.ToString("N2")</span>
-                            </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row border">
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Voyage:</b> <br /> @Model.VoyageNumber
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Activity/Service Type:</b> @Model.ActivityService.ActivityServiceName
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Date / Time Start:</b> @Model.DateLeft @Model.TimeLeft
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Date / Time End:</b> @Model.DateArrived @Model.TimeArrived
-                </div>
-            </div>
-
-            <div class="row border">
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Tug Master:</b> @Model.TugMaster?.TugMasterName
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Tugboat:</b> @Model.Tugboat?.TugboatName
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Vessel:</b> @Model.Vessel.VesselName
-                </div>
-                <div class="col-3 text-start p-2 small-text border">
-                    <b>Port-Terminal:</b> @Model.Terminal?.Port?.PortName-@Model.Terminal?.TerminalName
-                </div>
-            </div>
-
-            <div class="row small-text border">
-                <div class="col-12 text-start small-text p-2 border">
-                    <b>Remarks:</b> @Model.Remarks
-                </div>
-            </div>
-
-            @if (Model.DispatchRate != null)
-            {
-                <div class="row mt-4">
-
-                    <div class="row justify-content-end">
-
-                        @if (Model.Status == "Tariff Pending")
-                        {
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
-                                <h3 class="text-warning ms-2 mb-0">Tariff Pending</h3>
-                            </div>
-
-                        }
-
-                        @if (Model.Status == "For Billing")
-                        {
-
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
-                                <h3 class="text-success">Tariff Approved</h3>
-                            </div>
-                        }
-
-                        @if (Model.Status == "Disapproved")
-                        {
-                            <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
-                                <h2 class="text-danger">Tariff Disapproved</h2>
-                            </div>
-                        }
-
-                        <div class="col-6 d-flex justify-content-end align-items-center">
-                            <h2 class="pb-2"><strong>TARIFF DETAILS</strong></h2>
-                        </div>
-
-                    </div>
-
-                </div>
-            
-                <div class="row">
-                    <div class="col-12 d-flex flex-column justify-content-start">
-                        <div class="row d-flex align-content-center text-center mb-2">
-                            <div class="col-2 small-text text-start">
-                                <span><b>Dispatch Rate:</b> ₱@Model.DispatchRate?.ToString("N2") @Model.DispatchChargeType</span>
-                            </div>
-
-                            <div class="col-2 small-text text-start">
-                                <span><b>Dispatch Discount: </b> @Model.DispatchDiscount%</span>
-                            </div>
-
-                            <div class="col-2 small-text text-start">
-                                <span><b>BAF Rate:</b> ₱@Model.BAFRate?.ToString("N2") @Model.BAFChargeType</span>
-                            </div>
-
-                            <div class="col-2 small-text text-start">
-                                <span><b>BAF Discount:</b> @Model.BAFDiscount%</span>
-                            </div>
+    <div>
+        <div class="card-body">
+            <div class="row px-3 justify-content-center d-flex">
+                <div class="col-11 border">
+                    <div class="row mt-2">
+                        <div class="col">
+                            <h5>DISPATCH TICKET DETAILS</h5>
                         </div>
                     </div>
-
+                    <table class="table table-borderless" style="font-size: 18px;">
+                        <tbody>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VOYAGE #:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.VoyageNumber</b></td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.CreateDate</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster.TugMasterName</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatName</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselName</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-3 ps-4" style="width: 120px;"><b>REMARKS: </b></td>
+                            <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;" colspan="3">@Model.Remarks</td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="row">
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>Dispatch Billing: </b> ₱ @Model.DispatchBillingAmount?.ToString("N2")
-                    </div>
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>BAF Billing:</b> ₱ @Model.BAFBillingAmount?.ToString("N2")
-                    </div>
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>Total Billings:</b> <i>₱ @Model.TotalBilling?.ToString("N2")</i>
-                    </div>
-
-                </div>
-
-                <div class="row">
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>Dispatch Net Revenue: </b> ₱ @Model.DispatchNetRevenue?.ToString("N2")
-                    </div>
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>BAF Net Revenue:</b> ₱ @Model.BAFNetRevenue?.ToString("N2")
-                    </div>
-
-                    <div class="col-4 text-start border p-2 small-text">
-                        <b>Total Net Revenue:</b> <i>₱ @Model.TotalNetRevenue</i>
-                    </div>
-
-                </div>
-            }
+            </div>
         </div>
-        <div class="row mt-2">
 
-            @* <div class="col-12 text-end">
-                <div class="row text-end mt-2">
-                    <div class="col-6">
-                        @if ((Model.Status != "For Collection" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
-                        || !string.IsNullOrEmpty(Model.UploadName))
-                        {
-                            <div class="dropdown align-content-center">
-                                <button class="btn custom-btn dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
-                                    @if (Model.Status == "For Tariff")
-                                    {
-                                        <li><a class="dropdown-item" href="@Url.Action("Tariffing", "DispatchTicket", new { id = Model.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Tariffing</a></li>
-                                    }
-                                    @if (Model.Status == "Tariff Pending")
-                                    {
-                                        <li><a class="dropdown-item" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
-                                        <li><a class="dropdown-item" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
-                                    }
-                                    @if (!string.IsNullOrEmpty(Model.UploadName))
-                                    {
-                                        <li><a class="dropdown-item" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
-                                    }
-                                </ul>
+        @if (Model.DispatchRate != null)
+        {
+            <div class="card-body">
+                <div class="row px-3 justify-content-center">
+                    <div class="col-11 border">
+                        <div class="row mt-2 justify-content-start d-flex">
+                            <div class="col-3">
+                                <h5>TARIFF DETAILS</h5>
                             </div>
-                        }
-                    </div>
+                            <div class="col-5">
+                                @if (Model.Status == "Tariff Pending")
+                                {
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
+                                        <h5 class="text-warning ms-2 mb-0">Tariff Pending</h5>
+                                    </div>
+                                }
 
-                    <div class="col-6">
-                        <a class="btn btn-primary custom2-btn col-12" asp-controller="DispatchTicket" asp-action="Index">
-                            <i class="bi bi-arrow-90deg-left"></i> Go Back
-                        </a>
-                    </div>
+                                @if (Model.Status == "For Billing")
+                                {
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
+                                        <h5 class="text-success ms-2 mb-0">Tariff Approved</h5>
+                                    </div>
+                                }
 
+                                @if (Model.Status == "Disapproved")
+                                {
+                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                        <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
+                                        <h5 class="text-danger ms-2 mb-0">Tariff Disapproved</h5>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <table class="table table-borderless" style="font-size: 18px;">
+                            <tbody>
+                            <tr>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate</td>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
+                            </tr>
+                            <tr>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount</td>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue</td>
+                            </tr>
+                            <tr>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate</td>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
+                            </tr>
+                            <tr>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount</td>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue</td>
+                            </tr>
+                            <tr>
+                                <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling</b></td>
+                                <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue</b></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div> *@
-
-            <div class="row col-12 justify-content-end my-2">
+            </div>
+        }
+    </div>
+    
+        <div class="row">
+            <div class="row col-12 justify-content-end mb-4">
                 <div class="text-center" style="width: 250px;">
                     @if ((Model.Status != "Billed" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
                     || !string.IsNullOrEmpty(Model.ImageName))
@@ -309,7 +174,6 @@
             </div>
 
         </div>
-    </div>
 </div>
 
 @section Scripts {
