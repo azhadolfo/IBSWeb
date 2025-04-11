@@ -60,7 +60,8 @@ namespace IBSWeb.Areas.MMSI
                 Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
                 Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
                 TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
-                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken)
+                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
+                Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken)
             };
 
             ViewData["PortId"] = 0;
