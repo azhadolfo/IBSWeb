@@ -467,7 +467,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(cosSummary);
+                    if (cosSummary.Any())
+                    {
+                        return View(cosSummary);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(COSUnservedVolume));
                 }
                 catch (Exception ex)
                 {
@@ -514,7 +520,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                           && i.Date <= lastDayOfMonth
                                           && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
 
-                    return View(deliveryReceipts);
+                    if (deliveryReceipts.Any())
+                    {
+                        return View(deliveryReceipts);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(DispatchReport));
                 }
                 catch (Exception ex)
                 {
@@ -557,7 +569,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(sales);
+                    if (sales.Any())
+                    {
+                        return View(sales);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(SalesReport));;
                 }
                 catch (Exception ex)
                 {
@@ -589,7 +607,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var purchaseOrder = await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(purchaseOrder);
+                    if (purchaseOrder.Any())
+                    {
+                        return View(purchaseOrder);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(PurchaseOrderReport));
                 }
                 catch (Exception ex)
                 {
@@ -620,7 +644,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(checkVoucherHeader);
+                    if (checkVoucherHeader.Any())
+                    {
+                        return View(checkVoucherHeader);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ClearedDisbursementReport));
                 }
                 catch (Exception ex)
                 {
@@ -652,49 +682,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // get data by chosen date
                     var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, dateSelectionType:model.DateSelectionType);
 
-                    #region -- Assign collected data to purchaseReportVM --
-
-                    //assign data to vm model
-                    var purchaseReportVm = purchaseReport.Select(rr => new PurchaseReportViewModel
+                    if (purchaseReport.Any())
                     {
-                        Date = rr.Date,
-                        SupplierName = rr.PurchaseOrder?.Supplier?.SupplierName,
-                        SupplierTin = rr.PurchaseOrder?.Supplier?.SupplierTin,
-                        SupplierAddress = rr.PurchaseOrder?.Supplier?.SupplierAddress,
-                        PurchaseOrderNo = rr.PurchaseOrder?.PurchaseOrderNo,
-                        FilprideRR = rr.ReceivingReportNo,
-                        FilprideDR = rr.DeliveryReceipt?.DeliveryReceiptNo,
-                        ATLNo = rr.DeliveryReceipt?.AuthorityToLoadNo,
-                        CustomerName = rr.DeliveryReceipt?.Customer?.CustomerName,
-                        Product = rr.PurchaseOrder?.Product?.ProductName,
-                        Volume = rr.QuantityReceived,
-                        CostPerLiter = rr.PurchaseOrder?.Price,
-                        CostAmount = rr.QuantityReceived * rr.PurchaseOrder?.Price,
-                        VATAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.12m,
-                        WHTAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.01m,
-                        NetPurchases = (rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m,
-                        AccountSpecialist = rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist,
-                        COSPrice = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
-                        COSAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
-                        COSPerLiter = rr.PurchaseOrder?.Price,
-                        GMPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price,
-                        GMAmount = rr.QuantityReceived * (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price),
-                        HaulerName = rr.DeliveryReceipt?.Hauler?.SupplierName,
-                        FreightCharge = rr.DeliveryReceipt?.Freight,
-                        FCAmount = rr.QuantityReceived * rr.DeliveryReceipt?.Freight,
-                        CommissionPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
-                        CommissionAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
-                        NetMarginPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight,
-                        NetMarginAmount = rr.QuantityReceived * ((rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight),
-                        SupplierSalesInvoice = rr.SupplierInvoiceNumber,
-                        SupplierDR = rr.SupplierDrNo,
-                        SupplierWC = rr.WithdrawalCertificate
+                        return View(purchaseReport);
+                    }
 
-                    }).ToList();
-
-                    #endregion -- Assign collected data to purchaseReportVM --
-
-                    return View(purchaseReport);
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(PurchaseReport));
                 }
                 catch (Exception ex)
                 {
@@ -731,14 +725,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     // get data by chosen date
-                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers);
+                    var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers);
 
-                    return View(purchaseReport);
+                    if (grossMarginReport.Any())
+                    {
+                        return View(grossMarginReport);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(GmReport));
+
                 }
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(PurchaseReport));
+                    return RedirectToAction(nameof(GmReport));
                 }
             }
 
@@ -775,7 +776,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(si => si.CustomerOrderSlip)
                         .ToListAsync(cancellationToken);
 
-                    return View(salesInvoice);
+                    if (salesInvoice.Any())
+                    {
+                        return View(salesInvoice);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ArPerCustomer));
                 }
                 catch (Exception ex)
                 {
@@ -807,7 +814,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid, cancellationToken);
 
-                    return View(salesInvoice);
+                    if (salesInvoice.Any())
+                    {
+                        return View(salesInvoice);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(AgingReport));
                 }
                 catch (Exception ex)
                 {
