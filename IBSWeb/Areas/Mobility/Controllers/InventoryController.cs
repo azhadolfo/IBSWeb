@@ -46,17 +46,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            if (model.StationCode == "ALL")
-            {
-                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                ViewData["Station"] = model.StationCode;
-            }
-            else
-            {
-                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
-                ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
-            }
+            inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
+            StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
+            ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
 
             ViewData["Product"] = $"{productDetails.ProductCode} {productDetails.ProductName.ToUpper()}";
             return View(inventories);

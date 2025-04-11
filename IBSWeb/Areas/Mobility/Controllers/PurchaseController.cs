@@ -31,7 +31,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<MobilityFuelPurchase, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+            Expression<Func<MobilityFuelPurchase, bool>> filter = s => s.StationCode == stationCodeClaim;
 
             IEnumerable<MobilityFuelPurchase> fuelPurchaseList = await _unitOfWork
                 .MobilityFuelPurchase
@@ -137,7 +137,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var claims = await _userManager.GetClaimsAsync(user);
             var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
 
-            Expression<Func<MobilityLubePurchaseHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+            Expression<Func<MobilityLubePurchaseHeader, bool>> filter = s => s.StationCode == stationCodeClaim;
 
             IEnumerable<MobilityLubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
                 .MobilityLubePurchaseHeader

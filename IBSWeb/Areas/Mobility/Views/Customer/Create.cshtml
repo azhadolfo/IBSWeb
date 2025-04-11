@@ -21,10 +21,7 @@
         <form method="post" class="row">
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                @if (stationCode != "ALL")
-                {
-                    <input type="hidden" asp-for="StationCode" value="@stationCode" />
-                }
+                <input type="hidden" asp-for="StationCode" value="@stationCode" />
                 <div class="form-floating py-2 col-12">
                     <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="CustomerName" class="ms-2">Customer Name<span class="required">*</span></label>

@@ -41,7 +41,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -49,10 +49,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var purchaseOrders = await _unitOfWork.MobilityPurchaseOrder
                 .GetAllAsync(null, cancellationToken);
 
-            if (GetStationCodeClaimAsync().Result != "ALL")
-            {
                 purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
-            }
+
             ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 
             return View(purchaseOrders);

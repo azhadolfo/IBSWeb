@@ -21,11 +21,8 @@
                 <div asp-validation-summary="ModelOnly"></div>
 
                 <input type="hidden" asp-for="CustomerOrderSlipId" />
-
-                @if (stationCode != "ALL")
-                {
-                    <input type="hidden" asp-for="StationCode" value="@stationCode" />
-                }
+                
+                <input type="hidden" asp-for="StationCode" value="@stationCode" />
 
                 @if (!string.IsNullOrEmpty(Model.DisapprovalRemarks) && (Model.Status == "Pending"))
                 {
@@ -41,16 +38,6 @@
                         <input type="date" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
                         <label class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row pt-2">
-                    <div class="form-group py-2 col-12" style="display: @(stationCode != "ALL" ? "none" : "") ">
-                        <label class="control-label">Station<span class="required">*</span></label>
-                        <select id="StationCode" asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="">Select Station</option>
-                        </select>
-                        <span asp-validation-for="StationCode" class="text-danger"></span>
                     </div>
                 </div>
 

@@ -78,10 +78,6 @@
                 </tr>
                 <tr>
                     <th>Particulars</th>
-                    @if (ViewData["Station"].Equals("ALL"))
-                    {
-                        <th>Station</th>
-                    }
                     <th>Date</th>
                     <th>Ref</th>
                     <th class="text-end">Quantity</th>
@@ -100,10 +96,6 @@
                 {
                     <tr>
                         <td>@Html.DisplayFor(model => obj.Particulars)</td>
-                        @if (ViewData["Station"].Equals("ALL"))
-                        {
-                            <td>@Html.DisplayFor(model => obj.StationCode)</td>
-                        }
                         <td>@Html.DisplayFor(model => obj.Date)</td>
                         @if (obj.ValidatedBy != "N/A")
                         {

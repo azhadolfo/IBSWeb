@@ -183,21 +183,21 @@ namespace IBS.DataAccess.Repository.Mobility
                             g.TransactionDate <= dateTo &&
                             (accountNo == "ALL" || g.AccountNumber == accountNo) &&
                             (productCode == "ALL" || g.ProductCode == productCode) &&
-                            (stationCode == "ALL" || g.StationCode == stationCode))
+                            g.StationCode == stationCode)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<GeneralLedgerView>> GetLedgerViewByJournal(DateOnly dateFrom, DateOnly dateTo, string stationCode, string journal, CancellationToken cancellationToken = default)
         {
             return await _db.GeneralLedgerViews
-                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && g.JournalReference == journal && (stationCode == "ALL" || g.StationCode == stationCode))
+                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && g.JournalReference == journal && g.StationCode == stationCode)
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<IEnumerable<GeneralLedgerView>> GetLedgerViewByTransaction(DateOnly dateFrom, DateOnly dateTo, string stationCode, CancellationToken cancellationToken = default)
         {
             return await _db.GeneralLedgerViews
-                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && (stationCode == "ALL" || g.StationCode == stationCode))
+                .Where(g => g.TransactionDate >= dateFrom && g.TransactionDate <= dateTo && g.StationCode == stationCode)
                 .ToListAsync(cancellationToken);
         }
     }

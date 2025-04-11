@@ -27,23 +27,6 @@
         <div class="row pb-3">
             <div class="col-2"></div>
             <div class="col-8 text-center">
-                @if (currentStationCode == "ALL")
-                {
-                    <div class="text-center">
-                        <label>
-                            <input type="radio" name="stationRadio" value="" class="search-radio ms-2"> All Stations
-                        </label>
-                        <label>
-                            <input type="radio" name="stationRadio" value="S06" class="search-radio ms-2"> Batangas
-                        </label>
-                        <label>
-                            <input type="radio" name="stationRadio" value="S08" class="search-radio ms-2"> Tarlac
-                        </label>
-                        <label>
-                            <input type="radio" name="stationRadio" value="S21" class="search-radio ms-2"> Santiago
-                        </label>
-                    </div>
-                }
 
                 <div class="text-center">
                     <label>
@@ -81,10 +64,6 @@
             <thead>
             <tr>
                 <th class="text-start align-middle">@Html.DisplayNameFor(model => model.CustomerOrderSlipNo)</th>
-                @if (currentStationCode == "ALL")
-                {
-                    <th class="text-start align-middle">@Html.DisplayNameFor(model => model.StationCode)</th>
-                }
                 <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Date)</th>
                 <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Customer)</th>
                 <th class="text-start align-middle">@Html.DisplayNameFor(model => model.Driver)</th>
@@ -110,12 +89,6 @@
                         <td class="text-start align-middle">
                             @item.CustomerOrderSlipNo
                         </td>
-                        @if (currentStationCode == "ALL")
-                        {
-                            <td class="text-start align-middle">
-                                @Html.DisplayFor(model => item.MobilityStation.StationName)
-                            </td>
-                        }
                         <td class="text-start align-middle">
                             @item.Date.ToString("yyyy/MM/dd")
                         </td>
@@ -194,12 +167,6 @@
             const userDepartment = '@ViewBag.userDepartment';
             const currentStationCode = '@ViewData["currentStationCode"]';
 
-            // Redirect Cashier with 'ALL' station to logout
-            if (userDepartment === "Cashier" && currentStationCode === "ALL") {
-                window.location.href = '@Url.Page("/Account/Logout", new { area = "Identity", returnUrl = Url.Action("Index", "Home", new { area = "" }) })';
-                return;
-            }
-
             let filteredModelGlobal = @Html.Raw(JsonConvert.SerializeObject(Model));
             let statusFilter = "";
             let stationFilter = "";
@@ -260,7 +227,6 @@
                     const rowHtml = `
                         <tr>
                             <td class="text-start align-middle">${value.customerOrderSlipNo}</td>
-                            ${currentStationCode === "ALL" ? `<td class="text-start align-middle">${value.mobilityStation?.stationName || ''}</td>` : ''}
                             <td class="text-start align-middle">${new Date(value.date).toISOString().slice(0, 10).replace(/-/g, '/')}</td>
                             <td class="text-start align-middle">${value.customer?.customerName || ''}</td>
                             <td class="text-start align-middle">${value.driver || ''}</td>

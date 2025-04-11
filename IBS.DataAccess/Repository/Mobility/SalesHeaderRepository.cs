@@ -974,8 +974,6 @@ namespace IBS.DataAccess.Repository.Mobility
                 .OrderBy(dsr => dsr.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
-            if (stationCode != "ALL")
-            {
                 return query
                     .Where(dsr => dsr.StationCode == stationCode)
                     .Select(c => new SelectListItem
@@ -984,17 +982,6 @@ namespace IBS.DataAccess.Repository.Mobility
                         Text = c.SalesNo
                     })
                     .ToList();
-            }
-            else
-            {
-                return query
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.SalesHeaderId.ToString(),
-                        Text = c.SalesNo + " " + c.StationCode
-                    })
-                    .ToList();
-            }
         }
 
         public async Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken)

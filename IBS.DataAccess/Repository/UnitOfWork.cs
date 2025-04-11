@@ -309,20 +309,15 @@ namespace IBS.DataAccess.Repository
         public async Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
         {
             string stationString;
-            if (stationCodeClaims != "ALL")
-            {
-                var station = await _db.MobilityStations
-                    .Where(station => station.StationCode == stationCodeClaims)
-                    .FirstOrDefaultAsync(cancellationToken);
 
-                string stationName = station?.StationName ?? "Unknown Station";
-                string fullStationName = stationName + " STATION";
-                stationString = fullStationName;
-            }
-            else
-            {
-                stationString = "ALL STATIONS";
-            }
+            var station = await _db.MobilityStations
+                .Where(station => station.StationCode == stationCodeClaims)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            string stationName = station?.StationName ?? "Unknown Station";
+            string fullStationName = stationName + " STATION";
+            stationString = fullStationName;
+
             return stationString;
         }
 
