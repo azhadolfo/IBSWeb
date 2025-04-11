@@ -312,8 +312,15 @@
                             Swal.fire({
                                 position: "center",
                                 icon: "success",
-                                title: "Rate applied:",
-                                html: `<strong>Dispatch:</strong> ₱${result.dispatch}<br><strong>BAF:</strong> ₱${result.baf}`,
+                                title: "Default rate applied:",
+                                html: `<div class="row mt-2">
+                                            <div class="col-6 text-center align-items-center">
+                                                <strong>Dispatch Rate:</strong> ₱${result.dispatch}
+                                            </div>
+                                            <div class="col-6 text-center align-items-center">
+                                                <strong>BAF Rate:</strong> ₱${result.baf}
+                                            </div>
+                                        </div>  `,
                                 showConfirmButton: false,
                                 timer: 3000
                             });
