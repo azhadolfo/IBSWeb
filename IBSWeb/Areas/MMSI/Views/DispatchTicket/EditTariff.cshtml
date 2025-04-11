@@ -1,33 +1,10 @@
 @model IBS.Models.MMSI.MMSIDispatchTicket
 
 @{
-    ViewData["Title"] = "Tariffing";
+    ViewData["Title"] = "Edit Tariff";
     
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-
-<style>
-    @@media (max-width: 768px) {
-
-        label {
-            font-size: .8em !important
-        }
-
-        input {
-            font-size: .9em !important;
-        }
-    }
-    
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-    }
-
-    .card-body {
-        margin: 5px !important;
-        padding: 5px !important;
-    }
-</style>
 
 <div class="card text-dark bg-white  m-4">
 
@@ -38,8 +15,8 @@
     </div>
 
     <div class="card-body">
-        <div class="row px-3">
-            <div class="col-12">
+        <div class="row px-3 justify-content-center d-flex">
+            <div class="col-11 border">
                 <dov class="row mt-2">
                     <div class="col">
                         <h5>DISPATCH TICKET DETAILS</h5>
@@ -52,28 +29,24 @@
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.VoyageNumber</b></td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.CreateDate</td>
-                        <td class="m-0 p-0 pt-1" style="width: auto;"></td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster.TugMasterName</td>
-                        <td class="m-0 p-0 pt-1" style="width: auto;"></td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatName</td>
-                        <td class="m-0 p-0 pt-1" style="width: auto;"></td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselName</td>
-                        <td class="m-0 p-0 pt-1" style="width: auto;"></td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-3 ps-4" style="width: 120px;"><b>REMARKS: </b></td>
@@ -82,12 +55,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-
-    <div class="row px-3 ">
-        <div class="col">
-            <hr class="p-0 m-2"/>
         </div>
     </div>
 
@@ -106,7 +73,7 @@
 
                 <div class="row d-flex justify-content-start px-3">
                     <div class="form-group col-12 pe-3 text-start">
-                        <div class="row mt-3">
+                        <div class="row mt-2">
                             <div class="col-4 d-flex align-items-center">
                                 <label class="control-label ps-1 me-2" for="CustomerId">Customer<span class="required text-danger">*</span></label>
                                 <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
@@ -226,7 +193,7 @@
                     </div>
                 </div>
 
-                <div class="row mt-2 pt-2">
+                <div class="row mt-2 pt-2 px-2">
                     <div class="form-floating col-3 mb-3">
                         <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly />
                         <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
@@ -238,17 +205,20 @@
                         <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
                         <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
                     </div>
-
-                    <div class="row col-6 justify-content-end mt-4 mb-2">
-                        <div class="text-center" style="width: 250px;">
-                            <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                        </div>
-                        <div class="text-center" style="width: 250px;">
-                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
-                                <i class="bi bi-arrow-90deg-left"></i> Go Back
-                            </a>
+                    
+                    <div class="col-6">
+                        <div class="row justify-content-end mt-4 mb-2">
+                            <div class="text-center col-6" style="width: 250px;">
+                                <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                            </div>
+                            <div class="text-center col-6" style="width: 250px;">
+                                <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                    <i class="bi bi-arrow-90deg-left"></i> Go Back
+                                </a>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </form>
