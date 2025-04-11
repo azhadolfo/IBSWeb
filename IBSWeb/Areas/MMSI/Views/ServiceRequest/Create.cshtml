@@ -186,14 +186,22 @@
                         <span asp-validation-for="VesselId" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="form-floating col-12 my-2">
-                    <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
-                    <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
-                    <span asp-validation-for="Remarks" class="text-danger"></span>
+                <div class="row">
+                    <div class="form-floating col-12 my-2">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
                 </div>
-                <div class="form-group col-12 my-2">
-                    <label for="file" class="form-label">Upload image of Dispatch Ticket</label>
-                    <input class="form-control form-control-sm" id="fileUpload" name="file" type='file' accept="image/png, image/jpg, image/jpeg"/>
+                <div class="row">
+                    <div class="form-group col-6 my-2">
+                        <label for="imageFile" class="form-label">Upload image of Dispatch Ticket</label>
+                        <input class="form-control form-control-sm" id="imageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
+                    </div>
+                    <div class="form-group col-6 my-2">
+                        <label for="videoFile" class="form-label">Upload video of service operation</label>
+                        <input class="form-control form-control-sm" id="videoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg"/>
+                    </div>
                 </div>
                 <br/>
             </div>

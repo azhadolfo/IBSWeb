@@ -144,35 +144,39 @@
                                 </span>
                             </td>
 
-                            @if (!string.IsNullOrEmpty(item.UploadName))
-                            {
-                                <td class="text-center justify-content-center d-flex">
-                                    <div class="text-center" style="width: 150px;">
-                                        <div class="dropdown align-content-center">
-                                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                            <td class="text-center d-flex justify-content-center">
+                                <div style="width: 150px;">
+                                    @if (!string.IsNullOrEmpty(item.ImageName) || !string.IsNullOrEmpty(item.VideoName))
+                                    {
+                                        <div class="dropdown">
+                                            <button class="btn btn-primary dropdown-toggle col-12" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                            <ul class="dropdown-menu">
                                                 @if (item.Status != "Cancelled")
                                                 {
                                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a></li>
                                                 }
-                                                <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.SignedUrl"><i class="bi bi-eye"></i> View File</a></li>
+                                                @if (!string.IsNullOrEmpty(item.ImageName))
+                                                {
+                                                    <li><a class="dropdown-item view-upload" href="#" data-uploadname="@item.ImageSignedUrl"><i class="bi bi-eye"></i> View Image</a></li>
+                                                }
+                                                @if (!string.IsNullOrEmpty(item.VideoName))
+                                                {
+                                                    <li><a class="dropdown-item view-video" href="#" data-videolink="@item.VideoSignedUrl"><i class="bi bi-play-circle"></i> Play Video</a></li>
+                                                }
                                             </ul>
                                         </div>
-                                    </div>
-                                </td>
-                            }
-                            else
-                            {
-                                <td class="text-center justify-content-center d-flex">
-                                    <div class="text-center" style="width: 150px !important;">
-                                        <a class="view-upload btn btn-primary custom-btn col-12" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a>
-                                    </div>
-                                </td>
-                            }
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-primary col-12" href="@Url.Action("Edit", "ServiceRequest", new { id = item.DispatchTicketId })"><i class="bi bi-pencil-square"></i> Edit</a>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                     </tbody>
                 </table>
+                
                 <div class="row justify-content-end mt-2">
                     <div class="text-center" style="width: 250px;">
                         <a class="btn btn-primary col-12 align-content-center selected-options" id="postSelected" style="display:none">Post Selected</a>
@@ -301,8 +305,9 @@
                                                     <div class="dropdown align-content-center">
                                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                                         <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                                            <li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
-                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View File</a></li>
+                                                            ${value.status !== "Cancelled" ? `<li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
+                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View Image</a></li>
+                                                            <li><a class="dropdown-item view-video" href="#" data-videolink="/Dispatch_Ticket_Uploads/test.mp4"><i class="bi bi-eye"></i> View Video</a></li>
                                                         </ul>
                                                     </div>
                                                 ` : `
@@ -406,7 +411,7 @@
 
                 const maxHeight = window.innerHeight * 0.8;
                 Swal.fire({
-                    imageUrl: uploadName,
+                    imageUrl: uploadName, 
                     imageAlt: "Dispatch Ticket Upload",
                     showConfirmButton: false,
                     background: "transparent",
@@ -414,6 +419,36 @@
                     padding: 0,
                     width: "auto",
                     heightAuto: true,
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
+                    }
+                });
+            });
+
+            // View upload click handler
+            $(document).on("click", ".view-video", function () {
+                const videoLink = this.getAttribute("data-videolink");
+                if (!videoLink) {
+                    console.error("No video found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    html: `
+                            <video width="1280" height="720" controls>
+                                <source src="${videoLink}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            `,
+                    showConfirmButton: false,
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    background: "transparent",
                     didOpen: () => {
                         $(".swal2-image").css({
                             "max-height": `${maxHeight}px`,

@@ -514,14 +514,14 @@ namespace IBSWeb.Areas.MMSI
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
-                string filePath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", model.UploadName);
+                string filePath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", model.ImageName);
 
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
                 }
 
-                model.UploadName = null;
+                model.ImageName = null;
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
 
@@ -573,9 +573,9 @@ namespace IBSWeb.Areas.MMSI
         private async Task GenerateSignedUrl(MMSIDispatchTicket model)
         {
             // Get Signed URL only when Saved File Name is available.
-            if (!string.IsNullOrWhiteSpace(model.UploadName))
+            if (!string.IsNullOrWhiteSpace(model.ImageName))
             {
-                model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.UploadName);
+                model.ImageSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.ImageName);
             }
         }
     }

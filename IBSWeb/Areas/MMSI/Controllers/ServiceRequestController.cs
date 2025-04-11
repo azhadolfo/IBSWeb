@@ -39,9 +39,13 @@ namespace IBSWeb.Areas.MMSI
                 .Include(sq => sq.Vessel)
                 .ToListAsync();
 
-            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.UploadName)))
+            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
             {
-                await GenerateSignedUrl(dispatchTicket);
+                dispatchTicket.ImageSignedUrl = await GenerateSignedUrl(dispatchTicket.ImageName);
+            }
+            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.VideoName)))
+            {
+                dispatchTicket.VideoSignedUrl = await GenerateSignedUrl(dispatchTicket.VideoName);
             }
 
             return View(dispatchTickets);
@@ -65,7 +69,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? file, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
             model.Terminal.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
@@ -82,32 +86,21 @@ namespace IBSWeb.Areas.MMSI
                         model.CreatedBy = await GetUserNameAsync();
                         model.CreatedDate = DateTime.Now;
 
-                        // string uploadFolder = "wwwroot/Dispatch_Ticket_Uploads";
-                        // string cloudUploadDirectory = "";
-
                         // upload file if something is submitted
-                        if (file != null && file.Length > 0)
+                        if (imageFile != null && imageFile.Length > 0)
                         {
 
-                            model.UploadName = GenerateFileNameToSave(file.FileName);
-                            model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.UploadName);
+                            model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                            model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
 
                             ViewBag.Message = "Image uploaded successfully!";
+                        }
+                        if (videoFile != null && videoFile.Length > 0)
+                        {
+                            model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                            model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
 
-                            // if (!Directory.Exists(uploadFolder))
-                            // {
-                            //     Directory.CreateDirectory(uploadFolder);
-                            // }
-                            //
-                            // var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
-                            // var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
-                            // var fullPath = Path.Combine("wwwroot", filePath);
-                            // model.UploadName = customFileName;
-                            //
-                            // using (var stream = new FileStream(fullPath, FileMode.Create))
-                            // {
-                            //     await file.CopyToAsync(stream);
-                            // }
+                            ViewBag.Message = "Video uploaded successfully!";
                         }
 
                         model.Status = "For Posting";
@@ -189,7 +182,8 @@ namespace IBSWeb.Areas.MMSI
                 .FirstOrDefaultAsync(cancellationToken);
 
             model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
-            await GenerateSignedUrl(model);
+            model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
+            model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -197,7 +191,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? file, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? imageFile, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.GetUserAsync(User);
             try
@@ -209,36 +203,22 @@ namespace IBSWeb.Areas.MMSI
                         var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
                         TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
 
-                        if (file != null)
+                        if (imageFile != null)
                         {
                             // delete existing before replacing
-                            if (!string.IsNullOrEmpty(model.UploadName))
+                            if (!string.IsNullOrEmpty(model.ImageName))
                             {
-                                await _cloudStorageService.DeleteFileAsync(model.UploadName);
-                                model.UploadName = null;
+                                await _cloudStorageService.DeleteFileAsync(model.ImageName);
+                                model.ImageName = null;
+                            }
+                            if (!string.IsNullOrEmpty(model.VideoName))
+                            {
+                                await _cloudStorageService.DeleteFileAsync(model.VideoName);
+                                model.VideoName = null;
                             }
 
-                            model.UploadName = GenerateFileNameToSave(file.FileName);
-                            model.SavedUrl = await _cloudStorageService.UploadFileAsync(file, model.UploadName);
-
-                            // if (currentModel.UploadName != null)
-                            // {
-                            //     string destinationPath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", currentModel.UploadName);
-                            //
-                            //     if (System.IO.File.Exists(destinationPath))
-                            //     {
-                            //         System.IO.File.Delete(destinationPath);
-                            //     }
-                            // }
-
-                            // var customFileName = DateTime.Now.ToString("yyyyMMddhhmmss") + Path.GetExtension(file.FileName);
-                            // var filePath = Path.Combine("Dispatch_Ticket_Uploads", customFileName);
-                            // var itemPath = Path.Combine("wwwroot", filePath);
-                            // model.UploadName = customFileName;
-                            // await using (var stream = new FileStream(itemPath, FileMode.Create))
-                            // {
-                            //     await file.CopyToAsync(stream, cancellationToken);
-                            // }
+                            model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                            model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
                         }
 
                         #region -- Changes
@@ -259,7 +239,7 @@ namespace IBSWeb.Areas.MMSI
                         if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
                         if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                         if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); } if (currentModel.BaseOrStation != model.BaseOrStation) { changes.Add($"BaseOrStation: {currentModel.BaseOrStation} -> {model.BaseOrStation}"); }
-                        if (file != null && currentModel.UploadName != model.UploadName) { changes.Add($"UploadName: '{currentModel.UploadName}' -> '{model.UploadName}'"); }
+                        if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
 
                         #endregion -- Changes
 
@@ -281,9 +261,9 @@ namespace IBSWeb.Areas.MMSI
                         currentModel.TimeLeft = model.TimeLeft;
                         currentModel.COSNumber = model.COSNumber;
                         currentModel.BaseOrStation = model.BaseOrStation;
-                        if (file != null)
+                        if (imageFile != null)
                         {
-                            currentModel.UploadName = model.UploadName;
+                            currentModel.ImageName = model.ImageName;
                         }
 
                         #region -- Audit Trail
@@ -412,7 +392,7 @@ namespace IBSWeb.Areas.MMSI
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
 
-                await _cloudStorageService.DeleteFileAsync(model.UploadName);
+                await _cloudStorageService.DeleteFileAsync(model.ImageName);
 
                 // string filePath = Path.Combine("wwwroot/Dispatch_Ticket_Uploads", model.UploadName);
                 //
@@ -421,7 +401,7 @@ namespace IBSWeb.Areas.MMSI
                 //     System.IO.File.Delete(filePath);
                 // }
 
-                model.UploadName = null;
+                model.ImageName = null;
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
 
@@ -587,11 +567,11 @@ namespace IBSWeb.Areas.MMSI
             return RedirectToAction(nameof(Index));
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string? GenerateFileNameToSave(string incomingFileName, string type)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{type}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -606,12 +586,16 @@ namespace IBSWeb.Areas.MMSI
             return user.UserName;
         }
 
-        private async Task GenerateSignedUrl(MMSIDispatchTicket model)
+        private async Task<string> GenerateSignedUrl(string uploadName)
         {
             // Get Signed URL only when Saved File Name is available.
-            if (!string.IsNullOrWhiteSpace(model.UploadName))
+            if (!string.IsNullOrWhiteSpace(uploadName))
             {
-                model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.UploadName);
+                return await _cloudStorageService.GetSignedUrlAsync(uploadName);
+            }
+            else
+            {
+                throw new Exception("Upload name invalid.");
             }
         }
     }

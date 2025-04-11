@@ -145,7 +145,7 @@
             
             <div class="row col-12 justify-content-end my-2">
 
-                @if (!string.IsNullOrEmpty(Model.UploadName))
+                @if (!string.IsNullOrEmpty(Model.ImageName))
                 {
                     <div class="text-center" style="width: 250px">
                         <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewUpload"><i class="bi bi-eye"></i> View Image</button>
@@ -178,7 +178,7 @@
                 var maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
-                    imageUrl: '@Html.Raw(Model.SignedUrl)',
+                    imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
                     imageAlt: "Custom image",
                     showConfirmButton: false,
                     background: 'transparent',
@@ -247,7 +247,7 @@
             document.getElementById('submitButton')?.addEventListener('click', function (event) {
 
                 event.preventDefault();
-                var existingFileName = '@Model.UploadName';
+                var existingFileName = '@Model.ImageName';
                 var newFile = document.getElementById('fileUpload').files.length > 0;
 
                 if (existingFileName && existingFileName !== "" && newFile) {

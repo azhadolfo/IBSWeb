@@ -115,11 +115,17 @@ namespace IBS.Models.MMSI
 
         #endregion == Tariff ==
 
-        public string? UploadName { get; set; }
+        public string? ImageName { get; set; }
 
-        public string? SavedUrl { get; set; }
+        public string? ImageSavedUrl { get; set; }
 
-        public string? SignedUrl { get; set; }
+        public string? ImageSignedUrl { get; set; }
+
+        public string? VideoName { get; set; }
+
+        public string? VideoSavedUrl { get; set; }
+
+        public string? VideoSignedUrl { get; set; }
 
         public string? BillingId { get; set; }
 

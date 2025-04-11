@@ -275,7 +275,7 @@
             <div class="row col-12 justify-content-end my-2">
                 <div class="text-center" style="width: 250px;">
                     @if ((Model.Status != "Billed" && Model.Status != "Disapproved" && Model.Status != "For Billing") 
-                    || !string.IsNullOrEmpty(Model.UploadName))
+                    || !string.IsNullOrEmpty(Model.ImageName))
                     {
                         <div class="dropdown align-content-center">
                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
@@ -292,7 +292,7 @@
                                     <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
                                 }
                                 
-                                @if (!string.IsNullOrEmpty(Model.UploadName))
+                                @if (!string.IsNullOrEmpty(Model.ImageName))
                                 {
                                     <li><a class="dropdown-item" href="#" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
                                 }
@@ -323,7 +323,7 @@
                 var maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
-                    imageUrl: '@Html.Raw(Model.SignedUrl)',
+                    imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
                     imageAlt: "Custom image",
                     showConfirmButton: false,
                     background: 'transparent',
