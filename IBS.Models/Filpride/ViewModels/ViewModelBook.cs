@@ -12,7 +12,8 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "Date To")]
         public DateOnly DateTo { get; set; }
 
-        //Additional filter/sorting can use for all reports
+        #region Filtering
+
         public List<SelectListItem>? SI { get; set; }
 
         public List<SelectListItem>? SOA { get; set; }
@@ -21,6 +22,22 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<int>? Customers { get; set; }
 
+        #region Gross Margin
+
         public List<SelectListItem>? CustomerList { get; set; }
+
+        #endregion
+
+        #region Purchase Report
+
+        // New property for date selection type
+        [Display(Name = "Date Selection Based On")]
+        public string DateSelectionType { get; set; } = "RRDate";
+
+        #endregion
+
+
+
+        #endregion
     }
 }

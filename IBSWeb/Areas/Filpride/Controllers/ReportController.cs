@@ -650,7 +650,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     // get data by chosen date
-                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, dateSelectionType:model.DateSelectionType);
 
                     #region -- Assign collected data to purchaseReportVM --
 
@@ -4535,7 +4535,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken:cancellationToken);
 
                 if (purchaseReport.Count == 0)
                 {
