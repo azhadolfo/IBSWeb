@@ -30,16 +30,6 @@
                 </div>
 
                 <div class="row pt-2">
-                    <div class="form-group py-2 col-12" style="display: @(stationCode != "ALL" ? "none" : "") ">
-                        <label class="control-label">Stations List<span class="required">*</span></label>
-                        <select asp-for="StationCode" asp-items="@Model.MobilityStations" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected disabled>Select Station</option>
-                        </select>
-                        <span asp-validation-for="StationCode" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row pt-2">
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer<span class="required">*</span></label>
                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">

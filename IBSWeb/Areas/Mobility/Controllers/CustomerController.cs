@@ -219,10 +219,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     #region -- getMobilityStation --
 
-                    var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
-
                     var getMobilityStation = await _dbContext.MobilityStations
-                                                .Where(s => s.StationCode == stationCode)
+                                                .Where(s => s.StationCode == stationCodeClaims)
                                                 .FirstOrDefaultAsync(cancellationToken);
 
                     #endregion -- getMobilityStation --
