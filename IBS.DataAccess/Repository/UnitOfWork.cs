@@ -196,7 +196,7 @@ namespace IBS.DataAccess.Repository
         public async Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
+                .OrderBy(s => s.StationCode)
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
                 {

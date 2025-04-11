@@ -829,7 +829,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
-        public async Task<IActionResult> Delivered(int? id, string deliveredDate, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delivered(int? id, DateOnly deliveredDate, CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -848,10 +848,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var receivingReportNo = await _unitOfWork.MobilityReceivingReport
-                    .AutoGenerateReceivingReport(existingRecord, DateOnly.Parse(deliveredDate), cancellationToken);
+                await _unitOfWork.MobilityReceivingReport
+                    .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
 
-                existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
+                existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
                 existingRecord.PostedBy = _userManager.GetUserName(User);
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -885,8 +885,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
 
-                TempData["success"] = "Product has been delivered" +
-                                      $"RR#{receivingReportNo} has been generated.";
+                TempData["success"] = "Product has been delivered";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)

@@ -76,7 +76,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     .Where(s =>
                         s.ReceivingReportNo.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
-                        s.FilprideDeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
@@ -181,7 +180,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         ReceivingReportNo = await _unitOfWork.MobilityReceivingReport.GenerateCodeAsync(stationCodeClaim, existingPo.Type, cancellationToken),
                         Date = viewModel.Date,
                         Remarks = viewModel.Remarks,
-                        DeliveryReceiptId = null,
                         StationCode = stationCodeClaim,
                         CreatedBy = _userManager.GetUserName(User),
                         GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
@@ -270,7 +268,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     ReceivingReportId = existingRecord.ReceivingReportId,
                     Date = existingRecord.Date,
                     Remarks = existingRecord.Remarks,
-                    DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
                     PurchaseOrderId = existingRecord.PurchaseOrderId,
                     ReceivedDate = existingRecord.ReceivedDate,

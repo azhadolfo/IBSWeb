@@ -428,11 +428,6 @@ namespace IBS.DataAccess.Data
             {
                 rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
                 rr.HasIndex(rr => rr.StationCode);
-
-                rr.HasOne(rr => rr.FilprideDeliveryReceipt)
-                .WithMany()
-                .HasForeignKey(rr => rr.DeliveryReceiptId)
-                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion
