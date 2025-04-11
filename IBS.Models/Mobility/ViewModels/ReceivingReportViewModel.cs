@@ -84,8 +84,6 @@ namespace IBS.Models.Mobility.ViewModels
 
         public DateOnly? ReceivedDate { get; set; }
 
-        public int? DeliveryReceiptId { get; set; }
-
         public List<SelectListItem>? DrList { get; set; }
 
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);

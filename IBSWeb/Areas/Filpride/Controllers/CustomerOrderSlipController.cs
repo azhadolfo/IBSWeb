@@ -1499,7 +1499,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var filprideProduct = await _dbContext.Products.FindAsync(productId);
             var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct.ProductCode, cancellationToken);
             var purchaseOrder = await _dbContext.MobilityPurchaseOrders
-                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode)
+                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode && p.PostedBy != null)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -1529,7 +1529,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            return Json(purchaseOrder);
+            return Json(new
+            {
+                purchaseOrder.Quantity,
+                purchaseOrder.UnitPrice,
+            });
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250411045054_ChangeTheColumnTypeOfStationCodeInMobilityStationModel")]
+    partial class ChangeTheColumnTypeOfStationCodeInMobilityStationModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -6790,6 +6793,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(255)")
                         .HasColumnName("cancellation_remarks");
 
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("created_by");
@@ -6801,6 +6809,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
+
+                    b.Property<int?>("DeliveryReceiptId")
+                        .HasColumnType("integer")
+                        .HasColumnName("delivery_receipt_id");
 
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("date")
@@ -6913,6 +6925,9 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("ReceivingReportId")
                         .HasName("pk_mobility_receiving_reports");
+
+                    b.HasIndex("DeliveryReceiptId")
+                        .HasDatabaseName("ix_mobility_receiving_reports_delivery_receipt_id");
 
                     b.HasIndex("PurchaseOrderId")
                         .HasDatabaseName("ix_mobility_receiving_reports_purchase_order_id");
@@ -8759,12 +8774,20 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityReceivingReport", b =>
                 {
+                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", "FilprideDeliveryReceipt")
+                        .WithMany()
+                        .HasForeignKey("DeliveryReceiptId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_receiving_reports_filpride_delivery_receipts_deliv");
+
                     b.HasOne("IBS.Models.Mobility.MobilityPurchaseOrder", "PurchaseOrder")
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_mobility_receiving_reports_mobility_purchase_orders_purchas");
+
+                    b.Navigation("FilprideDeliveryReceipt");
 
                     b.Navigation("PurchaseOrder");
                 });

@@ -27,15 +27,6 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; }
 
-        #region DR FILPRIDE
-
-        public int? DeliveryReceiptId { get; set; }
-
-        [ForeignKey(nameof(DeliveryReceiptId))]
-        public FilprideDeliveryReceipt? FilprideDeliveryReceipt { get; set; }
-
-        #endregion DR FILPRIDE
-
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly DueDate { get; set; }
@@ -106,8 +97,6 @@ namespace IBS.Models.Mobility
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal CanceledQuantity { get; set; }
-
-        public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
