@@ -831,6 +831,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         public async Task<IActionResult> Delivered(int? id, DateOnly deliveredDate, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (id == null)
             {
                 return NotFound();
@@ -848,8 +850,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                await _unitOfWork.MobilityReceivingReport
-                    .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
+                if (companyClaims == nameof(Filpride))
+                {
+                    await _unitOfWork.MobilityReceivingReport
+                        .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
+                }
 
                 existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
