@@ -317,6 +317,72 @@ namespace IBSWeb.Areas.Bienes.Controllers
             }
         }
 
+        public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                return View(existingRecord);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to preview. Error: {ErrorMessage}, Stack: {StackTrace}. Previewed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> Post(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                existingRecord.PostedBy = User.Identity.Name;
+                existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Status = nameof(PlacementStatus.Posted);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                TempData["success"] = "Placement posted successfully.";
+                return RedirectToAction(nameof(Preview), new { id });
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to post delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetBankBranchById(int bankId)
         {
