@@ -35,7 +35,7 @@ namespace IBS.Services
 
             try
             {
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var today = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
 
                 var cosList = await _dbContext.FilprideCustomerOrderSlips
                     .Where(cos => cos.Date.AddDays(3) <= today &&

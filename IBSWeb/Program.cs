@@ -97,10 +97,12 @@ builder.Services.AddQuartz(q =>
 
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
+    var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));
 
     ///TODO Register the job for COS Expiration
 
     q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
+    q.AddJob<LockPlacementService>(options => options.WithIdentity(dailyPlacementLockKey));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -111,6 +113,14 @@ builder.Services.AddQuartz(q =>
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+
+    q.AddTrigger(opts => opts
+        .ForJob(dailyPlacementLockKey)
+        .WithIdentity("DailyPlacementTrigger")
+        .WithCronSchedule("0 47 13 * * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                .FindSystemTimeZoneById("Asia/Manila"))));
 });
 
 
