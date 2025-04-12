@@ -91,6 +91,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
             existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
+            existingSupplier.IsFilpride = model.IsFilpride;
+            existingSupplier.IsMobility = model.IsMobility;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {

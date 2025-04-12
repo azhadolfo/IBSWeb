@@ -142,6 +142,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.AccountName = model.AccountName;
                     existingModel.Bank = model.Bank;
                     existingModel.Branch = model.Branch;
+                    existingModel.IsFilpride = model.IsFilpride;
+                    existingModel.IsMobility = model.IsMobility;
 
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
