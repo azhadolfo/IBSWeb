@@ -94,7 +94,6 @@
             <th class="px-3">Cost Per Liter</th>
             <th class="px-3">Cost Amount</th>
             <th class="px-3">Vat Amount</th>
-            <th class="px-3">Def Vat Amount</th>
             <th class="px-3">WHT Amount</th>
             <th class="px-3">Net Purchases</th>
             <th class="px-3">Hauler Name</th>
@@ -131,10 +130,9 @@
                 <td class="px-3"> @rr.DeliveryReceipt?.Customer?.CustomerName </td> @* Customer Name *@
                 <td class="px-3"> @rr.PurchaseOrder?.Product?.ProductName </td> @* Product *@
                 <td class="px-3"> @volume.ToString(SD.Two_Decimal_Format) </td> @* Volume *@
-                <td class="px-3"> @costPerLiter.ToString(SD.Four_Decimal_Format)) </td> @* Cost/Liter *@
+                <td class="px-3"> @costPerLiter.ToString(SD.Four_Decimal_Format) </td> @* Cost/Liter *@
                 <td class="px-3"> @((costAmountGross).ToString(SD.Two_Decimal_Format)) </td> @* Cost Amount *@
                 <td class="px-3"> @((costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format)) </td> @* VAT Amount??? *@
-                <td class="px-3"></td> @* Def VAT Amount *@
                 <td class="px-3"> @((costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format)) </td> @* WHT Amount??? *@
                 <td class="px-3"> @(costAmountNet.ToString(SD.Two_Decimal_Format)) </td> @* Net Purchases *@
                 <td class="px-3"> @rr.DeliveryReceipt?.Hauler?.SupplierName </td> @* Hauler Name *@
@@ -172,12 +170,12 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
             <td class="text-start px-3"><b>TOTAL:</b></td>
             <td class="text-start px-3">@totalVolume.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-start px-3">@totalCostPerLiter.ToString(SD.Four_Decimal_Format)</td>
             <td class="text-start px-3">@totalCostAmount.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-start px-3">@totalVatAmount.ToString(SD.Two_Decimal_Format)</td>
-            <td></td>
             <td class="text-start px-3">@totalWHTAmount.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-start px-3">@totalNetPurchases.ToString(SD.Two_Decimal_Format)</td>
             <td></td>

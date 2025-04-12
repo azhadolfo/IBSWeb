@@ -312,52 +312,71 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var checkVoucherHeader = _db.FilprideCheckVoucherHeaders
+            var checkVoucherHeader = await _db.FilprideCheckVoucherHeaders
                 .Where(cd =>
                     cd.Company == company && cd.DcrDate >= dateFrom && cd.DcrDate <= dateTo &&
                     cd.Status == nameof(Status.Posted) &&
                     cd.CvType != nameof(CVType.Invoicing))
                 .Include(cd => cd.BankAccount)
                 .OrderBy(cd => cd.Date)
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             return checkVoucherHeader;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetPurchaseReport (DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, string dateSelectionType = "RRDate", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var receivingReports = await _db.FilprideReceivingReports
+             // Base query without date filter yet
+            var receivingReportsQuery = _db.FilprideReceivingReports
                 .Where(rr => rr.Company == company
-                             && rr.SupplierInvoiceDate >= dateFrom
-                             && rr.SupplierInvoiceDate <= dateTo
-                             && rr.Status == nameof(Status.Posted))
+                            && rr.Status == nameof(Status.Posted)
+                            && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt.CustomerId)));
+
+            // Apply date filter based on dateSelectionType
+            if (dateSelectionType == "RRDate")
+            {
+                // Filter by Receiving Report Date (original behavior)
+                receivingReportsQuery = receivingReportsQuery
+                    .Where(rr => rr.Date >= dateFrom && rr.Date <= dateTo);
+            }
+            else if (dateSelectionType == "SupplierSIDate")
+            {
+                // Filter by Supplier Invoice/SI Date instead
+                receivingReportsQuery = receivingReportsQuery
+                    .Where(rr => rr.SupplierInvoiceDate >= dateFrom
+                              && rr.SupplierInvoiceDate <= dateTo);
+            }
+
+            // Include necessary related entities
+            var receivingReports = await receivingReportsQuery
                 .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Supplier)
+                    .ThenInclude(po => po.Supplier)
                 .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(po => po.Product)
+                    .ThenInclude(po => po.Product)
                 .Include(rr => rr.DeliveryReceipt)
-                .ThenInclude(dr => dr.CustomerOrderSlip)
-                .ThenInclude(cos => cos.PickUpPoint)
+                    .ThenInclude(dr => dr.CustomerOrderSlip)
+                        .ThenInclude(cos => cos.PickUpPoint)
                 .Include(rr => rr.DeliveryReceipt)
-                .ThenInclude(dr => dr.CustomerOrderSlip)
-                .ThenInclude(cos => cos.Commissionee)
+                    .ThenInclude(dr => dr.CustomerOrderSlip)
+                        .ThenInclude(cos => cos.Commissionee)
                 .Include(rr => rr.DeliveryReceipt)
-                .ThenInclude(dr => dr.Customer)
+                    .ThenInclude(dr => dr.Customer)
                 .Include(rr => rr.DeliveryReceipt)
-                .ThenInclude(dr => dr.Hauler)
+                    .ThenInclude(dr => dr.Hauler)
                 .ToListAsync(cancellationToken);
 
+            // For the additional delivery receipts part, apply similar date filtering logic
+            var additionalDeliveryReceiptsQuery = _db.FilprideDeliveryReceipts
+                .Where(dr => dr.Date >= dateFrom && dr.Date <= dateTo
+                          && dr.Status == nameof(DRStatus.PendingDelivery)
+                          && (customerIds == null || customerIds.Contains(dr.CustomerId)));
 
-            // Add DeliveryReceipts that are in the date range but not yet delivered
-            var additionalDeliveryReceipts = await _db.FilprideDeliveryReceipts
-                .Where(dr => dr.Date >= dateFrom
-                             && dr.Date <= dateTo
-                             && dr.Status == nameof(DRStatus.PendingDelivery))
+            var additionalDeliveryReceipts = await additionalDeliveryReceiptsQuery
                 .Include(dr => dr.CustomerOrderSlip)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler)

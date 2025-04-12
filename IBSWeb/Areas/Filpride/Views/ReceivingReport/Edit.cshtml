@@ -86,22 +86,11 @@
                     <label asp-for="SupplierInvoiceNumber">SI#</label>
                     <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
                 </div>
-                @if (Model.SupplierInvoiceDate == null)
-                {
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                        <label asp-for="SupplierInvoiceDate">SI / Lifting Date</label>
-                        <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
-                    </div>
-                }
-                else
-                {
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
-                        <label asp-for="SupplierInvoiceDate">SI / Lifting Date</label>
-                        <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
-                    </div>
-                }
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
+                    <label asp-for="SupplierInvoiceDate">SI / Lifting Date</label>
+                    <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
+                </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="SupplierDrNo">DR#</label>

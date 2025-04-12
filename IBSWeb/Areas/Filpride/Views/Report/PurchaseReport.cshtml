@@ -17,14 +17,30 @@
     <div class="card-body p-4">
         <form id="dynamicForm" method="post">
             <div class="row">
+                <!-- Date Selection Criteria -->
+                <div class="mb-3">
+                    <label asp-for="DateSelectionType" class="control-label">Date Selection Based On</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="DateSelectionType" id="rrDate" value="RRDate" checked>
+                        <label class="form-check-label" for="rrDate">
+                            RR Date
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" asp-for="DateSelectionType" id="supplierSiDate" value="SupplierSIDate">
+                        <label class="form-check-label" for="supplierSiDate">
+                            Supplier SI/Date
+                        </label>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label asp-for="DateFrom" class="control-label"></label>
-                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <input type="date" asp-for="DateFrom" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="DateFrom" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="DateTo" class="control-label"></label>
-                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
+                    <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">
