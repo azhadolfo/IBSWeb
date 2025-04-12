@@ -110,6 +110,8 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             //PENDING process the method here
 
+            await UpdatePOAsync(receivingReport.PurchaseOrder.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
+
             await _db.SaveChangesAsync(cancellationToken);
         }
 
@@ -345,7 +347,7 @@ namespace IBS.DataAccess.Repository.Mobility
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
-            //await PostAsync(model, cancellationToken);
+            await PostAsync(model, cancellationToken);
         }
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
@@ -368,6 +370,33 @@ namespace IBS.DataAccess.Repository.Mobility
                 }
 
                 return await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new ArgumentException("No record found.");
+            }
+        }
+
+        public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        {
+            var po = await _db.MobilityPurchaseOrders
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+
+            if (po != null)
+            {
+                po.QuantityReceived += quantityReceived;
+
+                if (po.QuantityReceived == po.Quantity)
+                {
+                    po.IsReceived = true;
+                    po.ReceivedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                    await _db.SaveChangesAsync(cancellationToken);
+                }
+                if (po.QuantityReceived > po.Quantity)
+                {
+                    throw new ArgumentException("Input is exceed to remaining quantity received");
+                }
             }
             else
             {
