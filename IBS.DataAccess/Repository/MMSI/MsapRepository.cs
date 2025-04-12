@@ -268,7 +268,11 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<MMSIBilling> ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
         {
             // Splitting the address for the view
-            string[] words = model.Customer.CustomerAddress.Split(' ');
+            string[]? words = null;
+            if (model.PrincipalId != null)
+            {
+                words = model.Principal?.Address?.Split(' ');
+            }
             List<string> resultStrings = new List<string>();
             string currentString = "";
 

@@ -49,36 +49,72 @@
         </tbody>
         </table>
         <table class="table table-borderless">
-            <tbody>
-            <tr>
-                <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
-                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Customer?.CustomerName</b></td>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-2 p-0 m-0"><b>DATE:</b></td>
-                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
-            </tr>
-            <tr>
-                <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
-                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-2 p-0 m-0"><b>TIN:</b></td>
-                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTIN</td>
-            </tr>
-            <tr>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
-                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerBusinessStyle</td>
-            </tr>
-            <tr>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
-                <td class="col-1 p-0 m-0"></td>
-                <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
-                <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTerms</td>
-            </tr>
-            </tbody>
+            @if (Model.PrincipalId != null)
+            {
+                <tbody>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Principal?.PrincipalName</b></td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>DATE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TIN:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.TIN</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.BusinessType</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.Terms</td>
+                </tr>
+                </tbody>
+            }
+            else
+            {
+                <tbody>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Customer?.CustomerName</b></td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>DATE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TIN:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer?.CustomerTIN</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerBusinessStyle</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTerms</td>
+                </tr>
+                </tbody>
+            }
         </table>
     </div>
     

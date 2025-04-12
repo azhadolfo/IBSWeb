@@ -386,11 +386,12 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIBillings
-                .Where(a => a.MMSIBillingId == id)
-                .Include(a => a.Terminal)
+                .Where(b => b.MMSIBillingId == id)
+                .Include(b => b.Terminal)
                 .ThenInclude(t => t.Port)
-                .Include(a => a.Vessel)
-                .Include(a => a.Customer)
+                .Include(b => b.Vessel)
+                .Include(b => b.Customer)
+                .Include(b => b.Principal)
                 .FirstOrDefaultAsync(cancellationToken);
 
             // list of dispatch numbers(to be used in selectlist2, multiselect)
