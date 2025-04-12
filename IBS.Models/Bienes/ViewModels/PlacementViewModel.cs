@@ -75,5 +75,9 @@ namespace IBS.Models.Bienes.ViewModels
 
         public string? FrequencyOfPayment { get; set; }
 
+        public string BatchNumber { get; set; } = string.Empty;
+
+        public string CurrentUser { get; set; } = string.Empty;
+
     }
 }

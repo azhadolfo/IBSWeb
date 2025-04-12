@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250410091728_AddBatchNumberInBienesPlacementTable")]
+    partial class AddBatchNumberInBienesPlacementTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,15 +129,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(7,4)")
                         .HasColumnName("ewt_rate");
 
-                    b.Property<string>("EditedBy")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
                     b.Property<string>("FrequencyOfPayment")
                         .HasColumnType("varchar(20)")
                         .HasColumnName("frequency_of_payment");
@@ -213,11 +207,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("settlement_account_number");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("status");
 
                     b.Property<string>("TDAccountNumber")
                         .IsRequired()
