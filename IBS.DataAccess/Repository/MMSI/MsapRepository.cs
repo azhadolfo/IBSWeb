@@ -273,6 +273,10 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 words = model.Principal?.Address?.Split(' ');
             }
+            else
+            {
+                words = model.Customer?.CustomerAddress?.Split(' ');
+            }
             List<string> resultStrings = new List<string>();
             string currentString = "";
 
