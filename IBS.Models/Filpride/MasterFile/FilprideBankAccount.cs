@@ -28,5 +28,9 @@ namespace IBS.Models.Filpride.MasterFile
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         public string Company { get; set; } = string.Empty;
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
     }
 }
