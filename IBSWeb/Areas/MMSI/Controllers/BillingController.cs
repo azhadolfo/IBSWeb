@@ -258,6 +258,7 @@ namespace IBSWeb.Areas.MMSI
                     if (currentModel.PortId != model.PortId) { changes.Add($"PortId: {currentModel.PortId} -> {model.PortId}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                    if (currentModel.IsVatable != model.IsVatable) { changes.Add($"IsVatable: {currentModel.IsVatable} -> {model.IsVatable}"); }
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
                     { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", currentModel.ToBillDispatchTickets)} -> #{string.Join(", #", model.ToBillDispatchTickets)}"); }
 
@@ -291,6 +292,7 @@ namespace IBSWeb.Areas.MMSI
                     currentModel.TerminalId = model.TerminalId;
                     currentModel.VesselId = model.VesselId;
                     currentModel.IsUndocumented = model.IsUndocumented;
+                    currentModel.IsVatable = model.IsVatable;
 
                     // get billed by current billing select list
                     var unbilledDT = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken);
