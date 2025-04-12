@@ -19,6 +19,8 @@ namespace IBS.Models.MMSI
 
         public bool IsUndocumented { get; set; } = default;
 
+        public bool IsVatable { get; set; } = default;
+
         public string? VoyageNumber { get; set; }
 
         public decimal Amount { get; set; }

@@ -152,7 +152,7 @@
                                 <div class="row">
                                     <div id="SelectDiv" class="form-group col-12 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
                                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                                        <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" velue="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                        <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                                             <option value="">Select Principal</option>
                                         </select>
                                         <span asp-validation-for="PrincipalId" class="text-danger"></span>
@@ -303,16 +303,19 @@
                 console.log("use principal: checked");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
+                const $principal = $("#PrincipalSelect");
                 const customerId = $("#CustomerId").val();
 
                 if ($checkbox.is(":checked")) {
+                    $principal.val("");
                     fetchPrincipals(customerId);
                     $selectDiv.removeClass("d-none");
-                    $selectDiv.prop("required", true);
+                    $principal.prop("required", true);
                 } else {
+                    $principal.val("");
                     fillDataOnStartup();
                     $selectDiv.addClass("d-none");
-                    $selectDiv.prop("required", false);
+                    $principal.prop("required", false);
                 }
             }
 
