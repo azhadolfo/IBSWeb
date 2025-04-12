@@ -163,7 +163,8 @@
                         
                         if (row.status === "@nameof(PlacementStatus.Unposted)") {
                             actions += `
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Placement", new { area = "Bienes" })/${data}">Edit</a></li>`;
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Placement", new { area = "Bienes" })/${data}">Edit</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Preview", "Placement", new { area = "Bienes" })/${data}">Preview</a></li>`;
                         }
 
                         actions += `</ul></div>`;

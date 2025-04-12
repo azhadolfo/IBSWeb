@@ -1,0 +1,176 @@
+﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
+@model BienesPlacement
+
+@{
+    ViewData["Title"] = "Placement Details";
+
+    var trustFeeRate = Model.TrustFeeRate * 100;
+    var ewtRate = Model.EWTRate * 100;
+
+    var termValue = (Model.DateTo.ToDateTime(TimeOnly.MinValue) - Model.DateFrom.ToDateTime(TimeOnly.MinValue)).Days;
+    var trustFee = Model.PrincipalAmount * Model.TrustFeeRate;
+    var interest = Model.PlacementType != PlacementType.LongTerm ?
+    Model.PrincipalAmount * Model.InterestRate * (termValue / 360) :
+    Model.PrincipalAmount * Model.InterestRate;
+    var ewt = interest * Model.EWTRate;
+    var maturity = Model.PrincipalAmount + interest - ewt - trustFee;
+    var net = interest - ewt - trustFee;
+}
+
+<style>
+    .detail-label { font-weight: 600; color: #555; margin-right: 4px; font-size: 0.9rem; }
+    .detail-value { font-family: 'Segoe UI', Arial, sans-serif; font-size: 0.9rem; }
+    .card { margin-bottom: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: none; }
+    .card-header { padding: 0.5rem 1rem; background-color: #f8f9fa; border-bottom: 1px solid #eee; }
+    .card-header h5 { margin: 0; font-size: 1rem; color: #343a40; }
+    .card-body { padding: 0.75rem 1rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .remarks-box { padding: 0.75rem; border: 1px solid #e9ecef; border-radius: 4px; background-color: #f8f9fa;
+        min-height: 60px; white-space: pre-line; font-size: 0.9rem; }
+    .compact-row > div { padding-right: 10px; }
+    .btn-slim { padding: 0.375rem 0.75rem; }
+
+    /* Print styles */
+    @@media print {
+        body { font-size: 10pt; color: #000; background: #fff; }
+        .container { width: 100%; max-width: 100%; padding: 0; margin: 0; }
+        .card { break-inside: avoid; border: 1px solid #ddd; margin-bottom: 0.5rem; }
+        .card-body { padding: 0.5rem; }
+        .d-print-none { display: none !important; }
+        .detail-label { color: #000; }
+        .card-header h5 { color: #000; }
+        hr { border-color: #333; margin: 0.5rem 0; }
+        .page-header { margin-bottom: 0.5rem; }
+    }
+</style>
+
+<div class="container mt-3">
+    <div class="row mb-2 page-header">
+        <div class="col-12 text-center">
+            <h3 class="fw-bold mb-0">Placement Details</h3>
+            <hr class="mb-2" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row compact-row">
+                        <div class="col-6 mb-1"><span class="detail-label">Company:</span> <span class="detail-value">@Model.Company.CompanyName</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Bank:</span> <span class="detail-value">@Model.Bank</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Type:</span> <span class="detail-value">@Model.PlacementType.ToString()</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Branch:</span> <span class="detail-value">@Model.Branch</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Account Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row compact-row">
+                        <div class="col-6 mb-1"><span class="detail-label">TD Account:</span> <span class="detail-value">@Model.TDAccountNumber</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Account Name:</span> <span class="detail-value">@Model.AccountName</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Settlement:</span> <span class="detail-value">@Model.SettlementAccountNumber</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Term Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row compact-row">
+                        <div class="col-4 mb-1"><span class="detail-label">From:</span> <span class="detail-value">@Model.DateFrom.ToString(SD.Date_Format)</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">To:</span> <span class="detail-value">@Model.DateTo.ToString(SD.Date_Format)</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">Term:</span> <span class="detail-value">@termValue days</span></div>
+
+                        @if (Model.PlacementType == PlacementType.LongTerm)
+                        {
+                            <div class="col-6 mb-1"><span class="detail-label">Years:</span> <span class="detail-value">@Model.NumberOfYears</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Payment Frequency:</span> <span class="detail-value">@Model.FrequencyOfPayment</span></div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Reference Numbers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row compact-row">
+                        <div class="col-6 mb-1"><span class="detail-label">Control Number:</span> <span class="detail-value">@Model.ControlNumber</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Created Date:</span> <span class="detail-value">@Model.CreatedDate.ToString(SD.Date_Format)</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">Cheque:</span> <span class="detail-value">@Model.ChequeNumber</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">CV No:</span> <span class="detail-value">@Model.CVNo</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">Batch:</span> <span class="detail-value">@Model.BatchNumber</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Financial Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row compact-row">
+                        <div class="col-6 mb-1"><span class="detail-label">Principal:</span> <span class="detail-value">₱@Model.PrincipalAmount.ToString(SD.Two_Decimal_Format)</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Interest Rate:</span> <span class="detail-value">@Model.InterestRate.ToString(SD.Two_Decimal_Format)%</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Maturity Value:</span> <span class="detail-value">₱@maturity.ToString(SD.Two_Decimal_Format)</span></div>
+                        <div class="col-6 mb-1"><span class="detail-label">Principal Disposition:</span> <span class="detail-value">@Model.PrincipalDisposition</span></div>
+
+                        <div class="col-12"><hr class="my-2"></div>
+
+                        <div class="col-4 mb-1"><span class="detail-label">Earned (Gross):</span> <span class="detail-value">₱@interest.ToString(SD.Two_Decimal_Format)</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">EWT Rate:</span> <span class="detail-value">@(Model.HasEWT ? $"{ewtRate.ToString("N4")}%" : "N/A")</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">EWT Amount:</span> <span class="detail-value">₱@ewt.ToString(SD.Two_Decimal_Format)</span></div>
+                        
+
+                        <div class="col-4 mb-1"><span class="detail-label">Trust Fee Rate:</span> <span class="detail-value">@(Model.HasTrustFee ? $"{trustFeeRate.ToString("N8")}%" : "N/A")</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">Trust Fee Amount:</span> <span class="detail-value">₱@trustFee.ToString(SD.Two_Decimal_Format)</span></div>
+                        <div class="col-4 mb-1"><span class="detail-label">Net:</span> <span class="detail-value">₱@net.ToString(SD.Two_Decimal_Format)</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Remarks</h5>
+                </div>
+                <div class="card-body">
+                    <div class="remarks-box">@Model.Remarks</div>
+                </div>
+            </div>
+
+            <div class="d-print-none mt-3">
+                <div class="row">
+                    <div class="col-6">
+                        @if (Model.Status == nameof(PlacementStatus.Unposted))
+                        {
+                            <a asp-area="Bienes" asp-controller="Placement" asp-action="Post" asp-route-id="@Model.PlacementId" class="btn btn-success form-control buttons">Post</a>
+                        }
+                        else
+                        {
+                            <button onclick="window.print()" class="btn btn-primary btn-slim w-100">
+                                <i class="bi bi-printer"></i> Print
+                            </button>
+                        }
+                    </div>
+                    <div class="col-6">
+                        <a asp-area="Bienes" asp-controller="Placement" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
