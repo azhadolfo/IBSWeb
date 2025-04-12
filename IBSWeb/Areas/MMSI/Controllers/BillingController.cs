@@ -44,8 +44,7 @@ namespace IBSWeb.Areas.MMSI
             {
                 Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken),
                 Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
-                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
-                UnbilledDispatchTickets = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken)
+                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken)
             };
 
             return View(model);
@@ -491,6 +490,24 @@ namespace IBSWeb.Areas.MMSI
             }).ToList();
 
             return principalsList;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDispatchTicketsByCustomer (string customerId, CancellationToken cancellationToken)
+        {
+            var dispatchTickets = await _db
+                .MMSIDispatchTickets
+                .Where(t => t.CustomerId == int.Parse(customerId) && t.Status == "For Billing")
+                .OrderBy(t => t.DispatchNumber)
+                .ToListAsync(cancellationToken);
+
+            var principalsList = dispatchTickets.Select(t => new SelectListItem
+            {
+                Value = t.DispatchTicketId.ToString(),
+                Text = t.DispatchNumber
+            }).ToList();
+
+            return Json(principalsList);
         }
     }
 }
