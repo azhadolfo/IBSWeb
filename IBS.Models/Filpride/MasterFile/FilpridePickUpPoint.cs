@@ -33,5 +33,9 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
     }
 }

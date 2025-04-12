@@ -111,5 +111,9 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Zip Code")]
         [Column(TypeName = "varchar(10)")]
         public string? ZipCode { get; set; }
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
     }
 }
