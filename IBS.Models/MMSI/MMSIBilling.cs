@@ -17,7 +17,7 @@ namespace IBS.Models.MMSI
 
         public string? Status {  get; set; }
 
-        public bool IsDocumented { get; set; } = default;
+        public bool IsUndocumented { get; set; } = default;
 
         public string? VoyageNumber { get; set; }
 

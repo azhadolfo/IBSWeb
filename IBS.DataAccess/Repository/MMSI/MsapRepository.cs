@@ -230,9 +230,9 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<string> GenerateBillingNumber (CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSIBillings
-                .Where(b => b.IsDocumented == false && b.MMSIBillingNumber != null)
+                .Where(b => b.IsUndocumented == true && b.MMSIBillingNumber != null)
                 .OrderByDescending(b => b.MMSIBillingNumber)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             if(lastRecord == null)
             {

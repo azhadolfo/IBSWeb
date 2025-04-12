@@ -89,20 +89,20 @@
                 </div>
                 <div class="row">
                     <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
-                        <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
-                            Documented
+                        <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
+                            Undocumented
                         </label>
-                    </div>
-                    <div class="form-floating col-3 mb-2">
-                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
-                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 mb-2">
                         <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
                         <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3 mb-2">
+                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 mb-2">
                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
@@ -265,7 +265,7 @@
             }
 
             function setupEventListeners() {
-                $("#isDocumentedCheckbox").on("change", handleCheckboxChange);
+                $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
                 $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
                 $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
                 $("#CustomerId").on("change", handleCustomerChange);
@@ -275,16 +275,16 @@
 
             function handleCheckboxChange() {
                 console.log("documented/undoc: changed");
-                const $checkbox = $("#isDocumentedCheckbox");
+                const $checkbox = $("#isUndocumentedCheckbox");
                 const $inputField = $("#billingNumber");
                 const $status = $("#status");
 
                 if ($checkbox.is(":checked")) {
-                    $status.html("Billing Number<span class=\"required text-danger\">*</span>");
-                    $inputField.prop("required", true).prop("disabled", false);
-                } else {
                     $status.text("Undocumented");
                     $inputField.prop("required", false).prop("disabled", true);
+                } else {
+                    $status.html("Billing Number<span class=\"required text-danger\">*</span>");
+                    $inputField.prop("required", true).prop("disabled", false);
                 }
             }
 

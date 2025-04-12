@@ -63,7 +63,7 @@ namespace IBSWeb.Areas.MMSI
                     var datetimeNow = DateTime.Now;
                     model.CreatedDate = datetimeNow;
 
-                    if (!model.IsDocumented)
+                    if (model.IsUndocumented)
                     {
                         model.MMSIBillingNumber = await _unitOfWork.Msap.GenerateBillingNumber(cancellationToken);
                     }
@@ -205,32 +205,43 @@ namespace IBSWeb.Areas.MMSI
                     // get previous version
                     var currentModel = await _db.MMSIBillings.FindAsync(model.MMSIBillingId, cancellationToken);
 
-                    if(model.IsDocumented != null)
+                    // handle what to do if isUndoc value exists
+                    if(model.IsUndocumented != null)
                     {
-                        if (model.IsDocumented)
+                        // if new value is undoc:
+                        if (model.IsUndocumented)
                         {
-                            // overwrite if there's new
+                            // and previous value is doc
+                            if (!currentModel.IsUndocumented)
+                            {
+                                // replace with new generated
+                                currentModel.MMSIBillingNumber = await _unitOfWork.Msap.GenerateBillingNumber(cancellationToken);
+                            }
+                            else
+                            {
+                                // if was already undoc, maintain the old generated
+                                model.MMSIBillingNumber = currentModel.MMSIBillingNumber;
+                            }
+                        }
+                        // if new is documented
+                        if (!model.IsUndocumented)
+                        {
+                            // replace it with new regardless of past type
                             currentModel.MMSIBillingNumber = model.MMSIBillingNumber;
-                        }
-                        if (!model.IsDocumented && !currentModel.IsDocumented)
-                        {
-                            model.MMSIBillingNumber = currentModel.MMSIBillingNumber;
-                        }
-                        if (!model.IsDocumented && currentModel.IsDocumented)
-                        {
-                            // if the old is doc but now is undoc, generate
-                            currentModel.MMSIBillingNumber = await _unitOfWork.Msap.GenerateBillingNumber(cancellationToken);
                         }
                     }
 
-                    //empty string list
+                    // empty list of string
                     List<string> idsOfBilledTickets = null;
-                    //get dt billed by current billing
+
+                    // get dt billed by this billing
                     var tempModel = await _db.MMSIDispatchTickets
                         .Where(d => d.BillingId == model.MMSIBillingId.ToString())
                         .ToListAsync(cancellationToken);
-                    //from tempmodel, select the id=>string and list it
+
+                    // from dts billed, select the id=>string and list it
                     idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
+
                     //put the dt billed to its model container
                     currentModel.ToBillDispatchTickets = idsOfBilledTickets;
 
@@ -238,7 +249,7 @@ namespace IBSWeb.Areas.MMSI
 
                     var changes = new List<string>();
 
-                    if (currentModel.IsDocumented != model.IsDocumented) { changes.Add($"IsDocumented: {currentModel.IsDocumented} -> {model.IsDocumented}"); }
+                    if (currentModel.IsUndocumented != model.IsUndocumented) { changes.Add($"IsUndocumented: {currentModel.IsUndocumented} -> {model.IsUndocumented}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.MMSIBillingNumber != model.MMSIBillingNumber) { changes.Add($"MMSIBillingNumber: {currentModel.MMSIBillingNumber} -> {model.MMSIBillingNumber}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
@@ -279,7 +290,7 @@ namespace IBSWeb.Areas.MMSI
                     currentModel.PortId = model.PortId;
                     currentModel.TerminalId = model.TerminalId;
                     currentModel.VesselId = model.VesselId;
-                    currentModel.IsDocumented = model.IsDocumented;
+                    currentModel.IsUndocumented = model.IsUndocumented;
 
                     // get billed by current billing select list
                     var unbilledDT = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken);
