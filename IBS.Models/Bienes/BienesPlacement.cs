@@ -125,5 +125,16 @@ namespace IBS.Models.Bienes
         public string TDAccountNumber { get; set; }
 
         public bool IsPosted { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string BatchNumber { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string Status { get; set; } = nameof(PlacementStatus.Unposted);
+
+        [Column(TypeName = "varchar(50)")]
+        public string EditedBy { get; set; } = string.Empty;
+
+        public DateTime? EditedDate { get; set; }
     }
 }

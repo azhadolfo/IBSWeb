@@ -1,3 +1,4 @@
+@using IBS.Utility.Enums
 @model IEnumerable<BienesPlacement>
 
 @{
@@ -139,10 +140,11 @@
                 {
                     "data": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.isPosted ? "bg-info" : "bg-warning";
-                        var status = row.isPosted ? "Posted" : "Unposted";
+                        var statusClass = row.status === "@nameof(PlacementStatus.Posted)" ? "bg-info" :
+                                          row.status === "@nameof(PlacementStatus.Locked)" ? "bg-warning" :
+                                          row.status === "@nameof(PlacementStatus.Terminated)" ? "bg-danger" : "";
 
-                        return `<span class="badge rounded-pill ${statusClass}">${status}</span>`;
+                        return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                     }
                 },
                 {
@@ -158,6 +160,11 @@
                                         <i class="bi bi-three-dots"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
+                        
+                        if (row.status === "@nameof(PlacementStatus.Unposted)") {
+                            actions += `
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Placement", new { area = "Bienes" })/${data}">Edit</a></li>`;
+                        }
 
                         actions += `</ul></div>`;
                         return actions;

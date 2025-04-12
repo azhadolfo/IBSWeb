@@ -173,6 +173,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     Remarks = viewModel.Remarks,
                     ChequeNumber = viewModel.ChequeNumber,
                     CVNo = viewModel.CVNo,
+                    BatchNumber = viewModel.BatchNumber,
                     PrincipalAmount = viewModel.PrincipalAmount,
                     PrincipalDisposition = viewModel.PrincipalDisposition,
                     PlacementType = viewModel.PlacementType,
@@ -183,6 +184,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     TrustFeeRate = viewModel.TrustFeeRate / 100,
                     CreatedBy = User.Identity.Name,
                     LockedDate = viewModel.ToDate.AddDays(2).ToDateTime(TimeOnly.MinValue),
+
                 };
 
                 if (model.PlacementType == PlacementType.LongTerm)
@@ -200,7 +202,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
-                TempData["success"] = "Placement created successfully.";
+                TempData["success"] = $"Placement was successfully created. Control Number: {model.ControlNumber}.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -216,6 +218,104 @@ namespace IBSWeb.Areas.Bienes.Controllers
             }
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return BadRequest();
+                }
+
+                PlacementViewModel viewModel = new()
+                {
+                    PlacementId = existingRecord.PlacementId,
+                    Companies = await GetCompanies(cancellationToken),
+                    BankAccounts = await GetBanks(cancellationToken),
+                    CompanyId = existingRecord.CompanyId,
+                    BankId = existingRecord.BankId,
+                    Bank = existingRecord.Bank,
+                    Branch = existingRecord.Branch,
+                    TDAccountNumber = existingRecord.TDAccountNumber,
+                    AccountName = existingRecord.AccountName,
+                    SettlementAccountNumber = existingRecord.SettlementAccountNumber,
+                    FromDate = existingRecord.DateFrom,
+                    ToDate = existingRecord.DateTo,
+                    Remarks = existingRecord.Remarks,
+                    ChequeNumber = existingRecord.ChequeNumber,
+                    CVNo = existingRecord.CVNo,
+                    BatchNumber = existingRecord.BatchNumber,
+                    PrincipalAmount = existingRecord.PrincipalAmount,
+                    PrincipalDisposition = existingRecord.PrincipalDisposition,
+                    PlacementType = existingRecord.PlacementType,
+                    InterestRate = existingRecord.InterestRate * 100,
+                    HasEwt = existingRecord.HasEWT,
+                    EWTRate = existingRecord.EWTRate * 100,
+                    HasTrustFee = existingRecord.HasTrustFee,
+                    TrustFeeRate = existingRecord.TrustFeeRate * 100,
+                    NumberOfYears = existingRecord.NumberOfYears,
+                    FrequencyOfPayment = existingRecord.FrequencyOfPayment,
+                };
+
+                return View(viewModel);
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch placement. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(PlacementViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                viewModel.CurrentUser = User.Identity.Name;
+
+                await _unitOfWork.BienesPlacement.UpdateAsync(viewModel, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = "Placement updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to edit placement. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                await transaction.RollbackAsync(cancellationToken);
+                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                return View(viewModel);
+            }
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetBankBranchById(int bankId)

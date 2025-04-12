@@ -2,6 +2,10 @@ using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.Models.Bienes;
+using IBS.Models.Bienes.ViewModels;
+using IBS.Models.Filpride.Books;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Bienes
@@ -34,6 +38,57 @@ namespace IBS.DataAccess.Repository.Bienes
             int incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, company.CompanyName.Length) + "-" + incrementedNumber.ToString("D6");
+        }
+
+        public async Task UpdateAsync(PlacementViewModel viewModel, CancellationToken cancellationToken = default)
+        {
+            var existingRecord = await _db.BienesPlacements
+                .FirstOrDefaultAsync(p => p.PlacementId == viewModel.PlacementId, cancellationToken);
+
+            existingRecord!.CompanyId = viewModel.CompanyId;
+            existingRecord.BankId = viewModel.BankId;
+            existingRecord.Bank = viewModel.Bank;
+            existingRecord.Branch = viewModel.Branch;
+            existingRecord.TDAccountNumber = viewModel.TDAccountNumber;
+            existingRecord.AccountName = viewModel.AccountName;
+            existingRecord.SettlementAccountNumber = viewModel.SettlementAccountNumber;
+            existingRecord.DateFrom = viewModel.FromDate;
+            existingRecord.DateTo = viewModel.ToDate;
+            existingRecord.Remarks = viewModel.Remarks;
+            existingRecord.ChequeNumber = viewModel.ChequeNumber;
+            existingRecord.CVNo = viewModel.CVNo;
+            existingRecord.BatchNumber = viewModel.BatchNumber;
+            existingRecord.PrincipalAmount = viewModel.PrincipalAmount;
+            existingRecord.PrincipalDisposition = viewModel.PrincipalDisposition;
+            existingRecord.PlacementType = viewModel.PlacementType;
+            existingRecord.InterestRate = viewModel.InterestRate / 100;
+            existingRecord.HasEWT = viewModel.HasEwt;
+            existingRecord.EWTRate = viewModel.EWTRate / 100;
+            existingRecord.HasTrustFee = viewModel.HasTrustFee;
+            existingRecord.TrustFeeRate = viewModel.TrustFeeRate / 100;
+            existingRecord.LockedDate = viewModel.ToDate.AddDays(2).ToDateTime(TimeOnly.MinValue);
+
+            if (existingRecord.PlacementType == PlacementType.LongTerm)
+            {
+               existingRecord.NumberOfYears = viewModel.NumberOfYears;
+               existingRecord.FrequencyOfPayment = viewModel.FrequencyOfPayment;
+            }
+
+            if (_db.ChangeTracker.HasChanges())
+            {
+                existingRecord.EditedBy = viewModel.CurrentUser;
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit placement# {existingRecord.ControlNumber}", "Placement", "", nameof(Bienes));
+                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                throw new InvalidOperationException("No data changes!");
+            }
+
         }
 
         public override async Task<BienesPlacement> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
