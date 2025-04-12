@@ -33,6 +33,17 @@
                     </select>
                     <span asp-validation-for="SupplierId" class="text-danger"></span>
                 </div>
+                <label class="control-label">Please select where the record will be added:</label>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                    </label>
+                </div>
+                <div class="form-check pb-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                    </label>
+                </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Create</button>

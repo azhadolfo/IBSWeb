@@ -187,6 +187,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingModel.Name = services.Name;
                         existingModel.Percent = services.Percent;
+                        existingModel.IsFilpride = services.IsFilpride;
+                        existingModel.IsMobility = services.IsMobility;
                         TempData["success"] = "Services updated successfully";
 
                         await _dbContext.SaveChangesAsync(cancellationToken);

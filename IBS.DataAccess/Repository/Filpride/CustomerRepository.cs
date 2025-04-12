@@ -82,6 +82,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
             existingCustomer.ZipCode = model.ZipCode;
             existingCustomer.RetentionRate = model.RetentionRate;
+            existingCustomer.IsFilpride = model.IsFilpride;
+            existingCustomer.IsMobility = model.IsMobility;
 
             if (_db.ChangeTracker.HasChanges())
             {
