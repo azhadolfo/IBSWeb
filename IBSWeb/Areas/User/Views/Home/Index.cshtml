@@ -7,10 +7,12 @@
     var department = ViewBag.GetUserDepartment;
     ViewData["Title"] = "Dashboard";
     string? selectedCompany = string.Empty;
+    string? selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 }
 
@@ -27,7 +29,7 @@
             }
             else
             {
-                if (selectedCompany == "Filpride")
+                if (selectedCompany == "Filpride" || selectedCompany == "Mobility" && selectedStation == "S00")
                 {
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
