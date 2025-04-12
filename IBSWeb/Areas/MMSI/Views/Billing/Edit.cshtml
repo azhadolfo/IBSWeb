@@ -89,35 +89,31 @@
                 <div class="row pt-3">
                 </div>
                 <div class="row">
-                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
-                        <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
-                            Undocumented
-                        </label>
-                    </div>
-                    <div class="form-floating col-3 mb-2">
-                        <input asp-for="Date" type="date" class="form-control border-0 shadow">
-                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-3 mb-2">
+                    <div class="form-floating col-3 my-3">
                         <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
                         <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-3 mb-2">
+                    <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
+                        <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
+                            Undocumented
+                        </label>
+                    </div>
+                    <div class="col-3">
+
+                    </div>
+                    <div class="form-floating col-3 my-3">
                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
                         <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="row pt-2">
-                    <div class="form-group col-3 my-2">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span asp-validation-for="CustomerId" class="text-danger"></span>
+                <div class="row">
+                    <div class="form-floating col-3 my-2">
+                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-group col-3 my-2">
                         <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
@@ -141,24 +137,38 @@
                         <span asp-validation-for="VesselId" class="text-danger"></span>
                     </div>
                 </div>
-
-                <div id="PrincipalDiv" class="@(Model.Customer.HasPrincipal ? "row" : "d-none row")">
-
-                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-center">
-                        <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox">
-                            Use Principal
-                        </label>
-                    </div>
-
-                    <div id="SelectDiv" class="form-group col-3 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
-                        <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                        <select asp-for="PrincipalId" asp-items="@Model.CustomerPrincipal" id="PrincipalSelect" value="@Model.PrincipalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Principal</option>
+                <div class="row pt-2">
+                    <div class="form-group col-3 my-2">
+                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Customer</option>
                         </select>
-                        <span asp-validation-for="PrincipalId" class="text-danger"></span>
+                        <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
+                    <div class="col-6">
+                        <div id="PrincipalDiv" class="row @(Model.Customer.HasPrincipal ? "" : "d-none")">
 
+                            <div class="col-6" style="height: 72px;">
+                                <div class="row">
+                                    <div id="SelectDiv" class="form-group col-12 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
+                                        <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
+                                        <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" velue="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                            <option value="">Select Principal</option>
+                                        </select>
+                                        <span asp-validation-for="PrincipalId" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-check col-6 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
+                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
+                                <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox" style="font-size: 20px;">
+                                    Use Principal
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row pt-2">
