@@ -188,11 +188,28 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             List<SelectListItem> billingsList = await _dbContext.MMSIBillings
                 .Where(dt => dt.MMSICollectionId == collectionId)
-                .OrderBy(dt => dt.MMSIBillingNumber).Select(s => new SelectListItem
+                .OrderBy(dt => dt.MMSIBillingNumber).Select(b => new SelectListItem
                 {
-                    Value = s.MMSIBillingId.ToString(),
-                    Text = $"{s.MMSIBillingNumber} - {s.Customer.CustomerName}, {s.Date}"
+                    Value = b.MMSIBillingId.ToString(),
+                    Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
                 }).ToListAsync(cancellationToken);
+
+            return billingsList;
+        }
+
+        public async Task<List<SelectListItem>> GetMMSIBillingsByCustomer (int? customerId, CancellationToken cancellationToken)
+        {
+            var billings = await _dbContext
+                .MMSIBillings
+                .Where(t => t.CustomerId == customerId && t.Status == "For Collection")
+                .OrderBy(t => t.MMSIBillingNumber)
+                .ToListAsync(cancellationToken);
+
+            var billingsList = billings.Select(b => new SelectListItem
+            {
+                Value = b.MMSIBillingId.ToString(),
+                Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
+            }).ToList();
 
             return billingsList;
         }

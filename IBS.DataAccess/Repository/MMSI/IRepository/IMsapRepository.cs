@@ -33,6 +33,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>> GetMMSICompanyOwnerSelectListById(CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMMSIBillingsByCustomer(int? customerId, CancellationToken cancellationToken);
+
         Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default);
 
         Task<MMSIBilling> GetBillingLists(MMSIBilling model, CancellationToken cancellationToken = default);

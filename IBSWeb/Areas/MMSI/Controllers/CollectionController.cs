@@ -121,21 +121,17 @@ namespace IBSWeb.Areas.MMSI
         {
             var model = _dbContext.MMSICollections.Find(id);
 
+            // default contents of billing field from previous create
             model.ToCollectBillings = await _dbContext.MMSIBillings
                 .Where(b => b.MMSICollectionId == model.MMSICollectionId)
                 .Select(b => b.MMSIBillingId.ToString())
                 .ToListAsync(cancellationToken);
 
+            // selection of customers
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
-            // bills collected
-            model.Billings = await _unitOfWork.Msap.GetMMSICollectedBillsById(model.MMSICollectionId, cancellationToken);
-
-            // bills uncollected
-            var uncollectedBills = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
-
-            // add the uncollected to collected? this is assuming it will select from different customer
-            model.Billings.AddRange(uncollectedBills);
+            // selection of billings from previous create and current customer
+            model.Billings = await GetEditBillings(model.MMSICollectionId, model.CustomerId);
 
             return View(model);
         }
@@ -179,31 +175,6 @@ namespace IBSWeb.Areas.MMSI
                     }
 
                     var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
-
-                    // if(model.IsUndocumented != null)
-                    // {
-                    //     // if new is undoc
-                    //     if (model.IsUndocumented == true)
-                    //     {
-                    //         // and the old is also undoc
-                    //         if (currentModel.IsUndocumented == true)
-                    //         {
-                    //             // just apply the old number to the new
-                    //             model.CollectionNumber = currentModel.CollectionNumber;
-                    //         }
-                    //         // but if the old is documented
-                    //         else
-                    //         {
-                    //             // generate for the new
-                    //             model.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
-                    //         }
-                    //     }
-                    //     // but if new is documented
-                    //     else
-                    //     {
-                    //         // regardless of old number, replace the old with new, will assign it later
-                    //     }
-                    // }
 
                     #region -- Changes
 
@@ -357,22 +328,18 @@ namespace IBSWeb.Areas.MMSI
             return user.UserName;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetBillingsByCustomer (string customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>> GetEditBillings(int collectionId, int? customerId, CancellationToken cancellationToken = default)
         {
-            var billings = await _dbContext
-                .MMSIBillings
-                .Where(t => t.CustomerId == int.Parse(customerId) && t.Status == "For Collection")
-                .OrderBy(t => t.MMSIBillingNumber)
-                .ToListAsync(cancellationToken);
+            // bills collected by this collection
+            var currentBillings = await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken);
 
-            var billingsList = billings.Select(t => new SelectListItem
-            {
-                Value = t.MMSIBillingId.ToString(),
-                Text = t.MMSIBillingNumber
-            }).ToList();
+            // bills uncollected but with the same customers
+            var uncollectedBills = await _unitOfWork.Msap.GetMMSIBillingsByCustomer(customerId, cancellationToken);
 
-            return Json(billingsList);
+            // add the uncollected to collected
+            currentBillings.AddRange(uncollectedBills);
+
+            return currentBillings.ToList();
         }
     }
 }

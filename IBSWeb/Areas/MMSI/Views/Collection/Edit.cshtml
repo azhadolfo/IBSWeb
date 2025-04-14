@@ -34,7 +34,7 @@
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
                     <input asp-for="Status" value="Created" type="hidden"></input>
-                    <input asp-for="MMSICollectionId" value="@Model.MMSICollectionId" type="hidden"></input>
+                    <input asp-for="MMSICollectionId" value="@Model.MMSICollectionId" id="CollectionId" type="hidden"></input>
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
@@ -116,8 +116,8 @@
                             </div>
                             <div class="row my-2">
                                 <div class="form-group col-12">
-                                    <label class="control-label mb-2">Bill Paid</label>
-                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" required>
+                                    <label class="control-label mb-2">Bills Paid</label>
+                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" id="BillingsSelect" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" required>
                                     </select>
                                 </div>
                             </div>
@@ -165,133 +165,196 @@
 @section Scripts
 {
     <script>
-        
-        $(document).ready(function (){
+        $(document).ready(function () {
+            // State to prevent recursive loops
+            let isProcessing = false;
 
+            // Initialize Select2
             $('.js-example-basic-multiple').select2();
 
-            function calculateEWTDeduction() {
-                var originalAmount = document.getElementById("undeductedAmount").value;
-                var totalAmount = document.getElementById("amount").value;
-                var customerId = document.getElementById("customerId").value;
-                console.log("Amount debug:" + totalAmount);
-                console.log("CustomerId debug:" + customerId);
+            // Initialize DataTable
+            let table = initializeDataTable('#dataTable');
+
+            // Set up event listeners and initialize UI
+            setupEventListeners();
+            initialize();
+
+            // Initialize DataTable with consistent settings
+            function initializeDataTable(selector) {
+                if ($.fn.DataTable.isDataTable(selector)) {
+                    $(selector).DataTable().clear().destroy();
+                }
+                return $(selector).DataTable({
+                    paging: false,
+                    info: false,
+                    order: [[0, 'asc']],
+                    lengthChange: false,
+                    searching: false
+                });
+            }
+
+            // Set up all event listeners
+            function setupEventListeners() {
+                $('#isUndocumentedCheckbox').on('change', handleCheckboxChanged);
+                $('#customerId').on('change', handleCustomerChange);
+                $('.js-example-basic-multiple').on('change', debounce(handleBillSelectionChange, 100));
+            }
+
+            // Initialize UI state
+            function initialize() {
+                const selectedBills = $('.js-example-basic-multiple').val();
+                if (selectedBills && selectedBills.length > 0) {
+                    handleBillSelectionChange();
+                }
+                handleCheckboxChanged();
+            }
+
+            // Debounce function to limit rapid event triggers
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // Handle undocumented checkbox change
+            function handleCheckboxChanged() {
+                const $checkbox = $('#isUndocumentedCheckbox');
+                const $inputField = $('#collectionNumber');
+                const $status = $('#status');
+
+                if ($checkbox.is(':checked')) {
+                    $status.text('Undocumented');
+                    $inputField.prop({
+                        required: false,
+                        disabled: true
+                    });
+                } else {
+                    $status.html('Collection Number<span class="required text-danger">*</span>');
+                    $inputField.prop({
+                        required: true,
+                        disabled: false
+                    });
+                }
+            }
+
+            // Handle customer selection change
+            function handleCustomerChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const $billingsSelect = $('#BillingsSelect');
+                const customerId = $('#customerId').val();
+                const collectionId = $('#CollectionId').val();
 
                 $.ajax({
-                    url: '/MMSI/Collection/IsCustomerVatable',
+                    url: '/MMSI/Collection/GetEditBillings',
                     type: 'GET',
-                    data: { customerId : customerId },
-                    success: function(result) {
-                        console.log(result);
-                        if (result){
-                            var deductedAmount = originalAmount / 1.12;
-                            var ewt = originalAmount - deductedAmount;
-                            document.getElementById("amountShow").value = deductedAmount.toFixed(2);
-                            document.getElementById("amount").value = deductedAmount.toFixed(2);
-                            document.getElementById("ewt").value = ewt.toFixed(2);
-                            document.getElementById("ewtShow").value = ewt.toFixed(2);
-                        }
-                        else{
-                            document.getElementById("amountShow").value = document.getElementById("undeductedAmount").value;
-                            document.getElementById("amount").value = document.getElementById("undeductedAmount").value;
-                            document.getElementById("ewt").value = 0.00;
-                            document.getElementById("ewtShow").value = 0.00;
+                    data: {
+                        customerId: customerId,
+                        collectionId: collectionId
+                    },
+                    success: function (data) {
+                        $billingsSelect.empty();
+                        if (Array.isArray(data) && data.length > 0) {
+                            $.each(data, function (index, item) {
+                                $billingsSelect.append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
                         }
                     },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching billings:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
+                        calculateEWTDeduction();
                     }
                 });
             }
 
-            $('#customerId').on('change', function() {
-                calculateEWTDeduction();
-            });
-
-            document.getElementById("isUndocumentedCheckbox").addEventListener("change", checkboxChanged);
-
-            table = $('#dataTable').DataTable();
-            table.destroy();
-            table = $('#dataTable').DataTable({
-                paging: false,
-                info: false,
-                order: [[0, 'asc']],
-                lengthChange: false,
-                searching: false
-            });
-            
-            // turns collection number field on and off
-            function checkboxChanged() {
-                var checkbox = document.getElementById("isUndocumentedCheckbox");
-                var inputField = document.getElementById("collectionNumber");
-
-                if (checkbox.checked) {
-                    document.getElementById("status").innerHTML = "Collection Number<span class=\"required text-danger\">*</span>";
-                    inputField.setAttribute("required", "required");
-                    inputField.removeAttribute("disabled")
-                } else {
-                    document.getElementById("status").innerHTML = "Undocumented";
-                    inputField.removeAttribute("required");
-                    inputField.setAttribute("disabled", "disabled");
-                }
-            }
-
+            // Handle bill selection change
             function handleBillSelectionChange() {
-                var selectedBills = $('.js-example-basic-multiple').val();
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const selectedBills = $('.js-example-basic-multiple').val() || [];
 
                 $.ajax({
                     url: '/MMSI/Collection/GetSelectedBillings',
                     type: 'POST',
                     data: { billingIds: selectedBills },
-                    success: function(result) {
-                        if ($.fn.DataTable.isDataTable('#dataTable')) {
-                            $('#dataTable').DataTable().destroy();
-                        }
-
-                        $('#dataTable tbody').empty();
+                    success: function (result) {
+                        table.clear();
                         let totalAmount = 0.00;
 
-                        $.each(result.data, function(index, value) {
-                            console.log('Index:', index, 'Value:', value);
+                        if (result.data && Array.isArray(result.data)) {
+                            $.each(result.data, function (index, value) {
+                                table.row.add([
+                                    value.mmsiBillingNumber,
+                                    `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                ]);
+                                totalAmount += value.amount;
+                            });
+                        }
 
-                            $('#dataTable tbody').append(`
-                    <tr>
-                        <td class="text-center align-middle ps-4">${value.mmsiBillingNumber}</td>
-                        <td class="text-center align-middle ps-4">₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>`
-                            );
+                        table.draw();
 
-                            totalAmount = totalAmount + value.amount;
-                        });
+                        $('#billingsTotal').html(`<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
+                        $('#amountShow').val(totalAmount.toFixed(2));
+                        $('#amount').val(totalAmount.toFixed(2));
+                        $('#undeductedAmount').val(totalAmount.toFixed(2));
 
-                        document.getElementById("billingsTotal").innerHTML = `<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`;
-                        document.getElementById("amountShow").value = totalAmount.toFixed(2);
-                        document.getElementById("amount").value = totalAmount.toFixed(2);
-                        document.getElementById("undeductedAmount").value = totalAmount.toFixed(2);
-                        console.log(document.getElementById("amount").value);
                         calculateEWTDeduction();
-
-                        $('#dataTable').DataTable({
-                            paging: false,
-                            info: false,
-                            order: [[0, 'asc']],
-                            lengthChange: false,
-                            searching: false
-                        });
                     },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching selected billings:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
                     }
                 });
             }
 
-            // Call the function when the select changes
-            $('.js-example-basic-multiple').on('change', handleBillSelectionChange);
-            
-            handleBillSelectionChange();
-            
-            checkboxChanged();
+            // Calculate EWT deduction based on customer VAT status
+            function calculateEWTDeduction() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const originalAmount = parseFloat($('#undeductedAmount').val()) || 0;
+                const customerId = $('#customerId').val();
+
+                $.ajax({
+                    url: '/MMSI/Collection/IsCustomerVatable',
+                    type: 'GET',
+                    data: { customerId: customerId },
+                    success: function (result) {
+                        if (result) {
+                            const deductedAmount = originalAmount / 1.12;
+                            const ewt = originalAmount - deductedAmount;
+
+                            $('#amountShow').val(deductedAmount.toFixed(2));
+                            $('#amount').val(deductedAmount.toFixed(2));
+                            $('#ewt').val(ewt.toFixed(2));
+                            $('#ewtShow').val(ewt.toFixed(2));
+                        } else {
+                            $('#amountShow').val(originalAmount.toFixed(2));
+                            $('#amount').val(originalAmount.toFixed(2));
+                            $('#ewt').val('0.00');
+                            $('#ewtShow').val('0.00');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error checking VAT status:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
+                    }
+                });
+            }
         });
-        
     </script>
 }
