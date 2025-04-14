@@ -42,10 +42,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
                 var banks = await _unitOfWork.FilprideBankAccount
-                .GetAllAsync(b => b.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
                 if (view == nameof(DynamicView.BankAccount))
                 {

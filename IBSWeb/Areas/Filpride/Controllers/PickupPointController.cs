@@ -40,9 +40,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var pickupPoints = await _dbContext.FilpridePickUpPoints
-                .Where(p => p.Company == companyClaims)
                 .Include(p => p.Supplier)
                 .ToListAsync(cancellationToken);
 

@@ -39,10 +39,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
             IEnumerable<FilprideCustomer> customer = await _unitOfWork.FilprideCustomer
-                .GetAllAsync(c => c.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
             if (view == nameof(DynamicView.Customer))
             {
