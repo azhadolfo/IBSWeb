@@ -254,9 +254,9 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<string> GenerateCollectionNumber (CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSICollections
-                .Where(b => b.IsDocumented == false && b.CollectionNumber != null)
+                .Where(b => b.IsUndocumented == true && b.CollectionNumber != null)
                 .OrderByDescending(b => b.CollectionNumber)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             if(lastRecord == null)
             {

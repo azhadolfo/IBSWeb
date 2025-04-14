@@ -28,7 +28,7 @@ namespace IBS.Models.MMSI
 
         public int? CustomerId { get; set; }
 
-        public bool IsDocumented { get; set; }
+        public bool IsUndocumented { get; set; }
 
         public string? CreatedBy { get; set; }
 

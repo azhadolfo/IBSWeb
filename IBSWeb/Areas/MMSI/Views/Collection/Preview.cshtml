@@ -33,7 +33,7 @@
                         <span><b>Create Date:</b> @Model.Date</span>
                     </div>
                     <div class="col-4 text-start small-text">
-                        <span><b>Dispatch Ticket#:</b> @Model.CollectionNumber</span>
+                        <span><b>Collection No.</b> @Model.CollectionNumber @(Model.IsUndocumented ? "(auto-generated)" : "") </span>
                     </div>
                 </div>
             </div>

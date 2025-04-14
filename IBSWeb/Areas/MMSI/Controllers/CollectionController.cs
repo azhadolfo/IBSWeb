@@ -4,6 +4,7 @@ using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI
@@ -32,7 +33,6 @@ namespace IBSWeb.Areas.MMSI
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             var model = new MMSICollection();
-            model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
             return View(model);
         }
@@ -48,7 +48,7 @@ namespace IBSWeb.Areas.MMSI
                     model.CreatedBy = await GetUserNameAsync();
                     model.CreatedDate = dateNow;
 
-                    if (model.IsDocumented == false)
+                    if (model.IsUndocumented)
                     {
                         model.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
                     }
@@ -127,8 +127,14 @@ namespace IBSWeb.Areas.MMSI
                 .ToListAsync(cancellationToken);
 
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+
+            // bills collected
             model.Billings = await _unitOfWork.Msap.GetMMSICollectedBillsById(model.MMSICollectionId, cancellationToken);
+
+            // bills uncollected
             var uncollectedBills = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
+
+            // add the uncollected to collected? this is assuming it will select from different customer
             model.Billings.AddRange(uncollectedBills);
 
             return View(model);
@@ -174,30 +180,37 @@ namespace IBSWeb.Areas.MMSI
 
                     var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
 
-                    if(model.IsDocumented != null)
-                    {
-                        if (model.IsDocumented)
-                        {
-                            // overwrite if there's new
-                            currentModel.CollectionNumber = model.CollectionNumber;
-                        }
-                        if (!model.IsDocumented && !currentModel.IsDocumented)
-                        {
-                            model.CollectionNumber = currentModel.CollectionNumber;
-                        }
-                        if (!model.IsDocumented && currentModel.IsDocumented)
-                        {
-                            // if the old is doc but now is undoc, generate
-                            currentModel.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
-                        }
-                    }
+                    // if(model.IsUndocumented != null)
+                    // {
+                    //     // if new is undoc
+                    //     if (model.IsUndocumented == true)
+                    //     {
+                    //         // and the old is also undoc
+                    //         if (currentModel.IsUndocumented == true)
+                    //         {
+                    //             // just apply the old number to the new
+                    //             model.CollectionNumber = currentModel.CollectionNumber;
+                    //         }
+                    //         // but if the old is documented
+                    //         else
+                    //         {
+                    //             // generate for the new
+                    //             model.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
+                    //         }
+                    //     }
+                    //     // but if new is documented
+                    //     else
+                    //     {
+                    //         // regardless of old number, replace the old with new, will assign it later
+                    //     }
+                    // }
 
                     #region -- Changes
 
                     var changes = new List<string>();
 
                     if (currentModel.CollectionNumber != model.CollectionNumber) { changes.Add($"CollectionNumber: {currentModel.CollectionNumber} -> {model.CollectionNumber}"); }
-                    if (currentModel.IsDocumented != model.IsDocumented) { changes.Add($"IsDocumented: {currentModel.IsDocumented} -> {model.IsDocumented}"); }
+                    if (currentModel.IsUndocumented != model.IsUndocumented) { changes.Add($"IsUndocumented: {currentModel.IsUndocumented} -> {model.IsUndocumented}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
                     if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
@@ -230,7 +243,7 @@ namespace IBSWeb.Areas.MMSI
                     #endregion -- Audit Trail
 
                     currentModel.CollectionNumber = model.CollectionNumber;
-                    currentModel.IsDocumented = model.IsDocumented;
+                    currentModel.IsUndocumented = model.IsUndocumented;
                     currentModel.Date = model.Date;
                     currentModel.CheckNumber = model.CheckNumber;
                     currentModel.CheckDate = model.CheckDate;
@@ -342,6 +355,24 @@ namespace IBSWeb.Areas.MMSI
         {
             var user = await _userManager.GetUserAsync(User);
             return user.UserName;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetBillingsByCustomer (string customerId, CancellationToken cancellationToken)
+        {
+            var billings = await _dbContext
+                .MMSIBillings
+                .Where(t => t.CustomerId == int.Parse(customerId) && t.Status == "For Collection")
+                .OrderBy(t => t.MMSIBillingNumber)
+                .ToListAsync(cancellationToken);
+
+            var billingsList = billings.Select(t => new SelectListItem
+            {
+                Value = t.MMSIBillingId.ToString(),
+                Text = t.MMSIBillingNumber
+            }).ToList();
+
+            return Json(billingsList);
         }
     }
 }

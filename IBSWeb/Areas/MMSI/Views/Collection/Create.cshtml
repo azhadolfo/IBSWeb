@@ -47,9 +47,9 @@
                                     <span asp-validation-for="CollectionNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox" checked>
-                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
-                                        Documented
+                                    <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
+                                        Undocumented
                                     </label>
                                 </div>
                                 <div class="form-floating col-4">
@@ -84,15 +84,15 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" readonly="">
                                     <label class="ms-2">Bank</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" readonly="">
                                     <label class="ms-2">Account Number</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." readonly="">
                                     <label class="ms-2">Account Name</label>
                                 </div>
                             </div>
@@ -171,8 +171,6 @@
             var originalAmount = document.getElementById("undeductedAmount").value;
             var totalAmount = document.getElementById("amount").value;
             var customerId = document.getElementById("customerId").value;
-            console.log("Amount debug:" + totalAmount);
-            console.log("CustomerId debug:" + customerId);
             
             $.ajax({
                 url: '/MMSI/Collection/IsCustomerVatable',
@@ -207,7 +205,7 @@
                 calculateEWTDeduction();
             });
 
-            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
+            document.getElementById("isUndocumentedCheckbox").addEventListener("change", checkboxChanged);
 
             table = $('#dataTable').DataTable();
             table.destroy();
@@ -221,18 +219,19 @@
             
             // turns collection number field on and off
             function checkboxChanged() {
-                var checkbox = document.getElementById("isDocumentedCheckbox");
+                var checkbox = document.getElementById("isUndocumentedCheckbox");
                 var inputField = document.getElementById("collectionNumber");
 
                 if (checkbox.checked) {
-                    document.getElementById("status").innerHTML = "Collection Number<span class=\"required text-danger\">*</span>";
-                    inputField.setAttribute("required", "required");
-                    inputField.removeAttribute("disabled")
-                } else {
                     document.getElementById("status").innerHTML = "Undocumented";
                     document.getElementById("collectionNumber").value = "";
                     inputField.removeAttribute("required");
-                    inputField.setAttribute("disabled", "disabled");
+                    inputField.setAttribute("readonly", "true");
+                } else {
+                    document.getElementById("status").innerHTML = "Collection Number<span class=\"required text-danger\">*</span>";
+                    inputField.setAttribute("required", "required");
+                    inputField.removeAttribute("readonly")
+                    
                 }
             }
         });

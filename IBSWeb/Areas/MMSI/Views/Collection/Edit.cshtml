@@ -42,14 +42,15 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
-                                    <input asp-for="CollectionNumber" type="text" class="form-control border-0 shadow" id="collectionNumber" placeholder="#" required>
+                                    <input asp-for="CollectionNumber" type="text" class="form-control border-0 shadow" id="collectionNumber" placeholder="#" title="Collection number can no longer be changed." readonly>
                                     <label asp-for="CollectionNumber" for="collectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="CollectionNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input asp-for="IsDocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isDocumentedCheckbox">
-                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isDocumentedCheckbox">
-                                        Documented
+                                    <input asp-for="IsUndocumented" type="hidden">
+                                    <input class="form-check-input m-0 ms-2" type="checkbox" value="@Model.IsUndocumented" id="isUndocumentedCheckbox" disabled>
+                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
+                                        Undocumented
                                     </label>
                                 </div>
                                 <div class="form-floating col-4">
@@ -70,12 +71,12 @@
                                 <input type="hidden" id="undeductedAmount" value="@Model.Amount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0" readonly>
                                     <label class="ms-2">Amount</label>
                                 </div>
                                 <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0" disabled>
+                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0" readonly>
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
@@ -84,15 +85,15 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" readonly>
                                     <label class="ms-2">Bank</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" readonly>
                                     <label class="ms-2">Account Number</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." disabled>
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." readonly>
                                     <label class="ms-2">Account Name</label>
                                 </div>
                             </div>
@@ -207,7 +208,7 @@
                 calculateEWTDeduction();
             });
 
-            document.getElementById("isDocumentedCheckbox").addEventListener("change", checkboxChanged);
+            document.getElementById("isUndocumentedCheckbox").addEventListener("change", checkboxChanged);
 
             table = $('#dataTable').DataTable();
             table.destroy();
@@ -221,7 +222,7 @@
             
             // turns collection number field on and off
             function checkboxChanged() {
-                var checkbox = document.getElementById("isDocumentedCheckbox");
+                var checkbox = document.getElementById("isUndocumentedCheckbox");
                 var inputField = document.getElementById("collectionNumber");
 
                 if (checkbox.checked) {
