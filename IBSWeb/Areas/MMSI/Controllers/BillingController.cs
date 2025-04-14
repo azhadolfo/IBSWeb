@@ -431,7 +431,8 @@ namespace IBSWeb.Areas.MMSI
                 address = customerDetails.CustomerAddress,
                 tinNo = customerDetails.CustomerTIN,
                 businessStyle = customerDetails.CustomerBusinessStyle,
-                hasPrincipal = customerDetails.HasPrincipal
+                hasPrincipal = customerDetails.HasPrincipal,
+                isVatable = customerDetails.IsVatable
             };
 
             return Json(customerDetailsJson);
