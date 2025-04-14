@@ -11,7 +11,7 @@
     var termValue = (Model.DateTo.ToDateTime(TimeOnly.MinValue) - Model.DateFrom.ToDateTime(TimeOnly.MinValue)).Days;
     var trustFee = Model.PrincipalAmount * Model.TrustFeeRate;
     var interest = Model.PlacementType != PlacementType.LongTerm ?
-    Model.PrincipalAmount * Model.InterestRate * (termValue / 360) :
+    Model.PrincipalAmount * Model.InterestRate * (termValue / 360m) :
     Model.PrincipalAmount * Model.InterestRate;
     var ewt = interest * Model.EWTRate;
     var maturity = Model.PrincipalAmount + interest - ewt - trustFee;
