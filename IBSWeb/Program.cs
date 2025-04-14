@@ -117,7 +117,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(dailyPlacementLockKey)
         .WithIdentity("DailyPlacementTrigger")
-        .WithCronSchedule("0 47 13 * * ?",
+        .WithCronSchedule("0 0 0 * * ?",
             x => x.InTimeZone(
                 TimeZoneInfo
                 .FindSystemTimeZoneById("Asia/Manila"))));
