@@ -219,7 +219,12 @@
         </table>
     </div>
     
-    <div class="p-3 border-top border-bottom border-dark print-bottom2">
+    <div class="p-1 border-top border-bottom border-dark print-bottom2">
+        <div class="row">
+            <div class="col-12 px-3 pb-3 d-flex justify-content-end" style="font-size: 12px;">
+                <b>@Model.Amount</b>
+            </div>
+        </div>
         <div class="row">
             <div class="col-7">
                 <table>
@@ -243,125 +248,125 @@
             </div>
             @if (Model.IsVatable)
             {
-            <div class="col-5">
-                <table class="table-borderless col-12">
-                    <tr class="row">
-                        <td class="col-6">
-                            VATABLE SALES:
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            @{var vatableSales = Model.Amount / 1.12m;}
-                            <b>@vatableSales.ToString("N2") </b>
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            VAT - EXEMPT SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            ZERO RATED SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            TOTAL SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            12% VAT
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            @{var taxAmount = (Model.Amount-(Model.Amount / 1.12m));}
-                            <b>@taxAmount.ToString("N2") </b>
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            <b>TOTAL AMOUNT DUE:</b>
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            <div class="row border-bottom border-dark">
-                                <div class="col-12">
-                                    <b> @Model.Amount.ToString("N2")</b>
+                <div class="col-5">
+                    <table class="table-borderless col-12">
+                        <tr class="row">
+                            <td class="col-6">
+                                VATABLE SALES:
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                @{ var vatableSales = Model.Amount / 1.12m; }
+                                <b>@vatableSales.ToString("N2") </b>
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                VAT - EXEMPT SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                ZERO RATED SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                TOTAL SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                12% VAT
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                @{ var taxAmount = (Model.Amount - (Model.Amount / 1.12m)); }
+                                <b>@taxAmount.ToString("N2") </b>
+                            </td>
+                        </tr>
+                        <tr class="row mt-1 mb-2">
+                            <td class="col-6">
+                                <b>TOTAL AMOUNT DUE:</b>
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                <div class="row border-bottom border-dark">
+                                    <div class="col-12">
+                                        <b> @Model.Amount.ToString("N2")</b>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             }
             else
             {
-            <div class="col-5">
-                <table class="table-borderless col-12">
-                    <tr class="row">
-                        <td class="col-6">
-                            VATABLE SALES:
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            @Model.Amount
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            VAT - EXEMPT SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            ZERO RATED SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            TOTAL SALES
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            12% VAT
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            
-                        </td>
-                    </tr>
-                    <tr class="row mt-1">
-                        <td class="col-6">
-                            <b>TOTAL AMOUNT DUE:</b>
-                        </td>
-                        <td class="col-6 text-end border-bottom border-dark">
-                            <div class="row border-bottom border-dark">
-                                <div class="col-12">
-                                    <b> @Model.Amount.ToString("N2")</b>
+                <div class="col-5">
+                    <table class="table-borderless col-12">
+                        <tr class="row">
+                            <td class="col-6">
+                                VATABLE SALES:
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                VAT - EXEMPT SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                ZERO RATED SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                TOTAL SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                12% VAT
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1 mb-2">
+                            <td class="col-6">
+                                <b>TOTAL AMOUNT DUE:</b>
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                <div class="row border-bottom border-dark">
+                                    <div class="col-12">
+                                        <b> @Model.Amount.ToString("N2")</b>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             }
-            
+
         </div>
     </div>
     
