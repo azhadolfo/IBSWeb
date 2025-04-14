@@ -161,13 +161,18 @@
                                 {
                                     <li><a class="dropdown-item" href="#" id="viewUpload"><i class="bi bi-eye-fill"></i> View Upload</a></li>
                                 }
+                                
+                                @if (!string.IsNullOrEmpty(Model.VideoName))
+                                {
+                                    <li><a class="dropdown-item view-video" href="#" data-videolink="@Model.VideoSignedUrl"><i class="bi bi-play-circle-fill"></i> Play Video</a></li>
+                                }
                             </ul>
                         </div>
                     }
 
                 </div>
                 <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary custom2-btn col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
+                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                     </a>
                 </div>
@@ -248,6 +253,35 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.location.href = `/MMSI/DispatchTicket/Delete/${id}`;
+                    }
+                });
+            });
+
+            $(document).on("click", ".view-video", function () {
+                const videoLink = this.getAttribute("data-videolink");
+                if (!videoLink) {
+                    console.error("No video found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    html: `
+                            <video width="1280" height="720" controls>
+                                <source src="${videoLink}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            `,
+                    showConfirmButton: false,
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    background: "transparent",
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
                     }
                 });
             });

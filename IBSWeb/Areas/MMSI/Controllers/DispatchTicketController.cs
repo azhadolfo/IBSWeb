@@ -577,6 +577,10 @@ namespace IBSWeb.Areas.MMSI
             {
                 model.ImageSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.ImageName);
             }
+            if (!string.IsNullOrWhiteSpace(model.VideoName))
+            {
+                model.VideoSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.VideoName);
+            }
         }
     }
 }

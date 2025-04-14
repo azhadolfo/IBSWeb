@@ -170,6 +170,16 @@ namespace IBSWeb.Areas.MMSI
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync();
 
+
+            if (!string.IsNullOrEmpty(model.ImageName))
+            {
+                model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
+            }
+            if (!string.IsNullOrEmpty(model.VideoName))
+            {
+                model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
+            }
+
             return View(model);
 
         }
