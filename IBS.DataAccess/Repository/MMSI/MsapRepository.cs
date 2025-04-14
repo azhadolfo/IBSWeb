@@ -111,7 +111,7 @@ namespace IBS.DataAccess.Repository.MMSI
             List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
             {
                 Value = s.VesselId.ToString(),
-                Text = s.VesselNumber + " " + s.VesselName
+                Text = s.VesselNumber + " " + s.VesselName + " " + s.VesselType
             }).ToListAsync(cancellationToken);
 
             return vessels;
