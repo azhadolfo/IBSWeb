@@ -37,6 +37,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -125,10 +132,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaim = await GetStationCodeClaimAsync();
             ReceivingReportViewModel viewModel = new()
             {
-                DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
+                DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
                 PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                     .Where(po => po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
@@ -146,6 +154,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaim = await GetStationCodeClaimAsync();
             if (ModelState.IsValid)
             {
@@ -161,7 +170,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     if (viewModel.QuantityDelivered > totalAmountRR)
                     {
-                        viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
+                        viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                         viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                             .Where(po =>
                                 po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
@@ -215,7 +224,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
+                    viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                         .Where(po =>
                             po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
@@ -230,7 +239,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
             }
 
-            viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
+            viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                 .Where(po =>
                     po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
@@ -247,6 +256,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaim = await GetStationCodeClaimAsync();
             if (id == 0)
             {
@@ -268,7 +278,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     ReceivingReportId = existingRecord.ReceivingReportId,
                     Date = existingRecord.Date,
                     Remarks = existingRecord.Remarks,
-                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken),
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken),
                     PurchaseOrderId = existingRecord.PurchaseOrderId,
                     ReceivedDate = existingRecord.ReceivedDate,
                     SupplierInvoiceNumber = existingRecord.SupplierInvoiceNumber,
@@ -303,6 +313,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaim = await GetStationCodeClaimAsync();
             if (ModelState.IsValid)
             {
@@ -316,7 +327,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
+                    viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                         .Where(po =>
                             po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
@@ -330,7 +341,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     return View(viewModel);
                 }
             }
-            viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(cancellationToken);
+            viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                 .Where(po =>
                     po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)

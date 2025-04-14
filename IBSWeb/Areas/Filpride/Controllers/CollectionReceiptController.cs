@@ -466,6 +466,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> MultipleCollectionEdit(int? id, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (id == null)
             {
                 return NotFound();
@@ -479,6 +480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             existingModel.Customers = await _dbContext.FilprideCustomers
                .OrderBy(c => c.CustomerId)
+               .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                .Select(s => new SelectListItem
                {
                    Value = s.CustomerId.ToString(),
@@ -487,7 +489,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                .ToListAsync(cancellationToken);
 
             existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId)
+                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
                 .OrderBy(si => si.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
@@ -880,9 +882,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetServiceInvoices(int customerNo, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var invoices = await _dbContext
                 .FilprideServiceInvoices
-                .Where(si => si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
                 .OrderBy(si => si.ServiceInvoiceId)
                 .ToListAsync(cancellationToken);
 

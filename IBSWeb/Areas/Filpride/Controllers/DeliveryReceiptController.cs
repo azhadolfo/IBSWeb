@@ -387,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to create delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
@@ -397,7 +397,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -443,7 +443,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerAddress = existingRecord.CustomerAddress,
                     CustomerTin = existingRecord.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
+                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken),
                     PurchaseOrderId = (int)existingRecord.PurchaseOrderId,
                     PurchaseOrders = purchaseOrders,
                     Product = existingRecord.CustomerOrderSlip.Product.ProductName,
@@ -605,7 +605,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to edit delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
@@ -615,7 +615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -743,13 +743,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetCustomerOrderSlipList(int customerId, int? deliveryReceiptId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var orderSlips = _dbContext.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => ((!cos.IsDelivered &&
-                                cos.Status == nameof(CosStatus.Completed)) ||
+                .Where(cos => (!cos.IsDelivered &&
+                                cos.Status == nameof(CosStatus.Completed)
+                               && cos.Company == companyClaims ||
                                cos.Status == nameof(CosStatus.ForDR)) &&
                               cos.BalanceQuantity > 0 &&
-                              cos.CustomerId == customerId)
+                              cos.CustomerId == customerId && cos.Company == companyClaims)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -760,7 +762,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingCos = _dbContext.FilprideDeliveryReceipts
                     .Include(dr => dr.CustomerOrderSlip)
-                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId)
+                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId && dr.Company == companyClaims)
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.CustomerOrderSlipId.ToString(),

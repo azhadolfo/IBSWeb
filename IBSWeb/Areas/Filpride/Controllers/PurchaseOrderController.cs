@@ -280,7 +280,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
-            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(purchaseOrder.SupplierId, cancellationToken);
+            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, purchaseOrder.SupplierId, cancellationToken);
 
             purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -608,12 +608,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllPurchaseOrderIds()
+        public async Task<IActionResult> GetAllPurchaseOrderIds()
         {
-            var poIds = _dbContext.FilpridePurchaseOrders
-                                     .Where(po => po.Type == nameof(DocumentType.Documented))
+            var companyClaims = await GetCompanyClaimAsync();
+            var poIds = await _dbContext.FilpridePurchaseOrders
+                                     .Where(po => po.Type == nameof(DocumentType.Documented) && po.Company == companyClaims)
                                      .Select(po => po.PurchaseOrderId) // Assuming Id is the primary key
-                                     .ToList();
+                                     .ToListAsync();
 
             return Json(poIds);
         }
@@ -808,7 +809,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
         {
-            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, supplierId, cancellationToken);
 
             return Json(pickUpPoints);
         }

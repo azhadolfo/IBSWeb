@@ -124,7 +124,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Trade")
+                .Where(s => s.IsActive && s.Category == "Trade" && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

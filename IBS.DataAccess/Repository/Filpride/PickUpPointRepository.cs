@@ -15,9 +15,10 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<List<SelectListItem>> GetDistinctPickupPointList(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDistinctPickupPointList(string companyClaims, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
+                .Where(p => (companyClaims == nameof(Filpride) ? p.IsFilpride : p.IsMobility))
                 .GroupBy(p => p.Depot)
                 .OrderBy(g => g.Key)
                 .Select(g => new SelectListItem
@@ -29,11 +30,11 @@ namespace IBS.DataAccess.Repository.Filpride
         }
 
 
-        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(int supplierId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(string companyClaims, int supplierId, CancellationToken cancellationToken = default)
         {
             return await _db.FilpridePickUpPoints
                 .OrderBy(p => p.Depot)
-                .Where(p => p.SupplierId == supplierId)
+                .Where(p => p.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? p.IsFilpride : p.IsMobility))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PickUpPointId.ToString(),
