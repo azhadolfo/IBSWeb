@@ -329,7 +329,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
-                .Where(c => c.IsActive && c.Company == company)
+                .Where(c => c.IsActive && (company == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -342,7 +342,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company)
+                .Where(s => s.IsActive && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -355,7 +355,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Commissionee")
+                .Where(s => s.IsActive && s.Category == "Commissionee" && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
