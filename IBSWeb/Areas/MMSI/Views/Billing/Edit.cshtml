@@ -90,12 +90,13 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-3 my-3">
-                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
+                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" readonly>
                         <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
                     </div>
                     <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
-                        <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                        <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented"></input>
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" checked="@Model.IsUndocumented" disabled>
                         <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
                             Undocumented
                         </label>
@@ -179,22 +180,22 @@
 
                 <div class="row pt-2">
                     <div class="form-floating col-3 my-2">
-                        <input class="form-control border-0 shadow" id="Address" placeholder="" disabled>
+                        <input class="form-control border-0 shadow" id="Address" placeholder="" readonly>
                         <label class="ms-2">Address</label>
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 my-2">
-                        <input class="form-control border-0 shadow" id="TIN" placeholder="" disabled>
+                        <input class="form-control border-0 shadow" id="TIN" placeholder="" readonly>
                         <label class="ms-2">TIN</label>
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 my-2">
-                        <input class="form-control border-0 shadow" id="BusinessStyle" placeholder="" disabled>
+                        <input class="form-control border-0 shadow" id="BusinessStyle" placeholder="" readonly>
                         <label class="ms-2">Business Style</label>
                         <span class="text-danger"></span>
                     </div>
                     <div class="form-floating col-3 my-2">
-                        <input class="form-control border-0 shadow" id="Terms" placeholder="" disabled>
+                        <input class="form-control border-0 shadow" id="Terms" placeholder="" readonly>
                         <label class="ms-2">Terms</label>
                         <span class="text-danger"></span>
                     </div>
@@ -298,10 +299,8 @@
 
                 if ($checkbox.is(":checked")) {
                     $status.text("Undocumented");
-                    $inputField.prop("required", false).prop("disabled", true);
                 } else {
                     $status.html("Billing Number<span class=\"required text-danger\">*</span>");
-                    $inputField.prop("required", true).prop("disabled", false);
                 }
             }
 
