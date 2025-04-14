@@ -40,9 +40,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var services = await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken);
+            var services = await _dbContext.FilprideServices.ToListAsync(cancellationToken);
 
             if (view == nameof(DynamicView.Service))
             {
