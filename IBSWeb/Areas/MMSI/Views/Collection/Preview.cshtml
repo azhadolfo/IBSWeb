@@ -128,7 +128,9 @@
                     @foreach (var billing in Model.PaidBills)
                     {
                         <tr>
-                            <td class="border text-center">@billing.MMSIBillingNumber</td>
+                            <td class="border text-center">
+                                <a href="@Url.Action("Preview", "Billing", new { id = billing.MMSIBillingId })">@billing.MMSIBillingNumber</a>
+                            </td>
                             <td class="border text-center">@billing.Date</td>
                             <td class="border text-center">@billing.Customer?.CustomerName</td>
                             <td class="border text-center">₱ @billing.Amount.ToString("N2")</td>
