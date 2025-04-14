@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (!IsTinExist)
                     {
                         model.StationCode = stationCodeClaims;
-                        model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, stationCodeClaims, cancellationToken);
+                        model.CustomerCode = await _unitOfWork.MobilityCustomer.GenerateCodeAsync(model.CustomerType, stationCodeClaims, cancellationToken);
                         model.CreatedBy = _userManager.GetUserName(User);
                         await _dbContext.MobilityCustomers.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);

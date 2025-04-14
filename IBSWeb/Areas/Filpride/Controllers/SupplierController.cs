@@ -142,7 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
-                        .GenerateCodeAsync(companyClaims, cancellationToken);
+                        .GenerateCodeAsync(cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);

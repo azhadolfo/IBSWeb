@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default);
 
-        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
 
         Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default);
 

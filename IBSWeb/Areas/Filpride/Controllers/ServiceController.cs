@@ -131,7 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
 
-                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
+                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
 
                     TempData["success"] = "Services created successfully";
 

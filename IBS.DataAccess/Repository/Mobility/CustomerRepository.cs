@@ -3,7 +3,9 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
+using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
@@ -53,6 +55,44 @@ namespace IBS.DataAccess.Repository.Mobility
             else
             {
                 throw new InvalidOperationException("No data changes!");
+            }
+        }
+
+        public async Task<string> GenerateCodeAsync(string customerType, string stationCode, CancellationToken cancellationToken = default)
+        {
+            MobilityCustomer? lastCustomer = await _db
+                .MobilityCustomers
+                .Where(c => c.CustomerType == customerType && c.StationCode == stationCode)
+                .OrderBy(c => c.CustomerId)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastCustomer != null)
+            {
+                string lastCode = lastCustomer.CustomerCode;
+                string numericPart = lastCode.Substring(3);
+
+                // Parse the numeric part and increment it by one
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                // Format the incremented number with leading zeros and concatenate with the letter part
+                return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
+            }
+
+            if (customerType == nameof(CustomerType.Retail))
+            {
+                return "RET0001";
+            }
+            else if (customerType == nameof(CustomerType.Industrial))
+            {
+                return "IND0001";
+            }
+            else if (customerType == nameof(CustomerType.Reseller))
+            {
+                return "RES0001";
+            }
+            else
+            {
+                return "GOV0001";
             }
         }
     }
