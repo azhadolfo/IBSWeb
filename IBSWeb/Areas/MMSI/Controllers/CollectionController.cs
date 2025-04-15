@@ -342,5 +342,13 @@ namespace IBSWeb.Areas.MMSI
 
             return list;
         }
+
+        public async Task<List<SelectListItem>?> GetUncollectedBillings(int? customerId, CancellationToken cancellationToken = default)
+        {
+            // bills uncollected by customer
+            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+
+            return list;
+        }
     }
 }
