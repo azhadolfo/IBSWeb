@@ -60,6 +60,7 @@
 
     <div class="card-body">
         <form id="myForm" method="post" class="row">
+            <input type="hidden" asp-for="DispatchNumber" value="@Model.DispatchNumber"></input>
             <div class="border-2 px-3 mt-2">
                 <div asp-validation-summary="ModelOnly"></div>
 

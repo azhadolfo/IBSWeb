@@ -60,6 +60,7 @@
 
     <div class="card-body">
         <form id="myForm" method="post" class="row">
+            <input type="hidden" asp-for="DispatchNumber" value="@Model.DispatchNumber"></input>
             <div class="border-2 px-3 mt-2">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -195,17 +196,17 @@
 
                 <div class="row mt-2 pt-2 px-2">
                     <div class="form-floating col-3 mb-3">
-                        <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly />
+                        <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly/>
                         <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
                         <span asp-validation-for="TotalBilling" class="text-danger"></span>
                     </div>
 
                     <div class="form-floating col-3 mb-3">
-                        <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly />
+                        <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly/>
                         <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
                         <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
                     </div>
-                    
+
                     <div class="col-6">
                         <div class="row justify-content-end mt-4 mb-2">
                             <div class="text-center col-6" style="width: 250px;">
