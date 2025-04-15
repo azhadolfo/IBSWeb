@@ -130,8 +130,8 @@ namespace IBSWeb.Areas.MMSI
             // selection of customers
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
-            // selection of billings from previous create and current customer
-            model.Billings = await GetEditBillings(model.MMSICollectionId, model.CustomerId);
+            // get bills with same customer
+            model.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
 
             return View(model);
         }
@@ -328,18 +328,19 @@ namespace IBSWeb.Areas.MMSI
             return user.UserName;
         }
 
-        public async Task<List<SelectListItem>> GetEditBillings(int collectionId, int? customerId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>?> GetEditBillings(int? customerId, int collectionId, CancellationToken cancellationToken = default)
         {
-            // bills collected by this collection
-            var currentBillings = await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken);
-
             // bills uncollected but with the same customers
-            var uncollectedBills = await _unitOfWork.Msap.GetMMSIBillingsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
-            // add the uncollected to collected
-            currentBillings.AddRange(uncollectedBills);
+            var model = await _dbContext.MMSICollections.FindAsync(collectionId, cancellationToken);
 
-            return currentBillings.ToList();
+            if (model?.CustomerId == customerId)
+            {
+                list?.AddRange(await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken));
+            }
+
+            return list;
         }
     }
 }
