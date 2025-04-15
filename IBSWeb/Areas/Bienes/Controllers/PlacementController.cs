@@ -5,6 +5,7 @@ using IBS.Models;
 using IBS.Models.Bienes;
 using IBS.Models.Bienes.ViewModels;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -365,6 +366,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.PostedBy = User.Identity.Name;
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(PlacementStatus.Posted);
+                existingRecord.IsPosted = true;
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
@@ -377,7 +379,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to post delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                _logger.LogError(ex, "Failed to post placement. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
@@ -400,5 +402,122 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 bank = bank.Bank,
             });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Terminate(TerminatePlacementViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == viewModel.PlacementId, cancellationToken);
+
+                existingRecord.Status = nameof(PlacementStatus.Terminated);
+                existingRecord.TerminatedDate = viewModel.TerminatedDate;
+                existingRecord.TerminatedBy = User.Identity.Name;
+                existingRecord.InterestDeposited = viewModel.InterestDeposited;
+                existingRecord.InterestDepositedDate = viewModel.InterestDepositedDate;
+                existingRecord.InterestDepositedTo = viewModel.InterestDepositedTo;
+                existingRecord.InterestStatus = viewModel.InterestStatus;
+                existingRecord.TerminationRemarks = viewModel.TerminationRemarks;
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = "Terminated placement successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to terminate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Terminated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
+            }
+
+        }
+
+        public async Task<IActionResult> Reactivate(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                existingRecord.Status = existingRecord.IsLocked ? nameof(PlacementStatus.Locked) : nameof(PlacementStatus.Posted);
+                existingRecord.TerminatedDate = null;
+                existingRecord.TerminatedBy = null;
+                existingRecord.InterestDeposited = 0;
+                existingRecord.InterestDepositedDate = null;
+                existingRecord.InterestDepositedTo = null;
+                existingRecord.InterestStatus = null;
+                existingRecord.TerminationRemarks = null;
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Reactivate placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = "Reactivate placement successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to reactivate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Reactived by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+
+
+        // public async Task<IActionResult> RollOver(int? id, CancellationToken cancellationToken)
+        // {
+        //     if (id == null)
+        //     {
+        //         return NotFound();
+        //     }
+        //
+        //     await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        //
+        //     try
+        //     {
+        //         var existingRecord = await _unitOfWork.BienesPlacement
+        //             .GetAsync(p => p.PlacementId == id, cancellationToken);
+        //
+        //
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         await transaction.RollbackAsync(cancellationToken);
+        //         TempData["error"] = ex.Message;
+        //         _logger.LogError(ex, "Failed to roll over placement. Error: {ErrorMessage}, Stack: {StackTrace}. Rollover by: {UserName}",
+        //             ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+        //         return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
+        //     }
+        // }
     }
 }
