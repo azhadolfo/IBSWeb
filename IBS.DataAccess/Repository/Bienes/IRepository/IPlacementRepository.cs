@@ -9,5 +9,6 @@ namespace IBS.DataAccess.Repository.Bienes.IRepository
         Task<string> GenerateControlNumberAsync(int companyId, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(PlacementViewModel viewModel, CancellationToken cancellationToken = default);
+
     }
 }

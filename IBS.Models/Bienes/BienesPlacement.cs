@@ -136,5 +136,12 @@ namespace IBS.Models.Bienes
         public string EditedBy { get; set; } = string.Empty;
 
         public DateTime? EditedDate { get; set; }
+
+        public bool IsRolled { get; set; }
+
+        public int? RolledFromId { get; set; }
+
+        [ForeignKey(nameof(RolledFromId))]
+        public BienesPlacement RolledFrom { get; set; }
     }
 }
