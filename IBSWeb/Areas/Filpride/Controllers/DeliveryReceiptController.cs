@@ -852,11 +852,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (companyClaims == nameof(Filpride))
-                {
-                    await _unitOfWork.MobilityReceivingReport
-                        .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
-                }
+                await _unitOfWork.MobilityReceivingReport
+                    .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
 
                 existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
