@@ -247,20 +247,20 @@ namespace IBSWeb.Areas.MMSI
 
                         var changes = new List<string>();
 
-                        if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
-                        if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                        if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
                         if (currentModel.CreateDate != model.CreateDate) { changes.Add($"CreateDate: {currentModel.CreateDate} -> {model.CreateDate}"); }
+                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                        if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                        if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                        if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
+                        if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
+                        if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
+                        if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
                         if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
+                        if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
                         if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
                         if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
                         if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
-                        if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                        if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
-                        if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
-                        if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
-                        if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
-                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); } if (currentModel.BaseOrStation != model.BaseOrStation) { changes.Add($"BaseOrStation: {currentModel.BaseOrStation} -> {model.BaseOrStation}"); }
+                        if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
                         if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
                         if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
 
@@ -269,21 +269,20 @@ namespace IBSWeb.Areas.MMSI
                         currentModel.EditedBy = user.UserName;
                         currentModel.EditedDate = DateTime.Now;
                         currentModel.TotalHours = (decimal)timeDifference.TotalHours;
-                        currentModel.ActivityServiceId = model.ActivityServiceId;
-                        currentModel.DispatchNumber = model.DispatchNumber;
-                        currentModel.Remarks = model.Remarks;
                         currentModel.CreateDate = model.CreateDate;
+                        currentModel.COSNumber = model.COSNumber;
+                        currentModel.CustomerId = model.CustomerId;
+                        currentModel.DispatchNumber = model.DispatchNumber;
+                        currentModel.DateLeft = model.DateLeft;
+                        currentModel.TimeLeft = model.TimeLeft;
+                        currentModel.DateArrived = model.DateArrived;
+                        currentModel.TimeArrived = model.TimeArrived;
                         currentModel.TerminalId = model.TerminalId;
+                        currentModel.ActivityServiceId = model.ActivityServiceId;
                         currentModel.TugBoatId = model.TugBoatId;
                         currentModel.TugMasterId = model.TugMasterId;
                         currentModel.VesselId = model.VesselId;
-                        currentModel.VoyageNumber = model.VoyageNumber;
-                        currentModel.DateArrived = model.DateArrived;
-                        currentModel.DateLeft = model.DateLeft;
-                        currentModel.TimeArrived = model.TimeArrived;
-                        currentModel.TimeLeft = model.TimeLeft;
-                        currentModel.COSNumber = model.COSNumber;
-                        currentModel.BaseOrStation = model.BaseOrStation;
+                        currentModel.Remarks = model.Remarks;
                         if (imageFile != null)
                         {
                             currentModel.ImageName = model.ImageName;
