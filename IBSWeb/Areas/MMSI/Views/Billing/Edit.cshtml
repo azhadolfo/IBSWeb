@@ -305,7 +305,7 @@
             }
 
             function handleUsePrincipalChange() {
-                console.log("use principal: checked");
+                console.log("use principal: changed");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
                 const $principal = $("#PrincipalSelect");
@@ -383,6 +383,7 @@
                 } else {
                     $principalDiv.addClass("d-none");
                 }
+                handleUsePrincipalChange();
             }
 
             function updateFields(data) {
