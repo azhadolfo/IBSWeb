@@ -230,6 +230,7 @@
                                 $("input[name='CustomerPoNo']").prop("disabled", true).val('');
                                 products.val(null).trigger("change");
                                 $('input[name="Quantity"]').attr('readonly', true);
+                                $('input[name="DeliveredPrice"]').attr('readonly', true);
                             } else {
                                 $(".customerPOContainer").show();
                                 $(".substituteCustomerPOContainer").hide();
@@ -237,6 +238,7 @@
                                 $("input[name='CustomerPoNo']").prop("disabled", false).val('');
                                 products.val(null).trigger("change");
                                 $('input[name="Quantity"]').val('').removeAttr('readonly');
+                                $('input[name="DeliveredPrice"]').val('').removeAttr('readonly');
                             }
                         },
                         error: function (xhr, status, error) {
