@@ -38,7 +38,7 @@
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
-                                <div class="col-2"><h3 class="m-0 p-0">Collection</h3></div>
+                                <div class="col-12"><h3 class="m-0 p-0">Collection</h3></div>
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
@@ -71,17 +71,17 @@
                                 <input type="hidden" id="undeductedAmount" value="@Model.Amount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0" readonly>
+                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0">
                                     <label class="ms-2">Amount</label>
                                 </div>
                                 <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0" readonly>
+                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0">
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
                             <div class="row py-2">
-                                <div class="col-2"><h3 class="m-0 p-0">Deposit</h3></div>
+                                <div class="col-12"><h3 class="m-0 p-0">Deposit</h3></div>
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
@@ -139,7 +139,7 @@
                                 </tbody>
                             </table>
                             <div class="row pt-2 justify-content-end d-flex">
-                                <div class="col-6 justify-content-center d-flex">
+                                <div class="col-12 justify-content-end d-flex">
                                     <label id="billingsTotal">Total: ₱ 0.00</label>
                                 </div>
                             </div>
@@ -247,6 +247,16 @@
                 const $billingsSelect = $('#BillingsSelect');
                 const customerId = $('#customerId').val();
                 const collectionId = $('#CollectionId').val();
+                
+                $('#amountShow').val('0.00');
+                $('#amount').val('0.00');
+                $('#ewt').val('0.00');
+                $('#ewtShow').val('0.00');
+                $('#undeductedAmount').val('0');
+
+                // clear table
+                table.clear();
+                table.draw();
 
                 $.ajax({
                     url: '/MMSI/Collection/GetEditBillings',
@@ -271,7 +281,6 @@
                     },
                     complete: function () {
                         isProcessing = false;
-                        calculateEWTDeduction();
                     }
                 });
             }
@@ -288,9 +297,14 @@
                     type: 'POST',
                     data: { billingIds: selectedBills },
                     success: function (result) {
+                        
+                        // clear table
                         table.clear();
+                        
+                        // total amount variable
                         let totalAmount = 0.00;
-
+                        
+                        // show bills table
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
                                 table.row.add([
@@ -300,26 +314,25 @@
                                 totalAmount += value.amount;
                             });
                         }
-
                         table.draw();
 
+                        // show totals
                         $('#billingsTotal').html(`<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
-                        $('#amountShow').val(totalAmount.toFixed(2));
-                        $('#amount').val(totalAmount.toFixed(2));
-                        $('#undeductedAmount').val(totalAmount.toFixed(2));
-
-                        calculateEWTDeduction();
+                        $('#amount').val(totalAmount.toFixed(2)); // store amount value
+                        $('#undeductedAmount').val(totalAmount.toFixed(2)); // store undeducted amount
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching selected billings:', error);
                     },
                     complete: function () {
                         isProcessing = false;
+
+                        calculateEWTDeduction();
                     }
                 });
             }
 
-            // Calculate EWT deduction based on customer VAT status
+            // calculate ewt 
             function calculateEWTDeduction() {
                 if (isProcessing) return;
                 isProcessing = true;
@@ -327,24 +340,26 @@
                 const originalAmount = parseFloat($('#undeductedAmount').val()) || 0;
                 const customerId = $('#customerId').val();
 
+                // is customer vatable?
                 $.ajax({
                     url: '/MMSI/Collection/IsCustomerVatable',
                     type: 'GET',
                     data: { customerId: customerId },
                     success: function (result) {
+                        // if vatable
                         if (result) {
-                            const deductedAmount = originalAmount / 1.12;
-                            const ewt = originalAmount - deductedAmount;
+                            const ewt = ((originalAmount / 1.12) * 0.02); // calculate ewt
+                            const deductedAmount = originalAmount - ewt; // calculate deducted amount
 
-                            $('#amountShow').val(deductedAmount.toFixed(2));
-                            $('#amount').val(deductedAmount.toFixed(2));
-                            $('#ewt').val(ewt.toFixed(2));
-                            $('#ewtShow').val(ewt.toFixed(2));
+                            $('#amountShow').val(deductedAmount.toFixed(2)); // show amount
+                            $('#amount').val(deductedAmount.toFixed(2)); // store amount
+                            $('#ewtShow').val(ewt.toFixed(2)); // show ewt
+                            $('#ewt').val(ewt.toFixed(2)); // store ewt
                         } else {
-                            $('#amountShow').val(originalAmount.toFixed(2));
-                            $('#amount').val(originalAmount.toFixed(2));
-                            $('#ewt').val('0.00');
-                            $('#ewtShow').val('0.00');
+                            $('#amountShow').val(originalAmount.toFixed(2)); // show amount
+                            $('#amount').val(originalAmount.toFixed(2)); // store amount
+                            $('#ewtShow').val('0.00'); // show ewt
+                            $('#ewt').val('0.00'); // store ewt
                         }
                     },
                     error: function (xhr, status, error) {
