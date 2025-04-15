@@ -74,6 +74,7 @@ namespace IBSWeb.Areas.MMSI
         {
             model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
             model.Terminal.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
+            DateTime timeStamp = DateTime.Now;
 
             try
             {
@@ -85,7 +86,8 @@ namespace IBSWeb.Areas.MMSI
                     if (model.DateLeft < model.DateArrived || (model.TimeLeft != model.TimeArrived && model.TimeLeft < model.TimeArrived))
                     {
                         model.CreatedBy = await GetUserNameAsync();
-                        model.CreatedDate = DateTime.Now;
+                        timeStamp = DateTime.Now;
+                        model.CreatedDate = timeStamp;
 
                         // upload file if something is submitted
                         if (imageFile != null && imageFile.Length > 0)
@@ -110,6 +112,10 @@ namespace IBSWeb.Areas.MMSI
                         TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
                         model.TotalHours = (decimal)timeDifference.TotalHours;
                         await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
+                        await _db.SaveChangesAsync(cancellationToken);
+
+                        var tempModel =
+                            await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
 
                         #region -- Audit Trail
 
@@ -118,7 +124,7 @@ namespace IBSWeb.Areas.MMSI
                             Date = DateTime.Now,
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
-                            Activity = $"Create service request: id#{model.DispatchTicketId}",
+                            Activity = $"Create service request: id#{tempModel.DispatchTicketId}",
                             DocumentType = "ServiceRequest",
                             Company = await GetCompanyClaimAsync()
                         };
