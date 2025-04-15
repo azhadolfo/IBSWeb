@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.MMSI
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create Billing: id#{id} for dt #{string.Join(", #", model.ToBillDispatchTickets)}",
+                        Activity = $"Create Billing:#{id} for dt #{string.Join(", #", model.ToBillDispatchTickets)}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };
@@ -248,15 +248,13 @@ namespace IBSWeb.Areas.MMSI
 
                     var changes = new List<string>();
 
-                    if (currentModel.IsUndocumented != model.IsUndocumented) { changes.Add($"IsUndocumented: {currentModel.IsUndocumented} -> {model.IsUndocumented}"); }
-                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
-                    if (currentModel.MMSIBillingNumber != model.MMSIBillingNumber) { changes.Add($"MMSIBillingNumber: {currentModel.MMSIBillingNumber} -> {model.MMSIBillingNumber}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                    if (currentModel.PrincipalId != model.PrincipalId) { changes.Add($"PrincipalId: {currentModel.PrincipalId} -> {model.PrincipalId}"); }
+                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.PortId != model.PortId) { changes.Add($"PortId: {currentModel.PortId} -> {model.PortId}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.PrincipalId != model.PrincipalId) { changes.Add($"PrincipalId: {currentModel.PrincipalId} -> {model.PrincipalId}"); }
                     if (currentModel.IsVatable != model.IsVatable) { changes.Add($"IsVatable: {currentModel.IsVatable} -> {model.IsVatable}"); }
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
                     { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", currentModel.ToBillDispatchTickets)} -> #{string.Join(", #", model.ToBillDispatchTickets)}"); }
@@ -271,7 +269,7 @@ namespace IBSWeb.Areas.MMSI
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit Billing: id #{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
+                            ? $"Edit Billing: #{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
                             : $"No changes detected for Billing #{currentModel.MMSIBillingId}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
@@ -282,16 +280,15 @@ namespace IBSWeb.Areas.MMSI
 
                     #endregion -- Audit Trail
 
-                    currentModel.Date = model.Date;
-                    currentModel.Status = "For Collection";
                     currentModel.VoyageNumber = model.VoyageNumber;
-                    currentModel.CustomerId = model.CustomerId;
-                    currentModel.PrincipalId = model.PrincipalId;
+                    currentModel.Date = model.Date;
                     currentModel.PortId = model.PortId;
                     currentModel.TerminalId = model.TerminalId;
                     currentModel.VesselId = model.VesselId;
-                    currentModel.IsUndocumented = model.IsUndocumented;
+                    currentModel.CustomerId = model.CustomerId;
+                    currentModel.PrincipalId = model.PrincipalId;
                     currentModel.IsVatable = model.IsVatable;
+                    currentModel.Status = "For Collection";
 
                     // get billed by current billing select list
                     var unbilledDT = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken);
