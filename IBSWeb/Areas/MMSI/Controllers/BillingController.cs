@@ -106,7 +106,14 @@ namespace IBSWeb.Areas.MMSI
                     model.Amount = totalAmount;
                     await _db.SaveChangesAsync(cancellationToken);
 
-                    TempData["success"] = "Entry Created Successfully!";
+                    if (model.IsUndocumented)
+                    {
+                        TempData["success"] = $"Billing was successfully created. Control Number: {model.MMSIBillingNumber}";
+                    }
+                    else
+                    {
+                        TempData["success"] = $"Billing was successfully created.";
+                    }
 
                     return RedirectToAction(nameof(Index));
                 }
