@@ -91,7 +91,15 @@ namespace IBSWeb.Areas.MMSI
                         await _dbContext.SaveChangesAsync(cancellationToken);
                     }
 
-                    TempData["success"] = "Collection created successfully";
+
+                    if (model.IsUndocumented)
+                    {
+                        TempData["success"] = $"Collection was successfully created. Control Number: {model.CollectionNumber}";
+                    }
+                    else
+                    {
+                        TempData["success"] = $"Collection was successfully created.";
+                    }
 
                     return RedirectToAction(nameof(Index));
                 }
