@@ -353,5 +353,27 @@ namespace IBS.DataAccess.Repository.MMSI
 
             return model;
         }
+
+        public async Task<List<MMSIDispatchTicket>> GetSalesReport (DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            var dispatchTickets = await _dbContext.MMSIDispatchTickets
+                .Where(b => b.CreateDate >= dateFrom
+                             && b.CreateDate <= dateTo
+                             && b.Status == "Billed")
+                .Include(b => b.Customer)
+                .Include(b => b.Vessel)
+                .Include(b => b.Tugboat)
+                .Include(b => b.Terminal)
+                .ThenInclude(t => t.Port)
+                .Include(b => b.ActivityService)
+                .ToListAsync(cancellationToken);
+
+            return dispatchTickets;
+        }
     }
 }
