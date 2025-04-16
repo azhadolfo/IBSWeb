@@ -18,6 +18,7 @@ namespace IBS.Utility.Enums
 
     public enum InterestStatus
     {
+        NotApplicable,
         Withdrawn,
         Rolled,
     }

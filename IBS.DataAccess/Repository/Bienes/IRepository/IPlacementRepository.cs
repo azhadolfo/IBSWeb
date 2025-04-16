@@ -10,5 +10,7 @@ namespace IBS.DataAccess.Repository.Bienes.IRepository
 
         Task UpdateAsync(PlacementViewModel viewModel, CancellationToken cancellationToken = default);
 
+        Task RollOverAsync(BienesPlacement model, string user, CancellationToken cancellationToken = default);
+
     }
 }
