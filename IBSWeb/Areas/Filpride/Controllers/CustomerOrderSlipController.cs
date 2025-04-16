@@ -1501,7 +1501,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var filprideProduct = await _dbContext.Products.FindAsync(productId);
             var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct.ProductCode, cancellationToken);
             var purchaseOrder = await _dbContext.MobilityPurchaseOrders
-                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode && p.PostedBy != null)
+                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode && p.PostedBy != null && !p.IsReceived)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
