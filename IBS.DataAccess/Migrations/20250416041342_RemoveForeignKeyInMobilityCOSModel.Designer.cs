@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250416041342_RemoveForeignKeyInMobilityCOSModel")]
+    partial class RemoveForeignKeyInMobilityCOSModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4546,9 +4549,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityStation", b =>
                 {
-                    b.Property<string>("StationCode")
-                        .HasColumnType("varchar(5)")
-                        .HasColumnName("station_code");
+                    b.Property<int>("StationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("station_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StationId"));
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -4585,19 +4591,17 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("pos_code");
 
-                    b.Property<int>("StationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("station_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("StationId"));
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)")
+                        .HasColumnName("station_code");
 
                     b.Property<string>("StationName")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("station_name");
 
-                    b.HasKey("StationCode")
+                    b.HasKey("StationId")
                         .HasName("pk_mobility_stations");
 
                     b.HasIndex("PosCode")
@@ -4893,6 +4897,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("load_date");
 
+                    b.Property<int?>("MobilityStationStationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("mobility_station_station_id");
+
                     b.Property<string>("PlateNo")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -4956,11 +4964,11 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_mobility_customer_order_slips_customer_id");
 
+                    b.HasIndex("MobilityStationStationId")
+                        .HasDatabaseName("ix_mobility_customer_order_slips_mobility_station_station_id");
+
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_mobility_customer_order_slips_product_id");
-
-                    b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_customer_order_slips_station_code");
 
                     b.ToTable("mobility_customer_order_slips", (string)null);
                 });
@@ -5010,7 +5018,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("StationCode")
                         .IsRequired()
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("station_code");
 
                     b.Property<int>("StationId")
@@ -5026,8 +5034,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasIndex("ProductId")
                         .HasDatabaseName("ix_mobility_customer_purchase_orders_product_id");
 
-                    b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_customer_purchase_orders_station_code");
+                    b.HasIndex("StationId")
+                        .HasDatabaseName("ix_mobility_customer_purchase_orders_station_id");
 
                     b.ToTable("mobility_customer_purchase_orders", (string)null);
                 });
@@ -8675,19 +8683,17 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mobility_customer_order_slips_mobility_customers_customer_id");
 
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
+                        .WithMany()
+                        .HasForeignKey("MobilityStationStationId")
+                        .HasConstraintName("fk_mobility_customer_order_slips_mobility_stations_mobility_st");
+
                     b.HasOne("IBS.Models.MasterFile.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_mobility_customer_order_slips_products_product_id");
-
-                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
-                        .WithMany()
-                        .HasForeignKey("StationCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mobility_customer_order_slips_mobility_stations_station_code");
 
                     b.Navigation("Customer");
 
@@ -8714,7 +8720,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
                         .WithMany()
-                        .HasForeignKey("StationCode")
+                        .HasForeignKey("StationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_mobility_customer_purchase_orders_mobility_stations_station");
@@ -8812,21 +8818,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mobility_purchase_orders_mobility_products_product_id");
 
-                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
-                        .WithMany()
-                        .HasForeignKey("StationCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mobility_purchase_orders_mobility_stations_station_code");
-
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_mobility_purchase_orders_mobility_suppliers_supplier_id");
-
-                    b.Navigation("MobilityStation");
 
                     b.Navigation("PickUpPoint");
 

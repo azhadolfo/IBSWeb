@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Services;

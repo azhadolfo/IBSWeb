@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 

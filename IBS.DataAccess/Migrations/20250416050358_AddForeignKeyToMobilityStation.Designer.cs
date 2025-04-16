@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250416050358_AddForeignKeyToMobilityStation")]
+    partial class AddForeignKeyToMobilityStation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -8812,21 +8815,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mobility_purchase_orders_mobility_products_product_id");
 
-                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
-                        .WithMany()
-                        .HasForeignKey("StationCode")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_mobility_purchase_orders_mobility_stations_station_code");
-
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_mobility_purchase_orders_mobility_suppliers_supplier_id");
-
-                    b.Navigation("MobilityStation");
 
                     b.Navigation("PickUpPoint");
 
