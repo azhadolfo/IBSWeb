@@ -289,6 +289,7 @@
             function handleBillSelectionChange() {
                 if (isProcessing) return;
                 isProcessing = true;
+                let tempData;
 
                 const selectedBills = $('.js-example-basic-multiple').val() || [];
 
@@ -300,34 +301,51 @@
                         
                         // clear table
                         table.clear();
+                        tempData = result;
                         
                         // total amount variable
+                        let undeductedTotalAmount = 0.00;
                         let totalAmount = 0.00;
+                        let totalEwt = 0.00;
                         
                         // show bills table
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
+                                let tempAmount = value.amount;
+                                let tempEwt = 0;
+
+                                if (value.isVatable){
+                                    tempEwt = ((value.amount/1.12) * 0.02);
+                                    tempAmount = (value.amount - tempEwt);
+                                }
+                                
                                 table.row.add([
                                     value.mmsiBillingNumber,
                                     `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 ]);
-                                totalAmount += value.amount;
+                                undeductedTotalAmount += value.amount;
+                                totalAmount += tempAmount;
+                                totalEwt += tempEwt;
                             });
                         }
                         table.draw();
 
                         // show totals
-                        $('#billingsTotal').html(`<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
+                        $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
                         $('#amount').val(totalAmount.toFixed(2)); // store amount value
-                        $('#undeductedAmount').val(totalAmount.toFixed(2)); // store undeducted amount
+                        $('#ewt').val(totalEwt.toFixed(2));
+                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        $('#amountShow').val(totalAmount.toFixed(2));
+                        $('#ewtShow').val(totalEwt.toFixed(2));
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching selected billings:', error);
                     },
                     complete: function () {
                         isProcessing = false;
+                        console.log(tempData);
 
-                        calculateEWTDeduction();
+                        // calculateEWTDeduction();
                     }
                 });
             }
