@@ -331,8 +331,10 @@ namespace IBSWeb.Areas.MMSI
             // bills uncollected but with the same customers
             var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
+            // get the current model
             var model = await _dbContext.MMSICollections.FindAsync(collectionId, cancellationToken);
 
+            // if the model WAS having previous customer, fetch it previous bills as well
             if (model?.CustomerId == customerId)
             {
                 list?.AddRange(await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken));
