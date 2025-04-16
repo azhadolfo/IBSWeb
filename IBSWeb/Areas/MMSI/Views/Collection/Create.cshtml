@@ -70,12 +70,12 @@
                                 <input type="hidden" id="undeductedAmount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="amountShow" value="0.00"  placeholder=" " min="0">
+                                    <input type="number" class="form-control border-0 shadow" step="0.01" id="amountShow" value="0.00"  placeholder=" " min="0">
                                     <label class="ms-2">Amount</label>
                                 </div>
                                 <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" class="form-control border-0 shadow"  id="ewtShow" value="0.00" placeholder=" " min="0">
+                                    <input type="number" class="form-control border-0 shadow" step="0.01" id="ewtShow" value="0.00" placeholder=" " min="0">
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
@@ -278,6 +278,7 @@
             function handleBillSelectionChange() {
                 if (isProcessing) return;
                 isProcessing = true;
+                let tempData;
 
                 const selectedBills = $('.js-example-basic-multiple').val() || [];
 
@@ -288,35 +289,51 @@
                     success: function (result) {
                         // Clear existing table
                         table.clear();
+                        tempData = result;
 
+                        let undeductedTotalAmount = 0.00;
                         let totalAmount = 0.00;
+                        let totalEwt = 0.00;
 
                         // Populate table with new data
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
+                                let tempAmount = value.amount;
+                                let tempEwt = 0;
+                                
+                                if (value.isVatable){
+                                    tempEwt = ((value.amount/1.12) * 0.02);
+                                    tempAmount = (value.amount - tempEwt);
+                                }
+                                
                                 table.row.add([
                                     value.mmsiBillingNumber,
                                     `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 ]);
-                                totalAmount += value.amount;
+                                undeductedTotalAmount += value.amount;
+                                totalAmount += tempAmount;
+                                totalEwt += tempEwt;
                             });
                         }
 
                         table.draw();
 
                         // Update totals and form fields
-                        $('#billingsTotal').html(`<u>Total: ₱ ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
+                        $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
                         $('#amount').val(totalAmount.toFixed(2));
-                        $('#ewt').val(totalAmount.toFixed(2));
-                        $('#undeductedAmount').val(totalAmount.toFixed(2));
+                        $('#ewt').val(totalEwt.toFixed(2));
+                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        $('#amountShow').val(totalAmount.toFixed(2));
+                        $('#ewtShow').val(totalEwt.toFixed(2));
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching billings:', error);
                     },
                     complete: function () {
                         isProcessing = false;
+                        console.log(tempData);
 
-                        calculateEWTDeduction();
+                        // calculateEWTDeduction();
                     }
                 });
             }
