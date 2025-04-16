@@ -85,7 +85,7 @@
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <input asp-for="MMSIBillingId" value="@Model.MMSIBillingId" type="hidden">
+                <input asp-for="MMSIBillingId" id="billingId" value="@Model.MMSIBillingId" type="hidden">
                 <div class="row pt-3">
                 </div>
                 <div class="row">
@@ -205,7 +205,7 @@
 
                     <div class="form-group col-12">
                         <label class="control-label mb-2">Choose dispatch tickets to bill:</label>
-                        <select asp-for="ToBillDispatchTickets" asp-items="@Model.UnbilledDispatchTickets" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
+                        <select asp-for="ToBillDispatchTickets" id="DispatchTicketSelect"  asp-items="@Model.UnbilledDispatchTickets" class="form-control js-example-basic-multiple col-12" name="ToBillDispatchTickets" multiple="multiple" required>
                         </select>
                     </div>
 
@@ -259,6 +259,7 @@
     <script>
         // Initialize when DOM is ready
         $(document).ready(function () {
+            
             // Initialize Select2 for all elements with this class
             $('.js-example-basic-multiple').select2();
 
@@ -268,7 +269,7 @@
             // Event Handlers
             setupEventListeners();
 
-            // Functions
+            // Initializes the dataTable
             function initializeDataTable(selector) {
                 if ($.fn.DataTable.isDataTable(selector)) {
                     $(selector).DataTable().destroy();
@@ -283,29 +284,18 @@
             }
 
             function setupEventListeners() {
-                $("#isUndocumentedCheckbox").on("change", handleCheckboxChange);
-                $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange);
-                $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
-                $("#CustomerId").on("change", handleCustomerChange);
-                $("#PortSelect").on("change", handlePortChange);
-                $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange);
+                
+                $("#UsePrincipalCheckbox").on("change", handleUsePrincipalChange); // Use principal? checkbox: empty val, enable requirement
+                $("#PrincipalSelect").on("change.select2", handlePrincipalChange); // Principal select: replace details with principal's
+                $("#CustomerId").on("change", handleCustomerChange); // Customer select: replace details, change ticket select list, empty principal val, principal select disable requirement
+                $("#PortSelect").on("change", handlePortChange); // Port select: update terminal select list
+                $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange); // Tickets select: update ticket table contents, update total amount and ewt
             }
 
-            function handleCheckboxChange() {
-                console.log("documented/undoc: changed");
-                const $checkbox = $("#isUndocumentedCheckbox");
-                const $inputField = $("#billingNumber");
-                const $status = $("#status");
-
-                if ($checkbox.is(":checked")) {
-                    $status.text("Undocumented");
-                } else {
-                    $status.html("Billing Number<span class=\"required text-danger\">*</span>");
-                }
-            }
-
+            // Principal checkbox: checked - empty value, update select list, make it appear, enable requirement
+            // Principal checkbox: if unchecked, empty value, disappear, disable requirement
             function handleUsePrincipalChange() {
-                console.log("use principal: changed");
+                console.log("handleUsePrincipalChange");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
                 const $principal = $("#PrincipalSelect");
@@ -324,7 +314,9 @@
                 }
             }
 
+            // Principal select: get principal list
             function fetchPrincipals(customerId) {
+                console.log("fetchPrincipals");
                 $.ajax({
                     url: '@Url.Action("GetPrincipalsJSON", "Billing", new { area = "MMSI" })',
                     type: "GET",
@@ -344,61 +336,104 @@
                 });
             }
 
+            // Customer details: what do if changed
             function handlePrincipalChange() {
-                console.log("principal choice: changed");
+                console.log("handlePrincipalChange");
                 const principalId = $("#PrincipalSelect").val();
                 $.ajax({
                     url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "MMSI" })',
                     method: "GET",
                     data: { principalId: principalId },
                     success: function (data) {
-                        console.log(data);
                         updateFields(data);
                     }
                 });
             }
 
+            // 1 Customer select: what do if changed
             function handleCustomerChange() {
-                console.log("customer: changed");
-                $("#UsePrincipalCheckbox").prop("checked", false);
                 const customerId = $(this).val();
-                // continue here
+                const billingId = $("#billingId").val();
                 const $principalDiv = $("#PrincipalDiv");
+                const $principalSelect = $("#PrincipalSelect");
                 const $selectDiv = $("#SelectDiv");
-                $principalDiv.removeClass("d-none");
-                $selectDiv.addClass("d-none");
-                console.log("principal should've been blanked here");
+                const $dispatchSelect = $("#DispatchTicketSelect");
+                const $vatableDiv = $("#VatableDiv");
+                const $vatableCheckBox = $("#IsVatableCheckBox");
+                
+                $("#UsePrincipalCheckbox").prop("checked", false); // Principal checkbox: unchecks
+                $principalDiv.removeClass("d-none"); // Principal div: checkbox appears, 
+                $principalSelect.prop("required", false); // Principal select: disable requirement  
+                $selectDiv.addClass("d-none"); // but select is still hidden
 
+                // If customer != null
                 if (customerId) {
+                    $dispatchSelect.prop("disabled", false); // Tickets select: enable
+                    $vatableDiv.removeClass("d-none"); // Vatable checkbox: appears
+                    
+                    // Customer details: replace with selected customer's details
+                    console.log("starting ajax, customerid:" + customerId);
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
-                        method: "GET",
+                        method: "POST",
                         data: { customerId: customerId },
                         success: function (data) {
+                            console.log("inside the first ajax");
                             updateFields(data);
-                            console.log(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
+                            $vatableCheckBox.prop("checked", data.isVatable);
+                            console.log(data.isVatable);
+
+                            // Ticket select: update choices
+                            $.ajax({
+                                url: '@Url.Action("GetEditTickets", "Billing", new { area = "MMSI" })',
+                                method: "POST",
+                                data: { customerId: customerId,
+                                    billingId: billingId },
+                                success: function (data) {
+                                    console.log("inside the second ajax");
+                                    $dispatchSelect.empty();
+                                    if (Array.isArray(data) && data.length > 0) {
+                                        $.each(data, function (index, item) {
+                                            $dispatchSelect.append($('<option>', {
+                                                value: item.value,
+                                                text: item.text
+                                            }));
+                                        });
+                                    }
+                                }
+                            });
                         }
                     });
+                    // Customer select val == null
                 } else {
-                    $principalDiv.addClass("d-none");
+                    $dispatchSelect.val("0").trigger("change"); // Ticket select: empties
+                    $dispatchSelect.prop("disabled", true); // Ticket select: disabled
+                    $vatableDiv.addClass("d-none"); // Vatable checkbox: hidden
+                    $selectDiv.addClass("d-none"); // Principal select: disappears
+                    $principalDiv.addClass("d-none"); // Principal dix: disappears
                 }
-                handleUsePrincipalChange();
             }
-
+            
+            // 2 Customer details: updates based on passed data
             function updateFields(data) {
+                console.log("updateFields");
+                // Creates an array of array containing the id of the field and the value to put
                 const fields = {
                     "#Terms": data?.terms || '',
                     "#Address": data?.address || '',
                     "#TIN": data?.tinNo || '',
                     "#BusinessStyle": data?.businessStyle || ''
                 };
+                // Loops through the array and input the values
                 for (const [selector, value] of Object.entries(fields)) {
                     $(selector).val(value);
                 }
             }
 
+            // Port select: changes, updates terminal list
             function handlePortChange() {
+                console.log("handlePortChange");
                 const portId = $("#PortSelect").val();
                 $.ajax({
                     url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "MMSI" })',
@@ -406,7 +441,8 @@
                     data: { portId: portId },
                     success: function (data) {
                         const $terminalSelect = $("#TerminalSelect");
-                        $terminalSelect.empty().append('<option value="">Select Terminal</option>');
+                        $terminalSelect.empty().append('<option value="">Select Terminal</option>'); // Terminal select: empties
+                        // Terminal select: loops the array to input the choices
                         if (Array.isArray(data) && data.length > 0) {
                             $.each(data, function (index, item) {
                                 $terminalSelect.append($('<option>', {
@@ -419,15 +455,16 @@
                 });
             }
 
+            // Ticket select: changes, get the tickets
             function handleDispatchTicketsChange() {
+                console.log("handleDispatchTicketsChange");
                 const selectedTickets = $('.js-example-basic-multiple').val();
                 $.ajax({
                     url: '/MMSI/Billing/GetDispatchTickets',
                     type: 'POST',
                     data: { dispatchTicketIds: selectedTickets },
                     success: function (result) {
-                        console.log('Success:', result);
-                        updateDispatchTable(result.data);
+                        updateDispatchTable(result.data); // Tickets table: pass the fetched data to update the table
                     },
                     error: function (xhr, status, error) {
                         console.error('Error:', error);
@@ -435,17 +472,24 @@
                 });
             }
 
+            // Tickets table: updates, amount updates
             function updateDispatchTable(data) {
+                console.log("updateDispatchTable");
                 let totalDispatchAmount = 0;
                 let totalBAFAmount = 0;
 
+                // Tickets table: reset
                 table.destroy();
                 const $tbody = $('#dataTable tbody').empty();
 
+                // Loops the fetched tickets
                 $.each(data, function (index, value) {
-                    console.log('Index:', index, 'Value:', value);
+                    
+                    // Dispatch and BAF totals added
                     totalDispatchAmount += value.dispatchNetRevenue;
                     totalBAFAmount += value.bafNetRevenue;
+                    
+                    // Tickets table: updates
                     $tbody.append(`
                         <tr>
                             <td class="text-center align-middle ps-4">${value.dispatchNumber}</td>
@@ -462,21 +506,24 @@
                     `);
                 });
 
+                // Dispatch and BAF totals: show
                 $("#DispatchAmountTotal").text(totalDispatchAmount.toFixed(2));
                 $("#BAFAmountTotal").text(totalBAFAmount.toFixed(2));
 
+                // Reinitialize new table
                 table = initializeDataTable('#dataTable');
             }
             
+            // Fills the customer details field based on the received customer or principal
             function fillDataOnStartup () {
+                console.log("fillDataOnStartup");
                 let $principalId = $("#PrincipalSelect").val();
                 let $customerId = $("#CustomerId").val();
-                console.log("principalId: " + $principalId + ", customerId: " + $customerId);
 
                 if (!$principalId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
-                        method: "GET",
+                        method: "POST",
                         data: { customerId: $customerId },
                         success: function (data) {
                             updateFields(data);
@@ -495,8 +542,9 @@
                 }
             }
 
+            // Fill the customer details
             fillDataOnStartup();
-            handleCheckboxChange();
+            // Fill the table with ticket details
             handleDispatchTicketsChange();
         });
     </script>

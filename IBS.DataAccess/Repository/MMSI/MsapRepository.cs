@@ -158,6 +158,24 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
+        public async Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer (int? customerId, CancellationToken cancellationToken)
+        {
+            var tickets = await _dbContext
+                .MMSIDispatchTickets
+                .Where(b => b.CustomerId == customerId && b.Status == "For Billing")
+                .Include(b => b.Customer)
+                .OrderBy(b => b.DispatchNumber)
+                .ToListAsync(cancellationToken);
+
+            var ticketsList = tickets.Select(b => new SelectListItem
+            {
+                Value = b.DispatchTicketId.ToString(),
+                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.CreateDate}"
+            }).ToList();
+
+            return ticketsList;
+        }
+
         public async Task<List<SelectListItem>> GetMMSIBilledTicketsById(int id, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> dispatchTicketList = await _dbContext.MMSIDispatchTickets

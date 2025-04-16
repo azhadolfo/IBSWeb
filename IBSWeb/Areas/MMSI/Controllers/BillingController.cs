@@ -135,6 +135,7 @@ namespace IBSWeb.Areas.MMSI
             }
         }
 
+        [HttpPost]
         public async Task<IActionResult> GetDispatchTickets(List<string> dispatchTicketIds)
         {
             try
@@ -417,10 +418,11 @@ namespace IBSWeb.Areas.MMSI
             return View(model);
         }
 
-        public JsonResult GetCustomerDetails(int customerId)
+        [HttpPost]
+        public async Task<JsonResult> GetCustomerDetails(int customerId)
         {
-            var customerDetails = _db.MMSICustomers
-                .Find(customerId);
+            var customerDetails = await _db.MMSICustomers
+                .FindAsync(customerId);
 
             var customerDetailsJson = new
             {
@@ -506,6 +508,25 @@ namespace IBSWeb.Areas.MMSI
             }).ToList();
 
             return Json(principalsList);
+        }
+
+
+        [HttpPost]
+        public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
+        {
+            // bills uncollected but with the same customers
+            var list = await _unitOfWork.Msap.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
+
+            var model = await _db.MMSIDispatchTickets
+                .Where(dt => dt.BillingId == billingId.ToString())
+                .ToListAsync(cancellationToken);
+
+            if (model?.FirstOrDefault()?.CustomerId == customerId)
+            {
+                list?.AddRange(await _unitOfWork.Msap.GetMMSIBilledTicketsById(billingId, cancellationToken));
+            }
+
+            return list;
         }
     }
 }
