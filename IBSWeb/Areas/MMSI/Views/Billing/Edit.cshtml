@@ -112,7 +112,7 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-3 my-2">
-                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                        <input asp-for="Date" type="date" id="Date" class="form-control border-0 shadow">
                         <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
