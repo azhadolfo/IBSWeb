@@ -363,6 +363,13 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     return BadRequest();
                 }
 
+                if (existingRecord.DateFrom == default || existingRecord.DateTo == default)
+                {
+                    TempData["error"] = "The system has detected that this is a newly rolled-over account. " +
+                                        "Please ensure necessary modifications are made before proceeding with the posting.";
+                    return RedirectToAction(nameof(Preview), new { id });
+                }
+
                 existingRecord.PostedBy = User.Identity.Name;
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(PlacementStatus.Posted);
@@ -492,32 +499,50 @@ namespace IBSWeb.Areas.Bienes.Controllers
             }
         }
 
+        public async Task<IActionResult> RollOver(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // public async Task<IActionResult> RollOver(int? id, CancellationToken cancellationToken)
-        // {
-        //     if (id == null)
-        //     {
-        //         return NotFound();
-        //     }
-        //
-        //     await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-        //
-        //     try
-        //     {
-        //         var existingRecord = await _unitOfWork.BienesPlacement
-        //             .GetAsync(p => p.PlacementId == id, cancellationToken);
-        //
-        //
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         await transaction.RollbackAsync(cancellationToken);
-        //         TempData["error"] = ex.Message;
-        //         _logger.LogError(ex, "Failed to roll over placement. Error: {ErrorMessage}, Stack: {StackTrace}. Rollover by: {UserName}",
-        //             ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-        //         return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
-        //     }
-        // }
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                var user = User.Identity!.Name;
+
+                existingRecord.IsRolled = true;
+
+                if (existingRecord.TerminatedBy == null)
+                {
+                    existingRecord.TerminatedBy = user;
+                }
+
+                await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = $"Rollover placement successfully. " +
+                                      $"You can now modified the newly created placement with the same control#{existingRecord.ControlNumber}";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to roll over placement. Error: {ErrorMessage}, Stack: {StackTrace}. Rollover by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
     }
 }

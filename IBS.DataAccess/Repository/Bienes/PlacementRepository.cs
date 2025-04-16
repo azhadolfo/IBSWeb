@@ -91,6 +91,42 @@ namespace IBS.DataAccess.Repository.Bienes
 
         }
 
+        public async Task RollOverAsync(BienesPlacement model, string user, CancellationToken cancellationToken = default)
+        {
+            BienesPlacement newPlacement = new()
+            {
+                ControlNumber = model.ControlNumber,
+                CompanyId = model.CompanyId,
+                BankId = model.BankId,
+                Bank = model.Bank,
+                Branch = model.Branch,
+                TDAccountNumber = model.TDAccountNumber,
+                AccountName = model.AccountName,
+                SettlementAccountNumber = model.SettlementAccountNumber,
+                DateFrom = default,
+                DateTo = default,
+                Remarks = model.Remarks,
+                ChequeNumber = model.ChequeNumber,
+                CVNo = model.CVNo,
+                BatchNumber = model.BatchNumber,
+                PrincipalAmount = model.PrincipalAmount,
+                PrincipalDisposition = model.PrincipalDisposition,
+                PlacementType = model.PlacementType,
+                InterestRate = model.InterestRate,
+                HasEWT = model.HasEWT,
+                EWTRate = model.EWTRate,
+                HasTrustFee = model.HasTrustFee,
+                TrustFeeRate = model.TrustFeeRate,
+                CreatedBy = user,
+                NumberOfYears = model.NumberOfYears,
+                FrequencyOfPayment = model.FrequencyOfPayment,
+                RolledFromId = model.PlacementId,
+            };
+
+            await _db.BienesPlacements.AddAsync(newPlacement, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         public override async Task<BienesPlacement> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
             CancellationToken cancellationToken = default)
         {
