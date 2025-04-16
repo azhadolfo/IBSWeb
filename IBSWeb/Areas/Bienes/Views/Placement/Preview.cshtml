@@ -137,7 +137,7 @@
                         <div class="row">
                             <div class="col-4 mb-1"><span class="detail-label">From:</span> <span class="detail-value">@Model.DateFrom.ToString(SD.Date_Format)</span></div>
                             <div class="col-4 mb-1"><span class="detail-label">To:</span> <span class="detail-value">@Model.DateTo.ToString(SD.Date_Format)</span></div>
-                            <div class="col-4 mb-1"><span class="detail-label">Term:</span> <span class="detail-value">@termValue days</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Term:</span> <span class="detail-value">@termValue day(s)</span></div>
 
                         @if (Model.PlacementType == PlacementType.LongTerm)
                         {
@@ -177,23 +177,23 @@
                                         <label asp-for="InterestDeposited" class="detail-label">Interest Deposit</label>
                                         <div class="input-group">
                                             <span class="input-group-text">₱</span>
-                                            <input asp-for="InterestDeposited" class="form-control" required min="0.01"/>
+                                            <input asp-for="InterestDeposited" class="form-control"/>
                                         </div>
                                         <span asp-validation-for="InterestDeposited" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label asp-for="InterestDepositedDate" class="detail-label">Date Deposit</label>
-                                        <input asp-for="InterestDepositedDate" type="date" class="form-control" required/>
+                                        <input asp-for="InterestDepositedDate" type="date" class="form-control" value=""/>
                                         <span asp-validation-for="InterestDepositedDate" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label asp-for="InterestDepositedTo" class="detail-label">Interest Deposited To</label>
-                                        <input asp-for="InterestDepositedTo" class="form-control" required/>
+                                        <input asp-for="InterestDepositedTo" class="form-control"/>
                                         <span asp-validation-for="InterestDepositedTo" class="text-danger"></span>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label asp-for="InterestStatus" class="detail-label">Interest Status</label>
-                                        <select asp-for="InterestStatus" class="form-select" required>
+                                        <select asp-for="InterestStatus" class="form-select">
                                             <option value="@InterestStatus.NotApplicable.">NA</option>
                                             <option value="@InterestStatus.Withdrawn">Withdrawn</option>
                                             <option value="@InterestStatus.Rolled">Rolled</option>
@@ -211,7 +211,7 @@
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <label asp-for="TerminationRemarks" class="detail-label">Termination Remarks</label>
-                                        <textarea asp-for="TerminationRemarks" class="form-control" rows="3" required></textarea>
+                                        <textarea asp-for="TerminationRemarks" class="form-control" rows="3"></textarea>
                                         <span asp-validation-for="TerminationRemarks" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -401,6 +401,7 @@
                 });
             }
 
+            console.log(elements);
             // Setup roll over confirmation
             if (elements.rollOverBtn) {
                 elements.rollOverBtn.addEventListener('click', function(e) {
@@ -418,7 +419,48 @@
                         confirmButtonText: 'Yes, roll it over!'
                     }).then((result) => {
                         if (result.isConfirmed && rollOverUrl) {
-                            window.location.href = rollOverUrl;
+                            // Create a form to submit the data
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = rollOverUrl;
+
+                            // Add CSRF token
+                            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                            if (antiForgeryToken) {
+                                const tokenInput = document.createElement('input');
+                                tokenInput.type = 'hidden';
+                                tokenInput.name = '__RequestVerificationToken';
+                                tokenInput.value = antiForgeryToken.value;
+                                form.appendChild(tokenInput);
+                            }
+
+                            // If termination details are needed, add them
+                            if (@(Model.TerminatedBy == null ? "true" : "false")) {
+                                // Add all termination form fields
+                                const terminateFields = [
+                                    { name: 'terminateModel.PlacementId', value: @Model.PlacementId },
+                                    { name: 'terminateModel.InterestDeposited', value: elements.interestDeposited?.value || "" },
+                                    { name: 'terminateModel.InterestDepositedDate', value: elements.interestDepositedDate?.value || "" },
+                                    { name: 'terminateModel.InterestDepositedTo', value: elements.interestDepositedTo?.value || "" },
+                                    { name: 'terminateModel.InterestStatus', value: elements.interestStatus?.value || "" },
+                                    { name: 'terminateModel.TerminatedDate', value: elements.terminatedDate?.value || "" },
+                                    { name: 'terminateModel.TerminationRemarks', value: elements.terminationRemarks?.value || "" }
+                                ];
+
+                                terminateFields.forEach(field => {
+                                    if (field.value) {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = field.name;
+                                        input.value = field.value;
+                                        form.appendChild(input);
+                                    }
+                                });
+                            }
+
+                            // Append form to body and submit
+                            document.body.appendChild(form);
+                            form.submit();
                         }
                     });
                 });
@@ -448,17 +490,22 @@
             // Validate function - checks all required fields and enables/disables terminate button
             function validate() {
                 try {
-                    const interestValid = elements.interestDeposited && 
-                                         elements.interestDeposited.value && 
-                                         !isNaN(parseFloat(elements.interestDeposited.value)) && 
-                                         parseFloat(elements.interestDeposited.value) > 0;
+                    //Uncomment this if user wants to validate all the field 
+                    //const interestValid = elements.interestDeposited && 
+                    //                     elements.interestDeposited.value && 
+                    //                     !isNaN(parseFloat(elements.interestDeposited.value)) && 
+                    //                     parseFloat(elements.interestDeposited.value) > 0;
+                    //
                     
-                    const allFieldsValid = interestValid && 
-                                          elements.interestDepositedDate && elements.interestDepositedDate.value && 
-                                          elements.interestDepositedTo && elements.interestDepositedTo.value &&
-                                          elements.interestStatus && elements.interestStatus.value &&
-                                          elements.terminatedDate && elements.terminatedDate.value &&
-                                          elements.terminationRemarks && elements.terminationRemarks.value.trim();
+                    //const allFieldsValid = interestValid && 
+                    //                      elements.interestDepositedDate && elements.interestDepositedDate.value && 
+                    //                    elements.interestDepositedTo && elements.interestDepositedTo.value &&
+                    //                    elements.interestStatus && elements.interestStatus.value &&
+                    //                    elements.terminatedDate && elements.terminatedDate.value &&
+                    //                    elements.terminationRemarks && elements.terminationRemarks.value.trim();
+
+                    const allFieldsValid = elements.interestStatus && elements.interestStatus.value &&
+                        elements.terminatedDate && elements.terminatedDate.value;
                     
                     if (elements.terminateBtn) {
                         elements.terminateBtn.disabled = !allFieldsValid;
@@ -470,12 +517,13 @@
             
             // Add event listeners to all form fields
             const formFields = [
-                'interestDeposited', 
-                'interestDepositedDate', 
-                'interestDepositedTo',
-                'interestStatus', 
-                'terminatedDate', 
-                'terminationRemarks'
+                //Uncomment this if user wants to validate all the field
+                //'interestDeposited', 
+                //'interestDepositedDate', 
+                //'interestDepositedTo',
+                //'terminationRemarks',
+                'interestStatus',
+                'terminatedDate',
             ];
             
             formFields.forEach(field => {

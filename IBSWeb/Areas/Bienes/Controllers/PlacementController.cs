@@ -413,12 +413,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
         [HttpPost]
         public async Task<IActionResult> Terminate(TerminatePlacementViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(Preview), new { id = viewModel.PlacementId });
-            }
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -430,7 +424,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.TerminatedDate = viewModel.TerminatedDate;
                 existingRecord.TerminatedBy = User.Identity.Name;
                 existingRecord.InterestDeposited = viewModel.InterestDeposited;
-                existingRecord.InterestDepositedDate = viewModel.InterestDepositedDate;
+                existingRecord.InterestDepositedDate = viewModel.InterestDepositedDate == default ? null : viewModel.InterestDepositedDate;
                 existingRecord.InterestDepositedTo = viewModel.InterestDepositedTo;
                 existingRecord.InterestStatus = viewModel.InterestStatus;
                 existingRecord.TerminationRemarks = viewModel.TerminationRemarks;
@@ -499,6 +493,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> RollOver(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -520,6 +515,62 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 if (existingRecord.TerminatedBy == null)
                 {
                     existingRecord.TerminatedBy = user;
+                }
+
+                await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = $"Rollover placement successfully. " +
+                                      $"You can now modified the newly created placement with the same control#{existingRecord.ControlNumber}";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to roll over placement. Error: {ErrorMessage}, Stack: {StackTrace}. Rollover by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RollOver(int? id, TerminatePlacementViewModel terminateModel = null, CancellationToken cancellationToken = default)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                var user = User.Identity!.Name;
+
+                existingRecord.IsRolled = true;
+
+                // Check if termination details were provided
+                if (terminateModel.PlacementId > 0)
+                {
+                    // Apply termination details
+                    existingRecord.Status = nameof(PlacementStatus.Terminated);
+                    existingRecord.TerminatedDate = terminateModel.TerminatedDate;
+                    existingRecord.TerminatedBy = user;
+                    existingRecord.InterestDeposited = terminateModel.InterestDeposited;
+                    existingRecord.InterestDepositedDate = terminateModel.InterestDepositedDate == default ? null : terminateModel.InterestDepositedDate;
+                    existingRecord.InterestDepositedTo = terminateModel.InterestDepositedTo;
+                    existingRecord.InterestStatus = terminateModel.InterestStatus;
+                    existingRecord.TerminationRemarks = terminateModel.TerminationRemarks;
                 }
 
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
