@@ -536,5 +536,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             return RedirectToAction(nameof(Print), new { id });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> UnservedPurchaseOrder(CancellationToken cancellationToken)
+        {
+            var groupedPurchaseOrders = await _dbContext.MobilityPurchaseOrders
+                .Where(po => po.Status == "Posted" && !po.IsReceived)
+                .Include(po => po.Product)
+                .Include(po => po.PickUpPoint)
+                .Include(po => po.MobilityStation)
+                .GroupBy(po => po.StationCode)
+                .Select(g => new UnservedPurchaseOrderViewModel
+                {
+                    StationName = $"{g.Key} {g.First().MobilityStation.StationName} {g.First().MobilityStation.Initial}",
+                    PurchaseOrders = g.ToList()
+                })
+                .ToListAsync(cancellationToken);
+
+            return View(groupedPurchaseOrders);
+        }
     }
 }

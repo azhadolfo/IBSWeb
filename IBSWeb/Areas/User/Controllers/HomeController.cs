@@ -90,6 +90,10 @@ namespace IBSWeb.Areas.User.Controllers
                 RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
                     .Where(dr => !dr.HasReceivingReport && dr.CanceledBy == null && dr.Company == companyClaims)
                     .CountAsync(),
+
+                MobilityStationUnservePO = await _dbContext.MobilityPurchaseOrders
+                    .Where(po => po.Status == "Posted" && !po.IsReceived)
+                    .CountAsync(),
             };
 
             return View(dashboardCounts);

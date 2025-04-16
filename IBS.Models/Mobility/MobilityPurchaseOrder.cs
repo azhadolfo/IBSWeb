@@ -101,5 +101,8 @@ namespace IBS.Models.Mobility
         [Display(Name = "Station Code")]
         [Column(TypeName = "varchar(3)")]
         public string StationCode { get; set; } = string.Empty;
+
+        [ForeignKey(nameof(StationCode))]
+        public MobilityStation? MobilityStation { get; set; }
     }
 }
