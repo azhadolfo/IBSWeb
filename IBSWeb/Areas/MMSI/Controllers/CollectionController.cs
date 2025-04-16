@@ -180,9 +180,8 @@ namespace IBSWeb.Areas.MMSI
 
                     var changes = new List<string>();
 
-                    if (currentModel.CollectionNumber != model.CollectionNumber) { changes.Add($"CollectionNumber: {currentModel.CollectionNumber} -> {model.CollectionNumber}"); }
-                    if (currentModel.IsUndocumented != model.IsUndocumented) { changes.Add($"IsUndocumented: {currentModel.IsUndocumented} -> {model.IsUndocumented}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
                     if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
                     if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
@@ -202,7 +201,7 @@ namespace IBSWeb.Areas.MMSI
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit Collection: id #{currentModel.MMSICollectionId} {string.Join(", ", changes)}"
+                            ? $"Edit Collection: #{currentModel.MMSICollectionId} {string.Join(", ", changes)}"
                             : $"No changes detected for Collection #{currentModel.MMSICollectionId}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
@@ -213,9 +212,8 @@ namespace IBSWeb.Areas.MMSI
 
                     #endregion -- Audit Trail
 
-                    currentModel.CollectionNumber = model.CollectionNumber;
-                    currentModel.IsUndocumented = model.IsUndocumented;
                     currentModel.Date = model.Date;
+                    currentModel.CustomerId = model.CustomerId;
                     currentModel.CheckNumber = model.CheckNumber;
                     currentModel.CheckDate = model.CheckDate;
                     currentModel.DepositDate = model.DepositDate;
