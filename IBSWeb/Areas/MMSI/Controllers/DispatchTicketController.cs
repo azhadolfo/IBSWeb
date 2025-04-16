@@ -331,8 +331,8 @@ namespace IBSWeb.Areas.MMSI
                     MachineName = Environment.MachineName,
                     Activity = changes.Any()
                         ? $"Edit Tariff:#{currentModel.DispatchTicketId} {string.Join(", ", changes)}"
-                        : $"No changes detected for service request #{currentModel.DispatchNumber}",
-                    DocumentType = "DispatchTicket",
+                        : $"No changes detected for tariff details #{currentModel.DispatchTicketId}",
+                    DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
 
