@@ -370,10 +370,11 @@
 
                 if (customerId) {
                     $dispatchSelect.prop("disabled", false);
+                    $dispatchSelect.val("0").trigger("change");
                     $vatableDiv.removeClass("d-none");
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
-                        method: "GET",
+                        method: "POST",
                         data: { customerId: customerId },
                         success: function (data) {
                             updateFields(data);
