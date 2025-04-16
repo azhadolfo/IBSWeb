@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.MMSI
 
                         #endregion --Audit Trail
 
-                        TempData["success"] = "Entry Created Successfully!";
+                        TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
 
                         return RedirectToAction(nameof(Index));
                     }
