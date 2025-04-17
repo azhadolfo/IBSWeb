@@ -362,15 +362,16 @@ namespace IBS.DataAccess.Repository.MMSI
             }
 
             var dispatchTickets = await _dbContext.MMSIDispatchTickets
-                .Where(b => b.CreateDate >= dateFrom
-                             && b.CreateDate <= dateTo
-                             && b.Status == "Billed")
-                .Include(b => b.Customer)
-                .Include(b => b.Vessel)
-                .Include(b => b.Tugboat)
-                .Include(b => b.Terminal)
+                .Where(dt => dt.CreateDate >= dateFrom
+                             && dt.CreateDate <= dateTo
+                             && dt.Status == "Billed")
+                .Include(dt => dt.Customer)
+                .Include(dt => dt.Vessel)
+                .Include(dt => dt.Tugboat)
+                .Include(dt => dt.Terminal)
                 .ThenInclude(t => t.Port)
-                .Include(b => b.ActivityService)
+                .Include(dt => dt.ActivityService)
+                .OrderBy(dt => dt.CreateDate)
                 .ToListAsync(cancellationToken);
 
             return dispatchTickets;
