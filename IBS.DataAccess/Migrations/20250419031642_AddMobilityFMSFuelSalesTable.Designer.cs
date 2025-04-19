@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250419031642_AddMobilityFMSFuelSalesTable")]
+    partial class AddMobilityFMSFuelSalesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4980,138 +4983,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mobility_customer_purchase_orders", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityFMSCalibration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int>("PageNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("page_number");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price");
-
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_code");
-
-                    b.Property<int>("PumpNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("pump_number");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric")
-                        .HasColumnName("quantity");
-
-                    b.Property<DateOnly>("ShiftDate")
-                        .HasColumnType("date")
-                        .HasColumnName("shift_date");
-
-                    b.Property<int>("ShiftNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("shift_number");
-
-                    b.Property<string>("ShiftRecordId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("shift_record_id");
-
-                    b.Property<string>("StationCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("station_code");
-
-                    b.HasKey("Id")
-                        .HasName("pk_mobility_fms_calibrations");
-
-                    b.HasIndex("ShiftRecordId")
-                        .HasDatabaseName("ix_mobility_fms_calibrations_shift_record_id");
-
-                    b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_fms_calibrations_station_code");
-
-                    b.ToTable("mobility_fms_calibrations", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityFMSCashierShift", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<decimal>("BiodieselPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("biodiesel_price");
-
-                    b.Property<decimal>("CashOnHand")
-                        .HasColumnType("numeric")
-                        .HasColumnName("cash_on_hand");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date")
-                        .HasColumnName("date");
-
-                    b.Property<decimal>("EconogasPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("econogas_price");
-
-                    b.Property<string>("EmployeeNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("employee_number");
-
-                    b.Property<decimal>("EnvirogasPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("envirogas_price");
-
-                    b.Property<bool>("NextDay")
-                        .HasColumnType("boolean")
-                        .HasColumnName("next_day");
-
-                    b.Property<int>("PageNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("page_number");
-
-                    b.Property<int>("ShiftNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("shift_number");
-
-                    b.Property<string>("ShiftRecordId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("shift_record_id");
-
-                    b.Property<string>("StationCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("station_code");
-
-                    b.Property<TimeOnly>("TimeIn")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("time_in");
-
-                    b.Property<TimeOnly>("TimeOut")
-                        .HasColumnType("time without time zone")
-                        .HasColumnName("time_out");
-
-                    b.HasKey("Id")
-                        .HasName("pk_mobility_fms_cashier_shifts");
-
-                    b.HasIndex("ShiftRecordId")
-                        .HasDatabaseName("ix_mobility_fms_cashier_shifts_shift_record_id");
-
-                    b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_fms_cashier_shifts_station_code");
-
-                    b.ToTable("mobility_fms_cashier_shifts", (string)null);
-                });
-
             modelBuilder.Entity("IBS.Models.Mobility.MobilityFMSFuelSales", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5172,68 +5043,6 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_mobility_fms_fuel_sales_station_code");
 
                     b.ToTable("mobility_fms_fuel_sales", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityFMSLubeSales", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<decimal>("ActualPrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("actual_price");
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("numeric")
-                        .HasColumnName("cost");
-
-                    b.Property<int>("PageNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("page_number");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price");
-
-                    b.Property<string>("ProductCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_code");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
-                        .HasColumnName("quantity");
-
-                    b.Property<DateOnly>("ShiftDate")
-                        .HasColumnType("date")
-                        .HasColumnName("shift_date");
-
-                    b.Property<int>("ShiftNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("shift_number");
-
-                    b.Property<string>("ShiftRecordId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("shift_record_id");
-
-                    b.Property<string>("StationCode")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("station_code");
-
-                    b.HasKey("Id")
-                        .HasName("pk_mobility_fms_lube_sales");
-
-                    b.HasIndex("ShiftRecordId")
-                        .HasDatabaseName("ix_mobility_fms_lube_sales_shift_record_id");
-
-                    b.HasIndex("StationCode")
-                        .HasDatabaseName("ix_mobility_fms_lube_sales_station_code");
-
-                    b.ToTable("mobility_fms_lube_sales", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityFuel", b =>

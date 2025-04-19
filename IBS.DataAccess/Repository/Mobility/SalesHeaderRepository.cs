@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
+using CsvHelper;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -29,17 +30,17 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 // ALREADY SHOW PROBLEMS HERE: THROWS EXCEPTION
                 var fuelSales = await _db.FuelSalesViews
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
                     .Where(l => !l.IsProcessed)
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
                     .Where(s => !s.IsProcessed)
-                    .Where(f => f.BusinessDate.Month == 1 && f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
@@ -723,7 +724,7 @@ namespace IBS.DataAccess.Repository.Mobility
             await _db.MobilitySalesDetails.AddAsync(salesDetails, cancellationToken);
         }
 
-        public async Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        public async Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
         {
             var records = ReadFuelRecordsGoogleDrive(file.FileContent);
             var (newRecords, hasPoSales) = await AddNewFuelRecords(records, cancellationToken);
@@ -810,7 +811,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords, hasPoSales);
         }
 
-        public async Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        public async Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
         {
             var records = ReadLubeRecordsGoogleDrive(file.FileContent);
             var (newRecords, hasPoSales) = await AddNewLubeRecords(records, cancellationToken);
@@ -863,7 +864,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return (newRecords, hasPoSales);
         }
 
-        public async Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        public async Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
         {
             var records = ReadSafeDropRecordsGoogleDrive(file.FileContent);
             var newRecords = await AddNewSafeDropRecords(records, cancellationToken);
@@ -1059,6 +1060,197 @@ namespace IBS.DataAccess.Repository.Mobility
                     await LogChangesAsync(existingSalesHeader.SalesHeaderId, changes, viewModel.User, cancellationToken);
                 }
 
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<int> ProcessFmsFuelSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSFuelSalesRawViewModel>();
+            var fuelSales = new List<MobilityFMSFuelSales>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFMSFuelSales
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                fuelSales.Add(new MobilityFMSFuelSales
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    PumpNumber = record.pumpnumber,
+                    ProductCode = record.productcode,
+                    Opening = record.opening,
+                    Closing = record.closing,
+                    Price = record.price,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber
+                });
+            }
+
+            if (fuelSales.Count > 0)
+            {
+                await _db.MobilityFMSFuelSales.AddRangeAsync(fuelSales, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return fuelSales.Count;
+        }
+
+        public async Task<int> ProcessFmsLubeSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSLubeSalesRawViewModel>();
+            var lubesSales = new List<MobilityFMSLubeSales>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFMSLubeSales
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                lubesSales.Add(new MobilityFMSLubeSales
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    ProductCode = record.productcode,
+                    Quantity = record.quantity,
+                    Price = record.price,
+                    ActualPrice = record.actualprice,
+                    Cost = record.cost,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber
+                });
+            }
+
+            if (lubesSales.Count > 0)
+            {
+                await _db.MobilityFMSLubeSales.AddRangeAsync(lubesSales, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return lubesSales.Count;
+        }
+
+        public async Task ProcessFmsCalibrationGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSCalibrationRawViewModel>();
+            var calibrations = new List<MobilityFMSCalibration>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsCalibrations
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                calibrations.Add(new MobilityFMSCalibration
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    PumpNumber = record.pumpnumber,
+                    ProductCode = record.productcode,
+                    Quantity = record.quantity,
+                    Price = record.price,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber
+                });
+            }
+
+            if (calibrations.Count > 0)
+            {
+                await _db.MobilityFmsCalibrations.AddRangeAsync(calibrations, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task ProcessFmsCashierShiftGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSCashierShiftRawViewModel>();
+            var cashiers = new List<MobilityFMSCashierShift>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsCashierShifts
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.recid))
+                    continue;
+
+                cashiers.Add(new MobilityFMSCashierShift
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.recid,
+                    Date = record.date,
+                    EmployeeNumber = record.empno,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber,
+                    TimeIn = record.timein,
+                    TimeOut = record.timeout,
+                    NextDay = record.nextday == "T",
+                    CashOnHand = record.cashonhand,
+                    BiodieselPrice = record.pricebio,
+                    EconogasPrice = record.priceeco,
+                    EnvirogasPrice = record.priceenv,
+
+                });
+            }
+
+            if (cashiers.Count > 0)
+            {
+                await _db.MobilityFmsCashierShifts.AddRangeAsync(cashiers, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }

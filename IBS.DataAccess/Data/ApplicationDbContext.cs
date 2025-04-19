@@ -52,6 +52,14 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
         public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
 
+        public DbSet<MobilityFMSFuelSales> MobilityFMSFuelSales { get; set; }
+
+        public DbSet<MobilityFMSLubeSales> MobilityFMSLubeSales { get; set; }
+
+        public DbSet<MobilityFMSCashierShift> MobilityFmsCashierShifts { get; set; }
+
+        public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
+
         #endregion
 
         #region--Purchase Entity
@@ -314,6 +322,31 @@ namespace IBS.DataAccess.Data
             builder.Entity<MobilityPOSales>(po => po
                 .HasIndex(po => po.POSalesNo)
                 .IsUnique());
+
+            builder.Entity<MobilityFMSFuelSales>(fuel =>
+            {
+                fuel.HasIndex(f => f.ShiftRecordId);
+                fuel.HasIndex(f => f.StationCode);
+            });
+
+            builder.Entity<MobilityFMSLubeSales>(lube =>
+            {
+                lube.HasIndex(l => l.ShiftRecordId);
+                lube.HasIndex(l => l.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCalibration>(calibration =>
+            {
+                calibration.HasIndex(c => c.ShiftRecordId);
+                calibration.HasIndex(c => c.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCashierShift>(shift =>
+            {
+                shift.HasIndex(sh => sh.ShiftRecordId);
+                shift.HasIndex(sh => sh.StationCode);
+            });
+
 
             #endregion
 
