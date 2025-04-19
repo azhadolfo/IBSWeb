@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
     {
         Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default);
 
-        Task<int> ProcessLubeDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<int> ProcessLubeDeliveryGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
         Task RecordTheDeliveryToPurchase(IEnumerable<LubeDelivery> lubeDeliveries, CancellationToken cancellationToken = default);
 

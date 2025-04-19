@@ -1,6 +1,6 @@
 namespace IBS.Models.Mobility.ViewModels
 {
-    public class GoogleDriveFile
+    public class GoogleDriveFileViewModel
     {
         public string FileName { get; set; }
 
