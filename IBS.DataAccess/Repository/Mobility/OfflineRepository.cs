@@ -28,7 +28,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             return await _db.MobilityOfflines
                 .OrderBy(o => o.OfflineId)
-                .Where(o => !o.IsResolve && (stationCode == "ALL" || o.StationCode == stationCode))
+                .Where(o => !o.IsResolve && o.StationCode == stationCode)
                 .Select(o => new SelectListItem
                 {
                     Value = o.OfflineId.ToString(),

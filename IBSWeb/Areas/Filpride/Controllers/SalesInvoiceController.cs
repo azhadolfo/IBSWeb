@@ -228,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<JsonResult> GetProductAndDRDetails(int cosId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(c => c.CustomerOrderSlipId == cosId, cancellationToken);
             if (cos != null)
             {
@@ -240,7 +241,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.Terms,
                     cos.CustomerAddress,
                     cos.CustomerTin,
-                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(companyClaims, cos.CustomerOrderSlipId, cancellationToken)
                 });
             }
             return Json(null);
@@ -265,7 +266,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
                 var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
+                    .Where(rr => rr.Company == companyClaims && rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
                     .Select(rr => new
                     {
                         rr.ReceivingReportId,

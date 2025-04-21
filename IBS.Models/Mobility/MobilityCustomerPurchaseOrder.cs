@@ -34,7 +34,7 @@ namespace IBS.Models.Mobility
         public int StationId { get; set; }
         public string StationCode { get; set; }
 
-        [ForeignKey(nameof(StationId))]
+        [ForeignKey(nameof(StationCode))]
         public MobilityStation? MobilityStation { get; set; }
         #endregion
 

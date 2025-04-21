@@ -495,8 +495,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var checkVoucher = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeader.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) ||
-                              cvd.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeaderId == cvd.CheckVoucherHeader.CheckVoucherHeaderId)
+                .Where(cvd => cvd.CheckVoucherHeader.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeader.Company == companyClaims ||
+                              cvd.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeaderId == cvd.CheckVoucherHeader.CheckVoucherHeaderId && cvd.CheckVoucherHeader.Company == companyClaims)
                 .Include(cvd => cvd.CheckVoucherHeader)
                 .OrderBy(cvd => cvd.CheckVoucherDetailId)
                 .Select(cvd => new SelectListItem
@@ -508,7 +508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             var suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims)
+                .Where(cvh => (companyClaims == nameof(Filpride) ? cvh.IsFilpride : cvh.IsMobility) && cvh.Category == "Non-Trade")
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
@@ -517,7 +517,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             var bankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -783,7 +783,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
+                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                         .Select(ba => new SelectListItem
                         {
                             Value = ba.BankAccountId.ToString(),
@@ -808,7 +808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -856,6 +856,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<JsonResult> GetMultipleSupplier(int cvId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var cv = await _dbContext.FilprideCheckVoucherHeaders
                     .Include(c => c.Supplier)
                     .FirstOrDefaultAsync(c => c.CheckVoucherHeaderId == cvId, cancellationToken);
@@ -874,7 +875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             // Fetch suppliers whose IDs are in the supplierIds list
             var suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => supplierIds.Contains(supp.SupplierId))
+                .Where(supp => supplierIds.Contains(supp.SupplierId) && (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility))
                 .OrderBy(supp => supp.SupplierId)
                 .Select(supp => new SelectListItem
                 {
@@ -965,7 +966,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(cvh => cvh.Company == companyClaims)
+                .Where(cvh => (companyClaims == nameof(Filpride) ? cvh.IsFilpride : cvh.IsMobility) && cvh.Category == "Non-Trade")
                 .Select(cvh => new SelectListItem
                 {
                     Value = cvh.SupplierId.ToString(),
@@ -974,7 +975,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync();
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1164,7 +1165,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
+                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                         .Select(ba => new SelectListItem
                         {
                             Value = ba.BankAccountId.ToString(),
@@ -1189,7 +1190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1360,7 +1361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.Employees = await _dbContext.FilprideEmployees
-                .Where(e => e.IsActive)
+                .Where(e => e.IsActive && e.Company == companyClaims)
                 .Select(e => new SelectListItem
                 {
                     Value = e.EmployeeId.ToString(),
@@ -1369,7 +1370,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1493,7 +1494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    await transaction.RollbackAsync(cancellationToken);
 
                    viewModel.Employees = await _dbContext.FilprideEmployees
-                       .Where(e => e.IsActive)
+                       .Where(e => e.IsActive && e.Company == companyClaims)
                        .Select(e => new SelectListItem
                        {
                            Value = e.EmployeeId.ToString(),
@@ -1502,7 +1503,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                        .ToListAsync(cancellationToken);
 
                    viewModel.Banks = await _dbContext.FilprideBankAccounts
-                       .Where(ba => ba.Company == companyClaims)
+                       .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                        .Select(ba => new SelectListItem
                        {
                            Value = ba.BankAccountId.ToString(),
@@ -1526,7 +1527,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                .ToListAsync(cancellationToken);
 
            viewModel.Banks = await _dbContext.FilprideBankAccounts
-               .Where(ba => ba.Company == companyClaims)
+               .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                .Select(ba => new SelectListItem
                {
                    Value = ba.BankAccountId.ToString(),
@@ -1557,7 +1558,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var employees = await _dbContext.FilprideEmployees
-                .Where(e => e.IsActive)
+                .Where(e => e.IsActive && e.Company == companyClaims)
                 .Select(e => new SelectListItem
                 {
                     Value = e.EmployeeId.ToString(),
@@ -1566,7 +1567,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             var bankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1699,7 +1700,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to edit advances to employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     viewModel.Employees = await _dbContext.FilprideEmployees
-                        .Where(e => e.IsActive)
+                        .Where(e => e.IsActive && e.Company == companyClaims)
                         .Select(e => new SelectListItem
                         {
                             Value = e.EmployeeId.ToString(),
@@ -1708,7 +1709,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
+                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                         .Select(ba => new SelectListItem
                         {
                             Value = ba.BankAccountId.ToString(),
@@ -1723,7 +1724,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Employees = await _dbContext.FilprideEmployees
-                .Where(e => e.IsActive)
+                .Where(e => e.IsActive && e.Company == companyClaims)
                 .Select(e => new SelectListItem
                 {
                     Value = e.EmployeeId.ToString(),
@@ -1733,7 +1734,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1748,13 +1749,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetEmployeeDetails(int? employeeId)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (employeeId == null)
             {
                 return Json(null);
             }
 
             var employee = await _dbContext.FilprideEmployees
-                .FindAsync(employeeId);
+                .Where(e => e.Company == companyClaims)
+                .FirstOrDefaultAsync(e => e.EmployeeId == employeeId && e.Company == companyClaims);
 
             if (employee == null)
             {
@@ -1779,7 +1782,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -1920,7 +1923,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                    viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
 
                    viewModel.Banks = await _dbContext.FilprideBankAccounts
-                       .Where(ba => ba.Company == companyClaims)
+                       .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                        .Select(ba => new SelectListItem
                        {
                            Value = ba.BankAccountId.ToString(),
@@ -1937,7 +1940,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
            viewModel.Banks = await _dbContext.FilprideBankAccounts
-               .Where(ba => ba.Company == companyClaims)
+               .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                .Select(ba => new SelectListItem
                {
                    Value = ba.BankAccountId.ToString(),
@@ -1970,7 +1973,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var supplier = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             var bankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),
@@ -2120,7 +2123,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
                     viewModel.Banks = await _dbContext.FilprideBankAccounts
-                        .Where(ba => ba.Company == companyClaims)
+                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                         .Select(ba => new SelectListItem
                         {
                             Value = ba.BankAccountId.ToString(),
@@ -2138,7 +2141,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
             viewModel.Banks = await _dbContext.FilprideBankAccounts
-                .Where(ba => ba.Company == companyClaims)
+                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
                 .Select(ba => new SelectListItem
                 {
                     Value = ba.BankAccountId.ToString(),

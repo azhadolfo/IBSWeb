@@ -64,13 +64,13 @@
                                 </a>
                                 @if (obj.IsActive)
                                 {
-                                    <a asp-area="Filpride" asp-controller="Customer" asp-action="Deactivate" asp-route-id="@obj.CustomerId" class="btn btn-danger mx-2">
+                                    <a asp-area="Mobility" asp-controller="Customer" asp-action="Deactivate" asp-route-id="@obj.CustomerId" class="btn btn-danger mx-2">
                                         <i class="bi bi-person-fill-slash"></i> Deactivate
                                     </a>
                                 }
                                 else
                                 {
-                                    <a asp-area="Filpride" asp-controller="Customer" asp-action="Activate" asp-route-id="@obj.CustomerId" class="btn btn-success mx-2">
+                                    <a asp-area="Mobility" asp-controller="Customer" asp-action="Activate" asp-route-id="@obj.CustomerId" class="btn btn-success mx-2">
                                         <i class="bi bi-person-fill-check"></i> Activate
                                     </a>
                                 }

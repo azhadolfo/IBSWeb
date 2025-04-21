@@ -40,9 +40,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var services = await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken);
+            var services = await _dbContext.FilprideServices.ToListAsync(cancellationToken);
 
             if (view == nameof(DynamicView.Service))
             {
@@ -133,7 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
 
-                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
+                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
 
                     TempData["success"] = "Services created successfully";
 
@@ -187,6 +185,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingModel.Name = services.Name;
                         existingModel.Percent = services.Percent;
+                        existingModel.IsFilpride = services.IsFilpride;
+                        existingModel.IsMobility = services.IsMobility;
                         TempData["success"] = "Services updated successfully";
 
                         await _dbContext.SaveChangesAsync(cancellationToken);

@@ -46,6 +46,17 @@
                 <span class="input-group-text" id="basic-addon1">%</span>
                 <input asp-for="Percent" type="text" class="form-control" placeholder="Percentage" aria-label="Percentage" aria-describedby="basic-addon1" required>
             </div>
+            <label class="control-label">Please select where the record will be added:</label>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                </label>
+            </div>
             <div class="input-group mb-3">
                 <span asp-validation-for="Percent" class="text-danger"></span>
             </div>

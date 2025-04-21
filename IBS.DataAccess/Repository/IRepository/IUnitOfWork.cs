@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IUnitOfWork : IDisposable
     {
-        IProductRepository Product { get; }
+        MasterFile.IRepository.IProductRepository Product { get; }
 
         ICompanyRepository Company { get; }
 
@@ -49,7 +49,12 @@ namespace IBS.DataAccess.Repository.IRepository
         IOfflineRepository MobilityOffline { get; }
 
         IStationRepository MobilityStation { get; }
-
+        Mobility.IRepository.ISupplierRepository MobilitySupplier { get; }
+        Mobility.IRepository.ICustomerRepository MobilityCustomer { get; }
+        Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; }
+        Mobility.IRepository.IServiceRepository MobilityService { get; }
+        Mobility.IRepository.IProductRepository MobilityProduct { get; }
+        Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -74,7 +79,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
@@ -85,8 +90,8 @@ namespace IBS.DataAccess.Repository.IRepository
         Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; }
         Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
-        ISupplierRepository FilprideSupplier { get; }
-        ICustomerRepository FilprideCustomer { get; }
+        Filpride.IRepository.ISupplierRepository FilprideSupplier { get; }
+        Filpride.IRepository.ICustomerRepository FilprideCustomer { get; }
         IAuditTrailRepository FilprideAuditTrail { get; }
 
         IEmployeeRepository FilprideEmployee { get; }
@@ -135,11 +140,11 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region Master File
 
-        IBankAccountRepository FilprideBankAccount { get; }
+        Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; }
 
-        IServiceRepository FilprideService { get; }
+        Filpride.IRepository.IServiceRepository FilprideService { get; }
 
-        IPickUpPointRepository FilpridePickUpPoint { get; }
+        Filpride.IRepository.IPickUpPointRepository FilpridePickUpPoint { get; }
 
         IFreightRepository FilprideFreight { get; }
 

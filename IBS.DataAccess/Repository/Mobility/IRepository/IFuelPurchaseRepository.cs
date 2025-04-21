@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default);
 
-        Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
         Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default);
 

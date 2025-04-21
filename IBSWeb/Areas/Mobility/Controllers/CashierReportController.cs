@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         [HttpGet]
@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var stationCodeClaim = await GetStationCodeClaimAsync();
 
-                Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaim;
 
                 var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
 

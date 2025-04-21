@@ -7,10 +7,12 @@
     var department = ViewBag.GetUserDepartment;
     ViewData["Title"] = "Dashboard";
     string? selectedCompany = string.Empty;
+    string? selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 }
 
@@ -27,7 +29,7 @@
             }
             else
             {
-                if (selectedCompany == "Filpride")
+                if (selectedCompany == "Filpride" || selectedCompany == "Mobility" && selectedStation == "S00")
                 {
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
@@ -113,7 +115,7 @@
                                 }
                             </div>
 
-                        @if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+                            @if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
                             {
                                 <div class="col-md-4">
                                     <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="text-decoration-none">
@@ -322,6 +324,19 @@
                                         </div>
                                     </div>
                                 }
+                            </div>
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("UnservedPurchaseOrder", "PurchaseOrder", new { area = "Mobility" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-droplet-half me-2 text-primary"></i>Mobility Station Unserved PO
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MobilityStationUnservePO.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                             
                         </div>

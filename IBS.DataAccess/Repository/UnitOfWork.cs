@@ -22,7 +22,7 @@ namespace IBS.DataAccess.Repository
     {
         private ApplicationDbContext _db;
 
-        public IProductRepository Product { get; private set; }
+        public MasterFile.IRepository.IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
 
         public INotificationRepository Notifications { get; private set; }
@@ -40,6 +40,12 @@ namespace IBS.DataAccess.Repository
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
         public Mobility.IRepository.IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
+        public Mobility.IRepository.ISupplierRepository MobilitySupplier { get; private set; }
+        public Mobility.IRepository.ICustomerRepository MobilityCustomer { get; private set; }
+        public Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; private set; }
+        public Mobility.IRepository.IServiceRepository MobilityService { get; private set; }
+        public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
+        public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
@@ -51,9 +57,9 @@ namespace IBS.DataAccess.Repository
 
         public Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; private set; }
         public IDeliveryReceiptRepository FilprideDeliveryReceipt { get; private set; }
-        public ICustomerRepository FilprideCustomer { get; private set; }
-        public ISupplierRepository FilprideSupplier { get; private set; }
-        public IPickUpPointRepository FilpridePickUpPoint { get; private set; }
+        public Filpride.IRepository.ICustomerRepository FilprideCustomer { get; private set; }
+        public Filpride.IRepository.ISupplierRepository FilprideSupplier { get; private set; }
+        public Filpride.IRepository.IPickUpPointRepository FilpridePickUpPoint { get; private set; }
         public IFreightRepository FilprideFreight { get; private set; }
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
@@ -94,9 +100,9 @@ namespace IBS.DataAccess.Repository
 
         #region Master File
 
-        public IBankAccountRepository FilprideBankAccount { get; private set; }
+        public Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; private set; }
 
-        public IServiceRepository FilprideService { get; private set; }
+        public Filpride.IRepository.IServiceRepository FilprideService { get; private set; }
 
         #endregion
 
@@ -114,7 +120,7 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
 
-            Product = new ProductRepository(_db);
+            Product = new MasterFile.ProductRepository(_db);
             Company = new CompanyRepository(_db);
             Notifications = new NotificationRepository(_db);
 
@@ -131,6 +137,12 @@ namespace IBS.DataAccess.Repository
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
             MobilityInventory = new Mobility.InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
+            MobilitySupplier = new Mobility.SupplierRepository(_db);
+            MobilityCustomer = new Mobility.CustomerRepository(_db);
+            MobilityBankAccount = new Mobility.BankAccountRepository(_db);
+            MobilityService = new Mobility.ServiceRepository(_db);
+            MobilityProduct = new Mobility.ProductRepository(_db);
+            MobilityPickUpPoint = new Mobility.PickUpPointRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
@@ -141,9 +153,9 @@ namespace IBS.DataAccess.Repository
 
             FilprideCustomerOrderSlip = new Filpride.CustomerOrderSlipRepository(_db);
             FilprideDeliveryReceipt = new DeliveryReceiptRepository(_db);
-            FilprideCustomer = new CustomerRepository(_db);
-            FilprideSupplier = new SupplierRepository(_db);
-            FilpridePickUpPoint = new PickUpPointRepository(_db);
+            FilprideCustomer = new Filpride.CustomerRepository(_db);
+            FilprideSupplier = new Filpride.SupplierRepository(_db);
+            FilpridePickUpPoint = new Filpride.PickUpPointRepository(_db);
             FilprideFreight = new FreightRepository(_db);
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
@@ -176,8 +188,8 @@ namespace IBS.DataAccess.Repository
 
             #region Master File
 
-            FilprideBankAccount = new BankAccountRepository(_db);
-            FilprideService = new ServiceRepository(_db);
+            FilprideBankAccount = new Filpride.BankAccountRepository(_db);
+            FilprideService = new Filpride.ServiceRepository(_db);
 
             #endregion
 
@@ -203,7 +215,7 @@ namespace IBS.DataAccess.Repository
         public async Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default)
         {
             return await _db.MobilityStations
-                .OrderBy(s => s.StationId)
+                .OrderBy(s => s.StationCode)
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem
                 {
@@ -300,14 +312,15 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
             return await _db.MobilitySuppliers
-                .OrderBy(s => s.SupplierId)
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.StationCode == stationCodeClaims)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
-                    Text = s.SupplierName
+                    Text = s.SupplierCode + " " + s.SupplierName
                 })
                 .ToListAsync(cancellationToken);
         }
@@ -315,20 +328,15 @@ namespace IBS.DataAccess.Repository
         public async Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
         {
             string stationString;
-            if (stationCodeClaims != "ALL")
-            {
-                var station = await _db.MobilityStations
-                    .Where(station => station.StationCode == stationCodeClaims)
-                    .FirstOrDefaultAsync(cancellationToken);
 
-                string stationName = station?.StationName ?? "Unknown Station";
-                string fullStationName = stationName + " STATION";
-                stationString = fullStationName;
-            }
-            else
-            {
-                stationString = "ALL STATIONS";
-            }
+            var station = await _db.MobilityStations
+                .Where(station => station.StationCode == stationCodeClaims)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            string stationName = station?.StationName ?? "Unknown Station";
+            string fullStationName = stationName + " STATION";
+            stationString = fullStationName;
+
             return stationString;
         }
 
@@ -340,7 +348,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
-                .Where(c => c.IsActive && c.Company == company)
+                .Where(c => c.IsActive && (company == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -353,7 +361,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company)
+                .Where(s => s.IsActive && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -366,7 +374,7 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Commissionee")
+                .Where(s => s.IsActive && s.Category == "Commissionee" && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

@@ -1,4 +1,5 @@
 ﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
@@ -19,11 +20,10 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
             FilprideSupplier? lastSupplier = await _db
                 .FilprideSuppliers
-                .Where(s => s.Company == company)
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -90,6 +90,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.DefaultExpenseNumber = model.DefaultExpenseNumber;
             existingSupplier.WithholdingTaxPercent = model.WithholdingTaxPercent;
             existingSupplier.ZipCode = model.ZipCode;
+            existingSupplier.IsFilpride = model.IsFilpride;
+            existingSupplier.IsMobility = model.IsMobility;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
@@ -121,7 +123,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Company == company && s.Category == "Trade")
+                .Where(s => s.IsActive && s.Category == "Trade" && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),

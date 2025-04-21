@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility;
+using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBS.Models.Mobility.MasterFile
@@ -71,5 +72,46 @@ namespace IBS.Models.Mobility.MasterFile
         #endregion --Select List--
 
         public bool IsCheckDetailsRequired { get; set; }
+
+        [Display(Name = "Customer Code")]
+        [Column(TypeName = "varchar(7)")]
+        public string? CustomerCode { get; set; }
+
+        [Display(Name = "Business Style")]
+        [Column(TypeName = "varchar(100)")]
+        public string? BusinessStyle { get; set; }
+
+        [Required]
+        [Display(Name = "Vat Type")]
+        [Column(TypeName = "varchar(10)")]
+        public string VatType { get; set; }
+
+        [Required]
+        [Display(Name = "Creditable Withholding VAT 2306 ")]
+        public bool WithHoldingVat { get; set; }
+
+        [Required]
+        [Display(Name = "Creditable Withholding Tax 2307")]
+        public bool WithHoldingTax { get; set; }
+
+        public ClusterArea? ClusterCode { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal CreditLimit { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        public decimal CreditLimitAsOfToday { get; set; }
+
+        [Required]
+        [Display(Name = "Zip Code")]
+        [Column(TypeName = "varchar(10)")]
+        public string? ZipCode { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal? RetentionRate { get; set; }
+
+        public bool HasMultipleTerms { get; set; }
     }
 }
