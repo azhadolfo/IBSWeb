@@ -129,6 +129,9 @@ namespace IBS.Models.MMSI
 
         public string? BillingId { get; set; }
 
+        [NotMapped]
+        public MMSIBilling? Billing { get; set; }
+
         #region ---Columns with Table relations---
 
         public int? CustomerId { get; set; }

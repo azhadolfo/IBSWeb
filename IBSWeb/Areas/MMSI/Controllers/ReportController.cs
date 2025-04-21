@@ -18,12 +18,15 @@ namespace IBSWeb.Areas.MMSI
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<ReportController> _logger;
 
-        public ReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+        public ReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork,
+            ILogger<ReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public IActionResult SalesReport()
@@ -51,12 +54,17 @@ namespace IBSWeb.Areas.MMSI
                 }
 
                 // Create the Excel package
+                string currencyFormatTwoDecimal = "#,##0.00";
                 using var package = new ExcelPackage();
 
                 var worksheet = package.Workbook.Worksheets.Add("Sales Report");
 
                 worksheet.Cells["A1"].Value = "MALAYAN MARITIME SERVICES INC.";
                 worksheet.Cells["A2"].Value = $"AR MONITORING AS OF {DateTime.Today:MM/dd/yyyy}";
+
+                #region -- Header row --
+
+                #region -- Details of Trip of Tugboats --
 
                 var detailsOfTripOfTugboatsColStart = 1;
                 var col = 1;
@@ -90,9 +98,8 @@ namespace IBSWeb.Areas.MMSI
                 worksheet.Cells[headerRow, 26].Value = "AGENT COMMISSION";
                 worksheet.Cells[headerRow, 27].Value = "BALANCE";
                 worksheet.Cells[headerRow, 28].Value = "AP OTHER TUGS";
-
                 var detailsOfTripOfTugboatsColEnd = 28;
-
+                // formatting of main category
                 using (var range = worksheet.Cells[headerRow - 1, detailsOfTripOfTugboatsColStart, headerRow - 1, detailsOfTripOfTugboatsColEnd])
                 {
                     range.Merge = true;
@@ -107,11 +114,68 @@ namespace IBSWeb.Areas.MMSI
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
                 }
+                // formatting of subcategories
                 using (var range = worksheet.Cells[headerRow, detailsOfTripOfTugboatsColStart, headerRow, detailsOfTripOfTugboatsColEnd])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSkyBlue);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(153, 204, 255));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                col = detailsOfTripOfTugboatsColEnd + 1;
+
+                #endregion
+
+                #region -- For PNL Use --
+
+                var forPnlUseColStart = detailsOfTripOfTugboatsColEnd + 1;
+                var mmsiTugboats = await _dbContext.MMSITugboats
+                    .Where(t => t.IsCompanyOwned)
+                    .OrderBy(t => t.TugboatName)
+                    .ToListAsync(cancellationToken);
+                worksheet.Cells[headerRow, col].Value = "NET SALES";
+                foreach (var tugboat in mmsiTugboats)
+                {
+                    col++;
+                    worksheet.Cells[headerRow, col].Value = $"INCOME FROM {tugboat.TugboatName}";
+                }
+
+                col++;
+                worksheet.Cells[headerRow, col].Value = "INCOME FROM OTHER TUGS";
+
+                foreach (var tugboat in mmsiTugboats)
+                {
+                    col++;
+                    worksheet.Cells[headerRow, col].Value = $"{tugboat.TugboatName} # OF HOURS";
+                }
+                var forPnlUseColEnd = col;
+                // formatting of main category
+                using (var range = worksheet.Cells[headerRow - 1, forPnlUseColStart, headerRow - 1, forPnlUseColEnd])
+                {
+                    range.Merge = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Value = "FOR PNL USE";
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, forPnlUseColStart, headerRow, forPnlUseColEnd])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                     range.Style.Font.Size = 8;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
@@ -119,21 +183,11 @@ namespace IBSWeb.Areas.MMSI
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
                 }
 
+                #endregion
 
-                col = detailsOfTripOfTugboatsColEnd + 1;
+                #region -- AP Ledger --
 
-                var forPnlUseColStart = detailsOfTripOfTugboatsColEnd + 1;
-                var tugboats = await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
-                    .ToListAsync(cancellationToken);
-                worksheet.Cells[headerRow, col].Value = "NET SALES";
-                foreach (var tugboat in tugboats)
-                {
-                    col++;
-                    worksheet.Cells[headerRow, col].Value = $"INCOME FROM {tugboat.TugboatName}";
-                }
-                var forPnlUseColEnd = col;
-
-                var apLedgerStart = col + 1;
+                var apLedgerColStart = col + 1;
                 var tugboatOwners = await _dbContext.MMSICompanyOwners.OrderBy(t => t.CompanyOwnerName)
                     .ToListAsync(cancellationToken);
                 foreach (var tugboatOwner in tugboatOwners)
@@ -141,9 +195,41 @@ namespace IBSWeb.Areas.MMSI
                     col++;
                     worksheet.Cells[headerRow, col].Value = $"{tugboatOwner.CompanyOwnerName}";
                 }
-                var apLedgerEnd = col;
+                var apLedgerColEnd = col;
+                // formatting of main category
+                using (var range = worksheet.Cells[headerRow - 1, apLedgerColStart, headerRow - 1, apLedgerColEnd])
+                {
+                    range.Merge = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.DarkOrange);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Value = "AP LEDGER";
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, apLedgerColStart, headerRow, apLedgerColEnd])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.DarkOrange);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
 
-                var arLedgerStart = col + 1;
+                #endregion
+
+                #region -- AR Ledger --
+
+                var arLedgerColStart = col + 1;
                 var customers = await _dbContext.MMSICustomers.OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
                 foreach (var customer in customers)
@@ -151,7 +237,37 @@ namespace IBSWeb.Areas.MMSI
                     col++;
                     worksheet.Cells[headerRow, col].Value = $"{customer.CustomerName}";
                 }
-                var arLedgerEnd = col;
+                var arLedgerColEnd = col;
+                // formatting of main category
+                using (var range = worksheet.Cells[headerRow - 1, arLedgerColStart, headerRow - 1, arLedgerColEnd])
+                {
+                    range.Merge = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Value = "A/R LEDGER";
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, arLedgerColStart, headerRow, arLedgerColEnd])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+
+                #endregion
 
                 // var numberOfAssistsStart = col + 1;
                 //
@@ -166,7 +282,9 @@ namespace IBSWeb.Areas.MMSI
                 //
                 // var numberOfAssistsEnd = col;
 
-                var numberOfTendingStart = col + 1;
+                #region -- Number of Tending --
+
+                var numberOfTendingColStart = col + 1;
                 var tendingTugboats = await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
                 foreach (var tendingTugboat in tendingTugboats)
@@ -174,9 +292,41 @@ namespace IBSWeb.Areas.MMSI
                     col++;
                     worksheet.Cells[headerRow, col].Value = $"{tendingTugboat.TugboatName}";
                 }
-                var numberOfTendingEnd = col;
+                var numberOfTendingColEnd = col;
+                // formatting of main category
+                using (var range = worksheet.Cells[headerRow - 1, numberOfTendingColStart, headerRow - 1, numberOfTendingColEnd])
+                {
+                    range.Merge = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSalmon);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Value = "Number of TENDING";
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, numberOfTendingColStart, headerRow, numberOfTendingColEnd])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSalmon);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
 
-                var numberOfTendingHoursStart = col + 1;
+                #endregion
+
+                #region -- Number of Tending Hours --
+
+                var numberOfTendingHoursColStart = col + 1;
                 var tendingHoursTugboats = await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
                 foreach (var tendingTugboat in tendingTugboats)
@@ -184,29 +334,129 @@ namespace IBSWeb.Areas.MMSI
                     col++;
                     worksheet.Cells[headerRow, col].Value = $"{tendingTugboat.TugboatName}";
                 }
-                var numberOfTendingHoursEnd = col;
+                var numberOfTendingHoursColEnd = col;
+                // formatting of main category
+                using (var range = worksheet.Cells[headerRow - 1, numberOfTendingHoursColStart, headerRow - 1, numberOfTendingHoursColEnd])
+                {
+                    range.Merge = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Value = "Number of TENDING HOURS";
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, numberOfTendingHoursColStart, headerRow, numberOfTendingHoursColEnd])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
 
+                #endregion
+
+                #region -- DOC/UNDOC & PRINCIPAL --
 
                 col += 2;
                 worksheet.Cells[headerRow, col].Value = "DOC/UNDOC";
                 col += 1;
                 worksheet.Column(col).Width = 50;
                 worksheet.Cells[headerRow, col].Value = "PRINCIPAL";
+                // formatting of subcategories
+                using (var range = worksheet.Cells[headerRow, col-1, headerRow, col])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSkyBlue);
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Font.Size = 8;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+
+                #endregion
+
+                worksheet.Row(6).Height = 64;
+
+                #endregion
+
+                #region -- Contents --
+
+                // content start
+                var row = 7;
+
+                foreach (var sales in salesReport)
+                {
+                    worksheet.Cells[row, 1].Value = $"{sales.CreateDate}";
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MM/dd/yyyy";
+
+                    worksheet.Cells[row, 2].Value = $"{sales.DispatchNumber}";
+                    worksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                    worksheet.Cells[row, 3].Value = $"{sales.Billing?.MMSIBillingNumber}";
+                    worksheet.Cells[row, 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                    worksheet.Cells[row, 4].Value = $"{sales.Customer.CustomerName}";
+
+                    worksheet.Cells[row, 5].Value = $"{sales.Vessel.VesselName}";
+                    worksheet.Cells[row, 6].Value = $"{sales.Vessel.VesselType}";
+                    worksheet.Cells[row, 7].Value = $"{sales.Tugboat.TugboatName}";
+
+                    worksheet.Cells[row, 8].Value = $"{sales.Terminal.Port.PortName}";
+                    if (sales.Vessel.VesselType == "Foreign")
+                    {
+                        worksheet.Cells[row, 8].Style.Font.Color.SetColor(Color.Red);
+                    }
+
+                    worksheet.Cells[row, 9].Value = $"{sales.Terminal.TerminalName}";
+                    worksheet.Cells[row, 10].Value = $"{sales.ActivityService.ActivityServiceName}";
+                    worksheet.Cells[row, 11].Value = $"{sales.DateLeft} {sales.TimeLeft}";
+                    worksheet.Cells[row, 12].Value = $"{sales.DateArrived} {sales.TimeArrived}";
+
+                    worksheet.Cells[row, 13].Value = $"{sales.TotalHours}";
+                    worksheet.Cells[row, 14]. Value = $"{sales.TotalNetRevenue}";
+                    worksheet.Cells[row, 15].Value = $"{sales.TotalBilling}";
+
+                    using (var range = worksheet.Cells[row, 13, row, 15])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+
+                    worksheet.Cells[row, 27].Value = $"{sales.TotalBilling}"; // BALANCE to change operation
+                    //worksheet.Cells[row, 28].Value = $"{sales.TotalBilling}"; // AP OTHER TUGS
+                    worksheet.Cells[row, 29].Value = $"{sales.TotalBilling}"; // NET SALES to change operation
+
+                    var writingCol = 29;
+                    foreach (var tugboat in mmsiTugboats)
+                    {
+                        writingCol++;
+                        if (sales.Tugboat.TugboatName == tugboat.TugboatName)
+                        {
+                            worksheet.Cells[row, writingCol].Value = $"{sales.TotalBilling}";
+                        }
+                    }
 
 
 
+                    row++;
+                }
 
+                #endregion
 
-
-
-
-
-
-
-
-
-
-                worksheet.Row(6).Height = 15;
                 worksheet.Cells.AutoFitColumns();
 
                 var excelBytes = package.GetAsByteArray();
@@ -216,6 +466,8 @@ namespace IBSWeb.Areas.MMSI
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                ex.Message, ex.StackTrace, _userManager.GetUserAsync(User));
                 return RedirectToAction(nameof(SalesReport));
             }
         }

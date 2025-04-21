@@ -205,7 +205,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSICollectedBillsById(int collectionId, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> billingsList = await _dbContext.MMSIBillings
-                .Where(dt => dt.MMSICollectionId == collectionId)
+                .Where(dt => dt.CollectionId == collectionId)
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(b => new SelectListItem
                 {
                     Value = b.MMSIBillingId.ToString(),
@@ -373,6 +373,17 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.ActivityService)
                 .OrderBy(dt => dt.CreateDate)
                 .ToListAsync(cancellationToken);
+
+            foreach (var dispatchTicket in dispatchTickets)
+            {
+                dispatchTicket.Billing = await _dbContext.MMSIBillings
+                    .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
+                    .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
 
             return dispatchTickets;
         }
