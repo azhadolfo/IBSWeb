@@ -594,12 +594,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
+                int receivingReportId = 0;
+
+                if (automatedRr != null)
+
+                {
+                    receivingReportId = automatedRr.ReceivingReportId;
+                }
+
                 return Json(new
                 {
                     TransactionDate = dr.DeliveredDate,
                     dr.Quantity,
-                    automatedRr.ReceivingReportId,
-                    automatedRr.PurchaseOrder.PurchaseOrderId,
+                    receivingReportId,
+                    dr.PurchaseOrderId,
                     OtherRefNo = dr.ManualDrNo,
                     Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}" +
                               (!dr.Customer.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
