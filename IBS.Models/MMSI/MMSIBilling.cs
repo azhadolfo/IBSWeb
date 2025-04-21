@@ -97,7 +97,10 @@ namespace IBS.Models.MMSI
         [NotMapped]
         public List<MMSIDispatchTicket>? PaidDispatchTickets { get; set; }
 
-        public int? MMSICollectionId { get; set; }
+        public int? CollectionId { get; set; }
+
+        [NotMapped]
+        public MMSICollection? Collection { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CustomerPrincipal { get; set; }
