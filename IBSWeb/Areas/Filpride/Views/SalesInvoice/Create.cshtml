@@ -113,7 +113,7 @@
 
                         <div class="form-group mb-3">
                             <label asp-for="CustomerOrderSlipId" class="control-label">COS No.<span class="required">*</span></label>
-                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2 GetRRList" asp-items="@Model.COS" style="width:100%" required>
+                            <select asp-for="CustomerOrderSlipId" class="form-control js-select2" asp-items="@Model.COS" style="width:100%" required>
                                 <option></option>
                             </select>
                             <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>

@@ -45,7 +45,12 @@
                 }
                 @if (selectedCompany == "Mobility")
                 {
-                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+                    <h2 class="company-name"><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+                    <p style="line-height: 1; margin-top:-7px;">
+                        Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+                        Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+                        VAT Reg. TIN: 776-536-510-00000
+                    </p>
                 }
             </td>
         </tr>
@@ -211,14 +216,17 @@
 
 @if (Model.Type == nameof(DocumentType.Documented))
 {
-    <p class="text-center w-100">
-        <span>Acknowledgement Certificate No:</span>
-        <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
-        <span>&nbsp;&nbsp;Date Issued:</span>
-        <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
-        Series: SV0000000001 - SV9999999999
-        Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
-    </p>
+    @if (selectedCompany == "Filpride")
+    {
+        <p class="text-center w-100">
+            <span>Acknowledgement Certificate No:</span>
+            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+            <span>&nbsp;&nbsp;Date Issued:</span>
+            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br/>
+            Series: SV0000000001 - SV9999999999
+            Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
+        </p>
+    }
 
     @if (!Model.IsPrinted)
     {
@@ -233,19 +241,22 @@
         </div>
     }
 
-    <div class="text-start w-100 footer">
-        <p style="line-height: 1;">
-            <em>
-                <strong>Software Name :</strong> @CS.AAS
-                <br />
-                <strong>Version :</strong> @CS.Version
-                <br />
-                <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-                <br />
-                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
-            </em>
-        </p>
-    </div>
+    if (selectedCompany == "Filpride")
+    {
+        <div class="text-start w-100 footer">
+            <p style="line-height: 1;">
+                <em>
+                    <strong>Software Name :</strong> @CS.AAS
+                    <br/>
+                    <strong>Version :</strong> @CS.Version
+                    <br/>
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <br/>
+                    <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
+                </em>
+            </p>
+        </div>
+    }
 }
 
 <div class="row pt-2">

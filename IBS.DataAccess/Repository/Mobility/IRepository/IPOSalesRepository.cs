@@ -10,6 +10,6 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task<int> ProcessPOSales(string file, CancellationToken cancellationToken = default);
 
-        Task<int> ProcessPOSalesGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<int> ProcessPOSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
     }
 }

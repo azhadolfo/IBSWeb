@@ -42,10 +42,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
                 var banks = await _unitOfWork.FilprideBankAccount
-                .GetAllAsync(b => b.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
                 if (view == nameof(DynamicView.BankAccount))
                 {
@@ -142,6 +140,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.AccountName = model.AccountName;
                     existingModel.Bank = model.Bank;
                     existingModel.Branch = model.Branch;
+                    existingModel.IsFilpride = model.IsFilpride;
+                    existingModel.IsMobility = model.IsMobility;
 
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);

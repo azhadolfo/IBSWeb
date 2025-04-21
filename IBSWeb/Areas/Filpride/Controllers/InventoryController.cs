@@ -143,15 +143,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
-
                 var endingBalance = await _dbContext.FilprideInventories
                     .OrderBy(e => e.Date)
                     .ThenBy(e => e.InventoryId)
                     .Where(e => e.Company == companyClaims)
                     .LastOrDefaultAsync(e =>
                         (viewModel.POId == null || e.POId == viewModel.POId) &&
-                        (e.Date.Month - 1 == dateFrom.Month), cancellationToken)
+                        (e.Date.Month - 1 == viewModel.DateTo.Month), cancellationToken)
                     ?? await _dbContext.FilprideInventories
                     .OrderBy(e => e.Date)
                     .ThenBy(e => e.InventoryId)
@@ -165,7 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     inventories = await _dbContext.FilprideInventories
                         .OrderBy(e => e.Date)
                         .ThenBy(e => e.InventoryId)
-                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
+                        .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
                         .ToListAsync(cancellationToken);
                 }
                 else
@@ -173,7 +171,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     inventories = await _dbContext.FilprideInventories
                         .OrderBy(e => e.Date)
                         .ThenBy(e => e.InventoryId)
-                        .Where(i => i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
+                        .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
                         .ToListAsync(cancellationToken);
                 }
 

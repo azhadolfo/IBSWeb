@@ -29,7 +29,7 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Tin No")]
         public string SupplierTin { get; set; }
 
-        [Column(TypeName = "varchar(3)")]
+        [Column(TypeName = "varchar(10)")]
         [Display(Name = "Supplier Terms")]
         public string SupplierTerms { get; set; }
 
@@ -111,5 +111,9 @@ namespace IBS.Models.Filpride.MasterFile
         [Display(Name = "Zip Code")]
         [Column(TypeName = "varchar(10)")]
         public string? ZipCode { get; set; }
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
     }
 }

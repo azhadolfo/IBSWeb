@@ -350,6 +350,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder.GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
+
                 CustomerOrderSlipViewModel viewModel = new()
                 {
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
@@ -378,6 +380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
                     SelectedBranch = exisitingRecord.Branch,
                     CustomerType = exisitingRecord.CustomerType,
+                    StationCode = getPurchaseOrder.StationCode,
                 };
 
                 return View(viewModel);
@@ -893,6 +896,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(new
             {
+                StationCode = customer.StationCode,
                 Address = customer.CustomerAddress,
                 TinNo = customer.CustomerTin,
                 Terms = customer.CustomerTerms,
@@ -925,7 +929,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                 PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                 PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetDistinctPickupPointList(cancellationToken),
+                    .GetDistinctPickupPointList(companyClaims, cancellationToken),
             };
 
             return View(viewModel);
@@ -1006,7 +1010,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 catch (Exception ex)
                 {
                     viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => supp.Company == companyClaims && supp.Category == "Trade")
+                        .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
                         .OrderBy(supp => supp.SupplierCode)
                         .Select(sup => new SelectListItem
                         {
@@ -1015,7 +1019,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
@@ -1056,7 +1060,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Freight = existingRecord.Freight ?? 0,
                     PickUpPointId = (int)existingRecord.PickUpPointId,
                     PickUpPoints = await _unitOfWork.FilpridePickUpPoint
-                    .GetDistinctPickupPointList(cancellationToken),
+                    .GetDistinctPickupPointList(companyClaims, cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks,
 
                 };
@@ -1195,7 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(cancellationToken);
+                    viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to re-appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
@@ -1211,6 +1215,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPurchaseOrders(string supplierIds, string depot, int? productId, int? cosId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (string.IsNullOrEmpty(supplierIds) || productId == null)
             {
                 return NotFound();
@@ -1240,7 +1245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             p.PickUpPoint.Depot == depot &&
                             p.ProductId == productId &&
                             !p.IsReceived && !p.IsSubPo &&
-                            p.Status == nameof(Status.Posted))
+                            p.Status == nameof(Status.Posted) &&
+                            p.Company == companyClaims)
                 .ToListAsync(cancellationToken);
 
 
@@ -1485,6 +1491,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
+        public async Task<IActionResult> GetPurchaseOrderList(int? productId, string stationCode, CancellationToken cancellationToken)
+        {
+            if (productId == null)
+            {
+                return Json(null);
+            }
 
+            var filprideProduct = await _dbContext.Products.FindAsync(productId);
+            var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct.ProductCode, cancellationToken);
+            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
+                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode && p.PostedBy != null && !p.IsReceived)
+                .Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                })
+                .ToListAsync(cancellationToken);
+
+            if (!purchaseOrder.Any())
+            {
+                return Json(null);
+            }
+
+            return Json(purchaseOrder);
+        }
+        public async Task<IActionResult> GetPurchaseOrder(string? customerPoNo, CancellationToken cancellationToken)
+        {
+            if (customerPoNo == null)
+            {
+                return Json(null);
+            }
+
+            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
+                .FirstOrDefaultAsync(p => p.PurchaseOrderNo == customerPoNo.TrimStart().TrimEnd(), cancellationToken);
+
+            if (purchaseOrder == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                purchaseOrder.Quantity,
+                purchaseOrder.UnitPrice,
+            });
+        }
     }
 }

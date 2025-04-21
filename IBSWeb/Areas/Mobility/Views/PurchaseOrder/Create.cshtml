@@ -1,9 +1,18 @@
-﻿@model PurchaseOrderViewModel
+﻿@using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using IBS.Utility.Helpers
+@model PurchaseOrderViewModel
 
 @{
     ViewData["Title"] = "Create Purchase Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    DateTime today = DateTimeHelper.GetCurrentPhilippineTime();
 }
-
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
@@ -13,55 +22,111 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
-            <div class="border-2 p-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
-                    <label asp-for="Date">Date<span class="required">*</span></label>
-                    <span asp-validation-for="Date" class="text-danger"></span>
+        <form asp-action="Create">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group mb-3">
+                <label class="control-label">Type<span class="required">*</span></label>
+                <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <option value="" selected disabled>Select PO type</option>
+                    @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
+                    {
+                        <option value="@documentType">@documentType.ToString()</option>
+                    }
+                </select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Date" type="date" class="form-control border-0 shadow"
+                       placeholder=""
+                       value="@today.ToString("yyyy-MM-dd")" />
+                <label asp-for="Date">Date<span class="required">*</span></label>
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Supplier List<span class="required">*</span></label>
+                <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select supplier</option>
+                </select>
+                <span asp-validation-for="SupplierId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Port List<span class="required">*</span></label>
+                <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select port</option>
+                </select>
+                <span asp-validation-for="PickUpPointId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Product List<span class="required">*</span></label>
+                <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select product</option>
+                </select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Terms" class="control-label"></label><span class="required">*</span>
+                <select asp-for="Terms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                    <option value="" selected disabled>Select payment terms</option>
+                    <option value="COD">COD</option>
+                    <option value="PREPAID">PREPAID</option>
+                    <option value="7D">7D</option>
+                    <option value="10D">10D</option>
+                    <option value="15D">15D</option>
+                    <option value="30D">30D</option>
+                    <option value="45D">45D</option>
+                    <option value="60D">60D</option>
+                    <option value="90D">90D</option>
+                    <option value="15PDC">15PDC</option>
+                    <option value="30PDC">30PDC</option>
+                    <option value="45PDC">45PDC</option>
+                    <option value="60PDC">60PDC</option>
+                    <option value="M15">M15</option>
+                    <option value="M29">M29</option>
+                    <option value="M30">M30</option>
+                </select>
+                <span asp-validation-for="Terms" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Quantity" class="form-control border-0 shadow quantity" placeholder="" required min="0.01" />
+                <label asp-for="Quantity">Quantity<span class="required">*</span></label>
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+            <div class="form-floating py-2 col-12">
+                <input asp-for="UnitPrice" class="form-control border-0 shadow price" placeholder="" required min="0.01" />
+                <label asp-for="UnitPrice">Price<span class="required">*</span></label>
+                <span asp-validation-for="UnitPrice" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Total</label>
+                <input class="form-control total" value="" placeholder="0.00" required disabled readonly />
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="SupplierSalesOrderNo" class="form-control border-0 shadow price" placeholder="" />
+                <label asp-for="SupplierSalesOrderNo">Supplier SO#</label>
+                <span asp-validation-for="SupplierSalesOrderNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
+                <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Create</button>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Supplier List<span class="required">*</span></label>
-                    <select asp-for="SupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
-                    </select>
-                    <span asp-validation-for="SupplierId" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Product List<span class="required">*</span></label>
-                    <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select product</option>
-                    </select>
-                    <span asp-validation-for="ProductId" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Quantity">Quantity<span class="required">*</span></label>
-                    <span asp-validation-for="Quantity" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="UnitPrice" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="UnitPrice">Unit Price<span class="required">*</span></label>
-                    <span asp-validation-for="UnitPrice" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Discount" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="Discount">Discount</label>
-                    <span asp-validation-for="Discount" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <textarea asp-for="Remarks" class="form-control border-0 shadow" placeholder="Indicate the reason of this changes." style="height: 100px"></textarea>
-                    <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
-                    <span asp-validation-for="Remarks" class="text-danger"></span>
-                </div>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Create</button>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="PurchaseOrder" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                 </div>
             </div>
         </form>
@@ -72,4 +137,50 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        $(document).ready(function () {
+            function updateTotal() {
+                var quantity = parseNumber($(".quantity").val());
+                var price = parseNumber($(".price").val());
+                var total = quantity * price;
+                $(".total").val(formatNumber(total));
+            }
+
+            $(".quantity, .price").on("input", updateTotal);
+
+            $("#SupplierId").change(function (){
+                let supplierId = $(this).val();
+                fetchPickUpPoints(supplierId);
+            });
+
+            if ($("#SupplierId").val()) {
+                let supplierId = $("#SupplierId").val();
+                console.log("test");
+                fetchPickUpPoints(supplierId);
+            }
+
+            function fetchPickUpPoints(supplierId){
+                if (supplierId) {
+                    $.ajax({
+                        url: '@Url.Action("GetPickUpPoints", "PurchaseOrder", new { area = "Mobility" })',
+                        type: "GET",
+                        data: { supplierId: supplierId },
+                        success: function (data) {
+                            var pickupDropdown = $("#PickUpPointId");
+                            pickupDropdown.empty();
+                            pickupDropdown.append('<option value="">Select Pickup Point</option>');
+
+                            $.each(data, function (index, item) {
+                                pickupDropdown.append('<option value="' + item.value + '">' + item.text + '</option>');
+                            });
+                        },
+                        error: function () {
+                            alert("Error fetching pickup points.");
+                        }
+                    });
+                }
+            }
+
+        });
+    </script>
 }

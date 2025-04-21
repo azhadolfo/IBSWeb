@@ -4,7 +4,9 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Utility;
+using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Mobility
@@ -18,24 +20,59 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string stationCode, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string stationCode, string type, CancellationToken cancellationToken = default)
+        {
+            if (type == nameof(DocumentType.Documented))
+            {
+                return await GenerateCodeForDocumented(stationCode, cancellationToken);
+            }
+            else
+            {
+                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken)
         {
             MobilityPurchaseOrder? lastPo = await _db
                 .MobilityPurchaseOrders
-                .Where(s => s.StationCode == stationCode)
+                .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastPo != null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo.Substring(lastPo.PurchaseOrderNo.IndexOf('-') + 3);
-                int incrementedNumber = int.Parse(lastSeries) + 1;
+                string lastSeries = lastPo.PurchaseOrderNo;
+                string numericPart = lastSeries.Substring(6);
+                int incrementedNumber = int.Parse(numericPart) + 1;
 
-                return $"{stationCode}-PO{incrementedNumber:D5}";
+                return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
             }
             else
             {
-                return $"{stationCode}-PO00001"; //S07-PO00001
+                return $"{stationCode}-PO000000001"; //S07-PO000000001
+            }
+        }
+
+        private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken)
+        {
+            MobilityPurchaseOrder? lastPo = await _db
+                .MobilityPurchaseOrders
+                .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.PurchaseOrderNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastPo != null)
+            {
+                string lastSeries = lastPo.PurchaseOrderNo;
+                string numericPart = lastSeries.Substring(7);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
+            }
+            else
+            {
+                return $"{stationCode}-POU00000001"; //S07-PO0000000001
             }
         }
 
@@ -50,7 +87,8 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             IQueryable<MobilityPurchaseOrder> query = dbSet
                 .Include(po => po.Product)
-                .Include(po => po.Supplier);
+                .Include(po => po.Supplier)
+                .Include(po => po.PickUpPoint);
 
             if (filter != null)
             {
@@ -65,6 +103,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return await dbSet.Where(filter)
                 .Include(po => po.Product)
                 .Include(po => po.Supplier)
+                .Include(po => po.PickUpPoint)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -79,8 +118,7 @@ namespace IBS.DataAccess.Repository.Mobility
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.UnitPrice = viewModel.UnitPrice;
             existingRecord.Amount = viewModel.Quantity * viewModel.UnitPrice;
-            existingRecord.Discount = viewModel.Discount;
-            existingRecord.TotalAmount = existingRecord.Amount - viewModel.Discount;
+            //existingRecord.TotalAmount = existingRecord.Amount - viewModel.Discount;
             existingRecord.Remarks = viewModel.Remarks;
 
             if (_db.ChangeTracker.HasChanges())

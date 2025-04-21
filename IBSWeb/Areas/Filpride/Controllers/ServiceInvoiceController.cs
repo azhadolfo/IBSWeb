@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.Customers = await _dbContext.FilprideCustomers
-                .Where(c => c.Company == companyClaims)
+                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                 .OrderBy(c => c.CustomerId)
                 .Select(c => new SelectListItem
                 {
@@ -144,7 +144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             viewModel.Services = await _dbContext.FilprideServices
-                .Where(s => s.Company == companyClaims)
+                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .OrderBy(s => s.ServiceId)
                 .Select(s => new SelectListItem
                 {
@@ -162,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             model.Customers = await _dbContext.FilprideCustomers
-                .Where(c => c.Company == companyClaims)
+                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                 .OrderBy(c => c.CustomerId)
                 .Select(c => new SelectListItem
                 {
@@ -171,7 +171,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
             model.Services = await _dbContext.FilprideServices
-                .Where(s => s.Company == companyClaims)
+                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .OrderBy(s => s.ServiceId)
                 .Select(s => new SelectListItem
                 {
@@ -606,6 +606,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (id == null)
             {
                 return NotFound();
@@ -619,7 +620,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             existingModel.Customers = await _dbContext.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
-                .Where(c => c.Company == existingModel.Company)
+                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -628,7 +629,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
             existingModel.Services = await _dbContext.FilprideServices
                 .OrderBy(s => s.ServiceId)
-                .Where(s => s.Company == existingModel.Company)
+                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .Select(s => new SelectListItem
                 {
                     Value = s.ServiceId.ToString(),

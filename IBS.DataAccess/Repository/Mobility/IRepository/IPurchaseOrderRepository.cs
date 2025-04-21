@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IPurchaseOrderRepository : IRepository<MobilityPurchaseOrder>
     {
-        Task<string> GenerateCodeAsync(string stationCode, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string stationCode, string type, CancellationToken cancellationToken = default);
 
         Task PostAsync(MobilityPurchaseOrder purchaseOrder, CancellationToken cancellationToken = default);
 

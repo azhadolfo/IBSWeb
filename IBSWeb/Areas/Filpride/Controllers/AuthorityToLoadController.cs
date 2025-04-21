@@ -279,9 +279,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetHaulerDetails(int cosId)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             // Query your database to get hauler details for the COS
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip  // Replace with your actual context and model
-                .GetAsync(c => c.CustomerOrderSlipId == cosId);
+                .GetAsync(c => c.CustomerOrderSlipId == cosId && c.Company == companyClaims);
 
             var haulerDetails = new
             {

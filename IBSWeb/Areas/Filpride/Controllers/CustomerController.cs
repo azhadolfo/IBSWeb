@@ -39,10 +39,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
             IEnumerable<FilprideCustomer> customer = await _unitOfWork.FilprideCustomer
-                .GetAllAsync(c => c.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
             if (view == nameof(DynamicView.Customer))
             {
@@ -75,7 +73,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (!IsTinExist)
                     {
                         model.Company = companyClaims;
-                        model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, companyClaims, cancellationToken);
+                        model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
                         model.CreatedBy = _userManager.GetUserName(User);
                         await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);

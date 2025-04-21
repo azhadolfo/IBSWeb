@@ -1,13 +1,12 @@
-﻿using IBS.Models.MasterFile;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.MasterFile;
 using IBS.Models.Mobility.MasterFile;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
-using IBS.Utility.Helpers;
 
-namespace IBS.Models.Mobility.ViewModels
+namespace IBS.Models.Mobility
 {
     public class MobilityCustomerOrderSlip
     {
@@ -121,7 +120,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         public int StationId { get; set; }
 
-        [ForeignKey(nameof(StationId))]
+        [ForeignKey(nameof(StationCode))]
         public MobilityStation? MobilityStation { get; set; }
 
         #endregion Stations properties

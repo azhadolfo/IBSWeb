@@ -106,5 +106,9 @@ namespace IBS.Models.Filpride.MasterFile
         public decimal? RetentionRate { get; set; }
 
         public bool HasMultipleTerms { get; set; }
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
     }
 }

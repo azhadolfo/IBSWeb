@@ -9,18 +9,15 @@ using IBS.Models.Mobility.ViewModels;
 using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Quartz;
 
 namespace IBS.Services
 {
     public interface IGoogleDriveImportService
     {
-        Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string stationName, string folderId);
+        Task<List<GoogleDriveFileViewModel>> GetFileFromDriveAsync(string stationName, string folderId);
     }
 
     public class GoogleDriveImportService : IGoogleDriveImportService
@@ -84,22 +81,28 @@ namespace IBS.Services
                     $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
-                var salesModel = await ImportSales();
+                var posSalesModel = await ImportPosSales();
                 var purchasesModel = await ImportPurchases();
+                var fmsSalesModel = await ImportFmsSales();
 
-                foreach (var sales in salesModel)
+                foreach (var posSales in posSalesModel)
                 {
                     var purchase = purchasesModel
-                        .FirstOrDefault(s => s.StationName == sales.StationName);
-                    var message = $"{sales.Message} {purchase.Message}";
-                    logMessage = new("Information", $"{sales.StationName}",
-                        message);
-                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(sales.OpeningFileStatus) ||
-                        !string.IsNullOrEmpty(purchase.CsvStatus) || !string.IsNullOrEmpty(sales.CsvStatus))
+                        .FirstOrDefault(s => s.StationName == posSales.StationName);
+
+                    var fmsSales = fmsSalesModel
+                        .FirstOrDefault(s => s.StationName == posSales.StationName);
+
+                    var message = $"{posSales.Message} {purchase.Message} || {fmsSales.Message}";
+                    logMessage = new("Information", $"{posSales.StationName}", message);
+
+                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(posSales.OpeningFileStatus) ||
+                        !string.IsNullOrEmpty(purchase.CsvStatus) || !string.IsNullOrEmpty(posSales.CsvStatus))
                     {
                         logMessage.LogLevel = "Warning";
                     }
-                    if (!string.IsNullOrEmpty(purchase.Error) || !string.IsNullOrEmpty(sales.Error))
+
+                    if (!string.IsNullOrEmpty(purchase.Error) || !string.IsNullOrEmpty(posSales.Error))
                     {
                         logMessage.LogLevel = "Error";
                     }
@@ -128,7 +131,7 @@ namespace IBS.Services
                 _logger.LogInformation("==========GoogleDriveImportService.Execute - EXCEPTION: " + ex.Message + "==========");
 
                 LogMessage logMessage = new("Error", "GoogleDriveImportService",
-                    $"IMPORT SERVICE EXCEPTION {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                    $"IMPORT SERVICE EXCEPTION {DateTimeHelper.GetCurrentPhilippineTime()}. Error: {ex.Message}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
                 logMessage = new("Information", "End",
                     sessionCode);
@@ -137,7 +140,7 @@ namespace IBS.Services
             }
         }
 
-        public async Task<List<GoogleDriveFile>> GetFileFromDriveAsync(string stationName, string folderId)
+        public async Task<List<GoogleDriveFileViewModel>> GetFileFromDriveAsync(string stationName, string folderId)
         {
             // get credential
             var serviceCredential = _googleCredential.CreateScoped(DriveService.ScopeConstants.Drive);
@@ -150,7 +153,7 @@ namespace IBS.Services
             var request = service.Files.List();
             request.Q = $"'{folderId}' in parents and trashed=false";
             request.Fields = "nextPageToken, files(id, name, webViewLink)";
-            var filesModel = new List<GoogleDriveFile>();
+            var filesModel = new List<GoogleDriveFileViewModel>();
 
             do
             {
@@ -158,7 +161,7 @@ namespace IBS.Services
 
                 foreach (var file in result.Files)
                 {
-                    var fileVM = new GoogleDriveFile
+                    var fileVm = new GoogleDriveFileViewModel
                     {
                         FileName = file.Name,
                         FileLink = file.WebViewLink
@@ -168,10 +171,10 @@ namespace IBS.Services
                     {
                         var downloadRequest = service.Files.Get(file.Id);
                         await downloadRequest.DownloadAsync(stream);
-                        fileVM.FileContent = stream.ToArray();
+                        fileVm.FileContent = stream.ToArray();
                     }
 
-                    filesModel.Add(fileVM);
+                    filesModel.Add(fileVm);
                 }
 
                 request.PageToken = result.NextPageToken;
@@ -180,7 +183,7 @@ namespace IBS.Services
             return filesModel;
         }
 
-        public async Task<List<LogMessageDto>> ImportSales()
+        private async Task<List<LogMessageDto>> ImportPosSales()
         {
             List<LogMessageDto> logList = new();
             _logger.LogInformation("==========IMPORTING SALES==========");
@@ -199,7 +202,7 @@ namespace IBS.Services
                 LogMessageDto model = new LogMessageDto();
                 model.StationName = station.StationName;
 
-                if (station.FolderPath != " ")
+                if (!string.IsNullOrEmpty(station.FolderPath))
                 {
                     var fileList = await GetFileFromDriveAsync(station.StationName, station.FolderPath);
 
@@ -216,7 +219,7 @@ namespace IBS.Services
 
                         if (!files.Any())
                         {
-                            _logger.LogWarning($"==========NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES.==========");
+                            _logger.LogWarning($"==========NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES(POS).==========");
 
                             // LogMessage logMessage = new("Warning", $"ImportSales - {station.StationName}",
                             //     $"No csv files found for station '{station.StationName}'.");
@@ -227,7 +230,7 @@ namespace IBS.Services
                             model.CsvStatus = " NO CSV ";
 
                             model.Message =
-                                $"<strong>SALES:</strong> {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                                $"<strong>SALES(POS):</strong> {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                             logList.Add(model);
 
@@ -241,38 +244,28 @@ namespace IBS.Services
 
                         foreach (var file in files)
                         {
-                            _logger.LogInformation($"==========IMPORTING {station.StationName} SALES FROM: {file.FileName}==========");
+                            _logger.LogInformation($"==========IMPORTING {station.StationName} SALES(POS) FROM: {file.FileName}==========");
                             var fileName = file.FileName;
                             bool fileOpened = false;
-                            int retryCount = 0;
-                            while (!fileOpened && retryCount < 5)
+                            while (!fileOpened)
                             {
-                                try
+                                if (fileName.Contains("fuels"))
                                 {
-                                    if (fileName.Contains("fuels"))
-                                    {
-                                        (fuelsCount, hasPoSales) =
-                                            await _unitOfWork.MobilitySalesHeader.ProcessFuelGoogleDrive(file);
-                                    }
-                                    else if (fileName.Contains("lubes"))
-                                    {
-                                        (lubesCount, hasPoSales) =
-                                            await _unitOfWork.MobilitySalesHeader.ProcessLubeGoogleDrive(file);
-                                    }
-                                    else if (fileName.Contains("safedrops"))
-                                    {
-                                        safedropsCount =
-                                            await _unitOfWork.MobilitySalesHeader.ProcessSafeDropGoogleDrive(file);
-                                    }
+                                    (fuelsCount, hasPoSales) =
+                                        await _unitOfWork.MobilitySalesHeader.ProcessFuelGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("lubes"))
+                                {
+                                    (lubesCount, hasPoSales) =
+                                        await _unitOfWork.MobilitySalesHeader.ProcessLubeGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("safedrops"))
+                                {
+                                    safedropsCount =
+                                        await _unitOfWork.MobilitySalesHeader.ProcessSafeDropGoogleDrive(file);
+                                }
 
-                                    fileOpened = true; // File opened successfully, exit the loop
-                                }
-                                catch (IOException)
-                                {
-                                    // File is locked, wait for 100 milliseconds before retrying
-                                    await Task.Delay(100);
-                                    retryCount++;
-                                }
+                                fileOpened = true; // File opened successfully, exit the loop
                             }
 
                             if (!fileOpened)
@@ -289,7 +282,7 @@ namespace IBS.Services
                                 model.OpeningFileStatus = "Can't open ";
 
                                 model.Message =
-                                    $" SALES: {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                                    $" SALES(POS): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                                 logList.Add(model);
                             }
@@ -302,7 +295,7 @@ namespace IBS.Services
                             // LogMessage logMessage = new("Information", $"ImportSales - {station.StationName}",
                             //     $"Sales imported successfully in the station '{station.StationName}', Fuels: '{fuelsCount}' record(s), Lubes: '{lubesCount}' record(s), Safe drops: '{safedropsCount}' record(s).");
 
-                            _logger.LogInformation("==========" + station.StationName + " SALES IMPORTED==========");
+                            _logger.LogInformation("==========" + station.StationName + " SALES(POS) IMPORTED==========");
 
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
@@ -333,6 +326,8 @@ namespace IBS.Services
                         // await _dbContext.SaveChangesAsync();
 
                         model.Error = $"ERROR: {ex.Message} in '{station.StationName}'.";
+                        _logger.LogError(ex, $"Failed to import sales(POS): {ex.Message} in '{station.StationName}'.");
+                        throw;
                     }
                 }
                 else
@@ -341,16 +336,16 @@ namespace IBS.Services
                         $" ERROR: NO SALESTEXT.";
                 }
                 model.Message =
-                    $"SALES: {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+                    $"SALES(POS): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
 
                 logList.Add(model);
             }
-            _logger.LogInformation($"==========SALES IMPORT COMPLETED==========");
+            _logger.LogInformation($"==========SALES(POS) IMPORT COMPLETED==========");
 
             return logList;
         }
 
-        public async Task<List<LogMessageDto>> ImportPurchases()
+        private async Task<List<LogMessageDto>> ImportPurchases()
         {
             List<LogMessageDto> logList = new();
             _logger.LogInformation("==========IMPORTING PURCHASES==========");
@@ -368,7 +363,7 @@ namespace IBS.Services
                 LogMessageDto model = new LogMessageDto();
                 model.StationName = station.StationName;
 
-                if (station.FolderPath != " ")
+                if (!string.IsNullOrEmpty(station.FolderPath))
                 {
                     var fileList = await GetFileFromDriveAsync(station.StationName, station.FolderPath);
 
@@ -410,37 +405,27 @@ namespace IBS.Services
                             string fileName = Path.GetFileName(file.FileName).ToLower();
 
                             bool fileOpened = false;
-                            int retryCount = 0;
-                            while (!fileOpened && retryCount < 5)
+                            while (!fileOpened)
                             {
-                                try
+                                if (fileName.Contains("fuel"))
                                 {
-                                    if (fileName.Contains("fuel"))
-                                    {
-                                        fuelsCount =
-                                            await _unitOfWork.MobilityFuelPurchase.ProcessFuelDeliveryGoogleDrive(
-                                                file);
-                                    }
-                                    else if (fileName.Contains("lube"))
-                                    {
-                                        lubesCount =
-                                            await _unitOfWork.MobilityLubePurchaseHeader
-                                                .ProcessLubeDeliveryGoogleDrive(file);
-                                    }
-                                    else if (fileName.Contains("po_sales"))
-                                    {
-                                        poSalesCount =
-                                            await _unitOfWork.MobilityPOSales.ProcessPOSalesGoogleDrive(file);
-                                    }
+                                    fuelsCount =
+                                        await _unitOfWork.MobilityFuelPurchase.ProcessFuelDeliveryGoogleDrive(
+                                            file);
+                                }
+                                else if (fileName.Contains("lube"))
+                                {
+                                    lubesCount =
+                                        await _unitOfWork.MobilityLubePurchaseHeader
+                                            .ProcessLubeDeliveryGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("po_sales"))
+                                {
+                                    poSalesCount =
+                                        await _unitOfWork.MobilityPOSales.ProcessPOSalesGoogleDrive(file);
+                                }
 
-                                    fileOpened = true; // File opened successfully, exit the loop
-                                }
-                                catch (Exception ex)
-                                {
-                                    // File is locked, wait for 100 milliseconds before retrying
-                                    await Task.Delay(100);
-                                    retryCount++;
-                                }
+                                fileOpened = true; // File opened successfully, exit the loop
                             }
 
                             if (!fileOpened)
@@ -496,6 +481,8 @@ namespace IBS.Services
                         // await _dbContext.SaveChangesAsync();
 
                         model.Error = $"ERROR: {ex.Message} in '{station.StationName}'.";
+                        _logger.LogError(ex, $"Failed to import purchases: {ex.Message} in '{station.StationName}'.");
+                        throw;
                     }
 
                     _logger.LogInformation("==========" + station.StationName + " PURCHASES IMPORTED==========");
@@ -512,6 +499,138 @@ namespace IBS.Services
                 logList.Add(model);
             }
             _logger.LogInformation($"==========PURCHASE IMPORT COMPLETE==========");
+
+            return logList;
+        }
+
+        private async Task<List<LogMessageDto>> ImportFmsSales()
+        {
+            List<LogMessageDto> logList = new();
+            _logger.LogInformation("==========IMPORTING SALES==========");
+
+            int fuelsCount;
+            int lubesCount;
+            bool hasPoSales = false;
+
+            var stations = await _dbContext.MobilityStations
+                .Where(s => s.IsActive)
+                .ToListAsync();
+
+            foreach (var station in stations)
+            {
+                LogMessageDto model = new LogMessageDto();
+                model.StationName = station.StationName;
+
+                if (!string.IsNullOrEmpty(station.FolderPath))
+                {
+                    var fileList = await GetFileFromDriveAsync(station.StationName, station.FolderPath);
+
+                    try
+                    {
+                        var currentYear = DateTime.UtcNow.ToString("yyyy");
+
+                        var files = fileList.Where(f =>
+                                (f.FileName.Contains("FMS_CALIBRATION", StringComparison.CurrentCultureIgnoreCase) ||
+                                 f.FileName.Contains("FMS_CASHIER_SHIFT", StringComparison.CurrentCultureIgnoreCase) ||
+                                 f.FileName.Contains("FMS_FUEL_SALES", StringComparison.CurrentCultureIgnoreCase) ||
+                                 f.FileName.Contains("FMS_LUBE_SALES", StringComparison.CurrentCultureIgnoreCase)) &&
+                                Path.GetFileNameWithoutExtension(f.FileName).EndsWith(currentYear))
+                            .ToList();
+
+                        if (!files.Any())
+                        {
+                            _logger.LogWarning($"==========NO CSV FILES IN '{station.StationName}' FOR IMPORT SALES(FMS).==========");
+
+                            model.CsvStatus = " NO CSV ";
+
+                            model.Message =
+                                $"<strong>SALES(FMS):</strong> {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+
+                            logList.Add(model);
+
+                            continue;
+                        }
+
+                        fuelsCount = 0;
+                        lubesCount = 0;
+
+                        foreach (var file in files)
+                        {
+                            _logger.LogInformation($"==========IMPORTING {station.StationName} SALES(FMS) FROM: {file.FileName}==========");
+                            var fileName = file.FileName;
+                            bool fileOpened = false;
+                            while (!fileOpened)
+                            {
+                                if (fileName.Contains("FUEL"))
+                                {
+                                    fuelsCount =
+                                        await _unitOfWork.MobilitySalesHeader.ProcessFmsFuelSalesGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("LUBE"))
+                                {
+                                    lubesCount =
+                                        await _unitOfWork.MobilitySalesHeader.ProcessFmsLubeSalesGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("CALIBRATION"))
+                                {
+                                    await _unitOfWork.MobilitySalesHeader.ProcessFmsCalibrationGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("CASHIER"))
+                                {
+                                    await _unitOfWork.MobilitySalesHeader.ProcessFmsCashierShiftGoogleDrive(file);
+                                }
+
+                                fileOpened = true; // File opened successfully, exit the loop
+                            }
+
+                            if (!fileOpened)
+                            {
+                                // Log a warning or handle the situation where the file could not be opened after retrying
+                                _logger.LogWarning($"==========Failed to open file '{file.FileName}' after multiple retries.==========");
+
+                                model.OpeningFileStatus = "Can't open ";
+
+                                model.Message =
+                                    $" SALES(FMS): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+
+                                logList.Add(model);
+                            }
+                        }
+
+                        if (fuelsCount != 0 || lubesCount != 0)
+                        {
+                            await _unitOfWork.MobilitySalesHeader.ComputeSalesPerCashier(hasPoSales);
+
+                            _logger.LogInformation("==========" + station.StationName + " SALES(FMS) IMPORTED==========");
+
+                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}'.";
+                        }
+                        else
+                        {
+                            // Import this message to your message box
+                            _logger.LogInformation("==========You're up to date.==========");
+
+                            model.HowManyImported = "YOU'RE UP TO DATE.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        model.Error = $"ERROR: {ex.Message} in '{station.StationName}'.";
+                        _logger.LogError(ex, $"Failed to import sales(FMS): {ex.Message} in '{station.StationName}'.");
+                        throw;
+                    }
+                }
+                else
+                {
+                    model.Error =
+                        $" ERROR: NO SALESTEXT.";
+                }
+                model.Message =
+                    $"SALES(FMS): {model.CsvStatus} {model.OpeningFileStatus} {model.Error} {model.HowManyImported} ";
+
+                logList.Add(model);
+            }
+            _logger.LogInformation($"==========SALES(FMS) IMPORT COMPLETED==========");
 
             return logList;
         }

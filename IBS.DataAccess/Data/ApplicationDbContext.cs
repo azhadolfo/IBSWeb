@@ -53,6 +53,15 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
         public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
+
+        public DbSet<MobilityFMSFuelSales> MobilityFMSFuelSales { get; set; }
+
+        public DbSet<MobilityFMSLubeSales> MobilityFMSLubeSales { get; set; }
+
+        public DbSet<MobilityFMSCashierShift> MobilityFmsCashierShifts { get; set; }
+
+        public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
+
         #endregion
 
         #region--Purchase Entity
@@ -80,6 +89,14 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityStation> MobilityStations { get; set; }
         public DbSet<MobilityCustomer> MobilityCustomers { get; set; }
         public DbSet<MobilitySupplier> MobilitySuppliers { get; set; }
+
+        public DbSet<MobilityBankAccount> MobilityBankAccounts { get; set; }
+
+        public DbSet<MobilityProduct> MobilityProducts { get; set; }
+
+        public DbSet<MobilityPickUpPoint> MobilityPickUpPoints { get; set; }
+
+        public DbSet<MobilityService> MobilityServices { get; set; }
 
         #endregion
 
@@ -320,6 +337,31 @@ namespace IBS.DataAccess.Data
                 .HasIndex(po => po.POSalesNo)
                 .IsUnique());
 
+            builder.Entity<MobilityFMSFuelSales>(fuel =>
+            {
+                fuel.HasIndex(f => f.ShiftRecordId);
+                fuel.HasIndex(f => f.StationCode);
+            });
+
+            builder.Entity<MobilityFMSLubeSales>(lube =>
+            {
+                lube.HasIndex(l => l.ShiftRecordId);
+                lube.HasIndex(l => l.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCalibration>(calibration =>
+            {
+                calibration.HasIndex(c => c.ShiftRecordId);
+                calibration.HasIndex(c => c.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCashierShift>(shift =>
+            {
+                shift.HasIndex(sh => sh.ShiftRecordId);
+                shift.HasIndex(sh => sh.StationCode);
+            });
+
+
             #endregion
 
             #region--Purchase
@@ -390,11 +432,6 @@ namespace IBS.DataAccess.Data
             {
                 rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
                 rr.HasIndex(rr => rr.StationCode);
-
-                rr.HasOne(rr => rr.FilprideDeliveryReceipt)
-                .WithMany()
-                .HasForeignKey(rr => rr.DeliveryReceiptId)
-                .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion

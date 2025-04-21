@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task UpdateAsync(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetCosListNotDeliveredAsync(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetCosListNotDeliveredAsync(string companyClaims, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCosListPerCustomerNotDeliveredAsync(int customerId, CancellationToken cancellationToken = default);
 

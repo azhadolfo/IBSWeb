@@ -14,5 +14,7 @@ namespace IBS.Models.Filpride.ViewModels
         public int InTransitCount { get; set; }
         public int ForInvoiceCount { get; set; }
         public int RecordLiftingDateCount { get; set; }
+
+        public int MobilityStationUnservePO { get; set; }
     }
 }
