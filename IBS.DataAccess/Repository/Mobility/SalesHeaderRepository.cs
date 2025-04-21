@@ -1254,5 +1254,149 @@ namespace IBS.DataAccess.Repository.Mobility
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }
+
+        public async Task ComputeSalesReportForFms(CancellationToken cancellationToken = default)
+        {
+            var fmsCashierShifts = await _db.MobilityFmsCashierShifts
+                .Where(f => !f.IsProcessed && f.Date.Year == DateTime.UtcNow.Year)
+                .OrderBy(c => c.Date)
+                .ThenBy(c => c.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsFuelSales = await _db.MobilityFMSFuelSales
+                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsLubeSales = await _db.MobilityFMSLubeSales
+                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsCalibrations = await _db.MobilityFmsCalibrations
+                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsDataByShift = fmsCashierShifts.Select(shift => new
+            {
+                Shift = shift,
+                FuelSales = fmsFuelSales.Where(f => f.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                LubeSales = fmsLubeSales.Where(l => l.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                Calibrations = fmsCalibrations.Where(c => c.ShiftRecordId == shift.ShiftRecordId).ToList()
+            }).ToList();
+
+            foreach (var data in fmsDataByShift)
+            {
+                var salesHeader = new MobilitySalesHeader()
+                {
+                    SalesNo = await GenerateSeriesNumberForFmsSales(data.Shift.StationCode),
+                    Date = data.Shift.Date,
+                    StationCode = data.Shift.StationCode,
+                    Cashier = data.Shift.EmployeeNumber,
+                    CreatedBy = "System Generated",
+                    TimeIn = data.Shift.TimeIn,
+                    TimeOut = data.Shift.TimeOut,
+                    FuelSalesTotalAmount = data.Calibrations.Count == 0
+                        ? data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price)
+                        : data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price) - data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price),
+                    LubesTotalAmount = data.LubeSales.Sum(l => l.Quantity * l.Price),
+                    SafeDropTotalAmount = data.Shift.CashOnHand,
+                    POSalesAmount = [],
+                    Customers = [],
+                    Source = "FMS"
+                };
+
+                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
+                salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
+
+                await _db.MobilitySalesHeaders.AddAsync(salesHeader, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+
+                foreach (var fuel in data.FuelSales.OrderBy(f => f.ProductCode))
+                {
+                    var product = await _db.MobilityProducts
+                        .FirstOrDefaultAsync(p => p.ProductCode == fuel.ProductCode, cancellationToken) ?? throw new NullReferenceException($"Product {fuel.ProductCode} not found");
+
+                    var salesDetail = new MobilitySalesDetail()
+                    {
+                        SalesHeaderId = salesHeader.SalesHeaderId,
+                        SalesNo = salesHeader.SalesNo,
+                        StationCode = salesHeader.StationCode,
+                        Product = product.ProductCode,
+                        Particular = $"{product.ProductName} (P{fuel.PumpNumber})",
+                        Closing = fuel.Closing,
+                        Opening = fuel.Opening,
+                        Liters = fuel.Closing - fuel.Opening,
+                        Calibration = data.Calibrations.Sum(c => c.Quantity),
+                        LitersSold = fuel.Closing - fuel.Opening,
+                        TransactionCount = 0,
+                        Price = fuel.Price,
+                    };
+
+                    salesDetail.Liters = fuel.Closing - fuel.Opening;
+                    salesDetail.LitersSold = salesDetail.Liters;
+                    salesDetail.Sale = salesDetail.Calibration == 0 ? salesDetail.Liters * salesDetail.Price : (salesDetail.Liters - salesDetail.Calibration) * salesDetail.Price;
+                    fuel.IsProcessed = true;
+
+                    await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
+
+                }
+
+                foreach (var lube in data.LubeSales.OrderBy(l => l.ProductCode))
+                {
+                    var salesDetail = new MobilitySalesDetail()
+                    {
+                        SalesHeaderId = salesHeader.SalesHeaderId,
+                        SalesNo = salesHeader.SalesNo,
+                        StationCode = lube.StationCode,
+                        Product = lube.ProductCode,
+                        Particular = lube.ProductCode,
+                        Liters = lube.Quantity,
+                        Price = lube.Price,
+                        Sale = lube.Quantity * lube.Price,
+                        Value = lube.Quantity * lube.Price,
+                    };
+
+                    lube.IsProcessed = true;
+                    await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
+
+                }
+
+                foreach (var calibration in data.Calibrations)
+                {
+                    calibration.IsProcessed = true;
+                }
+
+                data.Shift.IsProcessed = true;
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateSeriesNumberForFmsSales(string stationCode)
+        {
+            var lastCashierReport = await _db.MobilitySalesHeaders
+                .OrderBy(s => s.SalesNo)
+                .Where(s => s.StationCode == stationCode && s.Source == "FMS")
+                .LastOrDefaultAsync();
+
+            if (lastCashierReport != null)
+            {
+                string lastSeries = lastCashierReport.SalesNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "FMS0000000001";
+            }
+        }
     }
 }

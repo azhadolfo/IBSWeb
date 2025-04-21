@@ -34,5 +34,7 @@ namespace IBS.Models.Mobility
         public decimal EconogasPrice { get; set; }
 
         public decimal EnvirogasPrice { get; set; }
+
+        public bool IsProcessed { get; set; }
     }
 }

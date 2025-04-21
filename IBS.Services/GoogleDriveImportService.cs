@@ -510,7 +510,6 @@ namespace IBS.Services
 
             int fuelsCount;
             int lubesCount;
-            bool hasPoSales = false;
 
             var stations = await _dbContext.MobilityStations
                 .Where(s => s.IsActive)
@@ -599,7 +598,7 @@ namespace IBS.Services
 
                         if (fuelsCount != 0 || lubesCount != 0)
                         {
-                            await _unitOfWork.MobilitySalesHeader.ComputeSalesPerCashier(hasPoSales);
+                            await _unitOfWork.MobilitySalesHeader.ComputeSalesReportForFms();
 
                             _logger.LogInformation("==========" + station.StationName + " SALES(FMS) IMPORTED==========");
 

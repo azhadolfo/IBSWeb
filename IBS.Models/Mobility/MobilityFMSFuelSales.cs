@@ -29,5 +29,7 @@ namespace IBS.Models.Mobility
 
         public int PageNumber { get; set; }
 
+        public bool IsProcessed { get; set; }
+
     }
 }

@@ -310,7 +310,7 @@
                                     }
                                 }
                                 
-                                if(selectedCompany == "Mobility" && selectedStation != "S00")
+                                if (selectedCompany == "Mobility" && selectedStation != "S00")
                                 {
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">POS</a>
@@ -569,6 +569,10 @@
                                                 </ul>
                                             </li>
                                         </ul>
+                                    </li>
+                                    
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Mobility" asp-controller="Report" asp-action="PosVsFmsComparison">POS vs FMS</a>
                                     </li>
                                     
                                     @if (User.IsInRole("Admin"))
