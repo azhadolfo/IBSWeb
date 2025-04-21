@@ -426,9 +426,9 @@ namespace IBSWeb.Areas.MMSI
                     worksheet.Cells[row, 11].Value = $"{sales.DateLeft} {sales.TimeLeft}";
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived} {sales.TimeArrived}";
 
-                    worksheet.Cells[row, 13].Value = sales.TotalHours;
-                    worksheet.Cells[row, 14]. Value = sales.TotalNetRevenue;
-                    worksheet.Cells[row, 15].Value = sales.TotalBilling;
+                    worksheet.Cells[row, 13].Value = $"{sales.TotalHours}";
+                    worksheet.Cells[row, 14]. Value = $"{sales.TotalNetRevenue}";
+                    worksheet.Cells[row, 15].Value = $"{sales.TotalBilling}";
 
                     using (var range = worksheet.Cells[row, 13, row, 15])
                     {
@@ -436,13 +436,9 @@ namespace IBSWeb.Areas.MMSI
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
-                    worksheet.Cells[row, 27].Value = sales.TotalBilling; // BALANCE to change operation
-                    worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                    worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 27].Value = $"{sales.TotalBilling}"; // BALANCE to change operation
                     //worksheet.Cells[row, 28].Value = $"{sales.TotalBilling}"; // AP OTHER TUGS
-                    worksheet.Cells[row, 29].Value = sales.TotalBilling; // NET SALES to change operation
-                    worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                    worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 29].Value = $"{sales.TotalBilling}"; // NET SALES to change operation
 
                     var writingCol = 29;
                     foreach (var tugboat in mmsiTugboats)
@@ -450,32 +446,9 @@ namespace IBSWeb.Areas.MMSI
                         writingCol++;
                         if (sales.Tugboat.TugboatName == tugboat.TugboatName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
-                            worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            worksheet.Cells[row, writingCol].Value = $"{sales.TotalBilling}";
                         }
                     }
-
-                    writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned)
-                    {
-                        worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
-                        worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    }
-
-                    foreach (var tugboat in mmsiTugboats)
-                    {
-                        writingCol++;
-                        if (sales.Tugboat.TugboatName == tugboat.TugboatName)
-                        {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalHours;
-                            worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        }
-                    }
-
-
 
 
 
