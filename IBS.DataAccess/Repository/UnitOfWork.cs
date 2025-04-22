@@ -48,6 +48,8 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
+        public Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; private set; }
+        public Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; private set; }
 
         public Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
 
@@ -73,13 +75,13 @@ namespace IBS.DataAccess.Repository
         #region Accounts Receivable
         public ISalesInvoiceRepository FilprideSalesInvoice { get; private set; }
 
-        public IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
+        public Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
 
         public ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
 
         public IDebitMemoRepository FilprideDebitMemo { get; private set; }
 
-        public ICreditMemoRepository FilprideCreditMemo { get; private set; }
+        public Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; private set; }
         #endregion
 
         #region Accounts Payable
@@ -146,6 +148,8 @@ namespace IBS.DataAccess.Repository
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
+            MobilityServiceInvoice = new Mobility.ServiceInvoiceRepository(_db);
+            MobilityCreditMemo = new Mobility.CreditMemoRepository(_db);
 
             #endregion
 
@@ -168,10 +172,10 @@ namespace IBS.DataAccess.Repository
 
             #region Accounts Receivable
             FilprideSalesInvoice = new SalesInvoiceRepository(_db);
-            FilprideServiceInvoice = new ServiceInvoiceRepository(_db);
+            FilprideServiceInvoice = new Filpride.ServiceInvoiceRepository(_db);
             FilprideCollectionReceipt = new CollectionReceiptRepository(_db);
             FilprideDebitMemo = new DebitMemoRepository(_db);
-            FilprideCreditMemo = new CreditMemoRepository(_db);
+            FilprideCreditMemo = new Filpride.CreditMemoRepository(_db);
             #endregion
 
             #region Accounts Payable

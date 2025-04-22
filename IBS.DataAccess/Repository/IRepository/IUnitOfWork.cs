@@ -62,6 +62,8 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
+        Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
+        Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
 
@@ -111,13 +113,13 @@ namespace IBS.DataAccess.Repository.IRepository
         #region Accounts Receivable
         ISalesInvoiceRepository FilprideSalesInvoice { get; }
 
-        IServiceInvoiceRepository FilprideServiceInvoice { get; }
+        Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; }
 
         ICollectionReceiptRepository FilprideCollectionReceipt { get; }
 
         IDebitMemoRepository FilprideDebitMemo { get; }
 
-        ICreditMemoRepository FilprideCreditMemo { get; }
+        Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; }
         #endregion
 
         #region Accounts Payable

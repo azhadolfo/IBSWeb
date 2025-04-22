@@ -1,0 +1,82 @@
+@model ServiceInvoiceViewModel
+
+@{
+    ViewData["Title"] = "Edit Service Invoice";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Service Invoice</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ServiceInvoiceId"/>
+            <div class="form-group mb-3">
+                <label asp-for="CustomerId" class="control-label">Customer<span class="required">*</span></label>
+                <select asp-for="CustomerId" class="form-control js-select2" asp-items="@Model.Customers" required style="width:100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="CustomerId" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="ServiceId" class="control-label">Particulars<span class="required">*</span></label>
+                <select asp-for="ServiceId" class="form-control js-select2" asp-items="@Model.Services" style="width:100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="ServiceId" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="DueDate" class="control-label">Due Date<span class="required">*</span></label>
+                <input asp-for="DueDate" type="date" class="form-control"/>
+                <span asp-validation-for="DueDate" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.000"/>
+                <label for="discount" class="control-label">Discount</label>
+                <span asp-validation-for="Discount" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Instructions" class="form-control" placeholder="Leave a instruction here" id="instructions" style="height: 100px"></textarea>
+                <label for="instructions" class="control-label">Instructions</label>
+                <span asp-validation-for="Instructions" class="text-danger"></span>
+            </div>
+            <div id="period-amount-fields" class="row g-2 mb-3">
+                <div class="col-sm mb-3">
+                    <label asp-for="Period" class="control-label">Period<span class="required">*</span></label>
+                    <input asp-for="Period" type="month" class="form-control"/>
+                    <span asp-validation-for="Period" class="text-danger"></span>
+                </div>
+                <div class="col-sm mb-3">
+                    <label asp-for="Amount" class="control-label">Amount<span class="required">*</span></label>
+                    <input asp-for="Amount" class="form-control money" placeholder="0.000"/>
+                    <span asp-validation-for="Amount" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="ServiceInvoice" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
