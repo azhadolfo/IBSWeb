@@ -53,289 +53,297 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaim = await GetStationCodeClaimAsync();
 
-            var posSales = await _dbContext.MobilitySalesHeaders
+            var salesHeaders = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
                 .Where(s => s.Date.Month == model.Period.Month && s.Date.Year == model.Period.Year && s.StationCode == stationCodeClaim)
                 .OrderBy(s => s.Date)
                 .ThenBy(s => s.Shift)
                 .ToListAsync();
 
-            var fmsCashierShifts = await _dbContext.MobilityFmsCashierShifts
-                .Where(c => c.Date.Month == model.Period.Month && c.Date.Year == model.Period.Year && c.StationCode == stationCodeClaim)
-                .OrderBy(c => c.Date)
-                .ThenBy(c => c.ShiftNumber)
-                .ToListAsync();
-
-            var fmsFuelSales = await _dbContext.MobilityFMSFuelSales
-                .Where(f => f.ShiftDate.Month == model.Period.Month && f.ShiftDate.Year == model.Period.Year && f.StationCode == stationCodeClaim)
-                .OrderBy(f => f.ShiftDate)
-                .ThenBy(f => f.ShiftNumber)
-                .ToListAsync();
-
-            var fmsLubeSales = await _dbContext.MobilityFMSLubeSales
-                .Where(f => f.ShiftDate.Month == model.Period.Month && f.ShiftDate.Year == model.Period.Year && f.StationCode == stationCodeClaim)
-                .OrderBy(f => f.ShiftDate)
-                .ThenBy(f => f.ShiftNumber)
-                .ToListAsync();
-
-            var fmsCalibrations = await _dbContext.MobilityFmsCalibrations
-                .Where(f => f.ShiftDate.Month == model.Period.Month && f.ShiftDate.Year == model.Period.Year && f.StationCode == stationCodeClaim)
-                .OrderBy(f => f.ShiftDate)
-                .ThenBy(f => f.ShiftNumber)
-                .ToListAsync();
-
-            // Combine FMS data by shift
-            var fmsDataByShift = fmsCashierShifts.Select(shift => new
-            {
-                Shift = shift,
-                FuelSales = fmsFuelSales.Where(f => f.ShiftRecordId == shift.ShiftRecordId).ToList(),
-                LubeSales = fmsLubeSales.Where(l => l.ShiftRecordId == shift.ShiftRecordId).ToList(),
-                Calibrations = fmsCalibrations.Where(c => c.ShiftRecordId == shift.ShiftRecordId).ToList()
-            }).ToList();
-
-            // Similarly, let's organize POS data for easier access
-            var posDataByShift = posSales.GroupBy(p => new { p.Date, p.Shift })
-                .Select(g => new
+            // Group data by Date, Shift, and Product for easier comparison
+            var groupedData = salesHeaders
+                .SelectMany(h => h.SalesDetails.Select(d => new
                 {
-                    Date = g.Key.Date,
-                    Shift = g.Key.Shift,
-                    Sales = g.ToList()
-                }).ToList();
-
-            using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add("POS vs FMS");
-
-            // Create FMS section headers
-            worksheet.Cells[1, 1].Value = "FMS";
-            worksheet.Cells[1, 2].Value = "CLOSING";
-            worksheet.Cells[1, 3].Value = "OPENING";
-            worksheet.Cells[1, 4].Value = "CALIBRATION";
-            worksheet.Cells[1, 5].Value = "VOLUME";
-            worksheet.Cells[1, 6].Value = "PRICE";
-            worksheet.Cells[1, 7].Value = "FUEL SALES";
-            worksheet.Cells[1, 8].Value = "LUBE SALES";
-            worksheet.Cells[1, 9].Value = "CASH ON HAND";
-
-            // Create POS section headers
-            worksheet.Cells[1, 11].Value = "POS";
-            worksheet.Cells[1, 12].Value = "CLOSING";
-            worksheet.Cells[1, 13].Value = "OPENING";
-            worksheet.Cells[1, 14].Value = "CALIBRATION";
-            worksheet.Cells[1, 15].Value = "VOLUME";
-            worksheet.Cells[1, 16].Value = "PRICE";
-            worksheet.Cells[1, 17].Value = "FUEL SALES";
-            worksheet.Cells[1, 18].Value = "LUBE SALES";
-            worksheet.Cells[1, 19].Value = "CASH DROP";
-
-            // Add TOTALS row
-            worksheet.Cells[2, 1].Value = "TOTALS";
-            worksheet.Cells[2, 11].Value = "TOTALS";
-
-            // Calculate and populate the totals for FMS
-            decimal fmsTotalCalibration = fmsCalibrations.Sum(c => c.Quantity);
-            decimal fmsTotalVolume = fmsFuelSales.Sum(f => f.Closing - f.Opening);
-            decimal fmsTotalFuelSales = fmsFuelSales.Sum(f => (f.Closing - f.Opening) * f.Price);
-            decimal fmsTotalLubeSales = fmsLubeSales.Sum(l => l.Quantity * l.Price);
-            decimal fmsTotalCashOnHand = fmsCashierShifts.Sum(s => s.CashOnHand);
-
-            worksheet.Cells[2, 4].Value = fmsTotalCalibration;
-            worksheet.Cells[2, 5].Value = fmsTotalVolume;
-            worksheet.Cells[2, 7].Value = fmsTotalFuelSales;
-            worksheet.Cells[2, 8].Value = fmsTotalLubeSales;
-            worksheet.Cells[2, 9].Value = fmsTotalCashOnHand;
-
-            // Calculate and populate the totals for POS
-            decimal posTotalCalibration = 0; // Assuming POS calibration data exists
-            decimal posTotalVolume = posSales.SelectMany(p => p.SalesDetails).Where(d => d.Product.Contains("PET")).Sum(d => d.Liters);
-            decimal posTotalFuelSales = posSales.SelectMany(p => p.SalesDetails).Where(d => d.Product.Contains("PET")).Sum(d => d.Value);
-            decimal posTotalLubeSales = posSales.SelectMany(p => p.SalesDetails).Where(d => !d.Product.Contains("PET")).Sum(d => d.Value);
-            decimal posTotalCashDrop = posSales.Sum(p => p.SafeDropTotalAmount);
-
-            worksheet.Cells[2, 14].Value = posTotalCalibration;
-            worksheet.Cells[2, 15].Value = posTotalVolume;
-            worksheet.Cells[2, 17].Value = posTotalFuelSales;
-            worksheet.Cells[2, 18].Value = posTotalLubeSales;
-            worksheet.Cells[2, 19].Value = posTotalCashDrop;
-
-            // Start populating data rows
-            int currentRow = 3;
-
-            // Create combined list of all dates and shifts
-            var allDatesAndShifts = new HashSet<(DateOnly Date, int Shift)>();
-
-            foreach (var shift in fmsCashierShifts)
-            {
-                allDatesAndShifts.Add((shift.Date, shift.ShiftNumber));
-            }
-
-            foreach (var sale in posSales)
-            {
-                allDatesAndShifts.Add((sale.Date, sale.Shift));
-            }
-
-            // Sort by date and shift
-            var sortedDatesAndShifts = allDatesAndShifts
-                .OrderBy(ds => ds.Date)
-                .ThenBy(ds => ds.Shift)
+                    Source = h.Source,
+                    Date = h.Date,
+                    Cashier = h.Cashier,
+                    Shift = h.Shift,
+                    Product = d.Product,
+                    Closing = d.Closing,
+                    Opening = d.Opening,
+                    Calibration = d.Calibration,
+                    Liters = d.Liters,
+                    Price = d.Price,
+                    Value = d.Value
+                }))
+                .GroupBy(x => new { x.Date, x.Shift, x.Product })
+                .OrderBy(g => g.Key.Date)
+                .ThenBy(g => g.Key.Shift)
+                .ThenBy(g => g.Key.Product)
                 .ToList();
 
-            // Populate data for each date/shift
-            foreach (var (date, shiftNumber) in sortedDatesAndShifts)
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("POS vs FMS Comparison");
+
+            //Accounting Number Format
+            string numberFormat = "#,##0.00;(#,##0.00)";
+
+            // Headers
+            int col = 1;
+            // Date and Shift common headers
+            worksheet.Cells[1, col++].Value = "DATE";
+            worksheet.Cells[1, col++].Value = "SHIFT";
+            worksheet.Cells[1, col++].Value = "PRODUCT";
+
+            // FMS Headers
+            worksheet.Cells[1, col++].Value = "FMS CASHIER";
+            worksheet.Cells[1, col++].Value = "FMS CLOSING";
+            worksheet.Cells[1, col++].Value = "FMS OPENING";
+            worksheet.Cells[1, col++].Value = "FMS CALIBRATION";
+            worksheet.Cells[1, col++].Value = "FMS VOLUME";
+            worksheet.Cells[1, col++].Value = "FMS PRICE";
+            worksheet.Cells[1, col++].Value = "FMS FUEL SALES";
+
+            // POS Headers
+            worksheet.Cells[1, col++].Value = "POS CASHIER";
+            worksheet.Cells[1, col++].Value = "POS CLOSING";
+            worksheet.Cells[1, col++].Value = "POS OPENING";
+            worksheet.Cells[1, col++].Value = "POS CALIBRATION";
+            worksheet.Cells[1, col++].Value = "POS VOLUME";
+            worksheet.Cells[1, col++].Value = "POS PRICE";
+            worksheet.Cells[1, col++].Value = "POS FUEL SALES";
+
+            // Difference Headers
+            worksheet.Cells[1, col++].Value = "VOLUME DIFF";
+            worksheet.Cells[1, col++].Value = "SALES DIFF";
+
+            // Style header row
+            using (var range = worksheet.Cells[1, 1, 1, col - 1])
             {
-                // Add date and shift as a row header
-                worksheet.Cells[currentRow, 1].Value = $"{date.ToShortDateString()} - Shift {shiftNumber}";
-                worksheet.Cells[currentRow, 11].Value = $"{date.ToShortDateString()} - Shift {shiftNumber}";
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            }
 
-                // Find corresponding FMS data
-                var fmsData = fmsDataByShift.FirstOrDefault(f =>
-                    f.Shift.Date.Day == date.Day && f.Shift.ShiftNumber == shiftNumber);
+            // Freeze top header row
+            worksheet.View.FreezePanes(2, 1);
 
+            // Fill data rows
+            int row = 2;
+
+            // Totals for summary
+            decimal fmsCalibrationTotal = 0;
+            decimal fmsVolumeTotal = 0;
+            decimal fmsSalesTotal = 0;
+            decimal posCalibrationTotal = 0;
+            decimal posVolumeTotal = 0;
+            decimal posSalesTotal = 0;
+
+            foreach (var group in groupedData)
+            {
+                var fmsData = group.FirstOrDefault(x => x.Source == "FMS");
+                var posData = group.FirstOrDefault(x => x.Source == "POS");
+
+                // Common fields
+                col = 1;
+                worksheet.Cells[row, col++].Value = group.Key.Date.ToString("yyyy/MM/dd");
+                worksheet.Cells[row, col++].Value = group.Key.Shift;
+                worksheet.Cells[row, col++].Value = group.Key.Product;
+
+                // FMS data
                 if (fmsData != null)
                 {
-                    // Populate FMS data
-                    worksheet.Cells[currentRow, 2].Value = fmsData.FuelSales.Max(f => f.Closing);
-                    worksheet.Cells[currentRow, 3].Value = fmsData.FuelSales.Min(f => f.Opening);
+                    worksheet.Cells[row, col++].Value = fmsData.Cashier;
+                    worksheet.Cells[row, col++].Value = fmsData.Closing;
+                    worksheet.Cells[row, col++].Value = fmsData.Opening;
+                    worksheet.Cells[row, col++].Value = fmsData.Calibration;
+                    worksheet.Cells[row, col++].Value = fmsData.Liters;
+                    worksheet.Cells[row, col++].Value = fmsData.Price;
+                    worksheet.Cells[row, col++].Value = fmsData.Value;
 
-                    decimal calibrationVolume = fmsData.Calibrations.Sum(c => c.Quantity);
-                    worksheet.Cells[currentRow, 4].Value = calibrationVolume;
-
-                    decimal fuelVolume = fmsData.FuelSales.Sum(f => f.Closing - f.Opening);
-                    worksheet.Cells[currentRow, 5].Value = fuelVolume;
-
-                    // Average price per unit if volume > 0
-                    if (fuelVolume > 0)
-                    {
-                        decimal totalAmount = fmsData.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price);
-                        worksheet.Cells[currentRow, 6].Value = totalAmount / fuelVolume;
-                    }
-
-                    worksheet.Cells[currentRow, 7].Value = fmsData.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price);
-                    worksheet.Cells[currentRow, 8].Value = fmsData.LubeSales.Sum(l => l.Quantity * l.Price);
-                    worksheet.Cells[currentRow, 9].Value = fmsData.Shift.CashOnHand;
+                    // Add to totals
+                    fmsCalibrationTotal += fmsData.Calibration;
+                    fmsVolumeTotal += fmsData.Liters;
+                    fmsSalesTotal += fmsData.Value;
+                }
+                else
+                {
+                    // Skip empty columns
+                    col += 7;
                 }
 
-                // Find corresponding POS data
-                var posData = posDataByShift.FirstOrDefault(p =>
-                    p.Date.Day == date.Day && p.Shift == shiftNumber);
-
+                // POS data
                 if (posData != null)
                 {
-                    var fuelSalesDetails = posData.Sales.SelectMany(s => s.SalesDetails)
-                        .Where(d => d.Product.Contains("PET"))
-                        .ToList();
+                    worksheet.Cells[row, col++].Value = posData.Cashier;
+                    worksheet.Cells[row, col++].Value = posData.Closing;
+                    worksheet.Cells[row, col++].Value = posData.Opening;
+                    worksheet.Cells[row, col++].Value = posData.Calibration;
+                    worksheet.Cells[row, col++].Value = posData.Liters;
+                    worksheet.Cells[row, col++].Value = posData.Price;
+                    worksheet.Cells[row, col++].Value = posData.Value;
 
-                    var lubeSalesDetails = posData.Sales.SelectMany(s => s.SalesDetails)
-                        .Where(d => !d.Product.Contains("PET"))
-                        .ToList();
-
-                    decimal posVolume = fuelSalesDetails.Sum(d => d.Liters);
-                    decimal posFuelSales = fuelSalesDetails.Sum(d => d.Value);
-                    decimal posLubeSales = lubeSalesDetails.Sum(d => d.Value);
-
-                    // Populate POS data
-                    // Assuming these fields exist in your POS data, adjust as needed
-                    worksheet.Cells[currentRow, 12].Value = posData.Sales.FirstOrDefault()?.SalesDetails.Max(s => s.Closing) ?? 0;
-                    worksheet.Cells[currentRow, 13].Value = posData.Sales.FirstOrDefault()?.SalesDetails.Min(s => s.Opening) ?? 0;
-                    worksheet.Cells[currentRow, 14].Value = 0; // POS calibration (if applicable)
-                    worksheet.Cells[currentRow, 15].Value = posVolume;
-
-                    // Average price per unit if volume > 0
-                    if (posVolume > 0)
-                    {
-                        worksheet.Cells[currentRow, 16].Value = posFuelSales / posVolume;
-                    }
-
-                    worksheet.Cells[currentRow, 17].Value = posFuelSales;
-                    worksheet.Cells[currentRow, 18].Value = posLubeSales;
-                    worksheet.Cells[currentRow, 19].Value = posData.Sales.Sum(s => s.SafeDropTotalAmount);
+                    // Add to totals
+                    posCalibrationTotal += posData.Calibration;
+                    posVolumeTotal += posData.Liters;
+                    posSalesTotal += posData.Value;
+                }
+                else
+                {
+                    // Skip empty columns
+                    col += 7;
                 }
 
-                currentRow++;
+                // Calculate differences if both exist
+                if (fmsData != null && posData != null)
+                {
+                    decimal volumeDiff = posData.Liters - fmsData.Liters;
+                    decimal salesDiff = posData.Value - fmsData.Value;
+
+                    worksheet.Cells[row, col++].Value = volumeDiff;
+                    worksheet.Cells[row, col++].Value = salesDiff;
+
+                    // Highlight significant differences
+                    if (Math.Abs(volumeDiff) > 0.1m)
+                    {
+                        worksheet.Cells[row, col - 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[row, col - 2].Style.Fill.BackgroundColor.SetColor(
+                            volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
+                    }
+
+                    if (Math.Abs(salesDiff) > 0.1m)
+                    {
+                        worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                            salesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                    }
+                }
+                else
+                {
+                    // Skip difference columns
+                    col += 2;
+                }
+
+                row++;
             }
 
-            // Format numbers to 2 decimal places for currency and price
-            var moneyFormat = "_($* #,##0.00_);_($* (#,##0.00);_($* \"-\"??_);_(@_)";
-            worksheet.Cells[2, 4, currentRow - 1, 9].Style.Numberformat.Format = moneyFormat;
-            worksheet.Cells[2, 14, currentRow - 1, 19].Style.Numberformat.Format = moneyFormat;
+            // Add totals row
+            int totalRow = row;
+            col = 1;
 
-            // Highlight totals cells in yellow
-            var yellowColor = Color.FromArgb(255, 255, 0);
-            worksheet.Cells[2, 4, 2, 9].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[2, 4, 2, 9].Style.Fill.BackgroundColor.SetColor(yellowColor);
-            worksheet.Cells[2, 14, 2, 19].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[2, 14, 2, 19].Style.Fill.BackgroundColor.SetColor(yellowColor);
+            worksheet.Cells[totalRow, col++].Value = "TOTALS";
+            worksheet.Cells[totalRow, col++].Value = "";  // Shift column
+            worksheet.Cells[totalRow, col++].Value = "";  // Product column
+            worksheet.Cells[totalRow, col++].Value = "";  // FMS Cashier
 
-            // Add alternating row colors for better readability
-            for (int i = 3; i < currentRow; i += 2)
+            // Skip to FMS calculated values
+            worksheet.Cells[totalRow, col++].Value = "";  // FMS Closing
+            worksheet.Cells[totalRow, col++].Value = "";  // FMS Opening
+            worksheet.Cells[totalRow, col++].Value = fmsCalibrationTotal;  // FMS Calibration
+            worksheet.Cells[totalRow, col++].Value = fmsVolumeTotal;       // FMS Volume
+            worksheet.Cells[totalRow, col++].Value = "";  // FMS Price
+            worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;        // FMS Sales
+
+            worksheet.Cells[totalRow, col++].Value = "";  // POS Cashier
+            worksheet.Cells[totalRow, col++].Value = "";  // POS Closing
+            worksheet.Cells[totalRow, col++].Value = "";  // POS Opening
+            worksheet.Cells[totalRow, col++].Value = posCalibrationTotal;  // POS Calibration
+            worksheet.Cells[totalRow, col++].Value = posVolumeTotal;       // POS Volume
+            worksheet.Cells[totalRow, col++].Value = "";  // POS Price
+            worksheet.Cells[totalRow, col++].Value = posSalesTotal;        // POS Sales
+
+            // Calculate total differences
+            decimal totalVolumeDiff = posVolumeTotal - fmsVolumeTotal;
+            decimal totalSalesDiff = posSalesTotal - fmsSalesTotal;
+
+            worksheet.Cells[totalRow, col++].Value = totalVolumeDiff;
+            worksheet.Cells[totalRow, col++].Value = totalSalesDiff;
+
+            // Highlight total row
+            using (var range = worksheet.Cells[totalRow, 1, totalRow, col - 1])
             {
-                var lightGray = Color.FromArgb(240, 240, 240);
-                worksheet.Cells[i, 1, i, 9].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[i, 1, i, 9].Style.Fill.BackgroundColor.SetColor(lightGray);
-                worksheet.Cells[i, 11, i, 19].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[i, 11, i, 19].Style.Fill.BackgroundColor.SetColor(lightGray);
+                range.Style.Font.Bold = true;
+                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                range.Style.Border.Top.Style = ExcelBorderStyle.Double;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
             }
 
-            // Add borders
-            var dataRange = worksheet.Cells[1, 1, currentRow - 1, 19];
-            dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-            dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-            dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-            dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            // Style all data cells with borders
+            using (var range = worksheet.Cells[1, 1, totalRow, col - 1])
+            {
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+            }
 
-            // Make headers bold
-            worksheet.Cells[1, 1, 1, 19].Style.Font.Bold = true;
-            worksheet.Cells[2, 1].Style.Font.Bold = true;
-            worksheet.Cells[2, 11].Style.Font.Bold = true;
+            // Format numeric columns with number format
+            for (int c = 5; c <= col - 1; c++)
+            {
+                if (c == 11) // Skip non-numeric columns if any
+                    continue;
 
-            // Add a difference/variance section
-            worksheet.Cells[currentRow + 1, 1].Value = "VARIANCE ANALYSIS (FMS vs POS)";
-            worksheet.Cells[currentRow + 1, 1, currentRow + 1, 19].Merge = true;
-            worksheet.Cells[currentRow + 1, 1].Style.Font.Bold = true;
-            worksheet.Cells[currentRow + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[2, c, totalRow, c].Style.Numberformat.Format = numberFormat;
+            }
 
-            worksheet.Cells[currentRow + 2, 1].Value = "CATEGORY";
-            worksheet.Cells[currentRow + 2, 2].Value = "FMS";
-            worksheet.Cells[currentRow + 2, 3].Value = "POS";
-            worksheet.Cells[currentRow + 2, 4].Value = "DIFFERENCE";
-            worksheet.Cells[currentRow + 2, 5].Value = "% VARIANCE";
+            // Format date column
+            worksheet.Cells[2, 1, totalRow, 1].Style.Numberformat.Format = "yyyy/MM/dd";
 
-            // Bold the variance headers
-            worksheet.Cells[currentRow + 2, 1, currentRow + 2, 5].Style.Font.Bold = true;
+            // Add summary section
+            row = totalRow + 2;
+            worksheet.Cells[row, 1].Value = "SUMMARY";
+            worksheet.Cells[row, 1].Style.Font.Bold = true;
+            worksheet.Cells[row, 1].Style.Font.Size = 14;
 
-            // Add variance data
-            worksheet.Cells[currentRow + 3, 1].Value = "VOLUME";
-            worksheet.Cells[currentRow + 3, 2].Value = fmsTotalVolume;
-            worksheet.Cells[currentRow + 3, 3].Value = posTotalVolume;
-            worksheet.Cells[currentRow + 3, 4].Formula = $"=B{currentRow + 3}-C{currentRow + 3}";
-            worksheet.Cells[currentRow + 3, 5].Formula = $"=D{currentRow + 3}/B{currentRow + 3}";
-            worksheet.Cells[currentRow + 3, 5].Style.Numberformat.Format = "0.00%";
+            row++;
+            worksheet.Cells[row, 1].Value = "Source";
+            worksheet.Cells[row, 2].Value = "Total Volume";
+            worksheet.Cells[row, 3].Value = "Total Sales";
 
-            worksheet.Cells[currentRow + 4, 1].Value = "FUEL SALES";
-            worksheet.Cells[currentRow + 4, 2].Value = fmsTotalFuelSales;
-            worksheet.Cells[currentRow + 4, 3].Value = posTotalFuelSales;
-            worksheet.Cells[currentRow + 4, 4].Formula = $"=B{currentRow + 4}-C{currentRow + 4}";
-            worksheet.Cells[currentRow + 4, 5].Formula = $"=D{currentRow + 4}/B{currentRow + 4}";
-            worksheet.Cells[currentRow + 4, 5].Style.Numberformat.Format = "0.00%";
+            row++;
+            worksheet.Cells[row, 1].Value = "FMS";
+            worksheet.Cells[row, 2].Value = fmsVolumeTotal;
+            worksheet.Cells[row, 3].Value = fmsSalesTotal;
+            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
 
-            worksheet.Cells[currentRow + 5, 1].Value = "LUBE SALES";
-            worksheet.Cells[currentRow + 5, 2].Value = fmsTotalLubeSales;
-            worksheet.Cells[currentRow + 5, 3].Value = posTotalLubeSales;
-            worksheet.Cells[currentRow + 5, 4].Formula = $"=B{currentRow + 5}-C{currentRow + 5}";
-            worksheet.Cells[currentRow + 5, 5].Formula = $"=D{currentRow + 5}/B{currentRow + 5}";
-            worksheet.Cells[currentRow + 5, 5].Style.Numberformat.Format = "0.00%";
+            row++;
+            worksheet.Cells[row, 1].Value = "POS";
+            worksheet.Cells[row, 2].Value = posVolumeTotal;
+            worksheet.Cells[row, 3].Value = posSalesTotal;
+            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
 
-            // Format the variance table
-            var varianceRange = worksheet.Cells[currentRow + 2, 1, currentRow + 5, 5];
-            varianceRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-            varianceRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-            varianceRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-            varianceRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+            row++;
+            worksheet.Cells[row, 1].Value = "Difference";
+            worksheet.Cells[row, 2].Value = totalVolumeDiff;
+            worksheet.Cells[row, 3].Value = totalSalesDiff;
+            worksheet.Cells[row, 2, row, 3].Style.Font.Bold = true;
+            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
 
-            // Add conditional formatting to highlight significant variances
-            var significantVariance = worksheet.ConditionalFormatting.AddAboveAverage(
-                new ExcelAddress(currentRow + 3, 5, currentRow + 5, 5));
-            significantVariance.Style.Fill.PatternType = ExcelFillStyle.Solid;
-            significantVariance.Style.Fill.BackgroundColor.SetColor(Color.LightCoral);
+            // Add percentage difference
+            row++;
+            decimal volumePercentDiff = fmsVolumeTotal != 0 ? (totalVolumeDiff / fmsVolumeTotal) : 0;
+            decimal salesPercentDiff = fmsSalesTotal != 0 ? (totalSalesDiff / fmsSalesTotal) : 0;
+
+            worksheet.Cells[row, 1].Value = "Percentage Diff";
+            worksheet.Cells[row, 2].Value = volumePercentDiff;
+            worksheet.Cells[row, 3].Value = salesPercentDiff;
+            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = "0.00%";
+            worksheet.Cells[row, 2, row, 3].Style.Font.Bold = true;
+
+            // Style summary table
+            using (var range = worksheet.Cells[totalRow + 3, 1, row, 3])
+            {
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+            }
 
             // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();

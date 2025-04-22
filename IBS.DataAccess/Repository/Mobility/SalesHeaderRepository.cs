@@ -1297,6 +1297,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     Date = data.Shift.Date,
                     StationCode = data.Shift.StationCode,
                     Cashier = data.Shift.EmployeeNumber,
+                    Shift = data.Shift.ShiftNumber,
                     CreatedBy = "System Generated",
                     TimeIn = data.Shift.TimeIn,
                     TimeOut = data.Shift.TimeOut,
@@ -1341,6 +1342,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     salesDetail.Liters = fuel.Closing - fuel.Opening;
                     salesDetail.LitersSold = salesDetail.Liters;
                     salesDetail.Sale = salesDetail.Calibration == 0 ? salesDetail.Liters * salesDetail.Price : (salesDetail.Liters - salesDetail.Calibration) * salesDetail.Price;
+                    salesDetail.Value = salesDetail.Sale;
                     fuel.IsProcessed = true;
 
                     await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
