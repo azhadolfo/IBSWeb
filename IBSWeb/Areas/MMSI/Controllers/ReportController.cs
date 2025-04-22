@@ -487,7 +487,7 @@ namespace IBSWeb.Areas.MMSI
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 9;
+                            worksheet.Column(writingCol).Width = 10;
                         }
                     }
                     // Incomes other tugs
@@ -497,7 +497,7 @@ namespace IBSWeb.Areas.MMSI
                         worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                         worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        worksheet.Column(writingCol).Width = 9;
+                        worksheet.Column(writingCol).Width = 10;
                     }
                     // Total Hours
                     foreach (var tugboat in mmsiTugboats)
@@ -508,7 +508,7 @@ namespace IBSWeb.Areas.MMSI
                             worksheet.Cells[row, writingCol].Value = sales.TotalHours;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 9;
+                            worksheet.Column(writingCol).Width = 10;
                         }
                     }
 
@@ -521,7 +521,7 @@ namespace IBSWeb.Areas.MMSI
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 9;
+                            worksheet.Column(writingCol).Width = 10;
                         }
                     }
 
@@ -537,7 +537,7 @@ namespace IBSWeb.Areas.MMSI
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 9;
+                            worksheet.Column(writingCol).Width = 10;
                             sumOfAr += sales.TotalBilling;
                         }
                     }
@@ -761,7 +761,7 @@ namespace IBSWeb.Areas.MMSI
                 worksheet.Column(26).Width = 12;
                 worksheet.Column(27).Width = 9;
                 worksheet.Column(28).Width = 9;
-                worksheet.Column(29).Width = 9;
+                worksheet.Column(29).Width = 14;
 
                 var excelBytes = package.GetAsByteArray();
 
