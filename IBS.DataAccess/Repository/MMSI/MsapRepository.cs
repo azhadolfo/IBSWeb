@@ -378,6 +378,8 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 dispatchTicket.Billing = await _dbContext.MMSIBillings
                     .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
+                    .Include(b => b.Customer)
+                    .Include(b => b.Principal)
                     .FirstOrDefaultAsync(cancellationToken);
 
                 dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
