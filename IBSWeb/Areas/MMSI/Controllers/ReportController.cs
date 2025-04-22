@@ -450,8 +450,8 @@ namespace IBSWeb.Areas.MMSI
 
                     worksheet.Cells[row, 9].Value = $"{sales.Terminal.TerminalName}";
                     worksheet.Cells[row, 10].Value = $"{sales.ActivityService.ActivityServiceName}";
-                    worksheet.Cells[row, 11].Value = $"{sales.DateLeft} {sales.TimeLeft}";
-                    worksheet.Cells[row, 12].Value = $"{sales.DateArrived} {sales.TimeArrived}";
+                    worksheet.Cells[row, 11].Value = $"{sales.DateLeft:MM/dd/yyyy} {sales.TimeLeft:HH:mm}";
+                    worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
                     worksheet.Cells[row, 13].Value = sales.TotalHours;
                     worksheet.Cells[row, 14]. Value = sales.TotalNetRevenue;
