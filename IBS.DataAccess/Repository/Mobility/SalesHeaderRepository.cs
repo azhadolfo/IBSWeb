@@ -235,18 +235,18 @@ namespace IBS.DataAccess.Repository.Mobility
                    on header.StationCode equals station.StationCode
                    select new
                    {
-                       header.SalesNo,
-                       header.Date,
-                       header.Cashier,
-                       header.StationCode,
-                       header.Shift,
-                       header.TimeIn,
-                       header.TimeOut,
-                       header.PostedBy,
-                       header.SafeDropTotalAmount,
-                       header.ActualCashOnHand,
-                       header.IsTransactionNormal,
-                       StationCodeWithName = $"{header.StationCode} - {station.StationName}"
+                       salesNo = header.SalesNo,
+                       date = header.Date,
+                       cashier = header.Cashier,
+                       stationCode = header.StationCode,
+                       shift = header.Shift,
+                       timeIn = header.TimeIn,
+                       timeOut = header.TimeOut,
+                       postedBy = header.PostedBy,
+                       safeDropTotalAmount = header.SafeDropTotalAmount,
+                       actualCashOnHand = header.ActualCashOnHand,
+                       isTransactionNormal = header.IsTransactionNormal,
+                       stationCodeWithName = $"{header.StationCode} - {station.StationName}"
                    }.ToExpando();
         }
 
