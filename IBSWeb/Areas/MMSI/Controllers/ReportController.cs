@@ -591,7 +591,8 @@ namespace IBSWeb.Areas.MMSI
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.ActivityService.ActivityServiceName == "TENDING")
+                                sales.ActivityService.ActivityServiceName == "TENDING" &&
+                                sales.Vessel.VesselType == category)
                             {
                                 worksheet.Cells[row, writingCol].Value = sales.TotalHours;
                                 worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
