@@ -68,6 +68,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Date = h.Date,
                     Cashier = h.Cashier,
                     Shift = h.Shift,
+                    PageNumber = h.PageNumber,
                     Product = d.Product,
                     Closing = d.Closing,
                     Opening = d.Opening,
@@ -76,9 +77,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Price = d.Price,
                     Value = d.Value
                 }))
-                .GroupBy(x => new { x.Date, x.Shift, x.Product })
+                .GroupBy(x => new { x.Date, x.Shift, x.PageNumber, x.Product })
                 .OrderBy(g => g.Key.Date)
                 .ThenBy(g => g.Key.Shift)
+                .ThenBy(g => g.Key.PageNumber)
                 .ThenBy(g => g.Key.Product)
                 .ToList();
 
@@ -93,6 +95,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Date and Shift common headers
             worksheet.Cells[1, col++].Value = "DATE";
             worksheet.Cells[1, col++].Value = "SHIFT";
+            worksheet.Cells[1, col++].Value = "PAGE NUMBER";
             worksheet.Cells[1, col++].Value = "PRODUCT";
 
             // FMS Headers
@@ -153,6 +156,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 col = 1;
                 worksheet.Cells[row, col++].Value = group.Key.Date.ToString("yyyy/MM/dd");
                 worksheet.Cells[row, col++].Value = group.Key.Shift;
+                worksheet.Cells[row, col++].Value = group.Key.PageNumber;
                 worksheet.Cells[row, col++].Value = group.Key.Product;
 
                 // FMS data
@@ -238,6 +242,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             worksheet.Cells[totalRow, col++].Value = "TOTALS";
             worksheet.Cells[totalRow, col++].Value = "";  // Shift column
+            worksheet.Cells[totalRow, col++].Value = "";  // Shift column
             worksheet.Cells[totalRow, col++].Value = "";  // Product column
             worksheet.Cells[totalRow, col++].Value = "";  // FMS Cashier
 
@@ -286,7 +291,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Format numeric columns with number format
             for (int c = 5; c <= col - 1; c++)
             {
-                if (c == 11) // Skip non-numeric columns if any
+                if (c == 12) // Skip non-numeric columns if any
                     continue;
 
                 worksheet.Cells[2, c, totalRow, c].Style.Numberformat.Format = numberFormat;

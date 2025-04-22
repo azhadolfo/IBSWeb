@@ -1298,6 +1298,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     StationCode = data.Shift.StationCode,
                     Cashier = data.Shift.EmployeeNumber,
                     Shift = data.Shift.ShiftNumber,
+                    PageNumber = data.Shift.PageNumber,
                     CreatedBy = "System Generated",
                     TimeIn = data.Shift.TimeIn,
                     TimeOut = data.Shift.TimeOut,

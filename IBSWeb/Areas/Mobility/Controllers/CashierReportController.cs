@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var stationCodeClaim = await GetStationCodeClaimAsync();
 
-                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaim;
+                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaim; //&& s.Source == "POS";
 
                 var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
 
