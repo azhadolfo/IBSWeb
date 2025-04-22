@@ -15,11 +15,7 @@ namespace IBS.Models.Mobility
         public int? ServiceInvoiceId { get; set; }
 
         [ForeignKey("ServiceInvoiceId")]
-        public FilprideServiceInvoice? ServiceInvoice { get; set; }
-
-        //implement this in view model
-        // [NotMapped]
-        // public List<SelectListItem>? ServiceInvoices { get; set; }
+        public MobilityServiceInvoice? ServiceInvoice { get; set; }
 
         [Column(TypeName = "varchar(12)")]
         [Display(Name = "DM No")]

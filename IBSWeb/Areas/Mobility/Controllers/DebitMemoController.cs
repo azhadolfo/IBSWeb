@@ -14,23 +14,24 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
     [Area(nameof(Mobility))]
     [CompanyAuthorize(nameof(Mobility))]
     [DepartmentAuthorize(SD.Department_CreditAndCollection, SD.Department_RCD)]
-    public class CreditMemoController : Controller
+    public class DebitMemoController : Controller
     {
-        private readonly IUnitOfWork _unitOfWork;
-
         private readonly ApplicationDbContext _dbContext;
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        private readonly ILogger<CreditMemoController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CreditMemoController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, ILogger<CreditMemoController> logger)
+        private readonly ILogger<DebitMemoController> _logger;
+
+        public DebitMemoController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<DebitMemoController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -59,32 +60,31 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GetCreditMemos([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDebitMemos([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
                 var stationCodeClaims = await GetStationCodeClaimAsync();
 
-
-                var creditMemos = await _unitOfWork.MobilityCreditMemo
-                    .GetAllAsync(cm => cm.StationCode == stationCodeClaims, cancellationToken);
+                var debitMemos = await _unitOfWork.MobilityDebitMemo
+                    .GetAllAsync(dm => dm.StationCode == stationCodeClaims, cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    creditMemos = creditMemos
-                    .Where(s =>
-                        s.CreditMemoNo.ToLower().Contains(searchValue) ||
-                        (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
-                        s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                        s.CreditAmount.ToString().Contains(searchValue) ||
-                        s.Remarks?.ToLower().Contains(searchValue) == true ||
-                        s.Description.ToLower().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
-                        )
-                    .ToList();
+                    debitMemos = debitMemos
+                        .Where(s =>
+                            s.DebitMemoNo.ToLower().Contains(searchValue) ||
+                            (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
+                            s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.DebitAmount.ToString().Contains(searchValue) ||
+                            s.Remarks?.ToLower().Contains(searchValue) == true ||
+                            s.Description.ToLower().Contains(searchValue) ||
+                            s.CreatedBy.ToLower().Contains(searchValue)
+                            )
+                        .ToList();
                 }
 
                 // Sorting
@@ -94,15 +94,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                    creditMemos = creditMemos
+                    debitMemos = debitMemos
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
 
-                var totalRecords = creditMemos.Count();
+                var totalRecords = debitMemos.Count();
 
-                var pagedData = creditMemos
+                var pagedData = debitMemos
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
@@ -117,17 +117,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get credit memos. Error: {ErrorMessage}, Stack: {StackTrace}. Get by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity!.Name);
+                _logger.LogError(ex, "Failed to get debit memo. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new CreditMemoViewModel();
-
+            var viewModel = new DebitMemoViewModel();
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
             viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
@@ -144,10 +144,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreditMemoViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
-            var stationCodeClaims = await GetStationCodeClaimAsync();
             var companyClaims = await GetCompanyClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var existingSv = await _unitOfWork.MobilityServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
@@ -162,6 +162,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = sv.ServiceInvoiceNo
                     })
                     .ToListAsync(cancellationToken);
+
                 TempData["error"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -170,35 +171,53 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             try
             {
-                #region -- check for unposted DM or CM
+                #region -- checking for unposted DM or CM
 
-                     var existingSOADMs = _dbContext.MobilityDebitMemos
-                                   .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                   .OrderBy(s => s.ServiceInvoiceId)
-                                   .ToList();
-                     if (existingSOADMs.Count > 0)
-                     {
-                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
-                         return View(viewModel);
-                     }
-
-                    var existingSOACMs = _dbContext.MobilityCreditMemos
-                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.ServiceInvoiceId)
-                                      .ToList();
-                    if (existingSOACMs.Count > 0)
+                    var existingSVDMs = _dbContext.MobilityDebitMemos
+                                  .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                  .OrderBy(s => s.DebitMemoId)
+                                  .ToList();
+                    if (existingSVDMs.Count > 0)
                     {
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
+                        viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                            .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                            .Select(sv => new SelectListItem
+                            {
+                                Value = sv.ServiceInvoiceId.ToString(),
+                                Text = sv.ServiceInvoiceNo
+                            })
+                            .ToListAsync(cancellationToken);
+
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
                         return View(viewModel);
                     }
 
-                #endregion -- check for unposted DM or CM
+                    var existingSVCMs = _dbContext.MobilityCreditMemos
+                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                      .OrderBy(s => s.CreditMemoId)
+                                      .ToList();
+                    if (existingSVCMs.Count > 0)
+                    {
+                        viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                            .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                            .Select(sv => new SelectListItem
+                            {
+                                Value = sv.ServiceInvoiceId.ToString(),
+                                Text = sv.ServiceInvoiceNo
+                            })
+                            .ToListAsync(cancellationToken);
 
-                MobilityCreditMemo model = new()
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
+                        return View(viewModel);
+                    }
+
+                #endregion -- checking for unposted DM or CM
+
+                MobilityDebitMemo model = new()
                 {
-                    CreditAmount = -viewModel.Amount ?? 0,
+                    DebitAmount = -viewModel.Amount ?? 0,
                     Type = existingSv.Type,
-                    CreditMemoNo = await _unitOfWork.MobilityCreditMemo.GenerateCodeAsync(stationCodeClaims, existingSv.Type, cancellationToken),
+                    DebitMemoNo = await _unitOfWork.MobilityDebitMemo.GenerateCodeAsync(stationCodeClaims, existingSv.Type, cancellationToken),
                     StationCode = existingSv.StationCode,
                     CreatedBy = User.Identity!.Name,
                     TransactionDate = viewModel.TransactionDate,
@@ -212,122 +231,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new credit memo# {viewModel.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = $"Credit memo created successfully. Series Number: {model.CreditMemoNo}.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to create credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity!.Name);
-                return View(viewModel);
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var stationCodeClaims = await GetStationCodeClaimAsync();
-
-            var existingRecord = await _unitOfWork.MobilityCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
-
-            if (existingRecord == null)
-            {
-                return BadRequest();
-            }
-
-            CreditMemoViewModel viewModel = new()
-            {
-                ServiceInvoices = await _dbContext.MobilityServiceInvoices
-                    .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
-                    .Select(sv => new SelectListItem
-                    {
-                        Value = sv.ServiceInvoiceId.ToString(),
-                        Text = sv.ServiceInvoiceNo
-                    })
-                    .ToListAsync(cancellationToken),
-                CreditAmount = -existingRecord.Amount ?? 0,
-                Type = existingRecord.Type,
-                StationCode = existingRecord.StationCode,
-                TransactionDate = existingRecord.TransactionDate,
-                ServiceInvoiceId = existingRecord.ServiceInvoiceId,
-                Period = existingRecord.Period,
-                Amount = existingRecord.Amount,
-                Description = existingRecord.Description,
-                Remarks = existingRecord.Remarks,
-                CreditMemoId = existingRecord.CreditMemoId,
-            };
-
-            return View(viewModel);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(CreditMemoViewModel viewModel, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (!ModelState.IsValid)
-            {
-                TempData["error"] = "The submitted information is invalid.";
-                return View(viewModel);
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                var existingCM = await _unitOfWork
-                    .MobilityCreditMemo
-                    .GetAsync(cm => cm.CreditMemoId == viewModel.CreditMemoId);
-
-                #region -- Saving Default Enries --
-
-                existingCM.TransactionDate = viewModel.TransactionDate;
-                existingCM.ServiceInvoiceId = viewModel.ServiceInvoiceId;
-                existingCM.Period = viewModel.Period;
-                existingCM.Amount = viewModel.Amount;
-                existingCM.Description = viewModel.Description;
-                existingCM.Remarks = viewModel.Remarks;
-                existingCM.CreditAmount = -viewModel.Amount ?? 0;
-                existingCM.EditedBy = User.Identity!.Name;
-                existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                #endregion -- Saving Default Enries --
-
-                #region --Audit Trail Recording
-
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new debit memo# {viewModel.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Credit Memo edited successfully";
+                TempData["success"] = $"Debit memo created successfully. Series Number: {model.DebitMemoNo}";
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to edit credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, User.Identity.Name);
                 return View(viewModel);
             }
         }
@@ -340,20 +261,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return BadRequest();
             }
 
-            var creditMemo = await _unitOfWork.MobilityCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
-
-            if (creditMemo == null)
+            var debitMemo = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
+            if (debitMemo == null)
             {
-                return NotFound();
+                return BadRequest();
             }
-
-            return View(creditMemo);
+            return View(debitMemo);
         }
 
-        public async Task<IActionResult> Post(int id, CancellationToken cancellationToken, ViewModelDMCM viewModelDMCM)
+        public async Task<IActionResult> Post(int id, ViewModelDMCM viewModelDMCM, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var model = await _unitOfWork.MobilityCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
+            var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             if (model != null)
             {
@@ -377,50 +296,36 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         if (model.ServiceInvoiceId != null)
                         {
                             var existingSv = await _unitOfWork.MobilityServiceInvoice
-                                                    .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                                .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
                             #region --SV Computation--
 
-                            viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
+                                viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv.Customer.VatType == "Vatable")
-                            {
-                                viewModelDMCM.Total = -model.Amount ?? 0;
-                                viewModelDMCM.NetAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
-                                viewModelDMCM.VatAmount = (model.Amount ?? 0 - existingSv.Discount) - viewModelDMCM.NetAmount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
-                                if (existingSv.Customer.WithHoldingVat)
+                                if (existingSv.Customer.VatType == "Vatable")
                                 {
-                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
+                                    viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
+                                    viewModelDMCM.NetAmount = _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
+                                    viewModelDMCM.VatAmount = _unitOfWork.MobilityServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
+                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                    if (existingSv.Customer.WithHoldingVat)
+                                    {
+                                        viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
-                                if (existingSv.Customer.WithHoldingVat)
+                                else
                                 {
-                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
+                                    viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
+                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                    if (existingSv.Customer.WithHoldingVat)
+                                    {
+                                        viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
+                                    }
                                 }
-                            }
-
-                            if (existingSv.Customer.VatType == "Vatable")
-                            {
-                                var total = Math.Round(model.Amount ?? 0 / 1.12m, 4);
-
-                                var roundedNetAmount = Math.Round(viewModelDMCM.NetAmount, 4);
-
-                                if (roundedNetAmount > total)
-                                {
-                                    var shortAmount = viewModelDMCM.NetAmount - total;
-
-                                    viewModelDMCM.Amount += shortAmount;
-                                }
-                            }
 
                             #endregion --SV Computation--
 
-                            /////TODO: waiting for ma'am LSA journal entries
+                            ///TODO: waiting for ma'am LSA journal entries
                             #region --Sales Book Recording(SV)--
 
                                 // var sales = new FilprideSalesBook();
@@ -428,26 +333,26 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 // if (model.ServiceInvoice.Customer.VatType == "Vatable")
                                 // {
                                 //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.CreditMemoNo;
+                                //     sales.SerialNo = model.DebitMemoNo;
                                 //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
                                 //     sales.Description = model.ServiceInvoice.Service.Name;
                                 //     sales.Amount = viewModelDMCM.Total;
-                                //     sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
-                                //     sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
+                                //     sales.VatAmount = viewModelDMCM.VatAmount;
+                                //     sales.VatableSales = viewModelDMCM.Total / 1.12m;
                                 //     //sales.Discount = model.Discount;
                                 //     sales.NetSales = viewModelDMCM.NetAmount;
                                 //     sales.CreatedBy = model.CreatedBy;
                                 //     sales.CreatedDate = model.CreatedDate;
                                 //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = model.ServiceInvoiceId;
+                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
                                 //     sales.Company = model.Company;
                                 // }
                                 // else if (model.ServiceInvoice.Customer.VatType == "Exempt")
                                 // {
                                 //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.CreditMemoNo;
+                                //     sales.SerialNo = model.DebitMemoNo;
                                 //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
@@ -459,13 +364,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 //     sales.CreatedBy = model.CreatedBy;
                                 //     sales.CreatedDate = model.CreatedDate;
                                 //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = model.ServiceInvoiceId;
+                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
                                 //     sales.Company = model.Company;
                                 // }
                                 // else
                                 // {
                                 //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.CreditMemoNo;
+                                //     sales.SerialNo = model.DebitMemoNo;
                                 //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
@@ -477,7 +382,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 //     sales.CreatedBy = model.CreatedBy;
                                 //     sales.CreatedDate = model.CreatedDate;
                                 //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = model.ServiceInvoiceId;
+                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
                                 //     sales.Company = model.Company;
                                 // }
                                 // await _dbContext.AddAsync(sales, cancellationToken);
@@ -487,115 +392,56 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             ///TODO: waiting for ma'am LSA journal entries
                             #region --General Ledger Book Recording(SV)--
 
-                                // decimal withHoldingTaxAmount = 0;
-                                // decimal withHoldingVatAmount = 0;
-                                // decimal netOfVatAmount = 0;
-                                // decimal vatAmount = 0;
-                                //
-                                // if (model.ServiceInvoice.Customer.VatType == SD.VatType_Vatable)
-                                // {
-                                //     netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
-                                //     vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(netOfVatAmount))) * -1;
-                                // }
-                                // else
-                                // {
-                                //     netOfVatAmount = model.CreditAmount;
-                                // }
-                                //
-                                // if (model.ServiceInvoice.Customer.WithHoldingTax)
-                                // {
-                                //     withHoldingTaxAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m)) * -1;
-                                // }
-                                //
-                                // if (model.ServiceInvoice.Customer.WithHoldingVat)
-                                // {
-                                //     withHoldingVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m)) * -1;
-                                // }
-                                //
                                 // var ledgers = new List<FilprideGeneralLedgerBook>();
                                 //
                                 // ledgers.Add(
                                 //         new FilprideGeneralLedgerBook
                                 //         {
                                 //             Date = model.TransactionDate,
-                                //             Reference = model.CreditMemoNo,
+                                //             Reference = model.DebitMemoNo,
                                 //             Description = model.ServiceInvoice.Service.Name,
                                 //             AccountId = arNonTradeTitle.AccountId,
                                 //             AccountNo = arNonTradeTitle.AccountNumber,
                                 //             AccountTitle = arNonTradeTitle.AccountName,
-                                //             Debit = 0,
-                                //             Credit = Math.Abs(model.CreditAmount - (withHoldingTaxAmount + withHoldingVatAmount)),
+                                //             Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
+                                //             Credit = 0,
                                 //             Company = model.Company,
                                 //             CreatedBy = model.CreatedBy,
                                 //             CreatedDate = model.CreatedDate,
-                                //             CustomerId = model.ServiceInvoice.CustomerId,
+                                //             CustomerId = model.ServiceInvoice.CustomerId
                                 //         }
                                 //     );
-                                // if (withHoldingTaxAmount < 0)
+                                // if (viewModelDMCM.WithholdingTaxAmount > 0)
                                 // {
                                 //     ledgers.Add(
                                 //         new FilprideGeneralLedgerBook
                                 //         {
                                 //             Date = model.TransactionDate,
-                                //             Reference = model.CreditMemoNo,
+                                //             Reference = model.DebitMemoNo,
                                 //             Description = model.ServiceInvoice.Service.Name,
                                 //             AccountId = arTradeCwt.AccountId,
                                 //             AccountNo = arTradeCwt.AccountNumber,
                                 //             AccountTitle = arTradeCwt.AccountName,
-                                //             Debit = 0,
-                                //             Credit = Math.Abs(withHoldingTaxAmount),
+                                //             Debit = viewModelDMCM.WithholdingTaxAmount,
+                                //             Credit = 0,
                                 //             Company = model.Company,
                                 //             CreatedBy = model.CreatedBy,
                                 //             CreatedDate = model.CreatedDate
                                 //         }
                                 //     );
                                 // }
-                                // if (withHoldingVatAmount < 0)
+                                // if (viewModelDMCM.WithholdingVatAmount > 0)
                                 // {
                                 //     ledgers.Add(
                                 //         new FilprideGeneralLedgerBook
                                 //         {
                                 //             Date = model.TransactionDate,
-                                //             Reference = model.CreditMemoNo,
+                                //             Reference = model.DebitMemoNo,
                                 //             Description = model.ServiceInvoice.Service.Name,
                                 //             AccountId = arTradeCwv.AccountId,
                                 //             AccountNo = arTradeCwv.AccountNumber,
                                 //             AccountTitle = arTradeCwv.AccountName,
-                                //             Debit = 0,
-                                //             Credit = Math.Abs(withHoldingVatAmount),
-                                //             Company = model.Company,
-                                //             CreatedBy = model.CreatedBy,
-                                //             CreatedDate = model.CreatedDate
-                                //         }
-                                //     );
-                                // }
-                                //
-                                // ledgers.Add(new FilprideGeneralLedgerBook
-                                // {
-                                //     Date = model.TransactionDate,
-                                //     Reference = model.CreditMemoNo,
-                                //     Description = model.ServiceInvoice.Service.Name,
-                                //     AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
-                                //     AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
-                                //     Debit = viewModelDMCM.NetAmount,
-                                //     Credit = 0,
-                                //     Company = model.Company,
-                                //     CreatedBy = model.CreatedBy,
-                                //     CreatedDate = model.CreatedDate
-                                // });
-                                //
-                                // if (vatAmount < 0)
-                                // {
-                                //     ledgers.Add(
-                                //         new FilprideGeneralLedgerBook
-                                //         {
-                                //             Date = model.TransactionDate,
-                                //             Reference = model.CreditMemoNo,
-                                //             Description = model.ServiceInvoice.Service.Name,
-                                //             AccountId = vatOutputTitle.AccountId,
-                                //             AccountNo = vatOutputTitle.AccountNumber,
-                                //             AccountTitle = vatOutputTitle.AccountName,
-                                //             Debit = Math.Abs(vatAmount),
+                                //             Debit = viewModelDMCM.WithholdingVatAmount,
                                 //             Credit = 0,
                                 //             Company = model.Company,
                                 //             CreatedBy = model.CreatedBy,
@@ -604,7 +450,44 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 //     );
                                 // }
                                 //
-                                // if (!_unitOfWork.FilprideCreditMemo.IsJournalEntriesBalanced(ledgers))
+                                // if (viewModelDMCM.Total > 0)
+                                // {
+                                //     ledgers.Add(new FilprideGeneralLedgerBook
+                                //     {
+                                //         Date = model.TransactionDate,
+                                //         Reference = model.DebitMemoNo,
+                                //         Description = model.ServiceInvoice.Service.Name,
+                                //         AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
+                                //         AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
+                                //         Debit = 0,
+                                //         Credit = viewModelDMCM.NetAmount,
+                                //         Company = model.Company,
+                                //         CreatedBy = model.CreatedBy,
+                                //         CreatedDate = model.CreatedDate
+                                //     });
+                                // }
+                                //
+                                // if (viewModelDMCM.VatAmount > 0)
+                                // {
+                                //     ledgers.Add(
+                                //         new FilprideGeneralLedgerBook
+                                //         {
+                                //             Date = model.TransactionDate,
+                                //             Reference = model.DebitMemoNo,
+                                //             Description = model.ServiceInvoice.Service.Name,
+                                //             AccountId = vatOutputTitle.AccountId,
+                                //             AccountNo = vatOutputTitle.AccountNumber,
+                                //             AccountTitle = vatOutputTitle.AccountName,
+                                //             Debit = 0,
+                                //             Credit = viewModelDMCM.VatAmount,
+                                //             Company = model.Company,
+                                //             CreatedBy = model.CreatedBy,
+                                //             CreatedDate = model.CreatedDate
+                                //         }
+                                //     );
+                                // }
+                                //
+                                // if (!_unitOfWork.FilprideDebitMemo.IsJournalEntriesBalanced(ledgers))
                                 // {
                                 //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
                                 // }
@@ -617,25 +500,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Credit Memo has been Posted.";
+                        TempData["success"] = "Debit Memo has been Posted.";
                     }
+                    return RedirectToAction(nameof(Print), new { id });
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to post credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, User.Identity!.Name);
+                    _logger.LogError(ex, "Failed to post debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                        ex.Message, ex.StackTrace, User.Identity.Name);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
-                return RedirectToAction(nameof(Print), new { id });
             }
 
             return NotFound();
@@ -645,7 +528,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var model = await _unitOfWork.MobilityCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
+            var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             if (model != null)
             {
@@ -664,28 +547,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        //TODO: uncomment this if the journal entries are provided
-                        //await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
-                        //await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo, cancellationToken);
+                        ///TODO: woiting for ma;am LSA journal entries
+                        //await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
+                        //await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
 
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Credit Memo has been Voided.";
+                        TempData["success"] = "Debit Memo has been Voided.";
                         return RedirectToAction(nameof(Index));
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to void credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, User.Identity!.Name);
+                    _logger.LogError(ex, "Failed to void debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -698,7 +581,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var model = await _unitOfWork.MobilityCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
+            var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -710,20 +593,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         model.CanceledBy = _userManager.GetUserName(this.User);
                         model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
                         model.CancellationRemarks = cancellationRemarks;
+                        model.Status = nameof(Status.Canceled);
 
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Credit Memo has been Cancelled.";
+                        TempData["success"] = "Debit Memo has been Cancelled.";
                     }
                     return RedirectToAction(nameof(Index));
                 }
@@ -731,15 +614,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity!.Name);
+                _logger.LogError(ex, "Failed to cancel debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
         }
-
 
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
@@ -757,22 +639,121 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return Json(null);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return BadRequest();
+            }
+
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            var existingRecord = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return BadRequest();
+            }
+
+            DebitMemoViewModel viewModel = new()
+            {
+                ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                    .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                    .Select(sv => new SelectListItem
+                    {
+                        Value = sv.ServiceInvoiceId.ToString(),
+                        Text = sv.ServiceInvoiceNo
+                    })
+                    .ToListAsync(cancellationToken),
+                DebitAmount = -existingRecord.Amount ?? 0,
+                Type = existingRecord.Type,
+                StationCode = existingRecord.StationCode,
+                TransactionDate = existingRecord.TransactionDate,
+                ServiceInvoiceId = existingRecord.ServiceInvoiceId,
+                Period = existingRecord.Period,
+                Amount = existingRecord.Amount,
+                Description = existingRecord.Description,
+                Remarks = existingRecord.Remarks,
+                DebitMemoId = existingRecord.DebitMemoId,
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingDM = await _unitOfWork
+                    .MobilityDebitMemo
+                    .GetAsync(dm => dm.DebitMemoId == viewModel.DebitMemoId);
+
+                #region -- Saving Default Enries --
+
+                existingDM.TransactionDate = viewModel.TransactionDate;
+                existingDM.ServiceInvoiceId = viewModel.ServiceInvoiceId;
+                existingDM.Period = viewModel.Period;
+                existingDM.Amount = viewModel.Amount;
+                existingDM.Description = viewModel.Description;
+                existingDM.Remarks = viewModel.Remarks;
+                existingDM.DebitAmount = viewModel.Amount ?? 0;
+                existingDM.EditedBy = _userManager.GetUserName(User);
+                existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #endregion -- Saving Default Enries --
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Debit Memo edited successfully. Series Number: {existingDM.DebitMemoNo}";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to terminate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, User.Identity.Name);
+                return View(viewModel);
+            }
+        }
+
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var cm = await _unitOfWork.MobilityCreditMemo.GetAsync(x => x.CreditMemoId == id, cancellationToken);
-            if (!cm.IsPrinted)
+            var dm = await _unitOfWork.MobilityDebitMemo.GetAsync(x => x.DebitMemoId == id, cancellationToken);
+            if (!dm.IsPrinted)
             {
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                cm.IsPrinted = true;
+                dm.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });

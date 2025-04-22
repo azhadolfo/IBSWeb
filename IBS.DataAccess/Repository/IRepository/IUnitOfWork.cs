@@ -64,6 +64,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
         Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
         Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
+        Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
 
@@ -117,7 +118,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         ICollectionReceiptRepository FilprideCollectionReceipt { get; }
 
-        IDebitMemoRepository FilprideDebitMemo { get; }
+        Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; }
 
         Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; }
         #endregion
