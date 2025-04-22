@@ -43,6 +43,7 @@ namespace IBS.DataAccess.Data
         #region--MOBILITY
 
         #region--Sales Entity
+
         public DbSet<MobilityFuel> MobilityFuels { get; set; }
         public DbSet<MobilityLube> MobilityLubes { get; set; }
         public DbSet<MobilitySafeDrop> MobilitySafeDrops { get; set; }
@@ -53,14 +54,12 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
         public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
-
         public DbSet<MobilityFMSFuelSales> MobilityFMSFuelSales { get; set; }
-
         public DbSet<MobilityFMSLubeSales> MobilityFMSLubeSales { get; set; }
-
         public DbSet<MobilityFMSCashierShift> MobilityFmsCashierShifts { get; set; }
-
         public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
+        public DbSet<MobilityServiceInvoice> MobilityServiceInvoices { get; set; }
+        public DbSet<MobilityCreditMemo> MobilityCreditMemos { get; set; }
 
         #endregion
 
@@ -361,6 +360,34 @@ namespace IBS.DataAccess.Data
                 shift.HasIndex(sh => sh.StationCode);
             });
 
+            #region -- Service Invoice --
+
+            builder.Entity<MobilityServiceInvoice>(sv =>
+            {
+                sv.HasOne(sv => sv.Customer)
+                    .WithMany()
+                    .HasForeignKey(sv => sv.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                sv.HasOne(sv => sv.Service)
+                    .WithMany()
+                    .HasForeignKey(sv => sv.ServiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Service Invoice --
+
+            #region -- Credit Memo --
+
+            builder.Entity<MobilityCreditMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.ServiceInvoice)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ServiceInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Credit Memo --
 
             #endregion
 
