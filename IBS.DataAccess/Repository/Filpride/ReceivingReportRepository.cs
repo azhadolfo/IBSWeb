@@ -350,6 +350,18 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
+            #region Update the invoice if any
+
+            var salesInvoice = await _db.FilprideSalesInvoices
+                .FirstOrDefaultAsync(si => si.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+
+            if (salesInvoice != null)
+            {
+                salesInvoice.ReceivingReportId = model.ReceivingReportId;
+            }
+
+            #endregion
+
             await PostAsync(model, cancellationToken);
 
             return model.ReceivingReportNo;
