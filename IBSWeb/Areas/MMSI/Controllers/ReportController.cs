@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.MMSI
                 {
                     range.Merge = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.DarkGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(192, 192, 192));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Value = "DETAILS OF TRIPS OF TUGBOAT";
                     range.Style.Font.Bold = true;
@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.MMSI
                 {
                     range.Merge = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.DarkOrange);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 153, 0));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Value = "AP LEDGER";
                     range.Style.Font.Bold = true;
@@ -209,7 +209,7 @@ namespace IBSWeb.Areas.MMSI
                 using (var range = worksheet.Cells[headerRow, apLedgerColStart, headerRow, apLedgerColEnd])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.DarkOrange);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 153, 0));
                 }
 
                 #endregion
@@ -234,7 +234,7 @@ namespace IBSWeb.Areas.MMSI
                 {
                     range.Merge = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(192, 192, 192));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Value = "A/R LEDGER";
                     range.Style.Font.Bold = true;
@@ -248,7 +248,7 @@ namespace IBSWeb.Areas.MMSI
                 using (var range = worksheet.Cells[headerRow, arLedgerColStart, headerRow, arLedgerColEnd])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(192, 192, 192));
                 }
 
                 #endregion
@@ -278,7 +278,7 @@ namespace IBSWeb.Areas.MMSI
                 {
                     range.Merge = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 0));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Value = "Number of ASSISTS";
                     range.Style.Font.Bold = true;
@@ -292,7 +292,7 @@ namespace IBSWeb.Areas.MMSI
                 using (var range = worksheet.Cells[headerRow, numberOfAssistsColStart, headerRow, numberOfAssistsColEnd])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 0));
                 }
 
                 #endregion
@@ -315,7 +315,7 @@ namespace IBSWeb.Areas.MMSI
                 {
                     range.Merge = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSalmon);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 153));
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Value = "Number of TENDING";
                     range.Style.Font.Bold = true;
@@ -329,7 +329,7 @@ namespace IBSWeb.Areas.MMSI
                 using (var range = worksheet.Cells[headerRow, numberOfTendingColStart, headerRow, numberOfTendingColEnd])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSalmon);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 153));
                 }
 
                 #endregion
@@ -385,7 +385,7 @@ namespace IBSWeb.Areas.MMSI
                 using (var range = worksheet.Cells[headerRow, col-1, headerRow, col])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightSkyBlue);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(153, 204, 255));
                 }
 
                 #endregion
@@ -419,8 +419,12 @@ namespace IBSWeb.Areas.MMSI
 
                 #region -- Contents --
 
-                // content start
+                var dynamicStartCol = 0;
+                var dynamicEndCol = 0;
+
+                // contents starts here
                 var row = 7;
+                var contentStartRow = row;
 
                 foreach (var sales in salesReport)
                 {
@@ -469,6 +473,9 @@ namespace IBSWeb.Areas.MMSI
                     worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     var writingCol = 29;
+
+                    // subtotal col starts here
+                    dynamicStartCol = 15;
 
                     // For PNL Use
                     // Incomes
@@ -564,7 +571,8 @@ namespace IBSWeb.Areas.MMSI
                         if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
                             sales.ActivityService.ActivityServiceName == "TENDING")
                         {
-                            worksheet.Cells[row, writingCol].Value = $"{sales.Tugboat.TugboatName}";
+                            worksheet.Cells[row, writingCol].Value = 1;
+                            worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
                     }
 
@@ -585,11 +593,14 @@ namespace IBSWeb.Areas.MMSI
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
                                 sales.ActivityService.ActivityServiceName == "TENDING")
                             {
-                                worksheet.Cells[row, writingCol].Value = $"{sales.Tugboat.TugboatName} - {category}" ;
-                                // worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Cells[row, writingCol].Value = sales.TotalHours;
+                                worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
                         }
                     }
+
+                    // subtotal col ends here
+                    dynamicEndCol = writingCol;
 
                     writingCol += 2;
                     worksheet.Cells[row, writingCol].Value = sales.Billing.IsUndocumented ? "DOC" : "UNDOC";
@@ -599,6 +610,55 @@ namespace IBSWeb.Areas.MMSI
                     // next record
                     row++;
                 }
+
+                // content row ends here
+                var contentEndRow = row - 1;
+                var subtotalRow = row;
+
+                #region -- Subtotals --
+
+                // colvar == counter, loop through dynamic columns
+                for (int colVar = dynamicStartCol; colVar <= dynamicEndCol; colVar++)
+                {
+                    // variable for sum
+                    decimal? sumVar = 0;
+
+                    // loop through all the rows
+                    for (int rowVar = contentStartRow; rowVar <= contentEndRow; rowVar++)
+                    {
+                        // temporary container for value of the cell iterated
+                        var tempValue = worksheet.Cells[rowVar, colVar].Value;
+
+                        // if it has valid value, will clean the value and add to sum variable
+                        if (tempValue != null && decimal.TryParse(tempValue.ToString(), out decimal cellValue))
+                        {
+                            sumVar += cellValue;
+                        }
+                    }
+
+                    // write the sum to its cell
+                    if (sumVar != 0)
+                    {
+                        worksheet.Cells[subtotalRow, colVar].Value = sumVar;
+                        worksheet.Cells[subtotalRow, colVar].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                }
+
+                // styling of subtotal row
+                using (var range = worksheet.Cells[subtotalRow, 1, subtotalRow, dynamicEndCol])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(204, 255, 255));
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+
+                // styling of total label
+                worksheet.Cells[subtotalRow, 1].Value = "TOTAL";
+                worksheet.Cells[subtotalRow, 1].Style.Font.Bold = true;
+                worksheet.Cells[subtotalRow, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                #endregion
 
                 #endregion -- Contents --
 
@@ -632,7 +692,6 @@ namespace IBSWeb.Areas.MMSI
                 worksheet.Column(27).Width = 9;
                 worksheet.Column(28).Width = 9;
                 worksheet.Column(29).Width = 9;
-
 
                 var excelBytes = package.GetAsByteArray();
 
