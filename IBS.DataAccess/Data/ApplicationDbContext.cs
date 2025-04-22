@@ -60,6 +60,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
         public DbSet<MobilityServiceInvoice> MobilityServiceInvoices { get; set; }
         public DbSet<MobilityCreditMemo> MobilityCreditMemos { get; set; }
+        public DbSet<MobilityDebitMemo> MobilityDebitMemos { get; set; }
 
         #endregion
 
@@ -388,6 +389,18 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion -- Credit Memo --
+
+            #region -- Debit Memo --
+
+            builder.Entity<MobilityDebitMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.ServiceInvoice)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ServiceInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Debit Memo --
 
             #endregion
 
