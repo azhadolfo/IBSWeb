@@ -62,6 +62,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityCreditMemo> MobilityCreditMemos { get; set; }
         public DbSet<MobilityDebitMemo> MobilityDebitMemos { get; set; }
         public DbSet<MobilityCollectionReceipt> MobilityCollectionReceipts { get; set; }
+        public DbSet<MobilityOffsettings> MobilityOffsettings { get; set; }
 
         #endregion
 

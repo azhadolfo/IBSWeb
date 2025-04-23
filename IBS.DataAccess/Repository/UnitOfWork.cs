@@ -51,6 +51,7 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; private set; }
         public Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; private set; }
         public Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; private set; }
+        public Mobility.IRepository.ICollectionReceiptRepository MobilityCollectionReceipt { get; private set; }
 
         public Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
 
@@ -78,7 +79,7 @@ namespace IBS.DataAccess.Repository
 
         public Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
 
-        public ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
+        public Filpride.IRepository.ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
 
         public Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; private set; }
 
@@ -152,6 +153,7 @@ namespace IBS.DataAccess.Repository
             MobilityServiceInvoice = new Mobility.ServiceInvoiceRepository(_db);
             MobilityCreditMemo = new Mobility.CreditMemoRepository(_db);
             MobilityDebitMemo = new Mobility.DebitMemoRepository(_db);
+            MobilityCollectionReceipt = new Mobility.CollectionReceiptRepository(_db);
 
             #endregion
 
@@ -175,7 +177,7 @@ namespace IBS.DataAccess.Repository
             #region Accounts Receivable
             FilprideSalesInvoice = new SalesInvoiceRepository(_db);
             FilprideServiceInvoice = new Filpride.ServiceInvoiceRepository(_db);
-            FilprideCollectionReceipt = new CollectionReceiptRepository(_db);
+            FilprideCollectionReceipt = new Filpride.CollectionReceiptRepository(_db);
             FilprideDebitMemo = new Filpride.DebitMemoRepository(_db);
             FilprideCreditMemo = new Filpride.CreditMemoRepository(_db);
             #endregion
@@ -355,6 +357,19 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive && (company == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerId.ToString(),
+                    Text = c.CustomerName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsync(string stationCodeClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityCustomers
+                .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive && c.StationCode == stationCodeClaims)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),

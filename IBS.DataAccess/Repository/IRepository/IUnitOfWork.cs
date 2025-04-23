@@ -65,6 +65,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
         Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
         Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
+        Mobility.IRepository.ICollectionReceiptRepository MobilityCollectionReceipt { get; }
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
 
@@ -84,6 +85,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMobilityCustomerListAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
         Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         #endregion
@@ -116,7 +118,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; }
 
-        ICollectionReceiptRepository FilprideCollectionReceipt { get; }
+        Filpride.IRepository.ICollectionReceiptRepository FilprideCollectionReceipt { get; }
 
         Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; }
 
