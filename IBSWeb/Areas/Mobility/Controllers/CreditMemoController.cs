@@ -173,21 +173,39 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region -- check for unposted DM or CM
 
                      var existingSOADMs = _dbContext.MobilityDebitMemos
-                                   .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                   .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
                                    .OrderBy(s => s.ServiceInvoiceId)
                                    .ToList();
                      if (existingSOADMs.Count > 0)
                      {
+                         viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                             .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                             .Select(sv => new SelectListItem
+                             {
+                                 Value = sv.ServiceInvoiceId.ToString(),
+                                 Text = sv.ServiceInvoiceNo
+                             })
+                             .ToListAsync(cancellationToken);
+
                          ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
                          return View(viewModel);
                      }
 
                     var existingSOACMs = _dbContext.MobilityCreditMemos
-                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
                                       .OrderBy(s => s.ServiceInvoiceId)
                                       .ToList();
                     if (existingSOACMs.Count > 0)
                     {
+                        viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                            .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                            .Select(sv => new SelectListItem
+                            {
+                                Value = sv.ServiceInvoiceId.ToString(),
+                                Text = sv.ServiceInvoiceNo
+                            })
+                            .ToListAsync(cancellationToken);
+
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
                         return View(viewModel);
                     }

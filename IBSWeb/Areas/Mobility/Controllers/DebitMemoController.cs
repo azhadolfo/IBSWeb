@@ -174,7 +174,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region -- checking for unposted DM or CM
 
                     var existingSVDMs = _dbContext.MobilityDebitMemos
-                                  .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                  .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
                                   .OrderBy(s => s.DebitMemoId)
                                   .ToList();
                     if (existingSVDMs.Count > 0)
@@ -193,7 +193,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     }
 
                     var existingSVCMs = _dbContext.MobilityCreditMemos
-                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
                                       .OrderBy(s => s.CreditMemoId)
                                       .ToList();
                     if (existingSVCMs.Count > 0)
