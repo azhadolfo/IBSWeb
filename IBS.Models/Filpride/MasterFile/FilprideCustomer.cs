@@ -110,5 +110,21 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsFilpride { get; set; }
 
         public bool IsMobility { get; set; }
+
+        public bool IsBienes { get; set; }
+    }
+
+    public static class CustomerExtensions
+    {
+        public static bool GetCompanyAssociation(this FilprideCustomer customer, string companyName)
+        {
+            return companyName switch
+            {
+                nameof(Filpride) => customer.IsFilpride,
+                nameof(Mobility) => customer.IsMobility,
+                nameof(Bienes) => customer.IsBienes,
+                _ => false
+            };
+        }
     }
 }

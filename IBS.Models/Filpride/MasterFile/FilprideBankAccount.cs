@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 
 namespace IBS.Models.Filpride.MasterFile
@@ -32,5 +31,7 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsFilpride { get; set; }
 
         public bool IsMobility { get; set; }
+
+        public bool IsBienes { get; set; }
     }
 }
