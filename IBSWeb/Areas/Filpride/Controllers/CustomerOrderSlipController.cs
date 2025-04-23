@@ -710,7 +710,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Quantity = item.Quantity,
                                 Price = (decimal)existingRecord.Freight,
                                 Amount = item.Quantity * (decimal)existingRecord.Freight,
-                                Remarks = $"{existingRecord.SubPORemarks}\n Please note: The values in this purchase order are for the freight charge.",
+                                Remarks = $"{existingRecord.SubPORemarks}\nPlease note: The values in this purchase order are for the freight charge.",
                                 Company = existingPo.Company,
                                 IsSubPo = true,
                                 CustomerId = existingRecord.CustomerId,
@@ -722,6 +722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Status = nameof(Status.Posted),
                                 OldPoNo = existingPo.OldPoNo,
                                 PickUpPointId = existingPo.PickUpPointId,
+                                Type = existingPo.Type
                             };
 
                             poNumbers.Add(subPoModel.PurchaseOrderNo);
