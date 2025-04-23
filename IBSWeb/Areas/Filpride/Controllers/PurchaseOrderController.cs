@@ -216,7 +216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -278,7 +278,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
-            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, purchaseOrder.SupplierId, cancellationToken);
 
@@ -311,7 +311,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var suppliers = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
-                    model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                     existingModel.Date = model.Date;
