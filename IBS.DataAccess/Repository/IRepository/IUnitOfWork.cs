@@ -116,6 +116,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string company, CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetFilprideServiceListById(string company, CancellationToken cancellationToken = default);
+
         #endregion
 
         #region AAS
