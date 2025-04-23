@@ -167,7 +167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -363,7 +363,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -382,7 +382,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -564,7 +564,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -706,7 +706,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
@@ -1664,7 +1664,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -1840,7 +1840,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -1850,7 +1850,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -1865,7 +1865,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2041,7 +2041,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -2051,7 +2051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -2216,7 +2216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2345,7 +2345,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to edit commission payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
@@ -2541,7 +2541,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to edit hauler payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
                     viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 

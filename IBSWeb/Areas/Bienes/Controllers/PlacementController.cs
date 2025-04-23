@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             PlacementViewModel viewModel = new()
             {
                 Companies = await GetCompanies(cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -166,7 +166,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
 
@@ -230,7 +230,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
         }
@@ -260,7 +260,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 {
                     PlacementId = existingRecord.PlacementId,
                     Companies = await GetCompanies(cancellationToken),
-                    BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken),
+                    BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                     CompanyId = existingRecord.CompanyId,
                     BankId = existingRecord.BankId,
                     Bank = existingRecord.Bank,
@@ -307,7 +307,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 TempData["error"] = "The submitted information is invalid.";
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
 
@@ -333,7 +333,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
         }
