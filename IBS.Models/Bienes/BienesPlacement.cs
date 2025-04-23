@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IBS.Models.Bienes.MasterFile;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -24,7 +24,7 @@ namespace IBS.Models.Bienes
         public int BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
-        public BienesBankAccount BankAccount { get; set; }
+        public FilprideBankAccount BankAccount { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string Bank { get; set; }

@@ -166,8 +166,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region --Bienes
 
-        Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; }
-
         IPlacementRepository BienesPlacement { get; }
 
         #endregion

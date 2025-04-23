@@ -1,6 +1,5 @@
 ﻿using IBS.Models;
 using IBS.Models.Bienes;
-using IBS.Models.Bienes.MasterFile;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -143,12 +142,6 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #region --BIENES
-
-        #region Master File
-
-        public DbSet<BienesBankAccount> BienesBankAccounts { get; set; }
-
-        #endregion
 
         public DbSet<BienesPlacement> BienesPlacements { get; set; }
 
@@ -882,16 +875,6 @@ namespace IBS.DataAccess.Data
             #endregion
 
             #region --Bienes
-
-            #region --Master File
-
-            builder.Entity<BienesBankAccount>(bank =>
-            {
-                bank.HasIndex(b => b.AccountNo);
-                bank.HasIndex(b => b.Bank);
-            });
-
-            #endregion
 
             builder.Entity<BienesPlacement>(placement =>
             {
