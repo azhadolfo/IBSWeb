@@ -398,6 +398,42 @@ namespace IBSWeb.Areas.MMSI
             }
         }
 
+        public async Task<IActionResult> RevokeApproval(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                model.Status = "Tariff Pending";
+
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Approval Revoked:#{model.DispatchTicketId}",
+                    DocumentType = "DispatchTicket",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion --Audit Trail
+
+                TempData["success"] = "Approval revoked successfully!";
+
+                return RedirectToAction(nameof(Index), new { id = id });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                return RedirectToAction(nameof(Index), new { id = id });
+            }
+        }
+
         public async Task<IActionResult> Disapprove(int id, CancellationToken cancellationToken)
         {
             try
