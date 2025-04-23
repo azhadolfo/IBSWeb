@@ -153,9 +153,18 @@
                                 <div class="row">
                                     <div id="SelectDiv" class="form-group col-12 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
                                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                                        <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                                            <option value="">Select Principal</option>
-                                        </select>
+                                        @if (string.IsNullOrEmpty(Model.PrincipalId.ToString()))
+                                        {
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
+                                                <option value="">Select Principal</option>
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                                <option value="">Select Principal</option>
+                                            </select>
+                                        }
                                         <span asp-validation-for="PrincipalId" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -289,6 +298,7 @@
                 $("#PrincipalSelect").on("change.select2", handlePrincipalChange); // Principal select: replace details with principal's
                 $("#CustomerId").on("change", handleCustomerChange); // Customer select: replace details, change ticket select list, empty principal val, principal select disable requirement
                 $("#PortSelect").on("change", handlePortChange); // Port select: update terminal select list
+                $("#submitButton").on("click", areYouSureToBill);
                 $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange); // Tickets select: update ticket table contents, update total amount and ewt
             }
 
@@ -540,6 +550,23 @@
                         }
                     });
                 }
+            }
+            
+            function areYouSureToBill (event) {
+
+                event.preventDefault();
+
+                Swal.fire({
+                    title: "Save changes to this billing?",
+                    text: "You can edit this again before posting.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('submitButton').form.submit();
+                    }
+                })
             }
 
             // Fill the customer details

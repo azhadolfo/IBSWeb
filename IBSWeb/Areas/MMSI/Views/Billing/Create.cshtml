@@ -286,6 +286,7 @@
                 $("#PrincipalSelect").on("change.select2", handlePrincipalChange);
                 $("#CustomerId").on("change", handleCustomerChange);
                 $("#PortSelect").on("change", handlePortChange);
+                $("#submitButton").on("click", areYouSureToBill);
                 $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange);
             }
 
@@ -488,6 +489,23 @@
                 $("#BAFAmountTotal").text(totalBAFAmount.toFixed(2));
 
                 table = initializeDataTable('#dataTable');
+            }
+
+            function areYouSureToBill (event) {
+
+                event.preventDefault();
+                
+                Swal.fire({
+                    title: "Are you sure with this billing?",
+                    text: "You can't change the billing no. after submission.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "No"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('submitButton').form.submit();
+                    }
+                })
             }
         });
     </script>
