@@ -59,25 +59,21 @@
 </div>
 @section Scripts {
     <script>
-        
+
         $(document).ready(function () {
+
+            $('#isCompanyOwnedCheckBox').on('click', checkboxChanged);
+
             function checkboxChanged() {
-                console.log("test checkbox");
+                let $checkbox = $('#isCompanyOwnedCheckBox');
+                let $inputField = $('#companyNameSelect');
 
-                var checkbox = document.getElementById("isCompanyOwnedCheckBox");
-                var inputField = document.getElementById("companyNameSelect");
-
-                if (checkbox.checked) {
-                    inputField.setAttribute("required", "required");
-                    inputField.removeAttribute("disabled")
+                if ($checkbox.prop("checked")) {
+                    $inputField.prop("required", true).prop("disabled", false);
                 } else {
-                    inputField.removeAttribute("required");
-                    inputField.setAttribute("disabled", "disabled");
+                    $inputField.prop("required", false).prop("disabled", true).val("0").trigger("change");
                 }
             }
-            
-            document.getElementById("isCompanyOwnedCheckBox").addEventListener("change", checkboxChanged);
-            
         });
         
     </script>

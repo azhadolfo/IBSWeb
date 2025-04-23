@@ -32,9 +32,18 @@
                 <div class="row pb-3">
                     <div class="form-group col-6">
                         <label class="control-label ps-1 pb-1">Company/Owner<span class="required text-danger">*</span></label>
-                        <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" required>
-                            <option value="">Select Company/Owner</option>
-                        </select>
+                        @if (Model.IsCompanyOwned)
+                        {
+                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" required>
+                                <option value="">Select Company/Owner</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" disabled>
+                                <option value="">Select Company/Owner</option>
+                            </select>
+                        }
                         <span asp-validation-for="CompanyOwnerId" class="text-danger"></span>
                     </div>
                     <div class="form-check col-3 ps-2 pt-4 text-start d-flex align-items-center justify-content-start">
@@ -62,23 +71,19 @@
     <script>
 
         $(document).ready(function () {
+
+            $('#isCompanyOwnedCheckBox').on('click', checkboxChanged);
+            
             function checkboxChanged() {
-                console.log("test checkbox");
+                let $checkbox = $('#isCompanyOwnedCheckBox');
+                let $inputField = $('#companyNameSelect');
 
-                var checkbox = document.getElementById("isCompanyOwnedCheckBox");
-                var inputField = document.getElementById("companyNameSelect");
-
-                if (checkbox.checked) {
-                    inputField.setAttribute("required", "required");
-                    inputField.removeAttribute("disabled")
+                if ($checkbox.prop("checked")) {
+                    $inputField.prop("required", true).prop("disabled", false);
                 } else {
-                    inputField.removeAttribute("required");
-                    inputField.setAttribute("disabled", "disabled");
+                    $inputField.prop("required", false).prop("disabled", true).val("0").trigger("change");
                 }
             }
-
-            document.getElementById("isCompanyOwnedCheckBox").addEventListener("change", checkboxChanged);
-
         });
 
     </script>
