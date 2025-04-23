@@ -150,7 +150,7 @@
                                     }
                                     @if (item.Status == "For Tariff")
                                     {
-                                        <a class="btn btn-primary col-12" href="@Url.Action("Tariffing", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Set</a>
+                                        <a class="btn btn-primary col-12" href="@Url.Action("SetTariff", "DispatchTicket", new { id = item.DispatchTicketId })"><i class="bi bi-cash-coin"></i> Set</a>
                                     }
                                 </div>
                             </td>
@@ -235,7 +235,7 @@
                                                 <a class="btn btn-primary col-12" href="DispatchTicket/Preview/${value.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>
                                             ` :
                                             `
-                                                <a class="btn btn-primary col-12" href="DispatchTicket/Tariffing/${value.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>
+                                                <a class="btn btn-primary col-12" href="DispatchTicket/SetTariff/${value.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>
                                             `}
                                         </div>
                                     </td>

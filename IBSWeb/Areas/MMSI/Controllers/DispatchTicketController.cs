@@ -174,7 +174,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpGet]
-        public async Task<IActionResult> Tariffing(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> SetTariff(int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
@@ -191,7 +191,7 @@ namespace IBSWeb.Areas.MMSI
         }
 
         [HttpPost]
-        public async Task<IActionResult> Tariffing(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
+        public async Task<IActionResult> SetTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
