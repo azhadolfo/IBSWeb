@@ -69,8 +69,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var companyClaims = await GetCompanyClaimAsync();
 
                     //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
-                    bool IsTinExist = false;
-                    if (!IsTinExist)
+
+                    bool isTinExist = false;
+
+                    if (!isTinExist)
                     {
                         model.Company = companyClaims;
                         model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
