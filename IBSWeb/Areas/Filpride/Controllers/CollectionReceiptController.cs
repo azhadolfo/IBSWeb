@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -154,7 +155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
@@ -175,7 +176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -309,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
@@ -330,7 +331,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
@@ -478,15 +479,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _dbContext.FilprideCustomers
-               .OrderBy(c => c.CustomerId)
-               .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-               .Select(s => new SelectListItem
-               {
-                   Value = s.CustomerId.ToString(),
-                   Text = s.CustomerName
-               })
-               .ToListAsync(cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
@@ -705,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
@@ -726,7 +719,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideServiceInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -987,7 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)

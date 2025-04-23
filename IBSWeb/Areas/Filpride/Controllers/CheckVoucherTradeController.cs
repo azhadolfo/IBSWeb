@@ -164,33 +164,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             CheckVoucherTradeViewModel model = new();
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -383,23 +360,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to create check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
-                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                            .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                            .Select(sup => new SelectListItem
-                            {
-                                Value = sup.SupplierId.ToString(),
-                                Text = sup.SupplierName
-                            })
-                            .ToListAsync();
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
                     viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -410,37 +374,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync(cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
-
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
-            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                 .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
@@ -450,15 +392,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = po.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
-
-            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -606,15 +539,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 RRs = new List<ReceivingReportList>()
             };
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                 .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
@@ -629,15 +554,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
             model.PONo = await _dbContext.FilpridePurchaseOrders
                 .Where(p => !p.IsSubPo && p.Company == companyClaims)
                 .OrderBy(s => s.PurchaseOrderNo)
@@ -648,14 +564,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -786,14 +695,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to edit check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
                     viewModel.PONo = await _dbContext.FilpridePurchaseOrders
                         .Where(p => !p.IsSubPo && p.Company == companyClaims)
@@ -805,17 +706,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         })
                         .ToListAsync(cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
-                    viewModel.Suppliers =
-                        await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -1768,33 +1661,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             CommissionPaymentViewModel model = new();
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Commissionee")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -1967,64 +1837,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to create commission payment. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
-                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                            .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                            .Select(sup => new SelectListItem
-                            {
-                                Value = sup.SupplierId.ToString(),
-                                Text = sup.SupplierName
-                            })
-                            .ToListAsync();
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
-            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -2036,33 +1862,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             HaulerPaymentViewModel model = new();
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Hauler")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2235,64 +2038,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to create hauler payment. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
-                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                            .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                            .Select(sup => new SelectListItem
-                            {
-                                Value = sup.SupplierId.ToString(),
-                                Text = sup.SupplierName
-                            })
-                            .ToListAsync();
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
-            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
 
-            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(ba => (companyClaims == nameof(Filpride) ? ba.IsFilpride : ba.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             TempData["error"] = "The information provided was invalid.";
             return View(viewModel);
@@ -2442,15 +2201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 DRs = new List<DRDetailsViewModel>()
             };
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Commissionee")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                 .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
@@ -2465,23 +2216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2609,26 +2344,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to edit commission payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
-                    viewModel.Suppliers =
-                        await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -2678,15 +2397,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 DRs = new List<DRDetailsViewModel>()
             };
 
-            model.Suppliers = await _dbContext.FilprideSuppliers
-                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Hauler")
-                .OrderBy(supp => supp.SupplierCode)
-                .Select(sup => new SelectListItem
-                {
-                    Value = sup.SupplierId.ToString(),
-                    Text = sup.SupplierName
-                })
-                .ToListAsync();
+            model.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                 .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
@@ -2701,23 +2412,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            model.BankAccounts = await _dbContext.FilprideBankAccounts
-                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                .Select(ba => new SelectListItem
-                {
-                    Value = ba.BankAccountId.ToString(),
-                    Text = ba.AccountNo + " " + ba.AccountName
-                })
-                .ToListAsync();
+            model.BankAccounts = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2845,26 +2540,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to edit hauler payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
 
-                    viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                        .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
-                        .Select(ba => new SelectListItem
-                        {
-                            Value = ba.BankAccountId.ToString(),
-                            Text = ba.AccountNo + " " + ba.AccountName
-                        })
-                        .ToListAsync();
+                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
 
-                    viewModel.Suppliers =
-                        await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
