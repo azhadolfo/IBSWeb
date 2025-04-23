@@ -504,6 +504,21 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetFilprideServiceListById(string companyClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideServices
+                .OrderBy(s => s.ServiceId)
+                .Where(GetCompanyFilter<FilprideService>(companyClaims))
+                .Select(s => new SelectListItem
+                {
+                    Value = s.ServiceId.ToString(),
+                    Text = s.Name
+                })
+                .ToListAsync(cancellationToken);;
+        }
+
+
+
 
         #endregion
 
