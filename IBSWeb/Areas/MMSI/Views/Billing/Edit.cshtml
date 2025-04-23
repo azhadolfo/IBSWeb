@@ -139,9 +139,10 @@
                     </div>
                 </div>
                 <div class="row pt-2">
-                    <div class="form-group col-3 my-2">
+                    <div class="form-group col-3 my-2" title="Customer can no longer be changed" >
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <input value="@Model.CustomerId" name="CustomerId" type="hidden">
+                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                             <option value="">Select Customer</option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
