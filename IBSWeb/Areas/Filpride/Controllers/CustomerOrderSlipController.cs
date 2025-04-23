@@ -1009,15 +1009,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                        .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
-                        .OrderBy(supp => supp.SupplierCode)
-                        .Select(sup => new SelectListItem
-                        {
-                            Value = sup.SupplierId.ToString(),
-                            Text = sup.SupplierName
-                        })
-                        .ToListAsync(cancellationToken);
+                    viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
                     viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetDistinctPickupPointList(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);

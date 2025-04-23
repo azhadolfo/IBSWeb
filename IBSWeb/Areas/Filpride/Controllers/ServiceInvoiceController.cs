@@ -134,15 +134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideServiceInvoice();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _dbContext.FilprideCustomers
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .OrderBy(c => c.CustomerId)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Services = await _dbContext.FilprideServices
                 .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .OrderBy(s => s.ServiceId)
@@ -161,15 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _dbContext.FilprideCustomers
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .OrderBy(c => c.CustomerId)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
             model.Services = await _dbContext.FilprideServices
                 .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
                 .OrderBy(s => s.ServiceId)
@@ -618,15 +602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _dbContext.FilprideCustomers
-                .OrderBy(c => c.CustomerId)
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
             existingModel.Services = await _dbContext.FilprideServices
                 .OrderBy(s => s.ServiceId)
                 .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))

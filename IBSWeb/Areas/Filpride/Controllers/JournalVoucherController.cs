@@ -140,15 +140,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Header.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
@@ -171,15 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            model.Header.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             model.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
@@ -618,15 +602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Text = cvh.CheckVoucherHeaderNo
                     })
                     .ToListAsync(cancellationToken),
-                COA = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => coa.Level == 4 || coa.Level == 5)
-                    .OrderBy(coa => coa.AccountId)
-                    .Select(s => new SelectListItem
-                    {
-                        Value = s.AccountNumber,
-                        Text = s.AccountNumber + " " + s.AccountName
-                    })
-                    .ToListAsync(cancellationToken)
+                COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken)
             };
 
 
