@@ -83,8 +83,13 @@ namespace IBSWeb.Areas.MMSI
                 if (ModelState.IsValid)
                 {
 
-                    if (model.DateLeft < model.DateArrived || (model.TimeLeft != model.TimeArrived && model.TimeLeft < model.TimeArrived))
+                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
+                        if (model.CreateDate > model.DateLeft)
+                        {
+                            throw new ArgumentException("Date start should not be earlier than date today.");
+                        }
+
                         model.CreatedBy = await GetUserNameAsync();
                         timeStamp = DateTime.Now;
                         model.CreatedDate = timeStamp;
@@ -221,8 +226,12 @@ namespace IBSWeb.Areas.MMSI
             {
                 if (ModelState.IsValid)
                 {
-                    if (model.DateLeft < model.DateArrived || model.TimeArrived != model.TimeLeft)
+                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
+                        if (model.CreateDate > model.DateLeft)
+                        {
+                            throw new ArgumentException("Date start should not be earlier than date today.");
+                        }
                         var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
                         TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
 
