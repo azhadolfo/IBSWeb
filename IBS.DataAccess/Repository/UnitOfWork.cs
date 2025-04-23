@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes;
 using IBS.DataAccess.Repository.Bienes.IRepository;
@@ -365,24 +366,31 @@ namespace IBS.DataAccess.Repository
 
         #region--Filpride
 
-        public async Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default)
+        // Make the function generic
+        Expression<Func<T, bool>> GetCompanyFilter<T>(string companyName) where T : class
         {
+            // Use reflection or property pattern matching to dynamically access properties
+            var param = Expression.Parameter(typeof(T), "x");
 
-            Expression<Func<FilprideCustomer, bool>> GetCompanyFilter(string companyName)
+            // Build the appropriate expression based on the company name
+            Expression propertyAccess = companyName switch
             {
-                return companyName switch
-                {
-                    nameof(Filpride) => c => c.IsFilpride,
-                    nameof(Mobility) => c => c.IsMobility,
-                    nameof(Bienes) => c => c.IsBienes,
-                    _ => c => false
-                };
-            }
+                nameof(Filpride) => Expression.Property(param, "IsFilpride"),
+                nameof(Mobility) => Expression.Property(param, "IsMobility"),
+                nameof(Bienes) => Expression.Property(param, "IsBienes"),
+                _ => Expression.Constant(false)
+            };
+
+            return Expression.Lambda<Func<T, bool>>(propertyAccess, param);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
 
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive)
-                .Where(GetCompanyFilter(company))
+                .Where(GetCompanyFilter<FilprideCustomer>(company))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),
@@ -395,7 +403,36 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
+                .Where(s => s.IsActive)
+                .Where(GetCompanyFilter<FilprideSupplier>(company))
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Category == "Trade")
+                .Where(GetCompanyFilter<FilprideSupplier>(company))
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideNonTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideSuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Category == "Non-Trade")
+                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -408,7 +445,8 @@ namespace IBS.DataAccess.Repository
         {
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
-                .Where(s => s.IsActive && s.Category == "Commissionee" && (company == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
+                .Where(s => s.IsActive && s.Category == "Commissionee")
+                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -422,6 +460,7 @@ namespace IBS.DataAccess.Repository
             return await _db.FilprideSuppliers
                 .OrderBy(s => s.SupplierCode)
                 .Where(s => s.IsActive && s.Company == company && s.Category == "Hauler")
+                .Where(GetCompanyFilter<FilprideSupplier>(company))
                 .Select(s => new SelectListItem
                 {
                     Value = s.SupplierId.ToString(),
@@ -429,6 +468,31 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<SelectListItem>> GetFilprideBankAccountById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideBankAccounts
+                .Where(GetCompanyFilter<FilprideBankAccount>(company))
+                .Select(ba => new SelectListItem
+                {
+                    Value = ba.BankAccountId.ToString(),
+                    Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetFilprideEmployeeById(string company, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideEmployees
+                .Where(e => e.IsActive && e.Company == company)
+                .Select(e => new SelectListItem
+                {
+                    Value = e.EmployeeId.ToString(),
+                    Text = $"{e.EmployeeNumber} - {e.FirstName} {e.LastName}"
+                })
+                .ToListAsync(cancellationToken);
+        }
+
 
         #endregion
 
@@ -486,26 +550,39 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default)
         {
-            return await _db.MobilityChartOfAccounts
-                .OrderBy(c => c.AccountId)
-                .Where(c => c.Level == 4)
-                .Select(c => new SelectListItem
+            return await _db.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
                 {
-                    Value = c.AccountId.ToString(),
-                    Text = c.AccountNumber + " " + c.AccountName
+                    Value = s.AccountId.ToString(),
+                    Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default)
         {
-            return await _db.MobilityChartOfAccounts
-                .OrderBy(c => c.AccountNumber)
-                .Where(c => c.Level == 4)
-                .Select(c => new SelectListItem
+            return await _db.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
                 {
-                    Value = c.AccountNumber,
-                    Text = c.AccountNumber + " " + c.AccountName
+                    Value = s.AccountNumber,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetChartOfAccountListAsyncByAccountTitle(CancellationToken cancellationToken = default)
+        {
+            return await _db.FilprideChartOfAccounts
+                .Where(coa => !coa.HasChildren)
+                .OrderBy(coa => coa.AccountNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
         }

@@ -24,6 +24,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetChartOfAccountListAsyncByAccountTitle(CancellationToken cancellationToken = default);
+
         Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCashierListAsyncByUsernameAsync(CancellationToken cancellationToken = default);
@@ -96,13 +98,21 @@ namespace IBS.DataAccess.Repository.IRepository
 
         IEmployeeRepository FilprideEmployee { get; }
 
-        Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideNonTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideCommissioneeListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideHaulerListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideBankAccountById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideEmployeeById(string company, CancellationToken cancellationToken = default);
 
         #endregion
 

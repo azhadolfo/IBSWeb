@@ -707,7 +707,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             ViewModelBook viewmodel = new()
             {
-                CustomerList = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims)
+                CustomerList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims)
             };
 
             return View(viewmodel);
