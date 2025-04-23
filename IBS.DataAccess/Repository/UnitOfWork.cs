@@ -490,6 +490,20 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string companyClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.FilpridePickUpPoints
+                .Where(GetCompanyFilter<FilpridePickUpPoint>(companyClaims))
+                .GroupBy(p => p.Depot)
+                .OrderBy(g => g.Key)
+                .Select(g => new SelectListItem
+                {
+                    Value = g.First().PickUpPointId.ToString(),
+                    Text = g.Key // g.Key is the Depot name
+                })
+                .ToListAsync(cancellationToken);
+        }
+
 
         #endregion
 
