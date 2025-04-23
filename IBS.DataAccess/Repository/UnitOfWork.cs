@@ -466,7 +466,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetFilprideBankAccountById(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideBankAccountListById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
                 .Where(GetCompanyFilter<FilprideBankAccount>(company))
@@ -478,7 +478,7 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetFilprideEmployeeById(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideEmployeeListById(string company, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideEmployees
                 .Where(e => e.IsActive && e.Company == company)

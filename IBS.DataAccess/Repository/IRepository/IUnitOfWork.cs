@@ -110,9 +110,9 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetFilprideHaulerListAsyncById(string company, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetFilprideBankAccountById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideBankAccountListById(string company, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetFilprideEmployeeById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideEmployeeListById(string company, CancellationToken cancellationToken = default);
 
         #endregion
 
