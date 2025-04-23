@@ -116,7 +116,7 @@
                             <div class="row my-2">
                                 <div class="form-group col-12">
                                     <label class="control-label mb-2">Bills Paid</label>
-                                    <select asp-for="ToCollectBillings" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" id="BillingsSelect" multiple="multiple">
+                                    <select asp-for="ToCollectBillings" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" id="BillingsSelect" multiple="multiple" disabled>
                                     </select>
                                 </div>
                             </div>
@@ -257,12 +257,18 @@
                     success: function (data) {
                         $billingsSelect.empty();
                         if (Array.isArray(data) && data.length > 0) {
+                            $billingsSelect.prop("disabled", false);
+                            $billingsSelect.val("0").trigger("change");
                             $.each(data, function (index, item) {
                                 $billingsSelect.append($('<option>', {
                                     value: item.value,
                                     text: item.text
                                 }));
                             });
+                        }
+                        else{
+                            $billingsSelect.prop("disabled", true);
+                            $billingsSelect.val("");
                         }
                     },
                     error: function (xhr, status, error) {
