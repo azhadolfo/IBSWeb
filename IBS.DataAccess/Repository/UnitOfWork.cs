@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes;
 using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.DataAccess.Repository.Filpride;
@@ -8,13 +9,33 @@ using IBS.DataAccess.Repository.MasterFile;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.Mobility;
 using IBS.DataAccess.Repository.Mobility.IRepository;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using BankAccountRepository = IBS.DataAccess.Repository.Filpride.BankAccountRepository;
-using IBankAccountRepository = IBS.DataAccess.Repository.Filpride.IRepository.IBankAccountRepository;
+using BankAccountRepository = IBS.DataAccess.Repository.Mobility.BankAccountRepository;
+using ChartOfAccountRepository = IBS.DataAccess.Repository.Mobility.ChartOfAccountRepository;
+using CustomerOrderSlipRepository = IBS.DataAccess.Repository.Mobility.CustomerOrderSlipRepository;
+using CustomerRepository = IBS.DataAccess.Repository.Mobility.CustomerRepository;
+using IBankAccountRepository = IBS.DataAccess.Repository.Mobility.IRepository.IBankAccountRepository;
+using IChartOfAccountRepository = IBS.DataAccess.Repository.Mobility.IRepository.IChartOfAccountRepository;
+using ICustomerOrderSlipRepository = IBS.DataAccess.Repository.Mobility.IRepository.ICustomerOrderSlipRepository;
+using ICustomerRepository = IBS.DataAccess.Repository.Mobility.IRepository.ICustomerRepository;
+using IInventoryRepository = IBS.DataAccess.Repository.Mobility.IRepository.IInventoryRepository;
+using InventoryRepository = IBS.DataAccess.Repository.Mobility.InventoryRepository;
+using IPickUpPointRepository = IBS.DataAccess.Repository.Mobility.IRepository.IPickUpPointRepository;
+using IProductRepository = IBS.DataAccess.Repository.MasterFile.IRepository.IProductRepository;
+using IPurchaseOrderRepository = IBS.DataAccess.Repository.Mobility.IRepository.IPurchaseOrderRepository;
+using IReceivingReportRepository = IBS.DataAccess.Repository.Mobility.IRepository.IReceivingReportRepository;
+using IServiceRepository = IBS.DataAccess.Repository.Mobility.IRepository.IServiceRepository;
+using ISupplierRepository = IBS.DataAccess.Repository.Mobility.IRepository.ISupplierRepository;
+using PickUpPointRepository = IBS.DataAccess.Repository.Mobility.PickUpPointRepository;
+using ProductRepository = IBS.DataAccess.Repository.MasterFile.ProductRepository;
+using PurchaseOrderRepository = IBS.DataAccess.Repository.Mobility.PurchaseOrderRepository;
+using ReceivingReportRepository = IBS.DataAccess.Repository.Mobility.ReceivingReportRepository;
+using ServiceRepository = IBS.DataAccess.Repository.Mobility.ServiceRepository;
+using SupplierRepository = IBS.DataAccess.Repository.Mobility.SupplierRepository;
 
 namespace IBS.DataAccess.Repository
 {
@@ -22,14 +43,14 @@ namespace IBS.DataAccess.Repository
     {
         private ApplicationDbContext _db;
 
-        public MasterFile.IRepository.IProductRepository Product { get; private set; }
+        public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
 
         public INotificationRepository Notifications { get; private set; }
 
         #region--Mobility
 
-        public Mobility.IRepository.IChartOfAccountRepository MobilityChartOfAccount { get; private set; }
+        public IChartOfAccountRepository MobilityChartOfAccount { get; private set; }
         public ISalesHeaderRepository MobilitySalesHeader { get; private set; }
         public ISalesDetailRepository MobilitySalesDetail { get; private set; }
         public IFuelPurchaseRepository MobilityFuelPurchase { get; private set; }
@@ -38,18 +59,18 @@ namespace IBS.DataAccess.Repository
         public IPOSalesRepository MobilityPOSales { get; private set; }
         public IOfflineRepository MobilityOffline { get; private set; }
         public IGeneralLedgerRepository MobilityGeneralLedger { get; private set; }
-        public Mobility.IRepository.IInventoryRepository MobilityInventory { get; private set; }
+        public IInventoryRepository MobilityInventory { get; private set; }
         public IStationRepository MobilityStation { get; private set; }
-        public Mobility.IRepository.ISupplierRepository MobilitySupplier { get; private set; }
-        public Mobility.IRepository.ICustomerRepository MobilityCustomer { get; private set; }
-        public Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; private set; }
-        public Mobility.IRepository.IServiceRepository MobilityService { get; private set; }
+        public ISupplierRepository MobilitySupplier { get; private set; }
+        public ICustomerRepository MobilityCustomer { get; private set; }
+        public IBankAccountRepository MobilityBankAccount { get; private set; }
+        public IServiceRepository MobilityService { get; private set; }
         public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
-        public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
-        public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
-        public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
+        public IPickUpPointRepository MobilityPickUpPoint { get; private set; }
+        public IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
+        public IReceivingReportRepository MobilityReceivingReport { get; private set; }
 
-        public Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
+        public ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
 
         #endregion
 
@@ -120,13 +141,13 @@ namespace IBS.DataAccess.Repository
         {
             _db = db;
 
-            Product = new MasterFile.ProductRepository(_db);
+            Product = new ProductRepository(_db);
             Company = new CompanyRepository(_db);
             Notifications = new NotificationRepository(_db);
 
             #region--Mobility
 
-            MobilityChartOfAccount = new Mobility.ChartOfAccountRepository(_db);
+            MobilityChartOfAccount = new ChartOfAccountRepository(_db);
             MobilitySalesHeader = new SalesHeaderRepository(_db);
             MobilitySalesDetail = new SalesDetailRepository(_db);
             MobilityFuelPurchase = new FuelPurchaseRepository(_db);
@@ -135,17 +156,17 @@ namespace IBS.DataAccess.Repository
             MobilityPOSales = new POSalesRepository(_db);
             MobilityOffline = new OfflineRepository(_db);
             MobilityGeneralLedger = new GeneralLedgerRepository(_db);
-            MobilityInventory = new Mobility.InventoryRepository(_db);
+            MobilityInventory = new InventoryRepository(_db);
             MobilityStation = new StationRepository(_db);
-            MobilitySupplier = new Mobility.SupplierRepository(_db);
-            MobilityCustomer = new Mobility.CustomerRepository(_db);
-            MobilityBankAccount = new Mobility.BankAccountRepository(_db);
-            MobilityService = new Mobility.ServiceRepository(_db);
+            MobilitySupplier = new SupplierRepository(_db);
+            MobilityCustomer = new CustomerRepository(_db);
+            MobilityBankAccount = new BankAccountRepository(_db);
+            MobilityService = new ServiceRepository(_db);
             MobilityProduct = new Mobility.ProductRepository(_db);
-            MobilityPickUpPoint = new Mobility.PickUpPointRepository(_db);
-            MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
-            MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
-            MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
+            MobilityPickUpPoint = new PickUpPointRepository(_db);
+            MobilityPurchaseOrder = new PurchaseOrderRepository(_db);
+            MobilityReceivingReport = new ReceivingReportRepository(_db);
+            MobilityCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
 
             #endregion
 
@@ -346,9 +367,22 @@ namespace IBS.DataAccess.Repository
 
         public async Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default)
         {
+
+            Expression<Func<FilprideCustomer, bool>> GetCompanyFilter(string companyName)
+            {
+                return companyName switch
+                {
+                    nameof(Filpride) => c => c.IsFilpride,
+                    nameof(Mobility) => c => c.IsMobility,
+                    nameof(Bienes) => c => c.IsBienes,
+                    _ => c => false
+                };
+            }
+
             return await _db.FilprideCustomers
                 .OrderBy(c => c.CustomerId)
-                .Where(c => c.IsActive && (company == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
+                .Where(c => c.IsActive)
+                .Where(GetCompanyFilter(company))
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),

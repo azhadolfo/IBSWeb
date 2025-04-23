@@ -1,9 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -92,6 +90,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.ZipCode = model.ZipCode;
             existingSupplier.IsFilpride = model.IsFilpride;
             existingSupplier.IsMobility = model.IsMobility;
+            existingSupplier.IsBienes = model.IsBienes;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
