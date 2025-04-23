@@ -132,8 +132,6 @@ namespace IBS.DataAccess.Repository
 
         #region --Bienes
 
-        public Bienes.IRepository.IBankAccountRepository BienesBankAccount { get; private set; }
-
         public IPlacementRepository BienesPlacement { get; private set; }
 
         #endregion
@@ -219,7 +217,6 @@ namespace IBS.DataAccess.Repository
 
             #region --Bienes
 
-            BienesBankAccount = new Bienes.BankAccountRepository(_db);
             BienesPlacement = new PlacementRepository(_db);
 
             #endregion

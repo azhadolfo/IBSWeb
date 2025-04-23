@@ -52,15 +52,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 .ToListAsync(cancellationToken);
         }
 
-        private async Task<List<SelectListItem>> GetBanks(CancellationToken cancellationToken)
+        private async Task<string> GetCompanyClaimAsync()
         {
-            return await _dbContext.BienesBankAccounts
-                .Select(c => new SelectListItem
-                {
-                    Value = c.BankAccountId.ToString(),
-                    Text = c.Bank
-                })
-                .ToListAsync(cancellationToken);
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public IActionResult Index()
@@ -135,10 +131,12 @@ namespace IBSWeb.Areas.Bienes.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             PlacementViewModel viewModel = new()
             {
                 Companies = await GetCompanies(cancellationToken),
-                BankAccounts = await GetBanks(cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -147,10 +145,12 @@ namespace IBSWeb.Areas.Bienes.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(PlacementViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (!ModelState.IsValid)
             {
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
 
@@ -214,7 +214,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
         }
@@ -230,6 +230,8 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
             try
             {
+                var companyClaims = await GetCompanyClaimAsync();
+
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
 
@@ -242,7 +244,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 {
                     PlacementId = existingRecord.PlacementId,
                     Companies = await GetCompanies(cancellationToken),
-                    BankAccounts = await GetBanks(cancellationToken),
+                    BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken),
                     CompanyId = existingRecord.CompanyId,
                     BankId = existingRecord.BankId,
                     Bank = existingRecord.Bank,
@@ -283,11 +285,13 @@ namespace IBSWeb.Areas.Bienes.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(PlacementViewModel viewModel, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
 
@@ -313,7 +317,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.Companies = await GetCompanies(cancellationToken);
-                viewModel.BankAccounts = await GetBanks(cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
         }
@@ -395,7 +399,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBankBranchById(int bankId)
         {
-            var bank = await _unitOfWork.BienesBankAccount
+            var bank = await _unitOfWork.FilprideBankAccount
                 .GetAsync(b => b.BankAccountId == bankId);
 
             if (bank == null)
