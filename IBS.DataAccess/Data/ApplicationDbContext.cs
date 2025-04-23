@@ -74,6 +74,11 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
         public DbSet<MobilityPurchaseOrder> MobilityPurchaseOrders { get; set; }
         public DbSet<MobilityReceivingReport> MobilityReceivingReports { get; set; }
+        public DbSet<MobilityCheckVoucherHeader> MobilityCheckVoucherHeaders { get; set; }
+        public DbSet<MobilityCheckVoucherDetail> MobilityCheckVoucherDetails { get; set; }
+        public DbSet<MobilityMultipleCheckVoucherPayment> MobilityMultipleCheckVoucherPayments { get; set; }
+        public DbSet<MobilityCVTradePayment> MobilityCVTradePayments { get; set; }
+
         #endregion
 
         #region --Inventory Entity
@@ -99,6 +104,8 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityPickUpPoint> MobilityPickUpPoints { get; set; }
 
         public DbSet<MobilityService> MobilityServices { get; set; }
+
+        public DbSet<MobilityEmployee> MobilityEmployees { get; set; }
 
         #endregion
 
@@ -493,6 +500,64 @@ namespace IBS.DataAccess.Data
                 rr.HasIndex(rr => rr.StationCode);
             });
 
+            #region -- Check Voucher Header --
+
+            builder.Entity<MobilityCheckVoucherHeader>(cv =>
+            {
+                cv.HasOne(cv => cv.Supplier)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.BankAccount)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher --
+
+            #region -- Check Voucher Details --
+
+            builder.Entity<MobilityCheckVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
+
+            #region -- Check Voucher Trade Payment --
+
+            builder.Entity<MobilityCVTradePayment>(cv =>
+            {
+                cv.HasOne(cv => cv.CV)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Trade Payment --
+
+            #region -- Multiple Check Voucher Payment --
+
+            builder.Entity<MobilityMultipleCheckVoucherPayment>(mcvp =>
+            {
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderPayment)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderPaymentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderInvoice)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Multiple Check Voucher Payment --
+
             #endregion
 
             #region--General Ledger
@@ -526,6 +591,12 @@ namespace IBS.DataAccess.Data
             builder.Entity<MobilityCustomer>(c =>
             {
                 c.HasIndex(c => c.CustomerId).IsUnique();
+            });
+
+            // MobilityEmployee
+            builder.Entity<MobilityEmployee>(c =>
+            {
+                c.HasIndex(c => c.EmployeeNumber);
             });
 
             #endregion
@@ -848,6 +919,18 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion -- Check Voucher --
+
+            #region -- Check Voucher Details --
+
+            builder.Entity<FilprideCheckVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
 
             #region -- Check Voucher Trade Payment --
 
