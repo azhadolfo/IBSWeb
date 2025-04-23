@@ -219,7 +219,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     await _unitOfWork.MobilityReceivingReport.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 
-                    TempData["success"] = "Receiving report created successfully.";
+                    TempData["success"] = $"Receiving report created successfully. Series Number: {model.ReceivingReportNo}.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
