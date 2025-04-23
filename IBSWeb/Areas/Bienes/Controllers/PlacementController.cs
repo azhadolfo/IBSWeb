@@ -90,6 +90,22 @@ namespace IBSWeb.Areas.Bienes.Controllers
                         .ToList();
                 }
 
+
+                // Column-specific search
+                foreach (var column in parameters.Columns)
+                {
+                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    {
+                        var searchValue = column.Search.Value.ToLower();
+                        switch (column.Data)
+                        {
+                            case "status":
+                                query = query.Where(p => p.Status.ToLower() == searchValue);
+                                break;
+                        }
+                    }
+                }
+
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
