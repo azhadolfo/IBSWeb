@@ -34,13 +34,13 @@
                         <label class="control-label ps-1 pb-1">Company/Owner<span class="required text-danger">*</span></label>
                         @if (Model.IsCompanyOwned)
                         {
-                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" required>
+                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" disabled>
                                 <option value="">Select Company/Owner</option>
                             </select>
                         }
                         else
                         {
-                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" disabled>
+                            <select asp-for="CompanyOwnerId" asp-items="@Model.CompanyList" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" id="companyNameSelect" required>
                                 <option value="">Select Company/Owner</option>
                             </select>
                         }
@@ -79,9 +79,9 @@
                 let $inputField = $('#companyNameSelect');
 
                 if ($checkbox.prop("checked")) {
-                    $inputField.prop("required", true).prop("disabled", false);
-                } else {
                     $inputField.prop("required", false).prop("disabled", true).val("0").trigger("change");
+                } else {
+                    $inputField.prop("required", true).prop("disabled", false);
                 }
             }
         });

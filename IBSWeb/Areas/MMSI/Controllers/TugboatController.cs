@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.MMSI
         {
             var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId);
 
-            if(model.IsCompanyOwned == false)
+            if(model.IsCompanyOwned)
             {
                 currentModel.CompanyOwnerId = null;
             }
