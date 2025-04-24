@@ -10,7 +10,7 @@ namespace IBS.Models.MMSI.MasterFile
         public int PrincipalId { get; set; }
 
         [Display(Name = "Principal Number")]
-        public string? PrincipalNumber { get; set; }
+        public string PrincipalNumber { get; set; }
 
         [Display(Name = "Principal Name")]
         [Required(ErrorMessage = "Principal name is required.")]
@@ -18,7 +18,7 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(25)")]
         public string PrincipalName { get; set; }
 
-        public string? Address { get; set; }
+        public string Address { get; set; }
 
         public string? BusinessType { get; set; }
 
