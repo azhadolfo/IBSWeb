@@ -224,17 +224,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 worksheet.Cells[row, col++].Value = posData?.Liters;
                 worksheet.Cells[row, col++].Value = volumeDiff;
 
+                // Highlight significant differences
+                if (Math.Abs(volumeDiff) > 0.1m)
+                {
+                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                        volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
+                }
+
                 worksheet.Cells[row, col++].Value = fmsData?.Value;
                 worksheet.Cells[row, col++].Value = posData?.Value;
                 worksheet.Cells[row, col++].Value = salesDiff;
 
-                // Highlight significant differences
-                if (Math.Abs(volumeDiff) > 0.1m)
-                {
-                    worksheet.Cells[row, col - 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, col - 2].Style.Fill.BackgroundColor.SetColor(
-                        volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
-                }
 
                 if (Math.Abs(salesDiff) > 0.1m)
                 {
