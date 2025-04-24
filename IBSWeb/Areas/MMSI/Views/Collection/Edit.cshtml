@@ -63,20 +63,21 @@
                                 <div class="form-group col-4">
                                     <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
                                     <input id="customerIsVatable" type="hidden">
-                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                    <input name="CustomerId" value="@Model.CustomerId" type="hidden">
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                                         <option value="">Select Customer</option>
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                                 </div>
                                 <input type="hidden" id="undeductedAmount" value="@Model.Amount">
-                                <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
+                                <input type="hidden" value="@Model.Amount" id="amount">
                                 <div class="form-floating col-4">
-                                    <input type="number" step="0.01" class="form-control border-0 shadow"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0">
+                                    <input type="number" step="0.01" class="form-control border-0 shadow" name="Amount"  id="amountShow" value="@Model.Amount"  placeholder=" " min="0">
                                     <label class="ms-2">Amount</label>
                                 </div>
-                                <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
+                                <input type="hidden" value="@Model.EWT" id="ewt">
                                 <div class="form-floating col-4">
-                                    <input type="number" step="0.01" class="form-control border-0 shadow"  id="ewtShow" value="@Model.EWT" placeholder=" " min="0">
+                                    <input type="number" step="0.01" class="form-control border-0 shadow" name="EWT" id="ewtShow" value="@Model.EWT" placeholder=" " min="0">
                                     <label class="ms-2">EWT</label>
                                 </div>
                             </div>
@@ -117,7 +118,8 @@
                             <div class="row my-2">
                                 <div class="form-group col-12">
                                     <label class="control-label mb-2">Bills Paid</label>
-                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" id="BillingsSelect" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" required>
+                                    <input value="@Model.ToCollectBillings" multiple="multiple" name="ToCollectBillings" type="hidden">
+                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" id="BillingsSelect" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" disabled>
                                     </select>
                                 </div>
                             </div>
@@ -284,8 +286,7 @@
                     }
                 });
             }
-
-            // Handle bill selection change
+            
             function handleBillSelectionChange() {
                 if (isProcessing) return;
                 isProcessing = true;
@@ -311,32 +312,19 @@
                         // show bills table
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
-                                let tempAmount = value.amount;
-                                let tempEwt = 0;
-
-                                if (value.isVatable){
-                                    tempEwt = ((value.amount/1.12) * 0.02);
-                                    tempAmount = (value.amount - tempEwt);
-                                }
                                 
                                 table.row.add([
                                     value.mmsiBillingNumber,
                                     `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 ]);
                                 undeductedTotalAmount += value.amount;
-                                totalAmount += tempAmount;
-                                totalEwt += tempEwt;
                             });
                         }
                         table.draw();
 
                         // show totals
                         $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
-                        $('#amount').val(totalAmount.toFixed(2)); // store amount value
-                        $('#ewt').val(totalEwt.toFixed(2));
                         $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
-                        $('#amountShow').val(totalAmount.toFixed(2));
-                        $('#ewtShow').val(totalEwt.toFixed(2));
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching selected billings:', error);

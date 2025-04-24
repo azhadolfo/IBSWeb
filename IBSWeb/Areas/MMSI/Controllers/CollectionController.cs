@@ -151,36 +151,6 @@ namespace IBSWeb.Areas.MMSI
             {
                 if (ModelState.IsValid)
                 {
-                    //previous billings
-                    var previousCollectedBills = await _dbContext.MMSIBillings
-                        .Where(b => b.CollectionId == model.MMSICollectionId)
-                        .ToListAsync(cancellationToken);
-
-                    //previous billings
-                    var previousCollectedBillsString = await _dbContext.MMSIBillings
-                        .Where(b => b.CollectionId == model.MMSICollectionId)
-                        .Select(b => b.MMSIBillingId.ToString())
-                        .ToListAsync(cancellationToken);
-
-                    //revert old billings
-                    foreach (var previousBilling in previousCollectedBills)
-                    {
-                        var billing = await _dbContext.MMSIBillings
-                            .FindAsync(previousBilling.MMSIBillingId, cancellationToken);
-                        billing.Status = "For Collection";
-                        billing.CollectionId = 0;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                    }
-
-                    //relate new billings to collection
-                    foreach (var newBilling in model.ToCollectBillings)
-                    {
-                        var billing = await _dbContext.MMSIBillings
-                            .FindAsync(int.Parse(newBilling), cancellationToken);
-                        billing.Status = "Collected";
-                        billing.CollectionId = model.MMSICollectionId;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                    }
 
                     var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
 
@@ -195,9 +165,6 @@ namespace IBSWeb.Areas.MMSI
                     if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
                     if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
                     if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
-
-                    if (!previousCollectedBillsString.OrderBy(x => x).SequenceEqual(model.ToCollectBillings.OrderBy(x => x)))
-                    { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", previousCollectedBillsString)} -> #{string.Join(", #", model.ToCollectBillings)}"); }
 
                     #endregion -- Changes
 
