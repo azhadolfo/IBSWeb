@@ -35,7 +35,7 @@ namespace IBS.DataAccess.Migrations
                     tin_no = table.Column<string>(type: "varchar(20)", nullable: true),
                     philhealth_no = table.Column<string>(type: "text", nullable: true),
                     pagibig_no = table.Column<string>(type: "text", nullable: true),
-                    company = table.Column<string>(type: "text", nullable: true),
+                    station_code = table.Column<string>(type: "text", nullable: true),
                     department = table.Column<string>(type: "text", nullable: true),
                     date_hired = table.Column<DateOnly>(type: "date", nullable: false),
                     date_resigned = table.Column<DateOnly>(type: "date", nullable: true),
@@ -85,7 +85,7 @@ namespace IBS.DataAccess.Migrations
                     check_amount = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     amount_paid = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     is_paid = table.Column<bool>(type: "boolean", nullable: false),
-                    company = table.Column<string>(type: "text", nullable: false),
+                    station_code = table.Column<string>(type: "text", nullable: false),
                     is_printed = table.Column<bool>(type: "boolean", nullable: false),
                     status = table.Column<string>(type: "text", nullable: false),
                     type = table.Column<string>(type: "text", nullable: true),
@@ -153,7 +153,8 @@ namespace IBS.DataAccess.Migrations
                     bank_id = table.Column<int>(type: "integer", nullable: true),
                     company_id = table.Column<int>(type: "integer", nullable: true),
                     customer_id = table.Column<int>(type: "integer", nullable: true),
-                    employee_id = table.Column<int>(type: "integer", nullable: true)
+                    employee_id = table.Column<int>(type: "integer", nullable: true),
+                    station_id = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {

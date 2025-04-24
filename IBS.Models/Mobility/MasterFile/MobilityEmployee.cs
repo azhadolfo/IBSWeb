@@ -44,7 +44,7 @@ namespace IBS.Models.Mobility.MasterFile
 
         public string? PagibigNo { get; set; } = string.Empty;
 
-        public string? Company { get; set; } = string.Empty;
+        public string? StationCode { get; set; } = string.Empty;
 
         public string? Department { get; set; } = string.Empty;
 

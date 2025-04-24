@@ -56,5 +56,7 @@ namespace IBS.Models.Mobility
         public int? CustomerId { get; set; }
 
         public int? EmployeeId { get; set; }
+
+        public int? StationId { get; set; }
     }
 }

@@ -46,8 +46,10 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IServiceRepository MobilityService { get; private set; }
         public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
         public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
+        public Mobility.IRepository.IEmployeeRepository MobilityEmployee { get; private set; }
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
+        public Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; private set; }
         public Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; private set; }
         public Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; private set; }
         public Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; private set; }
@@ -68,7 +70,7 @@ namespace IBS.DataAccess.Repository
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
         public IAuditTrailRepository FilprideAuditTrail { get; private set; }
-        public IEmployeeRepository FilprideEmployee { get; private set; }
+        public Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; private set; }
 
         #endregion
 
@@ -87,7 +89,7 @@ namespace IBS.DataAccess.Repository
         #endregion
 
         #region Accounts Payable
-        public ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
+        public Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
 
         public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
 
@@ -147,8 +149,10 @@ namespace IBS.DataAccess.Repository
             MobilityService = new Mobility.ServiceRepository(_db);
             MobilityProduct = new Mobility.ProductRepository(_db);
             MobilityPickUpPoint = new Mobility.PickUpPointRepository(_db);
+            MobilityEmployee = new Mobility.EmployeeRepository(_db);
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
+            MobilityCheckVoucher = new Mobility.CheckVoucherRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
             MobilityServiceInvoice = new Mobility.ServiceInvoiceRepository(_db);
             MobilityCreditMemo = new Mobility.CreditMemoRepository(_db);
@@ -168,7 +172,7 @@ namespace IBS.DataAccess.Repository
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
             FilprideAuditTrail = new AuditTrailRepository(_db);
-            FilprideEmployee = new EmployeeRepository(_db);
+            FilprideEmployee = new Filpride.EmployeeRepository(_db);
 
             #endregion
 
@@ -183,7 +187,7 @@ namespace IBS.DataAccess.Repository
             #endregion
 
             #region Accounts Payable
-            FilprideCheckVoucher = new CheckVoucherRepository(_db);
+            FilprideCheckVoucher = new Filpride.CheckVoucherRepository(_db);
             FilprideJournalVoucher = new JournalVoucherRepository(_db);
             FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
             FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);

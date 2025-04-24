@@ -55,6 +55,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IServiceRepository MobilityService { get; }
         Mobility.IRepository.IProductRepository MobilityProduct { get; }
         Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; }
+        Mobility.IRepository.IEmployeeRepository MobilityEmployee { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -62,6 +63,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
+        Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; }
         Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
         Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
         Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
@@ -99,7 +101,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Filpride.IRepository.ICustomerRepository FilprideCustomer { get; }
         IAuditTrailRepository FilprideAuditTrail { get; }
 
-        IEmployeeRepository FilprideEmployee { get; }
+        Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; }
 
         Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default);
 
@@ -127,7 +129,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region Accounts Payable
 
-        ICheckVoucherRepository FilprideCheckVoucher { get; }
+        Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; }
 
         IJournalVoucherRepository FilprideJournalVoucher { get; }
 

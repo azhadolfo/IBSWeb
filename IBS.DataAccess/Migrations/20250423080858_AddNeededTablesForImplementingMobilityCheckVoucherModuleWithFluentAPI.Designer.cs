@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250423072653_AddNeededTablesForImplementingMobilityCheckVoucherModuleWithFluentAPI")]
+    [Migration("20250423080858_AddNeededTablesForImplementingMobilityCheckVoucherModuleWithFluentAPI")]
     partial class AddNeededTablesForImplementingMobilityCheckVoucherModuleWithFluentAPI
     {
         /// <inheritdoc />
@@ -4744,10 +4744,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
 
-                    b.Property<string>("Company")
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
                     b.Property<DateOnly>("DateHired")
                         .HasColumnType("date")
                         .HasColumnName("date_hired");
@@ -4815,6 +4811,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("SssNo")
                         .HasColumnType("text")
                         .HasColumnName("sss_no");
+
+                    b.Property<string>("StationCode")
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -5251,6 +5251,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_vatable");
 
+                    b.Property<int?>("StationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("station_id");
+
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
@@ -5338,11 +5342,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("CheckVoucherHeaderNo")
                         .HasColumnType("text")
                         .HasColumnName("check_voucher_header_no");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -5451,6 +5450,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateOnly?>("StartDate")
                         .HasColumnType("date")
                         .HasColumnName("start_date");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
 
                     b.Property<string>("Status")
                         .IsRequired()
