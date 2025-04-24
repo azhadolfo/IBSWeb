@@ -39,12 +39,6 @@
                     Address
                 </th>
                 <th class="text-center">
-                    Terms
-                </th>
-                <th class="text-center">
-                    Business Style
-                </th>
-                <th class="text-center">
                     Agent Name
                 </th>
                 <th class="actions-column text-center">
@@ -61,12 +55,6 @@
                     </td>
                     <td class="text-center align-content-center">
                         @Html.DisplayFor(model => item.Address)
-                    </td>
-                    <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.Terms)
-                    </td>
-                    <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.BusinessType)
                     </td>
                     <td class="text-center align-content-center">
                         @Html.DisplayFor(model => item.Customer.CustomerName)
@@ -118,7 +106,7 @@
                 "autoWidth": false,
                 "columnDefs": [
                     {
-                        "targets": 4,
+                        "targets": 3,
                         "width": "150px",
                         "className": "text-center",
                         "orderable": false

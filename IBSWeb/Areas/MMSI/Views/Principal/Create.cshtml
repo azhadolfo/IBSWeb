@@ -19,44 +19,58 @@
                 <div class="row pt-2">
                     <div class="form-floating col-6 my-2">
                         <input asp-for="PrincipalName" type="text" class="form-control border-0 shadow" id="PrincipalName" placeholder=" " required>
-                        <label asp-for="PrincipalName" for="PrincipalName" class="ms-2">Name</label>
+                        <label asp-for="PrincipalName" for="PrincipalName" class="ms-2">Principal Name<span class="required text-danger">*</span></label>
                         <span asp-validation-for="PrincipalName" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="Landline1" type="number" class="form-control border-0 shadow" id="Landline1" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
-                        <label asp-for="Landline1" for="Landline1" class="ms-2">Landline1 #</label>
-                        <span asp-validation-for="Landline1" class="text-danger"></span>
+                        <input asp-for="PrincipalNumber" type="text" class="form-control border-0 shadow" id="PrincipalNumber" placeholder=" " required>
+                        <label asp-for="PrincipalNumber" for="PrincipalNumber" class="ms-2">Principal Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="PrincipalNumber" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="row pb-3">
-                    <div class="form-floating col-6 my-2">
+                <div class="row pt-2">
+                    <div class="form-floating col-12 my-2">
                         <input asp-for="Address" type="text" class="form-control border-0 shadow" id="Address" placeholder=" " required>
-                        <label asp-for="Address" for="Address" class="ms-2">Address</label>
+                        <label asp-for="Address" for="Address" class="ms-2">Address<span class="required text-danger">*</span></label>
                         <span asp-validation-for="Address" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-6 my-2">
-                        <input asp-for="Landline2" type="number" class="form-control border-0 shadow" id="Landline2" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
-                        <label asp-for="Landline2" for="Landline2" class="ms-2">Landline2 #</label>
-                        <span asp-validation-for="Landline2" class="text-danger"></span>
-                    </div>
                 </div>
                 <div class="row pb-3">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="TIN" type="text" class="form-control border-0 shadow" id="TIN" placeholder=" " required>
+                        <input asp-for="TIN" type="text" class="form-control border-0 shadow" id="TIN" placeholder=" ">
                         <label asp-for="TIN" for="TIN" class="ms-2">TIN</label>
                         <span asp-validation-for="TIN" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="Mobile1" type="number" class="form-control border-0 shadow" id="Mobile1" placeholder="" maxlength="20" title="Mobile Number must not exceed 20 characters">
-                        <label asp-for="Mobile1" for="Mobile1" class="ms-2">Mobile1 #</label>
-                        <span asp-validation-for="Mobile1" class="text-danger"></span>
+                        <input asp-for="BusinessType" type="text" class="form-control border-0 shadow" id="BusinessType" placeholder=" ">
+                        <label asp-for="BusinessType" for="BusinessType" class="ms-2">Business Type</label>
+                        <span asp-validation-for="BusinessType" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row pb-3">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="BusinessType" type="text" class="form-control border-0 shadow" id="BusinessType" placeholder=" " required>
-                        <label asp-for="BusinessType" for="BusinessType" class="ms-2">Business Type</label>
-                        <span asp-validation-for="BusinessType" class="text-danger"></span>
+                        <input asp-for="Terms" type="text" class="form-control border-0 shadow" id="Terms" placeholder=" ">
+                        <label asp-for="Terms" for="Terms" class="ms-2">Terms</label>
+                        <span asp-validation-for="Terms" class="text-danger"></span>
+                    </div>
+                    <div class="form-check col-3 ps-2 text-start d-flex align-items-center justify-content-start">
+                        <input asp-for="IsVatable" class="form-check-input m-0 ms-2" id="IsVatable" type="checkbox" checked>
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsVatable">
+                            Vatable
+                        </label>
+                    </div>
+                    <div class="form-check col-3 ps-2 text-start d-flex align-items-center justify-content-start">
+                        <input asp-for="IsActive" class="form-check-input m-0 ms-2" id="IsActive" type="checkbox" checked>
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsActive">
+                            Active
+                        </label>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Mobile1" type="number" class="form-control border-0 shadow" id="Mobile1" placeholder="" maxlength="20" title="Mobile Number must not exceed 20 characters">
+                        <label asp-for="Mobile1" for="Mobile1" class="ms-2">Mobile1 #</label>
+                        <span asp-validation-for="Mobile1" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
                         <input asp-for="Mobile2" type="number" class="form-control border-0 shadow" id="Mobile2" placeholder="" maxlength="20" title="Mobile Number must not exceed 20 characters">
@@ -66,21 +80,14 @@
                 </div>
                 <div class="row pb-3">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="Terms" type="text" class="form-control border-0 shadow" id="Terms" placeholder=" " required>
-                        <label asp-for="Terms" for="Terms" class="ms-2">Terms</label>
-                        <span asp-validation-for="Terms" class="text-danger"></span>
+                        <input asp-for="Landline1" type="number" class="form-control border-0 shadow" id="Landline1" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
+                        <label asp-for="Landline1" for="Landline1" class="ms-2">Landline1 #</label>
+                        <span asp-validation-for="Landline1" class="text-danger"></span>
                     </div>
-                    <div class="form-check col-3 ps-2 text-start d-flex align-items-center justify-content-start">
-                        <input asp-for="IsVatable" class="form-check-input m-0 ms-2" type="checkbox" checked>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsVatable">
-                            Vatable
-                        </label>
-                    </div>
-                    <div class="form-check col-3 ps-2 text-start d-flex align-items-center justify-content-start">
-                        <input asp-for="IsActive" class="form-check-input m-0 ms-2" type="checkbox" checked>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsActive">
-                            Active
-                        </label>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Landline2" type="number" class="form-control border-0 shadow" id="Landline2" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
+                        <label asp-for="Landline2" for="Landline2" class="ms-2">Landline2 #</label>
+                        <span asp-validation-for="Landline2" class="text-danger"></span>
                     </div>
                 </div>
 
