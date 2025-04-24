@@ -111,6 +111,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[1, col++].Value = "FMS FUEL SALES";
 
             // POS Headers
+            var posSpacesIndex = col;
+            worksheet.Cells[1, col++].Value = "";
             worksheet.Cells[1, col++].Value = "POS CASHIER";
             worksheet.Cells[1, col++].Value = "POS CLOSING";
             worksheet.Cells[1, col++].Value = "POS OPENING";
@@ -120,8 +122,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[1, col++].Value = "POS FUEL SALES";
 
             // Difference Headers
-            worksheet.Cells[1, col++].Value = "VOLUME DIFF";
-            worksheet.Cells[1, col++].Value = "SALES DIFF";
+            var differenceSpacesIndex = col;
+            worksheet.Cells[1, col++].Value = "";
+            worksheet.Cells[1, col++].Value = "FMS VOLUME";
+            worksheet.Cells[1, col++].Value = "POS VOLUME";
+            worksheet.Cells[1, col++].Value = "VARIANCE";
+            worksheet.Cells[1, col++].Value = "FMS SALES";
+            worksheet.Cells[1, col++].Value = "POS SALES";
+            worksheet.Cells[1, col++].Value = "VARIANCE";
 
             // Style header row
             using (var range = worksheet.Cells[1, 1, 1, col - 1])
@@ -188,6 +196,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 // POS data
                 if (posData != null)
                 {
+                    worksheet.Cells[row, col++].Value = "";
                     worksheet.Cells[row, col++].Value = posData.Cashier;
                     worksheet.Cells[row, col++].Value = posData.Closing;
                     worksheet.Cells[row, col++].Value = posData.Opening;
@@ -204,13 +213,19 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 else
                 {
                     // Skip empty columns
-                    col += 7;
+                    col += 8;
                 }
 
                 decimal volumeDiff = (posData?.Liters ?? 0m) - (fmsData?.Liters ?? 0m);
                 decimal salesDiff = (posData?.Value ?? 0m) - (fmsData?.Value ?? 0m);
 
+                worksheet.Cells[row, col++].Value = "";
+                worksheet.Cells[row, col++].Value = fmsData?.Liters;
+                worksheet.Cells[row, col++].Value = posData?.Liters;
                 worksheet.Cells[row, col++].Value = volumeDiff;
+
+                worksheet.Cells[row, col++].Value = fmsData?.Value;
+                worksheet.Cells[row, col++].Value = posData?.Value;
                 worksheet.Cells[row, col++].Value = salesDiff;
 
                 // Highlight significant differences
@@ -250,6 +265,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[totalRow, col++].Value = "";  // FMS Price
             worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;        // FMS Sales
 
+            worksheet.Cells[totalRow, col++].Value = "";
             worksheet.Cells[totalRow, col++].Value = "";  // POS Cashier
             worksheet.Cells[totalRow, col++].Value = "";  // POS Closing
             worksheet.Cells[totalRow, col++].Value = "";  // POS Opening
@@ -262,7 +278,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
             decimal totalVolumeDiff = posVolumeTotal - fmsVolumeTotal;
             decimal totalSalesDiff = posSalesTotal - fmsSalesTotal;
 
+            worksheet.Cells[totalRow, col++].Value = "";
+            worksheet.Cells[totalRow, col++].Value = posVolumeTotal;
+            worksheet.Cells[totalRow, col++].Value = fmsVolumeTotal;
             worksheet.Cells[totalRow, col++].Value = totalVolumeDiff;
+
+            worksheet.Cells[totalRow, col++].Value = posSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;
             worksheet.Cells[totalRow, col++].Value = totalSalesDiff;
 
             // Highlight total row
@@ -287,7 +309,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Format numeric columns with number format
             for (int c = 6; c <= col - 1; c++)
             {
-                if (c == 13) // Skip non-numeric columns if any
+                if (c == 15) // Skip non-numeric columns if any
                     continue;
 
                 worksheet.Cells[2, c, totalRow, c].Style.Numberformat.Format = numberFormat;
@@ -346,8 +368,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
             }
 
+
+
             // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+            worksheet.Column(differenceSpacesIndex).Width = 1;
+            worksheet.Column(posSpacesIndex).Width = 1;
+
+            // for (int i = 1; i <= worksheet.Dimension.End.Column; i++)
+            // {
+            //     if (i != spacesIndex)
+            //     {
+            //         worksheet.Column(i).AutoFit();
+            //     }
+            // }
 
             var excelBytes = package.GetAsByteArray();
 
