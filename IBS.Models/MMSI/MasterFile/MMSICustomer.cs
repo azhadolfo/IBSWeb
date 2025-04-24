@@ -13,11 +13,11 @@ namespace IBS.Models.MMSI.MasterFile
 
         public string CustomerAddress { get; set; }
 
-        public string CustomerTIN {  get; set; }
+        public string? CustomerTIN {  get; set; }
 
-        public string CustomerBusinessStyle { get; set; }
+        public string? CustomerBusinessStyle { get; set; }
 
-        public string CustomerTerms { get; set; }
+        public string? CustomerTerms { get; set; }
 
         public string? Landline1 { get; set; }
 
