@@ -70,6 +70,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Shift = h.Shift,
                     PageNumber = h.PageNumber,
                     Product = d.Product,
+                    PumpNumber = d.PumpNumber,
                     Closing = d.Closing,
                     Opening = d.Opening,
                     Calibration = d.Calibration,
@@ -77,11 +78,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Price = d.Price,
                     Value = d.Value
                 }))
-                .GroupBy(x => new { x.Date, x.Shift, x.PageNumber, x.Product })
+                .GroupBy(x => new { x.Date, x.Shift, x.PageNumber, x.Product, x.PumpNumber })
                 .OrderBy(g => g.Key.Date)
                 .ThenBy(g => g.Key.Shift)
                 .ThenBy(g => g.Key.PageNumber)
                 .ThenBy(g => g.Key.Product)
+                .ThenBy(g => g.Key.PumpNumber)
                 .ToList();
 
             using var package = new ExcelPackage();
@@ -97,6 +99,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[1, col++].Value = "SHIFT";
             worksheet.Cells[1, col++].Value = "PAGE NUMBER";
             worksheet.Cells[1, col++].Value = "PRODUCT";
+            worksheet.Cells[1, col++].Value = "PUMP";
 
             // FMS Headers
             worksheet.Cells[1, col++].Value = "FMS CASHIER";
@@ -154,10 +157,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 // Common fields
                 col = 1;
-                worksheet.Cells[row, col++].Value = group.Key.Date.ToString("yyyy/MM/dd");
+                worksheet.Cells[row, col++].Value = group.Key.Date;
                 worksheet.Cells[row, col++].Value = group.Key.Shift;
                 worksheet.Cells[row, col++].Value = group.Key.PageNumber;
                 worksheet.Cells[row, col++].Value = group.Key.Product;
+                worksheet.Cells[row, col++].Value = group.Key.PumpNumber;
 
                 // FMS data
                 if (fmsData != null)
@@ -203,34 +207,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     col += 7;
                 }
 
-                // Calculate differences if both exist
-                if (fmsData != null && posData != null)
+                decimal volumeDiff = (posData?.Liters ?? 0m) - (fmsData?.Liters ?? 0m);
+                decimal salesDiff = (posData?.Value ?? 0m) - (fmsData?.Value ?? 0m);
+
+                worksheet.Cells[row, col++].Value = volumeDiff;
+                worksheet.Cells[row, col++].Value = salesDiff;
+
+                // Highlight significant differences
+                if (Math.Abs(volumeDiff) > 0.1m)
                 {
-                    decimal volumeDiff = posData.Liters - fmsData.Liters;
-                    decimal salesDiff = posData.Value - fmsData.Value;
-
-                    worksheet.Cells[row, col++].Value = volumeDiff;
-                    worksheet.Cells[row, col++].Value = salesDiff;
-
-                    // Highlight significant differences
-                    if (Math.Abs(volumeDiff) > 0.1m)
-                    {
-                        worksheet.Cells[row, col - 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[row, col - 2].Style.Fill.BackgroundColor.SetColor(
-                            volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
-                    }
-
-                    if (Math.Abs(salesDiff) > 0.1m)
-                    {
-                        worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
-                            salesDiff < 0 ? Color.LightPink : Color.LightGreen);
-                    }
+                    worksheet.Cells[row, col - 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 2].Style.Fill.BackgroundColor.SetColor(
+                        volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
-                else
+
+                if (Math.Abs(salesDiff) > 0.1m)
                 {
-                    // Skip difference columns
-                    col += 2;
+                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                        salesDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
                 row++;
@@ -244,6 +239,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[totalRow, col++].Value = "";  // Shift column
             worksheet.Cells[totalRow, col++].Value = "";  // Shift column
             worksheet.Cells[totalRow, col++].Value = "";  // Product column
+            worksheet.Cells[totalRow, col++].Value = "";  // FMS Cashier
             worksheet.Cells[totalRow, col++].Value = "";  // FMS Cashier
 
             // Skip to FMS calculated values
@@ -289,16 +285,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             // Format numeric columns with number format
-            for (int c = 5; c <= col - 1; c++)
+            for (int c = 6; c <= col - 1; c++)
             {
-                if (c == 12) // Skip non-numeric columns if any
+                if (c == 13) // Skip non-numeric columns if any
                     continue;
 
                 worksheet.Cells[2, c, totalRow, c].Style.Numberformat.Format = numberFormat;
             }
 
             // Format date column
-            worksheet.Cells[2, 1, totalRow, 1].Style.Numberformat.Format = "yyyy/MM/dd";
+            worksheet.Cells[2, 1, totalRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
 
             // Add summary section
             row = totalRow + 2;
