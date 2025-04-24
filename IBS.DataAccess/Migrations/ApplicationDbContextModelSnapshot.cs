@@ -7526,6 +7526,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("product");
 
+                    b.Property<int>("PumpNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("pump_number");
+
                     b.Property<string>("ReferenceNo")
                         .HasColumnType("varchar(15)")
                         .HasColumnName("reference_no");
@@ -7733,6 +7737,39 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_mobility_sales_headers_station_code");
 
                     b.ToTable("mobility_sales_headers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityStationPump", b =>
+                {
+                    b.Property<int>("PumpId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("pump_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PumpId"));
+
+                    b.Property<int>("FmsPump")
+                        .HasColumnType("integer")
+                        .HasColumnName("fms_pump");
+
+                    b.Property<int>("PosPump")
+                        .HasColumnType("integer")
+                        .HasColumnName("pos_pump");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("product_code");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("station_code");
+
+                    b.HasKey("PumpId")
+                        .HasName("pk_mobility_station_pumps");
+
+                    b.ToTable("mobility_station_pumps", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.ViewModels.FuelSalesView", b =>

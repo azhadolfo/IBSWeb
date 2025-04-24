@@ -61,6 +61,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
 
+        public DbSet<MobilityStationPump> MobilityStationPumps { get; set; }
+
         #endregion
 
         #region--Purchase Entity

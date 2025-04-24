@@ -132,6 +132,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             StationCode = salesHeader.StationCode,
                             Product = fuel.ItemCode,
                             Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
+                            PumpNumber = fuel.xPUMP,
                             Closing = fuel.Closing,
                             Opening = fuel.Opening,
                             Liters = fuel.Liters,
@@ -1322,7 +1323,12 @@ namespace IBS.DataAccess.Repository.Mobility
                 foreach (var fuel in data.FuelSales.OrderBy(f => f.ProductCode))
                 {
                     var product = await _db.MobilityProducts
-                        .FirstOrDefaultAsync(p => p.ProductCode == fuel.ProductCode, cancellationToken) ?? throw new NullReferenceException($"Product {fuel.ProductCode} not found");
+                        .FirstOrDefaultAsync(p => p.ProductCode == fuel.ProductCode, cancellationToken) ?? throw new NullReferenceException($"Product {fuel.ProductCode} not found in {salesHeader.StationCode}.");
+
+                    var posPumpNo = await _db.MobilityStationPumps
+                        .FirstOrDefaultAsync(p => p.StationCode == salesHeader.StationCode &&
+                                                  p.FmsPump == fuel.PumpNumber && p.ProductCode.ToUpper() == fuel.ProductCode.ToUpper(),
+                            cancellationToken) ?? throw new NullReferenceException($"Pump {fuel.PumpNumber} not found in {salesHeader.StationCode}.");
 
                     var salesDetail = new MobilitySalesDetail()
                     {
@@ -1330,7 +1336,8 @@ namespace IBS.DataAccess.Repository.Mobility
                         SalesNo = salesHeader.SalesNo,
                         StationCode = salesHeader.StationCode,
                         Product = product.ProductCode,
-                        Particular = $"{product.ProductName} (P{fuel.PumpNumber})",
+                        Particular = $"{product.ProductName} (P{posPumpNo.PosPump})",
+                        PumpNumber = posPumpNo.PosPump,
                         Closing = fuel.Closing,
                         Opening = fuel.Opening,
                         Liters = fuel.Closing - fuel.Opening,

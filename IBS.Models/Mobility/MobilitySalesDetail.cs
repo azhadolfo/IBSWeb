@@ -67,5 +67,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal? PreviousPrice { get; set; }
+
+        public int PumpNumber { get; set; }
     }
 }
