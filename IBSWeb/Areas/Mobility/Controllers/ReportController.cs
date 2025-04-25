@@ -55,7 +55,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var salesHeaders = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
-                .Where(s => s.Date.Month == model.Period.Month && s.Date.Year == model.Period.Year && s.StationCode == stationCodeClaim)
+                .Where(s => s.Date.Month == model.Period.Month &&
+                            s.Date.Year == model.Period.Year &&
+                            s.StationCode == stationCodeClaim)
                 .OrderBy(s => s.Date)
                 .ThenBy(s => s.Shift)
                 .ToListAsync();
@@ -78,6 +80,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Price = d.Price,
                     Value = d.Value
                 }))
+                .Where(x => x.PumpNumber != 0)
                 .GroupBy(x => new { x.Date, x.Shift, x.PageNumber, x.Product, x.PumpNumber })
                 .OrderBy(g => g.Key.Date)
                 .ThenBy(g => g.Key.Shift)
@@ -280,12 +283,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
             decimal totalSalesDiff = posSalesTotal - fmsSalesTotal;
 
             worksheet.Cells[totalRow, col++].Value = "";
-            worksheet.Cells[totalRow, col++].Value = posVolumeTotal;
             worksheet.Cells[totalRow, col++].Value = fmsVolumeTotal;
+            worksheet.Cells[totalRow, col++].Value = posVolumeTotal;
             worksheet.Cells[totalRow, col++].Value = totalVolumeDiff;
 
-            worksheet.Cells[totalRow, col++].Value = posSalesTotal;
             worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = posSalesTotal;
             worksheet.Cells[totalRow, col++].Value = totalSalesDiff;
 
             // Highlight total row
@@ -310,7 +313,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Format numeric columns with number format
             for (int c = 6; c <= col - 1; c++)
             {
-                if (c == 15) // Skip non-numeric columns if any
+                if (c == 14) // Skip non-numeric columns if any
                     continue;
 
                 worksheet.Cells[2, c, totalRow, c].Style.Numberformat.Format = numberFormat;
@@ -322,8 +325,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Add summary section
             row = totalRow + 2;
             worksheet.Cells[row, 1].Value = "SUMMARY";
+            worksheet.Cells[row, 1, row, 3].Merge = true;
             worksheet.Cells[row, 1].Style.Font.Bold = true;
             worksheet.Cells[row, 1].Style.Font.Size = 14;
+            worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
 
             row++;
             worksheet.Cells[row, 1].Value = "Source";
@@ -369,22 +374,148 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
             }
 
+            row += 2;
+            worksheet.Cells[row, 1].Value = "PUMP AND PRODUCT SUMMARY";
+            worksheet.Cells[row, 1, row, 6].Merge = true;
+            worksheet.Cells[row, 1].Style.Font.Bold = true;
+            worksheet.Cells[row, 1].Style.Font.Size = 14;
+            worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
 
+            row++;
+            worksheet.Cells[row, 1].Value = "Source";
+            worksheet.Cells[row, 2].Value = "Product";
+            worksheet.Cells[row, 3].Value = "Pump";
+            worksheet.Cells[row, 4].Value = "Closing";
+            worksheet.Cells[row, 5].Value = "Opening";
+            worksheet.Cells[row, 6].Value = "Total Volume";
+
+            // Style header
+            using (var range = worksheet.Cells[row, 1, row, 6])
+            {
+                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+            }
+
+            // Get distinct products and pumps for summary
+            var products = groupedData.Select(g => g.Key.Product).Distinct().OrderBy(p => p).ToList();
+            var pumps = groupedData.Select(g => g.Key.PumpNumber).Distinct().OrderBy(p => p).ToList();
+
+            var extremesBySrcProdPump = salesHeaders
+                .SelectMany(h => h.SalesDetails.Select(d => new
+                {
+                    h.Source,
+                    d.Product,
+                    d.PumpNumber,
+                    d.Closing,
+                    d.Opening
+                }))
+                .Where(x => x.PumpNumber != 0 && x.Product.Contains("PET"))
+                .GroupBy(x => new { x.Source, x.Product, x.PumpNumber })
+                .ToDictionary(
+                    g => g.Key,
+                    g => new
+                    {
+                        MaxClosing = g.Max(x => x.Closing),
+                        MinOpening = g.Where(x => x.Opening > 0).Min(x => x.Opening) //Exclude the zero
+                    });
+
+
+            // Add rows for each product/pump combination for both POS and FMS
+            foreach (var source in new[] { "POS", "FMS" })
+            {
+                decimal grandTotal = 0;
+
+                foreach (var product in products)
+                {
+                    decimal productTotal = 0;
+
+                    foreach (var pump in pumps)
+                    {
+
+                        row++;
+                        worksheet.Cells[row, 1].Value = source;
+                        worksheet.Cells[row, 2].Value = product;
+                        worksheet.Cells[row, 3].Value = pump;
+
+                        var key = new { Source = source, Product = product, PumpNumber = pump };
+
+                        if (extremesBySrcProdPump.TryGetValue(key, out var ext))
+                        {
+                            worksheet.Cells[row, 4].Value = ext.MaxClosing;
+                            worksheet.Cells[row, 5].Value = ext.MinOpening;
+
+                            var totalVolume = ext.MaxClosing - ext.MinOpening;
+                            worksheet.Cells[row, 6].Value = totalVolume;
+
+                            productTotal += totalVolume;
+                        }
+                        else
+                        {
+                            worksheet.Cells[row, 4, row, 6].Value = 0m;
+                        }
+
+                        worksheet.Cells[row, 4, row, 6].Style.Numberformat.Format = numberFormat;
+
+                        using (var range = worksheet.Cells[row, 1, row, 6])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        }
+                    }
+
+                    // Add subtotal row for this product
+                    row++;
+                    worksheet.Cells[row, 1].Value = "TOTAL";
+                    worksheet.Cells[row, 1, row, 5].Merge = true;
+                    worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[row, 6].Value = productTotal;
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = numberFormat;
+                    worksheet.Cells[row, 1, row, 6].Style.Font.Bold = true;
+
+                    grandTotal += productTotal;
+
+                    using (var range = worksheet.Cells[row, 1, row, 6])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    }
+                }
+
+                row++;
+                worksheet.Cells[row, 1].Value = "GRAND TOTAL";
+                worksheet.Cells[row, 1, row, 5].Merge = true;
+                worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[row, 6].Value = grandTotal;
+                worksheet.Cells[row, 6].Style.Numberformat.Format = numberFormat;
+                worksheet.Cells[row, 1, row, 6].Style.Font.Bold = true;
+
+                using (var range = worksheet.Cells[row, 1, row, 6])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Add a blank row between sources
+                if (source == "POS")
+                {
+                    row++;
+                }
+            }
 
             // Auto-fit columns
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
             worksheet.Column(differenceSpacesIndex).Width = 1;
             worksheet.Column(posSpacesIndex).Width = 1;
 
-            // for (int i = 1; i <= worksheet.Dimension.End.Column; i++)
-            // {
-            //     if (i != spacesIndex)
-            //     {
-            //         worksheet.Column(i).AutoFit();
-            //     }
-            // }
-
-            var excelBytes = package.GetAsByteArray();
+            var excelBytes = await package.GetAsByteArrayAsync();
 
             return File(
                 excelBytes,
