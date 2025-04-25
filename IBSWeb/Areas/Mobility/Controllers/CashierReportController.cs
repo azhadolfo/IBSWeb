@@ -65,13 +65,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
                     salesHeaderWithStationName = salesHeaderWithStationName
                         .Where(s =>
-                            s.StationCodeWithName.ToLower().Contains(searchValue) ||
-                            s.SalesNo.ToLower().Contains(searchValue) ||
-                            s.Date.ToString().Contains(searchValue) ||
-                            s.Cashier.ToLower().Contains(searchValue) ||
-                            s.Shift.ToString().Contains(searchValue) ||
-                            s.TimeIn.ToString().Contains(searchValue) ||
-                            s.TimeOut.ToString().Contains(searchValue))
+                            s.stationCodeWithName.ToLower().Contains(searchValue) ||
+                            s.salesNo.ToLower().Contains(searchValue) ||
+                            s.date.ToString().Contains(searchValue) ||
+                            s.cashier.ToLower().Contains(searchValue) ||
+                            s.shift.ToString().Contains(searchValue) ||
+                            s.timeIn.ToString().Contains(searchValue) ||
+                            s.timeOut.ToString().Contains(searchValue))
                         .ToList();
                 }
 
