@@ -90,7 +90,7 @@
                 <div class="row">
                     <div class="form-floating col-3 my-3">
                         <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" required>
-                        <label asp-for="MMSIBillingNumber" for="MMSIBillingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
+                        <label asp-for="MMSIBillingNumber" for="billingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
                     </div>
                     <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
@@ -371,6 +371,7 @@
 
                 if (customerId) {
                     $dispatchSelect.prop("disabled", false);
+                    $dispatchSelect.prop("required", true);
                     $dispatchSelect.val("0").trigger("change");
                     $vatableDiv.removeClass("d-none");
                     $.ajax({
@@ -493,7 +494,15 @@
 
             function areYouSureToBill (event) {
 
-                event.preventDefault();
+                event.preventDefault(); // stop the default form submission
+
+                const form = document.getElementById("myForm");
+
+                if (!form.checkValidity()) {
+                    // If form is not valid, trigger built-in validation UI
+                    form.reportValidity();
+                    return;
+                }
                 
                 Swal.fire({
                     title: "Are you sure with this billing?",
@@ -503,7 +512,7 @@
                     cancelButtonText: "No"
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        document.getElementById('submitButton').form.submit();
+                        document.getElementById('myForm').requestSubmit();
                     }
                 })
             }
