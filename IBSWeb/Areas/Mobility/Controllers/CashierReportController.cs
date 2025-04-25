@@ -110,17 +110,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
         }
 
-        public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
-            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCode, cancellationToken);
+
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCodeClaim, cancellationToken);
 
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
-                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCodeClaim, cancellationToken);
 
             if (sales == null)
             {
@@ -131,22 +134,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(sales);
         }
 
-        public async Task<IActionResult> Post(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (!string.IsNullOrEmpty(id))
             {
                 try
                 {
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
+
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
-                    return RedirectToAction(nameof(Preview), new { id, stationCode });
+                    return RedirectToAction(nameof(Preview), new { id });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return RedirectToAction(nameof(Preview), new { id, stationCode });
+                    return RedirectToAction(nameof(Preview), new { id });
                 }
             }
 
@@ -154,14 +159,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            var sales = await _unitOfWork.MobilitySalesHeader.GetAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
+            var sales = await _unitOfWork.MobilitySalesHeader
+                .GetAsync(s => s.SalesNo == id &&
+                               s.StationCode == stationCodeClaim, cancellationToken);
 
             if (sales == null)
             {

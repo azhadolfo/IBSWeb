@@ -146,15 +146,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
-                return RedirectToAction(nameof(CashierReportController.Preview), "CashierReport", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(CashierReportController.Preview), "CashierReport", new { area = nameof(Mobility), id = transactionNo });
             }
             else if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
-                return RedirectToAction(nameof(PurchaseController.PreviewFuel), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(PurchaseController.PreviewFuel), "Purchase", new { area = nameof(Mobility), id = transactionNo });
             }
             else
             {
-                return RedirectToAction(nameof(PurchaseController.PreviewLube), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(PurchaseController.PreviewLube), "Purchase", new { area = nameof(Mobility), id = transactionNo });
             }
         }
 

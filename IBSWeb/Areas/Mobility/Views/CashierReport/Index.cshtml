@@ -141,14 +141,11 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                            var editUrl = '@Url.Action("Edit", "CashierReport", new { area = "Mobility" })' + '?id=' + row.salesNo + '&stationCode=' + row.stationCode;
-                            var previewUrl = '@Url.Action("Preview", "CashierReport", new { area = "Mobility" })' + '?id=' + row.salesNo + '&stationCode=' + row.stationCode;
-
                             if (row.postedBy === null) {
-                                actions += `<li><a class="dropdown-item" href="@Url.Action("Edit", "CashierReport", new { area = "Mobility" })?id=${row.salesNo}&stationCode=${row.stationCode}">Edit</a></li>`;
+                                actions += `<li><a class="dropdown-item" href="@Url.Action("Edit", "CashierReport", new { area = "Mobility" })/${row.salesNo}">Edit</a></li>`;
                             }
 
-                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CashierReport", new { area = "Mobility" })?id=${row.salesNo}&stationCode=${row.stationCode}">Preview</a></li>`;
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CashierReport", new { area = "Mobility" })/${row.salesNo}">Preview</a></li>`;
 
                             actions += `</ul></div>`;
                             return actions;

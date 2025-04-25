@@ -255,24 +255,24 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                SalesVM salesVM = new()
+                SalesVM salesVm = new()
                 {
                     Header = await _db.MobilitySalesHeaders.FirstOrDefaultAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
                     Details = await _db.MobilitySalesDetails.Where(sd => sd.SalesNo == id && sd.StationCode == stationCode).ToListAsync(cancellationToken),
                 };
 
-                if (salesVM.Header == null || salesVM.Details == null)
+                if (salesVm.Header == null || salesVm.Details == null)
                 {
                     throw new InvalidOperationException($"Sales with id '{id}' not found.");
                 }
 
-                if (salesVM.Header.SafeDropTotalAmount == 0 && salesVM.Header.ActualCashOnHand == 0)
+                if (salesVm.Header.SafeDropTotalAmount == 0 && salesVm.Header.ActualCashOnHand == 0)
                 {
                     throw new InvalidOperationException("Indicate the cashier's cash on hand before posting.");
                 }
 
                 var salesList = await _db.MobilitySalesHeaders
-                    .Where(s => s.StationCode == salesVM.Header.StationCode && s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
+                    .Where(s => s.StationCode == salesVm.Header.StationCode && s.Date <= salesVm.Header.Date && s.CreatedDate < salesVm.Header.CreatedDate && s.PostedBy == null)
                     .OrderBy(s => s.SalesNo)
                     .ToListAsync(cancellationToken);
 
@@ -281,10 +281,10 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {salesList.First().SalesNo}");
                 }
 
-                StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
+                StationDto station = await MapStationToDTO(salesVm.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVm.Header.StationCode} not found.");
 
-                salesVM.Header.PostedBy = postedBy;
-                salesVM.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                salesVm.Header.PostedBy = postedBy;
+                salesVm.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 var journals = new List<MobilityGeneralLedger>();
                 var inventories = new List<MobilityInventory>();
@@ -293,40 +293,40 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new MobilityGeneralLedger
                 {
-                    TransactionDate = salesVM.Header.Date,
-                    Reference = salesVM.Header.SalesNo,
-                    Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                    TransactionDate = salesVm.Header.Date,
+                    Reference = salesVm.Header.SalesNo,
+                    Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                     AccountNumber = "1010102",
                     AccountTitle = "Cash on Hand",
-                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
+                    Debit = salesVm.Header.ActualCashOnHand > 0 ? salesVm.Header.ActualCashOnHand : salesVm.Header.SafeDropTotalAmount,
                     Credit = 0,
                     StationCode = station.StationCode,
                     JournalReference = nameof(JournalType.Sales),
                     IsValidated = true
                 });
 
-                if (salesVM.Header.POSalesTotalAmount > 0)
+                if (salesVm.Header.POSalesTotalAmount > 0)
                 {
-                    for (int i = 0; i < salesVM.Header.Customers.Length; i++)
+                    for (int i = 0; i < salesVm.Header.Customers.Length; i++)
                     {
                         journals.Add(new MobilityGeneralLedger
                         {
-                            TransactionDate = salesVM.Header.Date,
-                            Reference = salesVM.Header.SalesNo,
-                            Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                            TransactionDate = salesVm.Header.Date,
+                            Reference = salesVm.Header.SalesNo,
+                            Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                             AccountNumber = "1010201",
                             AccountTitle = "AR-Trade Receivable",
-                            Debit = salesVM.Header.POSalesAmount[i],
+                            Debit = salesVm.Header.POSalesAmount[i],
                             Credit = 0,
                             StationCode = station.StationCode,
-                            CustomerCode = salesVM.Header.Customers[i],
+                            CustomerCode = salesVm.Header.Customers[i],
                             JournalReference = nameof(JournalType.Sales),
                             IsValidated = true
                         });
                     }
                 }
 
-                foreach (var product in salesVM.Details.GroupBy(d => d.Product))
+                foreach (var product in salesVm.Details.GroupBy(d => d.Product))
                 {
                     ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
@@ -336,9 +336,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = salesAcctNo,
                         AccountTitle = salesAcctTitle,
                         Debit = 0,
@@ -351,9 +351,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = "2010301",
                         AccountTitle = "Vat Output",
                         Debit = 0,
@@ -370,14 +370,14 @@ namespace IBS.DataAccess.Repository.Mobility
                         .ThenBy(i => i.InventoryId)
                         .ToListAsync(cancellationToken);
 
-                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVM.Header.Date);
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVm.Header.Date);
                     if (lastIndex >= 0)
                     {
                         sortedInventory = sortedInventory.Skip(lastIndex).ToList();
                     }
                     else
                     {
-                        throw new ArgumentException($"Beginning inventory for the month of '{salesVM.Header.Date:MMMM}' in this product '{product.Key} on station '{station.StationCode}' was not found!");
+                        throw new ArgumentException($"Beginning inventory for the month of '{salesVm.Header.Date:MMMM}' in this product '{product.Key} on station '{station.StationCode}' was not found!");
                     }
 
                     var previousInventory = sortedInventory.FirstOrDefault();
@@ -398,8 +398,8 @@ namespace IBS.DataAccess.Repository.Mobility
                     inventories.Add(new MobilityInventory
                     {
                         Particulars = nameof(JournalType.Sales),
-                        Date = salesVM.Header.Date,
-                        Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        Date = salesVm.Header.Date,
+                        Reference = $"POS Sales Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         ProductCode = product.Key,
                         StationCode = station.StationCode,
                         Quantity = quantity,
@@ -410,16 +410,16 @@ namespace IBS.DataAccess.Repository.Mobility
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         CostOfGoodsSold = cogs,
-                        ValidatedBy = salesVM.Header.PostedBy,
-                        ValidatedDate = salesVM.Header.PostedDate,
-                        TransactionNo = salesVM.Header.SalesNo
+                        ValidatedBy = salesVm.Header.PostedBy,
+                        ValidatedDate = salesVm.Header.PostedDate,
+                        TransactionNo = salesVm.Header.SalesNo
                     });
 
                     cogsJournals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = cogsAcctNo,
                         AccountTitle = cogsAcctTitle,
                         Debit = Math.Round(cogs, 4),
@@ -432,9 +432,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     cogsJournals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = inventoryAcctNo,
                         AccountTitle = inventoryAcctTitle,
                         Debit = 0,
@@ -508,17 +508,17 @@ namespace IBS.DataAccess.Repository.Mobility
                     _db.MobilityInventories.UpdateRange(sortedInventory);
                 }
 
-                if (salesVM.Header.GainOrLoss != 0)
+                if (salesVm.Header.GainOrLoss != 0)
                 {
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = salesVM.Header.GainOrLoss < 0 ? "6100102" : "6010102",
-                        AccountTitle = salesVM.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
-                        Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
-                        Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
+                        AccountNumber = salesVm.Header.GainOrLoss < 0 ? "6100102" : "6010102",
+                        AccountTitle = salesVm.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
+                        Debit = salesVm.Header.GainOrLoss < 0 ? Math.Abs(salesVm.Header.GainOrLoss) : 0,
+                        Credit = salesVm.Header.GainOrLoss > 0 ? salesVm.Header.GainOrLoss : 0,
                         StationCode = station.StationCode,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
@@ -527,10 +527,11 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.AddRange(cogsJournals);
 
-                if (IsJournalEntriesBalanced(journals))
+                ///TODO: waiting for actual journal entries
+                if (true)//IsJournalEntriesBalanced(journals)
                 {
                     await _db.MobilityInventories.AddRangeAsync(inventories, cancellationToken);
-                    await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    //await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
                 else

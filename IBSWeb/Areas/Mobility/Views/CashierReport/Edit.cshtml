@@ -2,7 +2,10 @@
 
 @{
     ViewData["Title"] = "Edit Cashier Report";
-    Model.SalesDetails = Model.SalesDetails.OrderBy(x => x.Product).ToList();
+    Model.SalesDetails = Model.SalesDetails
+        .OrderBy(x => x.Product)
+        .ThenBy(x => x.PumpNumber)
+        .ToList();
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
