@@ -1293,12 +1293,15 @@ namespace IBS.DataAccess.Repository.Mobility
 
             foreach (var data in fmsDataByShift)
             {
+                var employee = await _db.MobilityStationEmployees
+                    .FirstOrDefaultAsync(e => e.EmployeeNumber == data.Shift.EmployeeNumber, cancellationToken);
+
                 var salesHeader = new MobilitySalesHeader()
                 {
                     SalesNo = await GenerateSeriesNumberForFmsSales(data.Shift.StationCode),
                     Date = data.Shift.Date,
                     StationCode = data.Shift.StationCode,
-                    Cashier = data.Shift.EmployeeNumber,
+                    Cashier = employee?.FirstName ?? data.Shift.EmployeeNumber,
                     Shift = data.Shift.ShiftNumber,
                     PageNumber = data.Shift.PageNumber,
                     CreatedBy = "System Generated",

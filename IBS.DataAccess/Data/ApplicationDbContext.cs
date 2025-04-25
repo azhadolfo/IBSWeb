@@ -99,6 +99,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MobilityService> MobilityServices { get; set; }
 
+        public DbSet<MobilityStationEmployee> MobilityStationEmployees { get; set; }
+
         #endregion
 
         #region--Log Report
