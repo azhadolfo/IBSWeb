@@ -36,26 +36,26 @@
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.CreateDate</td>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VOYAGE #:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VoyageNumber</td>
-                        </tr>
-                        <tr>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster.TugMasterName</td>
                         </tr>
                         <tr>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatName</td>
                         </tr>
                         <tr>
-                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselName</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL TYPE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselType</td>
                         </tr>
                         <tr>
                             <td class="m-0 p-0 pt-3 ps-4" style="width: 120px;"><b>REMARKS: </b></td>
