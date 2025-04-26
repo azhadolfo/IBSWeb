@@ -35,6 +35,10 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task ProcessFmsCashierShiftGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
+        Task ProcessFmsPoSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessFmsDepositGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
         Task ComputeSalesReportForFms(CancellationToken cancellationToken = default);
 
     }

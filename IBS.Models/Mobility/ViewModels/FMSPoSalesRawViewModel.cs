@@ -24,7 +24,7 @@ namespace IBS.Models.Mobility.ViewModels
 
         public decimal contractprice { get; set; }
 
-        public TimeOnly time { get; set; }
+        public string time { get; set; }
 
         public DateOnly date { get; set; }
 

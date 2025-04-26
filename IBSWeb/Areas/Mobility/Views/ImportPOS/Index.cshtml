@@ -81,7 +81,7 @@
                         </tr>
                     </thead>
 
-                    @foreach (var obj in Model)
+                    @foreach (var obj in Model.OrderBy(x => x.TimeStamp))
                     {
                         <tr class="
                                     @{ switch (obj.LogLevel)

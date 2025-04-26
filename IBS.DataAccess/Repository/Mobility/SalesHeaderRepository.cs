@@ -1257,44 +1257,152 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
+        public async Task ProcessFmsPoSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSPoSalesRawViewModel>();
+            var poSales = new List<MobilityFMSPoSales>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsPoSales
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                poSales.Add(new MobilityFMSPoSales
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    CustomerCode = record.customercode,
+                    TripTicket = record.tripticket,
+                    DrNumber = record.drno,
+                    Driver = record.driver,
+                    PlateNo = record.plateno,
+                    ProductCode = record.productcode,
+                    Quantity = record.quantity,
+                    Price = record.price,
+                    ContractPrice = record.contractprice,
+                    Time = TimeOnly.TryParse(record.time, out var time) ? time : TimeOnly.MinValue,
+                    Date = record.date,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber,
+                });
+            }
+
+            if (poSales.Count > 0)
+            {
+                await _db.MobilityFmsPoSales.AddRangeAsync(poSales, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<int> ProcessFmsDepositGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSDepositRawViewModel>();
+            var deposits = new List<MobilityFMSDeposit>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsDeposits
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                deposits.Add(new MobilityFMSDeposit
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    Date = record.date,
+                    AccountNumber = record.accountno,
+                    Amount = record.amount,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber,
+                });
+            }
+
+            if (deposits.Count > 0)
+            {
+                await _db.MobilityFmsDeposits.AddRangeAsync(deposits, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return deposits.Count;
+        }
+
         public async Task ComputeSalesReportForFms(CancellationToken cancellationToken = default)
         {
             var fmsCashierShifts = await _db.MobilityFmsCashierShifts
-                .Where(f => !f.IsProcessed && f.Date.Year == DateTime.UtcNow.Year)
+                .Where(f => !f.IsProcessed)
                 .OrderBy(c => c.Date)
                 .ThenBy(c => c.ShiftNumber)
                 .ToListAsync(cancellationToken);
 
             var fmsFuelSales = await _db.MobilityFMSFuelSales
-                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .Where(f => !f.IsProcessed)
                 .OrderBy(f => f.ShiftDate)
                 .ThenBy(f => f.ShiftNumber)
                 .ToListAsync(cancellationToken);
 
             var fmsLubeSales = await _db.MobilityFMSLubeSales
-                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .Where(f => !f.IsProcessed)
                 .OrderBy(f => f.ShiftDate)
                 .ThenBy(f => f.ShiftNumber)
                 .ToListAsync(cancellationToken);
 
             var fmsCalibrations = await _db.MobilityFmsCalibrations
-                .Where(f => !f.IsProcessed && f.ShiftDate.Year == DateTime.UtcNow.Year)
+                .Where(f => !f.IsProcessed)
                 .OrderBy(f => f.ShiftDate)
                 .ThenBy(f => f.ShiftNumber)
                 .ToListAsync(cancellationToken);
+
+            var fmsPoSales = await _db.MobilityFmsPoSales
+                .Where(x => !x.IsProcessed && x.ShiftDate.Year == DateTime.UtcNow.Year)
+                .OrderBy(x => x.ShiftDate)
+                .ThenBy(x => x.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
 
             var fmsDataByShift = fmsCashierShifts.Select(shift => new
             {
                 Shift = shift,
                 FuelSales = fmsFuelSales.Where(f => f.ShiftRecordId == shift.ShiftRecordId).ToList(),
                 LubeSales = fmsLubeSales.Where(l => l.ShiftRecordId == shift.ShiftRecordId).ToList(),
-                Calibrations = fmsCalibrations.Where(c => c.ShiftRecordId == shift.ShiftRecordId).ToList()
+                Calibrations = fmsCalibrations.Where(c => c.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                POSales = fmsPoSales.Where(p => p.ShiftRecordId == shift.ShiftRecordId).ToList(),
             }).ToList();
 
             foreach (var data in fmsDataByShift)
             {
                 var employee = await _db.MobilityStationEmployees
                     .FirstOrDefaultAsync(e => e.EmployeeNumber == data.Shift.EmployeeNumber, cancellationToken);
+
+
 
                 var salesHeader = new MobilitySalesHeader()
                 {
@@ -1312,12 +1420,17 @@ namespace IBS.DataAccess.Repository.Mobility
                         : data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price) - data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price),
                     LubesTotalAmount = data.LubeSales.Sum(l => l.Quantity * l.Price),
                     SafeDropTotalAmount = data.Shift.CashOnHand,
-                    POSalesAmount = [],
-                    Customers = [],
+                    POSalesTotalAmount = data.POSales.Sum(p => p.Price * p.Quantity),
+                    POSalesAmount = data.POSales
+                        .Select(p => p.Price * p.Quantity)
+                        .ToArray(),
+                    Customers = data.POSales
+                        .Select(p => p.CustomerCode)
+                        .ToArray(),
                     Source = "FMS"
                 };
 
-                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
+                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount - salesHeader.POSalesTotalAmount;
                 salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
 
                 await _db.MobilitySalesHeaders.AddAsync(salesHeader, cancellationToken);

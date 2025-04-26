@@ -78,31 +78,35 @@ namespace IBS.Services
                     sessionCode);
                 await _dbContext.LogMessages.AddAsync(logMessage);
                 logMessage = new("Information", "GoogleDriveImportService",
-                    $"Import process started in {DateTimeHelper.GetCurrentPhilippineTime()}.");
+                    $"Import process started in {sessionStartDate}.");
                 await _dbContext.LogMessages.AddAsync(logMessage);
 
                 var posSalesModel = await ImportPosSales();
                 var purchasesModel = await ImportPurchases();
                 var fmsSalesModel = await ImportFmsSales();
 
-                foreach (var posSales in posSalesModel)
+                foreach (var fms in fmsSalesModel)
                 {
                     var purchase = purchasesModel
-                        .FirstOrDefault(s => s.StationName == posSales.StationName);
+                        .FirstOrDefault(s => s.StationName == fms.StationName);
 
-                    var fmsSales = fmsSalesModel
-                        .FirstOrDefault(s => s.StationName == posSales.StationName);
+                    var posSales = posSalesModel
+                        .FirstOrDefault(s => s.StationName == fms.StationName);
 
-                    var message = $"{posSales.Message} {purchase.Message} || {fmsSales.Message}";
-                    logMessage = new("Information", $"{posSales.StationName}", message);
+                    var message = $"{posSales.Message} {purchase.Message} || {fms.Message}";
+                    logMessage = new("Information", $"{fms.StationName}", message);
 
-                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) || !string.IsNullOrEmpty(posSales.OpeningFileStatus) ||
-                        !string.IsNullOrEmpty(purchase.CsvStatus) || !string.IsNullOrEmpty(posSales.CsvStatus))
+                    if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) ||
+                        !string.IsNullOrEmpty(posSales.OpeningFileStatus) ||
+                        !string.IsNullOrEmpty(fms.OpeningFileStatus) ||
+                        !string.IsNullOrEmpty(purchase.CsvStatus) ||
+                        !string.IsNullOrEmpty(posSales.CsvStatus) ||
+                        !string.IsNullOrEmpty(fms.CsvStatus))
                     {
                         logMessage.LogLevel = "Warning";
                     }
 
-                    if (!string.IsNullOrEmpty(purchase.Error) || !string.IsNullOrEmpty(posSales.Error))
+                    if (!string.IsNullOrEmpty(purchase.Error) || !string.IsNullOrEmpty(posSales.Error) || !string.IsNullOrEmpty(fms.Error))
                     {
                         logMessage.LogLevel = "Error";
                     }
@@ -130,12 +134,19 @@ namespace IBS.Services
 
                 _logger.LogInformation("==========GoogleDriveImportService.Execute - EXCEPTION: " + ex.Message + "==========");
 
-                LogMessage logMessage = new("Error", "GoogleDriveImportService",
-                    $"IMPORT SERVICE EXCEPTION {DateTimeHelper.GetCurrentPhilippineTime()}. Error: {ex.Message}.");
-                await _dbContext.LogMessages.AddAsync(logMessage);
-                logMessage = new("Information", "End",
+                LogMessage startMessage = new("Information", "Start",
                     sessionCode);
-                await _dbContext.LogMessages.AddAsync(logMessage);
+                await _dbContext.LogMessages.AddAsync(startMessage);
+                startMessage = new("Information", "GoogleDriveImportService",
+                    $"Import process started in {sessionStartDate}.");
+                await _dbContext.LogMessages.AddAsync(startMessage);
+
+                LogMessage endMessage = new("Error", "GoogleDriveImportService",
+                    $"IMPORT SERVICE EXCEPTION {DateTimeHelper.GetCurrentPhilippineTime()}. Error: {ex.Message}.");
+                await _dbContext.LogMessages.AddAsync(endMessage);
+                endMessage = new("Information", "End",
+                    sessionCode);
+                await _dbContext.LogMessages.AddAsync(endMessage);
                 await _dbContext.SaveChangesAsync();
             }
         }
@@ -372,8 +383,7 @@ namespace IBS.Services
                         var currentYear = DateTime.UtcNow.ToString("yyyy");
                         var files = fileList.Where(f =>
                                 (f.FileName.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
-                                f.FileName.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture) ||
-                                f.FileName.Contains("PO_SALES", StringComparison.CurrentCulture)) &&
+                                f.FileName.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture)) &&
                                 Path.GetFileNameWithoutExtension(f.FileName).EndsWith(DateTime.UtcNow.ToString(currentYear)));
 
                         if (!files.Any())
@@ -418,11 +428,6 @@ namespace IBS.Services
                                     lubesCount =
                                         await _unitOfWork.MobilityLubePurchaseHeader
                                             .ProcessLubeDeliveryGoogleDrive(file);
-                                }
-                                else if (fileName.Contains("po_sales"))
-                                {
-                                    poSalesCount =
-                                        await _unitOfWork.MobilityPOSales.ProcessPOSalesGoogleDrive(file);
                                 }
 
                                 fileOpened = true; // File opened successfully, exit the loop
@@ -510,6 +515,7 @@ namespace IBS.Services
 
             int fuelsCount;
             int lubesCount;
+            int depositCount;
 
             var stations = await _dbContext.MobilityStations
                 .Where(s => s.IsActive)
@@ -532,7 +538,9 @@ namespace IBS.Services
                                 (f.FileName.Contains("FMS_CALIBRATION", StringComparison.CurrentCultureIgnoreCase) ||
                                  f.FileName.Contains("FMS_CASHIER_SHIFT", StringComparison.CurrentCultureIgnoreCase) ||
                                  f.FileName.Contains("FMS_FUEL_SALES", StringComparison.CurrentCultureIgnoreCase) ||
-                                 f.FileName.Contains("FMS_LUBE_SALES", StringComparison.CurrentCultureIgnoreCase)) &&
+                                 f.FileName.Contains("FMS_LUBE_SALES", StringComparison.CurrentCultureIgnoreCase) ||
+                                 f.FileName.Contains("FMS_PO_SALES", StringComparison.CurrentCultureIgnoreCase) ||
+                                 f.FileName.Contains("FMS_DEPOSIT", StringComparison.CurrentCultureIgnoreCase)) &&
                                 Path.GetFileNameWithoutExtension(f.FileName).EndsWith(currentYear))
                             .ToList();
 
@@ -552,6 +560,7 @@ namespace IBS.Services
 
                         fuelsCount = 0;
                         lubesCount = 0;
+                        depositCount = 0;
 
                         foreach (var file in files)
                         {
@@ -578,6 +587,14 @@ namespace IBS.Services
                                 {
                                     await _unitOfWork.MobilitySalesHeader.ProcessFmsCashierShiftGoogleDrive(file);
                                 }
+                                else if (fileName.Contains("PO_SALES"))
+                                {
+                                   await _unitOfWork.MobilitySalesHeader.ProcessFmsPoSalesGoogleDrive(file);
+                                }
+                                else if (fileName.Contains("DEPOSIT"))
+                                {
+                                   depositCount = await _unitOfWork.MobilitySalesHeader.ProcessFmsDepositGoogleDrive(file);
+                                }
 
                                 fileOpened = true; // File opened successfully, exit the loop
                             }
@@ -596,13 +613,13 @@ namespace IBS.Services
                             }
                         }
 
-                        if (fuelsCount != 0 || lubesCount != 0)
+                        if (fuelsCount != 0 || lubesCount != 0 || depositCount != 0)
                         {
                             await _unitOfWork.MobilitySalesHeader.ComputeSalesReportForFms();
 
                             _logger.LogInformation("==========" + station.StationName + " SALES(FMS) IMPORTED==========");
 
-                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}'.";
+                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', DEPOSIT: '{depositCount}' .";
                         }
                         else
                         {
