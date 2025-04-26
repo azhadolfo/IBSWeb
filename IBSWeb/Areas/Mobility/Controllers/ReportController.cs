@@ -78,7 +78,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Calibration = d.Calibration,
                     Liters = d.Liters,
                     Price = d.Price,
-                    Value = d.Value
+                    Value = d.Value,
+                    CashDrop = h.ActualCashOnHand > 0 ? h.ActualCashOnHand : h.SafeDropTotalAmount,
+                    POSales = h.POSalesTotalAmount,
+                    FuelSales = h.FuelSalesTotalAmount,
                 }))
                 .Where(x => x.PumpNumber != 0)
                 .GroupBy(x => new { x.Date, x.Shift, x.PageNumber, x.Product, x.PumpNumber })
@@ -106,8 +109,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             // FMS Headers
             worksheet.Cells[1, col++].Value = "FMS CASHIER";
-            worksheet.Cells[1, col++].Value = "FMS CLOSING";
             worksheet.Cells[1, col++].Value = "FMS OPENING";
+            worksheet.Cells[1, col++].Value = "FMS CLOSING";
             worksheet.Cells[1, col++].Value = "FMS CALIBRATION";
             worksheet.Cells[1, col++].Value = "FMS VOLUME";
             worksheet.Cells[1, col++].Value = "FMS PRICE";
@@ -117,8 +120,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var posSpacesIndex = col;
             worksheet.Cells[1, col++].Value = "";
             worksheet.Cells[1, col++].Value = "POS CASHIER";
-            worksheet.Cells[1, col++].Value = "POS CLOSING";
             worksheet.Cells[1, col++].Value = "POS OPENING";
+            worksheet.Cells[1, col++].Value = "POS CLOSING";
             worksheet.Cells[1, col++].Value = "POS CALIBRATION";
             worksheet.Cells[1, col++].Value = "POS VOLUME";
             worksheet.Cells[1, col++].Value = "POS PRICE";
@@ -130,8 +133,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[1, col++].Value = "FMS VOLUME";
             worksheet.Cells[1, col++].Value = "POS VOLUME";
             worksheet.Cells[1, col++].Value = "VARIANCE";
+
             worksheet.Cells[1, col++].Value = "FMS SALES";
             worksheet.Cells[1, col++].Value = "POS SALES";
+            worksheet.Cells[1, col++].Value = "VARIANCE";
+
+            worksheet.Cells[1, col++].Value = "FMS PO SALES";
+            worksheet.Cells[1, col++].Value = "POS PO SALES";
+            worksheet.Cells[1, col++].Value = "VARIANCE";
+
+            worksheet.Cells[1, col++].Value = "FMS TOTAL SALES";
+            worksheet.Cells[1, col++].Value = "POS TOTAL SALES";
+            worksheet.Cells[1, col++].Value = "VARIANCE";
+
+            worksheet.Cells[1, col++].Value = "FMS CASH DROP";
+            worksheet.Cells[1, col++].Value = "POS CASH DROP";
             worksheet.Cells[1, col++].Value = "VARIANCE";
 
             // Style header row
@@ -156,10 +172,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Totals for summary
             decimal fmsCalibrationTotal = 0;
             decimal fmsVolumeTotal = 0;
-            decimal fmsSalesTotal = 0;
+            decimal fmsFuelSalesTotal = 0;
             decimal posCalibrationTotal = 0;
             decimal posVolumeTotal = 0;
+            decimal posFuelSalesTotal = 0;
+            decimal fmsCashdropTotal = 0;
+            decimal fmsPoSalesTotal = 0;
+            decimal posCashdropTotal = 0;
+            decimal posPoSalesTotal = 0;
             decimal posSalesTotal = 0;
+            decimal fmsSalesTotal = 0;
+
 
             foreach (var group in groupedData)
             {
@@ -178,8 +201,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 if (fmsData != null)
                 {
                     worksheet.Cells[row, col++].Value = fmsData.Cashier;
-                    worksheet.Cells[row, col++].Value = fmsData.Closing;
                     worksheet.Cells[row, col++].Value = fmsData.Opening;
+                    worksheet.Cells[row, col++].Value = fmsData.Closing;
                     worksheet.Cells[row, col++].Value = fmsData.Calibration;
                     worksheet.Cells[row, col++].Value = fmsData.Liters;
                     worksheet.Cells[row, col++].Value = fmsData.Price;
@@ -188,7 +211,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     // Add to totals
                     fmsCalibrationTotal += fmsData.Calibration;
                     fmsVolumeTotal += fmsData.Liters;
-                    fmsSalesTotal += fmsData.Value;
+                    fmsFuelSalesTotal += fmsData.Value;
                 }
                 else
                 {
@@ -201,8 +224,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     worksheet.Cells[row, col++].Value = "";
                     worksheet.Cells[row, col++].Value = posData.Cashier;
-                    worksheet.Cells[row, col++].Value = posData.Closing;
                     worksheet.Cells[row, col++].Value = posData.Opening;
+                    worksheet.Cells[row, col++].Value = posData.Closing;
                     worksheet.Cells[row, col++].Value = posData.Calibration;
                     worksheet.Cells[row, col++].Value = posData.Liters;
                     worksheet.Cells[row, col++].Value = posData.Price;
@@ -211,7 +234,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     // Add to totals
                     posCalibrationTotal += posData.Calibration;
                     posVolumeTotal += posData.Liters;
-                    posSalesTotal += posData.Value;
+                    posFuelSalesTotal += posData.Value;
                 }
                 else
                 {
@@ -220,7 +243,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
 
                 decimal volumeDiff = (posData?.Liters ?? 0m) - (fmsData?.Liters ?? 0m);
-                decimal salesDiff = (posData?.Value ?? 0m) - (fmsData?.Value ?? 0m);
 
                 worksheet.Cells[row, col++].Value = "";
                 worksheet.Cells[row, col++].Value = fmsData?.Liters;
@@ -235,6 +257,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         volumeDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
+                decimal salesDiff = (posData?.Value ?? 0m) - (fmsData?.Value ?? 0m);
+
                 worksheet.Cells[row, col++].Value = fmsData?.Value;
                 worksheet.Cells[row, col++].Value = posData?.Value;
                 worksheet.Cells[row, col++].Value = salesDiff;
@@ -245,6 +269,55 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
                     worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
                         salesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                }
+
+                decimal poSalesDiff = (posData?.POSales ?? 0m) - (fmsData?.POSales ?? 0m);
+                fmsPoSalesTotal += fmsData?.POSales ?? 0m;
+                posPoSalesTotal += posData?.POSales ?? 0m;
+
+                worksheet.Cells[row, col++].Value = fmsData?.POSales;
+                worksheet.Cells[row, col++].Value = posData?.POSales;
+                worksheet.Cells[row, col++].Value = poSalesDiff;
+
+
+                if (Math.Abs(poSalesDiff) > 0.1m)
+                {
+                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                        poSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                }
+
+                decimal totalPosSales = (posData?.Value ?? 0m) - (posData?.POSales ?? 0m);
+                decimal totalFmsSales = (fmsData?.Value ?? 0m) - (fmsData?.POSales ?? 0m);
+                decimal totalSalesDiff = totalPosSales - totalFmsSales;
+                posSalesTotal += totalPosSales;
+                fmsSalesTotal += totalFmsSales;
+
+                worksheet.Cells[row, col++].Value = totalFmsSales;
+                worksheet.Cells[row, col++].Value = totalPosSales;
+                worksheet.Cells[row, col++].Value = totalSalesDiff;
+
+                if (Math.Abs(totalSalesDiff) > 0.1m)
+                {
+                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                        totalSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                }
+
+                decimal cashDropDiff = (posData?.CashDrop ?? 0m) - (fmsData?.CashDrop ?? 0m);
+                fmsCashdropTotal += fmsData?.CashDrop ?? 0m;
+                posCashdropTotal += posData?.CashDrop ?? 0m;
+
+                worksheet.Cells[row, col++].Value = fmsData?.CashDrop;
+                worksheet.Cells[row, col++].Value = posData?.CashDrop;
+                worksheet.Cells[row, col++].Value = cashDropDiff;
+
+
+                if (Math.Abs(cashDropDiff) > 0.1m)
+                {
+                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                        cashDropDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
                 row++;
@@ -267,7 +340,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[totalRow, col++].Value = fmsCalibrationTotal;  // FMS Calibration
             worksheet.Cells[totalRow, col++].Value = fmsVolumeTotal;       // FMS Volume
             worksheet.Cells[totalRow, col++].Value = "";  // FMS Price
-            worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;        // FMS Sales
+            worksheet.Cells[totalRow, col++].Value = fmsFuelSalesTotal;        // FMS Sales
 
             worksheet.Cells[totalRow, col++].Value = "";
             worksheet.Cells[totalRow, col++].Value = "";  // POS Cashier
@@ -276,20 +349,35 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[totalRow, col++].Value = posCalibrationTotal;  // POS Calibration
             worksheet.Cells[totalRow, col++].Value = posVolumeTotal;       // POS Volume
             worksheet.Cells[totalRow, col++].Value = "";  // POS Price
-            worksheet.Cells[totalRow, col++].Value = posSalesTotal;        // POS Sales
+            worksheet.Cells[totalRow, col++].Value = posFuelSalesTotal;        // POS Sales
 
             // Calculate total differences
-            decimal totalVolumeDiff = posVolumeTotal - fmsVolumeTotal;
-            decimal totalSalesDiff = posSalesTotal - fmsSalesTotal;
+            decimal volumeSumDiff = posVolumeTotal - fmsVolumeTotal;
+            decimal salesSumDiff = posFuelSalesTotal - fmsFuelSalesTotal;
+            decimal casDropSumDiff = posCashdropTotal - fmsCashdropTotal;
+            decimal poSalesSumDiff = posPoSalesTotal - fmsPoSalesTotal;
+            decimal totalSalesSumDiff = posSalesTotal - fmsSalesTotal;
 
             worksheet.Cells[totalRow, col++].Value = "";
             worksheet.Cells[totalRow, col++].Value = fmsVolumeTotal;
             worksheet.Cells[totalRow, col++].Value = posVolumeTotal;
-            worksheet.Cells[totalRow, col++].Value = totalVolumeDiff;
+            worksheet.Cells[totalRow, col++].Value = volumeSumDiff;
+
+            worksheet.Cells[totalRow, col++].Value = fmsFuelSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = posFuelSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = salesSumDiff;
+
+            worksheet.Cells[totalRow, col++].Value = fmsPoSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = posPoSalesTotal;
+            worksheet.Cells[totalRow, col++].Value = poSalesSumDiff;
 
             worksheet.Cells[totalRow, col++].Value = fmsSalesTotal;
             worksheet.Cells[totalRow, col++].Value = posSalesTotal;
-            worksheet.Cells[totalRow, col++].Value = totalSalesDiff;
+            worksheet.Cells[totalRow, col++].Value = totalSalesSumDiff;
+
+            worksheet.Cells[totalRow, col++].Value = fmsCashdropTotal;
+            worksheet.Cells[totalRow, col++].Value = posCashdropTotal;
+            worksheet.Cells[totalRow, col++].Value = casDropSumDiff;
 
             // Highlight total row
             using (var range = worksheet.Cells[totalRow, 1, totalRow, col - 1])
@@ -333,40 +421,58 @@ namespace IBSWeb.Areas.Mobility.Controllers
             row++;
             worksheet.Cells[row, 1].Value = "Source";
             worksheet.Cells[row, 2].Value = "Total Volume";
-            worksheet.Cells[row, 3].Value = "Total Sales";
+            worksheet.Cells[row, 3].Value = "Total Fuel Sales";
+            worksheet.Cells[row, 4].Value = "Total PO Sales";
+            worksheet.Cells[row, 5].Value = "Total Sales";
+            worksheet.Cells[row, 6].Value = "Total Cash Drop";
 
             row++;
             worksheet.Cells[row, 1].Value = "FMS";
             worksheet.Cells[row, 2].Value = fmsVolumeTotal;
-            worksheet.Cells[row, 3].Value = fmsSalesTotal;
-            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
+            worksheet.Cells[row, 3].Value = fmsFuelSalesTotal;
+            worksheet.Cells[row, 4].Value = fmsPoSalesTotal;
+            worksheet.Cells[row, 5].Value = fmsSalesTotal;
+            worksheet.Cells[row, 6].Value = fmsCashdropTotal;
+            worksheet.Cells[row, 2, row, 6].Style.Numberformat.Format = numberFormat;
 
             row++;
             worksheet.Cells[row, 1].Value = "POS";
             worksheet.Cells[row, 2].Value = posVolumeTotal;
-            worksheet.Cells[row, 3].Value = posSalesTotal;
-            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
+            worksheet.Cells[row, 3].Value = posFuelSalesTotal;
+            worksheet.Cells[row, 4].Value = posPoSalesTotal;
+            worksheet.Cells[row, 5].Value = posSalesTotal;
+            worksheet.Cells[row, 6].Value = posCashdropTotal;
+            worksheet.Cells[row, 2, row, 6].Style.Numberformat.Format = numberFormat;
 
             row++;
             worksheet.Cells[row, 1].Value = "Difference";
-            worksheet.Cells[row, 2].Value = totalVolumeDiff;
-            worksheet.Cells[row, 3].Value = totalSalesDiff;
-            worksheet.Cells[row, 2, row, 3].Style.Font.Bold = true;
-            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = numberFormat;
+            worksheet.Cells[row, 2].Value = volumeSumDiff;
+            worksheet.Cells[row, 3].Value = salesSumDiff;
+            worksheet.Cells[row, 4].Value = poSalesSumDiff;
+            worksheet.Cells[row, 5].Value = totalSalesSumDiff;
+            worksheet.Cells[row, 6].Value = casDropSumDiff;
+            worksheet.Cells[row, 2, row, 6].Style.Font.Bold = true;
+            worksheet.Cells[row, 2, row, 6].Style.Numberformat.Format = numberFormat;
 
             // Add percentage difference
             row++;
-            decimal volumePercentDiff = fmsVolumeTotal != 0 ? (totalVolumeDiff / fmsVolumeTotal) : 0;
-            decimal salesPercentDiff = fmsSalesTotal != 0 ? (totalSalesDiff / fmsSalesTotal) : 0;
+            decimal volumePercentDiff = fmsVolumeTotal != 0 ? (volumeSumDiff / fmsVolumeTotal) : 0;
+            decimal salesPercentDiff = fmsFuelSalesTotal != 0 ? (salesSumDiff / fmsFuelSalesTotal) : 0;
+            decimal poSalesPercentDiff = fmsPoSalesTotal != 0 ? (poSalesSumDiff / fmsPoSalesTotal) : 0;
+            decimal totalSalesPercentDiff = fmsSalesTotal != 0 ? (totalSalesSumDiff / fmsSalesTotal) : 0;
+            decimal cashDropPercentDiff = fmsCashdropTotal != 0 ? (casDropSumDiff / fmsCashdropTotal) : 0;
 
             worksheet.Cells[row, 1].Value = "Percentage Diff";
             worksheet.Cells[row, 2].Value = volumePercentDiff;
             worksheet.Cells[row, 3].Value = salesPercentDiff;
-            worksheet.Cells[row, 2, row, 3].Style.Numberformat.Format = "0.00%";
-            worksheet.Cells[row, 2, row, 3].Style.Font.Bold = true;
+            worksheet.Cells[row, 4].Value = poSalesPercentDiff;
+            worksheet.Cells[row, 5].Value = totalSalesPercentDiff;
+            worksheet.Cells[row, 6].Value = cashDropPercentDiff;
+            worksheet.Cells[row, 2, row, 6].Style.Numberformat.Format = "0.00%";
+            worksheet.Cells[row, 2, row, 6].Style.Font.Bold = true;
 
             // Style summary table
-            using (var range = worksheet.Cells[totalRow + 3, 1, row, 3])
+            using (var range = worksheet.Cells[totalRow + 3, 1, row, 6])
             {
                 range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
@@ -385,8 +491,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             worksheet.Cells[row, 1].Value = "Source";
             worksheet.Cells[row, 2].Value = "Product";
             worksheet.Cells[row, 3].Value = "Pump";
-            worksheet.Cells[row, 4].Value = "Closing";
-            worksheet.Cells[row, 5].Value = "Opening";
+            worksheet.Cells[row, 4].Value = "Opening";
+            worksheet.Cells[row, 5].Value = "Closing";
             worksheet.Cells[row, 6].Value = "Total Volume";
 
             // Style header
@@ -443,8 +549,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         if (extremesBySrcProdPump.TryGetValue(key, out var ext))
                         {
-                            worksheet.Cells[row, 4].Value = ext.MaxClosing;
-                            worksheet.Cells[row, 5].Value = ext.MinOpening;
+                            worksheet.Cells[row, 4].Value = ext.MinOpening;
+                            worksheet.Cells[row, 5].Value = ext.MaxClosing;
 
                             var totalVolume = ext.MaxClosing - ext.MinOpening;
                             worksheet.Cells[row, 6].Value = totalVolume;
