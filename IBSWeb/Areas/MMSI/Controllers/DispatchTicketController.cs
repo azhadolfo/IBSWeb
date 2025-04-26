@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -20,13 +22,16 @@ namespace IBSWeb.Areas.MMSI
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly ILogger<DispatchTicketController> _logger;
 
-        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService)
+        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService, ILogger<DispatchTicketController> logger)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = clousStorageService;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -556,6 +561,118 @@ namespace IBSWeb.Areas.MMSI
             }
 
             return Json(item);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var queried = await _db.MMSIDispatchTickets
+                    .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled")
+                    .Include(dt => dt.ActivityService)
+                    .Include(dt => dt.Terminal)
+                    .ThenInclude(dt => dt.Port)
+                    .Include(dt => dt.Tugboat)
+                    .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Vessel)
+                    .ToListAsync(cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(dt =>
+                        dt.COSNumber?.ToLower().Contains(searchValue) == true ||
+                        dt.DispatchNumber?.ToString().Contains(searchValue) == true ||
+                        dt.ActivityService?.ActivityServiceName?.ToString().Contains(searchValue) == true ||
+                        dt.Terminal?.TerminalName?.ToString().Contains(searchValue) == true ||
+                        dt.Terminal?.Port?.PortName?.ToString().Contains(searchValue) == true ||
+                        dt.Tugboat?.TugboatName?.ToString().Contains(searchValue) == true ||
+                        dt.TugMaster?.TugMasterName?.ToString().Contains(searchValue) == true ||
+                        dt.Vessel?.VesselName?.ToString().Contains(searchValue) == true ||
+                        dt.Status.Contains(searchValue) == true
+                        )
+                    .ToList();
+                }
+
+                // Column-specific search
+                foreach (var column in parameters.Columns)
+                {
+                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    {
+                        var searchValue = column.Search.Value.ToLower();
+                        switch (column.Data)
+                        {
+                            case "status":
+                                if (searchValue == "for tariff")
+                                {
+                                    queried = queried.Where(s => s.Status == "For Tariff").ToList();
+                                }
+                                if (searchValue == "tariff pending")
+                                {
+                                    queried = queried.Where(s => s.Status == "Tariff Pending").ToList();
+                                }
+                                if (searchValue == "disapproved")
+                                {
+                                    queried = queried.Where(s => s.Status == "Disapproved").ToList();
+                                }
+                                if (searchValue == "for billing")
+                                {
+                                    queried = queried.Where(s => s.Status == "For Billing").ToList();
+                                }
+                                if (searchValue == "billed")
+                                {
+                                    queried = queried.Where(s => s.Status == "Billed").ToList();
+                                }
+                                else
+                                {
+                                    queried = queried.Where(s => s.Status != null).ToList();
+                                }
+                            break;
+                        }
+                    }
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = queried.Count();
+
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get disbursements.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken)

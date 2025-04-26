@@ -90,9 +90,6 @@
                         <th class="text-center" style="width: 100px;">Actions</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    
-                    </tbody>
                 </table>
 
                 <div class="row m-0 p-0 justify-content-end mt-2">
@@ -329,11 +326,11 @@
                                 {
                                     actions += `<li><a class="dropdown-item" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>`;
                                 }
-                                if (!string.IsNullOrEmpty(item.imageName))
+                                if (row.imageName)
                                 {
                                     actions += `<li><a class="dropdown-item view-upload" href="#" data-uploadname="${row.imageSignedUrl}"><i class="bi bi-eye-fill"></i> View Image</a></li>`;
                                 }
-                                if (!string.IsNullOrEmpty(item.videoName))
+                                if (row.videoName)
                                 {
                                     actions += `<li><a class="dropdown-item view-video" href="#" data-videolink="${row.videoSignedUrl}"><i class="bi bi-play-circle-fill"></i> Play Video</a></li>`;
                                 }
