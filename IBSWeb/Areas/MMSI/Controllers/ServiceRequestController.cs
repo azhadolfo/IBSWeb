@@ -1,5 +1,7 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -19,13 +21,16 @@ namespace IBSWeb.Areas.MMSI
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly ILogger<ServiceRequestController> _logger;
 
-        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService)
+        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService,
+            ILogger<ServiceRequestController> logger)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = cloudStorageService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -401,7 +406,7 @@ namespace IBSWeb.Areas.MMSI
             return Json(terminalsList);
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken = default)
         {
             var item = new List<MMSIDispatchTicket>();
@@ -429,6 +434,106 @@ namespace IBSWeb.Areas.MMSI
             }
 
             return Json(item);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var queried = await _db.MMSIDispatchTickets
+                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled")
+                    .Include(dt => dt.ActivityService)
+                    .Include(dt => dt.Terminal)
+                    .ThenInclude(dt => dt.Port)
+                    .Include(dt => dt.Tugboat)
+                    .Include(dt => dt.TugMaster)
+                    .Include(dt => dt.Vessel)
+                    .ToListAsync(cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(dt =>
+                        dt.COSNumber?.ToLower().Contains(searchValue) == true ||
+                        dt.DispatchNumber?.ToString().Contains(searchValue) == true ||
+                        dt.ActivityService?.ActivityServiceName?.ToString().Contains(searchValue) == true ||
+                        dt.Terminal?.TerminalName?.ToString().Contains(searchValue) == true ||
+                        dt.Terminal?.Port?.PortName?.ToString().Contains(searchValue) == true ||
+                        dt.Tugboat?.TugboatName?.ToString().Contains(searchValue) == true ||
+                        dt.TugMaster?.TugMasterName?.ToString().Contains(searchValue) == true ||
+                        dt.Vessel?.VesselName?.ToString().Contains(searchValue) == true ||
+                        dt.Status.Contains(searchValue) == true
+                        )
+                    .ToList();
+                }
+
+                // Column-specific search
+                foreach (var column in parameters.Columns)
+                {
+                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    {
+                        var searchValue = column.Search.Value.ToLower();
+                        switch (column.Data)
+                        {
+                            case "status":
+                                if (searchValue == "for posting")
+                                {
+                                    queried = queried.Where(s => s.Status == "For Posting").ToList();
+                                }
+                                if (searchValue == "cancelled")
+                                {
+                                    queried = queried.Where(s => s.Status == "Cancelled").ToList();
+                                }
+                                else
+                                {
+                                    queried = queried.Where(s => s.Status != null).ToList();
+                                }
+                            break;
+                        }
+                    }
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = queried.Count();
+
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get disbursements.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> DeleteImage(int id, CancellationToken cancellationToken = default)
