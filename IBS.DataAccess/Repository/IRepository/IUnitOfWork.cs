@@ -67,6 +67,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
 
+        IDepositRepository MobilityDeposit { get; }
+
         Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityStationListAsyncByCode(CancellationToken cancellationToken = default);

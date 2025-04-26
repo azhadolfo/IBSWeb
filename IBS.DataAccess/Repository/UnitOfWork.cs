@@ -73,6 +73,8 @@ namespace IBS.DataAccess.Repository
 
         public ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
 
+        public IDepositRepository MobilityDeposit { get; private set; }
+
         #endregion
 
         #region--Filpride
@@ -166,6 +168,7 @@ namespace IBS.DataAccess.Repository
             MobilityPurchaseOrder = new PurchaseOrderRepository(_db);
             MobilityReceivingReport = new ReceivingReportRepository(_db);
             MobilityCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
+            MobilityDeposit = new DepositRepository(_db);
 
             #endregion
 
