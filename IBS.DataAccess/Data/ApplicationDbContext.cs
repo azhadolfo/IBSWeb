@@ -63,6 +63,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MobilityStationPump> MobilityStationPumps { get; set; }
 
+        public DbSet<MobilityFMSPoSales> MobilityFmsPoSales { get; set; }
+
+        public DbSet<MobilityFMSDeposit> MobilityFmsDeposits { get; set; }
+
         #endregion
 
         #region--Purchase Entity
