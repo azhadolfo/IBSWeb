@@ -359,6 +359,32 @@ namespace IBS.DataAccess.Repository
             return stationString;
         }
 
+        public async Task<List<SelectListItem>> GetMobilityProductListAsyncByCode(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityProducts
+                .OrderBy(p => p.ProductId)
+                .Where(p => p.IsActive)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ProductCode,
+                    Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityProductListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityProducts
+                .OrderBy(p => p.ProductId)
+                .Where(p => p.IsActive)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.ProductId.ToString(),
+                    Text = p.ProductCode + " " + p.ProductName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
         #endregion
 
         #region--Filpride

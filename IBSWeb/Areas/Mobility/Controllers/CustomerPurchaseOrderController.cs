@@ -157,7 +157,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Where(cos => cos.CustomerPurchaseOrderId == id)
                 .FirstOrDefaultAsync();
 
-            model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 
             return View(model);
         }

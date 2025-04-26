@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             MobilityInventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
@@ -57,19 +57,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             IEnumerable<MobilityInventory> inventories;
             ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            model.StationCode = stationCodeClaims;
 
             var endingBalance = await _dbContext.MobilityInventories
                                     .OrderBy(e => e.Date)
                                     .ThenBy(e => e.InventoryId)
-                                    .Where(e => e.StationCode == stationCodeClaims)
+                                    .Where(e => e.StationCode == stationCodeClaims && e.ProductCode == model.ProductCode)
                                     .LastOrDefaultAsync(e => e.Date.Month - 1 == dateFrom.Month, cancellationToken)
                                 ?? await _dbContext.MobilityInventories
                                     .OrderBy(e => e.Date)
                                     .ThenBy(e => e.InventoryId)
-                                    .Where(e => e.StationCode == stationCodeClaims)
+                                    .Where(e => e.StationCode == stationCodeClaims && e.ProductCode == model.ProductCode)
                                     .LastOrDefaultAsync(cancellationToken);
 
             if (endingBalance != null)
@@ -91,6 +89,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             //inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
             StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
+
             ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
 
             ViewData["Product"] = $"{productDetails.ProductCode} {productDetails.ProductName.ToUpper()}";
@@ -102,7 +101,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             MobilityInventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
@@ -130,7 +129,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 _logger.LogError(ex, "Error in saving the beginning inventory.");
                 TempData["error"] = $"Error: '{ex.Message}'";
 
-                model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
                 model.Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
 
                 return View(model);
@@ -196,7 +195,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             ActualSoundingViewModel viewModel = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken)
             };
 
             return View(viewModel);
@@ -219,13 +218,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }

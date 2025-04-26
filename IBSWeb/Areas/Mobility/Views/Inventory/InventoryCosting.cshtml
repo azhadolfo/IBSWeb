@@ -72,7 +72,7 @@
             <h5>STATION: @ViewData["Station"]</h5>
             <h5>PRODUCT: @ViewData["Product"]</h5>
         </div>
-        <table class="table">
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th colspan="13" class="text-center table-primary">INVENTORY COSTING</th>
@@ -100,7 +100,16 @@
                         <td>@Html.DisplayFor(model => obj.Date)</td>
                         @if (obj.ValidatedBy != "N/A")
                         {
-                            <td><a asp-area="Mobility" asp-controller="Inventory" asp-action="ViewDetail" asp-route-transactionNo="@obj.TransactionNo" asp-route-productCode="@obj.ProductCode" asp-route-typeOfTransaction="@obj.Particulars" asp-route-stationCode="@obj.StationCode" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
+                            <td>
+                                <a asp-area="Mobility" asp-controller="Inventory" asp-action="ViewDetail"
+                                   asp-route-transactionNo="@obj.TransactionNo" 
+                                   asp-route-productCode="@obj.ProductCode" 
+                                   asp-route-typeOfTransaction="@obj.Particulars" 
+                                   asp-route-stationCode="@obj.StationCode" 
+                                   title="Click this link to preview." 
+                                   target="_blank">@Html.DisplayFor(model => obj.Reference)
+                                    </a>
+                            </td>
                         }
                         else
                         {

@@ -85,6 +85,10 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMobilityProductListAsyncByCode(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityProductListAsyncById(CancellationToken cancellationToken = default);
+
         #endregion
 
         #region--Filpride
