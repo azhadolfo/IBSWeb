@@ -311,7 +311,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', SAFE DROPS: '{safedropsCount}'.";
+                            model.HowManyImported = $"FUELS: '{fuelsCount:N0}', LUBES: '{lubesCount:N0}', SAFE DROPS: '{safedropsCount:N0}'.";
                         }
                         else
                         {
@@ -459,7 +459,7 @@ namespace IBS.Services
                             // await _dbContext.LogMessages.AddAsync(logMessage);
                             // await _dbContext.SaveChangesAsync();
 
-                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', PO SALES: '{poSalesCount}'.";
+                            model.HowManyImported = $"FUELS: '{fuelsCount:N0}', LUBES: '{lubesCount:N0}', PO SALES: '{poSalesCount:N0}'.";
                         }
                         else
                         {
@@ -619,7 +619,7 @@ namespace IBS.Services
 
                             _logger.LogInformation("==========" + station.StationName + " SALES(FMS) IMPORTED==========");
 
-                            model.HowManyImported = $"FUELS: '{fuelsCount}', LUBES: '{lubesCount}', DEPOSIT: '{depositCount}' .";
+                            model.HowManyImported = $"FUELS: '{fuelsCount:N0}', LUBES: '{lubesCount:N0}', DEPOSIT: '{depositCount:N0}' .";
                         }
                         else
                         {
