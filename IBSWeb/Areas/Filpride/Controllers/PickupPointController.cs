@@ -3,11 +3,9 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -137,6 +135,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     selected.SupplierId = model.SupplierId;
                     selected.IsFilpride = model.IsFilpride;
                     selected.IsMobility = model.IsMobility;
+                    selected.IsBienes = model.IsBienes;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);

@@ -339,7 +339,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Where(cos => cos.CustomerOrderSlipId == id)
                 .FirstOrDefaultAsync();
 
-            model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 
             if (!string.IsNullOrEmpty(model.SavedFileName))
             {
@@ -516,7 +516,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             query = query.Where(cos => cos.StationCode == currentStationCode);
-            
+
             item = await query.OrderBy(cos => cos.Date)
                 .ThenBy(cos => cos.CustomerOrderSlipNo)
                 .ToListAsync(cancellationToken);

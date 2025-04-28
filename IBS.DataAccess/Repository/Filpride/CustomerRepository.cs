@@ -1,9 +1,7 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -84,6 +82,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.RetentionRate = model.RetentionRate;
             existingCustomer.IsFilpride = model.IsFilpride;
             existingCustomer.IsMobility = model.IsMobility;
+            existingCustomer.IsBienes = model.IsBienes;
 
             if (_db.ChangeTracker.HasChanges())
             {

@@ -134,24 +134,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideServiceInvoice();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _dbContext.FilprideCustomers
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .OrderBy(c => c.CustomerId)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
-            viewModel.Services = await _dbContext.FilprideServices
-                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
-                .OrderBy(s => s.ServiceId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.Name
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
             return View(viewModel);
         }
 
@@ -161,24 +145,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _dbContext.FilprideCustomers
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .OrderBy(c => c.CustomerId)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
-            model.Services = await _dbContext.FilprideServices
-                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
-                .OrderBy(s => s.ServiceId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.Name
-                })
-                .ToListAsync(cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -618,24 +586,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _dbContext.FilprideCustomers
-                .OrderBy(c => c.CustomerId)
-                .Where(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility))
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CustomerId.ToString(),
-                    Text = c.CustomerName
-                })
-                .ToListAsync(cancellationToken);
-            existingModel.Services = await _dbContext.FilprideServices
-                .OrderBy(s => s.ServiceId)
-                .Where(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility))
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.Name
-                })
-                .ToListAsync(cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            existingModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
             return View(existingModel);
         }

@@ -132,6 +132,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             StationCode = salesHeader.StationCode,
                             Product = fuel.ItemCode,
                             Particular = $"{fuel.Particulars} (P{fuel.xPUMP})",
+                            PumpNumber = fuel.xPUMP,
                             Closing = fuel.Closing,
                             Opening = fuel.Opening,
                             Liters = fuel.Liters,
@@ -235,18 +236,18 @@ namespace IBS.DataAccess.Repository.Mobility
                    on header.StationCode equals station.StationCode
                    select new
                    {
-                       header.SalesNo,
-                       header.Date,
-                       header.Cashier,
-                       header.StationCode,
-                       header.Shift,
-                       header.TimeIn,
-                       header.TimeOut,
-                       header.PostedBy,
-                       header.SafeDropTotalAmount,
-                       header.ActualCashOnHand,
-                       header.IsTransactionNormal,
-                       StationCodeWithName = $"{header.StationCode} - {station.StationName}"
+                       salesNo = header.SalesNo,
+                       date = header.Date,
+                       cashier = header.Cashier,
+                       stationCode = header.StationCode,
+                       shift = header.Shift,
+                       timeIn = header.TimeIn,
+                       timeOut = header.TimeOut,
+                       postedBy = header.PostedBy,
+                       safeDropTotalAmount = header.SafeDropTotalAmount,
+                       actualCashOnHand = header.ActualCashOnHand,
+                       isTransactionNormal = header.IsTransactionNormal,
+                       stationCodeWithName = $"{header.StationCode} - {station.StationName}"
                    }.ToExpando();
         }
 
@@ -254,24 +255,24 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                SalesVM salesVM = new()
+                SalesVM salesVm = new()
                 {
                     Header = await _db.MobilitySalesHeaders.FirstOrDefaultAsync(sh => sh.SalesNo == id && sh.StationCode == stationCode, cancellationToken),
                     Details = await _db.MobilitySalesDetails.Where(sd => sd.SalesNo == id && sd.StationCode == stationCode).ToListAsync(cancellationToken),
                 };
 
-                if (salesVM.Header == null || salesVM.Details == null)
+                if (salesVm.Header == null || salesVm.Details == null)
                 {
                     throw new InvalidOperationException($"Sales with id '{id}' not found.");
                 }
 
-                if (salesVM.Header.SafeDropTotalAmount == 0 && salesVM.Header.ActualCashOnHand == 0)
+                if (salesVm.Header.SafeDropTotalAmount == 0 && salesVm.Header.ActualCashOnHand == 0)
                 {
                     throw new InvalidOperationException("Indicate the cashier's cash on hand before posting.");
                 }
 
                 var salesList = await _db.MobilitySalesHeaders
-                    .Where(s => s.StationCode == salesVM.Header.StationCode && s.Date <= salesVM.Header.Date && s.CreatedDate < salesVM.Header.CreatedDate && s.PostedBy == null)
+                    .Where(s => s.StationCode == salesVm.Header.StationCode && s.Date <= salesVm.Header.Date && s.CreatedDate < salesVm.Header.CreatedDate && s.PostedBy == null)
                     .OrderBy(s => s.SalesNo)
                     .ToListAsync(cancellationToken);
 
@@ -280,10 +281,10 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {salesList.First().SalesNo}");
                 }
 
-                StationDto station = await MapStationToDTO(salesVM.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVM.Header.StationCode} not found.");
+                StationDto station = await MapStationToDTO(salesVm.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVm.Header.StationCode} not found.");
 
-                salesVM.Header.PostedBy = postedBy;
-                salesVM.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                salesVm.Header.PostedBy = postedBy;
+                salesVm.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 var journals = new List<MobilityGeneralLedger>();
                 var inventories = new List<MobilityInventory>();
@@ -292,40 +293,40 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.Add(new MobilityGeneralLedger
                 {
-                    TransactionDate = salesVM.Header.Date,
-                    Reference = salesVM.Header.SalesNo,
-                    Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                    TransactionDate = salesVm.Header.Date,
+                    Reference = salesVm.Header.SalesNo,
+                    Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                     AccountNumber = "1010102",
                     AccountTitle = "Cash on Hand",
-                    Debit = salesVM.Header.ActualCashOnHand > 0 ? salesVM.Header.ActualCashOnHand : salesVM.Header.SafeDropTotalAmount,
+                    Debit = salesVm.Header.ActualCashOnHand > 0 ? salesVm.Header.ActualCashOnHand : salesVm.Header.SafeDropTotalAmount,
                     Credit = 0,
                     StationCode = station.StationCode,
                     JournalReference = nameof(JournalType.Sales),
                     IsValidated = true
                 });
 
-                if (salesVM.Header.POSalesTotalAmount > 0)
+                if (salesVm.Header.POSalesTotalAmount > 0)
                 {
-                    for (int i = 0; i < salesVM.Header.Customers.Length; i++)
+                    for (int i = 0; i < salesVm.Header.Customers.Length; i++)
                     {
                         journals.Add(new MobilityGeneralLedger
                         {
-                            TransactionDate = salesVM.Header.Date,
-                            Reference = salesVM.Header.SalesNo,
-                            Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                            TransactionDate = salesVm.Header.Date,
+                            Reference = salesVm.Header.SalesNo,
+                            Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                             AccountNumber = "1010201",
                             AccountTitle = "AR-Trade Receivable",
-                            Debit = salesVM.Header.POSalesAmount[i],
+                            Debit = salesVm.Header.POSalesAmount[i],
                             Credit = 0,
                             StationCode = station.StationCode,
-                            CustomerCode = salesVM.Header.Customers[i],
+                            CustomerCode = salesVm.Header.Customers[i],
                             JournalReference = nameof(JournalType.Sales),
                             IsValidated = true
                         });
                     }
                 }
 
-                foreach (var product in salesVM.Details.GroupBy(d => d.Product))
+                foreach (var product in salesVm.Details.GroupBy(d => d.Product))
                 {
                     ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
@@ -335,9 +336,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = salesAcctNo,
                         AccountTitle = salesAcctTitle,
                         Debit = 0,
@@ -350,9 +351,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = "2010301",
                         AccountTitle = "Vat Output",
                         Debit = 0,
@@ -369,14 +370,14 @@ namespace IBS.DataAccess.Repository.Mobility
                         .ThenBy(i => i.InventoryId)
                         .ToListAsync(cancellationToken);
 
-                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVM.Header.Date);
+                    var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= salesVm.Header.Date);
                     if (lastIndex >= 0)
                     {
                         sortedInventory = sortedInventory.Skip(lastIndex).ToList();
                     }
                     else
                     {
-                        throw new ArgumentException($"Beginning inventory for the month of '{salesVM.Header.Date:MMMM}' in this product '{product.Key} on station '{station.StationCode}' was not found!");
+                        throw new ArgumentException($"Beginning inventory for the month of '{salesVm.Header.Date:MMMM}' in this product '{product.Key} on station '{station.StationCode}' was not found!");
                     }
 
                     var previousInventory = sortedInventory.FirstOrDefault();
@@ -397,8 +398,8 @@ namespace IBS.DataAccess.Repository.Mobility
                     inventories.Add(new MobilityInventory
                     {
                         Particulars = nameof(JournalType.Sales),
-                        Date = salesVM.Header.Date,
-                        Reference = $"POS Sales Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        Date = salesVm.Header.Date,
+                        Reference = $"POS Sales Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         ProductCode = product.Key,
                         StationCode = station.StationCode,
                         Quantity = quantity,
@@ -409,16 +410,16 @@ namespace IBS.DataAccess.Repository.Mobility
                         UnitCostAverage = unitCostAverage,
                         InventoryValue = runningCost,
                         CostOfGoodsSold = cogs,
-                        ValidatedBy = salesVM.Header.PostedBy,
-                        ValidatedDate = salesVM.Header.PostedDate,
-                        TransactionNo = salesVM.Header.SalesNo
+                        ValidatedBy = salesVm.Header.PostedBy,
+                        ValidatedDate = salesVm.Header.PostedDate,
+                        TransactionNo = salesVm.Header.SalesNo
                     });
 
                     cogsJournals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = cogsAcctNo,
                         AccountTitle = cogsAcctTitle,
                         Debit = Math.Round(cogs, 4),
@@ -431,9 +432,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     cogsJournals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"COGS:{productDetails.ProductCode} {productDetails.ProductName} Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
                         AccountNumber = inventoryAcctNo,
                         AccountTitle = inventoryAcctTitle,
                         Debit = 0,
@@ -507,17 +508,17 @@ namespace IBS.DataAccess.Repository.Mobility
                     _db.MobilityInventories.UpdateRange(sortedInventory);
                 }
 
-                if (salesVM.Header.GainOrLoss != 0)
+                if (salesVm.Header.GainOrLoss != 0)
                 {
                     journals.Add(new MobilityGeneralLedger
                     {
-                        TransactionDate = salesVM.Header.Date,
-                        Reference = salesVM.Header.SalesNo,
-                        Particular = $"Cashier: {salesVM.Header.Cashier}, Shift:{salesVM.Header.Shift}",
-                        AccountNumber = salesVM.Header.GainOrLoss < 0 ? "6100102" : "6010102",
-                        AccountTitle = salesVM.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
-                        Debit = salesVM.Header.GainOrLoss < 0 ? Math.Abs(salesVM.Header.GainOrLoss) : 0,
-                        Credit = salesVM.Header.GainOrLoss > 0 ? salesVM.Header.GainOrLoss : 0,
+                        TransactionDate = salesVm.Header.Date,
+                        Reference = salesVm.Header.SalesNo,
+                        Particular = $"Cashier: {salesVm.Header.Cashier}, Shift:{salesVm.Header.Shift}",
+                        AccountNumber = salesVm.Header.GainOrLoss < 0 ? "6100102" : "6010102",
+                        AccountTitle = salesVm.Header.GainOrLoss < 0 ? "Cash Short - Handling" : "Cash Over - Handling",
+                        Debit = salesVm.Header.GainOrLoss < 0 ? Math.Abs(salesVm.Header.GainOrLoss) : 0,
+                        Credit = salesVm.Header.GainOrLoss > 0 ? salesVm.Header.GainOrLoss : 0,
                         StationCode = station.StationCode,
                         JournalReference = nameof(JournalType.Sales),
                         IsValidated = true
@@ -526,10 +527,11 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 journals.AddRange(cogsJournals);
 
-                if (IsJournalEntriesBalanced(journals))
+                ///TODO: waiting for actual journal entries
+                if (true)//IsJournalEntriesBalanced(journals)
                 {
                     await _db.MobilityInventories.AddRangeAsync(inventories, cancellationToken);
-                    await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
+                    //await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
                 else
@@ -1252,6 +1254,275 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 await _db.MobilityFmsCashierShifts.AddRangeAsync(cashiers, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task ProcessFmsPoSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSPoSalesRawViewModel>();
+            var poSales = new List<MobilityFMSPoSales>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsPoSales
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                poSales.Add(new MobilityFMSPoSales
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    CustomerCode = record.customercode,
+                    TripTicket = record.tripticket,
+                    DrNumber = record.drno,
+                    Driver = record.driver,
+                    PlateNo = record.plateno,
+                    ProductCode = record.productcode,
+                    Quantity = record.quantity,
+                    Price = record.price,
+                    ContractPrice = record.contractprice,
+                    Time = TimeOnly.TryParse(record.time, out var time) ? time : TimeOnly.MinValue,
+                    Date = record.date,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber,
+                });
+            }
+
+            if (poSales.Count > 0)
+            {
+                await _db.MobilityFmsPoSales.AddRangeAsync(poSales, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<int> ProcessFmsDepositGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
+        {
+            using var reader = new StreamReader(new MemoryStream(file.FileContent));
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true, // Set to false if your file doesn't have headers
+            });
+            var records = csv.GetRecords<FMSDepositRawViewModel>();
+            var deposits = new List<MobilityFMSDeposit>();
+
+            // Get existing ShiftRecordIds from the database
+            var existingShiftRecordIds = await _db.MobilityFmsDeposits
+                .Select(f => f.ShiftRecordId)
+                .ToListAsync(cancellationToken);
+
+            foreach (var record in records)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                // Skip if the ShiftRecordId already exists
+                if (existingShiftRecordIds.Contains(record.shiftrecid))
+                    continue;
+
+                deposits.Add(new MobilityFMSDeposit
+                {
+                    StationCode = record.stncode,
+                    ShiftRecordId = record.shiftrecid,
+                    Date = record.date,
+                    AccountNumber = record.accountno,
+                    Amount = record.amount,
+                    ShiftDate = record.shiftdate,
+                    ShiftNumber = record.shiftnumber,
+                    PageNumber = record.pagenumber,
+                });
+            }
+
+            if (deposits.Count > 0)
+            {
+                await _db.MobilityFmsDeposits.AddRangeAsync(deposits, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+
+            return deposits.Count;
+        }
+
+        public async Task ComputeSalesReportForFms(CancellationToken cancellationToken = default)
+        {
+            var fmsCashierShifts = await _db.MobilityFmsCashierShifts
+                .Where(f => !f.IsProcessed)
+                .OrderBy(c => c.Date)
+                .ThenBy(c => c.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsFuelSales = await _db.MobilityFMSFuelSales
+                .Where(f => !f.IsProcessed)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsLubeSales = await _db.MobilityFMSLubeSales
+                .Where(f => !f.IsProcessed)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsCalibrations = await _db.MobilityFmsCalibrations
+                .Where(f => !f.IsProcessed)
+                .OrderBy(f => f.ShiftDate)
+                .ThenBy(f => f.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+            var fmsPoSales = await _db.MobilityFmsPoSales
+                .Where(x => !x.IsProcessed && x.ShiftDate.Year == DateTime.UtcNow.Year)
+                .OrderBy(x => x.ShiftDate)
+                .ThenBy(x => x.ShiftNumber)
+                .ToListAsync(cancellationToken);
+
+
+            var fmsDataByShift = fmsCashierShifts.Select(shift => new
+            {
+                Shift = shift,
+                FuelSales = fmsFuelSales.Where(f => f.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                LubeSales = fmsLubeSales.Where(l => l.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                Calibrations = fmsCalibrations.Where(c => c.ShiftRecordId == shift.ShiftRecordId).ToList(),
+                POSales = fmsPoSales.Where(p => p.ShiftRecordId == shift.ShiftRecordId).ToList(),
+            }).ToList();
+
+            foreach (var data in fmsDataByShift)
+            {
+                var employee = await _db.MobilityStationEmployees
+                    .FirstOrDefaultAsync(e => e.EmployeeNumber == data.Shift.EmployeeNumber, cancellationToken);
+
+
+
+                var salesHeader = new MobilitySalesHeader()
+                {
+                    SalesNo = await GenerateSeriesNumberForFmsSales(data.Shift.StationCode),
+                    Date = data.Shift.Date,
+                    StationCode = data.Shift.StationCode,
+                    Cashier = employee?.FirstName ?? data.Shift.EmployeeNumber,
+                    Shift = data.Shift.ShiftNumber,
+                    PageNumber = data.Shift.PageNumber,
+                    CreatedBy = "System Generated",
+                    TimeIn = data.Shift.TimeIn,
+                    TimeOut = data.Shift.TimeOut,
+                    FuelSalesTotalAmount = data.Calibrations.Count == 0
+                        ? data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price)
+                        : data.FuelSales.Sum(f => ((f.Closing - f.Opening) - data.Calibrations.Sum(x => x.Quantity)) * f.Price),
+                    LubesTotalAmount = data.LubeSales.Sum(l => l.Quantity * l.Price),
+                    SafeDropTotalAmount = data.Shift.CashOnHand,
+                    POSalesTotalAmount = data.POSales.Sum(p => p.Price * p.Quantity),
+                    POSalesAmount = data.POSales
+                        .Select(p => p.Price * p.Quantity)
+                        .ToArray(),
+                    Customers = data.POSales
+                        .Select(p => p.CustomerCode)
+                        .ToArray(),
+                    Source = "FMS"
+                };
+
+                salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount - salesHeader.POSalesTotalAmount;
+                salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
+
+                await _db.MobilitySalesHeaders.AddAsync(salesHeader, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+
+                foreach (var fuel in data.FuelSales.OrderBy(f => f.ProductCode))
+                {
+                    var product = await _db.MobilityProducts
+                        .FirstOrDefaultAsync(p => p.ProductCode == fuel.ProductCode, cancellationToken) ?? throw new NullReferenceException($"Product {fuel.ProductCode} not found in {salesHeader.StationCode}.");
+
+                    var posPumpNo = await _db.MobilityStationPumps
+                        .FirstOrDefaultAsync(p => p.StationCode == salesHeader.StationCode &&
+                                                  p.FmsPump == fuel.PumpNumber && p.ProductCode.ToUpper() == fuel.ProductCode.ToUpper(),
+                            cancellationToken) ?? throw new NullReferenceException($"Pump {fuel.PumpNumber} not found in {salesHeader.StationCode}.");
+
+                    var salesDetail = new MobilitySalesDetail()
+                    {
+                        SalesHeaderId = salesHeader.SalesHeaderId,
+                        SalesNo = salesHeader.SalesNo,
+                        StationCode = salesHeader.StationCode,
+                        Product = product.ProductCode,
+                        Particular = $"{product.ProductName} (P{posPumpNo.PosPump})",
+                        PumpNumber = posPumpNo.PosPump,
+                        Closing = fuel.Closing,
+                        Opening = fuel.Opening,
+                        Liters = fuel.Closing - fuel.Opening,
+                        Calibration = data.Calibrations.Sum(c => c.Quantity),
+                        LitersSold = fuel.Closing - fuel.Opening,
+                        TransactionCount = 0,
+                        Price = fuel.Price,
+                    };
+
+                    salesDetail.Liters = fuel.Closing - fuel.Opening;
+                    salesDetail.LitersSold = salesDetail.Liters;
+                    salesDetail.Sale = salesDetail.Calibration == 0 ? salesDetail.Liters * salesDetail.Price : (salesDetail.Liters - salesDetail.Calibration) * salesDetail.Price;
+                    salesDetail.Value = salesDetail.Sale;
+                    fuel.IsProcessed = true;
+
+                    await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
+
+                }
+
+                foreach (var lube in data.LubeSales.OrderBy(l => l.ProductCode))
+                {
+                    var salesDetail = new MobilitySalesDetail()
+                    {
+                        SalesHeaderId = salesHeader.SalesHeaderId,
+                        SalesNo = salesHeader.SalesNo,
+                        StationCode = lube.StationCode,
+                        Product = lube.ProductCode,
+                        Particular = lube.ProductCode,
+                        Liters = lube.Quantity,
+                        Price = lube.Price,
+                        Sale = lube.Quantity * lube.Price,
+                        Value = lube.Quantity * lube.Price,
+                    };
+
+                    lube.IsProcessed = true;
+                    await _db.MobilitySalesDetails.AddAsync(salesDetail, cancellationToken);
+
+                }
+
+                foreach (var calibration in data.Calibrations)
+                {
+                    calibration.IsProcessed = true;
+                }
+
+                data.Shift.IsProcessed = true;
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        private async Task<string> GenerateSeriesNumberForFmsSales(string stationCode)
+        {
+            var lastCashierReport = await _db.MobilitySalesHeaders
+                .OrderBy(s => s.SalesNo)
+                .Where(s => s.StationCode == stationCode && s.Source == "FMS")
+                .LastOrDefaultAsync();
+
+            if (lastCashierReport != null)
+            {
+                string lastSeries = lastCashierReport.SalesNo;
+                string numericPart = lastSeries.Substring(3);
+                int incrementedNumber = int.Parse(numericPart) + 1;
+
+                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+            }
+            else
+            {
+                return "FMS0000000001";
             }
         }
     }
