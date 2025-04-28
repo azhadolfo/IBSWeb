@@ -145,9 +145,35 @@
                     {"data": "tugboat.tugboatName"},
                     {"data": "tugMaster.tugMasterName"},
                     {"data": "vessel.vesselName"},
-                    {"data": "status"},
                     {
-                        "data": "checkVoucherHeaderId",
+                        "data": "status",
+                        "orderable": false,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "For Tariff"){
+                                statusColor = `bg-info`
+                            }
+                            if (row.status === "Tariff Pending"){
+                                statusColor = `bg-warning`
+                            }
+                            if (row.status === "Disapproved") {
+                                statusColor = `bg-danger`
+                            }
+                            if (row.status === "For Billing"){
+                                statusColor = `bg-success`
+                            }
+                            if (row.status === "Billed") {
+                                statusColor = `bg-success`
+                            }
+
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
+                        "data": "null",
                         "orderable": false,
                         "render": function(data, type, row) {
                             let actions = `<div class="align-content-center text-center" style="width: 150px !important;">`;
