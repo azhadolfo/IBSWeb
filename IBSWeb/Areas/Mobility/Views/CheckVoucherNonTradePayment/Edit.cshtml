@@ -1,4 +1,4 @@
-﻿@model CheckVoucherNonTradePaymentViewModel
+@model CheckVoucherNonTradePaymentViewModel
 
 @{
     ViewData["Title"] = "Edit Non Trade Payment";
@@ -130,7 +130,7 @@
                         <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Mobility" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -151,7 +151,7 @@
         function getSupplierDetails(supplierId) {
             if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })', // Replace with the actual controller and action names
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })', // Replace with the actual controller and action names
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {
@@ -223,13 +223,12 @@
                 if (cvSelect && cvSelect.length > 0) {
                     // Call the controller to get new journal entries
                     $.ajax({
-                        url: '@Url.Action("GetMultipleInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                        url: '@Url.Action("GetMultipleInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })',
                         method: "GET",
                         traditional: true,
                         data: { cvId: cvSelect, supplierId: supplierId, },
                         success: function (data) {
                             if (data && data.journalEntries) {
-                                
 
                                 // Add CV balance rows and create payment details
                                 if (data.cvBalances && data.cvBalances.length > 0) {

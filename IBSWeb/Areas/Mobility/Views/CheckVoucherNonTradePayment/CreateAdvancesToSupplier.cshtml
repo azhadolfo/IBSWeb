@@ -3,7 +3,7 @@
 @model AdvancesToSupplierViewModel
 
 @{
-    ViewData["Title"] = "Edit Advances To Supplier";
+    ViewData["Title"] = "Create Advances To Supplier";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
@@ -16,7 +16,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Advances To Supplier</h2>
+                <h2 class="text-white py-2">Create Advances To Supplier</h2>
             </div>
         </div>
     </div>
@@ -25,10 +25,20 @@
             @Html.AntiForgeryToken()
             <div class="row">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <input type="hidden" asp-for="CvId"/>
+                <div class="form-group mb-3">
+                    <label class="control-label">Type<span class="required">*</span></label>
+                    <select asp-for="DocumentType" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;" required>
+                        <option value="" selected disabled>Select document type</option>
+                        @foreach (DocumentType documentType in Enum.GetValues<DocumentType>())
+                        {
+                            <option value="@documentType">@documentType.ToString()</option>
+                        }
+                    </select>
+                    <span asp-validation-for="DocumentType" class="text-danger"></span>
+                </div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control"/>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -75,7 +85,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="CheckDate" type="Date" class="form-control"/>
+                    <input asp-for="CheckDate" type="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control"/>
                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -134,10 +144,10 @@
                 <br/>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Mobility" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -201,7 +211,7 @@
         function getSupplierDetails(supplierId) {
             if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })',
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {

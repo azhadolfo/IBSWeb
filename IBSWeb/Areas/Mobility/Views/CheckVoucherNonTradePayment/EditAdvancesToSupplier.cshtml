@@ -137,7 +137,7 @@
                         <button type="submit" class="btn btn-primary form-control">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Mobility" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -201,7 +201,7 @@
         function getSupplierDetails(supplierId) {
             if (supplierId !== "") {
                 $.ajax({
-                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })',
                     method: "GET",
                     data: { supplierId: supplierId },
                     success: function (data) {

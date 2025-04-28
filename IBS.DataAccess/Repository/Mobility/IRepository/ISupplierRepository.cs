@@ -11,5 +11,8 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
         Task UpdateAsync(MobilitySupplier model, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityTradeSupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetmobilityTradeSupplierListAsyncById(string stationCode,
+            CancellationToken cancellationToken = default);
     }
 }
