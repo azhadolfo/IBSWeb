@@ -285,6 +285,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 if (isNewShift)
                 {
                     int endOfShiftRow = row - 1;
+
+                    int lastCol = worksheet.Dimension.End.Column;
+
+                    // Clear background for the previous row from PO sales to end
+                    using (var range = worksheet.Cells[endOfShiftRow, col, endOfShiftRow, lastCol])
+                    {
+                        range.Style.Fill.PatternType = ExcelFillStyle.None;
+                    }
+
                     decimal poSalesDiff = (lastPosData?.POSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
                     fmsPoSalesTotal += lastFmsData?.POSales ?? 0m;
                     posPoSalesTotal += lastPosData?.POSales ?? 0m;
@@ -338,7 +347,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 else
                 {
-                    //Shade the background color
+                    int lastCol = worksheet.Dimension.End.Column;
+                    Color shadingColor = Color.LightGray; // You can change this color as needed
+
+                    using (var range = worksheet.Cells[row - 1, col, row - 1, lastCol])
+                    {
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(shadingColor);
+                    }
                 }
 
                 lastFmsData = fmsData;
@@ -350,6 +366,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             if (!isFirstRow)
             {
                 int endOfShiftRow = row - 1;
+
+                int lastCol = worksheet.Dimension.End.Column;
+
+                // Clear background for the previous row from PO sales to end
+                using (var range = worksheet.Cells[endOfShiftRow, col, endOfShiftRow, lastCol])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.None;
+                }
+
                 decimal poSalesDiff = (lastPosData?.POSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
                 fmsPoSalesTotal += lastFmsData?.POSales ?? 0m;
                 posPoSalesTotal += lastPosData?.POSales ?? 0m;
