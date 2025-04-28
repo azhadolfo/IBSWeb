@@ -4,7 +4,7 @@ using IBS.Models.Mobility.MasterFile;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
-    public class EmployeeRepository : Repository<MobilityEmployee>, IEmployeeRepository
+    public class EmployeeRepository : Repository<MobilityStationEmployee>, IEmployeeRepository
     {
         private ApplicationDbContext _db;
 

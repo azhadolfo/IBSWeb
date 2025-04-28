@@ -144,7 +144,7 @@ namespace IBS.Models.Mobility
         public int? EmployeeId { get; set; }
 
         [ForeignKey("EmployeeId")]
-        public MobilityEmployee? Employee { get; set; }
+        public MobilityStationEmployee? Employee { get; set; }
 
         public string Address { get; set; }
 

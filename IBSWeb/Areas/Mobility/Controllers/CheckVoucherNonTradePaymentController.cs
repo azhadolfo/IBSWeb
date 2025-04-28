@@ -1395,7 +1395,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var viewModel = new AdvancesToEmployeeViewModel();
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
-            viewModel.Employees = await _dbContext.MobilityEmployees
+            viewModel.Employees = await _dbContext.MobilityStationEmployees
                 .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                 .Select(e => new SelectListItem
                 {
@@ -1425,7 +1425,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Employees = await _dbContext.MobilityEmployees
+                viewModel.Employees = await _dbContext.MobilityStationEmployees
                     .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                     .Select(e => new SelectListItem
                     {
@@ -1485,18 +1485,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                    #region Details
 
-                       ///TODO: wait for ma'am LSA journal entries
-                       //var accountTitlesDto = await _unitOfWork.MobilityCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                       //var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
-                       //var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+                       var accountTitlesDto = await _unitOfWork.MobilityCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                       var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
+                       var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
 
-                       ///TODO: remove string if the journal entries are provided
                        var checkVoucherDetails = new List<MobilityCheckVoucherDetail>
                        {
                            new()
                            {
-                               AccountNo = "advancesToOfficerTitle.AccountNumber",
-                               AccountName = "advancesToOfficerTitle.AccountName",
+                               AccountNo = advancesToOfficerTitle.AccountNumber,
+                               AccountName = advancesToOfficerTitle.AccountName,
                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                                Debit = viewModel.Total,
@@ -1506,8 +1504,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                            new()
                            {
-                               AccountNo = "cashInBankTitle.AccountNumber",
-                               AccountName = "cashInBankTitle.AccountName",
+                               AccountNo = cashInBankTitle.AccountNumber,
+                               AccountName = cashInBankTitle.AccountName,
                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                                Debit = 0,
@@ -1547,7 +1545,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             catch (Exception ex)
             {
-                viewModel.Employees = await _dbContext.MobilityEmployees
+                viewModel.Employees = await _dbContext.MobilityStationEmployees
                     .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                     .Select(e => new SelectListItem
                     {
@@ -1590,7 +1588,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
-            var employees = await _dbContext.MobilityEmployees
+            var employees = await _dbContext.MobilityStationEmployees
                 .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                 .Select(e => new SelectListItem
                 {
@@ -1637,7 +1635,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Employees = await _dbContext.MobilityEmployees
+                viewModel.Employees = await _dbContext.MobilityStationEmployees
                     .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                     .Select(e => new SelectListItem
                     {
@@ -1703,18 +1701,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         var details = new List<MobilityCheckVoucherDetail>();
 
-                        ///TODO: waiting for ma'am LSA journal entries
-                        //var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                        //var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
-                        //var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
+                        var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                        var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
+                        var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException($"Account title '101010100' not found.");
 
-                        ///TODO: remove string if the journal entries are provided
                         var checkVoucherDetails = new List<MobilityCheckVoucherDetail>
                         {
                             new()
                             {
-                                AccountNo = "advancesToOfficerTitle.AccountNumber",
-                                AccountName = "advancesToOfficerTitle.AccountName",
+                                AccountNo = advancesToOfficerTitle.AccountNumber,
+                                AccountName = advancesToOfficerTitle.AccountName,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 Debit = viewModel.Total,
@@ -1724,8 +1720,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                             new()
                             {
-                                AccountNo = "cashInBankTitle.AccountNumber",
-                                AccountName = "cashInBankTitle.AccountName",
+                                AccountNo = cashInBankTitle.AccountNumber,
+                                AccountName = cashInBankTitle.AccountName,
                                 TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 Debit = 0,
@@ -1755,7 +1751,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             catch (Exception ex)
             {
-                viewModel.Employees = await _dbContext.MobilityEmployees
+                viewModel.Employees = await _dbContext.MobilityStationEmployees
                     .Where(e => e.IsActive && e.StationCode == stationCodeClaims)
                     .Select(e => new SelectListItem
                     {
@@ -1789,7 +1785,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return Json(null);
             }
 
-            var employee = await _dbContext.MobilityEmployees
+            var employee = await _dbContext.MobilityStationEmployees
                 .Where(e => e.StationCode == stationCodeClaims)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId && e.StationCode == stationCodeClaims);
 
@@ -1889,23 +1885,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                    #region Details
 
-                       ///TODO: waiting for ma'am LSA journal entries
-                       //var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                       //var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
-                       //var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
-                       //var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                       var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                       var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
+                       var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                       var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                        var grossAmount = viewModel.Total;
                        var ewtAmount = _unitOfWork.MobilityCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
                        var netOfEwtAmount = _unitOfWork.MobilityCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
 
-                       ///TODO: remove string if the journal entries are provided
                        var checkVoucherDetails = new List<MobilityCheckVoucherDetail>
                        {
                            new()
                            {
-                               AccountNo = "advancesToSupplierTitle.AccountNumber",
-                               AccountName = "advancesToSupplierTitle.AccountName",
+                               AccountNo = advancesToSupplierTitle.AccountNumber,
+                               AccountName = advancesToSupplierTitle.AccountName,
                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                                Debit = grossAmount,
@@ -1915,8 +1909,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                            new()
                            {
-                               AccountNo = "ewtTitle.AccountNumber",
-                               AccountName = "ewtTitle.AccountName",
+                               AccountNo = ewtTitle.AccountNumber,
+                               AccountName = ewtTitle.AccountName,
                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                                Debit = 0,
@@ -1925,8 +1919,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                            new()
                            {
-                               AccountNo = "cashInBankTitle.AccountNumber",
-                               AccountName = "cashInBankTitle.AccountName",
+                               AccountNo = cashInBankTitle.AccountNumber,
+                               AccountName = cashInBankTitle.AccountName,
                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                                Debit = 0,
@@ -2099,23 +2093,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         _dbContext.RemoveRange(existingDetailsModel);
                         await _dbContext.SaveChangesAsync(cancellationToken);
 
-                       ///TODO: waiting for ma'am LSA journal entries
-                       //var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                       //var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
-                       //var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
-                       //var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                       var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                       var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
+                       var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                       var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
 
                        var grossAmount = viewModel.Total;
                        var ewtAmount = _unitOfWork.MobilityCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
                        var netOfEwtAmount = _unitOfWork.MobilityCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
 
-                       ///TODO: remove string if the journal entries are provided
                        var checkVoucherDetails = new List<MobilityCheckVoucherDetail>
                        {
                            new()
                            {
-                               AccountNo = "advancesToSupplierTitle.AccountNumber",
-                               AccountName = "advancesToSupplierTitle.AccountName",
+                               AccountNo = advancesToSupplierTitle.AccountNumber,
+                               AccountName = advancesToSupplierTitle.AccountName,
                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = grossAmount,
@@ -2125,8 +2117,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                            new()
                            {
-                               AccountNo = "ewtTitle.AccountNumber",
-                               AccountName = "ewtTitle.AccountName",
+                               AccountNo = ewtTitle.AccountNumber,
+                               AccountName = ewtTitle.AccountName,
                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = 0,
@@ -2135,8 +2127,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                            new()
                            {
-                               AccountNo = "cashInBankTitle.AccountNumber",
-                               AccountName = "cashInBankTitle.AccountName",
+                               AccountNo = cashInBankTitle.AccountNumber,
+                               AccountName = cashInBankTitle.AccountName,
                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = 0,

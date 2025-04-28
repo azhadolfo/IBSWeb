@@ -110,8 +110,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MobilityService> MobilityServices { get; set; }
 
-        public DbSet<MobilityEmployee> MobilityEmployees { get; set; }
-
         public DbSet<MobilityStationEmployee> MobilityStationEmployees { get; set; }
 
         #endregion
@@ -595,7 +593,7 @@ namespace IBS.DataAccess.Data
             });
 
             // MobilityEmployee
-            builder.Entity<MobilityEmployee>(c =>
+            builder.Entity<MobilityStationEmployee>(c =>
             {
                 c.HasIndex(c => c.EmployeeNumber);
             });

@@ -290,14 +290,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     decimal ewtFivePercentAmount = 0;
                     decimal ewtTenPercentAmount = 0;
 
-                    ///TODO: waiting for ma'am LSA journal entries
-                    //var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    //var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
-                    //var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                    //var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                    //var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                    //var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                    //var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
 
                     foreach (var accountEntry in viewModel.AccountingEntries)
                     {
@@ -351,13 +350,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     checkVoucherHeader.InvoiceAmount = apNontradeAmount;
 
-                    ///TODO: remove account no and account name string if the journal entries are provided
                     if (vatAmount > 0)
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "vatInputTitle.AccountNumber",
-                            AccountName = "vatInputTitle.AccountName",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountName = vatInputTitle.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = vatAmount,
@@ -369,8 +367,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "apNonTradeTitle.AccountNumber",
-                            AccountName = "apNonTradeTitle.AccountName",
+                            AccountNo = apNonTradeTitle.AccountNumber,
+                            AccountName = apNonTradeTitle.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
@@ -383,8 +381,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtOnePercent.AccountNumber",
-                            AccountName = "ewtOnePercent.AccountName",
+                            AccountNo = ewtOnePercent.AccountNumber,
+                            AccountName = ewtOnePercent.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
@@ -398,8 +396,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtTwoPercent.AccountNumber",
-                            AccountName = "ewtTwoPercent.AccountName",
+                            AccountNo = ewtTwoPercent.AccountNumber,
+                            AccountName = ewtTwoPercent.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
@@ -413,8 +411,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtFivePercent.AccountNumber",
-                            AccountName = "ewtFivePercent.AccountName",
+                            AccountNo = ewtFivePercent.AccountNumber,
+                            AccountName = ewtFivePercent.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
@@ -428,8 +426,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtTenPercent.AccountNumber",
-                            AccountName = "ewtTenPercent.AccountName",
+                            AccountNo = ewtTenPercent.AccountNumber,
+                            AccountName = ewtTenPercent.AccountName,
                             TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
                             Debit = 0,
@@ -839,14 +837,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     decimal ewtFivePercentAmount = 0;
                     decimal ewtTenPercentAmount = 0;
 
-                    ///TODO: waiting for ma'am LSA journal entries
-                    //var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    //var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
-                    //var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                    //var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                    //var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                    //var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                    //var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
 
                     foreach (var accountEntry in viewModel.AccountingEntries)
                     {
@@ -899,13 +896,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     existingModel.InvoiceAmount = apNontradeAmount;
 
-                    ///TODO: remove string if the journal entries are provided
                     if (vatAmount > 0)
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "vatInputTitle.AccountNumber",
-                            AccountName = "vatInputTitle.AccountName",
+                            AccountNo = vatInputTitle.AccountNumber,
+                            AccountName = vatInputTitle.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = vatAmount,
@@ -917,8 +913,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "apNonTradeTitle.AccountNumber",
-                            AccountName = "apNonTradeTitle.AccountName",
+                            AccountNo = apNonTradeTitle.AccountNumber,
+                            AccountName = apNonTradeTitle.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
@@ -931,8 +927,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtOnePercent.AccountNumber",
-                            AccountName = "ewtOnePercent.AccountName",
+                            AccountNo = ewtOnePercent.AccountNumber,
+                            AccountName = ewtOnePercent.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
@@ -946,8 +942,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtTwoPercent.AccountNumber",
-                            AccountName = "ewtTwoPercent.AccountName",
+                            AccountNo = ewtTwoPercent.AccountNumber,
+                            AccountName = ewtTwoPercent.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
@@ -961,8 +957,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtFivePercent.AccountNumber",
-                            AccountName = "ewtFivePercent.AccountName",
+                            AccountNo = ewtFivePercent.AccountNumber,
+                            AccountName = ewtFivePercent.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,
@@ -976,8 +972,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            AccountNo = "ewtTenPercent.AccountNumber",
-                            AccountName = "ewtTenPercent.AccountName",
+                            AccountNo = ewtTenPercent.AccountNumber,
+                            AccountName = ewtTenPercent.AccountName,
                             TransactionNo = existingModel.CheckVoucherHeaderNo,
                             CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
                             Debit = 0,

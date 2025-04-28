@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBS.Models.Mobility
+namespace IBS.Models.Mobility.MasterFile
 {
     public class MobilityStationEmployee
     {
