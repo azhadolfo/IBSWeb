@@ -4858,6 +4858,126 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mobility_stations", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityStationEmployee", b =>
+                {
+                    b.Property<int>("EmployeeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
+
+                    b.Property<string>("Address")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("address");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
+                    b.Property<DateOnly>("DateHired")
+                        .HasColumnType("date")
+                        .HasColumnName("date_hired");
+
+                    b.Property<DateOnly?>("DateResigned")
+                        .HasColumnType("date")
+                        .HasColumnName("date_resigned");
+
+                    b.Property<string>("Department")
+                        .HasColumnType("text")
+                        .HasColumnName("department");
+
+                    b.Property<string>("EmployeeNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("employee_number");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("Initial")
+                        .HasColumnType("text")
+                        .HasColumnName("initial");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsManagerial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_managerial");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("middle_name");
+
+                    b.Property<string>("PagibigNo")
+                        .HasColumnType("text")
+                        .HasColumnName("pagibig_no");
+
+                    b.Property<string>("Paygrade")
+                        .HasColumnType("text")
+                        .HasColumnName("paygrade");
+
+                    b.Property<string>("PhilhealthNo")
+                        .HasColumnType("text")
+                        .HasColumnName("philhealth_no");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("position");
+
+                    b.Property<decimal>("Salary")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("salary");
+
+                    b.Property<string>("SssNo")
+                        .HasColumnType("text")
+                        .HasColumnName("sss_no");
+
+                    b.Property<string>("StationCode")
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("varchar(5)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Suffix")
+                        .HasColumnType("varchar(5)")
+                        .HasColumnName("suffix");
+
+                    b.Property<string>("Supervisor")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("supervisor");
+
+                    b.Property<string>("TelNo")
+                        .HasColumnType("text")
+                        .HasColumnName("tel_no");
+
+                    b.Property<string>("TinNo")
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("tin_no");
+
+                    b.HasKey("EmployeeId")
+                        .HasName("pk_mobility_station_employees");
+
+                    b.HasIndex("EmployeeNumber")
+                        .HasDatabaseName("ix_mobility_station_employees_employee_number");
+
+                    b.ToTable("mobility_station_employees", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilitySupplier", b =>
                 {
                     b.Property<int>("SupplierId")
@@ -4989,6 +5109,679 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mobility_suppliers");
 
                     b.ToTable("mobility_suppliers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<int>("CheckVoucherId")
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_id");
+
+                    b.Property<int>("DocumentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("document_id");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("document_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mobility_cv_trade_payments");
+
+                    b.HasIndex("CheckVoucherId")
+                        .HasDatabaseName("ix_mobility_cv_trade_payments_check_voucher_id");
+
+                    b.ToTable("mobility_cv_trade_payments", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
+                {
+                    b.Property<int>("CheckVoucherDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_detail_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherDetailId"));
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_name");
+
+                    b.Property<string>("AccountNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_no");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<int?>("BankId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bank_id");
+
+                    b.Property<int>("CheckVoucherHeaderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_header_id");
+
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal>("EwtPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ewt_percent");
+
+                    b.Property<bool>("IsUserSelected")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_user_selected");
+
+                    b.Property<bool>("IsVatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_vatable");
+
+                    b.Property<int?>("StationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("station_id");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("TransactionNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("transaction_no");
+
+                    b.HasKey("CheckVoucherDetailId")
+                        .HasName("pk_mobility_check_voucher_details");
+
+                    b.HasIndex("CheckVoucherHeaderId")
+                        .HasDatabaseName("ix_mobility_check_voucher_details_check_voucher_header_id");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_mobility_check_voucher_details_supplier_id");
+
+                    b.ToTable("mobility_check_voucher_details", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
+                {
+                    b.Property<int>("CheckVoucherHeaderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_header_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherHeaderId"));
+
+                    b.Property<string>("AccruedType")
+                        .HasColumnType("text")
+                        .HasColumnName("accrued_type");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<decimal[]>("Amount")
+                        .HasColumnType("numeric[]")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<decimal>("AmountPerMonth")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_per_month");
+
+                    b.Property<int?>("BankId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bank_id");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("cancellation_remarks");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
+                    b.Property<decimal>("CheckAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("check_amount");
+
+                    b.Property<DateOnly?>("CheckDate")
+                        .HasColumnType("date")
+                        .HasColumnName("check_date");
+
+                    b.Property<string>("CheckNo")
+                        .HasColumnType("text")
+                        .HasColumnName("check_no");
+
+                    b.Property<string>("CheckVoucherHeaderNo")
+                        .HasColumnType("text")
+                        .HasColumnName("check_voucher_header_no");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("CvType")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("cv_type");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<DateOnly?>("DcpDate")
+                        .HasColumnType("date")
+                        .HasColumnName("dcp_date");
+
+                    b.Property<DateOnly?>("DcrDate")
+                        .HasColumnType("date")
+                        .HasColumnName("dcr_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<decimal>("InvoiceAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("invoice_amount");
+
+                    b.Property<bool>("IsAdvances")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_advances");
+
+                    b.Property<bool>("IsComplete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_complete");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_paid");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<DateTime?>("LastCreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_created_date");
+
+                    b.Property<int>("NumberOfMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("number_of_months");
+
+                    b.Property<int>("NumberOfMonthsCreated")
+                        .HasColumnType("integer")
+                        .HasColumnName("number_of_months_created");
+
+                    b.Property<string[]>("PONo")
+                        .HasColumnType("varchar[]")
+                        .HasColumnName("po_no");
+
+                    b.Property<string>("Particulars")
+                        .HasColumnType("text")
+                        .HasColumnName("particulars");
+
+                    b.Property<string>("Payee")
+                        .HasColumnType("text")
+                        .HasColumnName("payee");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<string[]>("RRNo")
+                        .HasColumnType("varchar[]")
+                        .HasColumnName("rr_no");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("text")
+                        .HasColumnName("reference");
+
+                    b.Property<string[]>("SINo")
+                        .HasColumnType("varchar[]")
+                        .HasColumnName("si_no");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("SupportingFileSavedFileName")
+                        .HasColumnType("text")
+                        .HasColumnName("supporting_file_saved_file_name");
+
+                    b.Property<string>("SupportingFileSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("supporting_file_saved_url");
+
+                    b.Property<string>("Tin")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("tin");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.HasKey("CheckVoucherHeaderId")
+                        .HasName("pk_mobility_check_voucher_headers");
+
+                    b.HasIndex("BankId")
+                        .HasDatabaseName("ix_mobility_check_voucher_headers_bank_id");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_mobility_check_voucher_headers_employee_id");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_mobility_check_voucher_headers_supplier_id");
+
+                    b.ToTable("mobility_check_voucher_headers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
+                {
+                    b.Property<int>("CollectionReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("collection_receipt_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CollectionReceiptId"));
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("cancellation_remarks");
+
+                    b.Property<decimal>("CashAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("cash_amount");
+
+                    b.Property<decimal>("CheckAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("check_amount");
+
+                    b.Property<string>("CheckBank")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("check_bank");
+
+                    b.Property<string>("CheckBranch")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("check_branch");
+
+                    b.Property<string>("CheckDate")
+                        .HasColumnType("text")
+                        .HasColumnName("check_date");
+
+                    b.Property<string>("CheckNo")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("check_no");
+
+                    b.Property<string>("CollectionReceiptNo")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("collection_receipt_no");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("EWT")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("ewt");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("F2306FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2306file_name");
+
+                    b.Property<string>("F2306FilePath")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("f2306file_path");
+
+                    b.Property<string>("F2307FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("f2307file_name");
+
+                    b.Property<string>("F2307FilePath")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("f2307file_path");
+
+                    b.Property<bool>("IsCertificateUpload")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_certificate_upload");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<decimal>("ManagerCheckAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("manager_check_amount");
+
+                    b.Property<string>("ManagerCheckBank")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("manager_check_bank");
+
+                    b.Property<string>("ManagerCheckBranch")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("manager_check_branch");
+
+                    b.Property<DateOnly?>("ManagerCheckDate")
+                        .HasColumnType("date")
+                        .HasColumnName("manager_check_date");
+
+                    b.Property<string>("ManagerCheckNo")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("manager_check_no");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<string>("ReferenceNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("reference_no");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("SVNo")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("sv_no");
+
+                    b.Property<long>("SeriesNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("series_number");
+
+                    b.Property<int?>("ServiceInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_invoice_id");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.Property<decimal>("WVAT")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("wvat");
+
+                    b.HasKey("CollectionReceiptId")
+                        .HasName("pk_mobility_collection_receipts");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mobility_collection_receipts_customer_id");
+
+                    b.HasIndex("ServiceInvoiceId")
+                        .HasDatabaseName("ix_mobility_collection_receipts_service_invoice_id");
+
+                    b.ToTable("mobility_collection_receipts", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
+                {
+                    b.Property<int>("CreditMemoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("credit_memo_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CreditMemoId"));
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("cancellation_remarks");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("CreditAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit_amount");
+
+                    b.Property<string>("CreditMemoNo")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("credit_memo_no");
+
+                    b.Property<decimal>("CurrentAndPreviousAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("current_and_previous_amount");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date")
+                        .HasColumnName("period");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("text")
+                        .HasColumnName("remarks");
+
+                    b.Property<int?>("ServiceInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_invoice_id");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<decimal>("UnearnedAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unearned_amount");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.HasKey("CreditMemoId")
+                        .HasName("pk_mobility_credit_memos");
+
+                    b.HasIndex("ServiceInvoiceId")
+                        .HasDatabaseName("ix_mobility_credit_memos_service_invoice_id");
+
+                    b.ToTable("mobility_credit_memos", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
@@ -5221,6 +6014,128 @@ namespace IBS.DataAccess.Migrations
                         .HasDatabaseName("ix_mobility_customer_purchase_orders_station_code");
 
                     b.ToTable("mobility_customer_purchase_orders", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
+                {
+                    b.Property<int>("DebitMemoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("debit_memo_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebitMemoId"));
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("cancellation_remarks");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("CurrentAndPreviousAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("current_and_previous_amount");
+
+                    b.Property<decimal>("DebitAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit_amount");
+
+                    b.Property<string>("DebitMemoNo")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("debit_memo_no");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date")
+                        .HasColumnName("period");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("remarks");
+
+                    b.Property<int?>("ServiceInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_invoice_id");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<decimal>("UnearnedAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unearned_amount");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.HasKey("DebitMemoId")
+                        .HasName("pk_mobility_debit_memos");
+
+                    b.HasIndex("ServiceInvoiceId")
+                        .HasDatabaseName("ix_mobility_debit_memos_service_invoice_id");
+
+                    b.ToTable("mobility_debit_memos", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityFMSCalibration", b =>
@@ -6756,6 +7671,37 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mobility_lube_purchase_headers", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<int>("CheckVoucherHeaderInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_header_invoice_id");
+
+                    b.Property<int>("CheckVoucherHeaderPaymentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_header_payment_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mobility_multiple_check_voucher_payments");
+
+                    b.HasIndex("CheckVoucherHeaderInvoiceId")
+                        .HasDatabaseName("ix_mobility_multiple_check_voucher_payments_check_voucher_head");
+
+                    b.HasIndex("CheckVoucherHeaderPaymentId")
+                        .HasDatabaseName("ix_mobility_multiple_check_voucher_payments_check_voucher_head1");
+
+                    b.ToTable("mobility_multiple_check_voucher_payments", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Mobility.MobilityOffline", b =>
                 {
                     b.Property<int>("OfflineId")
@@ -6845,6 +7791,61 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mobility_offlines");
 
                     b.ToTable("mobility_offlines", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityOffsettings", b =>
+                {
+                    b.Property<int>("OffSettingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("off_setting_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OffSettingId"));
+
+                    b.Property<string>("AccountNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_no");
+
+                    b.Property<string>("AccountTitle")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_title");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsRemoved")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_removed");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("text")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<string>("StationCode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("station_code");
+
+                    b.HasKey("OffSettingId")
+                        .HasName("pk_mobility_offsettings");
+
+                    b.ToTable("mobility_offsettings", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityPOSales", b =>
@@ -7876,121 +8877,163 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mobility_sales_headers", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityStationEmployee", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
                 {
-                    b.Property<int>("EmployeeId")
+                    b.Property<int>("ServiceInvoiceId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("employee_id");
+                        .HasColumnName("service_invoice_id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceInvoiceId"));
 
-                    b.Property<string>("Address")
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("balance");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
                         .HasColumnType("varchar(255)")
-                        .HasColumnName("address");
+                        .HasColumnName("cancellation_remarks");
 
-                    b.Property<DateOnly?>("BirthDate")
-                        .HasColumnType("date")
-                        .HasColumnName("birth_date");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
 
-                    b.Property<DateOnly>("DateHired")
-                        .HasColumnType("date")
-                        .HasColumnName("date_hired");
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
 
-                    b.Property<DateOnly?>("DateResigned")
-                        .HasColumnType("date")
-                        .HasColumnName("date_resigned");
+                    b.Property<decimal>("CurrentAndPreviousAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("current_and_previous_amount");
 
-                    b.Property<string>("Department")
-                        .HasColumnType("text")
-                        .HasColumnName("department");
-
-                    b.Property<string>("EmployeeNumber")
+                    b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
-                        .HasColumnName("employee_number");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("first_name");
-
-                    b.Property<string>("Initial")
                         .HasColumnType("text")
-                        .HasColumnName("initial");
+                        .HasColumnName("customer_address");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerTin")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_tin");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("discount");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("Instructions")
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("instructions");
+
+                    b.Property<bool>("IsPaid")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_active");
+                        .HasColumnName("is_paid");
 
-                    b.Property<bool>("IsManagerial")
+                    b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_managerial");
+                        .HasColumnName("is_printed");
 
-                    b.Property<string>("LastName")
+                    b.Property<string>("PaymentStatus")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("last_name");
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("payment_status");
 
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("middle_name");
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date")
+                        .HasColumnName("period");
 
-                    b.Property<string>("PagibigNo")
-                        .HasColumnType("text")
-                        .HasColumnName("pagibig_no");
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
 
-                    b.Property<string>("Paygrade")
-                        .HasColumnType("text")
-                        .HasColumnName("paygrade");
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
 
-                    b.Property<string>("PhilhealthNo")
-                        .HasColumnType("text")
-                        .HasColumnName("philhealth_no");
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_id");
 
-                    b.Property<string>("Position")
+                    b.Property<string>("ServiceInvoiceNo")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("position");
-
-                    b.Property<decimal>("Salary")
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("salary");
-
-                    b.Property<string>("SssNo")
-                        .HasColumnType("text")
-                        .HasColumnName("sss_no");
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("service_invoice_no");
 
                     b.Property<string>("StationCode")
-                        .HasColumnType("text")
+                        .IsRequired()
+                        .HasColumnType("varchar(3)")
                         .HasColumnName("station_code");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
-                    b.Property<string>("Suffix")
-                        .HasColumnType("varchar(5)")
-                        .HasColumnName("suffix");
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("total");
 
-                    b.Property<string>("Supervisor")
+                    b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("supervisor");
-
-                    b.Property<string>("TelNo")
                         .HasColumnType("text")
-                        .HasColumnName("tel_no");
+                        .HasColumnName("type");
 
-                    b.Property<string>("TinNo")
-                        .HasColumnType("varchar(20)")
-                        .HasColumnName("tin_no");
+                    b.Property<decimal>("UnearnedAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unearned_amount");
 
-                    b.HasKey("EmployeeId")
-                        .HasName("pk_mobility_station_employees");
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
 
-                    b.ToTable("mobility_station_employees", (string)null);
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.HasKey("ServiceInvoiceId")
+                        .HasName("pk_mobility_service_invoices");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mobility_service_invoices_customer_id");
+
+                    b.HasIndex("ServiceId")
+                        .HasDatabaseName("ix_mobility_service_invoices_service_id");
+
+                    b.HasIndex("StationCode")
+                        .HasDatabaseName("ix_mobility_service_invoices_station_code");
+
+                    b.ToTable("mobility_service_invoices", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityStationPump", b =>
@@ -8899,7 +9942,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany()
                         .HasForeignKey("CheckVoucherHeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
 
@@ -9174,6 +10217,94 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CV")
+                        .WithMany()
+                        .HasForeignKey("CheckVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_cv_trade_payments_mobility_check_voucher_headers_c");
+
+                    b.Navigation("CV");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeader")
+                        .WithMany()
+                        .HasForeignKey("CheckVoucherHeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_check_voucher_details_mobility_check_voucher_heade");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .HasConstraintName("fk_mobility_check_voucher_details_mobility_suppliers_supplier_");
+
+                    b.Navigation("CheckVoucherHeader");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityBankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_check_voucher_headers_mobility_bank_accounts_bank_");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStationEmployee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .HasConstraintName("fk_mobility_check_voucher_headers_mobility_station_employees_e");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_check_voucher_headers_mobility_suppliers_supplier_");
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_collection_receipts_mobility_customers_customer_id");
+
+                    b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
+                        .WithMany()
+                        .HasForeignKey("ServiceInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_collection_receipts_mobility_service_invoices_serv");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ServiceInvoice");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
+                        .WithMany()
+                        .HasForeignKey("ServiceInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_credit_memos_mobility_service_invoices_service_inv");
+
+                    b.Navigation("ServiceInvoice");
+                });
+
             modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
@@ -9234,6 +10365,17 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
+                        .WithMany()
+                        .HasForeignKey("ServiceInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_mobility_debit_memos_mobility_service_invoices_service_invo");
+
+                    b.Navigation("ServiceInvoice");
+                });
+
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityLubePurchaseHeader", "LubePurchaseHeader")
@@ -9244,6 +10386,27 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_mobility_lube_purchase_details_mobility_lube_purchase_heade");
 
                     b.Navigation("LubePurchaseHeader");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeaderInvoice")
+                        .WithMany()
+                        .HasForeignKey("CheckVoucherHeaderInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_multiple_check_voucher_payments_mobility_check_vou");
+
+                    b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeaderPayment")
+                        .WithMany()
+                        .HasForeignKey("CheckVoucherHeaderPaymentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_multiple_check_voucher_payments_mobility_check_vou1");
+
+                    b.Navigation("CheckVoucherHeaderInvoice");
+
+                    b.Navigation("CheckVoucherHeaderPayment");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityPurchaseOrder", b =>
@@ -9307,6 +10470,36 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_mobility_sales_details_mobility_sales_headers_sales_header_");
 
                     b.Navigation("SalesHeader");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
+                {
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_service_invoices_mobility_customers_customer_id");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_service_invoices_mobility_services_service_id");
+
+                    b.HasOne("IBS.Models.Mobility.MasterFile.MobilityStation", "MobilityStation")
+                        .WithMany()
+                        .HasForeignKey("StationCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mobility_service_invoices_mobility_stations_station_code");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("MobilityStation");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("IBS.Models.UserNotification", b =>

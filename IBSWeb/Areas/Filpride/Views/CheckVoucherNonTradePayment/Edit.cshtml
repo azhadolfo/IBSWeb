@@ -229,9 +229,7 @@
                         data: { cvId: cvSelect, supplierId: supplierId, },
                         success: function (data) {
                             if (data && data.journalEntries) {
-
-                                // Set the particulars from the first CV
-                                $("#Particulars").val(data.particulars);
+                                
 
                                 // Add CV balance rows and create payment details
                                 if (data.cvBalances && data.cvBalances.length > 0) {

@@ -189,7 +189,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Purchase Order created successfully";
+                    TempData["success"] = $"Purchase Order created successfully. Series Number: {model.PurchaseOrderNo}.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)

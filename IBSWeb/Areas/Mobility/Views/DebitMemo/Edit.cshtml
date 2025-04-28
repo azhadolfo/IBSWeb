@@ -1,0 +1,118 @@
+@model DebitMemoViewModel
+
+@{
+    ViewData["Title"] = "Edit Debit Memo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Edit Debit Memo</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Edit">
+            @Html.AntiForgeryToken()
+            <input asp-for="DebitMemoId" type="hidden"/>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group mb-3">
+                <label asp-for="TransactionDate" class="control-label"></label>
+                <input asp-for="TransactionDate" type="Date" class="form-control"/>
+                <span asp-validation-for="TransactionDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ServiceInvoiceId" class="control-label"></label>
+                <select asp-for="ServiceInvoiceId" asp-items="@Model.ServiceInvoices" class="form-control js-select2" style="width:100%" required>
+                    <option></option>
+                    <span asp-validation-for="ServiceInvoiceId" class="text-danger"></span>
+                </select>
+                <div class="row g-2 mt-3">
+                    <div class="col-sm mb-3">
+                        <label asp-for="Period" class="control-label"></label>
+                        <input asp-for="Period" type="month" class="form-control" readonly/>
+                        <span asp-validation-for="Period" class="text-danger"></span>
+                    </div>
+                    <div class="col-sm">
+                        <label asp-for="Amount" class="control-label"></label>
+                        <input asp-for="Amount" class="form-control moneyInput" placeholder="0.000"/>
+                        <span asp-validation-for="Amount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Description" id="floatingInput" type="text" class="form-control" placeholder="Optional"/>
+                <label for="floatingInput" class="control-label">Description</label>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Remarks" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                <label asp-for="Remarks" class="control-label">Remarks</label>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Save</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Mobility" asp-controller="DebitMemo" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Get the current date in the format "YYYY-MM-DD" (required for the date input)
+        let currentDate = new Date().toISOString().slice(0, 10);
+    </script>
+    <script>
+        $("#ServiceInvoiceId").change(function () {
+            let svId = $(this).val();
+            if (svId !== "") {
+                // Make an AJAX request to get the customer details based on the selected CustomerId
+                $.ajax({
+                    url: '@Url.Action("GetSVDetails", "DebitMemo", new { area = "Mobility" })', // Replace with the actual controller and action names
+                    method: "GET",
+                    data: { svId: svId },
+                    success: function (data) {
+                        if (data) {
+                            let forrmattedDate = formatDateToMonth(data.period);
+                            $("#Period").val(forrmattedDate);
+                        } else {
+                            $("#Period").empty();
+                            $("#Amount").empty();
+                        }
+                    }
+                });
+            } else {
+                // Clear the fields if no customer is selected
+                $("#periodContainer").empty();
+                $("#amountContainer").empty();
+            }
+        });
+
+        function formatDateToMonth(dateString) {
+            // Parse the date string to a Date object
+            const date = new Date(dateString);
+
+            // Get the year and month from the date object
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Adding 1 because month index starts from 0
+
+            // Return the formatted date string in yyyy-MM format
+            return `${year}-${month}`;
+        }
+    </script>
+}

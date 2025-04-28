@@ -102,5 +102,18 @@ namespace IBS.DataAccess.Repository.Mobility
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<SelectListItem>> GetmobilityTradeSupplierListAsyncById(string stationCode, CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilitySuppliers
+                .OrderBy(s => s.SupplierCode)
+                .Where(s => s.IsActive && s.Category == "Trade" && s.StationCode == stationCode)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SupplierId.ToString(),
+                    Text = s.SupplierCode + " " + s.SupplierName
+                })
+                .ToListAsync(cancellationToken);
+        }
     }
 }

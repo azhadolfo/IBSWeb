@@ -57,6 +57,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IServiceRepository MobilityService { get; }
         Mobility.IRepository.IProductRepository MobilityProduct { get; }
         Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; }
+        Mobility.IRepository.IEmployeeRepository MobilityEmployee { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -64,6 +65,11 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
+        Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; }
+        Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
+        Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
+        Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
+        Mobility.IRepository.ICollectionReceiptRepository MobilityCollectionReceipt { get; }
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
 
@@ -85,6 +91,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMobilityCustomerListAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
         Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMobilityProductListAsyncByCode(CancellationToken cancellationToken = default);
@@ -102,7 +109,7 @@ namespace IBS.DataAccess.Repository.IRepository
         Filpride.IRepository.ICustomerRepository FilprideCustomer { get; }
         IAuditTrailRepository FilprideAuditTrail { get; }
 
-        IEmployeeRepository FilprideEmployee { get; }
+        Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; }
 
         Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default);
 
@@ -131,18 +138,18 @@ namespace IBS.DataAccess.Repository.IRepository
         #region Accounts Receivable
         ISalesInvoiceRepository FilprideSalesInvoice { get; }
 
-        IServiceInvoiceRepository FilprideServiceInvoice { get; }
+        Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; }
 
-        ICollectionReceiptRepository FilprideCollectionReceipt { get; }
+        Filpride.IRepository.ICollectionReceiptRepository FilprideCollectionReceipt { get; }
 
-        IDebitMemoRepository FilprideDebitMemo { get; }
+        Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; }
 
-        ICreditMemoRepository FilprideCreditMemo { get; }
+        Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; }
         #endregion
 
         #region Accounts Payable
 
-        ICheckVoucherRepository FilprideCheckVoucher { get; }
+        Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; }
 
         IJournalVoucherRepository FilprideJournalVoucher { get; }
 

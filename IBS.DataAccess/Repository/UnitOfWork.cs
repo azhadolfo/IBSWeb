@@ -67,9 +67,15 @@ namespace IBS.DataAccess.Repository
         public IBankAccountRepository MobilityBankAccount { get; private set; }
         public IServiceRepository MobilityService { get; private set; }
         public Mobility.IRepository.IProductRepository MobilityProduct { get; private set; }
-        public IPickUpPointRepository MobilityPickUpPoint { get; private set; }
-        public IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
-        public IReceivingReportRepository MobilityReceivingReport { get; private set; }
+        public Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; private set; }
+        public Mobility.IRepository.IEmployeeRepository MobilityEmployee { get; private set; }
+        public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
+        public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
+        public Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; private set; }
+        public Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; private set; }
+        public Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; private set; }
+        public Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; private set; }
+        public Mobility.IRepository.ICollectionReceiptRepository MobilityCollectionReceipt { get; private set; }
 
         public ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; private set; }
 
@@ -88,7 +94,7 @@ namespace IBS.DataAccess.Repository
         public IAuthorityToLoadRepository FilprideAuthorityToLoad { get; private set; }
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
         public IAuditTrailRepository FilprideAuditTrail { get; private set; }
-        public IEmployeeRepository FilprideEmployee { get; private set; }
+        public Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; private set; }
 
         #endregion
 
@@ -97,17 +103,17 @@ namespace IBS.DataAccess.Repository
         #region Accounts Receivable
         public ISalesInvoiceRepository FilprideSalesInvoice { get; private set; }
 
-        public IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
+        public Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; private set; }
 
-        public ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
+        public Filpride.IRepository.ICollectionReceiptRepository FilprideCollectionReceipt { get; private set; }
 
-        public IDebitMemoRepository FilprideDebitMemo { get; private set; }
+        public Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; private set; }
 
-        public ICreditMemoRepository FilprideCreditMemo { get; private set; }
+        public Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; private set; }
         #endregion
 
         #region Accounts Payable
-        public ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
+        public Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
 
         public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
 
@@ -164,10 +170,16 @@ namespace IBS.DataAccess.Repository
             MobilityBankAccount = new BankAccountRepository(_db);
             MobilityService = new ServiceRepository(_db);
             MobilityProduct = new Mobility.ProductRepository(_db);
-            MobilityPickUpPoint = new PickUpPointRepository(_db);
-            MobilityPurchaseOrder = new PurchaseOrderRepository(_db);
-            MobilityReceivingReport = new ReceivingReportRepository(_db);
-            MobilityCustomerOrderSlip = new CustomerOrderSlipRepository(_db);
+            MobilityPickUpPoint = new Mobility.PickUpPointRepository(_db);
+            MobilityEmployee = new Mobility.EmployeeRepository(_db);
+            MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
+            MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
+            MobilityCheckVoucher = new Mobility.CheckVoucherRepository(_db);
+            MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
+            MobilityServiceInvoice = new Mobility.ServiceInvoiceRepository(_db);
+            MobilityCreditMemo = new Mobility.CreditMemoRepository(_db);
+            MobilityDebitMemo = new Mobility.DebitMemoRepository(_db);
+            MobilityCollectionReceipt = new Mobility.CollectionReceiptRepository(_db);
             MobilityDeposit = new DepositRepository(_db);
 
             #endregion
@@ -183,7 +195,7 @@ namespace IBS.DataAccess.Repository
             FilprideAuthorityToLoad = new AuthorityToLoadRepository(_db);
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
             FilprideAuditTrail = new AuditTrailRepository(_db);
-            FilprideEmployee = new EmployeeRepository(_db);
+            FilprideEmployee = new Filpride.EmployeeRepository(_db);
 
             #endregion
 
@@ -191,14 +203,14 @@ namespace IBS.DataAccess.Repository
 
             #region Accounts Receivable
             FilprideSalesInvoice = new SalesInvoiceRepository(_db);
-            FilprideServiceInvoice = new ServiceInvoiceRepository(_db);
-            FilprideCollectionReceipt = new CollectionReceiptRepository(_db);
-            FilprideDebitMemo = new DebitMemoRepository(_db);
-            FilprideCreditMemo = new CreditMemoRepository(_db);
+            FilprideServiceInvoice = new Filpride.ServiceInvoiceRepository(_db);
+            FilprideCollectionReceipt = new Filpride.CollectionReceiptRepository(_db);
+            FilprideDebitMemo = new Filpride.DebitMemoRepository(_db);
+            FilprideCreditMemo = new Filpride.CreditMemoRepository(_db);
             #endregion
 
             #region Accounts Payable
-            FilprideCheckVoucher = new CheckVoucherRepository(_db);
+            FilprideCheckVoucher = new Filpride.CheckVoucherRepository(_db);
             FilprideJournalVoucher = new JournalVoucherRepository(_db);
             FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
             FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);
@@ -417,6 +429,19 @@ namespace IBS.DataAccess.Repository
                 .OrderBy(c => c.CustomerId)
                 .Where(c => c.IsActive)
                 .Where(GetCompanyFilter<FilprideCustomer>(company))
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CustomerId.ToString(),
+                    Text = c.CustomerName
+                })
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMobilityCustomerListAsync(string stationCodeClaims, CancellationToken cancellationToken = default)
+        {
+            return await _db.MobilityCustomers
+                .OrderBy(c => c.CustomerId)
+                .Where(c => c.IsActive && c.StationCode == stationCodeClaims)
                 .Select(c => new SelectListItem
                 {
                     Value = c.CustomerId.ToString(),

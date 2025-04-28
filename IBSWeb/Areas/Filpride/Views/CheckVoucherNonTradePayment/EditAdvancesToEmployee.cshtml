@@ -28,7 +28,7 @@
                 <input type="hidden" asp-for="CvId"/>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" />
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -75,7 +75,7 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="CheckDate" type="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control"/>
+                    <input asp-for="CheckDate" type="Date" class="form-control"/>
                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
@@ -127,7 +127,7 @@
                 <br/>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Create</button>
+                        <button type="submit" class="btn btn-primary form-control" onclick="validateDebitAndCredit(event)">Save</button>
                     </div>
                     <div class="col-6 col-md-3">
                         <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
