@@ -2,6 +2,7 @@ using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -182,18 +183,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
             decimal posPoSalesTotal = 0;
             decimal posSalesTotal = 0;
             decimal fmsSalesTotal = 0;
+            var currentDate = model.Period;
+            var currentShift = 1;
+            var currentPage = 1;
+            var isFirstRow = true;
+            var lastFmsData = groupedData.FirstOrDefault().FirstOrDefault(x => x.Source == "FMS");
+            var lastPosData = groupedData.FirstOrDefault().FirstOrDefault(x => x.Source == "POS");
 
 
             foreach (var group in groupedData)
             {
                 var fmsData = group.FirstOrDefault(x => x.Source == "FMS");
                 var posData = group.FirstOrDefault(x => x.Source == "POS");
+                var isNewShift = !isFirstRow && (currentDate != group.Key.Date || currentShift != group.Key.Shift || currentPage != group.Key.PageNumber);
+                currentDate = group.Key.Date;
+                currentShift = group.Key.Shift;
+                currentPage = group.Key.PageNumber;
 
                 // Common fields
                 col = 1;
-                worksheet.Cells[row, col++].Value = group.Key.Date;
-                worksheet.Cells[row, col++].Value = group.Key.Shift;
-                worksheet.Cells[row, col++].Value = group.Key.PageNumber;
+                worksheet.Cells[row, col++].Value = currentDate;
+                worksheet.Cells[row, col++].Value = currentShift;
+                worksheet.Cells[row, col++].Value = currentPage;
                 worksheet.Cells[row, col++].Value = group.Key.Product;
                 worksheet.Cells[row, col++].Value = group.Key.PumpNumber;
 
@@ -271,56 +282,122 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         salesDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
-                decimal poSalesDiff = (posData?.POSales ?? 0m) - (fmsData?.POSales ?? 0m);
-                fmsPoSalesTotal += fmsData?.POSales ?? 0m;
-                posPoSalesTotal += posData?.POSales ?? 0m;
+                if (isNewShift)
+                {
+                    int endOfShiftRow = row - 1;
+                    decimal poSalesDiff = (lastPosData?.POSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
+                    fmsPoSalesTotal += lastFmsData?.POSales ?? 0m;
+                    posPoSalesTotal += lastPosData?.POSales ?? 0m;
 
-                worksheet.Cells[row, col++].Value = fmsData?.POSales;
-                worksheet.Cells[row, col++].Value = posData?.POSales;
-                worksheet.Cells[row, col++].Value = poSalesDiff;
+                    worksheet.Cells[endOfShiftRow, col++].Value = lastFmsData?.POSales;
+                    worksheet.Cells[endOfShiftRow, col++].Value = lastPosData?.POSales;
+                    worksheet.Cells[endOfShiftRow, col++].Value = poSalesDiff;
+
+
+                    if (Math.Abs(poSalesDiff) > 0.1m)
+                    {
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
+                            poSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                    }
+
+                    decimal totalPosSales = (lastPosData?.FuelSales ?? 0m) - (lastPosData?.POSales ?? 0m);
+                    decimal totalFmsSales = (lastFmsData?.FuelSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
+                    decimal totalSalesDiff = totalPosSales - totalFmsSales;
+                    posSalesTotal += totalPosSales;
+                    fmsSalesTotal += totalFmsSales;
+
+                    worksheet.Cells[endOfShiftRow, col++].Value = totalFmsSales;
+                    worksheet.Cells[endOfShiftRow, col++].Value = totalPosSales;
+                    worksheet.Cells[endOfShiftRow, col++].Value = totalSalesDiff;
+
+                    if (Math.Abs(totalSalesDiff) > 0.1m)
+                    {
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
+                            totalSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
+                    }
+
+                    decimal cashDropDiff = (lastPosData?.CashDrop ?? 0m) - (lastFmsData?.CashDrop ?? 0m);
+                    fmsCashdropTotal += lastFmsData?.CashDrop ?? 0m;
+                    posCashdropTotal += lastPosData?.CashDrop ?? 0m;
+
+                    worksheet.Cells[endOfShiftRow, col++].Value = lastFmsData?.CashDrop;
+                    worksheet.Cells[endOfShiftRow, col++].Value = lastPosData?.CashDrop;
+                    worksheet.Cells[endOfShiftRow, col++].Value = cashDropDiff;
+
+
+                    if (Math.Abs(cashDropDiff) > 0.1m)
+                    {
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
+                            cashDropDiff < 0 ? Color.LightPink : Color.LightGreen);
+                    }
+
+                    //Remove the shade background color and change it to normal
+                }
+                else
+                {
+                    //Shade the background color
+                }
+
+                lastFmsData = fmsData;
+                lastPosData = posData;
+                isFirstRow = false;
+                row++;
+            }
+
+            if (!isFirstRow)
+            {
+                int endOfShiftRow = row - 1;
+                decimal poSalesDiff = (lastPosData?.POSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
+                fmsPoSalesTotal += lastFmsData?.POSales ?? 0m;
+                posPoSalesTotal += lastPosData?.POSales ?? 0m;
+
+                worksheet.Cells[endOfShiftRow, col++].Value = lastFmsData?.POSales;
+                worksheet.Cells[endOfShiftRow, col++].Value = lastPosData?.POSales;
+                worksheet.Cells[endOfShiftRow, col++].Value = poSalesDiff;
 
 
                 if (Math.Abs(poSalesDiff) > 0.1m)
                 {
-                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
                         poSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
-                decimal totalPosSales = (posData?.Value ?? 0m) - (posData?.POSales ?? 0m);
-                decimal totalFmsSales = (fmsData?.Value ?? 0m) - (fmsData?.POSales ?? 0m);
+                decimal totalPosSales = (lastPosData?.FuelSales ?? 0m) - (lastPosData?.POSales ?? 0m);
+                decimal totalFmsSales = (lastFmsData?.FuelSales ?? 0m) - (lastFmsData?.POSales ?? 0m);
                 decimal totalSalesDiff = totalPosSales - totalFmsSales;
                 posSalesTotal += totalPosSales;
                 fmsSalesTotal += totalFmsSales;
 
-                worksheet.Cells[row, col++].Value = totalFmsSales;
-                worksheet.Cells[row, col++].Value = totalPosSales;
-                worksheet.Cells[row, col++].Value = totalSalesDiff;
+                worksheet.Cells[endOfShiftRow, col++].Value = totalFmsSales;
+                worksheet.Cells[endOfShiftRow, col++].Value = totalPosSales;
+                worksheet.Cells[endOfShiftRow, col++].Value = totalSalesDiff;
 
                 if (Math.Abs(totalSalesDiff) > 0.1m)
                 {
-                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
                         totalSalesDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
 
-                decimal cashDropDiff = (posData?.CashDrop ?? 0m) - (fmsData?.CashDrop ?? 0m);
-                fmsCashdropTotal += fmsData?.CashDrop ?? 0m;
-                posCashdropTotal += posData?.CashDrop ?? 0m;
+                decimal cashDropDiff = (lastPosData?.CashDrop ?? 0m) - (lastFmsData?.CashDrop ?? 0m);
+                fmsCashdropTotal += lastFmsData?.CashDrop ?? 0m;
+                posCashdropTotal += lastPosData?.CashDrop ?? 0m;
 
-                worksheet.Cells[row, col++].Value = fmsData?.CashDrop;
-                worksheet.Cells[row, col++].Value = posData?.CashDrop;
-                worksheet.Cells[row, col++].Value = cashDropDiff;
+                worksheet.Cells[endOfShiftRow, col++].Value = lastFmsData?.CashDrop;
+                worksheet.Cells[endOfShiftRow, col++].Value = lastPosData?.CashDrop;
+                worksheet.Cells[endOfShiftRow, col++].Value = cashDropDiff;
 
 
                 if (Math.Abs(cashDropDiff) > 0.1m)
                 {
-                    worksheet.Cells[row, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, col - 1].Style.Fill.BackgroundColor.SetColor(
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[endOfShiftRow, col - 1].Style.Fill.BackgroundColor.SetColor(
                         cashDropDiff < 0 ? Color.LightPink : Color.LightGreen);
                 }
-
-                row++;
             }
 
             // Add totals row

@@ -1417,7 +1417,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     TimeOut = data.Shift.TimeOut,
                     FuelSalesTotalAmount = data.Calibrations.Count == 0
                         ? data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price)
-                        : data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price) - data.FuelSales.Sum(f => (f.Closing - f.Opening) * f.Price),
+                        : data.FuelSales.Sum(f => ((f.Closing - f.Opening) - data.Calibrations.Sum(x => x.Quantity)) * f.Price),
                     LubesTotalAmount = data.LubeSales.Sum(l => l.Quantity * l.Price),
                     SafeDropTotalAmount = data.Shift.CashOnHand,
                     POSalesTotalAmount = data.POSales.Sum(p => p.Price * p.Quantity),
