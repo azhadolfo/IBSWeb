@@ -293,9 +293,9 @@
                         "render": function(data, type, row) {
                             const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
                             if (row.status !== "Cancelled") {
-                                return `<input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}>`;
+                                return `<div class="row"><div class="col text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div></div> `;
                             } else {
-                                return `<input type="checkbox" disabled>`;
+                                return `<div class="row"><div class="col"><input type="checkbox" disabled></div></div>`;
                             }
                         }
                     },
