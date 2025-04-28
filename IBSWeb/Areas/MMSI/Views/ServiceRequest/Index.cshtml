@@ -295,7 +295,7 @@
                             if (row.status !== "Cancelled") {
                                 return `<div class="row"><div class="col text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div></div> `;
                             } else {
-                                return `<div class="row"><div class="col"><input type="checkbox" disabled></div></div>`;
+                                return `<div class="row"><div class="col text-center"><input type="checkbox" disabled></div></div>`;
                             }
                         }
                     },
@@ -309,42 +309,58 @@
                     {"data": "tugboat.tugboatName"},
                     {"data": "tugMaster.tugMasterName"},
                     {"data": "vessel.vesselName"},
-                    {"data": "status"},
                     {
-                        "data": "checkVoucherHeaderId",
+                        "data": null,
                         "orderable": false,
+                        "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
-                            let actions = `<div class="d-flex justify-content-center" style="width: 150px;">`;
+                            let statusColor = ``;
+                            if (row.status === "For Posting"){
+                                statusColor = `bg-info`
+                            }
+                            else {
+                                statusColor = `bg-secondary`
+                            }
+                            
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center">`; // d-flex here
+                            actions += `<div style="width:150px;">`; // Fixed width, centered
 
-                            if (row.imageName || row.videoName)
-                            {
+                            if (row.imageName || row.videoName) {
                                 actions += `<div class="dropdown w-100">
-                                                <button class="btn btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                                <ul class="dropdown-menu">`;
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu">`;
 
-                                if (row.status !== "Cancelled")
-                                {
+                                if (row.status !== "Cancelled") {
                                     actions += `<li><a class="dropdown-item" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>`;
                                 }
-                                if (row.imageName)
-                                {
+                                if (row.imageName) {
                                     actions += `<li><a class="dropdown-item view-upload" href="#" data-uploadname="${row.imageSignedUrl}"><i class="bi bi-eye-fill"></i> View Image</a></li>`;
                                 }
-                                if (row.videoName)
-                                {
+                                if (row.videoName) {
                                     actions += `<li><a class="dropdown-item view-video" href="#" data-videolink="${row.videoSignedUrl}"><i class="bi bi-play-circle-fill"></i> Play Video</a></li>`;
                                 }
                                 actions += `</ul>
-                                        </div>`;
-                            }
-                            else
-                            {
+                        </div>`;
+                            } else {
                                 actions += `<a class="btn btn-primary w-100" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
                             }
-                            actions += `</div>`;
+
+                            actions += `</div>`; // close width div
+                            actions += `</div>`; // close flex-center div
                             return actions;
-                        }
+                        },
                     }
+
                 ]
             });
             
