@@ -505,53 +505,6 @@
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item dropend">
                                                 <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    MMSI Master File
-                                                </a>
-                                                <ul class="dropdown-menu">
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="ActivityService" asp-action="Index"> Activities/Services</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Customer" asp-action="Index"> Customers</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Port" asp-action="Index"> Ports</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Principal" asp-action="Index"> Principals</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="TariffRate" asp-action="Index"> Tariff Rates</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Terminal" asp-action="Index"> Terminals</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="TugMaster" asp-action="Index"> Tug Masters</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="CompanyOwner" asp-action="Index"> Tugboat Company/Owner</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Tugboat" asp-action="Index"> Tugboats</a>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Vessel" asp-action="Index"> Vessels</a>
-                                                    </li>
-                                                </ul>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item dropend">
-                                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                     MMSI Reports
                                                 </a>
                                                 <ul class="dropdown-menu">
@@ -793,6 +746,55 @@
                                             </li>
                                         </ul>
                                     </li>
+                                    @if (selectedCompany == "MMSI")
+                                    {
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                MMSI Master File
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="ActivityService" asp-action="Index"> Activities/Services</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Customer" asp-action="Index"> Customers</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Port" asp-action="Index"> Ports</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Principal" asp-action="Index"> Principals</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="TariffRate" asp-action="Index"> Tariff Rates</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Terminal" asp-action="Index"> Terminals</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="TugMaster" asp-action="Index"> Tug Masters</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="CompanyOwner" asp-action="Index"> Tugboat Company/Owner</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Tugboat" asp-action="Index"> Tugboats</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li class="nav-item">
+                                                    <a class="dropdown-item text-dark" asp-area="MMSI" asp-controller="Vessel" asp-action="Index"> Vessels</a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    }
                                 }
                             }
                             
