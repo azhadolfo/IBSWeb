@@ -89,7 +89,6 @@
     <script>
         // Event listeners
         $(document).ready(function () {
-            console.log("readyfunction");
             const previewUrl = '@Url.Action("Preview", "Billing")';
             const editUrl = '@Url.Action("Edit", "Billing")';
 
@@ -149,7 +148,6 @@
                         "data": "null",
                         "orderable": false,
                         "render": function(data, type, row) {
-                            console.log("test");
                             let actions = `<div class="align-content-center text-center" style="width: 150px !important;">`;
                             
                             if (row.status !== "For Collection")

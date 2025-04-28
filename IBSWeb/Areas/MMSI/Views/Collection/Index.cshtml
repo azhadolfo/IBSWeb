@@ -10,53 +10,67 @@
         width: 100% !important;
     }
 
-    .card-body {
-        margin: 5px !important;
-        padding: 5px !important;
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
     }
 </style>
 
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
-
 <div class="container-fluid mt-4">
-    
-    <div class="card shadow mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Billing</h2>
+        <a asp-area="MMSI" asp-controller="Collection" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Create Collection
+        </a>
+    </div>
 
-        <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">COLLECTION LIST</h2>
-            </div>
-        </div>
-
-        <div class="card-body table-responsive">
-
-            <div class="row justify-content-end mx-0">
-                <div class="text-center" style="width: 150px;">
-                    <a class="btn btn-primary w-100 align-content-center" asp-action="Create" asp-controller="Collection">
-                        <i class="bi bi-plus-circle"></i> Create
-                    </a>
-                </div>
-            </div>
-            
-            <div class="card-body">
-                <table id="dataTable" class="table table-striped table-bordered" style="width:100%" data-order='[[0, "asc"]]'>
-                    <thead>
-                        <tr>
-                            <th class="text-center align-content-center">Date</th>
-                            <th class="text-center align-content-center">Collection Number</th>
-                            <th class="text-center align-content-center">Check Date</th>
-                            <th class="text-center align-content-center">Date Deposited</th>
-                            <th class="text-center align-content-center">Amount</th>
-                            <th class="text-center align-content-center">Customer</th>
-                            <th class="text-center align-content-center">Actions</th>
-                        </tr>
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">DATE</th>
+                        <th class="text-start">COLLECTION #</th>
+                        <th class="text-start">CHECK DATE</th>
+                        <th class="text-start">DATE DEPOSITED</th>
+                        <th class="text-start">AMOUNT</th>
+                        <th class="text-start">CUSTOMER</th>
+                        <th class="text-center" style="width: 100px;">ACTIONS</th>
+                    </tr>
                     </thead>
-                    <tbody>
-
-                    </tbody>
                 </table>
             </div>
         </div>
@@ -65,70 +79,86 @@
 
 @section Scripts {
     <script>
-
-        function handleStatusChange() {
-
-            $.ajax({
-                url: '@Url.Action("GetCollections", "Collection")',
-                type: "GET",
-                success: function (data) {
-                    // Destroy existing DataTable if initialized
-                    if ($.fn.DataTable.isDataTable("#dataTable")) {
-                        $("#dataTable").DataTable().destroy();
-                    }
-
-                    // Clear table body
-                    $("#dataTable tbody").empty();
-
-                    // Populate table with new data
-                    data.forEach((value, index) => {
-
-                        $("#dataTable tbody").append(`
-                                <tr>
-                                    <td class="text-center align-content-center ">${value.date}</td>
-                                    <td class="text-center align-content-center ">${value.collectionNumber}</td>
-                                    <td class="text-center align-content-center ">${value.checkDate}</td>
-                                    <td class="text-center align-content-center ">${value.depositDate}</td>
-                                    <td class="text-center align-content-center ">${value.amount}</td>
-                                    <td class="text-center align-content-center ">${value.customer.customerName}</td>
-                                    <td class="text-center justify-content-center d-flex">
-                                        <div class="dropdown align-content-center col-12">
-                                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                            <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
-                                                <li><a class="dropdown-item" href="/MMSI/Collection/Preview/${value.mmsiCollectionId}"><i class="bi bi-eye-fill"></i> View</a></li>
-                                                <li><a class="dropdown-item" href="/MMSI/Collection/Edit/${value.mmsiCollectionId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `);
-                    });
-
-                    // Initialize DataTable with custom options
-                    $("#dataTable").DataTable({
-                        paging: true,
-                        searching: true,
-                        info: true,
-                        lengthChange: true,
-                        columnDefs: [
-                            {
-                                "targets": 6,
-                                "width": "150px",
-                                "className": "text-center",
-                                "orderable": false
-                            }
-                        ]
-                    });
-                },
-                error: function (xhr, status, error) {
-                    console.error("AJAX error:", error);
-                }
-            });
-        }
-        
+        // Event listeners
         $(document).ready(function () {
-            handleStatusChange();
+            const previewUrl = '@Url.Action("Preview", "Collection")';
+            const editUrl = '@Url.Action("Edit", "Collection")';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[1, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [6] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetCollectionList", "Collection", new { area = "MMSI" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {"data": "date"},
+                    {"data": "mmsiCollectionNumber"},
+                    {"data": "checkDate"},
+                    {"data": "depositDate"},
+                    {
+                        "data": "amount",
+                        "render": function (data, type, row) {
+                            return parseFloat(data).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
+                    },
+                    {"data": "customer.customerName"},
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="align-content-center text-center" style="width: 150px !important;">`;
+                            
+                            if (row.status !== "For Collection")
+                            {
+                                actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.mmsiCollectionId}"><i class="bi bi-eye"></i> View</a>`
+                            }
+                            else
+                            {
+                                actions += `<div class="dropdown align-content-center">
+                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
+                                            <li><a class="dropdown-item" href="${previewUrl}?id=${row.mmsiCollectionId}"><i class="bi bi-eye-fill"></i> View</a></li>
+                                            <li><a class="dropdown-item" href="${editUrl}?id=${row.mmsiCollectionId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                        </ul>
+                                    </div>`
+                            }
+                                `</div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
         });
-    
     </script>
 }

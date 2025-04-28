@@ -1,5 +1,7 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -16,12 +18,15 @@ namespace IBSWeb.Areas.MMSI
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<CollectionController> _logger;
 
-        public CollectionController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public CollectionController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager, ILogger<CollectionController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -50,7 +55,7 @@ namespace IBSWeb.Areas.MMSI
 
                     if (model.IsUndocumented)
                     {
-                        model.CollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
+                        model.MMSICollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
                     }
 
                     await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
@@ -94,7 +99,7 @@ namespace IBSWeb.Areas.MMSI
 
                     if (model.IsUndocumented)
                     {
-                        TempData["success"] = $"Collection was successfully created. Control Number: {model.CollectionNumber}";
+                        TempData["success"] = $"Collection was successfully created. Control Number: {model.MMSICollectionNumber}";
                     }
                     else
                     {
@@ -121,6 +126,67 @@ namespace IBSWeb.Areas.MMSI
                 model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
 
                 return View(model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCollectionList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var queried = await _dbContext.MMSICollections
+                    .Include(b => b.Customer)
+                    .ToListAsync(cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(dt =>
+                        dt.Customer?.CustomerName.ToString().Contains(searchValue) == true ||
+                        dt.Status.Contains(searchValue) == true
+                        )
+                    .ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = queried.Count();
+
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get disbursements.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 

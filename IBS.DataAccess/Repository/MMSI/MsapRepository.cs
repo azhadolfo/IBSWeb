@@ -290,8 +290,8 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<string> GenerateCollectionNumber (CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSICollections
-                .Where(b => b.IsUndocumented == true && b.CollectionNumber != null)
-                .OrderByDescending(b => b.CollectionNumber)
+                .Where(b => b.IsUndocumented == true && b.MMSICollectionNumber != null)
+                .OrderByDescending(b => b.MMSICollectionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if(lastRecord == null)
@@ -300,7 +300,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
             else
             {
-                var lastSeries = lastRecord.CollectionNumber.Substring(3);
+                var lastSeries = lastRecord.MMSICollectionNumber.Substring(3);
                 int parsed = int.Parse(lastSeries) + 1;
                 return "CL" + (parsed.ToString("D8"));
             }
