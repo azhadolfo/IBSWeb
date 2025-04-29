@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 
-namespace IBSWeb.Areas.MMSI
+namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]

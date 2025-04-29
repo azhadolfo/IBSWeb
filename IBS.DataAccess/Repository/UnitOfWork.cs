@@ -245,7 +245,7 @@ namespace IBS.DataAccess.Repository
             Msap = new MsapRepository(_db);
 
             #endregion
-            
+
             #region --Bienes
 
             BienesPlacement = new PlacementRepository(_db);
@@ -432,6 +432,7 @@ namespace IBS.DataAccess.Repository
                 nameof(Filpride) => Expression.Property(param, "IsFilpride"),
                 nameof(Mobility) => Expression.Property(param, "IsMobility"),
                 nameof(Bienes) => Expression.Property(param, "IsBienes"),
+                nameof(MMSI) => Expression.Property(param, "IsMMSI"),
                 _ => Expression.Constant(false)
             };
 

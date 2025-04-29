@@ -112,5 +112,7 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsMobility { get; set; }
 
         public bool IsBienes { get; set; }
+
+        public bool IsMMSI { get; set; }
     }
 }

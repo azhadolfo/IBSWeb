@@ -5,7 +5,7 @@ using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace IBSWeb.Areas.MMSI
+namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]

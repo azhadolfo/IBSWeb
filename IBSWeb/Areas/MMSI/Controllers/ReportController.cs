@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
-namespace IBSWeb.Areas.MMSI
+namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]
