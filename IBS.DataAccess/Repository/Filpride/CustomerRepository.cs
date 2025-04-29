@@ -83,6 +83,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.IsFilpride = model.IsFilpride;
             existingCustomer.IsMobility = model.IsMobility;
             existingCustomer.IsBienes = model.IsBienes;
+            existingCustomer.IsMMSI = model.IsMMSI;
 
             if (_db.ChangeTracker.HasChanges())
             {
