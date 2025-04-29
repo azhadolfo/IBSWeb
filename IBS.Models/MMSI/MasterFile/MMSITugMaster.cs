@@ -10,9 +10,7 @@ namespace IBS.Models.MMSI.MasterFile
 
         [Display(Name = "Tug Master Number")]
         [Required(ErrorMessage = "Tug Master number is required.")]
-        [StringLength(4, MinimumLength = 4, ErrorMessage = "Tug Master number must be exactly 4 characters.")]
         [RegularExpression(@"^\d+$", ErrorMessage = "Tug Master number must be numeric.")]
-        [Column(TypeName = "varchar(4)")]
         public string TugMasterNumber { get; set; }
 
         [Display(Name = "Tug Master")]
