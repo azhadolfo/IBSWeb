@@ -147,7 +147,7 @@
                     {"data": "vessel.vesselName"},
                     {
                         "data": "status",
-                        "orderable": false,
+                        "orderable": true,
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
                             let statusColor = ``;
@@ -176,7 +176,7 @@
                         "data": "null",
                         "orderable": false,
                         "render": function(data, type, row) {
-                            let actions = `<div class="align-content-center text-center" style="width: 150px !important;">`;
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
                             
                             if (row.status !== "For Tariff" && row.status !== "Tariff Pending")
                             {
@@ -197,7 +197,7 @@
                                 actions += `<a class="btn btn-primary col-12" href="${setTariffUrl}?id=${row.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>`;
                             }
                             
-                            actions += `</div>`;
+                            actions += `</div></div>`;
                             return actions;
                         }
                     }

@@ -311,7 +311,7 @@
                     {"data": "vessel.vesselName"},
                     {
                         "data": null,
-                        "orderable": false,
+                        "orderable": true,
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
                             let statusColor = ``;
@@ -332,8 +332,7 @@
                         "orderable": false,
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
-                            let actions = `<div class="d-flex justify-content-center">`; // d-flex here
-                            actions += `<div style="width:150px;">`; // Fixed width, centered
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`; // d-flex here
 
                             if (row.imageName || row.videoName) {
                                 actions += `<div class="dropdown w-100">
@@ -355,8 +354,7 @@
                                 actions += `<a class="btn btn-primary w-100" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
                             }
 
-                            actions += `</div>`; // close width div
-                            actions += `</div>`; // close flex-center div
+                            actions += `</div></div>`; // close width div
                             return actions;
                         },
                     }

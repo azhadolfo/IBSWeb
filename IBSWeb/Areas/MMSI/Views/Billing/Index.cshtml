@@ -143,12 +143,29 @@
                         }
                     },
                     {"data": "vessel.vesselName"},
-                    {"data": "status"},
+                    {
+                        "data": "status",
+                        "orderable": true,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "For Collection"){
+                                statusColor = `bg-info`
+                            }
+                            if (row.status === "Collected"){
+                                statusColor = `bg-success`
+                            }
+
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
                     {
                         "data": "null",
                         "orderable": false,
                         "render": function(data, type, row) {
-                            let actions = `<div class="align-content-center text-center" style="width: 150px !important;">`;
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
                             
                             if (row.status !== "For Collection")
                             {
@@ -164,7 +181,7 @@
                                         </ul>
                                     </div>`
                             }
-                                `</div>`;
+                                `</div></div>`;
                             return actions;
                         }
                     }
