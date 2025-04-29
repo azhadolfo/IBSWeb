@@ -66,6 +66,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
         Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; }
+        Mobility.IRepository.IJournalVoucherRepository MobilityJournalVoucher { get; }
         Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
         Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
         Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
@@ -151,7 +152,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; }
 
-        IJournalVoucherRepository FilprideJournalVoucher { get; }
+        Filpride.IRepository.IJournalVoucherRepository FilprideJournalVoucher { get; }
 
         Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; }
 

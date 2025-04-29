@@ -377,6 +377,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         });
                     }
 
+                    var supplierBIR = await _dbContext.MobilitySuppliers
+                        .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
+                        .Select(s => s.SupplierId)
+                        .FirstOrDefaultAsync();
+
                     if (ewtOnePercentAmount > 0)
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
@@ -388,7 +393,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtOnePercentAmount,
                             Amount = ewtOnePercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -403,7 +408,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtTwoPercentAmount,
                             Amount = ewtTwoPercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -418,7 +423,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtFivePercentAmount,
                             Amount = ewtFivePercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -433,7 +438,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtTenPercentAmount,
                             Amount = ewtTenPercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -923,6 +928,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         });
                     }
 
+                    var supplierBIR = await _dbContext.MobilitySuppliers
+                        .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
+                        .Select(s => s.SupplierId)
+                        .FirstOrDefaultAsync();
+
                     if (ewtOnePercentAmount > 0)
                     {
                         checkVoucherDetails.Add(new MobilityCheckVoucherDetail
@@ -934,7 +944,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtOnePercentAmount,
                             Amount = ewtOnePercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -949,7 +959,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtTwoPercentAmount,
                             Amount = ewtTwoPercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -964,7 +974,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtFivePercentAmount,
                             Amount = ewtFivePercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
@@ -979,7 +989,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             Debit = 0,
                             Credit = ewtTenPercentAmount,
                             Amount = ewtTenPercentAmount,
-                            SupplierId = 133
+                            SupplierId = supplierBIR
                         });
                     }
 
