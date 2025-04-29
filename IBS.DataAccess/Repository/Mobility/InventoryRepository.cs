@@ -97,11 +97,13 @@ namespace IBS.DataAccess.Repository.Mobility
             decimal inventoryBalance = model.InventoryBalance + viewModel.Variance;
             decimal unitCostAverage = runningCost / inventoryBalance;
 
+            var particular = model.ProductCode.Contains("PET") ? "Sounding" : "Count";
+
             MobilityInventory inventory = new()
             {
-                Particulars = viewModel.Variance > 0 ? "Actual Sounding (Gain)" : "Actual Sounding (Loss)",
+                Particulars = viewModel.Variance > 0 ? $"Actual {particular} (Gain)" : $"Actual {particular} (Loss)",
                 Date = viewModel.Date,
-                Reference = viewModel.Variance > 0 ? "Actual Sounding (Gain)" : "Actual Sounding (Loss)",
+                Reference = viewModel.Variance > 0 ? $"Actual {particular} (Gain)" : $"Actual {particular} (Loss)",
                 ProductCode = viewModel.ProductCode,
                 StationCode = model.StationCode,
                 Quantity = viewModel.Variance,
