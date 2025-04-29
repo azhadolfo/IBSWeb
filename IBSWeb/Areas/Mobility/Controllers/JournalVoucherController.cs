@@ -679,64 +679,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --CV Details Entry
 
-                    // Dictionary to keep track of AccountNo and their ids for comparison
-                    var accountTitleDict = new Dictionary<string, List<int>>();
-                    foreach (var details in existingDetailsModel)
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                var details = new List<MobilityJournalVoucherDetail>();
+
+                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                {
+                    details.Add(new MobilityJournalVoucherDetail
                     {
-                        if (!accountTitleDict.ContainsKey(details.AccountNo))
-                        {
-                            accountTitleDict[details.AccountNo] = new List<int>();
-                        }
-                        accountTitleDict[details.AccountNo].Add(details.JournalVoucherDetailId);
-                    }
+                        AccountNo = viewModel.AccountNumber[i],
+                        AccountName = viewModel.AccountTitle[i],
+                        Debit = viewModel.Debit[i],
+                        Credit = viewModel.Credit[i],
+                        TransactionNo = viewModel.JournalVoucherHeaderNo,
+                        JournalVoucherHeaderId = viewModel.JournalVoucherHeaderId
+                    });
+                }
 
-                    // Add or update records
-                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                    {
-                        if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
-                        {
-                            // Update the first matching record and remove it from the list
-                            var detailsId = ids.First();
-                            ids.RemoveAt(0);
-                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
-
-                            details.AccountNo = viewModel.AccountNumber[i];
-                            details.AccountName = viewModel.AccountTitle[i];
-                            details.Debit = viewModel.Debit[i];
-                            details.Credit = viewModel.Credit[i];
-                            details.TransactionNo = viewModel.JournalVoucherHeaderNo;
-                            details.JournalVoucherHeaderId = viewModel.JournalVoucherHeaderId;
-
-                            if (ids.Count == 0)
-                            {
-                                accountTitleDict.Remove(viewModel.AccountNumber[i]);
-                            }
-                        }
-                        else
-                        {
-                            // Add new record
-                            var newDetails = new MobilityJournalVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = viewModel.JournalVoucherHeaderNo,
-                                JournalVoucherHeaderId = viewModel.JournalVoucherHeaderId
-                            };
-                            _dbContext.Add(newDetails);
-                        }
-                    }
-
-                    // Remove remaining records that were duplicates
-                    foreach (var ids in accountTitleDict.Values)
-                    {
-                        foreach (var id in ids)
-                        {
-                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == id);
-                            _dbContext.Remove(details);
-                        }
-                    }
+                await _dbContext.MobilityJournalVoucherDetails.AddRangeAsync(details, cancellationToken);
 
                 #endregion --CV Details Entry
 
