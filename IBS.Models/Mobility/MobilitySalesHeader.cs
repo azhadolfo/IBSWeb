@@ -84,5 +84,7 @@ namespace IBS.Models.Mobility
         #endregion --Added properties for editing purposes
 
         public List<MobilitySalesDetail> SalesDetails { get; set; }
+
+        public int PageNumber { get; set; } = 1;
     }
 }

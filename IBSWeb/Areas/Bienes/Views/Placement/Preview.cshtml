@@ -1,0 +1,539 @@
+﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
+@model BienesPlacement
+
+@{
+    ViewData["Title"] = "Placement Details";
+
+    var trustFeeRate = Model.TrustFeeRate * 100;
+    var ewtRate = Model.EWTRate * 100;
+
+    var termValue = (Model.DateTo.ToDateTime(TimeOnly.MinValue) - Model.DateFrom.ToDateTime(TimeOnly.MinValue)).Days;
+    var trustFee = Model.PrincipalAmount * Model.TrustFeeRate;
+    var interest = Model.PlacementType != PlacementType.LongTerm ?
+    Model.PrincipalAmount * Model.InterestRate * (termValue / 360m) :
+    Model.PrincipalAmount * Model.InterestRate;
+    var ewt = interest * Model.EWTRate;
+    var maturity = Model.PrincipalAmount + interest - ewt - trustFee;
+    var net = interest - ewt - trustFee;
+}
+
+<style>
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        margin-right: 4px;
+        font-size: 0.9rem;
+    }
+    .detail-value {
+        font-size: 0.9rem;
+        color: #212529;
+    }
+    .card {
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+    }
+    .card-header {
+        padding: 0.75rem 1.25rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+    }
+    .card-header h5 {
+        margin: 0;
+        font-size: 1rem;
+        color: #212529;
+    }
+    .card-body {
+        padding: 1rem;
+    }
+    .mb-1 {
+        margin-bottom: 0.5rem;
+    }
+    .remarks-box {
+        padding: 0.75rem;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        min-height: 80px;
+        white-space: pre-line;
+        font-size: 0.9rem;
+    }
+    .page-title {
+        font-weight: 700;
+        color: #212529;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 0.375rem 0.75rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* Print styles */
+    @@media print {
+        body { font-size: 11pt; color: #000; background: #fff; }
+        .container { width: 100%; max-width: 100%; padding: 0; margin: 0; }
+        .card { break-inside: avoid; border: 1px solid #ddd; margin-bottom: 0.75rem; }
+        .d-print-none { display: none !important; }
+        .detail-label { color: #000; }
+        .card-header h5 { color: #000; }
+        hr { border-color: #333; margin: 0.5rem 0; }
+        .page-title { margin-bottom: 1rem; }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-12 text-center">
+            <h3 class="page-title">Placement Details</h3>
+        </div>
+    </div>
+
+    <form id="terminateForm" method="post" asp-area="Bienes" asp-controller="Placement" asp-action="Terminate">
+        @Html.HiddenFor(b => b.PlacementId)
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-1"><span class="detail-label">Company:</span> <span class="detail-value">@Model.Company.CompanyName</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Bank:</span> <span class="detail-value">@Model.Bank</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Type:</span> <span class="detail-value">@Model.PlacementType.ToString()</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Branch:</span> <span class="detail-value">@Model.Branch</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-credit-card me-2"></i>Account Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-1"><span class="detail-label">TD Account:</span> <span class="detail-value">@Model.TDAccountNumber</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Account Name:</span> <span class="detail-value">@Model.AccountName</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Settlement:</span> <span class="detail-value">@Model.SettlementAccountNumber</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-calendar-date me-2"></i>Term Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4 mb-1"><span class="detail-label">From:</span> <span class="detail-value">@Model.DateFrom.ToString(SD.Date_Format)</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">To:</span> <span class="detail-value">@Model.DateTo.ToString(SD.Date_Format)</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Term:</span> <span class="detail-value">@termValue day(s)</span></div>
+
+                        @if (Model.PlacementType == PlacementType.LongTerm)
+                        {
+                            <div class="col-6 mb-1"><span class="detail-label">Years:</span> <span class="detail-value">@Model.NumberOfYears</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Payment Frequency:</span> <span class="detail-value">@Model.FrequencyOfPayment</span></div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-hash me-2"></i>Reference Numbers</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-1"><span class="detail-label">Control Number:</span> <span class="detail-value">@Model.ControlNumber</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Created Date:</span> <span class="detail-value">@Model.CreatedDate.ToString(SD.Date_Format)</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Cheque:</span> <span class="detail-value">@Model.ChequeNumber</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">CV No:</span> <span class="detail-value">@Model.CVNo</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Batch:</span> <span class="detail-value">@Model.BatchNumber</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (Model.IsPosted)
+                {
+                    if (Model.TerminatedBy == null)
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-exclamation-triangle me-2"></i>Termination Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="InterestDeposited" class="detail-label">Interest Deposit</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">₱</span>
+                                            <input asp-for="InterestDeposited" class="form-control"/>
+                                        </div>
+                                        <span asp-validation-for="InterestDeposited" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="InterestDepositedDate" class="detail-label">Date Deposit</label>
+                                        <input asp-for="InterestDepositedDate" type="date" class="form-control" value=""/>
+                                        <span asp-validation-for="InterestDepositedDate" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="InterestDepositedTo" class="detail-label">Interest Deposited To</label>
+                                        <input asp-for="InterestDepositedTo" class="form-control"/>
+                                        <span asp-validation-for="InterestDepositedTo" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="InterestStatus" class="detail-label">Interest Status</label>
+                                        <select asp-for="InterestStatus" class="form-select">
+                                            <option value="@InterestStatus.NotApplicable.">NA</option>
+                                            <option value="@InterestStatus.Withdrawn">Withdrawn</option>
+                                            <option value="@InterestStatus.Rolled">Rolled</option>
+                                        </select>
+                                        <span asp-validation-for="InterestStatus" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="TerminatedDate" class="detail-label">Termination Date</label>
+                                        <input asp-for="TerminatedDate" 
+                                               type="date" 
+                                               class="form-control" 
+                                               required 
+                                               value="@(Model.DateTo.ToString("yyyy-MM-dd"))"/>
+                                        <span asp-validation-for="TerminatedDate" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label asp-for="TerminationRemarks" class="detail-label">Termination Remarks</label>
+                                        <textarea asp-for="TerminationRemarks" class="form-control" rows="3"></textarea>
+                                        <span asp-validation-for="TerminationRemarks" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Termination Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row compact-row">
+                                    <div class="col-6 mb-1"><span class="detail-label">Interest Deposit:</span> <span class="detail-value">@Model.InterestDeposited</span></div>
+                                    <div class="col-6 mb-1"><span class="detail-label">Date Deposit:</span> <span class="detail-value">@(Model.InterestDepositedDate?.ToString(SD.Date_Format))</span></div>
+                                    <div class="col-6 mb-1"><span class="detail-label">Interest Deposited To:</span> <span class="detail-value">@Model.InterestDepositedTo</span></div>
+                                    <div class="col-6 mb-1"><span class="detail-label">Interest Status:</span> <span class="detail-value">@Model.InterestStatus</span></div>
+                                    <div class="col-6 mb-1"><span class="detail-label">Termination Date:</span> <span class="detail-value">@(Model.TerminatedDate?.ToString(SD.Date_Format))</span></div>
+                                    <div class="col-12 mb-1"><span class="detail-label">Termination Remarks:</span></div>
+                                    <div class="col-12">
+                                        <div class="remarks-box">@Model.TerminationRemarks</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-cash-coin me-2"></i>Financial Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 mb-1"><span class="detail-label">Principal:</span> <span class="detail-value">₱@Model.PrincipalAmount.ToString(SD.Two_Decimal_Format)</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Interest Rate:</span> <span class="detail-value">@Model.InterestRate.ToString(SD.Two_Decimal_Format)%</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Maturity Value:</span> <span class="detail-value">₱@maturity.ToString(SD.Two_Decimal_Format)</span></div>
+                            <div class="col-6 mb-1"><span class="detail-label">Principal Disposition:</span> <span class="detail-value">@Model.PrincipalDisposition</span></div>
+
+                            <div class="col-12"><hr class="my-3"></div>
+
+                            <div class="col-4 mb-1"><span class="detail-label">Earned (Gross):</span> <span class="detail-value">₱@interest.ToString(SD.Two_Decimal_Format)</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">EWT Rate:</span> <span class="detail-value">@(Model.HasEWT ? $"{ewtRate.ToString("N4")}%" : "N/A")</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">EWT Amount:</span> <span class="detail-value">₱@ewt.ToString(SD.Two_Decimal_Format)</span></div>
+
+                            <div class="col-4 mb-1"><span class="detail-label">Trust Fee Rate:</span> <span class="detail-value">@(Model.HasTrustFee ? $"{trustFeeRate.ToString("N8")}%" : "N/A")</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Trust Fee Amount:</span> <span class="detail-value">₱@trustFee.ToString(SD.Two_Decimal_Format)</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">Net:</span> <span class="detail-value">₱@net.ToString(SD.Two_Decimal_Format)</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-chat-text me-2"></i>Remarks</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="remarks-box">@Model.Remarks</div>
+                    </div>
+                </div>
+
+                <div class="d-print-none mt-4">
+                    @if (Model.IsPosted)
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                @if (Model.TerminatedBy == null)
+                                {
+                                    <button type="button" id="terminateBtn" class="btn btn-warning w-100" disabled>
+                                        <i class="bi bi-exclamation-triangle me-1"></i> Terminate
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a id="reactivateBtn" asp-area="Bienes" asp-controller="Placement" asp-action="Reactivate"
+                                       asp-route-id="@Model.PlacementId" class="btn btn-secondary w-100">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Reactivate
+                                    </a>
+                                }
+                            </div>
+                            <div class="col-6">
+                                @if (!Model.IsRolled)
+                                {
+                                    <a id="rollOverBtn" asp-area="Bienes" asp-controller="Placement" asp-action="RollOver"
+                                       asp-route-id="@Model.PlacementId" class="btn btn-info w-100">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Roll Over
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            @if (!Model.IsPosted)
+                            {
+                                <a id="postBtn" asp-area="Bienes" asp-controller="Placement" asp-action="Post" asp-route-id="@Model.PlacementId"
+                                   class="btn btn-success w-100">
+                                    <i class="bi bi-check-circle me-1"></i> Post
+                                </a>
+                            }
+                            else
+                            {
+                                <button onclick="window.print()" class="btn btn-primary w-100">
+                                    <i class="bi bi-printer me-1"></i> Print
+                                </button>
+                            }
+                        </div>
+                        <div class="col-6">
+                            <a asp-area="Bienes" asp-controller="Placement" asp-action="Index"
+                               class="btn btn-outline-primary w-100">
+                                <i class="bi bi-arrow-left me-1"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cache DOM elements
+            const elements = {
+                terminateBtn: document.getElementById('terminateBtn'),
+                terminateForm: document.getElementById('terminateForm'),
+                postBtn: document.getElementById('postBtn'),
+                rollOverBtn: document.getElementById('rollOverBtn'),
+                reactivateBtn: document.getElementById('reactivateBtn'),
+                interestDeposited: document.getElementById("InterestDeposited"),
+                interestDepositedDate: document.getElementById("InterestDepositedDate"),
+                interestDepositedTo: document.getElementById("InterestDepositedTo"),
+                interestStatus: document.getElementById("InterestStatus"),
+                terminatedDate: document.getElementById("TerminatedDate"),
+                terminationRemarks: document.getElementById("TerminationRemarks")
+            };
+
+            // Setup termination confirmation
+            if (elements.terminateBtn) {
+                elements.terminateBtn.addEventListener('click', function() {
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to terminate this placement.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, terminate it!'
+                    }).then((result) => {
+                        if (result.isConfirmed && elements.terminateForm) {
+                            elements.terminateForm.submit();
+                        }
+                    });
+                });
+            }
+
+            // Setup post confirmation
+            if (elements.postBtn) {
+                elements.postBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const postUrl = this.getAttribute('href');
+
+                    Swal.fire({
+                        title: 'Post Placement',
+                        text: "Are you sure you want to post this placement? This action cannot be undone.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, post it!'
+                    }).then((result) => {
+                        if (result.isConfirmed && postUrl) {
+                            window.location.href = postUrl;
+                        }
+                    });
+                });
+            }
+            
+            // Setup roll over confirmation
+            if (elements.rollOverBtn) {
+                elements.rollOverBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const rollOverUrl = this.getAttribute('href');
+                    const message = "@(Model.TerminatedBy == null ? "Placement will also be terminated at the same time." : "")";
+
+                    Swal.fire({
+                        title: 'Roll Over Placement',
+                        text: `Are you sure you want to roll over this placement? ${message}`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#17a2b8',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, roll it over!'
+                    }).then((result) => {
+                        if (result.isConfirmed && rollOverUrl) {
+                            // Create a form to submit the data
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = rollOverUrl;
+
+                            // Add CSRF token
+                            const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                            if (antiForgeryToken) {
+                                const tokenInput = document.createElement('input');
+                                tokenInput.type = 'hidden';
+                                tokenInput.name = '__RequestVerificationToken';
+                                tokenInput.value = antiForgeryToken.value;
+                                form.appendChild(tokenInput);
+                            }
+
+                            // If termination details are needed, add them
+                            if (@(Model.TerminatedBy == null ? "true" : "false")) {
+                                // Add all termination form fields
+                                const terminateFields = [
+                                    { name: 'terminateModel.PlacementId', value: @Model.PlacementId },
+                                    { name: 'terminateModel.InterestDeposited', value: elements.interestDeposited?.value || "" },
+                                    { name: 'terminateModel.InterestDepositedDate', value: elements.interestDepositedDate?.value || "" },
+                                    { name: 'terminateModel.InterestDepositedTo', value: elements.interestDepositedTo?.value || "" },
+                                    { name: 'terminateModel.InterestStatus', value: elements.interestStatus?.value || "" },
+                                    { name: 'terminateModel.TerminatedDate', value: elements.terminatedDate?.value || "" },
+                                    { name: 'terminateModel.TerminationRemarks', value: elements.terminationRemarks?.value || "" }
+                                ];
+
+                                terminateFields.forEach(field => {
+                                    if (field.value) {
+                                        const input = document.createElement('input');
+                                        input.type = 'hidden';
+                                        input.name = field.name;
+                                        input.value = field.value;
+                                        form.appendChild(input);
+                                    }
+                                });
+                            }
+
+                            // Append form to body and submit
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+                });
+            }
+
+            if (elements.reactivateBtn) {
+                elements.reactivateBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const reactivateBtn = this.getAttribute('href');
+
+                    Swal.fire({
+                        title: 'Reactivate Placement',
+                        text: "Are you sure you want to reactivate this placement?",
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#17a2b8',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, reactivate it!'
+                    }).then((result) => {
+                        if (result.isConfirmed && reactivateBtn) {
+                            window.location.href = reactivateBtn;
+                        }
+                    });
+                });
+            }
+            
+            // Validate function - checks all required fields and enables/disables terminate button
+            function validate() {
+                try {
+                    //Uncomment this if user wants to validate all the field 
+                    //const interestValid = elements.interestDeposited && 
+                    //                     elements.interestDeposited.value && 
+                    //                     !isNaN(parseFloat(elements.interestDeposited.value)) && 
+                    //                     parseFloat(elements.interestDeposited.value) > 0;
+                    //
+                    
+                    //const allFieldsValid = interestValid && 
+                    //                      elements.interestDepositedDate && elements.interestDepositedDate.value && 
+                    //                    elements.interestDepositedTo && elements.interestDepositedTo.value &&
+                    //                    elements.interestStatus && elements.interestStatus.value &&
+                    //                    elements.terminatedDate && elements.terminatedDate.value &&
+                    //                    elements.terminationRemarks && elements.terminationRemarks.value.trim();
+
+                    const allFieldsValid = elements.interestStatus && elements.interestStatus.value &&
+                        elements.terminatedDate && elements.terminatedDate.value;
+                    
+                    if (elements.terminateBtn) {
+                        elements.terminateBtn.disabled = !allFieldsValid;
+                    }
+                } catch (error) {
+                    console.error("Validation error:", error);
+                }
+            }
+            
+            // Add event listeners to all form fields
+            const formFields = [
+                //Uncomment this if user wants to validate all the field
+                //'interestDeposited', 
+                //'interestDepositedDate', 
+                //'interestDepositedTo',
+                //'terminationRemarks',
+                'interestStatus',
+                'terminatedDate',
+            ];
+            
+            formFields.forEach(field => {
+                if (elements[field]) {
+                    elements[field].addEventListener("input", validate);
+                    elements[field].addEventListener("change", validate);
+                }
+            });
+            
+            // Run initial validation
+            validate();
+        });
+    </script>
+}

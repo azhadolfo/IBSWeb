@@ -1,9 +1,9 @@
-﻿using IBS.Models.Filpride.Integrated;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.AccountsPayable
 {
@@ -28,6 +28,10 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
+
+        public string SupplierAddress { get; set; } = string.Empty;
+
+        public string SupplierTin { get; set; } = string.Empty;
 
         #endregion
 
@@ -56,7 +60,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
         public string Remarks { get; set; }
 
         [Column(TypeName = "varchar(10)")]

@@ -1,19 +1,19 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -61,6 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetSalesInvoices([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -121,7 +122,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get sales invoices.");
+                _logger.LogError(ex, "Failed to get sales invoices. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -134,7 +136,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             FilprideSalesInvoice viewModel = new()
             {
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
 
@@ -142,6 +144,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideSalesInvoice model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -177,7 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction(nameof(Index));
                     }
 
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
                     return View(model);
@@ -186,16 +189,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create sales invoice. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(model);
@@ -224,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<JsonResult> GetProductAndDRDetails(int cosId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(c => c.CustomerOrderSlipId == cosId, cancellationToken);
             if (cos != null)
             {
@@ -234,7 +239,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cos.Product.ProductUnit,
                     cos.DeliveredPrice,
                     cos.Terms,
-                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(cos.CustomerOrderSlipId, cancellationToken)
+                    cos.CustomerAddress,
+                    cos.CustomerTin,
+                    DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListForSalesInvoice(companyClaims, cos.CustomerOrderSlipId, cancellationToken)
                 });
             }
             return Json(null);
@@ -247,7 +254,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
-                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                 salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
                 .OrderBy(p => p.PurchaseOrderNo)
@@ -259,7 +266,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
                 var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
+                    .Where(rr => rr.Company == companyClaims && rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
                     .Select(rr => new
                     {
                         rr.ReceivingReportId,
@@ -278,12 +285,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to fetch data in edit sales invoice.");
+                _logger.LogError(ex, "Failed to fetch sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return StatusCode(500, "An error occurred. Please try again later.");
             }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideSalesInvoice model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -316,6 +325,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
                     existingRecord.Terms = model.Terms;
                     existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
+                    existingRecord.CustomerAddress = model.CustomerAddress;
+                    existingRecord.CustomerTin = model.CustomerTin;
 
                     existingRecord.EditedBy = _userManager.GetUserName(User);
                     existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -335,8 +346,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit sales invoice. Edited by: {UserName}", _userManager.GetUserName(User));
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+                    _logger.LogError(ex, "Failed to edit sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -344,7 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(model);
@@ -402,7 +414,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to post sales invoice. Posted by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to post sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -481,7 +494,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to void sales invoice. Voided by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to void sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -527,7 +541,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel sales invoice. Canceled by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to cancel sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
@@ -580,12 +595,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var automatedRr = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == dr.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
 
+                int receivingReportId = 0;
+
+                if (automatedRr != null)
+
+                {
+                    receivingReportId = automatedRr.ReceivingReportId;
+                }
+
                 return Json(new
                 {
                     TransactionDate = dr.DeliveredDate,
                     dr.Quantity,
-                    automatedRr.ReceivingReportId,
-                    automatedRr.PurchaseOrder.PurchaseOrderId,
+                    receivingReportId,
+                    dr.PurchaseOrderId,
                     OtherRefNo = dr.ManualDrNo,
                     Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}" +
                               (!dr.Customer.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
@@ -639,6 +662,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["T1"].Value = "OriginalProductId";
             worksheet.Cells["U1"].Value = "OriginalSeriesNumber";
             worksheet.Cells["V1"].Value = "OriginalDocumentId";
+            worksheet.Cells["W1"].Value = "PostedBy";
+            worksheet.Cells["X1"].Value = "PostedDate";
 
             int row = 2;
 
@@ -666,6 +691,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 20].Value = item.ProductId;
                 worksheet.Cells[row, 21].Value = item.SalesInvoiceNo;
                 worksheet.Cells[row, 22].Value = item.SalesInvoiceId;
+                worksheet.Cells[row, 23].Value = item.PostedBy;
+                worksheet.Cells[row, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                 row++;
             }
@@ -677,7 +704,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SalesInvoiceList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesInvoiceList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

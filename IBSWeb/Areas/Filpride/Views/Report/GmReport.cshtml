@@ -3,7 +3,7 @@
 @model ViewModelBook
 
 @{
-    ViewData["Title"] = "Purchase Report";
+    ViewData["Title"] = "GM Report";
 }
 
 <div class="card shadow border-0 mt-4">
@@ -26,6 +26,18 @@
                     <label asp-for="DateTo" class="control-label"></label>
                     <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Customers" class="control-label">
+                        Customer List <small class="text-muted">(optional)</small>
+                    </label>
+                    <select asp-for="Customers" asp-items="@Model.CustomerList" class="form-select js-multiple" multiple="multiple" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="Customers" class="text-danger"></span>
+                    <div class="form-text text-muted">
+                        Leave empty to include all customers by default. You can select more than one customer to filter results.
+                    </div>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">

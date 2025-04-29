@@ -1,0 +1,189 @@
+@model IEnumerable<FilprideChartOfAccount>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Export Check Voucher";
+}
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CHART OF ACCOUNT</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <p>
+                    <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export Selected to CSV</button>
+                </p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-hover" id="dataTable">
+            <thead class="table-secondary">
+            <tr>
+                <th data-orderable="false">
+                    <input type="checkbox" class="text-center" id="selectAll" onclick="toggleSelectAll(this)">
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AccountNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AccountName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AccountType)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.NormalBalance)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Level)
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="selectCheckbox text-center" value="@item.AccountId">
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AccountNumber)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AccountName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AccountType)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.NormalBalance)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Level)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedRecords = new Set(); // To track selected record IDs
+        let allRecordsSelected = false;  // Flag to check if "Select All" is toggled across all pages
+        function toggleSelectAll(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll('.selectCheckbox');
+            if (selectAllCheckbox.checked) {
+                // Select all visible checkboxes and mark all records as selected
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                    selectedRecords.add(checkbox.value);
+                });
+                allRecordsSelected = true;
+            } else {
+                // Unselect all visible checkboxes and mark all records as unselected
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    selectedRecords.clear();  // Clear the set
+                });
+                allRecordsSelected = false;
+            }
+        }
+        // Update selectedRecords when individual checkboxes are toggled
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.classList.contains('selectCheckbox')) {
+                if (e.target.checked) {
+                    selectedRecords.add(e.target.value);
+                } else {
+                    selectedRecords.delete(e.target.value);
+                }
+            }
+        });
+        function exportToExcel() {
+            let selectedIds = '';
+            if (allRecordsSelected) {
+                // Optionally make an AJAX call to get all IDs if "Select All" was selected
+                // Example of a call:
+                fetch('@Url.Action("GetAllChartOfAccountIds", "ChartOfAccount")')
+                    .then(response => response.json())
+                    .then(data => {
+                        selectedIds = data.join(',');
+                        submitForm(selectedIds);
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                // Only get IDs from selected checkboxes in current set
+                selectedIds = Array.from(selectedRecords).join(',');
+                if (selectedIds) {
+                    submitForm(selectedIds);
+                } else {
+                    alert('No ChartOfAccount selected.');
+                }
+            }
+        }
+        function submitForm(selectedIds) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("Export", "ChartOfAccount")';
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selectedRecord';
+            input.value = selectedIds;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+}

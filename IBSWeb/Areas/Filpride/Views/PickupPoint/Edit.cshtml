@@ -17,12 +17,13 @@
     </div>
     <div class="card-body p-4">
         <form method="post" class="row">
+            @Html.AntiForgeryToken()
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <input type="hidden" asp-for="Company" value="@Model.Company" />
-                <input type="hidden" asp-for="PickUpPointId" value="@Model.PickUpPointId" />
+                <input type="hidden" asp-for="Company" value="@Model.Company"/>
+                <input type="hidden" asp-for="PickUpPointId" value="@Model.PickUpPointId"/>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="Depot" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="Depot" class="form-control border-0 shadow " placeholder=""/>
                     <label asp-for="Depot" class="ms-2">Depot Name<span class="required">*</span></label>
                     <span asp-validation-for="Depot" class="text-danger"></span>
                 </div>
@@ -32,6 +33,22 @@
                         <option value="" selected disabled>Select payment terms</option>
                     </select>
                     <span asp-validation-for="SupplierId" class="text-danger"></span>
+                </div>
+                <label class="control-label">Please select where the record will be added:</label>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                    </label>
+                </div>
+                <div class="form-check pb-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                    </label>
+                </div>
+                <div class="form-check pb-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsBienes" /> BIENES
+                    </label>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">

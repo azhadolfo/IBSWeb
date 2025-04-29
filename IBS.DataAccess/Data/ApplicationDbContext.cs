@@ -1,4 +1,5 @@
 ﻿using IBS.Models;
+using IBS.Models.Bienes;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -43,6 +44,7 @@ namespace IBS.DataAccess.Data
         #region--MOBILITY
 
         #region--Sales Entity
+
         public DbSet<MobilityFuel> MobilityFuels { get; set; }
         public DbSet<MobilityLube> MobilityLubes { get; set; }
         public DbSet<MobilitySafeDrop> MobilitySafeDrops { get; set; }
@@ -53,6 +55,22 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityOffline> MobilityOfflines { get; set; }
         public DbSet<MobilityCustomerOrderSlip> MobilityCustomerOrderSlips { get; set; }
         public DbSet<MobilityCustomerPurchaseOrder> MobilityCustomerPurchaseOrders { get; set; }
+        public DbSet<MobilityFMSFuelSales> MobilityFMSFuelSales { get; set; }
+        public DbSet<MobilityFMSLubeSales> MobilityFMSLubeSales { get; set; }
+        public DbSet<MobilityFMSCashierShift> MobilityFmsCashierShifts { get; set; }
+        public DbSet<MobilityFMSCalibration> MobilityFmsCalibrations { get; set; }
+        public DbSet<MobilityServiceInvoice> MobilityServiceInvoices { get; set; }
+        public DbSet<MobilityCreditMemo> MobilityCreditMemos { get; set; }
+        public DbSet<MobilityDebitMemo> MobilityDebitMemos { get; set; }
+        public DbSet<MobilityCollectionReceipt> MobilityCollectionReceipts { get; set; }
+        public DbSet<MobilityOffsettings> MobilityOffsettings { get; set; }
+
+        public DbSet<MobilityStationPump> MobilityStationPumps { get; set; }
+
+        public DbSet<MobilityFMSPoSales> MobilityFmsPoSales { get; set; }
+
+        public DbSet<MobilityFMSDeposit> MobilityFmsDeposits { get; set; }
+
         #endregion
 
         #region--Purchase Entity
@@ -63,6 +81,13 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityLubePurchaseDetail> MobilityLubePurchaseDetails { get; set; }
         public DbSet<MobilityPurchaseOrder> MobilityPurchaseOrders { get; set; }
         public DbSet<MobilityReceivingReport> MobilityReceivingReports { get; set; }
+        public DbSet<MobilityCheckVoucherHeader> MobilityCheckVoucherHeaders { get; set; }
+        public DbSet<MobilityCheckVoucherDetail> MobilityCheckVoucherDetails { get; set; }
+        public DbSet<MobilityJournalVoucherHeader> MobilityJournalVoucherHeaders { get; set; }
+        public DbSet<MobilityJournalVoucherDetail> MobilityJournalVoucherDetails { get; set; }
+        public DbSet<MobilityMultipleCheckVoucherPayment> MobilityMultipleCheckVoucherPayments { get; set; }
+        public DbSet<MobilityCVTradePayment> MobilityCVTradePayments { get; set; }
+
         #endregion
 
         #region --Inventory Entity
@@ -80,6 +105,16 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityStation> MobilityStations { get; set; }
         public DbSet<MobilityCustomer> MobilityCustomers { get; set; }
         public DbSet<MobilitySupplier> MobilitySuppliers { get; set; }
+
+        public DbSet<MobilityBankAccount> MobilityBankAccounts { get; set; }
+
+        public DbSet<MobilityProduct> MobilityProducts { get; set; }
+
+        public DbSet<MobilityPickUpPoint> MobilityPickUpPoints { get; set; }
+
+        public DbSet<MobilityService> MobilityServices { get; set; }
+
+        public DbSet<MobilityStationEmployee> MobilityStationEmployees { get; set; }
 
         #endregion
 
@@ -124,7 +159,7 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #endregion
-
+        
         #region --MMSI
 
         public DbSet<MMSIAuditTrail> MMSIAuditTrails { get; set; }
@@ -145,6 +180,10 @@ namespace IBS.DataAccess.Data
         public DbSet<MMSITugMaster> MMSITugMasters { get; set; }
         public DbSet<MMSIVessel> MMSIVessels { get; set; }
         #endregion
+
+        #region --BIENES
+
+        public DbSet<BienesPlacement> BienesPlacements { get; set; }
 
         #endregion
 
@@ -331,6 +370,88 @@ namespace IBS.DataAccess.Data
                 .HasIndex(po => po.POSalesNo)
                 .IsUnique());
 
+            builder.Entity<MobilityFMSFuelSales>(fuel =>
+            {
+                fuel.HasIndex(f => f.ShiftRecordId);
+                fuel.HasIndex(f => f.StationCode);
+            });
+
+            builder.Entity<MobilityFMSLubeSales>(lube =>
+            {
+                lube.HasIndex(l => l.ShiftRecordId);
+                lube.HasIndex(l => l.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCalibration>(calibration =>
+            {
+                calibration.HasIndex(c => c.ShiftRecordId);
+                calibration.HasIndex(c => c.StationCode);
+            });
+
+            builder.Entity<MobilityFMSCashierShift>(shift =>
+            {
+                shift.HasIndex(sh => sh.ShiftRecordId);
+                shift.HasIndex(sh => sh.StationCode);
+            });
+
+            #region -- Service Invoice --
+
+            builder.Entity<MobilityServiceInvoice>(sv =>
+            {
+                sv.HasOne(sv => sv.Customer)
+                    .WithMany()
+                    .HasForeignKey(sv => sv.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                sv.HasOne(sv => sv.Service)
+                    .WithMany()
+                    .HasForeignKey(sv => sv.ServiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Service Invoice --
+
+            #region -- Credit Memo --
+
+            builder.Entity<MobilityCreditMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.ServiceInvoice)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ServiceInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Credit Memo --
+
+            #region -- Debit Memo --
+
+            builder.Entity<MobilityDebitMemo>(cr =>
+            {
+                cr.HasOne(cr => cr.ServiceInvoice)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ServiceInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Debit Memo --
+
+            #region -- Collection Receipt --
+
+            builder.Entity<MobilityCollectionReceipt>(cr =>
+            {
+                cr.HasOne(cr => cr.ServiceInvoice)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.ServiceInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.Customer)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Collection Receipt --
+
             #endregion
 
             #region--Purchase
@@ -401,12 +522,89 @@ namespace IBS.DataAccess.Data
             {
                 rr.HasIndex(rr => rr.ReceivingReportNo).IsUnique();
                 rr.HasIndex(rr => rr.StationCode);
-
-                rr.HasOne(rr => rr.FilprideDeliveryReceipt)
-                .WithMany()
-                .HasForeignKey(rr => rr.DeliveryReceiptId)
-                .OnDelete(DeleteBehavior.Restrict);
             });
+
+            #region -- Check Voucher Header --
+
+            builder.Entity<MobilityCheckVoucherHeader>(cv =>
+            {
+                cv.HasOne(cv => cv.Supplier)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.SupplierId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                cv.HasOne(cv => cv.BankAccount)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher --
+
+            #region -- Check Voucher Details --
+
+            builder.Entity<MobilityCheckVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
+
+            #region -- Check Voucher Trade Payment --
+
+            builder.Entity<MobilityCVTradePayment>(cv =>
+            {
+                cv.HasOne(cv => cv.CV)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Trade Payment --
+
+            #region -- Multiple Check Voucher Payment --
+
+            builder.Entity<MobilityMultipleCheckVoucherPayment>(mcvp =>
+            {
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderPayment)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderPaymentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                mcvp.HasOne(mcvp => mcvp.CheckVoucherHeaderInvoice)
+                    .WithMany()
+                    .HasForeignKey(mcvp => mcvp.CheckVoucherHeaderInvoiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Multiple Check Voucher Payment --
+
+            #region -- Journal Voucher Header --
+
+            builder.Entity<MobilityJournalVoucherHeader>(jv =>
+            {
+                jv.HasOne(jv => jv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(jv => jv.CVId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Journal Voucher Header --
+
+            #region -- Journal Voucher Details --
+
+            builder.Entity<MobilityJournalVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.JournalVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.JournalVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
 
             #endregion
 
@@ -441,6 +639,12 @@ namespace IBS.DataAccess.Data
             builder.Entity<MobilityCustomer>(c =>
             {
                 c.HasIndex(c => c.CustomerId).IsUnique();
+            });
+
+            // MobilityEmployee
+            builder.Entity<MobilityStationEmployee>(c =>
+            {
+                c.HasIndex(c => c.EmployeeNumber);
             });
 
             #endregion
@@ -764,6 +968,18 @@ namespace IBS.DataAccess.Data
 
             #endregion -- Check Voucher --
 
+            #region -- Check Voucher Details --
+
+            builder.Entity<FilprideCheckVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.CheckVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
+
             #region -- Check Voucher Trade Payment --
 
             builder.Entity<FilprideCVTradePayment>(cv =>
@@ -851,6 +1067,25 @@ namespace IBS.DataAccess.Data
             builder.Entity<AppSetting>(a =>
             {
                 a.HasIndex(a => a.SettingKey).IsUnique();
+            });
+
+            #endregion
+
+            #region --Bienes
+
+            builder.Entity<BienesPlacement>(placement =>
+            {
+                placement.HasOne(p => p.BankAccount)
+                    .WithMany()
+                    .HasForeignKey(p => p.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                placement.HasOne(p => p.Company)
+                    .WithMany()
+                    .HasForeignKey(p => p.CompanyId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                placement.HasIndex(p => p.ControlNumber);
             });
 
             #endregion

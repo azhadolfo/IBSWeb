@@ -14,11 +14,10 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GetLastNumber(string company, CancellationToken cancellationToken = default)
+        public async Task<string> GetLastNumber(CancellationToken cancellationToken = default)
         {
             var lastNumber = await _db
                 .FilprideServices
-                .Where(s => s.Company == company)
                 .OrderByDescending(s => s.ServiceId)
                 .FirstOrDefaultAsync(cancellationToken);
 

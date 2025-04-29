@@ -5,15 +5,15 @@ namespace IBS.Models.Mobility.MasterFile
 {
     public class MobilityStation
     {
-        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int StationId { get; set; }
 
         [Display(Name = "POS Code")]
         public string PosCode { get; set; }
 
+        [Key]
         [Display(Name = "Station Code")]
-        [Column(TypeName = "varchar(3)")]
+        [Column(TypeName = "varchar(5)")]
         public string StationCode { get; set; }
 
         [Display(Name = "Station Name")]

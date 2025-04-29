@@ -15,16 +15,31 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 
         Task ComputeSalesPerCashier(bool hasPoSales, CancellationToken cancellationToken = default);
 
-        Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<(int fuelCount, bool hasPoSales)> ProcessFuelGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
-        Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<(int lubeCount, bool hasPoSales)> ProcessLubeGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
-        Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default);
+        Task<int> ProcessSafeDropGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetPostedDsrList(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetUnpostedDsrList(string stationCode, CancellationToken cancellationToken = default);
 
         Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken);
+
+        Task<int> ProcessFmsFuelSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessFmsLubeSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task ProcessFmsCalibrationGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task ProcessFmsCashierShiftGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task ProcessFmsPoSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task<int> ProcessFmsDepositGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default);
+
+        Task ComputeSalesReportForFms(CancellationToken cancellationToken = default);
+
     }
 }

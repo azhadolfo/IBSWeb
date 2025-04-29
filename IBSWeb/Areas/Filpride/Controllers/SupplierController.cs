@@ -69,10 +69,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
             IEnumerable<FilprideSupplier> suppliers = await _unitOfWork.FilprideSupplier
-                .GetAllAsync(c => c.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
             if (view == nameof(DynamicView.Supplier))
             {
@@ -108,6 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -143,7 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
-                        .GenerateCodeAsync(companyClaims, cancellationToken);
+                        .GenerateCodeAsync(cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
@@ -207,6 +206,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -417,7 +417,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "SupplierList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SupplierList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

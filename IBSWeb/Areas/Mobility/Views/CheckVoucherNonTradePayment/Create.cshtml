@@ -1,0 +1,313 @@
+@model CheckVoucherNonTradePaymentViewModel
+
+@{
+    ViewData["Title"] = "Create Non Trade Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Non-Trade Payment</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="row">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group mb-3">
+                    <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
+                    <span asp-validation-for="TransactionDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Supplier<span class="required">*</span></label>
+                    <select asp-for="MultipleSupplierId" asp-items="@Model.Suppliers" class="form-select js-select2 GetCVList" style="width: 100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="MultipleSupplierId" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="MultipleCvId" class="control-label">CV #</label><span class="required">*</span>
+                    <select asp-for="MultipleCvId" asp-items="@Model.CheckVouchers" class="form-select js-multiple multipleCvId" multiple="multiple" style="width:100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="MultipleCvId" class="text-danger"></span>
+                </div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="text-center">CV List</th>
+                        <th class="text-center">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody class="cvAmountList">
+                    </tbody>
+                </table>
+                <div class="form-floating mb-3">
+                    <input asp-for="Payee" type="text" class="form-control" placeholder="Optional" readonly/>
+                    <label asp-for="Payee" class="control-label ms-2"></label>
+                    <span asp-validation-for="Payee" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="PayeeAddress" type="text" class="form-control" placeholder="Optional" readonly/>
+                    <label asp-for="PayeeAddress" class="control-label ms-2"></label>
+                    <span asp-validation-for="PayeeAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="PayeeTin" type="text" class="form-control" placeholder="Optional" readonly/>
+                    <label asp-for="PayeeTin" class="control-label ms-2"></label>
+                    <span asp-validation-for="PayeeTin" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="Total" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="Total" class="form-control money totalAmount total" value="" placeholder="0.000" readonly/>
+                    <span asp-validation-for="Total" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Bank Account<span class="required">*</span></label>
+                    <select asp-for="BankId" asp-items="@Model.Banks" class="form-select js-select2" style="width: 100%" required>
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="BankId" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="CheckNo" type="text" class="form-control" placeholder="Input check #"/>
+                    <label asp-for="CheckNo" class="control-label ms-2">Check No.<span class="required">*</span></label>
+                    <span asp-validation-for="CheckNo" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label asp-for="CheckDate" class="control-label"></label><span class="required">*</span>
+                    <input asp-for="CheckDate" type="Date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" class="form-control"/>
+                    <span asp-validation-for="CheckDate" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Upload File (Optional)</label>
+                    <input name="file" type="file" class="form-control"/>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Particulars" class="form-control" placeholder="Leave a remarks here" style="height: 100px"></textarea>
+                    <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
+                    <span asp-validation-for="Particulars" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Account No.</th>
+                            <th>Account Title</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody id="accountingEntriesBody">
+                        <!-- Dynamic rows will be added here -->
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td class="text-end" colspan="2">TOTAL:</td>
+                            <td class="totalDebit">0.0000</td>
+                            <td class="totalCredit">0.0000</td>
+                            <td></td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <br/>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Mobility" asp-controller="CheckVoucherNonTradePayment" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $("#MultipleSupplierId").change(function () {
+            let supplierId = $(this).val();
+            getSupplierDetails(supplierId)
+        });
+
+        function getSupplierDetails(supplierId) {
+            if (supplierId !== "") {
+                $.ajax({
+                    url: '@Url.Action("GetSupplierDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })',
+                    method: "GET",
+                    data: { supplierId: supplierId },
+                    success: function (data) {
+                        if (data) {
+                            $("#Payee").val(data.name);
+                            $("#PayeeAddress").val(data.address);
+                            $("#PayeeTin").val(data.tinNo);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error occurred:", status, error);
+                    }
+                });
+            } else {
+                $("#Payee").val("");
+                $("#PayeeAddress").val("");
+                $("#PayeeTin").val("");
+            }
+        }
+
+        $(function () {
+            $(".GetCVList").change(function () {
+                var suppId = $(this).val();
+                if (suppId !== "") {
+                    // Make an AJAX request to get the POs based on the selected SupplierId
+                    $.ajax({
+                        url: "@Url.Action("GetCVs", "CheckVoucherNonTradePayment")",
+                        method: "GET",
+                        data: { supplierId: suppId }, // Corrected parameter name
+                        success: function (data) {
+                            if (data) {
+                                // Clear existing options
+                                $(".multipleCvId").empty();
+                                // Add new options based on the fetched data
+                                $.each(data, function (index, cv) {
+                                    if (cv && cv.cvNumber) { // Adjust property name to poNumber
+                                        $('.multipleCvId').append('<option value="' + cv.id + '">' + cv.cvNumber + '</option>'); // Adjust property names
+                                    } else {
+                                        console.error("Invalid CV object:", cv);
+                                    }
+                                });
+                            } else {
+                                // Clear the fields if no POs are found
+                                $(".multipleCvId").empty();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error fetching CVs:', error);
+                        }
+                    });
+                } else {
+                    // Clear the fields if no supplier is selected
+                    $(".multipleCvId").empty();
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $("#MultipleCvId").change(function () {
+                let cvSelect = $("#MultipleCvId").val();
+                let supplierId = $(".GetCVList").val();
+
+                // Clear the table before adding new rows
+                $("#accountingEntriesBody").empty();
+                $(".cvAmountList").empty();
+
+                if (cvSelect && cvSelect.length > 0) {
+                    // Call the controller to get new journal entries
+                    $.ajax({
+                        url: '@Url.Action("GetMultipleInvoiceDetails", "CheckVoucherNonTradePayment", new { area = "Mobility" })',
+                        method: "GET",
+                        traditional: true,
+                        data: { cvId: cvSelect, supplierId: supplierId },
+                        success: function (data) {
+                            if (data && data.journalEntries) {
+
+                                // Set the particulars from the first CV
+                                $("#Particulars").val(data.particulars);
+
+                                // Add CV balance rows and create payment details
+                                if (data.cvBalances && data.cvBalances.length > 0) {
+                                    data.cvBalances.forEach(function(cv, index) {
+                                        // Add row to table
+                                        var cvRow = `<tr>
+                                                        <td class="text-center">${cv.cvNumber}</td>
+                                                        <td class="text-center">${formatNumber(cv.balance)}</td>
+                                                        <input type="hidden" name="PaymentDetails[${index}].CVId" value="${cv.cvId}" />
+                                                        <input type="hidden" name="PaymentDetails[${index}].AmountPaid" value="${cv.balance}" />
+                                                    </tr>`;
+                                        $(".cvAmountList").append(cvRow);
+                                    });
+                                }
+                                
+                                
+                                // Add new rows based on the data returned by the controller
+                                data.journalEntries.forEach(function (entry) {
+                                    var newRow = `<tr>
+                                            <td><input type="text" name="AccountNumber" value="${entry.accountNumber}" class="w-100" style='border:none' readonly /></td>
+                                            <td><input name='AccountTitle' value='${entry.accountTitle}' class="w-100" style='border:none' readonly /></td>
+                                            <td><input name="Debit" value='${formatNumber(entry.debit)}' class="w-100 debit" style='border:none' readonly /></td>
+                                            <td><input name="Credit" value='${formatNumber(entry.credit)}' class="w-100 credit" style='border:none' readonly /></td>
+                                            <td></td>
+                                        </tr>`;
+                                    $("#accountingEntriesBody").append(newRow);
+                                });
+
+                                // Update the total debit and credit
+                                $(".totalDebit").text(formatNumber(data.totalDebit));
+                                $(".totalCredit").text(formatNumber(data.totalCredit));
+                                $("#Total").val(formatNumber(data.totalCredit));
+                                
+                                validateDebitAndCredit();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Error fetching journal entries:", error);
+                        }
+                    });
+                } else {
+                    // If no CVs are selected, ensure the totals are reset
+                    $(".totalDebit").text("0.0000");
+                    $(".totalCredit").text("0.0000");
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $("#MultipleCvId").trigger("change");
+        });
+    
+    </script>
+    <script>
+        function validateDebitAndCredit() {
+            var totalDebit = parseNumber($(".totalDebit").text());
+            var totalCredit = parseNumber($(".totalCredit").text());
+            var errorMessage = "";
+            var isValid = true;
+
+            if ($("#balance-error-message").length === 0) {
+                $("#accountingEntriesBody").after('<div id="balance-error-message" class="text-danger mt-2"></div>');
+            }
+
+            if (totalDebit !== totalCredit) {
+                errorMessage = "Debit and Credit totals must be equal.";
+                isValid = false;
+            } else if (totalDebit === 0 && totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot both be zero.";
+                isValid = false;
+            } else if (totalDebit === 0 || totalCredit === 0) {
+                errorMessage = "Debit and Credit cannot be zero.";
+                isValid = false;
+            }
+
+            // Display or clear the error message
+            $("#balance-error-message").text(errorMessage);
+
+            // Optionally disable/enable the submit button based on validation
+            $("button[type='submit']").prop("disabled", !isValid);
+
+            return isValid;
+        }
+    </script>
+}

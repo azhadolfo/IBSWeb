@@ -31,6 +31,7 @@ Balance:        <span id="balance"></span>
            </pre>
         </div>
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div class="col-md-4">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="CollectionReceiptId" />

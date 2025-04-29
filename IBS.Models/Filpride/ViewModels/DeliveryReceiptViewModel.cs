@@ -82,5 +82,9 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
         #endregion
+
+        public bool HasReceivingReport { get; set; }
+
+        public bool IsTheCreationLockForTheMonth { get; set; }
     }
 }

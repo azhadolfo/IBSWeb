@@ -19,6 +19,7 @@
     </div>
     <div class="card-body p-4">
         <form method="post" enctype="multipart/form-data" id="form">
+            @Html.AntiForgeryToken()
             <div class="row">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group mb-3">

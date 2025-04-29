@@ -1,23 +1,23 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBSWeb.Hubs;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -101,6 +101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetDeliveryReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -125,8 +126,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 dr.Status == nameof(DRStatus.ForInvoicing));
                             break;
                         case "ForOMApproval":
-                            drList = drList.Where(cos =>
-                                cos.Status == nameof(CosStatus.ForApprovalOfOM));
+                            drList = drList.Where(dr =>
+                                dr.Status == nameof(CosStatus.ForApprovalOfOM));
+                            break;
+                        case "RecordLiftingDate":
+                            drList = drList.Where(dr =>
+                                !dr.HasReceivingReport && dr.CanceledBy == null);
                             break;
                         // Add other cases as needed
                     }
@@ -185,7 +190,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to get delivery receipts.");
+                _logger.LogError(ex, "Failed to get delivery receipts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -200,22 +206,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(s => s.Value == "true")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (isDrLock)
-            {
-                TempData["denied"] = "Creation of the DR is locked due to incomplete in-transit deliveries.";
-                return RedirectToAction(nameof(Index));
-            }
-
             DeliveryReceiptViewModel viewModel = new()
             {
-                Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                IsTheCreationLockForTheMonth = isDrLock,
             };
 
             return View(viewModel);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -255,6 +257,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CommissioneeId = customerOrderSlip.CommissioneeId,
                         CommissionRate = customerOrderSlip.CommissionRate,
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
+                        CustomerAddress = customerOrderSlip.CustomerAddress,
+                        CustomerTin = customerOrderSlip.CustomerTin,
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -382,17 +386,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to create delviery receipt. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -434,11 +439,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
                     CustomerId = existingRecord.Customer.CustomerId,
-                    Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken),
-                    CustomerAddress = existingRecord.Customer.CustomerAddress,
-                    CustomerTin = existingRecord.Customer.CustomerTin,
+                    Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                    CustomerAddress = existingRecord.CustomerAddress,
+                    CustomerTin = existingRecord.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken),
+                    CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken),
                     PurchaseOrderId = (int)existingRecord.PurchaseOrderId,
                     PurchaseOrders = purchaseOrders,
                     Product = existingRecord.CustomerOrderSlip.Product.ProductName,
@@ -456,7 +461,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     Driver = existingRecord.Driver,
                     PlateNo = existingRecord.PlateNo,
-                    ATLNo = existingRecord.AuthorityToLoadNo
+                    ATLNo = existingRecord.AuthorityToLoadNo,
+                    HasReceivingReport = existingRecord.HasReceivingReport,
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -466,12 +472,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to fetch delivery receipts.");
+                _logger.LogError(ex, "Failed to fetch delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -596,17 +604,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to edit customer order slip. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return View(viewModel);
                 }
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -633,7 +642,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to preview the delivery receipt. Previewed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to preview delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Previewed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -666,7 +676,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to print the delivery receipt. Printed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to print delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Printed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -703,7 +714,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to post the delivery receipt. Posted by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to post delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
         }
@@ -731,13 +743,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetCustomerOrderSlipList(int customerId, int? deliveryReceiptId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             var orderSlips = _dbContext.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => ((!cos.IsDelivered &&
-                                cos.Status == nameof(CosStatus.Completed)) ||
+                .Where(cos => (!cos.IsDelivered &&
+                                cos.Status == nameof(CosStatus.Completed)
+                               && cos.Company == companyClaims ||
                                cos.Status == nameof(CosStatus.ForDR)) &&
                               cos.BalanceQuantity > 0 &&
-                              cos.CustomerId == customerId)
+                              cos.CustomerId == customerId && cos.Company == companyClaims)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -748,7 +762,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingCos = _dbContext.FilprideDeliveryReceipts
                     .Include(dr => dr.CustomerOrderSlip)
-                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId)
+                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId && dr.Company == companyClaims)
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.CustomerOrderSlipId.ToString(),
@@ -817,8 +831,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
-        public async Task<IActionResult> Delivered(int? id, string deliveredDate, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delivered(int? id, DateOnly deliveredDate, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (id == null)
             {
                 return NotFound();
@@ -836,7 +852,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                existingRecord.DeliveredDate = DateOnly.Parse(deliveredDate);
+                await _unitOfWork.MobilityReceivingReport
+                    .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
+
+                existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
                 existingRecord.PostedBy = _userManager.GetUserName(User);
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -852,8 +871,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 #endregion
-
-                await _unitOfWork.FilprideReceivingReport.AutoGenerateReceivingReport(existingRecord, cancellationToken);
 
                 #region--Inventory Recording
 
@@ -879,11 +896,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to mark the delivery receipt. Marked by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to mark delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Marked by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
+        [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
@@ -897,6 +916,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Status = nameof(DRStatus.Canceled);
                     model.CancellationRemarks = cancellationRemarks;
                     await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
+                    await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
 
                     #region --Audit Trail Recording
 
@@ -957,11 +977,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
                         await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-
-                        if (model.CustomerOrderSlip.HasMultiplePO)
-                        {
-                            await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
-                        }
+                        await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
 
                         #region --Audit Trail Recording
 
@@ -980,7 +996,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to void the delivery receipt. Voided by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to void delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
@@ -1045,6 +1062,55 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var exists = await _unitOfWork.FilprideDeliveryReceipt.CheckIfManualDrNoExists(manualDrNo);
             return Json(exists);
+        }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> RecordLiftingDate(int id, DateOnly liftingDate, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var receivingReportNo = await _unitOfWork.FilprideReceivingReport
+                    .AutoGenerateReceivingReport(model, liftingDate, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name,
+                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt",
+                    ipAddress, model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                model.HasReceivingReport = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = "Delivery Receipt lifting date has been recorded successfully. " +
+                                      $"RR#{receivingReportNo} has been generated.";
+
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to record lifting date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+
         }
 
     }

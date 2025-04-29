@@ -1,0 +1,332 @@
+@model MobilityServiceInvoice
+@using IBS.Utility.Constants
+@using IBS.Utility.Enums
+@using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@{
+    ViewData["Title"] = "Print Service Invoice";
+
+    string? selectedCompany = string.Empty;
+
+    if (SignInManager.IsSignedIn(User))
+    {
+        selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+    }
+
+    var decimalFormat = Model.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+}
+
+<table class="w-100">
+    <tbody>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
+    </tr>
+    <tr style="margin: 0 !important;">
+        <td class="text-center" style="padding: 0 !important;">
+            <h2 class="company-name"><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+            <p style="line-height: 1; margin-top:-7px;">
+                Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+                Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+                VAT Reg. TIN: 776-536-510-00000
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.ServiceInvoiceNo)</b></h6></td>
+    </tr>
+    <tr>
+        <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>SERVICE INVOICE</b></h3></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="table-responsive">
+    <table class="w-100">
+        <tbody>
+        <tr>
+            <td>
+                <span><b>Billed To:</b></span>
+                &nbsp; @Html.DisplayFor(model => model.Customer.CustomerName) &nbsp;<br />
+
+                <span><b>Address:</b></span>
+                &nbsp; @Html.DisplayFor(model => model.CustomerAddress) &nbsp;<br />
+
+                <span><b>TIN:</b></span>
+                &nbsp; @Html.DisplayFor(model => model.CustomerTin) &nbsp;<br />
+
+                <span><b>Business Style:</b></span>
+                &nbsp; @Html.DisplayFor(model => model.Customer.BusinessStyle) &nbsp;
+            </td>
+
+            <td class="w-25 text-nowrap">
+
+                <b>Invoice Date:</b>
+                &nbsp; <span id="soaDate">@Model.CreatedDate.ToString(SD.Date_Format)</span>
+                <br />
+                <b>Terms:</b>&nbsp;<span id="terms"></span>&nbsp;<br />
+                <b>Due Date:</b>&nbsp; <span id="dueDate">@Model.DueDate.ToString(SD.Date_Format)</span><br />
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="table-responsive" style="margin-top:20px;">
+    <table class="table-bordered w-100 text-center">
+        <tbody>
+        <tr>
+            <td><b>PARTICULAR</b></td>
+            <td><b>PERIOD</b></td>
+            <td><b>AMOUNT</b></td>
+        </tr>
+
+        <tr style="height:80px;">
+            <td>@Html.DisplayFor(model => model.Service.Name)</td>
+
+            <td class="pt-2">
+                <p style="line-height:15px">
+                    @Model.Period.ToString("MMMM yyyy")
+                </p>
+            </td>
+            <td class="pt-2">
+                <p style="line-height:15px">
+                    @Model.Amount.ToString(decimalFormat)
+                </p>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<p style="line-height: 1; margin-top:20px;">
+    Please attach BIR Form 2306 and 2307 to your payment if you deducted Expanded Withholding Tax and Vat.
+</p>
+
+<div style="margin-top:20px;">
+    <table class="w-100">
+        <tbody>
+        <tr>
+            <td style="width:33%; vertical-align: top;" class="border-1">
+                <p class="mb-0" style="margin:10px;">INSTRUCTIONS: <br />@Html.DisplayFor(model => model.Instructions)</p>
+            </td>
+            <td style="width:33%;">
+                <table class="table-bordered w-100">
+                    <tbody class="text-nowrap">
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>Vatable Sales: </b></p></td>
+                        <td class="text-end">
+                            @if (Model.Customer.VatType == "Vatable")
+                            {
+                                <p class="mb-0">@((Model.Total / 1.12m).ToString(decimalFormat))</p>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>Zero-Rated Sales: </b></p></td>
+
+                        <td class="text-end">
+                            @if (Model.Customer.VatType == "Zero Rated")
+                            {
+                                if (Model.Discount > 0)
+                                {
+                                    <p class="mb-0">@((Model.Total - Model.Discount).ToString(decimalFormat))</p>
+                                }
+                                else
+                                {
+                                    <p class="mb-0">@Model.Total.ToString(decimalFormat)</p>
+                                }
+
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>VAT-Exempt Sales: </b></p></td>
+
+                        <td class="text-end">
+                            @if (Model.Customer.VatType == "Exempt")
+                            {
+                                if (Model.Discount > 0)
+                                {
+                                    <p class="mb-0">@((Model.Total - Model.Discount).ToString(decimalFormat))</p>
+                                }
+                                else
+                                {
+                                    <p class="mb-0">@Model.Total.ToString(decimalFormat)</p>
+                                }
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>VAT Amount: </b></p></td>
+
+                        <td class="text-end">
+                            @if (Model.Customer.VatType == "Vatable")
+                            {
+                                <p class="mb-0">@(((Model.Total / 1.12m) * 0.12m).ToString(decimalFormat))</p>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>Discount: </b></p></td>
+                        <td class="text-end">
+
+                            @if (Model.Discount > 0)
+                            {
+                                <p class="mb-0">@Model.Discount.ToString(decimalFormat)</p>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><p style="margin-left:8%;" class="mb-0"><b>TOTAL SALES: </b></p></td>
+                        <td class="text-end"><p class="mb-0">@Model.Total.ToString(decimalFormat)</p></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<p style="margin-top:20px;" class="p-italic">
+    This is a system generated invoice, no signature required.
+</p>
+
+@if (Model.Type == nameof(DocumentType.Documented))
+{
+    @if (selectedCompany == "Filpride")
+    {
+        <p class="text-center w-100">
+            <span>Acknowledgement Certificate No:</span>
+            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+            <span>&nbsp;&nbsp;Date Issued:</span>
+            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br/>
+            Series: SV0000000001 - SV9999999999
+            Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
+        </p>
+    }
+
+    @if (!Model.IsPrinted)
+    {
+        <div class="text-end">
+            ORIGINAL COPY
+        </div>
+    }
+    else
+    {
+        <div class="text-end">
+            REPRINT COPY
+        </div>
+    }
+
+    if (selectedCompany == "Filpride")
+    {
+        <div class="text-start w-100 footer">
+            <p style="line-height: 1;">
+                <em>
+                    <strong>Software Name :</strong> @CS.AAS
+                    <br/>
+                    <strong>Version :</strong> @CS.Version
+                    <br/>
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <br/>
+                    <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
+                </em>
+            </p>
+        </div>
+    }
+}
+
+<div class="row pt-2">
+    @{
+        if (Model.PostedBy == null)
+        {
+            <div class="col-6 col-md-3">
+                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.ServiceInvoiceId)">Post</a>
+            </div>
+        }
+        else
+        {
+            <div class="col-6 col-md-3">
+                <a asp-area="Mobility" asp-controller="ServiceInvoice" asp-action="Printed" asp-route-id="@Model.ServiceInvoiceId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+        }
+    }
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Mobility" asp-controller="ServiceInvoice" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var originalFontSizes = [];
+
+        function printPage() {
+            var printButton = document.getElementById("printButton");
+            var otherButton = document.getElementById("otherButton");
+
+            // Hide the header and footer
+            document.querySelector("header").style.display = "none";
+
+            // Hide the buttons before printing
+            if (printButton) {
+                printButton.style.visibility = "hidden";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "hidden";
+            }
+
+            // Get all paragraph elements
+            var paragraphs = document.querySelectorAll("p");
+
+            // Store the original font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                originalFontSizes[i] = paragraphs[i].style.fontSize;
+                // Set the font size of all paragraph elements to 12px for printing
+                paragraphs[i].style.fontSize = "12px";
+            }
+
+            // Call the print function
+            window.print();
+
+            // Restore the font sizes
+            for (var i = 0; i < paragraphs.length; i++) {
+                paragraphs[i].style.fontSize = originalFontSizes[i];
+            }
+
+            // Restore the buttons' visibility after printing (optional)
+            if (printButton) {
+                printButton.style.visibility = "visible";
+            }
+            if (otherButton) {
+                otherButton.style.visibility = "visible";
+            }
+
+            // Restore the header and footer's visibility after printing (optional)
+            document.querySelector("header").style.display = "";
+        }
+    </script>
+    <script>
+        function confirmPost(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Replace with the actual URL that you want to redirect to
+                    var url = `@Url.Action("Post", "ServiceInvoice", new { area = "Mobility" })/${id}`;
+                    window.location.href = url;
+                }
+            })
+        }
+    </script>
+}

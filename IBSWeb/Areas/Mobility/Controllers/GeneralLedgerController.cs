@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             MobilityGeneralLedger model = new()
             {
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken)
             };
 
             return View(model);

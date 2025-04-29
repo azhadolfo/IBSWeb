@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -82,6 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -140,7 +142,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get collection receipts.");
+                _logger.LogError(ex, "Failed to get collection receipts. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -152,7 +155,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
@@ -168,11 +171,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SingleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -184,15 +188,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -286,7 +282,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create sales invoice single collection receipt. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create sales invoice single collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -305,27 +302,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             return View(viewModel);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MultipleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
@@ -338,15 +328,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -444,7 +426,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create sales invoice multiple collection receipt. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -460,6 +443,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> MultipleCollectionEdit(int? id, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             if (id == null)
             {
                 return NotFound();
@@ -471,17 +455,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _dbContext.FilprideCustomers
-               .OrderBy(c => c.CustomerId)
-               .Select(s => new SelectListItem
-               {
-                   Value = s.CustomerId.ToString(),
-                   Text = s.CustomerName
-               })
-               .ToListAsync(cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId)
+                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
                 .OrderBy(si => si.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
@@ -490,15 +467,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             var findCustomers = await _dbContext.FilprideCustomers
                 .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
@@ -514,6 +483,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MultipleCollectionEdit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
@@ -676,7 +646,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit sales invoice multiple collection receipt. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -695,27 +666,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
-
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             return View(viewModel);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateForService(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideServiceInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -727,15 +689,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            model.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -828,7 +782,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create service invoice collection receipt. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit service invoice collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -870,9 +825,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetServiceInvoices(int customerNo, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var invoices = await _dbContext
                 .FilprideServiceInvoices
-                .Where(si => si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
+                .Where(si => si.Company == companyClaims && si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
                 .OrderBy(si => si.ServiceInvoiceId)
                 .ToListAsync(cancellationToken);
 
@@ -935,8 +892,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (isSales)
             {
                 var si = await _dbContext
-                .FilprideSalesInvoices
-                .FirstOrDefaultAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
+                    .FilprideSalesInvoices
+                    .Include(filprideSalesInvoice => filprideSalesInvoice.Customer)
+                    .FirstOrDefaultAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
 
                 decimal netDiscount = si.Amount - si.Discount;
                 decimal netOfVatAmount = si.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
@@ -972,7 +930,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsync(companyClaims, cancellationToken);
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
@@ -994,15 +952,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            existingModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             var findCustomers = await _dbContext.FilprideCustomers
                 .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
@@ -1018,6 +968,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
@@ -1173,7 +1124,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit collection receipt. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -1246,7 +1198,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to post collection receipt. Posted by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -1319,7 +1272,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to void collection receipt. Voided by: {UserName}", _userManager.GetUserName(User));
+                        _logger.LogError(ex, "Failed to void collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                            ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                         await transaction.RollbackAsync(cancellationToken);
                         TempData["error"] = ex.Message;
                     }
@@ -1365,7 +1319,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel collection receipt. Canceled by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to cancel collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
@@ -1502,6 +1457,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["T1"].Value = "OriginalProductId";
                 worksheet3.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet3.Cells["V1"].Value = "OriginalDocumentId";
+                worksheet3.Cells["W1"].Value = "PostedBy";
+                worksheet3.Cells["X1"].Value = "PostedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -1528,6 +1485,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet4.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet4.Cells["R1"].Value = "OriginalServicesId";
                 worksheet4.Cells["S1"].Value = "OriginalDocumentId";
+                worksheet4.Cells["T1"].Value = "PostedBy";
+                worksheet4.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -1567,6 +1526,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["AD1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["AE1"].Value = "OriginalServiceInvoiceId";
                 worksheet.Cells["AF1"].Value = "OriginalDocumentId";
+                worksheet.Cells["AG1"].Value = "PostedBy";
+                worksheet.Cells["AH1"].Value = "PostedDate";
 
                 #endregion -- Collection Receipt Table Header --
 
@@ -1626,6 +1587,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 30].Value = item.CollectionReceiptNo;
                     worksheet.Cells[row, 31].Value = item.ServiceInvoiceId;
                     worksheet.Cells[row, 32].Value = item.CollectionReceiptId;
+                    worksheet.Cells[row, 33].Value = item.PostedBy;
+                    worksheet.Cells[row, 34].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1671,6 +1634,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 20].Value = item.SalesInvoice.ProductId;
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
+                    worksheet3.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
+                    worksheet3.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1713,6 +1678,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet4.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
                     worksheet4.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
+                    worksheet4.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
+                    worksheet4.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -1753,6 +1720,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[siRow, 20].Value = item.ProductId;
                     worksheet3.Cells[siRow, 21].Value = item.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 22].Value = item.SalesInvoiceId;
+                    worksheet3.Cells[siRow, 23].Value = item.PostedBy;
+                    worksheet3.Cells[siRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1797,7 +1766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CollectionReceiptList.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CollectionReceiptList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
         }
 

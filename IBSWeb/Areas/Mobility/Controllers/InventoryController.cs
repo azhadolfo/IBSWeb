@@ -1,5 +1,7 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Services.Attributes;
@@ -7,6 +9,7 @@ using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -20,18 +23,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly UserManager<IdentityUser> _userManager;
 
-        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger, UserManager<IdentityUser> userManager)
+        private readonly ApplicationDbContext _dbContext;
+
+        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userManager = userManager;
+            _dbContext = dbContext;
+        }
+
+        private async Task<string> GetStationCodeClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
         }
 
         public async Task<IActionResult> GenerateInventoryCosting(CancellationToken cancellationToken)
         {
             MobilityInventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
@@ -40,23 +53,44 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> InventoryCosting(MobilityInventory model, DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
             IEnumerable<MobilityInventory> inventories;
             ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            model.StationCode = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            model.StationCode = stationCodeClaims;
 
-            if (model.StationCode == "ALL")
+            var endingBalance = await _dbContext.MobilityInventories
+                                    .OrderBy(e => e.Date)
+                                    .ThenBy(e => e.InventoryId)
+                                    .Where(e => e.StationCode == stationCodeClaims && e.ProductCode == model.ProductCode)
+                                    .LastOrDefaultAsync(e => e.Date.Month - 1 == dateFrom.Month, cancellationToken)
+                                ?? await _dbContext.MobilityInventories
+                                    .OrderBy(e => e.Date)
+                                    .ThenBy(e => e.InventoryId)
+                                    .Where(e => e.StationCode == stationCodeClaims && e.ProductCode == model.ProductCode)
+                                    .LastOrDefaultAsync(cancellationToken);
+
+            if (endingBalance != null)
             {
-                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                ViewData["Station"] = model.StationCode;
+                inventories = await _dbContext.MobilityInventories
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.InventoryId)
+                    .Where( i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo || i.InventoryId == endingBalance.InventoryId)
+                    .ToListAsync(cancellationToken);
             }
             else
             {
-                inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-                StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
-                ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
+                inventories = await _dbContext.MobilityInventories
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.InventoryId)
+                    .Where(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo)
+                    .ToListAsync(cancellationToken);
             }
+
+            //inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
+            StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
+
+            ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
 
             ViewData["Product"] = $"{productDetails.ProductCode} {productDetails.ProductName.ToUpper()}";
             return View(inventories);
@@ -67,7 +101,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             MobilityInventory? inventory = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken),
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken)
             };
 
@@ -95,7 +129,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 _logger.LogError(ex, "Error in saving the beginning inventory.");
                 TempData["error"] = $"Error: '{ex.Message}'";
 
-                model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
                 model.Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
 
                 return View(model);
@@ -111,15 +145,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Sales))
             {
-                return RedirectToAction(nameof(CashierReportController.Preview), "CashierReport", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(CashierReportController.Preview), "CashierReport", new { area = nameof(Mobility), id = transactionNo });
             }
             else if (productCode.StartsWith("PET") && typeOfTransaction == nameof(JournalType.Purchase))
             {
-                return RedirectToAction(nameof(PurchaseController.PreviewFuel), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(PurchaseController.PreviewFuel), "Purchase", new { area = nameof(Mobility), id = transactionNo });
             }
             else
             {
-                return RedirectToAction(nameof(PurchaseController.PreviewLube), "Purchase", new { area = nameof(Mobility), id = transactionNo, stationCode });
+                return RedirectToAction(nameof(PurchaseController.PreviewLube), "Purchase", new { area = nameof(Mobility), id = transactionNo });
             }
         }
 
@@ -161,7 +195,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             ActualSoundingViewModel viewModel = new()
             {
-                Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken)
+                Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken)
             };
 
             return View(viewModel);
@@ -179,18 +213,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     await _unitOfWork.MobilityInventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
 
-                    TempData["success"] = "Actual sounding inserted successfully.";
+                    TempData["success"] = "Actual sounding/count inserted successfully.";
                     return RedirectToAction(nameof(ActualSounding));
                 }
                 catch (Exception ex)
                 {
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
                 }
             }
 
-            viewModel.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -206,7 +240,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (lastInventory == null)
             {
-                return NotFound();
+                return Json(null);
             }
 
             return Json(new

@@ -4,15 +4,14 @@ using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Models.Filpride.ViewModels;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -36,6 +35,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<PurchaseOrderController> _logger;
 
+        private const string FilterTypeClaimType = "PurchaseOrder.FilterType";
+
         public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext, ILogger<PurchaseOrderController> logger)
         {
             _dbContext = dbContext;
@@ -52,8 +53,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        private async Task UpdateFilterTypeClaim(string filterType)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
+        }
+
+        public async Task<IActionResult> Index(string? view, string filterType, CancellationToken cancellationToken)
+        {
+            await UpdateFilterTypeClaim(filterType);
             if (view == nameof(DynamicView.PurchaseOrder))
             {
                 var companyClaims = await GetCompanyClaimAsync();
@@ -68,14 +101,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetPurchaseOrders([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
                 var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                     .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    purchaseOrders = purchaseOrders
+                        .Where(po => po.Status == nameof(DRStatus.ForApprovalOfOM));
+                }
+
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "ForOMApproval":
+                            purchaseOrders = purchaseOrders
+                                .Where(rr => rr.Status == nameof(DRStatus.ForApprovalOfOM));
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -128,9 +181,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get purchase orders.");
+                _logger.LogError(ex, "Failed to get purchase order. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -143,18 +197,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Select(s => s.Value == "true")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (isPoLock)
-            {
-                TempData["denied"] = "Creation is locked due to untriggered purchase orders.";
-                return RedirectToAction(nameof(Index));
-            }
-
             var viewModel = new FilpridePurchaseOrder();
+
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            ViewData["IsPoLock"] = isPoLock;
 
             return View(viewModel);
         }
@@ -165,7 +216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -177,10 +228,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var supplier = await _dbContext.FilprideSuppliers
+                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
+
                     model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
                     model.UnTriggeredQuantity = model.Quantity;
+                    model.SupplierAddress = supplier.SupplierAddress;
+                    model.SupplierTin = supplier.SupplierTin;
                     await _dbContext.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
@@ -194,21 +250,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Purchase Order created successfully";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create purchase order. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
-            else
-            {
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
-            }
+
+            ModelState.AddModelError("", "The information you submitted is not valid!");
+            return View(model);
         }
 
         [HttpGet]
@@ -223,9 +278,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
-            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(purchaseOrder.SupplierId, cancellationToken);
+            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, purchaseOrder.SupplierId, cancellationToken);
 
             purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
@@ -235,6 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilpridePurchaseOrder model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -252,8 +308,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
-                    model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                    var suppliers = await _dbContext.FilprideSuppliers
+                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
+                    model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
                     existingModel.Date = model.Date;
@@ -271,6 +329,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
                     existingModel.PickUpPointId = model.PickUpPointId;
+                    existingModel.SupplierAddress = suppliers.SupplierAddress;
+                    existingModel.SupplierTin = suppliers.SupplierTin;
 
                     #region --Audit Trail Recording
 
@@ -283,11 +343,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Purchase Order updated successfully";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit purchase order. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -363,7 +424,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (hasAlreadyBeenUsed)
             {
                 TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             if (model != null)
@@ -389,7 +450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Purchase Order has been Voided.";
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
 
@@ -425,15 +486,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Purchase Order has been Cancelled.";
                     }
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel purchase order. Canceled by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to cancel purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             return NotFound();
@@ -468,7 +530,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (string.IsNullOrEmpty(selectedRecord))
             {
                 // Handle the case where no invoices are selected
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
@@ -502,6 +564,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["P1"].Value = "OriginalSeriesNumber";
             worksheet.Cells["Q1"].Value = "OriginalSupplierId";
             worksheet.Cells["R1"].Value = "OriginalDocumentId";
+            worksheet.Cells["S1"].Value = "PostedBy";
+            worksheet.Cells["T1"].Value = "PostedDate";
 
             int row = 2;
 
@@ -525,6 +589,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 16].Value = item.PurchaseOrderNo;
                 worksheet.Cells[row, 17].Value = item.SupplierId;
                 worksheet.Cells[row, 18].Value = item.PurchaseOrderId;
+                worksheet.Cells[row, 19].Value = item.PostedBy;
+                worksheet.Cells[row, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                 row++;
             }
@@ -536,18 +602,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "PurchaseOrderList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PurchaseOrderList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllPurchaseOrderIds()
+        public async Task<IActionResult> GetAllPurchaseOrderIds()
         {
-            var poIds = _dbContext.FilpridePurchaseOrders
-                                     .Where(po => po.Type == nameof(DocumentType.Documented))
+            var companyClaims = await GetCompanyClaimAsync();
+            var poIds = await _dbContext.FilpridePurchaseOrders
+                                     .Where(po => po.Type == nameof(DocumentType.Documented) && po.Company == companyClaims)
                                      .Select(po => po.PurchaseOrderId) // Assuming Id is the primary key
-                                     .ToList();
+                                     .ToListAsync();
 
             return Json(poIds);
         }
@@ -631,7 +698,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to update price of purchase order. Updated by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to update price of purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Updated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return Json(new { success = false, message = TempData["error"] });
@@ -729,7 +797,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to approve purchase order. Approved by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to approve purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     return BadRequest(new { error = ex.Message });
                 }
@@ -740,9 +809,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
         {
-            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(supplierId, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            var pickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, supplierId, cancellationToken);
 
             return Json(pickUpPoints);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcessProductTransfer(int purchaseOrderId, int pickupPointId, string notes, CancellationToken cancellationToken)
+        {
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                var pickupPoint = await _dbContext.FilpridePickUpPoints
+                    .FindAsync(pickupPointId, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint.Depot} to {pickupPoint.Depot}. \nNote: {notes}", "Purchase Order", ipAddress, purchaseOrder.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                purchaseOrder.PickUpPointId = pickupPointId;
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Json(new { success = true});
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to product transfer the purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Transfer by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
+
         }
     }
 }

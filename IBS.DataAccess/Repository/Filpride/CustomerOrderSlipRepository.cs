@@ -1,14 +1,14 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using IBS.Models.Filpride.Books;
+using IBS.Models.MasterFile;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -81,6 +81,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerId = viewModel.CustomerId;
+            existingRecord.CustomerAddress = viewModel.CustomerAddress;
+            existingRecord.CustomerTin = viewModel.TinNo;
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
@@ -95,6 +97,16 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Branch = viewModel.SelectedBranch;
             existingRecord.Terms = viewModel.Terms;
             existingRecord.CustomerType = viewModel.CustomerType;
+
+            if (existingRecord.Branch != null)
+            {
+                var branch = await _db.FilprideCustomerBranches
+                    .Where(b => b.BranchName == existingRecord.Branch)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                existingRecord.CustomerAddress = branch.BranchAddress;
+                existingRecord.CustomerTin = branch.BranchTin;
+            }
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -112,11 +124,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetCosListNotDeliveredAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideCustomerOrderSlips
                 .OrderBy(cos => cos.CustomerOrderSlipId)
                 .Where(cos =>
+                    cos.Company == companyClaims &&
                     (!cos.IsDelivered && cos.Status == nameof(CosStatus.Completed)) || cos.Status == nameof(CosStatus.ForDR))
                 .Select(cos => new SelectListItem
                 {
@@ -181,26 +194,19 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             decimal netOfVatProductCost = 0;
 
-            if (!existingRecord.HasMultiplePO)
+            var appointedSupplier = _db.FilprideCOSAppointedSuppliers
+                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                .ToList();
+
+            decimal totalPoAmount = 0;
+
+            foreach (var item in appointedSupplier)
             {
-                netOfVatProductCost = existingRecord.PurchaseOrder.Price / 1.12m;
+                var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
+                totalPoAmount += item.Quantity * ComputeNetOfVat(po.Price);
             }
-            else
-            {
-                var appointedSupplier = _db.FilprideCOSAppointedSuppliers
-                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
-                        .ToList();
 
-                decimal totalPoAmount = 0;
-
-                foreach (var item in appointedSupplier)
-                {
-                    var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
-                    totalPoAmount += item.Quantity * ComputeNetOfVat(po.Price);
-                }
-
-                netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
-            }
+            netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
 
             var netOfVatCosPrice = existingRecord.DeliveredPrice / 1.12m;
             var netOfVatFreightCharge = existingRecord.Freight / 1.12m;

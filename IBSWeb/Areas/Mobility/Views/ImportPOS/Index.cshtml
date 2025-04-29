@@ -1,0 +1,126 @@
+@model IEnumerable<IBS.Models.LogMessage>?
+
+@{
+    ViewData["Title"] = "Cashier Report";
+    var lastManualImport = ViewData["LastManualImport"] as string;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+</style>
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">IMPORT POS CSV</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <div class="row mb-4">
+            <form asp-action="StartImport" method="post" id="importForm" class="justify-content-end">
+                <div class="row">
+                    <div class="col-6 align-content-center">
+                        @if (!string.IsNullOrEmpty(lastManualImport))
+                        {
+                            <h4>Last manual import: @lastManualImport</h4>
+                        }
+                        else
+                        {
+                            <h5>No manual import found</h5>
+                        }
+                    </div>
+                    <div class="col-6 text-end">
+                        <button type="submit" class="btn btn-primary">Import Now</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="loader-container" style="display: none;">
+                <div class="loader"></div>
+                <div class="loader-text">Importing...</div>
+            </div>
+        </div>
+
+        <div class="row table-responsive" style="max-height: 550px;">
+            @if (!string.IsNullOrEmpty(lastManualImport))
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Level</th>
+                            <th>Name</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+
+                    @foreach (var obj in Model.OrderBy(x => x.TimeStamp))
+                    {
+                        <tr class="
+                                    @{ switch (obj.LogLevel)
+                                        {
+                                        case "Warning":
+                                        {<text>table-warning</text>};
+                                        break;
+                                        case "Error":
+                                        {<text>table-danger</text>};
+                                        break; 
+                                        default: 
+                                        {
+                                             }
+                                        break;
+                                        }}
+                                    ">
+                            <td>
+                                @obj.TimeStamp.ToString("yyyy/MM/dd HH:mm:ss")
+                            </td>
+                            <td>
+                                @obj.LogLevel
+                            </td>
+                            <td>
+                                @obj.LoggerName
+                            </td>
+                            <td>
+                                @Html.Raw(obj.Message)
+                            </td>
+                        </tr>
+                    }
+                </table>
+            }
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

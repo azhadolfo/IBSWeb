@@ -264,7 +264,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        public async Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
         {
             using var stream = new MemoryStream(file.FileContent);
             using var reader = new StreamReader(stream);

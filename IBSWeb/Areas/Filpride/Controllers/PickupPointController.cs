@@ -3,11 +3,9 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -40,9 +38,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var pickupPoints = await _dbContext.FilpridePickUpPoints
-                .Where(p => p.Company == companyClaims)
                 .Include(p => p.Supplier)
                 .ToListAsync(cancellationToken);
 
@@ -54,13 +50,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
             var model = new FilpridePickUpPoint();
-            model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+            model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
 
             return View(model);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilpridePickUpPoint model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -87,11 +84,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(model);
                 }
             }
-            else
-            {
-                ModelState.AddModelError("", "Make sure to fill all the required details.");
-                return View(model);
-            }
+
+            model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(model.Company, cancellationToken);
+            ModelState.AddModelError("", "Make sure to fill all the required details.");
+            return View(model);
         }
 
         [HttpGet]
@@ -105,15 +101,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
-                var model = await _dbContext.FilpridePickUpPoints.FindAsync(id, cancellationToken);
-                model.Suppliers = await _unitOfWork.GetFilprideSupplierListAsyncById(companyClaims, cancellationToken);
+                var model = await _unitOfWork.FilpridePickUpPoint
+                    .GetAsync(p => p.PickUpPointId == id, cancellationToken);
+                model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-                if (model != null)
-                {
-                    return View(model);
-                }
-
-                return NotFound();
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -123,6 +115,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilpridePickUpPoint model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -132,13 +125,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var selected = await _dbContext.FilpridePickUpPoints.FindAsync(model.PickUpPointId, cancellationToken);
+                    var selected = await _unitOfWork.FilpridePickUpPoint
+                        .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", model.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     selected.Depot = model.Depot;
                     selected.SupplierId = model.SupplierId;
+                    selected.IsFilpride = model.IsFilpride;
+                    selected.IsMobility = model.IsMobility;
+                    selected.IsBienes = model.IsBienes;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);

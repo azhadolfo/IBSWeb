@@ -42,10 +42,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
                 var banks = await _unitOfWork.FilprideBankAccount
-                .GetAllAsync(b => b.Company == companyClaims, cancellationToken);
+                .GetAllAsync(null, cancellationToken);
 
                 if (view == nameof(DynamicView.BankAccount))
                 {
@@ -69,6 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideBankAccount model, CancellationToken cancellationToken)
         {
             if (ModelState.IsValid)
@@ -127,6 +126,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideBankAccount model, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
@@ -140,6 +140,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.AccountName = model.AccountName;
                     existingModel.Bank = model.Bank;
                     existingModel.Branch = model.Branch;
+                    existingModel.IsFilpride = model.IsFilpride;
+                    existingModel.IsMobility = model.IsMobility;
+                    existingModel.IsBienes = model.IsBienes;
 
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -218,7 +221,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "BankAccountList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"BankAccountList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

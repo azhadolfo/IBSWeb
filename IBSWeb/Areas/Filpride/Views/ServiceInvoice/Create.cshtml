@@ -19,6 +19,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Create">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group mb-3">
                 <label class="control-label">Type<span class="required">*</span></label>
@@ -47,11 +48,11 @@
             </div>
             <div class="form-group mb-3">
                 <label asp-for="DueDate" class="control-label">Due Date<span class="required">*</span></label>
-                <input asp-for="DueDate" type="date" class="form-control" />
+                <input asp-for="DueDate" type="date" class="form-control"/>
                 <span asp-validation-for="DueDate" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.000" />
+                <input asp-for="Discount" class="form-control moneyInput" placeholder="0.000"/>
                 <label for="discount" class="control-label">Discount</label>
                 <span asp-validation-for="Discount" class="text-danger"></span>
             </div>
@@ -63,12 +64,12 @@
             <div id="period-amount-fields" class="row g-2 mb-3">
                 <div class="col-sm mb-3">
                     <label asp-for="Period" class="control-label">Period<span class="required">*</span></label>
-                    <input asp-for="Period" type="month" value="@DateTime.UtcNow.ToString("yyyy-MM")" class="form-control" />
+                    <input asp-for="Period" type="month" value="@DateTime.UtcNow.ToString("yyyy-MM")" class="form-control"/>
                     <span asp-validation-for="Period" class="text-danger"></span>
                 </div>
                 <div class="col-sm mb-3">
                     <label asp-for="Amount" class="control-label">Amount<span class="required">*</span></label>
-                    <input asp-for="Amount" class="form-control money" placeholder="0.000" value="" />
+                    <input asp-for="Amount" class="form-control money" placeholder="0.000" value=""/>
                     <span asp-validation-for="Amount" class="text-danger"></span>
                 </div>
             </div>

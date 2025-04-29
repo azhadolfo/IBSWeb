@@ -1,6 +1,5 @@
-﻿@model FilprideSupplier
-@using IBS.Utility
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
+@model FilprideSupplier
 
 @{
     ViewData["Title"] = "Edit Supplier";
@@ -19,6 +18,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <input asp-for="SupplierId" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <fieldset class="form-group mb-3">
@@ -177,6 +177,23 @@
                 </div>
             }
 
+            <label class="control-label">Please select where the record will be added:</label>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsBienes" /> BIENES
+                </label>
+            </div>
+            
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
                     <button type="submit" class="btn btn-primary form-control">Save</button>

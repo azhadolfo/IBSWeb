@@ -44,7 +44,12 @@
     }
     @if (selectedCompany == "Mobility")
     {
-        <h2><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+        <h2><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+        <p style="line-height: 1; margin-top:-7px;">
+            Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+            Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+            VAT Reg. TIN: 776-536-510-00000
+        </p>
     }
 </div>
 <h3><span style="display: inline-block;"><b>COLLECTION RECEIPT</b></span></h3>
@@ -79,11 +84,11 @@
                     Address: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerAddress)
+                        @Html.DisplayFor(model => model.SalesInvoice.CustomerAddress)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerAddress)
+                        @Html.DisplayFor(model => model.ServiceInvoice.CustomerAddress)
                     }
                 </td>
             </tr>
@@ -92,11 +97,11 @@
                     TIN: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerTin)
+                        @Html.DisplayFor(model => model.SalesInvoice.CustomerTin)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerTin)
+                        @Html.DisplayFor(model => model.ServiceInvoice.CustomerTin)
                     }
                 </td>
                 <td style="padding-left:10px;">
@@ -432,31 +437,37 @@
 @if (Model.Type == nameof(DocumentType.Documented))
 {
     <div class="text-center w-100" style="margin-top:10px;">
-        <p>
-            <em class="p-4"><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong><br /></em>
-            <span>Acknowledgement Certificate No:</span>
-            <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
-            <span>&nbsp;&nbsp;Date Issued:</span>
-            <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br />
-            Series: CR0000000001 - CR9999999999
-            Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
-        </p>
+        <em class="p-4"><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong><br/></em>
+        @if (selectedCompany == "Filpride")
+        {
+            <p>
+                <span>Acknowledgement Certificate No:</span>
+                <span style="display: inline-block; width:150px;"> @CS.ACCN </span>
+                <span>&nbsp;&nbsp;Date Issued:</span>
+                <span style="display: inline-block; width:50px;"> @CS.DateIssued </span><br/>
+                Series: CR0000000001 - CR9999999999
+                Date and Time Created:&nbsp;@DateTimeHelper.GetCurrentPhilippineTimeFormatted(Model.CreatedDate)
+            </p>
+        }
     </div>
 
-    <br />
-    <div class="text-start footer" style="margin-top:20px;">
-        <p style="line-height: 1;">
-            <em>
-                <strong>Software Name :</strong> @CS.AAS
-                <br />
-                <strong>Version :</strong> @CS.Version
-                <br />
-                <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
-                <br />
-                <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
-            </em>
-        </p>
-    </div>
+    if (selectedCompany == "Filpride")
+    {
+        <br/>
+        <div class="text-start footer" style="margin-top:20px;">
+            <p style="line-height: 1;">
+                <em>
+                    <strong>Software Name :</strong> @CS.AAS
+                    <br/>
+                    <strong>Version :</strong> @CS.Version
+                    <br/>
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <br/>
+                    <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
+                </em>
+            </p>
+        </div>
+    }
 
     @if (!Model.IsPrinted)
     {

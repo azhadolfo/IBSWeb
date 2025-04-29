@@ -18,6 +18,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group mb-3">
                 <label asp-for="Name" class="control-label"></label>
@@ -30,6 +31,22 @@
             </div>
             <div class="input-group mb-3">
                 <span asp-validation-for="Percent" class="text-danger"></span>
+            </div>
+            <label class="control-label">Please select where the record will be added:</label>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsBienes" /> BIENES
+                </label>
             </div>
             <input type="hidden" asp-for="ServiceId"/>
             <input type="hidden" asp-for="CreatedBy" class="form-control"/>

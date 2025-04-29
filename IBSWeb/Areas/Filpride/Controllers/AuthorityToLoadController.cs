@@ -53,6 +53,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetAuthorityToLoads([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -111,7 +112,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to get authority to loads.");
+                _logger.LogError(ex, "Failed to get authority to loads. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -132,6 +134,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BookATLViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -217,7 +220,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to book ATL. Created by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to book ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return View(viewModel);
             }
 
@@ -246,7 +250,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to print ATL. Printed by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to print ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Printed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -274,9 +279,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetHaulerDetails(int cosId)
         {
+            var companyClaims = await GetCompanyClaimAsync();
             // Query your database to get hauler details for the COS
             var existingCos = await _unitOfWork.FilprideCustomerOrderSlip  // Replace with your actual context and model
-                .GetAsync(c => c.CustomerOrderSlipId == cosId);
+                .GetAsync(c => c.CustomerOrderSlipId == cosId && c.Company == companyClaims);
 
             var haulerDetails = new
             {
@@ -315,7 +321,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to update the validity date of ATL. Updated by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to update the validity date of ATL. Error: {ErrorMessage}, Stack: {StackTrace}. Updated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return Json(new { success = false });
             }
         }

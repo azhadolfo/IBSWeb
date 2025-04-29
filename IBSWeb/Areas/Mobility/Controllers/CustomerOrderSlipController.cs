@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Services;
@@ -70,13 +71,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             IQueryable<MobilityCustomerOrderSlip> customerOrderSlip = _dbContext.MobilityCustomerOrderSlips
                 .Include(c => c.Customer)
                 .Include(p => p.Product)
-                .Include(s => s.MobilityStation);
-
-            if (stationCodeClaims != "ALL")
-            {
-                // Filter by StationCode if stationCodeClaims is not "ALL"
-                customerOrderSlip = customerOrderSlip.Where(record => record.StationCode == stationCodeClaims);
-            }
+                .Include(s => s.MobilityStation)
+                .Where(record => record.StationCode == stationCodeClaims);
 
             // Apply sorting and execute the query
             var sortedCustomerOrderSlip = await customerOrderSlip
@@ -102,23 +98,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Where(a => a.CustomerType == SD.CustomerType_PO)
                 .ToListAsync(cancellationToken);
 
-            if (stationCodeClaims != "ALL")
+            model = new()
             {
-                model = new()
-                {
-                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken),
-                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
-                };
-            }
-            else
-            {
-                model = new()
-                {
-                    Customers = await _unitOfWork.GetMobilityCustomerListAsyncByIdAll(stationCodeString, cancellationToken),
-                    MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken),
-                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
-                };
-            }
+                MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken),
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
+            };
 
             return View(model);
         }
@@ -147,10 +131,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region -- Get mobility station --
 
-                    var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
-
                     var getMobilityStation = await _dbContext.MobilityStations
-                        .Where(s => s.StationCode == stationCode)
+                        .Where(s => s.StationCode == stationCodeClaims)
                         .FirstOrDefaultAsync(cancellationToken);
 
                     #endregion -- get mobility station --
@@ -159,7 +141,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     MobilityCustomerOrderSlip? lastCos = await _dbContext
                         .MobilityCustomerOrderSlips
-                        .Where(c => c.StationCode == stationCode)
+                        .Where(c => c.StationCode == stationCodeClaims)
                         .OrderBy(c => c.CustomerOrderSlipNo)
                         .LastOrDefaultAsync(cancellationToken);
 
@@ -193,10 +175,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model.StationId = getMobilityStation.StationId;
                     model.Address = selectedCustomer.CustomerAddress;
-                    if (stationCodeClaims == "ALL")
-                    {
-                        model.StationCode = getMobilityStation.StationCode;
-                    }
 
                     await _dbContext.MobilityCustomerOrderSlips.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -266,10 +244,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region -- GetMobilityStation --
 
-                    var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
-
                     var getMobilityStation = await _dbContext.MobilityStations
-                                                .Where(s => s.StationCode == stationCode)
+                                                .Where(s => s.StationCode == stationCodeClaims)
                                                 .FirstOrDefaultAsync(cancellationToken);
 
                     #endregion -- getMobilityStation --
@@ -363,7 +339,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Where(cos => cos.CustomerOrderSlipId == id)
                 .FirstOrDefaultAsync();
 
-            model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 
             if (!string.IsNullOrEmpty(model.SavedFileName))
             {
@@ -538,10 +514,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 query = query.Where(cos => cos.StationCode == stationFilter);
             }
-            if (currentStationCode != "ALL")
-            {
-                query = query.Where(cos => cos.StationCode == currentStationCode);
-            }
+
+            query = query.Where(cos => cos.StationCode == currentStationCode);
+
             item = await query.OrderBy(cos => cos.Date)
                 .ThenBy(cos => cos.CustomerOrderSlipNo)
                 .ToListAsync(cancellationToken);

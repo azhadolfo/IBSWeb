@@ -18,28 +18,47 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="BankAccountId"/>
             <div class="form-group mb-3">
                 <label asp-for="AccountNo" class="control-label"></label>
-                <input asp-for="AccountNo" class="form-control" />
+                <input asp-for="AccountNo" class="form-control"/>
                 <span asp-validation-for="AccountNo" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
                 <label asp-for="AccountName" class="control-label"></label>
-                <input asp-for="AccountName" type="text" class="form-control " />
+                <input asp-for="AccountName" type="text" class="form-control "/>
                 <span asp-validation-for="AccountName" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
                 <label asp-for="Bank" class="control-label"></label>
-                <input asp-for="Bank" type="text" class="form-control " />
+                <input asp-for="Bank" type="text" class="form-control "/>
                 <span asp-validation-for="Bank" class="text-danger"></span>
             </div>
             <div class="form-group mb-3">
                 <label asp-for="Branch" class="control-label"></label>
-                <input asp-for="Branch" type="text" class="form-control " />
+                <input asp-for="Branch" type="text" class="form-control "/>
                 <span asp-validation-for="Branch" class="text-danger"></span>
             </div>
 
+            <label class="control-label">Please select where the record will be added:</label>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsBienes" /> BIENES
+                </label>
+            </div>
+            
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
                     <button type="submit" class="btn btn-primary form-control">Save</button>

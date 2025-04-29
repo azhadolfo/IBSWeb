@@ -119,7 +119,9 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
             decimal totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
 
-            decimal averageCost = totalBalance / inventoryBalance;
+            decimal averageCost = totalBalance == 0 || inventoryBalance == 0
+                ? total / receivingReport.QuantityReceived
+                : totalBalance / inventoryBalance;
 
             // Create new inventory entry
             FilprideInventory inventory = new()
@@ -148,7 +150,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     transaction.Total = transaction.Quantity * averageCost;
                     transaction.TotalBalance = totalBalance - transaction.Total;
                     transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance <= 0 || transaction.InventoryBalance <= 0
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
                         ? transaction.Cost
                         : transaction.TotalBalance / transaction.InventoryBalance;
 
@@ -188,7 +190,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
                     averageCost = transaction.AverageCost;
@@ -217,28 +221,29 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
 
             var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= deliveryReceipt.DeliveredDate);
-            if (lastIndex < 0)
-            {
-                throw new ArgumentException($"Beginning inventory for {deliveryReceipt.CustomerOrderSlip.Product.ProductName} not found!");
-            }
-
-            var previousInventory = sortedInventory[lastIndex];
+            var previousInventory = lastIndex >= 0 ? sortedInventory[lastIndex] : null;
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
+            decimal cost;
 
-            if (previousInventory.InventoryBalance < deliveryReceipt.Quantity)
+            if (previousInventory == null)
             {
-                throw new InvalidOperationException(
-                    $"The requested quantity exceeds the available inventory for '{deliveryReceipt.CustomerOrderSlip.Product.ProductName}'. " +
-                    $"Please contact the Logistics department to verify the delivery date if it aligns with your transaction date.");
+                var purchaseOrder = await _db.FilpridePurchaseOrders
+                    .FindAsync(deliveryReceipt.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
+
+                cost = ComputeNetOfVat(purchaseOrder.Price);
+            }
+            else
+            {
+                cost = previousInventory.AverageCost;
             }
 
             // Calculate initial values for new inventory entry
-            decimal total = deliveryReceipt.Quantity * previousInventory.AverageCost;
-            decimal inventoryBalance = previousInventory.InventoryBalance - deliveryReceipt.Quantity;
-            decimal totalBalance = previousInventory.TotalBalance - total;
+            decimal total = deliveryReceipt.Quantity * cost;
+            decimal inventoryBalance = previousInventory?.InventoryBalance - deliveryReceipt.Quantity ?? 0 - deliveryReceipt.Quantity;
+            decimal totalBalance = previousInventory?.TotalBalance - total ?? 0 - total;
 
-            decimal averageCost = totalBalance <= 0 || inventoryBalance <= 0
-                ? previousInventory.AverageCost
+            decimal averageCost = totalBalance == 0 || inventoryBalance == 0
+                ? cost
                 : totalBalance / inventoryBalance;
 
             // Create new inventory entry
@@ -249,7 +254,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 Particular = "Sales",
                 Reference = deliveryReceipt.DeliveryReceiptNo,
                 Quantity = deliveryReceipt.Quantity,
-                Cost = previousInventory.AverageCost,
+                Cost = cost,
                 POId = deliveryReceipt.PurchaseOrderId,
                 IsValidated = true,
                 ValidatedBy = deliveryReceipt.CreatedBy,
@@ -270,7 +275,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     transaction.Total = transaction.Quantity * averageCost;
                     transaction.TotalBalance = totalBalance - transaction.Total;
                     transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance <= 0 || transaction.InventoryBalance <= 0
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
                         ? transaction.Cost
                         : transaction.TotalBalance / transaction.InventoryBalance;
 
@@ -288,7 +293,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
                     averageCost = transaction.AverageCost;
@@ -408,7 +415,9 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         transaction.TotalBalance = totalBalance + transaction.Total;
                         transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                        transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                        transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                            ? transaction.Cost
+                            : transaction.TotalBalance / transaction.InventoryBalance;
 
                         averageCost = transaction.AverageCost;
                         totalBalance = transaction.TotalBalance;
@@ -482,7 +491,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     transaction.TotalBalance = totalBalance + transaction.Total;
                     transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
-                    transaction.AverageCost = transaction.TotalBalance / transaction.InventoryBalance;
+                    transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0
+                        ? transaction.Cost
+                        : transaction.TotalBalance / transaction.InventoryBalance;
 
                     averageCost = transaction.AverageCost;
                     totalBalance = transaction.TotalBalance;

@@ -62,6 +62,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetDebitMemos([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -120,7 +121,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get debit memos.");
+                _logger.LogError(ex, "Failed to get debit memo. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -154,6 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideDebitMemo model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -277,7 +280,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create debit memo. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -327,13 +331,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
                         var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
                         var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
-                        var (salesAcctNo, salesAcctTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.SalesInvoice.Product.ProductCode);
-                        var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
                         var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
 
                         if (model.SalesInvoiceId != null)
                         {
+                            var (salesAcctNo, salesAcctTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.SalesInvoice.Product.ProductCode);
+                            var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
+
                             #region --Retrieval of SI
 
                             var existingSI = await _dbContext
@@ -760,7 +765,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to post debit memo. Posted by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to post debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -811,7 +817,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to void debit memo. Voided by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to void debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -856,18 +863,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel debit memo. Canceled by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to cancel debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
 
             return NotFound();
-        }
-
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
-        {
-            var dm = await _dbContext.FilprideDebitMemos.FindAsync(id, cancellationToken);
-            return PartialView("_PreviewDebit", dm);
         }
 
         [HttpGet]
@@ -924,6 +926,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideDebitMemo model, CancellationToken cancellationToken)
         {
             var existingSalesInvoice = await _dbContext
@@ -999,7 +1002,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit debit memo. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
@@ -1084,6 +1088,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet2.Cells["T1"].Value = "OriginalProductId";
                 worksheet2.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet2.Cells["V1"].Value = "OriginalDocumentId";
+                worksheet2.Cells["W1"].Value = "PostedBy";
+                worksheet2.Cells["X1"].Value = "PostedDate";
 
                 #endregion -- Sales Invoice Table Header --
 
@@ -1110,6 +1116,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet3.Cells["R1"].Value = "OriginalServicesId";
                 worksheet3.Cells["S1"].Value = "OriginalDocumentId";
+                worksheet3.Cells["T1"].Value = "PostedBy";
+                worksheet3.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Service Invoice Table Header --
 
@@ -1136,6 +1144,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["Q1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["R1"].Value = "OriginalServiceInvoiceId";
                 worksheet.Cells["S1"].Value = "OriginalDocumentId";
+                worksheet.Cells["T1"].Value = "PostedBy";
+                worksheet.Cells["U1"].Value = "PostedDate";
 
                 #endregion -- Debit Memo Table Header --
 
@@ -1164,6 +1174,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 17].Value = item.DebitMemoNo;
                     worksheet.Cells[row, 18].Value = item.ServiceInvoiceId;
                     worksheet.Cells[row, 19].Value = item.DebitMemoId;
+                    worksheet.Cells[row, 20].Value = item.PostedBy;
+                    worksheet.Cells[row, 21].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1209,6 +1221,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[siRow, 20].Value = item.SalesInvoice.ProductId;
                     worksheet2.Cells[siRow, 21].Value = item.SalesInvoice.SalesInvoiceNo;
                     worksheet2.Cells[siRow, 22].Value = item.SalesInvoice.SalesInvoiceId;
+                    worksheet2.Cells[siRow, 23].Value = item.SalesInvoice.PostedBy;
+                    worksheet2.Cells[siRow, 24].Value = item.SalesInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     siRow++;
                 }
@@ -1251,6 +1265,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[svRow, 17].Value = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet3.Cells[svRow, 18].Value = item.ServiceInvoice.ServiceId;
                     worksheet3.Cells[svRow, 19].Value = item.ServiceInvoice.ServiceInvoiceId;
+                    worksheet3.Cells[svRow, 20].Value = item.ServiceInvoice.PostedBy;
+                    worksheet3.Cells[svRow, 21].Value = item.ServiceInvoice.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     svRow++;
                 }
@@ -1269,7 +1285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = await package.GetAsByteArrayAsync();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "DebitMemoList.xlsx");
+                    $"DebitMemoList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
         }
 

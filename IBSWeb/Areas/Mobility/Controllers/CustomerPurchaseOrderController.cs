@@ -81,10 +81,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region -- get mobility station --
 
-                    var stationCode = stationCodeClaims == "ALL" ? model.StationCode : stationCodeClaims;
-
                     var getMobilityStation = await _dbContext.MobilityStations
-                                        .Where(s => s.StationCode == stationCode)
+                                        .Where(s => s.StationCode == stationCodeClaims)
                                         .FirstOrDefaultAsync(cancellationToken);
 
                     #endregion -- get mobility station --
@@ -115,10 +113,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.CustomerPurchaseOrderNo = series;
                     model.StationCode = stationCodeClaims;
                     model.StationId = getMobilityStation.StationId;
-                    if (stationCodeClaims == "ALL")
-                    {
-                        model.StationCode = getMobilityStation.StationCode;
-                    }
 
                     await _dbContext.MobilityCustomerPurchaseOrders.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -163,7 +157,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Where(cos => cos.CustomerPurchaseOrderId == id)
                 .FirstOrDefaultAsync();
 
-            model.Products = await _unitOfWork.GetProductListAsyncByCode(cancellationToken);
+            model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 
             return View(model);
         }

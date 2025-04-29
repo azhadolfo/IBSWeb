@@ -1,6 +1,8 @@
 @model IEnumerable<FilprideReceivingReport>
 @using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
@@ -24,6 +26,42 @@
     decimal totalCommissionAmount = 0m;
     decimal totalNetMarginPerLiter = 0m;
     decimal totalNetMarginAmount = 0m;
+
+    var overallTotalQuantity = 0m;
+    var overallTotalSales = 0m;
+    var overallTotalPurchases = 0m;
+    var overallTotalGrossMargin = 0m;
+    var overallTotalFreight = 0m;
+    var overallTotalCommission = 0m;
+    var overallTotalNetMargin = 0m;
+    var overallTotalNetMarginPerLiter = 0m;
+    
+    var biodieselTotalQuantity = 0m;
+    var biodieselTotalSales = 0m;
+    var biodieselTotalPurchases = 0m;
+    var biodieselTotalGrossMargin = 0m;
+    var biodieselTotalFreight = 0m;
+    var biodieselTotalCommission = 0m;
+    var biodieselTotalNetMargin = 0m;
+    var biodieselTotalNetMarginPerLiter = 0m;
+    
+    var econogasTotalQuantity = 0m;
+    var econogasTotalSales = 0m;
+    var econogasTotalPurchases = 0m;
+    var econogasTotalGrossMargin = 0m;
+    var econogasTotalFreight = 0m;
+    var econogasTotalCommission = 0m;
+    var econogasTotalNetMargin = 0m;
+    var econogasTotalNetMarginPerLiter = 0m;
+    
+    var envirogasTotalQuantity = 0m;
+    var envirogasTotalSales = 0m;
+    var envirogasTotalPurchases = 0m;
+    var envirogasTotalGrossMargin = 0m;
+    var envirogasTotalFreight = 0m;
+    var envirogasTotalCommission = 0m;
+    var envirogasTotalNetMargin = 0m;
+    var envirogasTotalNetMarginPerLiter = 0m;
 }
 <style>
     .container {
@@ -32,7 +70,7 @@
 
     .table-responsive {
         overflow-y: auto;
-        max-height: 70vh;
+        max-height: 50vh;
     }
 
     table thead th {
@@ -69,31 +107,36 @@
     }
 </style>
 
+@if (!Model.Any())
+{
+    <p><i>No data available in report.</i></p>
+}
+
 <div class="table-responsive">
-    <h5>PURCHASE REPORT</h5>
+    <h5>GROSS MARGIN REPORT</h5>
     <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
     <table id="ledgerTable" class="table">
         <thead>
         <tr class="table-primary text-nowrap">
             <th class="px-3">Date</th>
             <th class="px-3">Supplier Name</th>
-            <th class="px-3">PO No.</th>
-            <th class="px-3">Filpride RR</th>
-            <th class="px-3">Filpride DR</th>
+            <th class="px-3">PO #.</th>
+            <th class="px-3">RR #</th>
+            <th class="px-3">DR #</th>
             <th class="px-3">Customer Name</th>
             <th class="px-3">Product</th>
-            <th class="px-3">Volume</th>
-            <th class="px-3">CPL, G.VAT</th>
-            <th class="px-3">PURCHASES, G.VAT</th>
-            <th class="px-3">Vat Amount</th>
-            <th class="px-3">Def Vat Amount</th>
-            <th class="px-3">PURCHASES N.VAT</th>
             <th class="px-3">Account Specialist</th>
+            <th class="px-3">Hauler Name</th>
+            <th class="px-3">Commissionee</th>
+            <th class="px-3">Volume</th>
             <th class="px-3">COS Price</th>
-            <th class="px-3">COS Amount</th>
+            <th class="px-3">Sales G.VAT</th>
+            <th class="px-3">CPL G.VAT</th>
+            <th class="px-3">Purchases G.VAT</th>
+            <th class="px-3">Vat Amount</th>
+            <th class="px-3">Purchases N.VAT</th>
             <th class="px-3">GM/Liter</th>
             <th class="px-3">GM Amount</th>
-            <th class="px-3">Hauler's Name</th>
             <th class="px-3">Freight Charge</th>
             <th class="px-3">FC Amount</th>
             <th class="px-3">Commission/Liter</th>
@@ -118,7 +161,7 @@
             var saleAmountGross = volume * salePricePerLiter;
             var gmPerLiter = (salePricePerLiter - purchasePerLiter);
             var gmAmount = volume * gmPerLiter;
-            var freightChargePerLiter = (rr.DeliveryReceipt?.Freight ?? 0m);
+            var freightChargePerLiter = (rr.DeliveryReceipt.Freight) + (rr.DeliveryReceipt?.ECC ?? 0m);
             var commissionPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
             var commissionAmount = commissionPerLiter * volume;
             var netMarginPerLiter = gmPerLiter - freightChargePerLiter;
@@ -126,25 +169,25 @@
             var netMarginAmount = volume * netMarginPerLiter;
             
             <tr class="align-text-bottom text-nowrap">
-                <td> @rr.Date</td>
+                <td> @rr.Date.ToString(SD.Date_Format)</td>
                 <td> @rr.PurchaseOrder?.Supplier?.SupplierName</td>
                 <td> @rr.PurchaseOrder?.PurchaseOrderNo</td>
                 <td> @rr.ReceivingReportNo</td>
                 <td> @rr.DeliveryReceipt?.DeliveryReceiptNo</td>
                 <td> @rr.DeliveryReceipt?.Customer?.CustomerName</td>
                 <td> @rr.PurchaseOrder?.Product?.ProductName</td>
+                <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist </td>
+                <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.Hauler?.SupplierName </td>
+                <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.Commissionee?.SupplierName </td>
                 <td class="text-end p-3"> @volume.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end p-3"> @salePricePerLiter.ToString(SD.Four_Decimal_Format) </td>
+                <td class="text-end p-3"> @saleAmountGross.ToString(SD.Two_Decimal_Format) </td>
                 <td class="text-end p-3"> @purchasePerLiter.ToString(SD.Four_Decimal_Format)</td>
                 <td class="text-end p-3"> @costAmountGross.ToString(SD.Two_Decimal_Format)</td>
                 <td class="text-end p-3"> @costVatAmount.ToString(SD.Two_Decimal_Format)</td>
-                <td> </td>
                 <td class="text-end p-3"> @costAmountNet.ToString(SD.Two_Decimal_Format) </td>
-                <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist </td>
-                <td class="text-end p-3"> @salePricePerLiter.ToString(SD.Four_Decimal_Format) </td>
-                <td class="text-end p-3"> @saleAmountGross.ToString(SD.Two_Decimal_Format) </td>
                 <td class="text-end p-3"> @gmPerLiter.ToString(SD.Four_Decimal_Format) </td>
                 <td class="text-end p-3"> @gmAmount.ToString(SD.Two_Decimal_Format) </td>
-                <td> @rr.DeliveryReceipt?.CustomerOrderSlip?.Hauler?.SupplierName </td>
                 <td class="text-end p-3"> @freightChargePerLiter.ToString(SD.Four_Decimal_Format) </td>
                 <td class="text-end p-3"> @freightChargeAmount.ToString(SD.Two_Decimal_Format) </td>
                 <td class="text-end p-3"> @commissionPerLiter.ToString(SD.Four_Decimal_Format) </td>
@@ -185,19 +228,19 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="text-end p-3">Total:</td>
             <td class="text-end p-3">@totalVolume.ToString(SD.Two_Decimal_Format)</td>
-            <td class="text-end p-3">@averagePurchasePrice.ToString(SD.Four_Decimal_Format)</td>
-            <td class="text-end p-3">@totalPurchaseAmountGross.ToString(SD.Two_Decimal_Format)</td>
-            <td class="text-end p-3">@totalVatAmount.ToString(SD.Two_Decimal_Format)</td>
-            <td></td>
-            <td class="text-end p-3">@totalPurchaseAmountNet.ToString(SD.Two_Decimal_Format)</td>
-            <td></td>
             <td class="text-end p-3">@averageSalePrice.ToString(SD.Four_Decimal_Format)</td>
             <td class="text-end p-3">@totalSaleAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@averagePurchasePrice.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalPurchaseAmountGross.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-end p-3">@totalVatAmount.ToString(SD.Four_Decimal_Format)</td>
+            <td class="text-end p-3">@totalPurchaseAmountNet.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-end p-3">@totalGMPerLiter.ToString(SD.Four_Decimal_Format)</td>
             <td class="text-end p-3">@totalGMAmount.ToString(SD.Two_Decimal_Format)</td>
-            <td></td>
             <td class="text-end p-3">@totalFreightCharge.ToString(SD.Four_Decimal_Format)</td>
             <td class="text-end p-3">@totalFCAmount.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-end p-3">@totalCommissionPerLiter.ToString(SD.Four_Decimal_Format)</td>
@@ -207,6 +250,304 @@
         </tr>
         </tbody>
     </table>
+</div>
+
+<div class="row mt-5">
+    <h5>SUMMARY</h5>
+    <div class="col">
+        <table class="table">
+            <thead>
+            <tr class="table-primary text-center">
+                <th colspan="9">Overall</th>
+            </tr>
+            </thead>
+            <thead>
+            <tr class="table-primary text-nowrap text-center">
+                <th class="text-center">Segment</th>
+                <th class="text-center">Volume</th>
+                <th class="text-center">Sales N. VAT</th>
+                <th class="text-center">Purchases N. VAT</th>
+                <th class="text-center">Gross Margin</th>
+                <th class="text-center">Freight N. VAT</th>
+                <th class="text-center">Commission</th>
+                <th class="text-center">Net Margin</th>
+                <th class="text-center">Net GM/LIT</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+            @foreach (var customerType in Enum.GetValues<CustomerType>())
+            {
+                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+
+                // Computation for Overall
+                var overallQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
+                var overallSalesSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
+                var overallPurchasesSum = list.Sum(s => s.Amount);
+                var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
+                var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
+                var overallFreightSum = list.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
+                var overallCommissionSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
+                var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
+                
+                <tr class="align-text-bottom">
+                    <td class="text-start">@customerType.ToString()</td>
+                    <td class="text-end">@overallQuantitySum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallNetOfSalesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallNetOfPurchasesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallGrossMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallNetOfFreightSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallCommissionSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallNetMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@overallNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format)</td>
+                </tr>
+
+                overallTotalQuantity += overallQuantitySum;
+                overallTotalSales += overallNetOfSalesSum;
+                overallTotalPurchases += overallNetOfPurchasesSum;
+                overallTotalGrossMargin += overallGrossMarginSum;
+                overallTotalFreight += overallNetOfFreightSum;
+                overallTotalCommission += overallCommissionSum;
+                overallTotalNetMargin += overallNetMarginSum;
+                overallTotalNetMarginPerLiter = overallTotalNetMargin != 0 && overallTotalQuantity != 0 ? overallTotalNetMargin / overallTotalQuantity : 0;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td class="text-center"><b>TOTAL:</b></td>
+                <td class="text-end">@overallTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalSales.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalPurchases.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalGrossMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalCommission.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalNetMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@overallTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col">
+        <table class="table">
+            <thead>
+            <tr class="table-primary text-center">
+                <th colspan="8">Biodiesel</th>
+            </tr>
+            </thead>
+            <thead>
+            <tr class="table-primary text-nowrap text-center">
+                <th class="text-center">Volume</th>
+                <th class="text-center">Sales N. VAT</th>
+                <th class="text-center">Purchases N. VAT</th>
+                <th class="text-center">Gross Margin</th>
+                <th class="text-center">Freight N. VAT</th>
+                <th class="text-center">Commission</th>
+                <th class="text-center">Net Margin</th>
+                <th class="text-center">Net GM/LIT</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var customerType in Enum.GetValues<CustomerType>())
+            {
+                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+
+                // Computation for Biodiesel
+                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
+                var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
+                var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
+                var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
+                var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
+                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
+                var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
+                var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
+
+                <tr class="align-text-bottom">
+                    <td class="text-end">@biodieselQuantitySum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselNetOfSalesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselNetOfPurchasesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselGrossMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselNetOfFreightSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselCommissionSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselNetMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@biodieselNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format)</td>
+                </tr>
+
+                biodieselTotalQuantity += biodieselQuantitySum;
+                biodieselTotalSales += biodieselNetOfSalesSum;
+                biodieselTotalPurchases += biodieselNetOfPurchasesSum;
+                biodieselTotalGrossMargin += biodieselGrossMarginSum;
+                biodieselTotalFreight += biodieselNetOfFreightSum;
+                biodieselTotalCommission += biodieselCommissionSum;
+                biodieselTotalNetMargin += biodieselNetMarginSum;
+                biodieselTotalNetMarginPerLiter = biodieselTotalNetMargin != 0 && biodieselTotalQuantity != 0 ? biodieselTotalNetMargin / biodieselTotalQuantity : 0;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td class="text-end">@biodieselTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalSales.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalPurchases.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalGrossMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalCommission.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalNetMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@biodieselTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col">
+        <table class="table">
+            <thead>
+            <tr class="table-primary text-center">
+                <th colspan="9">Econogas</th>
+            </tr>
+            </thead>
+            <thead>
+            <tr class="table-primary text-nowrap text-center">
+                <th class="text-center">Segment</th>
+                <th class="text-center">Volume</th>
+                <th class="text-center">Sales N. VAT</th>
+                <th class="text-center">Purchases N. VAT</th>
+                <th class="text-center">Gross Margin</th>
+                <th class="text-center">Freight N. VAT</th>
+                <th class="text-center">Commission</th>
+                <th class="text-center">Net Margin</th>
+                <th class="text-center">Net GM/LIT</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var customerType in Enum.GetValues<CustomerType>())
+            {
+                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForEconogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS").ToList();
+
+                // Computation for Econogas
+                var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
+                var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
+                var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
+                var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
+                var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
+                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
+                var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
+                var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
+
+                <tr class="align-text-bottom">
+                    <td class="text-start">@customerType.ToString()</td>
+                    <td class="text-end">@econogasQuantitySum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasNetOfSalesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasNetOfPurchasesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasGrossMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasNetOfFreightSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasCommissionSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasNetMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@econogasNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format)</td>
+                </tr>
+
+                econogasTotalQuantity += econogasQuantitySum;
+                econogasTotalSales += econogasNetOfSalesSum;
+                econogasTotalPurchases += econogasNetOfPurchasesSum;
+                econogasTotalGrossMargin += econogasGrossMarginSum;
+                econogasTotalFreight += econogasNetOfFreightSum;
+                econogasTotalCommission += econogasCommissionSum;
+                econogasTotalNetMargin += econogasNetMarginSum;
+                econogasTotalNetMarginPerLiter = econogasTotalNetMargin != 0 && econogasTotalQuantity != 0 ? econogasTotalNetMargin / econogasTotalQuantity : 0;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td class="text-center"><b>TOTAL:</b></td>
+                <td class="text-end">@econogasTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalSales.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalPurchases.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalGrossMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalCommission.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalNetMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@econogasTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col">
+        <table id="ledgerTable" class="table">
+            <thead>
+            <tr class="table-primary text-center">
+                <th colspan="8">Envirogas</th>
+            </tr>
+            </thead>
+            <thead>
+            <tr class="table-primary text-nowrap text-center">
+                <th class="text-center">Volume</th>
+                <th class="text-center">Sales N. VAT</th>
+                <th class="text-center">Purchases N. VAT</th>
+                <th class="text-center">Gross Margin</th>
+                <th class="text-center">Freight N. VAT</th>
+                <th class="text-center">Commission</th>
+                <th class="text-center">Net Margin</th>
+                <th class="text-center">Net GM/LIT</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            @foreach (var customerType in Enum.GetValues<CustomerType>())
+            {
+                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForEnvirogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS").ToList();
+
+                // Computation for Envirogas
+                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
+                var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
+                var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
+                var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
+                var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
+                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
+                var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
+                var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
+
+                <tr class="align-text-bottom">
+                    <td class="text-end">@envirogasQuantitySum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasNetOfSalesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasNetOfPurchasesSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasGrossMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasNetOfFreightSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasCommissionSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasNetMarginSum.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@envirogasNetMarginPerLiterSum.ToString(SD.Four_Decimal_Format)</td>
+                </tr>
+
+                envirogasTotalQuantity += envirogasQuantitySum;
+                envirogasTotalSales += envirogasNetOfSalesSum;
+                envirogasTotalPurchases += envirogasNetOfPurchasesSum;
+                envirogasTotalGrossMargin += envirogasGrossMarginSum;
+                envirogasTotalFreight += envirogasNetOfFreightSum;
+                envirogasTotalCommission += envirogasCommissionSum;
+                envirogasTotalNetMargin += envirogasNetMarginSum;
+                envirogasTotalNetMarginPerLiter = envirogasTotalNetMargin != 0 && envirogasTotalQuantity != 0 ? envirogasTotalNetMargin / envirogasTotalQuantity : 0;
+            }
+            <tr class="table-primary" style="border-top: double">
+                <td class="text-end">@envirogasTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalSales.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalPurchases.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalGrossMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalFreight.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalCommission.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalNetMargin.ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@envirogasTotalNetMarginPerLiter.ToString(SD.Four_Decimal_Format)</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 <div class="row mt-5">

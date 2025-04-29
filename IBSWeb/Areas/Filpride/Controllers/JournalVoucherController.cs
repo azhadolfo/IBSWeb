@@ -63,6 +63,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetJournalVouchers([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -121,7 +122,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get journal vouchers.");
+                _logger.LogError(ex, "Failed to get journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -138,15 +140,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.Header.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
@@ -164,19 +158,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(JournalVoucherVM? model, CancellationToken cancellationToken, string[] accountNumber, decimal[]? debit, decimal[]? credit)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            model.Header.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            model.Header.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             model.Header.CheckVoucherHeaders = await _dbContext.FilprideCheckVoucherHeaders
                 .OrderBy(c => c.CheckVoucherHeaderId)
@@ -261,17 +248,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to create journal voucher. Created by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to create journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
             }
-            else
-            {
-                TempData["error"] = "The information you submitted is not valid!";
-                return View(model);
-            }
+
+            TempData["error"] = "The information you submitted is not valid!";
+            return View(model);
         }
 
         public async Task<IActionResult> GetCV(int id)
@@ -301,8 +287,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvNo = viewModel.Header.CheckVoucherHeaderNo;
                 var date = viewModel.Header.Date;
                 var name = viewModel.Header.Payee;
-                var address = viewModel.Header.Supplier?.SupplierAddress ?? viewModel.Header.Employee.Address;
-                var tinNo = viewModel.Header.Supplier?.SupplierTin ?? viewModel.Header.Employee.TinNo;
+                var address = viewModel.Header.Address;
+                var tinNo = viewModel.Header.Tin;
                 var poNo = viewModel.Header.PONo;
                 var siNo = viewModel.Header.SINo;
                 var payee = viewModel.Header.Payee;
@@ -457,7 +443,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to post journal voucher. Posted by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to post journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -508,7 +495,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to void journal voucher. Voided by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to void journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -553,7 +541,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to cancel journal voucher. Canceled by: {UserName}", _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to cancel journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
@@ -613,15 +602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Text = cvh.CheckVoucherHeaderNo
                     })
                     .ToListAsync(cancellationToken),
-                COA = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => coa.Level == 4 || coa.Level == 5)
-                    .OrderBy(coa => coa.AccountId)
-                    .Select(s => new SelectListItem
-                    {
-                        Value = s.AccountNumber,
-                        Text = s.AccountNumber + " " + s.AccountName
-                    })
-                    .ToListAsync(cancellationToken)
+                COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken)
             };
 
 
@@ -629,9 +610,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -733,7 +714,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to edit journal voucher. Edited by: {UserName}", _userManager.GetUserName(User));
+                    _logger.LogError(ex, "Failed to edit journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(viewModel);
@@ -812,6 +794,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet3.Cells["P1"].Value = "OriginalSeriesNumber";
                 worksheet3.Cells["Q1"].Value = "OriginalSupplierId";
                 worksheet3.Cells["R1"].Value = "OriginalDocumentId";
+                worksheet3.Cells["S1"].Value = "PostedBy";
+                worksheet3.Cells["T1"].Value = "PostedDate";
 
                 #endregion -- Purchase Order Table Header --
 
@@ -841,6 +825,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet4.Cells["T1"].Value = "OriginalPOId";
                 worksheet4.Cells["U1"].Value = "OriginalSeriesNumber";
                 worksheet4.Cells["V1"].Value = "OriginalDocumentId";
+                worksheet4.Cells["W1"].Value = "PostedBy";
+                worksheet4.Cells["X1"].Value = "PostedDate";
 
                 #endregion -- Receiving Report Table Header --
 
@@ -879,6 +865,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet5.Cells["AC1"].Value = "OriginalSeriesNumber";
                     worksheet5.Cells["AD1"].Value = "OriginalSupplierId";
                     worksheet5.Cells["AE1"].Value = "OriginalDocumentId";
+                    worksheet5.Cells["AF1"].Value = "PostedBy";
+                    worksheet5.Cells["AG1"].Value = "PostedDate";
 
                 #endregion -- Check Voucher Header Table Header --
 
@@ -911,6 +899,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["I1"].Value = "OriginalCVId";
                 worksheet.Cells["J1"].Value = "OriginalSeriesNumber";
                 worksheet.Cells["K1"].Value = "OriginalDocumentId";
+                worksheet.Cells["L1"].Value = "PostedBy";
+                worksheet.Cells["M1"].Value = "PostedDate";
 
                 #endregion -- Journal Voucher Header Table Header --
 
@@ -945,6 +935,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 9].Value = item.CVId;
                     worksheet.Cells[row, 10].Value = item.JournalVoucherHeaderNo;
                     worksheet.Cells[row, 11].Value = item.JournalVoucherHeaderId;
+                    worksheet.Cells[row, 12].Value = item.PostedBy;
+                    worksheet.Cells[row, 13].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     row++;
                 }
@@ -1012,6 +1004,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet5.Cells[cvhRow, 29].Value = item.CheckVoucherHeader.CheckVoucherHeaderNo;
                         worksheet5.Cells[cvhRow, 30].Value = item.CheckVoucherHeader.SupplierId;
                         worksheet5.Cells[cvhRow, 31].Value = item.CheckVoucherHeader.CheckVoucherHeaderId;
+                        worksheet5.Cells[cvhRow, 32].Value = item.CheckVoucherHeader.PostedBy;
+                        worksheet5.Cells[cvhRow, 33].Value = item.CheckVoucherHeader.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         cvhRow++;
                     }
@@ -1079,6 +1073,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet5.Cells[cvhRow, 29].Value = item.CheckVoucherHeaderNo;
                         worksheet5.Cells[cvhRow, 30].Value = item.SupplierId;
                         worksheet5.Cells[cvhRow, 31].Value = item.CheckVoucherHeaderId;
+                        worksheet5.Cells[cvhRow, 32].Value = item.PostedBy;
+                        worksheet5.Cells[cvhRow, 33].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                         cvhRow++;
                     }
@@ -1204,6 +1200,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet4.Cells[rrRow, 20].Value = item.POId;
                     worksheet4.Cells[rrRow, 21].Value = item.ReceivingReportNo;
                     worksheet4.Cells[rrRow, 22].Value = item.ReceivingReportId;
+                    worksheet4.Cells[rrRow, 23].Value = item.PostedBy;
+                    worksheet4.Cells[rrRow, 24].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     rrRow++;
                 }
@@ -1248,6 +1246,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[poRow, 16].Value = item.PurchaseOrderNo;
                     worksheet3.Cells[poRow, 17].Value = item.SupplierId;
                     worksheet3.Cells[poRow, 18].Value = item.PurchaseOrderId;
+                    worksheet3.Cells[poRow, 19].Value = item.PostedBy;
+                    worksheet3.Cells[poRow, 20].Value = item.PostedDate?.ToString("yyyy-MM-dd hh:mm:ss.ffffff") ?? null;
 
                     poRow++;
                 }
@@ -1265,7 +1265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "JournalVoucherList.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"JournalVoucherList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
         }
 

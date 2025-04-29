@@ -1,5 +1,4 @@
-﻿using IBS.Utility;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -105,5 +104,13 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal? RetentionRate { get; set; }
+
+        public bool HasMultipleTerms { get; set; }
+
+        public bool IsFilpride { get; set; }
+
+        public bool IsMobility { get; set; }
+
+        public bool IsBienes { get; set; }
     }
 }

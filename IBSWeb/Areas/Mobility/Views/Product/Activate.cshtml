@@ -1,0 +1,50 @@
+@using IBS.Models.MasterFile
+@model MobilityProduct
+@using IBS.Utility
+
+@{
+    ViewData["Title"] = "Activate Product";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Activate Product</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            <input asp-for="ProductId" hidden />
+            <div class="border p-3">
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ProductCode" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <label asp-for="ProductCode" class="ms-2"></label>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ProductName" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <label asp-for="ProductName" class="ms-2"></label>
+                </div>
+                <div class="form-floating py-2 col-12">
+                    <input asp-for="ProductUnit" class="form-control border-0 shadow" placeholder="" disabled/>
+                    <label asp-for="ProductUnit" class="ms-2"></label>
+                </div>
+                <div class="row pt-2">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-success form-control">Activate</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Mobility" asp-controller="Product" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

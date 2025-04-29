@@ -237,9 +237,12 @@
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                               ${row.checkVoucherHeader.postedBy == null ?
                                                                             `<li>
-                                                   <a class="dropdown-item" href="${row.checkVoucherHeader.isAdvances ?
-                                                                                '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/' :
-                                                                                '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
+                                                   <a class="dropdown-item" href="${
+                                                                                row.checkVoucherHeader.isAdvances
+                                                                                    ? (row.checkVoucherHeader.employeeId
+                                                                                        ? '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
+                                                                                        : '@Url.Action("EditAdvancesToSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })/')
+                                                                                    : '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
                                                                             }${row.checkVoucherHeaderId}">Edit</a>
                                                  </li>
                                                  <li>
@@ -285,7 +288,7 @@
                 html: `
                     <select id="advancesSelect" class="swal2-select">
                         <option value="employee">Officers and Employee</option>
-                        <option value="supplier" disabled>Supplier/Others (Coming Soon)</option>
+                        <option value="supplier">Supplier/Others</option>
                     </select>
                 `,
                 showCancelButton: true,
@@ -295,13 +298,8 @@
                     if (selectedKey) {
                         let routes = {
                             'employee': '@Url.Action("CreateAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })',
-                            'supplier': '' // Keep empty since it's disabled
+                            'supplier': '@Url.Action("CreateAdvancesToSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })'
                         };
-
-                        if (selectedKey === 'supplier') {
-                            Swal.showValidationMessage('Supplier selection is temporarily unavailable.');
-                            return false;
-                        }
 
                         window.location.href = routes[selectedKey];
                     } else {

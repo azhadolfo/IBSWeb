@@ -258,12 +258,12 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
+        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, CancellationToken cancellationToken = default)
         {
             FilprideReceivingReport model = new()
             {
                 DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
-                Date = (DateOnly)deliveryReceipt.DeliveredDate,
+                Date = liftingDate,
                 POId = deliveryReceipt.PurchaseOrder.PurchaseOrderId,
                 PONo = deliveryReceipt.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
@@ -277,7 +277,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
-                Type = deliveryReceipt.PurchaseOrder.Type
+                Type = deliveryReceipt.PurchaseOrder.Type,
             };
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
@@ -290,6 +290,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
                 ? deliveryReceipt.Freight
                 : 0;
+
             model.ReceivedDate = model.Date;
             model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
@@ -349,7 +350,21 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
+            #region Update the invoice if any
+
+            var salesInvoice = await _db.FilprideSalesInvoices
+                .FirstOrDefaultAsync(si => si.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+
+            if (salesInvoice != null)
+            {
+                salesInvoice.ReceivingReportId = model.ReceivingReportId;
+            }
+
+            #endregion
+
             await PostAsync(model, cancellationToken);
+
+            return model.ReceivingReportNo;
         }
 
         public async Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default)
@@ -362,6 +377,7 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal vatAmount = 0;
             decimal ewtAmount = 0;
             decimal netOfEwtAmount = 0;
+            decimal advanceEwtAmount = 0;
 
             if (model.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
             {
@@ -373,20 +389,34 @@ namespace IBS.DataAccess.Repository.Filpride
                 netOfVatAmount = model.Amount;
             }
 
-            if (model.PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax)
+            ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
+
+            if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
             {
-                ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
-                netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+                var advancesVoucher = await _db.FilprideCheckVoucherDetails
+                    .Include(cv => cv.CheckVoucherHeader)
+                    .FirstOrDefaultAsync(cv =>
+                        cv.CheckVoucherHeader.SupplierId == model.PurchaseOrder.SupplierId &&
+                        cv.CheckVoucherHeader.IsAdvances &&
+                        cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
+                        cv.AccountName.Contains("Expanded Withholding Tax") &&
+                        cv.Credit > cv.AmountPaid,
+                        cancellationToken);
+
+                if (advancesVoucher != null)
+                {
+                    var affectedEwt = Math.Min(advancesVoucher.Credit, ewtAmount);
+                    ewtAmount -= affectedEwt;
+                    advancesVoucher.AmountPaid += affectedEwt;
+                }
             }
-            else
-            {
-                netOfEwtAmount = model.Amount;
-            }
+
+            netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030200") ?? throw new ArgumentException("Account title '201030200' not found.");
+            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
             var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
             var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
 
@@ -531,38 +561,31 @@ namespace IBS.DataAccess.Repository.Filpride
                 return;
             }
 
-            try
+            if (model.PostedBy != null)
             {
-                if (model.PostedBy != null)
-                {
-                    model.PostedBy = null;
-                }
-
-                model.VoidedBy = currentUser;
-                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                model.Status = nameof(Status.Voided);
-
-                await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
-                await RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
-                var unitOfWork = new UnitOfWork(_db);
-                await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
-
-                model.QuantityReceived = 0;
-
-                #region --Audit Trail Recording
-
-                FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
-                await _db.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                await _db.SaveChangesAsync(cancellationToken);
+                model.PostedBy = null;
             }
-            catch
-            {
-                throw;
-            }
+
+            model.VoidedBy = currentUser;
+            model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+            model.Status = nameof(Status.Voided);
+
+            await RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+            await RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+            var unitOfWork = new UnitOfWork(_db);
+            await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+            await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+
+            model.QuantityReceived = 0;
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+            await _db.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

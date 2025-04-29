@@ -18,14 +18,15 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
                 <div class="row">
                     <div class="col">
-                        <input asp-for="SalesInvoiceId" type="hidden" />
+                        <input asp-for="SalesInvoiceId" type="hidden"/>
                         <div class="form-group mb-3">
                             <label asp-for="SalesInvoiceNo" class="control-label"></label>
-                            <input asp-for="SalesInvoiceNo" class="form-control" disabled readonly />
+                            <input asp-for="SalesInvoiceNo" class="form-control" disabled readonly/>
                             <span asp-validation-for="SalesInvoiceNo" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
@@ -36,57 +37,57 @@
                             <span asp-validation-for="CustomerId" class="text-danger"></span>
                         </div>
 
-                        <input type="hidden" id="soldTo" class="form-control" readonly tabindex="-1" />
+                        <input type="hidden" id="soldTo" class="form-control" readonly tabindex="-1"/>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Tin No</label>
-                            <input id="tinNo" class="form-control" value="@Model.Customer.CustomerTin" readonly tabindex="-1" />
+                            <input asp-for="CustomerTin" id="tinNo" class="form-control" value="@Model.Customer.CustomerTin" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Customer Type</label>
-                            <input id="customerType" class="form-control" value="@Model.Customer.CustomerType" readonly tabindex="-1" />
+                            <input id="customerType" class="form-control" value="@Model.Customer.CustomerType" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Address</label>
-                            <input id="address" class="form-control" value="@Model.Customer.CustomerAddress" readonly tabindex="-1" />
+                            <input asp-for="CustomerAddress" id="address" class="form-control" value="@Model.Customer.CustomerAddress" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Business Style</label>
-                            <input id="businessStyle" class="form-control" value="@Model.Customer.BusinessStyle" readonly tabindex="-1" />
+                            <input id="businessStyle" class="form-control" value="@Model.Customer.BusinessStyle" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Terms</label>
-                            <input asp-for="Terms" class="form-control" readonly tabindex="-1" />
+                            <input asp-for="Terms" class="form-control" readonly tabindex="-1"/>
                         </div>
                     </div>
                     <div class="col">
-                        <input type="hidden" asp-for="ProductId" />
+                        <input type="hidden" asp-for="ProductId"/>
                         <div class="form-group mb-3">
                             <label class="control-label">Product Name</label>
-                            <input id="productName" class="form-control" readonly />
+                            <input id="productName" class="form-control" readonly/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Unit</label>
-                            <input id="productUnit" class="form-control" readonly />
+                            <input id="productUnit" class="form-control" readonly/>
                         </div>
                         <div class="form-group mb-3">
                             <label asp-for="Quantity" class="control-label"></label>
-                            <input asp-for="Quantity" class="form-control money" readonly tabindex="-1" />
+                            <input asp-for="Quantity" class="form-control money" readonly tabindex="-1"/>
                             <span asp-validation-for="Quantity" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
                             <label asp-for="UnitPrice" class="control-label"></label>
-                            <input asp-for="UnitPrice" class="form-control money" readonly tabindex="-1" />
+                            <input asp-for="UnitPrice" class="form-control money" readonly tabindex="-1"/>
                             <span asp-validation-for="UnitPrice" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
                             <label asp-for="Discount" class="control-label"></label>
-                            <input asp-for="Discount" class="form-control moneyInput" />
+                            <input asp-for="Discount" class="form-control moneyInput"/>
                             <span asp-validation-for="Discount" class="text-danger"></span>
                         </div>
                     </div>
@@ -95,7 +96,7 @@
                     <div class="col">
                         <div class="form-group mb-3">
                             <label asp-for="TransactionDate" class="control-label"></label>
-                            <input type="date" asp-for="TransactionDate" class="form-control" data-existing-id="@Model.SalesInvoiceId" />
+                            <input type="date" asp-for="TransactionDate" class="form-control" data-existing-id="@Model.SalesInvoiceId"/>
                             <span asp-validation-for="TransactionDate" class="text-danger"></span>
                         </div>
                         <div class="form-group mb-3">
@@ -105,8 +106,8 @@
                             </select>
                             <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
                         </div>
-                        <input type="hidden" asp-for="PurchaseOrderId" />
-                        <input type="hidden" asp-for="ReceivingReportId" />
+                        <input type="hidden" asp-for="PurchaseOrderId"/>
+                        <input type="hidden" asp-for="ReceivingReportId"/>
                         <div class="form-group mb-3">
                             <label asp-for="DeliveryReceiptId" class="control-label">DR No<span class="required">*</span></label>
                             <select asp-for="DeliveryReceiptId" class="form-control js-select2" asp-items="@Model.DR" style="width:100%" required>
@@ -115,7 +116,7 @@
                             <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
                         </div>
                         <div class="form-floating mb-3">
-                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" readonly tabindex="-1" />
+                            <input asp-for="OtherRefNo" class="form-control" placeholder="Optional" readonly tabindex="-1"/>
                             <label asp-for="OtherRefNo" class="control-label">Other Ref No.</label>
                             <span asp-validation-for="OtherRefNo" class="text-danger"></span>
                         </div>
@@ -127,9 +128,9 @@
                 <textarea asp-for="Remarks" class="form-control" placeholder="Leave a remarks here" style="height: 200px"></textarea>
                 <span asp-validation-for="Remarks" class="text-danger"></span>
             </div>
-            <br />
+            <br/>
 
-            <input type="hidden" asp-for="PurchaseOrderId" />
+            <input type="hidden" asp-for="PurchaseOrderId"/>
 
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
@@ -210,6 +211,8 @@
                             $("#productUnit").val(data.productUnit);
                             $("#UnitPrice").val(data.deliveredPrice);
                             $("#Terms").val(data.terms);
+                            $("#address").val(data.customerAddress);
+                            $("#tinNo").val(data.customerTin);
 
                             // Populate DR dropdown
                             var drSelect = $("#DeliveryReceiptId");
@@ -232,6 +235,8 @@
                             $("#productUnit").val("");
                             $("#UnitPrice").val("");
                             $("#Terms").val("");
+                            $("#address").val('');
+                            $("#tinNo").val('');
                         }
                     }
                 });

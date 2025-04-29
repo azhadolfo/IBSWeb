@@ -1,10 +1,10 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Filpride.AccountsReceivable
 {
@@ -26,6 +26,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
+
+        public string CustomerAddress { get; set; } = string.Empty;
+
+        public string CustomerTin { get; set; } = string.Empty;
 
         #endregion Customer properties
 
@@ -74,7 +78,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Discount { get; set; }
-        
+
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }

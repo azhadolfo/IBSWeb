@@ -40,9 +40,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var services = await _dbContext.FilprideServices.Where(s => s.Company == companyClaims).ToListAsync(cancellationToken);
+            var services = await _dbContext.FilprideServices.ToListAsync(cancellationToken);
 
             if (view == nameof(DynamicView.Service))
             {
@@ -52,6 +50,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(services);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new FilprideService();
@@ -132,7 +131,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
 
-                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(companyClaims, cancellationToken);
+                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
 
                     TempData["success"] = "Services created successfully";
 
@@ -152,6 +151,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(services);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             if (id == null || _dbContext.FilprideServices == null)
@@ -185,6 +185,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         existingModel.Name = services.Name;
                         existingModel.Percent = services.Percent;
+                        existingModel.IsFilpride = services.IsFilpride;
+                        existingModel.IsMobility = services.IsMobility;
+                        existingModel.IsBienes = services.IsBienes;
                         TempData["success"] = "Services updated successfully";
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -273,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ServiceList.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

@@ -1,7 +1,6 @@
-﻿@using Microsoft.AspNetCore.Identity
-@using IBS.Utility
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
+@using Microsoft.AspNetCore.Identity
 @model FilprideDeliveryReceipt
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
@@ -45,7 +44,12 @@
                 }
                 @if (selectedCompany == "Mobility")
                 {
-                    <h2 class="company-name" style="margin: 0 0 1px 0;"><u><b>&nbsp;MOBILITY&nbsp;</b></u></h2>
+                    <h2 class="company-name"><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+                    <p style="line-height: 1; margin-top:-7px;">
+                        Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+                        Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+                        VAT Reg. TIN: 776-536-510-00000
+                    </p>
                 }
             </td>
         </tr>
@@ -66,7 +70,7 @@
                 <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerAddress.ToUpper()</td>
+                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
                 <td class="w-25 text-end"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
             </tr>
             <tr>

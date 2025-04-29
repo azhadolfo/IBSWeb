@@ -36,7 +36,6 @@
                             <label for="station" class="form-label">What Station?</label>
                             <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" style="width:100%;" id="station-select" required>
                                 <option value="">Select station</option>
-                                <option value="ALL">ALL STATION</option>
                             </select>
                             <span asp-validation-for="Input.StationCode" class="text-danger"></span>
                         </div>

@@ -7,10 +7,12 @@
     var department = ViewBag.GetUserDepartment;
     ViewData["Title"] = "Dashboard";
     string? selectedCompany = string.Empty;
+    string? selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        selectedStation = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 }
 
@@ -27,7 +29,7 @@
             }
             else
             {
-                if (selectedCompany == "Filpride")
+                if (selectedCompany == "Filpride" || selectedCompany == "Mobility" && selectedStation == "S00")
                 {
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
@@ -113,7 +115,7 @@
                                 }
                             </div>
 
-                        @if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+                            @if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
                             {
                                 <div class="col-md-4">
                                     <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForOMApproval" })" class="text-decoration-none">
@@ -140,6 +142,19 @@
                                         </div>
                                     </a>
                                 </div>
+                                
+                                <div class="col-md-4">
+                                    <a href="@Url.Action("Index", "PurchaseOrder", new { area = "Filpride", filterType = "ForOMApproval" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-check-circle me-2 text-primary"></i>OM Approval (Purchase Order)
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.OMApprovalPOCount.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
                             }
                             else
                             {
@@ -161,6 +176,17 @@
                                                 <i class="bi bi-check-circle me-2 text-primary"></i>OM Approval (Delivery Receipt)
                                             </h5>
                                             <p class="card-text display-6 text-primary fw-bold">@Model.OMApprovalDRCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-check-circle me-2 text-primary"></i>OM Approval (Purchase Order)
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.OMApprovalPOCount.ToString("N0")</p>
                                         </div>
                                     </div>
                                 </div>
@@ -247,6 +273,33 @@
                             }
                             
                             <div class="col-md-4">
+                                @if (department == SD.Department_TradeAndSupply || User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "RecordLiftingDate" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-calendar-plus me-2 text-primary"></i>Record Lifting Date
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.RecordLiftingDateCount.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-calendar-plus me-2 text-primary"></i>Record Lifting Date
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.RecordLiftingDateCount.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <div class="col-md-4">
                                 @if (department == SD.Department_CreditAndCollection || User.IsInRole("Admin"))
                                 {
                                     <a href="@Url.Action("Index", "DeliveryReceipt", new { area = "Filpride", filterType = "ForInvoice" })" class="text-decoration-none">
@@ -255,7 +308,7 @@
                                                 <h5 class="card-title text-dark fw-semibold">
                                                     <i class="bi bi-file-earmark-text me-2 text-primary"></i>For Invoicing
                                                 </h5>
-                                                <p class="card-text display-6 text-primary fw-bold">@Model.InvoiceCount.ToString("N0")</p>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.ForInvoiceCount.ToString("N0")</p>
                                             </div>
                                         </div>
                                     </a>
@@ -267,10 +320,23 @@
                                             <h5 class="card-title text-dark fw-semibold">
                                                 <i class="bi bi-file-earmark-text me-2 text-primary"></i>For Invoicing
                                             </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.InvoiceCount.ToString("N0")</p>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.ForInvoiceCount.ToString("N0")</p>
                                         </div>
                                     </div>
                                 }
+                            </div>
+
+                            <div class="col-md-4">
+                                <a href="@Url.Action("UnservedPurchaseOrder", "PurchaseOrder", new { area = "Mobility" })" class="text-decoration-none">
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-droplet-half me-2 text-primary"></i>Mobility Station Unserved PO
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MobilityStationUnservePO.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
                             
                         </div>

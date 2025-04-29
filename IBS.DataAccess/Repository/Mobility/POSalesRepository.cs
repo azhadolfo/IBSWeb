@@ -46,7 +46,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async Task<int> ProcessPOSalesGoogleDrive(GoogleDriveFile file, CancellationToken cancellationToken = default)
+        public async Task<int> ProcessPOSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
         {
             using var stream = new MemoryStream(file.FileContent);
             using var reader = new StreamReader(stream);

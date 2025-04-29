@@ -3,7 +3,7 @@ using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.DataAccess.Repository.MasterFile.IRepository
+namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface ISupplierRepository : IRepository<FilprideSupplier>
     {
@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.MasterFile.IRepository
 
         Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default);
 
-        Task<string> GenerateCodeAsync(string company, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default);
 
         Task<string> SaveProofOfRegistration(IFormFile file, string localPath, CancellationToken cancellationToken = default);
 

@@ -1,6 +1,5 @@
-﻿@model FilprideSupplier
-@using IBS.Utility
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
+@model FilprideSupplier
 
 @{
     ViewData["Title"] = "Create Supplier";
@@ -19,6 +18,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <fieldset class="form-group mb-3">
                 <legend>Select Category</legend>
@@ -172,6 +172,23 @@
                 <label for="registration" class="form-label">Upload the proof of BIR registration</label>
                 <input class="form-control form-control-sm" name="registration" type='file'>
                 <span asp-validation-for="ProofOfRegistrationFilePath" class="text-danger"></span>
+            </div>
+
+            <label class="control-label">Please select where the record will be added:</label>
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                </label>
+            </div>
+            <div class="form-check pb-2">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsBienes" /> BIENES
+                </label>
             </div>
 
             <div class="row pt-2">

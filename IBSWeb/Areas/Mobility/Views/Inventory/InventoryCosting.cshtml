@@ -1,4 +1,5 @@
-﻿@model IEnumerable<MobilityInventory>
+﻿@using IBS.Utility.Constants
+@model IEnumerable<MobilityInventory>
 
 @{
     ViewData["Title"] = "Inventory Costing";
@@ -71,27 +72,23 @@
             <h5>STATION: @ViewData["Station"]</h5>
             <h5>PRODUCT: @ViewData["Product"]</h5>
         </div>
-        <table class="table">
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th colspan="13" class="text-center table-primary">INVENTORY COSTING</th>
                 </tr>
-                <tr>
+                <tr class="text-center">
                     <th>Particulars</th>
-                    @if (ViewData["Station"].Equals("ALL"))
-                    {
-                        <th>Station</th>
-                    }
                     <th>Date</th>
                     <th>Ref</th>
-                    <th class="text-end">Quantity</th>
-                    <th class="text-end">Unit Cost</th>
-                    <th class="text-end">Total Cost</th>
-                    <th class="text-end">Running Cost</th>
-                    <th class="text-end">Inventory Balance</th>
-                    <th class="text-end">Unit Cost</th>
-                    <th class="text-end">Inventory Value</th>
-                    <th class="text-end">COGS</th>
+                    <th>Quantity</th>
+                    <th>Unit Cost</th>
+                    <th>Total Cost</th>
+                    <th>Running Cost</th>
+                    <th>Inventory Balance</th>
+                    <th>Unit Cost</th>
+                    <th>Inventory Value</th>
+                    <th>COGS</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -100,34 +97,33 @@
                 {
                     <tr>
                         <td>@Html.DisplayFor(model => obj.Particulars)</td>
-                        @if (ViewData["Station"].Equals("ALL"))
-                        {
-                            <td>@Html.DisplayFor(model => obj.StationCode)</td>
-                        }
                         <td>@Html.DisplayFor(model => obj.Date)</td>
                         @if (obj.ValidatedBy != "N/A")
                         {
-                            <td><a asp-area="Mobility" asp-controller="Inventory" asp-action="ViewDetail" asp-route-transactionNo="@obj.TransactionNo" asp-route-productCode="@obj.ProductCode" asp-route-typeOfTransaction="@obj.Particulars" asp-route-stationCode="@obj.StationCode" title="Click this link to preview." target="_blank">@Html.DisplayFor(model => obj.Reference)</a></td>
+                            <td>
+                                <a asp-area="Mobility" asp-controller="Inventory" asp-action="ViewDetail"
+                                   asp-route-transactionNo="@obj.TransactionNo" 
+                                   asp-route-productCode="@obj.ProductCode" 
+                                   asp-route-typeOfTransaction="@obj.Particulars" 
+                                   asp-route-stationCode="@obj.StationCode" 
+                                   title="Click this link to preview." 
+                                   target="_blank">@Html.DisplayFor(model => obj.Reference)
+                                    </a>
+                            </td>
                         }
                         else
                         {
                             <td>@Html.DisplayFor(model => obj.Reference)</td>
                         }
-                        <td class="text-end">@Html.DisplayFor(model => obj.Quantity)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.UnitCost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.TotalCost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.RunningCost)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.InventoryBalance)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.UnitCostAverage)</td>
-                        <td class="text-end">@Html.DisplayFor(model => obj.InventoryValue)</td>
-                        @if (obj.CostOfGoodsSold > 0)
-                        {
-                            <td class="text-end">@Html.DisplayFor(model => obj.CostOfGoodsSold)</td>
-                        }
-                        else
-                        {
-                            <td></td>
-                        }
+                        <td class="text-end">@obj.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.UnitCost.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@obj.TotalCost.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.RunningCost.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.InventoryBalance.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.UnitCostAverage.ToString(SD.Four_Decimal_Format)</td>
+                        <td class="text-end">@obj.InventoryValue.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@obj.CostOfGoodsSold.ToString(SD.Two_Decimal_Format)</td>
+                        
                         @if (obj.ValidatedBy == "N/A")
                         {
                             <td></td>

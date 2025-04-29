@@ -69,5 +69,9 @@ namespace IBS.Models.Filpride.ViewModels
         public string? SelectedBranch { get; set; }
 
         public List<SelectListItem>? Branches { get; set; }
+
+        public List<SelectListItem>? PurchaseOrder { get; set; }
+
+        public string? StationCode { get; set; }
     }
 }

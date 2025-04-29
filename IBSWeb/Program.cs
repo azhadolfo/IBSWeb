@@ -1,17 +1,16 @@
+using Google.Apis.Auth.OAuth2;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
-using IBS.DataAccess.Repository.Filpride;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.DataAccess.Repository.Mobility;
 using IBS.Services;
 using IBS.Utility;
-using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.GoogleCloudLogging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,18 +20,50 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Configure Serilog to log only to the terminal
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration) // Optional, if using appsettings.json
-    .Enrich.FromLogContext()
-    .WriteTo.Console() // Only logs to the terminal
-    .CreateLogger();
 
-// Replace default logging with Serilog
-builder.Host.UseSerilog((context, config) =>
+// Configure logging based on environment
+if (builder.Environment.IsProduction())
 {
-    config.ReadFrom.Configuration(context.Configuration);
-});
+    try
+    {
+        var googleCloudSinkOptions = new GoogleCloudLoggingSinkOptions
+        {
+            ProjectId = "integrated-business-system",
+            LogName = "ibs-web-log",
+            ResourceType = "global",
+            UseLogCorrelation = true,
+            UseSourceContextAsLogName = false
+        };
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .WriteTo.GoogleCloudLogging(googleCloudSinkOptions, restrictedToMinimumLevel: LogEventLevel.Warning)
+            .CreateLogger();
+
+        // Replace default logging with Serilog
+        builder.Host.UseSerilog();
+    }
+    catch (Exception ex)
+    {
+        // Fallback logging if Google Cloud Logging fails
+        Console.WriteLine($"Failed to configure Google Cloud Logging: {ex.Message}");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Console()
+            .CreateLogger();
+    }
+}
+else
+{
+    // Use standard console logging for non-production environments
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        .WriteTo.Console()
+        .CreateLogger();
+
+    builder.Host.UseSerilog();
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -54,6 +85,7 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
+builder.Services.AddScoped<GoogleDriveImportService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddSignalR();
 
@@ -65,12 +97,12 @@ builder.Services.AddQuartz(q =>
 
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
-    var googleDriveImportKey = JobKey.Create(nameof(GoogleDriveImportService));
+    var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));
 
     ///TODO Register the job for COS Expiration
 
     q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
-    q.AddJob<GoogleDriveImportService>(options => options.WithIdentity(googleDriveImportKey));
+    q.AddJob<LockPlacementService>(options => options.WithIdentity(dailyPlacementLockKey));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -81,11 +113,14 @@ builder.Services.AddQuartz(q =>
             x => x.InTimeZone(
                 TimeZoneInfo
                     .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+
     q.AddTrigger(opts => opts
-        .ForJob(googleDriveImportKey)
-        .WithIdentity("DailyTrigger")
-        .WithCronSchedule("0 30 8 * * ?",
-            x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Manila"))));
+        .ForJob(dailyPlacementLockKey)
+        .WithIdentity("DailyPlacementTrigger")
+        .WithCronSchedule("0 0 0 * * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                .FindSystemTimeZoneById("Asia/Manila"))));
 });
 
 // Add Quartz Hosted Service

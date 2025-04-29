@@ -1,8 +1,7 @@
 ﻿using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -19,11 +18,11 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string customerType, string company, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
         {
             FilprideCustomer? lastCustomer = await _db
                 .FilprideCustomers
-                .Where(c => c.Company == company && c.CustomerType == customerType)
+                .Where(c => c.CustomerType == customerType)
                 .OrderBy(c => c.CustomerId)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -81,6 +80,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.CreditLimitAsOfToday = model.CreditLimitAsOfToday;
             existingCustomer.ZipCode = model.ZipCode;
             existingCustomer.RetentionRate = model.RetentionRate;
+            existingCustomer.IsFilpride = model.IsFilpride;
+            existingCustomer.IsMobility = model.IsMobility;
+            existingCustomer.IsBienes = model.IsBienes;
 
             if (_db.ChangeTracker.HasChanges())
             {

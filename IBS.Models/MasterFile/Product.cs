@@ -37,6 +37,6 @@ namespace IBS.Models.MasterFile
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
-        public DateTime EditedDate { get; set; }
+        public DateTime? EditedDate { get; set; }
     }
 }

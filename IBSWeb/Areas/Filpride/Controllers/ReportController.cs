@@ -467,7 +467,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(cosSummary);
+                    if (cosSummary.Any())
+                    {
+                        return View(cosSummary);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(COSUnservedVolume));
                 }
                 catch (Exception ex)
                 {
@@ -486,20 +492,67 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        [HttpPost]
+        public async Task<IActionResult> GeneratedDispatchReport(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (string.IsNullOrEmpty(viewModel.ReportType))
+                    {
+                        return BadRequest();
+                    }
+
+                    var companyClaims = await GetCompanyClaimAsync();
+                    var currentUser = _userManager.GetUserName(User);
+                    var today = DateTimeHelper.GetCurrentPhilippineTime();
+                    var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                    var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                    ViewData["DateFrom"] = firstDayOfMonth;
+                    ViewData["DateTo"] = lastDayOfMonth;
+
+                    var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAllAsync(i => i.Company == companyClaims
+                                          && i.AuthorityToLoadNo != null
+                                          && i.Date >= firstDayOfMonth
+                                          && i.Date <= lastDayOfMonth
+                                          && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
+
+                    if (deliveryReceipts.Any())
+                    {
+                        return View(deliveryReceipts);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(DispatchReport));
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(DispatchReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(DispatchReport));
+        }
+
         [HttpGet]
-        public async Task<IActionResult> PostedCollection()
+        public IActionResult PostedCollection()
         {
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> TradePayableReport()
+        public IActionResult TradePayableReport()
         {
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> SalesReport()
+        public IActionResult SalesReport()
         {
             return View();
         }
@@ -516,7 +569,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(sales);
+                    if (sales.Any())
+                    {
+                        return View(sales);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(SalesReport));;
                 }
                 catch (Exception ex)
                 {
@@ -531,7 +590,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> PurchaseOrderReport()
+        public IActionResult PurchaseOrderReport()
         {
             return View();
         }
@@ -548,7 +607,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var purchaseOrder = await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(purchaseOrder);
+                    if (purchaseOrder.Any())
+                    {
+                        return View(purchaseOrder);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(PurchaseOrderReport));
                 }
                 catch (Exception ex)
                 {
@@ -562,7 +627,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ClearedDisbursementReport()
+        public IActionResult ClearedDisbursementReport()
         {
             return View();
         }
@@ -579,7 +644,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
 
-                    return View(checkVoucherHeader);
+                    if (checkVoucherHeader.Any())
+                    {
+                        return View(checkVoucherHeader);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ClearedDisbursementReport));
                 }
                 catch (Exception ex)
                 {
@@ -592,7 +663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(ClearedDisbursementReport));
         }
 
-        public async Task<IActionResult> PurchaseReport()
+        public IActionResult PurchaseReport()
         {
             return View();
         }
@@ -609,51 +680,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     // get data by chosen date
-                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, dateSelectionType:model.DateSelectionType);
 
-                    #region -- Assign collected data to purchaseReportVM --
-
-                    //assign data to vm model
-                    var purchaseReportVm = purchaseReport.Select(rr => new PurchaseReportViewModel
+                    if (purchaseReport.Any())
                     {
-                        Date = rr.Date,
-                        SupplierName = rr.PurchaseOrder?.Supplier?.SupplierName,
-                        SupplierTin = rr.PurchaseOrder?.Supplier?.SupplierTin,
-                        SupplierAddress = rr.PurchaseOrder?.Supplier?.SupplierAddress,
-                        PurchaseOrderNo = rr.PurchaseOrder?.PurchaseOrderNo,
-                        FilprideRR = rr.ReceivingReportNo,
-                        FilprideDR = rr.DeliveryReceipt?.DeliveryReceiptNo,
-                        ATLNo = rr.DeliveryReceipt?.AuthorityToLoadNo,
-                        CustomerName = rr.DeliveryReceipt?.Customer?.CustomerName,
-                        Product = rr.PurchaseOrder?.Product?.ProductName,
-                        Volume = rr.QuantityReceived,
-                        CostPerLiter = rr.PurchaseOrder?.Price,
-                        CostAmount = rr.QuantityReceived * rr.PurchaseOrder?.Price,
-                        VATAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.12m,
-                        WHTAmount = ((rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m) * 0.01m,
-                        NetPurchases = (rr.QuantityReceived * rr.PurchaseOrder?.Price) / 1.12m,
-                        AccountSpecialist = rr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist,
-                        COSPrice = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
-                        COSAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice,
-                        COSPerLiter = rr.PurchaseOrder?.Price,
-                        GMPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price,
-                        GMAmount = rr.QuantityReceived * (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price),
-                        HaulerName = rr.DeliveryReceipt?.Hauler?.SupplierName,
-                        FreightCharge = rr.DeliveryReceipt?.Freight,
-                        FCAmount = rr.QuantityReceived * rr.DeliveryReceipt?.Freight,
-                        CommissionPerLiter = rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
-                        CommissionAmount = rr.QuantityReceived * rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate,
-                        NetMarginPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight,
-                        NetMarginAmount = rr.QuantityReceived * ((rr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice - rr.PurchaseOrder?.Price) - rr.DeliveryReceipt?.Freight),
-                        SupplierSalesInvoice = rr.SupplierInvoiceNumber,
-                        SupplierDR = rr.SupplierDrNo,
-                        SupplierWC = rr.WithdrawalCertificate
+                        return View(purchaseReport);
+                    }
 
-                    }).ToList();
-
-                    #endregion -- Assign collected data to purchaseReportVM --
-
-                    return View(purchaseReport);
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(PurchaseReport));
                 }
                 catch (Exception ex)
                 {
@@ -668,7 +703,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GmReport()
         {
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            ViewModelBook viewmodel = new()
+            {
+                CustomerList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims)
+            };
+
+            return View(viewmodel);
         }
 
         [HttpPost]
@@ -683,14 +725,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     // get data by chosen date
-                    var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                    var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers);
 
-                    return View(purchaseReport);
+                    if (grossMarginReport.Any())
+                    {
+                        return View(grossMarginReport);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(GmReport));
+
                 }
                 catch (Exception ex)
                 {
                     TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(PurchaseReport));
+                    return RedirectToAction(nameof(GmReport));
                 }
             }
 
@@ -698,13 +747,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(PurchaseReport));
         }
 
-        public async Task<IActionResult> OtcFuelSalesReport()
+        public IActionResult OtcFuelSalesReport()
         {
             return View();
         }
 
         [HttpGet]
-        public async Task<IActionResult> ArPerCustomer()
+        public IActionResult ArPerCustomer()
         {
             return View();
         }
@@ -727,7 +776,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(si => si.CustomerOrderSlip)
                         .ToListAsync(cancellationToken);
 
-                    return View(salesInvoice);
+                    if (salesInvoice.Any())
+                    {
+                        return View(salesInvoice);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ArPerCustomer));
                 }
                 catch (Exception ex)
                 {
@@ -741,7 +796,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AgingReport()
+        public IActionResult AgingReport()
         {
             return View();
         }
@@ -759,7 +814,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid, cancellationToken);
 
-                    return View(salesInvoice);
+                    if (salesInvoice.Any())
+                    {
+                        return View(salesInvoice);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(AgingReport));
                 }
                 catch (Exception ex)
                 {
@@ -2623,116 +2684,152 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateSalesReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-            var dateFrom = model.DateFrom;
-            var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
-            if (salesReport.Count == 0)
+            if (!ModelState.IsValid)
             {
-                TempData["error"] = "No Record Found";
+                TempData["error"] = "Please input date range";
                 return RedirectToAction(nameof(SalesReport));
             }
-            var totalQuantity = salesReport.Sum(s => s.DeliveryReceipt.Quantity);
-            var totalAmount = salesReport.Sum(s => s.DeliveryReceipt.TotalAmount);
 
-            // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("SalesReport");
-
-            // Set the column headers
-            var mergedCells = worksheet.Cells["A1:C1"];
-            mergedCells.Merge = true;
-            mergedCells.Value = "SALES REPORT";
-            mergedCells.Style.Font.Size = 13;
-
-            worksheet.Cells["A2"].Value = "Date Range:";
-            worksheet.Cells["A3"].Value = "Extracted By:";
-            worksheet.Cells["A4"].Value = "Company:";
-
-            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-            worksheet.Cells["B3"].Value = $"{extractedBy}";
-            worksheet.Cells["B4"].Value = $"{companyClaims}";
-
-            worksheet.Cells["A7"].Value = "Date Delivered";
-            worksheet.Cells["B7"].Value = "Customer Name";
-            worksheet.Cells["C7"].Value = "Segment";
-            worksheet.Cells["D7"].Value = "Specialist";
-            worksheet.Cells["E7"].Value = "SI No.";
-            worksheet.Cells["F7"].Value = "COS #";
-            worksheet.Cells["G7"].Value = "OTC COS #";
-            worksheet.Cells["H7"].Value = "DR #";
-            worksheet.Cells["I7"].Value = "OTC DR #";
-            worksheet.Cells["J7"].Value = "PO #";
-            worksheet.Cells["K7"].Value = "IS PO #";
-            worksheet.Cells["L7"].Value = "Delivery Option";
-            worksheet.Cells["M7"].Value = "Items";
-            worksheet.Cells["N7"].Value = "Quantity";
-            worksheet.Cells["O7"].Value = "Freight";
-            worksheet.Cells["P7"].Value = "Sales G. VAT";
-            worksheet.Cells["Q7"].Value = "VAT";
-            worksheet.Cells["R7"].Value = "Sales N. VAT";
-            worksheet.Cells["S7"].Value = "Freight N. VAT";
-            worksheet.Cells["T7"].Value = "Commission";
-            worksheet.Cells["U7"].Value = "Remarks";
-
-            // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:U7"])
+            try
             {
-                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
 
-            // Populate the data rows
-            int row = 8;
-            string currencyFormat = "#,##0.0000";
-            string currencyFormatTwoDecimal = "#,##0.00";
+                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                if (salesReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(SalesReport));
+                }
+                var totalQuantity = salesReport.Sum(s => s.DeliveryReceipt.Quantity);
+                var totalAmount = salesReport.Sum(s => s.DeliveryReceipt.TotalAmount);
 
-            var totalFreightAmount = 0m;
-            var totalSalesNetOfVat = 0m;
-            var totalFreightNetOfVat = 0m;
-            var totalCommissionRate = 0m;
-            var totalVat = 0m;
-            foreach (var dr in salesReport)
-            {
-                var quantity = dr.DeliveryReceipt.Quantity;
-                var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
-                var segment = dr.DeliveryReceipt.TotalAmount;
-                var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
-                var vat = salesNetOfVat * .12m;
-                var freightNetOfVat = freightAmount / 1.12m;
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("SalesReport");
 
-                worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
-                worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.Customer?.CustomerName;
-                worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.Customer?.CustomerType;
-                worksheet.Cells[row, 4].Value = dr.DeliveryReceipt.CustomerOrderSlip?.AccountSpecialist;
-                worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
-                worksheet.Cells[row, 6].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
-                worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
-                worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
-                worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
-                worksheet.Cells[row, 10].Value = dr.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
-                worksheet.Cells[row, 11].Value = dr.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
-                worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName;
-                worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
-                worksheet.Cells[row, 15].Value = freightAmount;
-                worksheet.Cells[row, 16].Value = segment;
-                worksheet.Cells[row, 17].Value = vat;
-                worksheet.Cells[row, 18].Value = salesNetOfVat;
-                worksheet.Cells[row, 19].Value = freightNetOfVat;
-                worksheet.Cells[row, 20].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
-                worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.Remarks;
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "SALES REPORT";
+                mergedCells.Style.Font.Size = 13;
 
-                worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Date Delivered";
+                worksheet.Cells["B7"].Value = "Customer Name";
+                worksheet.Cells["C7"].Value = "Segment";
+                worksheet.Cells["D7"].Value = "Specialist";
+                worksheet.Cells["E7"].Value = "SI No.";
+                worksheet.Cells["F7"].Value = "COS #";
+                worksheet.Cells["G7"].Value = "OTC COS #";
+                worksheet.Cells["H7"].Value = "DR #";
+                worksheet.Cells["I7"].Value = "OTC DR #";
+                worksheet.Cells["J7"].Value = "PO #";
+                worksheet.Cells["K7"].Value = "IS PO #";
+                worksheet.Cells["L7"].Value = "Delivery Option";
+                worksheet.Cells["M7"].Value = "Items";
+                worksheet.Cells["N7"].Value = "Quantity";
+                worksheet.Cells["O7"].Value = "Freight";
+                worksheet.Cells["P7"].Value = "Sales G. VAT";
+                worksheet.Cells["Q7"].Value = "VAT";
+                worksheet.Cells["R7"].Value = "Sales N. VAT";
+                worksheet.Cells["S7"].Value = "Freight N. VAT";
+                worksheet.Cells["T7"].Value = "Commission";
+                worksheet.Cells["U7"].Value = "Commissionee";
+                worksheet.Cells["V7"].Value = "Remarks";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:V7"])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var totalFreightAmount = 0m;
+                var totalSalesNetOfVat = 0m;
+                var totalFreightNetOfVat = 0m;
+                var totalCommissionRate = 0m;
+                var totalVat = 0m;
+                foreach (var dr in salesReport)
+                {
+                    var quantity = dr.DeliveryReceipt.Quantity;
+                    var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
+                    var segment = dr.DeliveryReceipt.TotalAmount;
+                    var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
+                    var vat = salesNetOfVat * .12m;
+                    var freightNetOfVat = freightAmount / 1.12m;
+
+                    worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
+                    worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.Customer?.CustomerName;
+                    worksheet.Cells[row, 3].Value = dr.DeliveryReceipt.Customer?.CustomerType;
+                    worksheet.Cells[row, 4].Value = dr.DeliveryReceipt.CustomerOrderSlip?.AccountSpecialist;
+                    worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
+                    worksheet.Cells[row, 6].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
+                    worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
+                    worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
+                    worksheet.Cells[row, 10].Value = dr.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
+                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName;
+                    worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
+                    worksheet.Cells[row, 15].Value = freightAmount;
+                    worksheet.Cells[row, 16].Value = segment;
+                    worksheet.Cells[row, 17].Value = vat;
+                    worksheet.Cells[row, 18].Value = salesNetOfVat;
+                    worksheet.Cells[row, 19].Value = freightNetOfVat;
+                    worksheet.Cells[row, 20].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
+                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.CustomerOrderSlip?.Commissionee?.SupplierName;
+                    worksheet.Cells[row, 22].Value = dr.DeliveryReceipt.Remarks;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+
+                    totalFreightAmount += freightAmount;
+                    totalVat += vat;
+                    totalSalesNetOfVat += salesNetOfVat;
+                    totalFreightNetOfVat += freightNetOfVat;
+                    totalCommissionRate += dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate ?? 0m;
+                }
+
+                worksheet.Cells[row, 13].Value = "Total ";
+                worksheet.Cells[row, 14].Value = totalQuantity;
+                worksheet.Cells[row, 15].Value = totalFreightAmount;
+                worksheet.Cells[row, 16].Value = totalAmount;
+                worksheet.Cells[row, 17].Value = totalVat;
+                worksheet.Cells[row, 18].Value = totalSalesNetOfVat;
+                worksheet.Cells[row, 19].Value = totalFreightNetOfVat;
+                worksheet.Cells[row, 20].Value = totalCommissionRate;
+
                 worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -2741,289 +2838,338 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
 
-                row++;
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 22])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
 
-                totalFreightAmount += freightAmount;
-                totalVat += vat;
-                totalSalesNetOfVat += salesNetOfVat;
-                totalFreightNetOfVat += freightNetOfVat;
-                totalCommissionRate += dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate ?? 0m;
-            }
+                using (var range = worksheet.Cells[row, 10, row, 22])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-            worksheet.Cells[row, 13].Value = "Total ";
-            worksheet.Cells[row, 14].Value = totalQuantity;
-            worksheet.Cells[row, 15].Value = totalFreightAmount;
-            worksheet.Cells[row, 16].Value = totalAmount;
-            worksheet.Cells[row, 17].Value = totalVat;
-            worksheet.Cells[row, 18].Value = totalSalesNetOfVat;
-            worksheet.Cells[row, 19].Value = totalFreightNetOfVat;
-            worksheet.Cells[row, 20].Value = totalCommissionRate;
+                var rowForSummary = row + 8;
 
-            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                // Set the column headers
+                var mergedCellForOverall = worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5];
+                mergedCellForOverall.Merge = true;
+                mergedCellForOverall.Value = "Overall";
+                mergedCellForOverall.Style.Font.Size = 13;
+                mergedCellForOverall.Style.Font.Bold = true;
+                worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Apply style to subtotal row
-            using (var range = worksheet.Cells[row, 1, row, 21])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
-            }
+                var textStyleForSummary = worksheet.Cells[rowForSummary - 3, 2];
+                textStyleForSummary.Style.Font.Size = 16;
+                textStyleForSummary.Style.Font.Bold = true;
 
-            using (var range = worksheet.Cells[row, 10, row, 21])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
+                worksheet.Cells[rowForSummary - 3, 2].Value = "Summary";
+                worksheet.Cells[rowForSummary - 1, 2].Value = "Segment";
+                worksheet.Cells[rowForSummary - 1, 3].Value = "Volume";
+                worksheet.Cells[rowForSummary - 1, 4].Value = "Sales N. VAT";
+                worksheet.Cells[rowForSummary - 1, 5].Value = "Ave. SP";
 
-            var rowForSummary = row + 8;
+                worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Set the column headers
-            var mergedCellForBiodiesel = worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5];
-            mergedCellForBiodiesel.Merge = true;
-            mergedCellForBiodiesel.Value = "Diesel";
-            mergedCellForBiodiesel.Style.Font.Size = 13;
-            mergedCellForBiodiesel.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Apply styling to the header row for Overall
+                using (var range = worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
 
-            var textStyleForSummarry = worksheet.Cells[rowForSummary - 3, 2];
-            textStyleForSummarry.Style.Font.Size = 16;
-            textStyleForSummarry.Style.Font.Bold = true;
+                // Apply style to subtotal row for Overall
+                using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
 
-            worksheet.Cells[rowForSummary - 3, 2].Value = "Summary";
-            worksheet.Cells[rowForSummary - 1, 2].Value = "Segment";
-            worksheet.Cells[rowForSummary - 1, 3].Value = "Volume";
-            worksheet.Cells[rowForSummary - 1, 4].Value = "Sales N. VAT";
-            worksheet.Cells[rowForSummary - 1, 5].Value = "Ave. SP";
+                using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-            worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Set the column headers
+                var mergedCellForBiodiesel = worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9];
+                mergedCellForBiodiesel.Merge = true;
+                mergedCellForBiodiesel.Value = "Biodiesel";
+                mergedCellForBiodiesel.Style.Font.Size = 13;
+                mergedCellForBiodiesel.Style.Font.Bold = true;
+                worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Apply styling to the header row for Biodiesel
-            using (var range = worksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 5])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                worksheet.Cells[rowForSummary - 1, 7].Value = "Volume";
+                worksheet.Cells[rowForSummary - 1, 8].Value = "Sales N. VAT";
+                worksheet.Cells[rowForSummary - 1, 9].Value = "Ave. SP";
 
-            // Apply style to subtotal row for Biodiesel
-            using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-            }
+                worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
+                // Apply styling to the header row for Biodiesel
+                using (var range = worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
 
-            // Set the column headers
-            var mergedCellForEconogas = worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9];
-            mergedCellForEconogas.Merge = true;
-            mergedCellForEconogas.Value = "Econo";
-            mergedCellForEconogas.Style.Font.Size = 13;
-            mergedCellForEconogas.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 7, rowForSummary - 2, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Apply style to subtotal row for Biodiesel
+                using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
 
-            worksheet.Cells[rowForSummary - 1, 7].Value = "Volume";
-            worksheet.Cells[rowForSummary - 1, 8].Value = "Sales N. VAT";
-            worksheet.Cells[rowForSummary - 1, 9].Value = "Ave. SP";
+                using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-            worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Set the column headers
+                var mergedCellForEconogas = worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13];
+                mergedCellForEconogas.Merge = true;
+                mergedCellForEconogas.Value = "Econogas";
+                mergedCellForEconogas.Style.Font.Size = 13;
+                mergedCellForEconogas.Style.Font.Bold = true;
+                worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Apply styling to the header row for Econogas
-            using (var range = worksheet.Cells[rowForSummary - 1, 7, rowForSummary - 1, 9])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                worksheet.Cells[rowForSummary - 1, 11].Value = "Volume";
+                worksheet.Cells[rowForSummary - 1, 12].Value = "Sales N. VAT";
+                worksheet.Cells[rowForSummary - 1, 13].Value = "Ave. SP";
 
-            // Apply style to subtotal row for Econogas
-            using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-            }
+                worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
+                // Apply styling to the header row for Econogas
+                using (var range = worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
 
-            // Set the column headers
-            var mergedCellForEnvirogas = worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13];
-            mergedCellForEnvirogas.Merge = true;
-            mergedCellForEnvirogas.Value = "Enviro";
-            mergedCellForEnvirogas.Style.Font.Size = 13;
-            mergedCellForEnvirogas.Style.Font.Bold = true;
-            worksheet.Cells[rowForSummary - 2, 11, rowForSummary - 2, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Apply style to subtotal row for Econogas
+                using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
 
-            //inset data/value in excel
-            worksheet.Cells[rowForSummary - 1, 11].Value = "Volume";
-            worksheet.Cells[rowForSummary - 1, 12].Value = "Sales N. VAT";
-            worksheet.Cells[rowForSummary - 1, 13].Value = "Ave. SP";
+                using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-            worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                // Set the column headers
+                var mergedCellForEnvirogas = worksheet.Cells[rowForSummary - 2, 15, rowForSummary - 2, 17];
+                mergedCellForEnvirogas.Merge = true;
+                mergedCellForEnvirogas.Value = "Envirogas";
+                mergedCellForEnvirogas.Style.Font.Size = 13;
+                mergedCellForEnvirogas.Style.Font.Bold = true;
+                worksheet.Cells[rowForSummary - 2, 15, rowForSummary - 2, 17].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            // Apply styling to the header row for Envirogas
-            using (var range = worksheet.Cells[rowForSummary - 1, 11, rowForSummary - 1, 13])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                //inset data/value in excel
+                worksheet.Cells[rowForSummary - 1, 15].Value = "Volume";
+                worksheet.Cells[rowForSummary - 1, 16].Value = "Sales N. VAT";
+                worksheet.Cells[rowForSummary - 1, 17].Value = "Ave. SP";
 
-            // Apply style to subtotal row for Envirogas
-            using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-            }
+                worksheet.Cells[rowForSummary - 1, 15, rowForSummary - 1, 17].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-            using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
+                // Apply styling to the header row for Envirogas
+                using (var range = worksheet.Cells[rowForSummary - 1, 15, rowForSummary - 1, 17])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
 
-            var listForBiodiesel = new List<SalesReportViewModel>();
-            var listForEconogas = new List<SalesReportViewModel>();
-            var listForEnvirogas = new List<SalesReportViewModel>();
+                // Apply style to subtotal row for Envirogas
+                using (var range = worksheet.Cells[rowForSummary + 4, 15, rowForSummary + 4, 17])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
 
-            var totalQuantityForBiodiesel = 0m;
-            var totalAmountForBiodiesel = 0m;
+                using (var range = worksheet.Cells[rowForSummary + 4, 15, rowForSummary + 4, 17])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-            var totalQuantityForEconogas = 0m;
-            var totalAmountForEconogas = 0m;
+                var listForBiodiesel = new List<SalesReportViewModel>();
+                var listForEconogas = new List<SalesReportViewModel>();
+                var listForEnvirogas = new List<SalesReportViewModel>();
 
-            var totalQuantityForEnvirogas = 0m;
-            var totalAmountForEnvirogas = 0m;
+                var totalOverallQuantity = 0m;
+                var totalOverallAmount = 0m;
 
-            foreach (var customerType in Enum.GetValues<CustomerType>())
-            {
-                var list = salesReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
-                listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
-                listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
+                var totalQuantityForBiodiesel = 0m;
+                var totalAmountForBiodiesel = 0m;
 
-                // Computation for Biodiesel
-                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
-                var biodieselAmountSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.TotalAmount);
-                var biodieselNetOfAmountSum = biodieselAmountSum != 0m ? biodieselAmountSum / 1.12m : 0;
+                var totalQuantityForEconogas = 0m;
+                var totalAmountForEconogas = 0m;
 
-                worksheet.Cells[rowForSummary, 2].Value = customerType.ToString();
-                worksheet.Cells[rowForSummary, 3].Value = biodieselQuantitySum;
-                worksheet.Cells[rowForSummary, 4].Value = biodieselNetOfAmountSum;
-                worksheet.Cells[rowForSummary, 5].Value = biodieselNetOfAmountSum != 0m || biodieselQuantitySum != 0m ? biodieselNetOfAmountSum / biodieselQuantitySum : 0m;
+                var totalQuantityForEnvirogas = 0m;
+                var totalAmountForEnvirogas = 0m;
+
+                foreach (var customerType in Enum.GetValues<CustomerType>())
+                {
+                    var list = salesReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
+                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
+
+                    // Computation for Overall
+                    var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
+                    var overallAmountSum = list.Sum(s => s.DeliveryReceipt.TotalAmount);
+                    var overallNetOfAmountSum = overallAmountSum != 0m ? overallAmountSum / 1.12m : 0;
+
+                    worksheet.Cells[rowForSummary, 2].Value = customerType.ToString();
+                    worksheet.Cells[rowForSummary, 3].Value = overAllQuantitySum;
+                    worksheet.Cells[rowForSummary, 4].Value = overallNetOfAmountSum;
+                    worksheet.Cells[rowForSummary, 5].Value = overallNetOfAmountSum != 0m || overAllQuantitySum != 0m ? overallNetOfAmountSum / overAllQuantitySum : 0m;
+
+                    worksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Biodiesel
+                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
+                    var biodieselAmountSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.TotalAmount);
+                    var biodieselNetOfAmountSum = biodieselAmountSum != 0m ? biodieselAmountSum / 1.12m : 0;
+
+                    worksheet.Cells[rowForSummary, 7].Value = biodieselQuantitySum;
+                    worksheet.Cells[rowForSummary, 8].Value = biodieselNetOfAmountSum;
+                    worksheet.Cells[rowForSummary, 9].Value = biodieselNetOfAmountSum != 0m || biodieselQuantitySum != 0m ? biodieselNetOfAmountSum / biodieselQuantitySum : 0m;
+
+                    worksheet.Cells[rowForSummary, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Econogas
+                    var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
+                    var econogasNetOfAmountSum = econogasAmountSum != 0m ? econogasAmountSum / 1.12m : 0;
+
+                    worksheet.Cells[rowForSummary, 11].Value = econogasQuantitySum;
+                    worksheet.Cells[rowForSummary, 12].Value = econogasNetOfAmountSum;
+                    worksheet.Cells[rowForSummary, 13].Value = econogasNetOfAmountSum != 0m || econogasQuantitySum != 0m ? econogasNetOfAmountSum / econogasQuantitySum : 0m;
+
+                    worksheet.Cells[rowForSummary, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Envirogas
+                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
+                    var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? envirogasAmountSum / 1.12m : 0;
+
+                    worksheet.Cells[rowForSummary, 15].Value = envirogasQuantitySum;
+                    worksheet.Cells[rowForSummary, 16].Value = envirogasNetOfAmountSum;
+                    worksheet.Cells[rowForSummary, 17].Value = envirogasNetOfAmountSum != 0m || envirogasQuantitySum != 0m ? envirogasNetOfAmountSum / envirogasQuantitySum : 0;
+
+                    worksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormat;
+
+                    rowForSummary++;
+
+                    // Computation of total for Overall
+                    totalOverallQuantity += overAllQuantitySum;
+                    totalOverallAmount += overallNetOfAmountSum;
+                    // Computation of total for Biodiesel
+                    totalQuantityForBiodiesel += biodieselQuantitySum;
+                    totalAmountForBiodiesel += biodieselNetOfAmountSum;
+                    // Computation of total for Econogas
+                    totalQuantityForEconogas += econogasQuantitySum;
+                    totalAmountForEconogas += econogasNetOfAmountSum;
+                    // Computation of total for Envirogas
+                    totalQuantityForEnvirogas += envirogasQuantitySum;
+                    totalAmountForEnvirogas += envirogasNetOfAmountSum;
+                }
+
+                var styleOfTotal = worksheet.Cells[rowForSummary, 2];
+                styleOfTotal.Value = "Total";
+                mergedCellForEconogas.Style.Font.Size = 13;
+                mergedCellForEconogas.Style.Font.Bold = true;
+
+                worksheet.Cells[rowForSummary, 3].Value = totalOverallQuantity;
+                worksheet.Cells[rowForSummary, 4].Value = totalOverallAmount;
+                worksheet.Cells[rowForSummary, 5].Value = totalOverallAmount != 0m || totalOverallQuantity != 0m ? totalOverallAmount / totalOverallQuantity : 0;
 
                 worksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormat;
 
-                // Computation for Econogas
-                var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
-                var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
-                var econogasNetOfAmountSum = econogasAmountSum != 0m ? econogasAmountSum / 1.12m : 0;
-
-                worksheet.Cells[rowForSummary, 7].Value = econogasQuantitySum;
-                worksheet.Cells[rowForSummary, 8].Value = econogasNetOfAmountSum;
-                worksheet.Cells[rowForSummary, 9].Value = econogasNetOfAmountSum != 0m || econogasQuantitySum != 0m ? econogasNetOfAmountSum / econogasQuantitySum : 0m;
+                worksheet.Cells[rowForSummary, 7].Value = totalQuantityForBiodiesel;
+                worksheet.Cells[rowForSummary, 8].Value = totalAmountForBiodiesel;
+                worksheet.Cells[rowForSummary, 9].Value = totalAmountForBiodiesel != 0m || totalQuantityForBiodiesel != 0m ? totalAmountForBiodiesel / totalQuantityForBiodiesel : 0;
 
                 worksheet.Cells[rowForSummary, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormat;
 
-                // Computation for Envirogas
-                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
-                var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
-                var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? envirogasAmountSum / 1.12m : 0;
-
-                worksheet.Cells[rowForSummary, 11].Value = envirogasQuantitySum;
-                worksheet.Cells[rowForSummary, 12].Value = envirogasNetOfAmountSum;
-                worksheet.Cells[rowForSummary, 13].Value = envirogasNetOfAmountSum != 0m || envirogasQuantitySum != 0m ? envirogasNetOfAmountSum / envirogasQuantitySum : 0;
+                worksheet.Cells[rowForSummary, 11].Value = totalQuantityForEconogas;
+                worksheet.Cells[rowForSummary, 12].Value = totalAmountForEconogas;
+                worksheet.Cells[rowForSummary, 13].Value = totalAmountForEconogas != 0m || totalQuantityForEconogas != 0m ? totalAmountForEconogas / totalQuantityForEconogas : 0;
 
                 worksheet.Cells[rowForSummary, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormat;
 
-                rowForSummary++;
+                worksheet.Cells[rowForSummary, 15].Value = totalQuantityForEnvirogas;
+                worksheet.Cells[rowForSummary, 16].Value = totalAmountForEnvirogas;
+                worksheet.Cells[rowForSummary, 17].Value = totalAmountForEnvirogas != 0m || totalQuantityForEnvirogas != 0m ? totalAmountForEnvirogas / totalQuantityForEnvirogas : 0;
 
-                // Computation of total for Biodiesel
-                totalQuantityForBiodiesel += biodieselQuantitySum;
-                totalAmountForBiodiesel += biodieselNetOfAmountSum;
-                // Computation of total for Econogas
-                totalQuantityForEconogas += econogasQuantitySum;
-                totalAmountForEconogas += econogasNetOfAmountSum;
-                // Computation of total for Envirogas
-                totalQuantityForEnvirogas += envirogasQuantitySum;
-                totalAmountForEnvirogas += envirogasNetOfAmountSum;
+                worksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormat;
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 3);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
 
-            var styleOfTotal = worksheet.Cells[rowForSummary, 2];
-            styleOfTotal.Value = "Total";
-            mergedCellForEconogas.Style.Font.Size = 13;
-            mergedCellForEconogas.Style.Font.Bold = true;
-
-            worksheet.Cells[rowForSummary, 3].Value = totalQuantityForBiodiesel;
-            worksheet.Cells[rowForSummary, 4].Value = totalAmountForBiodiesel;
-            worksheet.Cells[rowForSummary, 5].Value = totalAmountForBiodiesel != 0m || totalQuantityForBiodiesel != 0m ? totalAmountForBiodiesel / totalQuantityForBiodiesel : 0;
-
-            worksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormat;
-
-            worksheet.Cells[rowForSummary, 7].Value = totalQuantityForEconogas;
-            worksheet.Cells[rowForSummary, 8].Value = totalAmountForEconogas;
-            worksheet.Cells[rowForSummary, 9].Value = totalAmountForEconogas != 0m || totalQuantityForEconogas != 0m ? totalAmountForEconogas / totalQuantityForEconogas : 0;
-
-            worksheet.Cells[rowForSummary, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormat;
-
-            worksheet.Cells[rowForSummary, 11].Value = totalQuantityForEnvirogas;
-            worksheet.Cells[rowForSummary, 12].Value = totalAmountForEnvirogas;
-            worksheet.Cells[rowForSummary, 13].Value = totalAmountForEnvirogas != 0m || totalQuantityForEnvirogas != 0m ? totalAmountForEnvirogas / totalQuantityForEnvirogas : 0;
-
-            worksheet.Cells[rowForSummary, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormat;
-
-            // Auto-fit columns for better readability
-            worksheet.Cells.AutoFitColumns();
-            worksheet.View.FreezePanes(8, 3);
-
-            // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                return RedirectToAction(nameof(SalesReport));
+            }
         }
 
         #endregion
@@ -3032,93 +3178,112 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GeneratePurchaseOrderReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-            var dateFrom = model.DateFrom;
-            var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
-            var companyClaims = await GetCompanyClaimAsync();
 
-            var PurchaseOrderReport = await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
-            if (PurchaseOrderReport.Count == 0)
+            if (!ModelState.IsValid)
             {
-                TempData["error"] = "No Record Found";
+                TempData["error"] = "Please input date range";
                 return RedirectToAction(nameof(PurchaseOrderReport));
             }
 
-            // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("PurchaseOrderReport");
-
-            // Set the column headers
-            var mergedCells = worksheet.Cells["A1:C1"];
-            mergedCells.Merge = true;
-            mergedCells.Value = "PURCHASE ORDER REPORT";
-            mergedCells.Style.Font.Size = 13;
-
-            worksheet.Cells["A2"].Value = "Date Range:";
-            worksheet.Cells["A3"].Value = "Extracted By:";
-            worksheet.Cells["A4"].Value = "Company:";
-
-            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-            worksheet.Cells["B3"].Value = $"{extractedBy}";
-            worksheet.Cells["B4"].Value = $"{companyClaims}";
-
-            worksheet.Cells["A7"].Value = "PO #";
-            worksheet.Cells["B7"].Value = "IS PO #";
-            worksheet.Cells["C7"].Value = "Date";
-            worksheet.Cells["D7"].Value = "Supplier";
-            worksheet.Cells["E7"].Value = "Product";
-            worksheet.Cells["F7"].Value = "Quantity";
-            worksheet.Cells["G7"].Value = "Unit";
-            worksheet.Cells["H7"].Value = "Price";
-            worksheet.Cells["I7"].Value = "Amount";
-            worksheet.Cells["J7"].Value = "Remarks";
-
-            // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:J7"])
+            try
             {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var purchaseOrderReport =
+                    await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo,
+                        companyClaims);
+
+                if (purchaseOrderReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(PurchaseOrderReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("PurchaseOrderReport");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "PURCHASE ORDER REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "PO #";
+                worksheet.Cells["B7"].Value = "IS PO #";
+                worksheet.Cells["C7"].Value = "Date";
+                worksheet.Cells["D7"].Value = "Supplier";
+                worksheet.Cells["E7"].Value = "Product";
+                worksheet.Cells["F7"].Value = "Quantity";
+                worksheet.Cells["G7"].Value = "Unit";
+                worksheet.Cells["H7"].Value = "Price";
+                worksheet.Cells["I7"].Value = "Amount";
+                worksheet.Cells["J7"].Value = "Remarks";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:J7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+
+                foreach (var po in purchaseOrderReport)
+                {
+                    worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                    worksheet.Cells[row, 2].Value = po.OldPoNo;
+                    worksheet.Cells[row, 3].Value = po.Date;
+                    worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
+                    worksheet.Cells[row, 5].Value = po.Product?.ProductName;
+                    worksheet.Cells[row, 6].Value = po.Quantity;
+                    worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
+                    worksheet.Cells[row, 8].Value = po.Price;
+                    worksheet.Cells[row, 9].Value = po.Amount;
+                    worksheet.Cells[row, 10].Value = po.Remarks;
+
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"PurchaseOrderReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
-
-            // Populate the data rows
-            int row = 8;
-            string currencyFormat = "#,##0.00";
-
-            foreach (var po in PurchaseOrderReport)
+            catch (Exception ex)
             {
-                worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
-                worksheet.Cells[row, 2].Value = po.OldPoNo;
-                worksheet.Cells[row, 3].Value = po.Date;
-                worksheet.Cells[row, 4].Value = po.Supplier?.SupplierName;
-                worksheet.Cells[row, 5].Value = po.Product?.ProductName;
-                worksheet.Cells[row, 6].Value = po.Quantity;
-                worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
-                worksheet.Cells[row, 8].Value = po.Price;
-                worksheet.Cells[row, 9].Value = po.Amount;
-                worksheet.Cells[row, 10].Value = po.Remarks;
-
-                worksheet.Cells[row, 3].Style.Numberformat.Format = "MMM/dd/yyyy";
-                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
-                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-
-                row++;
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(PurchaseOrderReport));
             }
-
-            // Auto-fit columns for better readability
-            worksheet.Cells.AutoFitColumns();
-            worksheet.View.FreezePanes(8, 1);
-
-            // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"PurchaseOrderReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion
@@ -3127,118 +3292,136 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateClearedDisbursementReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-            var dateFrom = model.DateFrom;
-            var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
-            var companyClaims = await GetCompanyClaimAsync();
 
-            var clearedDisbursementReport = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
-
-
-            if (clearedDisbursementReport.Count == 0)
+            if (!ModelState.IsValid)
             {
-                TempData["error"] = "No Record Found";
-                return RedirectToAction(nameof(clearedDisbursementReport));
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(ClearedDisbursementReport));
             }
 
-            // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("ClearedDisbursementReport");
-
-            // Set the column headers
-            var mergedCells = worksheet.Cells["A1:C1"];
-            mergedCells.Merge = true;
-            mergedCells.Value = "CLEARED DISBURSEMENT REPORT";
-            mergedCells.Style.Font.Size = 13;
-
-            worksheet.Cells["A2"].Value = "Date Range:";
-            worksheet.Cells["A3"].Value = "Extracted By:";
-            worksheet.Cells["A4"].Value = "Company:";
-
-            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-            worksheet.Cells["B3"].Value = $"{extractedBy}";
-            worksheet.Cells["B4"].Value = $"{companyClaims}";
-
-            worksheet.Cells["A7"].Value = "Category";
-            worksheet.Cells["B7"].Value = "Subcategory";
-            worksheet.Cells["C7"].Value = "Payee";
-            worksheet.Cells["D7"].Value = "Date";
-            worksheet.Cells["E7"].Value = "Voucher #";
-            worksheet.Cells["F7"].Value = "Bank Name";
-            worksheet.Cells["G7"].Value = "Check #";
-            worksheet.Cells["H7"].Value = "Particulars";
-            worksheet.Cells["I7"].Value = "Amount";
-
-            // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:I7"])
+            try
             {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
 
-            // Populate the data rows
-            int row = 8;
-            string currencyFormat = "#,##0.00";
+                var clearedDisbursementReport =
+                    await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo,
+                        companyClaims);
 
-            foreach (var cd in clearedDisbursementReport)
-            {
 
-                var details = await _dbContext.FilprideCheckVoucherDetails
+                if (clearedDisbursementReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(clearedDisbursementReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("ClearedDisbursementReport");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "CLEARED DISBURSEMENT REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Category";
+                worksheet.Cells["B7"].Value = "Subcategory";
+                worksheet.Cells["C7"].Value = "Payee";
+                worksheet.Cells["D7"].Value = "Date";
+                worksheet.Cells["E7"].Value = "Voucher #";
+                worksheet.Cells["F7"].Value = "Bank Name";
+                worksheet.Cells["G7"].Value = "Check #";
+                worksheet.Cells["H7"].Value = "Particulars";
+                worksheet.Cells["I7"].Value = "Amount";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:I7"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+
+                foreach (var cd in clearedDisbursementReport)
+                {
+
+                    var details = await _dbContext.FilprideCheckVoucherDetails
                         .Where(d => d.CheckVoucherHeaderId == cd.CheckVoucherHeaderId)
                         .ToListAsync(cancellationToken);
 
-                var invoiceDebit = details
-                    .FirstOrDefault(d => d.Debit > 0);
+                    var invoiceDebit = details
+                        .FirstOrDefault(d => d.Debit > 0);
 
-                var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
-                    .Include(coa => coa.ParentAccount) // Level 3
+                    var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
+                        .Include(coa => coa.ParentAccount) // Level 3
                         .ThenInclude(a => a.ParentAccount) // Level 2
-                            .ThenInclude(a => a.ParentAccount) // Level 1
-                    .Where(coa => coa.AccountNumber == invoiceDebit.AccountNo)
-                    .FirstOrDefaultAsync(cancellationToken);
+                        .ThenInclude(a => a.ParentAccount) // Level 1
+                        .Where(coa => coa.AccountNumber == invoiceDebit.AccountNo)
+                        .FirstOrDefaultAsync(cancellationToken);
 
-                var levelOneAccount = getCategoryInChartOfAccount?.ParentAccount?.ParentAccount;
+                    var levelOneAccount = getCategoryInChartOfAccount?.ParentAccount?.ParentAccount;
 
-                worksheet.Cells[row, 1].Value = $"{levelOneAccount.AccountNumber} " +
-                                                $"{levelOneAccount.AccountName}";
-                worksheet.Cells[row, 2].Value = $"{invoiceDebit.AccountNo} {invoiceDebit.AccountName}";
-                worksheet.Cells[row, 3].Value = cd.Payee;
-                worksheet.Cells[row, 4].Value = cd.Date;
-                worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;
-                worksheet.Cells[row, 6].Value = cd.BankAccount.AccountName;
-                worksheet.Cells[row, 7].Value = cd.CheckNo;
-                worksheet.Cells[row, 8].Value = cd.Particulars;
-                worksheet.Cells[row, 9].Value = cd.Total;
+                    worksheet.Cells[row, 1].Value = $"{levelOneAccount.AccountNumber} " +
+                                                    $"{levelOneAccount.AccountName}";
+                    worksheet.Cells[row, 2].Value = $"{invoiceDebit.AccountNo} {invoiceDebit.AccountName}";
+                    worksheet.Cells[row, 3].Value = cd.Payee;
+                    worksheet.Cells[row, 4].Value = cd.Date;
+                    worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;
+                    worksheet.Cells[row, 6].Value = cd.BankAccount.AccountName;
+                    worksheet.Cells[row, 7].Value = cd.CheckNo;
+                    worksheet.Cells[row, 8].Value = cd.Particulars;
+                    worksheet.Cells[row, 9].Value = cd.Total;
 
-                worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 8].Value = "Total: ";
+                worksheet.Cells[row, 9].Value = clearedDisbursementReport.Sum(cv => cv.Total);
+                using (var range = worksheet.Cells[row, 1, row, 9])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thick; // Apply thick border at the top of the row
+                }
+
+                worksheet.Cells[row, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
 
-                row++;
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ClearedDisbursementReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
-
-            worksheet.Cells[row, 8].Value = "Total: ";
-            worksheet.Cells[row, 9].Value = clearedDisbursementReport.Sum(cv => cv.Total);
-            using (var range = worksheet.Cells[row, 1, row, 9])
+            catch (Exception ex)
             {
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thick;  // Apply thick border at the top of the row
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ClearedDisbursementReport));
             }
-
-            worksheet.Cells[row, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-            // Auto-fit columns for better readability
-            worksheet.Cells.AutoFitColumns();
-            worksheet.View.FreezePanes(8, 1);
-
-            // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ClearedDisbursementReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
 
@@ -3248,6 +3431,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GeneratePurchaseReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(PurchaseReport));
+            }
+
             try
             {
                 var dateFrom = model.DateFrom;
@@ -3311,8 +3501,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["B3"].Value = $"{extractedBy}";
                     purchaseReportWorksheet.Cells["B4"].Value = $"{companyClaims}";
 
-                    purchaseReportWorksheet.Cells["A7"].Value = "DELIVERY DATE";
-                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVE DATE"; // move down from here:
+                    purchaseReportWorksheet.Cells["A7"].Value = "TRANSACTION DATE";
+                    purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVED DATE";
                     purchaseReportWorksheet.Cells["C7"].Value = "SUPPLIER NAME";
                     purchaseReportWorksheet.Cells["D7"].Value = "SUPPLIER TIN";
                     purchaseReportWorksheet.Cells["E7"].Value = "SUPPLIER ADDRESS";
@@ -3323,29 +3513,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["J7"].Value = "DEPOT";
                     purchaseReportWorksheet.Cells["K7"].Value = "ATL #";
                     purchaseReportWorksheet.Cells["L7"].Value = "SUPPLIER'S SI";
-                    purchaseReportWorksheet.Cells["M7"].Value = "SUPPLIER'S DR";
-                    purchaseReportWorksheet.Cells["N7"].Value = "SUPPLIER'S WC";
-                    purchaseReportWorksheet.Cells["O7"].Value = "CUSTOMER NAME";
-                    purchaseReportWorksheet.Cells["P7"].Value = "PRODUCT";
-                    purchaseReportWorksheet.Cells["Q7"].Value = "VOLUME";
-                    purchaseReportWorksheet.Cells["R7"].Value = "CPL G.VAT";
-                    purchaseReportWorksheet.Cells["S7"].Value = "PURCHASES G.VAT";
-                    purchaseReportWorksheet.Cells["T7"].Value = "VAT AMOUNT";
-                    purchaseReportWorksheet.Cells["U7"].Value = "WHT AMOUNT";
-                    purchaseReportWorksheet.Cells["V7"].Value = "HAULER'S NAME";
-                    purchaseReportWorksheet.Cells["W7"].Value = "PURCHASES N.VAT";
-                    purchaseReportWorksheet.Cells["X7"].Value = "FREIGHT N.VAT";
-                    purchaseReportWorksheet.Cells["Y7"].Value = "COMMISSION";
-                    purchaseReportWorksheet.Cells["Z7"].Value = "OTC COS#.";
-                    purchaseReportWorksheet.Cells["AA7"].Value = "OTC DR#.";
-                    purchaseReportWorksheet.Cells["AB7"].Value = "IS PO#";
-                    purchaseReportWorksheet.Cells["AC7"].Value = "IS RR#";
+                    purchaseReportWorksheet.Cells["M7"].Value = "SI/LIFTING DATE";
+                    purchaseReportWorksheet.Cells["N7"].Value = "SUPPLIER'S DR";
+                    purchaseReportWorksheet.Cells["O7"].Value = "SUPPLIER'S WC";
+                    purchaseReportWorksheet.Cells["P7"].Value = "CUSTOMER NAME";
+                    purchaseReportWorksheet.Cells["Q7"].Value = "PRODUCT";
+                    purchaseReportWorksheet.Cells["R7"].Value = "VOLUME";
+                    purchaseReportWorksheet.Cells["S7"].Value = "CPL G.VAT";
+                    purchaseReportWorksheet.Cells["T7"].Value = "PURCHASES G.VAT";
+                    purchaseReportWorksheet.Cells["U7"].Value = "VAT AMOUNT";
+                    purchaseReportWorksheet.Cells["V7"].Value = "WHT AMOUNT";
+                    purchaseReportWorksheet.Cells["W7"].Value = "HAULER'S NAME";
+                    purchaseReportWorksheet.Cells["X7"].Value = "PURCHASES N.VAT";
+                    purchaseReportWorksheet.Cells["Y7"].Value = "FREIGHT N.VAT";
+                    purchaseReportWorksheet.Cells["Z7"].Value = "COMMISSION";
+                    purchaseReportWorksheet.Cells["AA7"].Value = "OTC COS#.";
+                    purchaseReportWorksheet.Cells["AB7"].Value = "OTC DR#.";
+                    purchaseReportWorksheet.Cells["AC7"].Value = "IS PO#";
+                    purchaseReportWorksheet.Cells["AD7"].Value = "IS RR#";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:AC7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AD7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -3374,7 +3565,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var volume = pr.QuantityReceived; // volume
                         var costAmount = pr.Amount; // purchase total gross
                         var netPurchases = costAmount / 1.12m; // purchase total net
-                        var netFreight = pr.DeliveryReceipt?.Freight / 1.12m; // purchase total net
+                        var netFreight = pr.DeliveryReceipt?.Freight / 1.12m ?? 0m; // purchase total net
                         var vatAmount = costAmount * 0.12m; // vat total
                         var whtAmount = netPurchases * 0.01m; // wht total
                         var cosAmount = (pr.QuantityReceived * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m)); // sale total gross
@@ -3385,8 +3576,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Assign Values to Cells --
 
-                        purchaseReportWorksheet.Cells[row, 1].Value = pr.DeliveryReceipt?.Date; // Date = dr date
-                        purchaseReportWorksheet.Cells[row, 2].Value = pr.Date; // Date = rr date
+                        purchaseReportWorksheet.Cells[row, 1].Value = pr.Date; // Date
+                        purchaseReportWorksheet.Cells[row, 2].Value = pr.DeliveryReceipt?.DeliveredDate; // DeliveredDate
                         purchaseReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
                         purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
                         purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
@@ -3397,23 +3588,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.PickUpPoint?.Depot; // Filpride DR
                         purchaseReportWorksheet.Cells[row, 11].Value = pr.DeliveryReceipt?.AuthorityToLoadNo; // ATL #
                         purchaseReportWorksheet.Cells[row, 12].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
-                        purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierDrNo; // Supplier's DR
-                        purchaseReportWorksheet.Cells[row, 14].Value = pr.WithdrawalCertificate; // Supplier's WC
-                        purchaseReportWorksheet.Cells[row, 15].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
-                        purchaseReportWorksheet.Cells[row, 16].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
-                        purchaseReportWorksheet.Cells[row, 17].Value = volume; // Volume
-                        purchaseReportWorksheet.Cells[row, 18].Value = costPerLiter; // Purchase price per liter
-                        purchaseReportWorksheet.Cells[row, 19].Value = costAmount; // Purchase total gross
-                        purchaseReportWorksheet.Cells[row, 20].Value = vatAmount; // Vat total
-                        purchaseReportWorksheet.Cells[row, 21].Value = whtAmount; // WHT total
-                        purchaseReportWorksheet.Cells[row, 22].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
-                        purchaseReportWorksheet.Cells[row, 23].Value = netPurchases; // Purchase total net ======== move to third last
-                        purchaseReportWorksheet.Cells[row, 24].Value = netFreight; // freight n vat ============
-                        purchaseReportWorksheet.Cells[row, 25].Value = commission; // commission =========
-                        purchaseReportWorksheet.Cells[row, 26].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // OTC COS =========
-                        purchaseReportWorksheet.Cells[row, 27].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
-                        purchaseReportWorksheet.Cells[row, 28].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
-                        purchaseReportWorksheet.Cells[row, 29].Value = pr.OldRRNo; // IS RR =========
+                        purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierInvoiceDate; // Supplier's Sales Invoice
+                        purchaseReportWorksheet.Cells[row, 14].Value = pr.SupplierDrNo; // Supplier's DR
+                        purchaseReportWorksheet.Cells[row, 15].Value = pr.WithdrawalCertificate; // Supplier's WC
+                        purchaseReportWorksheet.Cells[row, 16].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
+                        purchaseReportWorksheet.Cells[row, 17].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
+                        purchaseReportWorksheet.Cells[row, 18].Value = volume; // Volume
+                        purchaseReportWorksheet.Cells[row, 19].Value = costPerLiter; // Purchase price per liter
+                        purchaseReportWorksheet.Cells[row, 20].Value = costAmount; // Purchase total gross
+                        purchaseReportWorksheet.Cells[row, 21].Value = vatAmount; // Vat total
+                        purchaseReportWorksheet.Cells[row, 22].Value = whtAmount; // WHT total
+                        purchaseReportWorksheet.Cells[row, 23].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
+                        purchaseReportWorksheet.Cells[row, 24].Value = netPurchases; // Purchase total net ======== move to third last
+                        purchaseReportWorksheet.Cells[row, 25].Value = netFreight; // freight n vat ============
+                        purchaseReportWorksheet.Cells[row, 26].Value = commission; // commission =========
+                        purchaseReportWorksheet.Cells[row, 27].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // OTC COS =========
+                        purchaseReportWorksheet.Cells[row, 28].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
+                        purchaseReportWorksheet.Cells[row, 29].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
+                        purchaseReportWorksheet.Cells[row, 30].Value = pr.OldRRNo; // IS RR =========
 
                         #endregion -- Assign Values to Cells --
 
@@ -3431,14 +3623,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region -- Add format number cells from Assign Values to Cells --
 
                         purchaseReportWorksheet.Cells[row, 1, row, 2].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 13].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                        purchaseReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat2;
 
                         #endregion -- Add format number cells from Assign Values to Cells --
 
@@ -3456,37 +3649,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalCommissionPerLiter = totalCommissionAmount / totalVolume;
                     totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
-                    purchaseReportWorksheet.Cells[row, 16].Value = "Total: ";
-                    purchaseReportWorksheet.Cells[row, 17].Value = totalVolume;
-                    purchaseReportWorksheet.Cells[row, 18].Value = totalCostPerLiter;
-                    purchaseReportWorksheet.Cells[row, 19].Value = totalCostAmount;
-                    purchaseReportWorksheet.Cells[row, 20].Value = totalVatAmount;
-                    purchaseReportWorksheet.Cells[row, 21].Value = totalWHTAmount;
-                    purchaseReportWorksheet.Cells[row, 23].Value = totalNetPurchases;
-                    purchaseReportWorksheet.Cells[row, 24].Value = totalNetFreight;
-                    purchaseReportWorksheet.Cells[row, 25].Value = totalCommission;
+                    purchaseReportWorksheet.Cells[row, 17].Value = "Total: ";
+                    purchaseReportWorksheet.Cells[row, 18].Value = totalVolume;
+                    purchaseReportWorksheet.Cells[row, 19].Value = totalCostPerLiter;
+                    purchaseReportWorksheet.Cells[row, 20].Value = totalCostAmount;
+                    purchaseReportWorksheet.Cells[row, 21].Value = totalVatAmount;
+                    purchaseReportWorksheet.Cells[row, 22].Value = totalWHTAmount;
+                    purchaseReportWorksheet.Cells[row, 24].Value = totalNetPurchases;
+                    purchaseReportWorksheet.Cells[row, 25].Value = totalNetFreight;
+                    purchaseReportWorksheet.Cells[row, 26].Value = totalCommission;
 
-                    purchaseReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
                     purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat2;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
                     // Apply style to subtotal rows
                     // color to whole row
-                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 25])
+                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 26])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                     }
                     // line to subtotal values
-                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 25])
+                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 26])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -3679,6 +3872,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateOtcFuelSalesReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(OtcFuelSalesReport));
+            }
+
             try
             {
                 var dateFrom = model.DateFrom;
@@ -4328,6 +4528,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateGmReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(GmReport));
+            }
+
             try
             {
                 var startingSummaryTableRow = 0;
@@ -4340,12 +4547,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
-                var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
+                var purchaseReport = await _unitOfWork.FilprideReport
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken:cancellationToken);
 
                 if (purchaseReport.Count == 0)
                 {
                     TempData["error"] = "No Record Found";
-                    return RedirectToAction(nameof(PurchaseReport));
+                    return RedirectToAction(nameof(GmReport));
                 }
 
                 #region -- Initialize "total" Variables for operations --
@@ -4353,15 +4561,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalVolume = purchaseReport.Sum(pr => pr.QuantityReceived);
                 decimal totalCostPerLiter = 0m;
                 decimal totalCostAmount = 0m;
-                decimal totalVatAmount = 0m;
-                decimal totalWHTAmount = 0m;
                 decimal totalNetPurchases = 0m;
                 var totalCOSPrice = purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice);
-                decimal totalCOSAmount = 0m;
-                decimal totalCosNet = 0m;
+                decimal totalSalesAmount = 0m;
+                decimal totalNetSales = 0m;
                 decimal totalGMPerLiter = 0m;
                 decimal totalGmAmount = 0m;
-                var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight);
+                var totalFreightCharge = purchaseReport.Sum(pr => pr.DeliveryReceipt?.Freight + pr.DeliveryReceipt?.ECC);
                 decimal totalFCAmount = 0m;
                 decimal totalFCNet = 0m;
                 var totalCommissionPerLiter =  purchaseReport.Sum(pr => pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate);
@@ -4393,32 +4599,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells["E7"].Value = "FILPRIDE DR";
                 gmReportWorksheet.Cells["F7"].Value = "CUSTOMER NAME";
                 gmReportWorksheet.Cells["G7"].Value = "PRODUCT NAME";
-                gmReportWorksheet.Cells["H7"].Value = "VOLUME";
-                gmReportWorksheet.Cells["I7"].Value = "CPL G.VAT";
-                gmReportWorksheet.Cells["J7"].Value = "PURCHASES G.VAT";
-                gmReportWorksheet.Cells["K7"].Value = "VAT";
-                gmReportWorksheet.Cells["L7"].Value = "DEF VAT";
-                gmReportWorksheet.Cells["M7"].Value = "PURCHASES N.VAT";
-                gmReportWorksheet.Cells["N7"].Value = "SPECIALIST";
-                gmReportWorksheet.Cells["O7"].Value = "COS PRICE";
-                gmReportWorksheet.Cells["P7"].Value = "COS AMOUNT";
-                gmReportWorksheet.Cells["Q7"].Value = "SALES N.VAT";
+                gmReportWorksheet.Cells["H7"].Value = "ACCOUNT SPECIALIST";
+                gmReportWorksheet.Cells["I7"].Value = "HAULER NAME";
+                gmReportWorksheet.Cells["J7"].Value = "COMMISSIONEE";
+                gmReportWorksheet.Cells["K7"].Value = "VOLUME";
+                gmReportWorksheet.Cells["L7"].Value = "COS PRICE";
+                gmReportWorksheet.Cells["M7"].Value = "SALES G. VAT";
+                gmReportWorksheet.Cells["N7"].Value = "SALES N. VAT";
+                gmReportWorksheet.Cells["O7"].Value = "CPL G. VAT";
+                gmReportWorksheet.Cells["P7"].Value = "PURCHASES G. VAT";
+                gmReportWorksheet.Cells["Q7"].Value = "PURCHASES N.VAT";
                 gmReportWorksheet.Cells["R7"].Value = "GM/LITER";
                 gmReportWorksheet.Cells["S7"].Value = "GM AMOUNT";
-                gmReportWorksheet.Cells["T7"].Value = "HAULER'S NAME";
-                gmReportWorksheet.Cells["U7"].Value = "FREIGHT CHARGE";
-                gmReportWorksheet.Cells["V7"].Value = "FC AMOUNT";
-                gmReportWorksheet.Cells["W7"].Value = "FC N.VAT";
-                gmReportWorksheet.Cells["X7"].Value = "COMMISSION/LITER";
-                gmReportWorksheet.Cells["Y7"].Value = "COMMISSION AMOUNT";
-                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN/LIT";
-                gmReportWorksheet.Cells["AA7"].Value = "NET MARGIN AMOUNT";
+                gmReportWorksheet.Cells["T7"].Value = "FREIGHT CHARGE";
+                gmReportWorksheet.Cells["U7"].Value = "FC AMOUNT";
+                gmReportWorksheet.Cells["V7"].Value = "FC N.VAT";
+                gmReportWorksheet.Cells["W7"].Value = "COMMISSION/LITER";
+                gmReportWorksheet.Cells["X7"].Value = "COMMISSION AMOUNT";
+                gmReportWorksheet.Cells["Y7"].Value = "NET MARGIN/LIT";
+                gmReportWorksheet.Cells["Z7"].Value = "NET MARGIN AMOUNT";
 
                 #endregion
 
                 #region -- Apply styling to the header row --
 
-                    using (var range = gmReportWorksheet.Cells["A7:AA7"])
+                    using (var range = gmReportWorksheet.Cells["A7:Z7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -4445,91 +4650,86 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // calculate values, put in variables to be displayed per cell
                     var volume = pr.QuantityReceived;
+                    var cosPricePerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m; // sales per liter
+                    var salesAmount = volume * cosPricePerLiter; // sales total
+                    var netSales = salesAmount / 1.12m;
                     var costAmount = pr.Amount; // purchase total
-                    var cosAmount = (volume * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m)); // sales total
                     var costPerLiter = costAmount / volume; // purchase per liter
                     var netPurchases = costAmount / 1.12m; // purchase total net
-                    var vatAmount = costAmount * 0.12m; // purchase total vat
-                    var whtAmount = netPurchases * 0.01m; // purchase wht
-                    var freightCharge = (pr.DeliveryReceipt?.Freight ?? 0m); // freight charge per liter
-                    var freightChargeAmount = volume * freightCharge; // freight charge total
-                    var commissionPerLiter = (pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m); // commission rate
-                    var cosPricePerLiter = (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m); // sales per liter
-                    var commissionAmount = volume * commissionPerLiter; // commission total
-                    var cosNet = cosAmount / 1.12m;
-                    var gmAmount = cosNet - netPurchases; // gross margin total
+                    var gmAmount = netSales - netPurchases; // gross margin total
                     var gmPerLiter = gmAmount/volume; // gross margin per liter
+                    var freightCharge = (pr.DeliveryReceipt?.Freight ?? 0m) + (pr.DeliveryReceipt?.ECC ?? 0m); // freight charge per liter
+                    var freightChargeAmount = volume * freightCharge; // freight charge total
                     var freightChargeNet = freightChargeAmount / 1.12m;
-                    var netMarginAmount = (gmAmount - freightChargeNet - commissionAmount);
+                    var commissionPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m; // commission rate
+                    var commissionAmount = volume * commissionPerLiter; // commission total
+                    var netMarginAmount = gmAmount - freightChargeNet - commissionAmount;
                     var netMarginPerLiter = netMarginAmount / volume; // net margin per liter
 
                     #endregion
 
                     #region -- Assign Values to Cells --
 
-                    gmReportWorksheet.Cells[row, 1].Value = pr.Date; // Date
-                    gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
-                    gmReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
-                    gmReportWorksheet.Cells[row, 4].Value = pr.ReceivingReportNo; // Filpride RR
-                    gmReportWorksheet.Cells[row, 5].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
-                    gmReportWorksheet.Cells[row, 6].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
-                    gmReportWorksheet.Cells[row, 7].Value = pr.PurchaseOrder?.Product?.ProductName; // Product Name
-                    gmReportWorksheet.Cells[row, 8].Value = volume; // Volume
-                    gmReportWorksheet.Cells[row, 9].Value = costPerLiter; // Purchase Cost per Liter
-                    gmReportWorksheet.Cells[row, 10].Value = costAmount; // Cost Amount / Purchase Total Gross
-                    gmReportWorksheet.Cells[row, 11].Value = vatAmount; // Purchases Vat
-                    gmReportWorksheet.Cells[row, 13].Value = netPurchases; // Purchase Total Nett
-                    gmReportWorksheet.Cells[row, 14].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist; // Account Specialist
-                    gmReportWorksheet.Cells[row, 15].Value = cosPricePerLiter; // COS Price / Sale Price Gross
-                    gmReportWorksheet.Cells[row, 16].Value = cosAmount; // COS Amount / Sales Total Price
-                    gmReportWorksheet.Cells[row, 17].Value = cosNet; // COS Net / Sales Total Net // RECALCULATE
-                    gmReportWorksheet.Cells[row, 18].Value = gmPerLiter; // Gross Margin per liter // RECALCULATE
-                    gmReportWorksheet.Cells[row, 19].Value = gmAmount; // Gross Margin per Amount // RECALCULATE
-                    gmReportWorksheet.Cells[row, 20].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
-                    gmReportWorksheet.Cells[row, 21].Value = freightCharge; // Freight Charge
-                    gmReportWorksheet.Cells[row, 22].Value = freightChargeAmount; // Freight Charge Amount
-                    gmReportWorksheet.Cells[row, 23].Value = freightChargeNet; // Freight Charge Amount // RECALCULATE
-                    gmReportWorksheet.Cells[row, 24].Value = commissionPerLiter; // Commission per liter
-                    gmReportWorksheet.Cells[row, 25].Value = commissionAmount; // Commission Amount
-                    gmReportWorksheet.Cells[row, 26].Value = netMarginPerLiter; // Net Margin liter
-                    gmReportWorksheet.Cells[row, 27].Value = netMarginAmount; // Net Margin Amount // RECALCULATE
+                    gmReportWorksheet.Cells[row, 1].Value = pr.Date;
+                    gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.Supplier?.SupplierName;
+                    gmReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 4].Value = pr.ReceivingReportNo;
+                    gmReportWorksheet.Cells[row, 5].Value = pr.DeliveryReceipt?.DeliveryReceiptNo;
+                    gmReportWorksheet.Cells[row, 6].Value = pr.DeliveryReceipt?.Customer?.CustomerName;
+                    gmReportWorksheet.Cells[row, 7].Value = pr.PurchaseOrder?.Product?.ProductName;
+                    gmReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist;
+                    gmReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.Hauler?.SupplierName;
+                    gmReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.Commissionee?.SupplierName;
+                    gmReportWorksheet.Cells[row, 11].Value = volume;
+                    gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
+                    gmReportWorksheet.Cells[row, 13].Value = salesAmount;
+                    gmReportWorksheet.Cells[row, 14].Value = netSales;
+                    gmReportWorksheet.Cells[row, 15].Value = costPerLiter;
+                    gmReportWorksheet.Cells[row, 16].Value = costAmount;
+                    gmReportWorksheet.Cells[row, 17].Value = netPurchases;
+                    gmReportWorksheet.Cells[row, 18].Value = gmPerLiter;
+                    gmReportWorksheet.Cells[row, 19].Value = gmAmount;
+                    gmReportWorksheet.Cells[row, 20].Value = freightCharge;
+                    gmReportWorksheet.Cells[row, 21].Value = freightChargeAmount;
+                    gmReportWorksheet.Cells[row, 22].Value = freightChargeNet;
+                    gmReportWorksheet.Cells[row, 23].Value = commissionPerLiter;
+                    gmReportWorksheet.Cells[row, 24].Value = commissionAmount;
+                    gmReportWorksheet.Cells[row, 25].Value = netMarginPerLiter;
+                    gmReportWorksheet.Cells[row, 26].Value = netMarginAmount;
 
                     #endregion -- Assign Values to Cells --
 
                     #region -- Add the values to total and format number cells --
 
                     totalCostAmount += costAmount;
-                    totalVatAmount += vatAmount;
                     totalNetPurchases += netPurchases;
-                    totalWHTAmount += whtAmount;
-                    totalCOSAmount += cosAmount;
+                    totalSalesAmount += salesAmount;
                     totalGMPerLiter += gmPerLiter;
                     totalGmAmount += gmAmount;
                     totalFCAmount += freightChargeAmount;
                     totalCommissionAmount += commissionAmount;
                     totalNetMarginPerLiter += netMarginPerLiter;
                     totalNetMarginAmount += netMarginAmount;
-                    totalCosNet += cosNet;
+                    totalNetSales += netSales;
                     totalFCNet += freightChargeNet;
 
                     gmReportWorksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
                     gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
                     gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                    gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     #endregion -- Add the values to total and format number cells --
 
@@ -4541,61 +4741,59 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Other subtotal values and formatting of subtotal cells --
 
                 totalCostPerLiter = totalCostAmount / totalVolume;
-                totalCOSPrice = totalCOSAmount / totalVolume;
+                totalCOSPrice = totalSalesAmount / totalVolume;
                 totalGMPerLiter = totalGmAmount / totalVolume;
                 totalFreightCharge = totalFCAmount / totalVolume;
                 totalCommissionPerLiter = totalCommissionAmount / totalVolume;
                 totalNetMarginPerLiter = totalNetMarginAmount / totalVolume;
 
-                gmReportWorksheet.Cells[row, 7].Value = "Total: ";
-                gmReportWorksheet.Cells[row, 8].Value = totalVolume; // Volume
-                gmReportWorksheet.Cells[row, 9].Value = totalCostPerLiter; // Purchase Amount per liter
-                gmReportWorksheet.Cells[row, 10].Value = totalCostAmount; // Purchase Total Amount Net
-                gmReportWorksheet.Cells[row, 11].Value = totalVatAmount; // Purchase Vat
-                gmReportWorksheet.Cells[row, 13].Value = totalNetPurchases; // Purchase Net
-                gmReportWorksheet.Cells[row, 15].Value = totalCOSPrice; // Sales Price per Liter
-                gmReportWorksheet.Cells[row, 16].Value = totalCOSAmount; // Sales Total Gross
-                gmReportWorksheet.Cells[row, 17].Value = totalCosNet; // Sales Total Net
-                gmReportWorksheet.Cells[row, 18].Value = totalGMPerLiter; // GM Per Liter
-                gmReportWorksheet.Cells[row, 19].Value = totalGmAmount; // Gross Margin Amount
-                gmReportWorksheet.Cells[row, 21].Value = totalFreightCharge; // Freight Charge
-                gmReportWorksheet.Cells[row, 22].Value = totalFCAmount; // Freight Charge Amount Gross
-                gmReportWorksheet.Cells[row, 23].Value = totalFCNet; // Freight Charge Amount Net
-                gmReportWorksheet.Cells[row, 24].Value = totalCommissionPerLiter; // Commission Per Liter
-                gmReportWorksheet.Cells[row, 25].Value = totalCommissionAmount; // Commission Amount
-                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginPerLiter; // Net Margin Per Liter
-                gmReportWorksheet.Cells[row, 27].Value = totalNetMarginAmount; // Net Margin Amount
+                gmReportWorksheet.Cells[row, 10].Value = "Total: ";
+                gmReportWorksheet.Cells[row, 11].Value = totalVolume;
+                gmReportWorksheet.Cells[row, 12].Value = totalCOSPrice;
+                gmReportWorksheet.Cells[row, 13].Value = totalSalesAmount;
+                gmReportWorksheet.Cells[row, 14].Value = totalNetSales;
+                gmReportWorksheet.Cells[row, 15].Value = totalCostPerLiter;
+                gmReportWorksheet.Cells[row, 16].Value = totalCostAmount;
+                gmReportWorksheet.Cells[row, 17].Value = totalNetPurchases;
+                gmReportWorksheet.Cells[row, 18].Value = totalGMPerLiter;
+                gmReportWorksheet.Cells[row, 19].Value = totalGmAmount;
+                gmReportWorksheet.Cells[row, 20].Value = totalFreightCharge;
+                gmReportWorksheet.Cells[row, 21].Value = totalFCAmount;
+                gmReportWorksheet.Cells[row, 22].Value = totalFCNet;
+                gmReportWorksheet.Cells[row, 23].Value = totalCommissionPerLiter;
+                gmReportWorksheet.Cells[row, 24].Value = totalCommissionAmount;
+                gmReportWorksheet.Cells[row, 25].Value = totalNetMarginPerLiter;
+                gmReportWorksheet.Cells[row, 26].Value = totalNetMarginAmount;
 
-                gmReportWorksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
                 gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
                 // Apply style to subtotal rows
                 // color to whole row
-                using (var range = gmReportWorksheet.Cells[row, 1, row, 27])
+                using (var range = gmReportWorksheet.Cells[row, 1, row, 26])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
                 // line to subtotal values
-                using (var range = gmReportWorksheet.Cells[row, 7, row, 27])
+                using (var range = gmReportWorksheet.Cells[row, 10, row, 26])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -4604,182 +4802,496 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Summary Row --
 
-                row += 2;
+                var rowForSummary = row + 8;
 
-                #region -- Summary Header --
+                // Set the column headers
+                var mergedCellForOverall = gmReportWorksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 10];
+                mergedCellForOverall.Merge = true;
+                mergedCellForOverall.Value = "Overall";
+                mergedCellForOverall.Style.Font.Size = 13;
+                mergedCellForOverall.Style.Font.Bold = true;
+                gmReportWorksheet.Cells[rowForSummary - 2, 3, rowForSummary - 2, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                gmReportWorksheet.Cells[row, 2].Value = "SUMMARY: ";
-                gmReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
-                gmReportWorksheet.Cells[row, 2].Style.Font.Size = 16;
+                var textStyleForSummary = gmReportWorksheet.Cells[rowForSummary - 3, 2];
+                textStyleForSummary.Style.Font.Size = 16;
+                textStyleForSummary.Style.Font.Bold = true;
 
-                row++;
+                gmReportWorksheet.Cells[rowForSummary - 3, 2].Value = "Summary";
+                gmReportWorksheet.Cells[rowForSummary - 1, 2].Value = "Segment";
+                gmReportWorksheet.Cells[rowForSummary - 1, 3].Value = "Volume";
+                gmReportWorksheet.Cells[rowForSummary - 1, 4].Value = "Sales N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 5].Value = "Purchases N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 6].Value = "Gross Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 7].Value = "Freight N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 8].Value = "Commission";
+                gmReportWorksheet.Cells[rowForSummary - 1, 9].Value = "Net Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 10].Value = "Net GM/LIT";
 
-                var firstRowEnclosure = row;
+                gmReportWorksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                string[] productList = { "DIESEL", "ECONO", "ENVIRO" };
-
-                for (int i = 3, index = 0; i != 27; i += 8, index++)
+                // Apply styling to the header row for Overall
+                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 2, rowForSummary - 1, 10])
                 {
-                    mergedCells = gmReportWorksheet.Cells[row, i, row, i + 7];
-                    mergedCells.Style.Font.Bold = true;
-                    mergedCells.Style.Font.Size = 16;
-                    mergedCells.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    mergedCells.Merge = true;
-                    mergedCells.Value = productList[index];
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                row++;
-
-                gmReportWorksheet.Cells[row, 2].Value = "SUPPLIERS";
-                gmReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
-                gmReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
-                gmReportWorksheet.Cells[row, 2].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                gmReportWorksheet.Cells[row, 2].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                gmReportWorksheet.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                gmReportWorksheet.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-                gmReportWorksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                for (int i = 2; i != 26; i += 8)
+                // Apply style to subtotal row for Overall
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 10])
                 {
-                    gmReportWorksheet.Cells[row, i+1].Value = "VOLUME";
-                    gmReportWorksheet.Cells[row, i+2].Value = "SALES N.VAT";
-                    gmReportWorksheet.Cells[row, i+3].Value = "PURCHASES N.VAT";
-                    gmReportWorksheet.Cells[row, i+4].Value = "GROSS MARGIN";
-                    gmReportWorksheet.Cells[row, i+5].Value = "FREIGHT N.VAT";
-                    gmReportWorksheet.Cells[row, i+6].Value = "COMMISSION";
-                    gmReportWorksheet.Cells[row, i+7].Value = "NET MARGIN";
-                    gmReportWorksheet.Cells[row, i+8].Value = "NET GM/LIT";
-                    gmReportWorksheet.Cells[row, i+1, row, i+8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    gmReportWorksheet.Cells[row, i+1, row, i+8].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-
-                    using (var range = gmReportWorksheet.Cells[row, i+1, row, i+8])
-                    {
-                        range.Style.Font.Bold = true;
-                        range.Style.Font.Italic = true;
-                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-                    }
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
-                row += 2;
-
-                #endregion -- Summary Header --
-
-                #region == Summary Contents ==
-
-                var rrBySupplier = purchaseReport
-                    .OrderBy(rr => rr.PurchaseOrder.Supplier.SupplierName)
-                    .GroupBy(rr => rr.PurchaseOrder.Supplier.SupplierName);
-
-                startingSummaryTableRow = row;
-                foreach (var rrSupplier in rrBySupplier)
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 10])
                 {
-                    int startingColumn = 2;
-
-                    gmReportWorksheet.Cells[row, 2].Value = rrSupplier.First().PurchaseOrder.Supplier.SupplierName;
-                    gmReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
-                    gmReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
-
-                    var productBySupplier = rrSupplier
-                        .OrderBy(rr => rr.PurchaseOrder.Product.ProductName)
-                        .GroupBy(rr => rr.PurchaseOrder.Product.ProductName);
-
-                    foreach (var product in productBySupplier)
-                    {
-                        if (product.Any())
-                        {
-                            var grandTotalVolume = product
-                                .Sum(pr => pr.QuantityReceived); // volume
-                            var grandTotalCosNetAmount = product
-                                .Sum(pr => pr.QuantityReceived * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m) / 1.12m); // Sales Net Total
-                            var grandTotalPurchasesNetAmount = product
-                                .Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m); // Purchase Net Total
-                            var grandTotalFreightNVat = product
-                                .Sum(pr => pr.QuantityReceived * ((pr.DeliveryReceipt?.Freight ?? 0m) / 1.12m)); // Freight Net Total
-                            var grandTotalCommissionAmount = product
-                                .Sum(pr => pr.QuantityReceived * (pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m)); // Commission Gross
-                            var grandTotalGmAmount = grandTotalCosNetAmount - grandTotalPurchasesNetAmount;
-                            var grandTotalNetMarginAmount = (grandTotalGmAmount - grandTotalFreightNVat - grandTotalCommissionAmount);
-                            var grandTotalNetMarginPerLiter = grandTotalNetMarginAmount / grandTotalVolume;
-
-                            gmReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume; //grand volume
-                            gmReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalCosNetAmount; // grand sales n.vat
-                            gmReportWorksheet.Cells[row, startingColumn + 3].Value = grandTotalPurchasesNetAmount; // grand purchases nvat
-                            gmReportWorksheet.Cells[row, startingColumn + 4].Value = grandTotalGmAmount; // gm amount sales - purchases
-                            gmReportWorksheet.Cells[row, startingColumn + 5].Value = grandTotalFreightNVat;// freight nvat
-                            gmReportWorksheet.Cells[row, startingColumn + 6].Value = grandTotalCommissionAmount; // commission
-                            gmReportWorksheet.Cells[row, startingColumn + 7].Value = grandTotalNetMarginAmount; // Net Margin Amount
-                            gmReportWorksheet.Cells[row, startingColumn + 8].Value = grandTotalNetMarginPerLiter; // Net Margin Per Lit
-
-                            gmReportWorksheet.Cells[row, startingColumn + 1, row, startingColumn + 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                            gmReportWorksheet.Cells[row, startingColumn + 1, row, startingColumn + 8].Style.Numberformat.Format = currencyFormat;
-                        }
-
-                        startingColumn += 8;
-                    }
-
-                    row++;
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
                 }
 
-                var endingSummaryTableRow = row - 1;
+                // Set the column headers
+                var mergedCellForBiodiesel = gmReportWorksheet.Cells[rowForSummary - 2, 12, rowForSummary - 2, 19];
+                mergedCellForBiodiesel.Merge = true;
+                mergedCellForBiodiesel.Value = "Biodiesel";
+                mergedCellForBiodiesel.Style.Font.Size = 13;
+                mergedCellForBiodiesel.Style.Font.Bold = true;
+                gmReportWorksheet.Cells[rowForSummary - 2, 12, rowForSummary - 2, 19].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                row++;
+                gmReportWorksheet.Cells[rowForSummary - 1, 12].Value = "Volume";
+                gmReportWorksheet.Cells[rowForSummary - 1, 13].Value = "Sales N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 14].Value = "Purchases N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 15].Value = "Gross Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 16].Value = "Freight N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 17].Value = "Commission";
+                gmReportWorksheet.Cells[rowForSummary - 1, 18].Value = "Net Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 19].Value = "Net GM/LIT";
 
-                var lastRowEnclosure = row;
+                gmReportWorksheet.Cells[rowForSummary - 1, 12, rowForSummary - 1, 19].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-
-                for (int i = 2; i != 26; i += 8)
+                // Apply styling to the header row for Biodiesel
+                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 12, rowForSummary - 1, 19])
                 {
-                    gmReportWorksheet.Cells[row, i + 1].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+1].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+1].Address})";
-                    gmReportWorksheet.Cells[row, i + 2].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+2].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+2].Address})";
-                    gmReportWorksheet.Cells[row, i + 3].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+3].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+3].Address})";
-                    gmReportWorksheet.Cells[row, i + 4].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+4].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+4].Address})";
-                    gmReportWorksheet.Cells[row, i + 5].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+5].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+5].Address})";
-                    gmReportWorksheet.Cells[row, i + 6].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+6].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+6].Address})";
-                    gmReportWorksheet.Cells[row, i + 7].Formula = $"SUM({gmReportWorksheet.Cells[startingSummaryTableRow, i+7].Address}:{gmReportWorksheet.Cells[endingSummaryTableRow, i+7].Address})";
-                    gmReportWorksheet.Cells[row, i + 8].Formula = $"=({gmReportWorksheet.Cells[row, i+7].Address}/{gmReportWorksheet.Cells[row, i+1].Address})";
-
-                    mergedCells = gmReportWorksheet.Cells[row, i + 1, row, i + 8];
-                    mergedCells.Style.Font.Bold = true;
-                    mergedCells.Style.Numberformat.Format = currencyFormat;
-                    mergedCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    mergedCells.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
-                    mergedCells.Style.Font.Size = 11;
-                    mergedCells.Style.Border.Top.Style = ExcelBorderStyle.Thin ;
-                    mergedCells.Style.Border.Bottom.Style = ExcelBorderStyle.Double ;
-                    mergedCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
-                var enclosure = gmReportWorksheet.Cells[firstRowEnclosure, 2, lastRowEnclosure, 2];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                // Apply style to subtotal row for Biodiesel
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 12, rowForSummary + 4, 19])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
 
-                enclosure = gmReportWorksheet.Cells[firstRowEnclosure, 3, lastRowEnclosure, 10];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 12, rowForSummary + 4, 19])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
 
-                enclosure = gmReportWorksheet.Cells[firstRowEnclosure, 11, lastRowEnclosure, 18];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                // Set the column headers
+                var mergedCellForEconogas = gmReportWorksheet.Cells[rowForSummary - 2, 21, rowForSummary - 2, 28];
+                mergedCellForEconogas.Merge = true;
+                mergedCellForEconogas.Value = "Econogas";
+                mergedCellForEconogas.Style.Font.Size = 13;
+                mergedCellForEconogas.Style.Font.Bold = true;
+                gmReportWorksheet.Cells[rowForSummary - 2, 21, rowForSummary - 2, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                enclosure = gmReportWorksheet.Cells[firstRowEnclosure, 19, lastRowEnclosure, 26];
-                enclosure.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                gmReportWorksheet.Cells[rowForSummary - 1, 21].Value = "Volume";
+                gmReportWorksheet.Cells[rowForSummary - 1, 22].Value = "Sales N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 23].Value = "Purchases N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 24].Value = "Gross Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 25].Value = "Freight N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 26].Value = "Commission";
+                gmReportWorksheet.Cells[rowForSummary - 1, 27].Value = "Net Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 28].Value = "Net GM/LIT";
+
+                gmReportWorksheet.Cells[rowForSummary - 1, 21, rowForSummary - 1, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                // Apply styling to the header row for Econogas
+                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 21, rowForSummary - 1, 28])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Apply style to subtotal row for Econogas
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 21, rowForSummary + 4, 28])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
+
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 21, rowForSummary + 4, 28])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Set the column headers
+                var mergedCellForEnvirogas = gmReportWorksheet.Cells[rowForSummary - 2, 30, rowForSummary - 2, 37];
+                mergedCellForEnvirogas.Merge = true;
+                mergedCellForEnvirogas.Value = "Envirogas";
+                mergedCellForEnvirogas.Style.Font.Size = 13;
+                mergedCellForEnvirogas.Style.Font.Bold = true;
+                gmReportWorksheet.Cells[rowForSummary - 2, 30, rowForSummary - 2, 37].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                //inset data/value in excel
+                gmReportWorksheet.Cells[rowForSummary - 1, 30].Value = "Volume";
+                gmReportWorksheet.Cells[rowForSummary - 1, 31].Value = "Sales N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 32].Value = "Purchases N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 33].Value = "Gross Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 34].Value = "Freight N. VAT";
+                gmReportWorksheet.Cells[rowForSummary - 1, 35].Value = "Commission";
+                gmReportWorksheet.Cells[rowForSummary - 1, 36].Value = "Net Margin";
+                gmReportWorksheet.Cells[rowForSummary - 1, 37].Value = "Net GM/LIT";
+
+                gmReportWorksheet.Cells[rowForSummary - 1, 30, rowForSummary - 1, 37].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                // Apply styling to the header row for Envirogas
+                using (var range = gmReportWorksheet.Cells[rowForSummary - 1, 30, rowForSummary - 1, 37])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Apply style to subtotal row for Envirogas
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 30, rowForSummary + 4, 37])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                }
+
+                using (var range = gmReportWorksheet.Cells[rowForSummary + 4, 30, rowForSummary + 4, 37])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                var listForBiodiesel = new List<FilprideReceivingReport>();
+                var listForEconogas = new List<FilprideReceivingReport>();
+                var listForEnvirogas = new List<FilprideReceivingReport>();
+
+                var totalOverallQuantity = 0m;
+                var totalOverallNetOfSales = 0m;
+                var totalOverallNetOfPurchases = 0m;
+                var totalOverallGrossMargin = 0m;
+                var totalOverallNetOfFreight = 0m;
+                var totalOverallCommission = 0m;
+                var totalOverallNetMargin = 0m;
+                var totalOverallNetMarginPerLiter = 0m;
+
+                var totalQuantityForBiodiesel = 0m;
+                var totalNetOfSalesForBiodiesel = 0m;
+                var totalNetOfPurchasesForBiodiesel = 0m;
+                var totalGrossMarginForBiodiesel = 0m;
+                var totalNetOfFreightForBiodiesel = 0m;
+                var totalCommissionForBiodiesel = 0m;
+                var totalNetMarginForBiodiesel = 0m;
+                var totalNetMarginPerLiterForBiodiesel = 0m;
+
+                var totalQuantityForEconogas = 0m;
+                var totalNetOfSalesForEconogas = 0m;
+                var totalNetOfPurchasesForEconogas = 0m;
+                var totalGrossMarginForEconogas = 0m;
+                var totalNetOfFreightForEconogas = 0m;
+                var totalCommissionForEconogas = 0m;
+                var totalNetMarginForEconogas = 0m;
+                var totalNetMarginPerLiterForEconogas = 0m;
+
+                var totalQuantityForEnvirogas = 0m;
+                var totalNetOfSalesForEnvirogas= 0m;
+                var totalNetOfPurchasesForEnvirogas = 0m;
+                var totalGrossMarginForEnvirogas = 0m;
+                var totalNetOfFreightForEnvirogas = 0m;
+                var totalCommissionForEnvirogas = 0m;
+                var totalNetMarginForEnvirogas = 0m;
+                var totalNetMarginPerLiterForEnvirogas = 0m;
+
+
+                foreach (var customerType in Enum.GetValues<CustomerType>())
+                {
+                    var list = purchaseReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
+                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
+
+                    // Computation for Overall
+                    var overallQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
+                    var overallSalesSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
+                    var overallPurchasesSum = list.Sum(s => s.Amount);
+                    var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
+                    var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
+                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
+                    var overallCommissionSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
+                    var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
+
+                    gmReportWorksheet.Cells[rowForSummary, 2].Value = customerType.ToString();
+                    gmReportWorksheet.Cells[rowForSummary, 3].Value = overallQuantitySum;
+                    gmReportWorksheet.Cells[rowForSummary, 4].Value = overallNetOfSalesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 5].Value = overallNetOfPurchasesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 6].Value = overallGrossMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 7].Value = overallNetOfFreightSum;
+                    gmReportWorksheet.Cells[rowForSummary, 8].Value = overallCommissionSum;
+                    gmReportWorksheet.Cells[rowForSummary, 9].Value = overallNetMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 10].Value = overallNetMarginPerLiterSum;
+
+                    gmReportWorksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 10].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Biodiesel
+                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
+                    var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
+                    var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
+                    var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
+                    var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
+                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
+                    var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
+                    var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
+
+                    gmReportWorksheet.Cells[rowForSummary, 12].Value = biodieselQuantitySum;
+                    gmReportWorksheet.Cells[rowForSummary, 13].Value = biodieselNetOfSalesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 14].Value = biodieselNetOfPurchasesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 15].Value = biodieselGrossMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 16].Value = biodieselNetOfFreightSum;
+                    gmReportWorksheet.Cells[rowForSummary, 17].Value = biodieselCommissionSum;
+                    gmReportWorksheet.Cells[rowForSummary, 18].Value = biodieselNetMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 19].Value = biodieselNetMarginPerLiterSum;
+
+                    gmReportWorksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 19].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Econogas
+                    var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
+                    var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
+                    var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
+                    var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
+                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
+                    var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
+                    var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
+
+                    gmReportWorksheet.Cells[rowForSummary, 21].Value = econogasQuantitySum;
+                    gmReportWorksheet.Cells[rowForSummary, 22].Value = econogasNetOfSalesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 23].Value = econogasNetOfPurchasesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 24].Value = econogasGrossMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 25].Value = econogasNetOfFreightSum;
+                    gmReportWorksheet.Cells[rowForSummary, 26].Value = econogasCommissionSum;
+                    gmReportWorksheet.Cells[rowForSummary, 27].Value = econogasNetMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 28].Value = econogasNetMarginPerLiterSum;
+
+                    gmReportWorksheet.Cells[rowForSummary, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 28].Style.Numberformat.Format = currencyFormat;
+
+                    // Computation for Envirogas
+                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
+                    var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
+                    var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
+                    var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
+                    var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
+                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
+                    var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
+                    var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
+
+                    gmReportWorksheet.Cells[rowForSummary, 30].Value = envirogasQuantitySum;
+                    gmReportWorksheet.Cells[rowForSummary, 31].Value = envirogasNetOfSalesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 32].Value = envirogasNetOfPurchasesSum;
+                    gmReportWorksheet.Cells[rowForSummary, 33].Value = envirogasGrossMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 34].Value = envirogasNetOfFreightSum;
+                    gmReportWorksheet.Cells[rowForSummary, 35].Value = envirogasCommissionSum;
+                    gmReportWorksheet.Cells[rowForSummary, 36].Value = envirogasNetMarginSum;
+                    gmReportWorksheet.Cells[rowForSummary, 37].Value = envirogasNetMarginPerLiterSum;
+
+                    gmReportWorksheet.Cells[rowForSummary, 30].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 31].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 32].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 33].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 34].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 35].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 36].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    gmReportWorksheet.Cells[rowForSummary, 37].Style.Numberformat.Format = currencyFormat;
+
+                    rowForSummary++;
+
+                    // Computation of total for Overall
+                    totalOverallQuantity += overallQuantitySum;
+                    totalOverallNetOfSales += overallNetOfSalesSum;
+                    totalOverallNetOfPurchases += overallNetOfPurchasesSum;
+                    totalOverallGrossMargin += overallGrossMarginSum;
+                    totalOverallNetOfFreight += overallNetOfFreightSum;
+                    totalOverallCommission += overallCommissionSum;
+                    totalOverallNetMargin += overallNetMarginSum;
+                    totalOverallNetMarginPerLiter += totalOverallNetMargin != 0 && totalOverallQuantity != 0 ? totalOverallNetMargin / totalOverallQuantity : 0;
+
+                    // Computation of total for Biodiesel
+                    totalQuantityForBiodiesel += biodieselQuantitySum;
+                    totalNetOfSalesForBiodiesel += biodieselNetOfSalesSum;
+                    totalNetOfPurchasesForBiodiesel += biodieselNetOfPurchasesSum;
+                    totalGrossMarginForBiodiesel += biodieselGrossMarginSum;
+                    totalNetOfFreightForBiodiesel += biodieselNetOfFreightSum;
+                    totalCommissionForBiodiesel += biodieselCommissionSum;
+                    totalNetMarginForBiodiesel += biodieselNetMarginSum;
+                    totalNetMarginPerLiterForBiodiesel += totalNetMarginForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? totalNetMarginForBiodiesel / totalQuantityForBiodiesel : 0;
+
+                    // Computation of total for Econogas
+                    totalQuantityForEconogas += econogasQuantitySum;
+                    totalNetOfSalesForEconogas += econogasNetOfSalesSum;
+                    totalNetOfPurchasesForEconogas += econogasNetOfPurchasesSum;
+                    totalGrossMarginForEconogas += econogasGrossMarginSum;
+                    totalNetOfFreightForEconogas += econogasNetOfFreightSum;
+                    totalCommissionForEconogas += econogasCommissionSum;
+                    totalNetMarginForEconogas += econogasNetMarginSum;
+                    totalNetMarginPerLiterForEconogas += totalNetMarginForEconogas != 0 && totalQuantityForEconogas != 0 ? totalNetMarginForEconogas / totalQuantityForEconogas : 0;
+
+                    // Computation of total for Envirogas
+                    totalQuantityForEnvirogas += envirogasQuantitySum;
+                    totalNetOfSalesForEnvirogas += envirogasNetOfSalesSum;
+                    totalNetOfPurchasesForEnvirogas += envirogasNetOfPurchasesSum;
+                    totalGrossMarginForEnvirogas += envirogasGrossMarginSum;
+                    totalNetOfFreightForEnvirogas += envirogasNetOfFreightSum;
+                    totalCommissionForEnvirogas += envirogasCommissionSum;
+                    totalNetMarginForEnvirogas += envirogasNetMarginSum;
+                    totalNetMarginPerLiterForEnvirogas += totalNetMarginForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? totalNetMarginForEnvirogas / totalQuantityForEnvirogas : 0;
+
+                }
+
+                var styleOfTotal = gmReportWorksheet.Cells[rowForSummary, 2];
+                styleOfTotal.Value = "Total";
+
+                gmReportWorksheet.Cells[rowForSummary, 3].Value = totalOverallQuantity;
+                gmReportWorksheet.Cells[rowForSummary, 4].Value = totalOverallNetOfSales;
+                gmReportWorksheet.Cells[rowForSummary, 5].Value = totalOverallNetOfPurchases;
+                gmReportWorksheet.Cells[rowForSummary, 6].Value = totalOverallGrossMargin;
+                gmReportWorksheet.Cells[rowForSummary, 7].Value = totalOverallNetOfFreight;
+                gmReportWorksheet.Cells[rowForSummary, 8].Value = totalOverallCommission;
+                gmReportWorksheet.Cells[rowForSummary, 9].Value = totalOverallNetMargin;
+                gmReportWorksheet.Cells[rowForSummary, 10].Value = totalOverallNetMarginPerLiter;
+
+                gmReportWorksheet.Cells[rowForSummary, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 10].Style.Numberformat.Format = currencyFormat;
+
+                gmReportWorksheet.Cells[rowForSummary, 12].Value = totalQuantityForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 13].Value = totalNetOfSalesForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 14].Value = totalNetOfPurchasesForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 15].Value = totalGrossMarginForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 16].Value = totalNetOfFreightForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 17].Value = totalCommissionForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 18].Value = totalNetMarginForBiodiesel;
+                gmReportWorksheet.Cells[rowForSummary, 19].Value = totalNetMarginPerLiterForBiodiesel;
+
+                gmReportWorksheet.Cells[rowForSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 15].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 19].Style.Numberformat.Format = currencyFormat;
+
+                gmReportWorksheet.Cells[rowForSummary, 21].Value = totalQuantityForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 22].Value = totalNetOfSalesForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 23].Value = totalNetOfPurchasesForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 24].Value = totalGrossMarginForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 25].Value = totalNetOfFreightForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 26].Value = totalCommissionForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 27].Value = totalNetMarginForEconogas;
+                gmReportWorksheet.Cells[rowForSummary, 28].Value = totalNetMarginPerLiterForEconogas;
+
+                gmReportWorksheet.Cells[rowForSummary, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 28].Style.Numberformat.Format = currencyFormat;
+
+                gmReportWorksheet.Cells[rowForSummary, 30].Value = totalQuantityForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 31].Value = totalNetOfSalesForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 32].Value = totalNetOfPurchasesForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 33].Value = totalGrossMarginForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 34].Value = totalNetOfFreightForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 35].Value = totalCommissionForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 36].Value = totalNetMarginForEnvirogas;
+                gmReportWorksheet.Cells[rowForSummary, 37].Value = totalNetMarginPerLiterForEnvirogas;
+
+                gmReportWorksheet.Cells[rowForSummary, 30].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 31].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 32].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 33].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 34].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 35].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 36].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Cells[rowForSummary, 37].Style.Numberformat.Format = currencyFormat;
 
                 #endregion == Summary Contents ==
-
-                #endregion -- Summary Rows --
 
                 // Auto-fit columns for better readability
                 gmReportWorksheet.Cells.AutoFitColumns();
                 gmReportWorksheet.View.FreezePanes(8, 1);
-
-
-                for (int col = 1; col <= 25; col++)
-                {
-                    double currentWidth = gmReportWorksheet.Column(col).Width;
-                    if (currentWidth > 25)
-                    {
-                        gmReportWorksheet.Column(col).Width = 24;
-                    }
-                }
 
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
@@ -4799,6 +5311,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GeneratePostedCollectionExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(PostedCollection));
+            }
+
             try
             {
                 var dateFrom = model.DateFrom;
@@ -4916,6 +5435,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateTradePayableReport(ViewModelBook model, CancellationToken cancellationToken)
         {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(TradePayableReport));
+            }
+
             try
             {
                 var dateFrom = model.DateFrom;
@@ -5408,140 +5934,191 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-            var dateFrom = model.DateFrom;
-            var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
-            var companyClaims = await GetCompanyClaimAsync();
-
-            var salesInvoice = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.PostedBy != null && si.Company == companyClaims)
-                .Include(si => si.Product)
-                .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt)
-                .Include(si => si.CustomerOrderSlip)
-                .ToListAsync(cancellationToken);
-
-            if (!salesInvoice.Any())
+            if (!ModelState.IsValid)
             {
-                TempData["error"] = "No Record Found";
+                TempData["error"] = "Please input date range";
                 return RedirectToAction(nameof(ArPerCustomer));
             }
 
-            // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("ARPerCustomer");
-
-            // Set the column headers
-            var mergedCells = worksheet.Cells["A1:C1"];
-            mergedCells.Merge = true;
-            mergedCells.Value = "AR PER CUSTOMER";
-            mergedCells.Style.Font.Size = 13;
-
-            worksheet.Cells["A2"].Value = "Date Range:";
-            worksheet.Cells["A3"].Value = "Extracted By:";
-            worksheet.Cells["A4"].Value = "Company:";
-
-            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-            worksheet.Cells["B3"].Value = $"{extractedBy}";
-            worksheet.Cells["B4"].Value = $"{companyClaims}";
-
-            worksheet.Cells["A7"].Value = "CUSTOMER No.";
-            worksheet.Cells["B7"].Value = "CUSTOMER NAME";
-            worksheet.Cells["C7"].Value = "ACCT. TYPE";
-            worksheet.Cells["D7"].Value = "TERMS";
-            worksheet.Cells["E7"].Value = "TRAN. DATE";
-            worksheet.Cells["F7"].Value = "DUE DATE";
-            worksheet.Cells["G7"].Value = "INVOICE No.";
-            worksheet.Cells["H7"].Value = "DR No.";
-            worksheet.Cells["I7"].Value = "PO No.";
-            worksheet.Cells["J7"].Value = "COS No.";
-            worksheet.Cells["K7"].Value = "REMARKS";
-            worksheet.Cells["L7"].Value = "PRODUCT";
-            worksheet.Cells["M7"].Value = "QTY";
-            worksheet.Cells["N7"].Value = "UNIT";
-            worksheet.Cells["O7"].Value = "UNIT PRICE";
-            worksheet.Cells["P7"].Value = "FREIGHT";
-            worksheet.Cells["Q7"].Value = "FREIGHT/LTR";
-            worksheet.Cells["R7"].Value = "VAT/LTR";
-            worksheet.Cells["S7"].Value = "VAT AMT.";
-            worksheet.Cells["T7"].Value = "TOTAL AMT. (G. VAT)";
-            worksheet.Cells["U7"].Value = "AMT. PAID";
-            worksheet.Cells["V7"].Value = "SI BALANCE";
-            worksheet.Cells["W7"].Value = "EWT AMT.";
-            worksheet.Cells["X7"].Value = "EWT PAID";
-            worksheet.Cells["Y7"].Value = "CWT BALANCE";
-
-            // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:Y7"])
+            try
             {
-                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
 
-            // Populate the data rows
-            int row = 8;
-            string currencyFormat = "#,##0.0000";
-            string currencyFormatTwoDecimal = "#,##0.00";
+                var salesInvoice = await _dbContext.FilprideSalesInvoices
+                    .Where(si => si.PostedBy != null && si.Company == companyClaims)
+                    .Include(si => si.Product)
+                    .Include(si => si.Customer)
+                    .Include(si => si.DeliveryReceipt)
+                    .Include(si => si.CustomerOrderSlip)
+                    .ToListAsync(cancellationToken);
 
-            var totalQuantity = 0m;
-            var totalUnitPrice = 0m;
-            var totalFreight = 0m;
-            var totalFreightPerLiter = 0m;
-            var totalVatPerLiter = 0m;
-            var totalVatAmount = 0m;
-            var totalGrossAmount = 0m;
-            var totalAmountPaid = 0m;
-            var totalBalance = 0m;
-            var totalEwtAmount = 0m;
-            var totalEwtAmountPaid = 0m;
-            var totalewtBalance = 0m;
+                if (!salesInvoice.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(ArPerCustomer));
+                }
 
-            foreach (var si in salesInvoice)
-            {
-                var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
-                var grossAmount = si.Amount;
-                var vatableAmount = grossAmount / 1.12m;
-                var vatAmount = vatableAmount * .12m;
-                var vatPerLiter = vatAmount * si.Quantity;
-                var ewtAmount = vatableAmount * .01m;
-                var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
-                var ewtBalance = ewtAmount - isEwtAmountPaid;
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("ARPerCustomer");
 
-                worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
-                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
-                worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
-                worksheet.Cells[row, 4].Value = si.Terms;
-                worksheet.Cells[row, 5].Value = si.TransactionDate;
-                worksheet.Cells[row, 6].Value = si.DueDate;
-                worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
-                worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
-                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo;
-                worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
-                worksheet.Cells[row, 11].Value = si.Remarks;
-                worksheet.Cells[row, 12].Value = si.Product?.ProductName;
-                worksheet.Cells[row, 13].Value = si.Quantity;
-                worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
-                worksheet.Cells[row, 15].Value = si.UnitPrice;
-                worksheet.Cells[row, 16].Value = freight;
-                worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
-                worksheet.Cells[row, 18].Value = vatPerLiter;
-                worksheet.Cells[row, 19].Value = vatAmount;
-                worksheet.Cells[row, 20].Value = grossAmount;
-                worksheet.Cells[row, 21].Value = si.AmountPaid;
-                worksheet.Cells[row, 22].Value = si.Balance;
-                worksheet.Cells[row, 23].Value = ewtAmount;
-                worksheet.Cells[row, 24].Value = isEwtAmountPaid;
-                worksheet.Cells[row, 25].Value = ewtBalance;
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "AR PER CUSTOMER";
+                mergedCells.Style.Font.Size = 13;
 
-                worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
-                worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "CUSTOMER No.";
+                worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+                worksheet.Cells["C7"].Value = "ACCT. TYPE";
+                worksheet.Cells["D7"].Value = "TERMS";
+                worksheet.Cells["E7"].Value = "TRAN. DATE";
+                worksheet.Cells["F7"].Value = "DUE DATE";
+                worksheet.Cells["G7"].Value = "INVOICE No.";
+                worksheet.Cells["H7"].Value = "DR No.";
+                worksheet.Cells["I7"].Value = "PO No.";
+                worksheet.Cells["J7"].Value = "COS No.";
+                worksheet.Cells["K7"].Value = "REMARKS";
+                worksheet.Cells["L7"].Value = "PRODUCT";
+                worksheet.Cells["M7"].Value = "QTY";
+                worksheet.Cells["N7"].Value = "UNIT";
+                worksheet.Cells["O7"].Value = "UNIT PRICE";
+                worksheet.Cells["P7"].Value = "FREIGHT";
+                worksheet.Cells["Q7"].Value = "FREIGHT/LTR";
+                worksheet.Cells["R7"].Value = "VAT/LTR";
+                worksheet.Cells["S7"].Value = "VAT AMT.";
+                worksheet.Cells["T7"].Value = "TOTAL AMT. (G. VAT)";
+                worksheet.Cells["U7"].Value = "AMT. PAID";
+                worksheet.Cells["V7"].Value = "SI BALANCE";
+                worksheet.Cells["W7"].Value = "EWT AMT.";
+                worksheet.Cells["X7"].Value = "EWT PAID";
+                worksheet.Cells["Y7"].Value = "CWT BALANCE";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:Y7"])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var totalQuantity = 0m;
+                var totalUnitPrice = 0m;
+                var totalFreight = 0m;
+                var totalFreightPerLiter = 0m;
+                var totalVatPerLiter = 0m;
+                var totalVatAmount = 0m;
+                var totalGrossAmount = 0m;
+                var totalAmountPaid = 0m;
+                var totalBalance = 0m;
+                var totalEwtAmount = 0m;
+                var totalEwtAmountPaid = 0m;
+                var totalewtBalance = 0m;
+
+                foreach (var si in salesInvoice)
+                {
+                    var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                    var grossAmount = si.Amount;
+                    var vatableAmount = grossAmount / 1.12m;
+                    var vatAmount = vatableAmount * .12m;
+                    var vatPerLiter = vatAmount * si.Quantity;
+                    var ewtAmount = vatableAmount * .01m;
+                    var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
+                    var ewtBalance = ewtAmount - isEwtAmountPaid;
+
+                    worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
+                    worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                    worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                    worksheet.Cells[row, 4].Value = si.Terms;
+                    worksheet.Cells[row, 5].Value = si.TransactionDate;
+                    worksheet.Cells[row, 6].Value = si.DueDate;
+                    worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
+                    worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                    worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo;
+                    worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 11].Value = si.Remarks;
+                    worksheet.Cells[row, 12].Value = si.Product?.ProductName;
+                    worksheet.Cells[row, 13].Value = si.Quantity;
+                    worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
+                    worksheet.Cells[row, 15].Value = si.UnitPrice;
+                    worksheet.Cells[row, 16].Value = freight;
+                    worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
+                    worksheet.Cells[row, 18].Value = vatPerLiter;
+                    worksheet.Cells[row, 19].Value = vatAmount;
+                    worksheet.Cells[row, 20].Value = grossAmount;
+                    worksheet.Cells[row, 21].Value = si.AmountPaid;
+                    worksheet.Cells[row, 22].Value = si.Balance;
+                    worksheet.Cells[row, 23].Value = ewtAmount;
+                    worksheet.Cells[row, 24].Value = isEwtAmountPaid;
+                    worksheet.Cells[row, 25].Value = ewtBalance;
+
+                    worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    row++;
+
+                    totalQuantity += si.Quantity;
+                    totalFreight += freight ?? 0m;
+                    totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
+                    totalVatPerLiter += vatPerLiter;
+                    totalVatAmount += vatAmount;
+                    totalGrossAmount += grossAmount;
+                    totalAmountPaid += si.AmountPaid;
+                    totalBalance += si.Balance;
+                    totalEwtAmount += ewtAmount;
+                    totalEwtAmountPaid += isEwtAmountPaid;
+                    totalewtBalance += ewtBalance;
+                }
+
+                worksheet.Cells[row, 12].Value = "Total ";
+
+                worksheet.Cells[row, 13].Value = totalQuantity;
+                worksheet.Cells[row, 15].Value = totalGrossAmount / totalQuantity;
+                worksheet.Cells[row, 16].Value = totalFreight;
+                worksheet.Cells[row, 17].Value = totalFreightPerLiter;
+                worksheet.Cells[row, 18].Value = totalVatPerLiter;
+                worksheet.Cells[row, 19].Value = totalVatAmount;
+                worksheet.Cells[row, 20].Value = totalGrossAmount;
+                worksheet.Cells[row, 21].Value = totalAmountPaid;
+                worksheet.Cells[row, 22].Value = totalBalance;
+                worksheet.Cells[row, 23].Value = totalEwtAmount;
+                worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
+                worksheet.Cells[row, 25].Value = totalewtBalance;
+
                 worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -5555,72 +6132,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                row++;
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 25])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
 
-                totalQuantity += si.Quantity;
-                totalFreight += freight ?? 0m;
-                totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
-                totalVatPerLiter += vatPerLiter;
-                totalVatAmount += vatAmount;
-                totalGrossAmount += grossAmount;
-                totalAmountPaid += si.AmountPaid;
-                totalBalance += si.Balance;
-                totalEwtAmount += ewtAmount;
-                totalEwtAmountPaid += isEwtAmountPaid;
-                totalewtBalance += ewtBalance;
+                using (var range = worksheet.Cells[row, 12, row, 25])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ArPerCustomerReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
-
-            worksheet.Cells[row, 12].Value = "Total ";
-
-            worksheet.Cells[row, 13].Value = totalQuantity;
-            worksheet.Cells[row, 15].Value = totalGrossAmount/totalQuantity;
-            worksheet.Cells[row, 16].Value = totalFreight;
-            worksheet.Cells[row, 17].Value = totalFreightPerLiter;
-            worksheet.Cells[row, 18].Value = totalVatPerLiter;
-            worksheet.Cells[row, 19].Value = totalVatAmount;
-            worksheet.Cells[row, 20].Value = totalGrossAmount;
-            worksheet.Cells[row, 21].Value = totalAmountPaid;
-            worksheet.Cells[row, 22].Value = totalBalance;
-            worksheet.Cells[row, 23].Value = totalEwtAmount;
-            worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
-            worksheet.Cells[row, 25].Value = totalewtBalance;
-
-            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-            worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-            // Apply style to subtotal row
-            using (var range = worksheet.Cells[row, 1, row, 25])
+            catch (Exception ex)
             {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ArPerCustomer));
             }
-
-            using (var range = worksheet.Cells[row, 12, row, 25])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
-
-            // Auto-fit columns for better readability
-            worksheet.Cells.AutoFitColumns();
-            worksheet.View.FreezePanes(8, 1);
-
-            // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ArPerCustomerReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion
@@ -5629,138 +6170,197 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateAgingReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
-            var dateFrom = model.DateFrom;
-            var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
-            var companyClaims = await GetCompanyClaimAsync();
 
-            var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                        .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims, cancellationToken);
-
-            if (!salesInvoice.Any())
+            if (!ModelState.IsValid)
             {
-                TempData["error"] = "No Record Found";
+                TempData["error"] = "Please input date range";
                 return RedirectToAction(nameof(AgingReport));
             }
 
-            // Create the Excel package
-            using var package = new ExcelPackage();
-            // Add a new worksheet to the Excel package
-            var worksheet = package.Workbook.Worksheets.Add("AgingReport");
-
-            // Set the column headers
-            var mergedCells = worksheet.Cells["A1:C1"];
-            mergedCells.Merge = true;
-            mergedCells.Value = "AGING REPORT";
-            mergedCells.Style.Font.Size = 13;
-
-            worksheet.Cells["A2"].Value = "Date Range:";
-            worksheet.Cells["A3"].Value = "Extracted By:";
-            worksheet.Cells["A4"].Value = "Company:";
-
-            worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
-            worksheet.Cells["B3"].Value = $"{extractedBy}";
-            worksheet.Cells["B4"].Value = $"{companyClaims}";
-
-            worksheet.Cells["A7"].Value = "MONTH";
-            worksheet.Cells["B7"].Value = "CUSTOMER NAME";
-            worksheet.Cells["C7"].Value = "ACCT. TYPE";
-            worksheet.Cells["D7"].Value = "TERMS";
-            worksheet.Cells["E7"].Value = "EWT %";
-            worksheet.Cells["F7"].Value = "SALES DATE";
-            worksheet.Cells["G7"].Value = "DUE DATE";
-            worksheet.Cells["H7"].Value = "INVOICE No.";
-            worksheet.Cells["I7"].Value = "DR";
-            worksheet.Cells["J7"].Value = "GROSS";
-            worksheet.Cells["K7"].Value = "PARTIAL COLLECTIONS";
-            worksheet.Cells["L7"].Value = "ADJUSTED GROSS";
-            worksheet.Cells["M7"].Value = "EWT";
-            worksheet.Cells["N7"].Value = "NET OF VAT";
-            worksheet.Cells["O7"].Value = "VCF";
-            worksheet.Cells["P7"].Value = "RETENTION AMOUNT";
-            worksheet.Cells["Q7"].Value = "ADJUSTED NET";
-            worksheet.Cells["R7"].Value = "DAYS DUE";
-            worksheet.Cells["S7"].Value = "CURRENT";
-            worksheet.Cells["T7"].Value = "1-30 DAYS";
-            worksheet.Cells["U7"].Value = "31-60 DAYS";
-            worksheet.Cells["V7"].Value = "61-90 DAYS";
-            worksheet.Cells["W7"].Value = "OVER 90 DAYS";
-
-            // Apply styling to the header row
-            using (var range = worksheet.Cells["A7:W7"])
+            try
             {
-                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-            }
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
 
-            // Populate the data rows
-            int row = 8;
-            string currencyFormat = "#,##0.00";
+                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(
+                        si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims,
+                        cancellationToken);
 
-            var totalGrossAmount = 0m;
-            var totalAmountPaid = 0m;
-            var totalAdjustedGross = 0m;
-            var totalWithHoldingTaxAmount = 0m;
-            var totalNetOfVatAmount = 0m;
-            var totalVcfAmount = 0m;
-            var totalRetentionAmount = 0m;
-            var totalAdjustedNet = 0m;
-            var totalCurrent = 0m;
-            var totalOneToThirtyDays = 0m;
-            var totalThirtyOneToSixtyDays = 0m;
-            var totalSixtyOneToNinetyDays = 0m;
-            var totalOverNinetyDays = 0m;
-            foreach (var si in salesInvoice)
-            {
-                var gross = si.Amount;
-                decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
-                decimal withHoldingTaxAmount = (si.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
-                decimal retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
-                decimal vcfAmount = 0.0000m;
-                decimal adjustedGross = gross - vcfAmount;
-                decimal adjustedNet = gross - vcfAmount - retentionAmount;
+                if (!salesInvoice.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(AgingReport));
+                }
 
-                DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-                int daysDue = (today > si.DueDate) ? (today.DayNumber - si.DueDate.DayNumber) : 0;
-                var current = (si.DueDate >= today) ? gross : 0.0000m;
-                var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
-                var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
-                var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
-                var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("AgingReport");
 
-                worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("MMM");
-                worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
-                worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
-                worksheet.Cells[row, 4].Value = si.Terms;
-                worksheet.Cells[row, 5].Value = (si.Customer?.WithHoldingTax ?? false) ? "1" : "0";
-                worksheet.Cells[row, 6].Value = si.TransactionDate;
-                worksheet.Cells[row, 7].Value = si.DueDate;
-                worksheet.Cells[row, 8].Value = si.SalesInvoiceNo;
-                worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
-                worksheet.Cells[row, 10].Value = gross;
-                worksheet.Cells[row, 11].Value = si.AmountPaid;
-                worksheet.Cells[row, 12].Value = adjustedGross;
-                worksheet.Cells[row, 13].Value = withHoldingTaxAmount;
-                worksheet.Cells[row, 14].Value = netOfVatAmount;
-                worksheet.Cells[row, 15].Value = vcfAmount;
-                worksheet.Cells[row, 16].Value = retentionAmount;
-                worksheet.Cells[row, 17].Value = adjustedNet;
-                worksheet.Cells[row, 18].Value = daysDue;
-                worksheet.Cells[row, 19].Value = current;
-                worksheet.Cells[row, 20].Value = oneToThirtyDays;
-                worksheet.Cells[row, 21].Value = thirtyOneToSixtyDays;
-                worksheet.Cells[row, 22].Value = sixtyOneToNinetyDays;
-                worksheet.Cells[row, 23].Value = overNinetyDays;
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "AGING REPORT";
+                mergedCells.Style.Font.Size = 13;
 
-                worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
-                worksheet.Cells[row, 7].Style.Numberformat.Format = "MMM/dd/yyyy";
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "MONTH";
+                worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+                worksheet.Cells["C7"].Value = "ACCT. TYPE";
+                worksheet.Cells["D7"].Value = "TERMS";
+                worksheet.Cells["E7"].Value = "EWT %";
+                worksheet.Cells["F7"].Value = "SALES DATE";
+                worksheet.Cells["G7"].Value = "DUE DATE";
+                worksheet.Cells["H7"].Value = "INVOICE No.";
+                worksheet.Cells["I7"].Value = "DR";
+                worksheet.Cells["J7"].Value = "GROSS";
+                worksheet.Cells["K7"].Value = "PARTIAL COLLECTIONS";
+                worksheet.Cells["L7"].Value = "ADJUSTED GROSS";
+                worksheet.Cells["M7"].Value = "EWT";
+                worksheet.Cells["N7"].Value = "NET OF VAT";
+                worksheet.Cells["O7"].Value = "VCF";
+                worksheet.Cells["P7"].Value = "RETENTION AMOUNT";
+                worksheet.Cells["Q7"].Value = "ADJUSTED NET";
+                worksheet.Cells["R7"].Value = "DAYS DUE";
+                worksheet.Cells["S7"].Value = "CURRENT";
+                worksheet.Cells["T7"].Value = "1-30 DAYS";
+                worksheet.Cells["U7"].Value = "31-60 DAYS";
+                worksheet.Cells["V7"].Value = "61-90 DAYS";
+                worksheet.Cells["W7"].Value = "OVER 90 DAYS";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:W7"])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.00";
+
+                var totalGrossAmount = 0m;
+                var totalAmountPaid = 0m;
+                var totalAdjustedGross = 0m;
+                var totalWithHoldingTaxAmount = 0m;
+                var totalNetOfVatAmount = 0m;
+                var totalVcfAmount = 0m;
+                var totalRetentionAmount = 0m;
+                var totalAdjustedNet = 0m;
+                var totalCurrent = 0m;
+                var totalOneToThirtyDays = 0m;
+                var totalThirtyOneToSixtyDays = 0m;
+                var totalSixtyOneToNinetyDays = 0m;
+                var totalOverNinetyDays = 0m;
+                foreach (var si in salesInvoice)
+                {
+                    var gross = si.Amount;
+                    decimal netDiscount = si.Amount - si.Discount;
+                    decimal netOfVatAmount =
+                        si.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+                    decimal withHoldingTaxAmount =
+                        (si.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
+                    decimal retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                    decimal vcfAmount = 0.0000m;
+                    decimal adjustedGross = gross - vcfAmount;
+                    decimal adjustedNet = gross - vcfAmount - retentionAmount;
+
+                    DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+                    int daysDue = (today > si.DueDate) ? (today.DayNumber - si.DueDate.DayNumber) : 0;
+                    var current = (si.DueDate >= today) ? gross : 0.0000m;
+                    var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
+                    var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
+                    var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
+                    var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
+
+                    worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("MMM");
+                    worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                    worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                    worksheet.Cells[row, 4].Value = si.Terms;
+                    worksheet.Cells[row, 5].Value = (si.Customer?.WithHoldingTax ?? false) ? "1" : "0";
+                    worksheet.Cells[row, 6].Value = si.TransactionDate;
+                    worksheet.Cells[row, 7].Value = si.DueDate;
+                    worksheet.Cells[row, 8].Value = si.SalesInvoiceNo;
+                    worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                    worksheet.Cells[row, 10].Value = gross;
+                    worksheet.Cells[row, 11].Value = si.AmountPaid;
+                    worksheet.Cells[row, 12].Value = adjustedGross;
+                    worksheet.Cells[row, 13].Value = withHoldingTaxAmount;
+                    worksheet.Cells[row, 14].Value = netOfVatAmount;
+                    worksheet.Cells[row, 15].Value = vcfAmount;
+                    worksheet.Cells[row, 16].Value = retentionAmount;
+                    worksheet.Cells[row, 17].Value = adjustedNet;
+                    worksheet.Cells[row, 18].Value = daysDue;
+                    worksheet.Cells[row, 19].Value = current;
+                    worksheet.Cells[row, 20].Value = oneToThirtyDays;
+                    worksheet.Cells[row, 21].Value = thirtyOneToSixtyDays;
+                    worksheet.Cells[row, 22].Value = sixtyOneToNinetyDays;
+                    worksheet.Cells[row, 23].Value = overNinetyDays;
+
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
+
+                    row++;
+
+                    totalGrossAmount += si.Amount;
+                    totalAmountPaid += si.AmountPaid;
+                    totalAdjustedGross += adjustedGross;
+                    totalWithHoldingTaxAmount += withHoldingTaxAmount;
+                    totalNetOfVatAmount += netOfVatAmount;
+                    totalVcfAmount += vcfAmount;
+                    totalRetentionAmount += retentionAmount;
+                    totalAdjustedNet += adjustedNet;
+                    totalCurrent += current;
+                    totalOneToThirtyDays += oneToThirtyDays;
+                    totalThirtyOneToSixtyDays += thirtyOneToSixtyDays;
+                    totalSixtyOneToNinetyDays += sixtyOneToNinetyDays;
+                    totalOverNinetyDays += overNinetyDays;
+                }
+
+                worksheet.Cells[row, 9].Value = "Total ";
+                worksheet.Cells[row, 10].Value = totalGrossAmount;
+                worksheet.Cells[row, 11].Value = totalAmountPaid;
+                worksheet.Cells[row, 12].Value = totalAdjustedGross;
+                worksheet.Cells[row, 13].Value = totalWithHoldingTaxAmount;
+                worksheet.Cells[row, 14].Value = totalNetOfVatAmount;
+                worksheet.Cells[row, 15].Value = totalVcfAmount;
+                worksheet.Cells[row, 16].Value = totalRetentionAmount;
+                worksheet.Cells[row, 17].Value = totalAdjustedNet;
+                worksheet.Cells[row, 19].Value = totalCurrent;
+                worksheet.Cells[row, 20].Value = totalOneToThirtyDays;
+                worksheet.Cells[row, 21].Value = totalThirtyOneToSixtyDays;
+                worksheet.Cells[row, 22].Value = totalSixtyOneToNinetyDays;
+                worksheet.Cells[row, 23].Value = totalOverNinetyDays;
+
                 worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
@@ -5775,75 +6375,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
                 worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
 
-                row++;
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 23])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
 
-                totalGrossAmount += si.Amount;
-                totalAmountPaid += si.AmountPaid;
-                totalAdjustedGross += adjustedGross;
-                totalWithHoldingTaxAmount += withHoldingTaxAmount;
-                totalNetOfVatAmount += netOfVatAmount;
-                totalVcfAmount += vcfAmount;
-                totalRetentionAmount += retentionAmount;
-                totalAdjustedNet += adjustedNet;
-                totalCurrent += current;
-                totalOneToThirtyDays += oneToThirtyDays;
-                totalThirtyOneToSixtyDays += thirtyOneToSixtyDays;
-                totalSixtyOneToNinetyDays += sixtyOneToNinetyDays;
-                totalOverNinetyDays += overNinetyDays;
+                using (var range = worksheet.Cells[row, 9, row, 23])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"AgingReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
-
-            worksheet.Cells[row, 9].Value = "Total ";
-            worksheet.Cells[row, 10].Value = totalGrossAmount;
-            worksheet.Cells[row, 11].Value = totalAmountPaid;
-            worksheet.Cells[row, 12].Value = totalAdjustedGross;
-            worksheet.Cells[row, 13].Value = totalWithHoldingTaxAmount;
-            worksheet.Cells[row, 14].Value = totalNetOfVatAmount;
-            worksheet.Cells[row, 15].Value = totalVcfAmount;
-            worksheet.Cells[row, 16].Value = totalRetentionAmount;
-            worksheet.Cells[row, 17].Value = totalAdjustedNet;
-            worksheet.Cells[row, 19].Value = totalCurrent;
-            worksheet.Cells[row, 20].Value = totalOneToThirtyDays;
-            worksheet.Cells[row, 21].Value = totalThirtyOneToSixtyDays;
-            worksheet.Cells[row, 22].Value = totalSixtyOneToNinetyDays;
-            worksheet.Cells[row, 23].Value = totalOverNinetyDays;
-
-            worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
-            worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-
-            // Apply style to subtotal row
-            using (var range = worksheet.Cells[row, 1, row, 23])
+            catch (Exception ex)
             {
-                range.Style.Font.Bold = true;
-                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(AgingReport));
             }
-
-            using (var range = worksheet.Cells[row, 9, row, 23])
-            {
-                range.Style.Font.Bold = true;
-                range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
-                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
-            }
-
-            // Auto-fit columns for better readability
-            worksheet.Cells.AutoFitColumns();
-            worksheet.View.FreezePanes(8, 1);
-
-            // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
-
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"AgingReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion
@@ -5954,236 +6515,221 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         #region -- Generate Dispatch Report Excel File --
-
-        [HttpPost]
-        public async Task<IActionResult> DispatchReport(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(viewModel.ReportType))
             {
                 return BadRequest();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-            var currentUser = _userManager.GetUserName(User);
-            var today = DateTimeHelper.GetCurrentPhilippineTime();
-            var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
-            var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-
-            var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(i => i.Company == companyClaims
-                    && i.AuthorityToLoadNo != null
-                    && i.Date >= firstDayOfMonth
-                    && i.Date <= lastDayOfMonth
-                    && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
-
-            using (var package = new ExcelPackage())
+            try
             {
-                var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
+                var companyClaims = await GetCompanyClaimAsync();
+                var currentUser = _userManager.GetUserName(User);
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-                // Insert image from root directory
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
-                var picture = worksheet.Drawings.AddPicture("CompanyLogo", new FileInfo(imagePath));
-                picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
-                picture.SetSize(200, 60); // Adjust size as needed
+                var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(i => i.Company == companyClaims
+                        && i.AuthorityToLoadNo != null
+                        && i.Date >= firstDayOfMonth
+                        && i.Date <= lastDayOfMonth
+                        && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
 
-                var mergedCellsA5 = worksheet.Cells["A5:B5"];
-                mergedCellsA5.Merge = true;
-                mergedCellsA5.Value = "OPERATION - LOGISTICS";
-
-                var mergedCellsA6 = worksheet.Cells["A6:B6"];
-                mergedCellsA6.Merge = true;
-                mergedCellsA6.Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
-
-                var mergedCellsA7 = worksheet.Cells["A7:B7"];
-                mergedCellsA7.Merge = true;
-                mergedCellsA7.Value = viewModel.ReportType == "AllDeliveries" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
-
-                // Table headers
-                worksheet.Cells["A9"].Value = "DR DATE";
-                worksheet.Cells["B9"].Value = "CUSTOMER NAME";
-                worksheet.Cells["C9"].Value = "TYPE";
-                worksheet.Cells["D9"].Value = "DR NO.";
-                worksheet.Cells["E9"].Value = "PRODUCTS";
-                worksheet.Cells["F9"].Value = "QTY.";
-                worksheet.Cells["G9"].Value = "AMOUNT";
-                worksheet.Cells["H9"].Value = "PICK-UP POINT";
-                worksheet.Cells["I9"].Value = "PO #";
-                worksheet.Cells["J9"].Value = "ATL#/SO#";
-                worksheet.Cells["K9"].Value = "COS NO.";
-                worksheet.Cells["L9"].Value = "HAULER NAME";
-                worksheet.Cells["M9"].Value = "SUPPLIER";
-                worksheet.Cells["N9"].Value = "COST";
-                worksheet.Cells["O9"].Value = "FREIGHT";
-                worksheet.Cells["P9"].Value = "ECC";
-                worksheet.Cells["Q9"].Value = "TOTAL FREIGHT";
-
-                //TODO Remove this in the future
-                worksheet.Cells["R9"].Value = "OTC COS No.";
-                worksheet.Cells["S9"].Value = "OTC DR No.";
-
-                if (viewModel.ReportType == "AllDeliveries")
+                using (var package = new ExcelPackage())
                 {
-                    worksheet.Cells["T9"].Value = "DELIVERY DATE";
-                    worksheet.Cells["U9"].Value = "STATUS";
-                }
+                    var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
 
+                    // Insert image from root directory
+                    var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
+                    var picture = worksheet.Drawings.AddPicture("CompanyLogo", new FileInfo(imagePath));
+                    picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
+                    picture.SetSize(200, 60); // Adjust size as needed
 
-                int currentRow = 10;
-                string headerColumn = viewModel.ReportType == "AllDeliveries" ? "U9" : "S9";
+                    var mergedCellsA5 = worksheet.Cells["A5:B5"];
+                    mergedCellsA5.Merge = true;
+                    mergedCellsA5.Value = "OPERATION - LOGISTICS";
 
-                var groupedReceipts = deliveryReceipts
-                    .OrderBy(d => d.CustomerOrderSlip.ProductId)
-                    .ThenBy(d => d.Date)
-                    .GroupBy(d => d.CustomerOrderSlip.ProductId);
+                    var mergedCellsA6 = worksheet.Cells["A6:B6"];
+                    mergedCellsA6.Merge = true;
+                    mergedCellsA6.Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
 
-                decimal grandSumOfCost = 0;
-                decimal grandSumOfFreight = 0;
-                decimal grandSumOfECC = 0;
-                decimal grandSumOfTotalFreight = 0;
-                decimal grandTotalQuantity = 0;
-                decimal grandTotalAmount = 0;
+                    var mergedCellsA7 = worksheet.Cells["A7:B7"];
+                    mergedCellsA7.Merge = true;
+                    mergedCellsA7.Value = viewModel.ReportType == "AllDeliveries" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
 
-                foreach (var group in groupedReceipts)
-                {
-                    string productName = group.First().CustomerOrderSlip.Product.ProductName;
-                    decimal sumOfCost = 0;
-                    decimal sumOfFreight = 0;
-                    decimal sumOfECC = 0;
-                    decimal sumOfTotalFreight = 0;
-                    decimal totalQuantity = 0;
-                    decimal totalAmount = 0;
+                    // Table headers
+                    worksheet.Cells["A9"].Value = "DR DATE";
+                    worksheet.Cells["B9"].Value = "CUSTOMER NAME";
+                    worksheet.Cells["C9"].Value = "TYPE";
+                    worksheet.Cells["D9"].Value = "DR NO.";
+                    worksheet.Cells["E9"].Value = "PRODUCTS";
+                    worksheet.Cells["F9"].Value = "QTY.";
+                    worksheet.Cells["G9"].Value = "PICK-UP POINT";
+                    worksheet.Cells["H9"].Value = "PO #";
+                    worksheet.Cells["I9"].Value = "ATL#";
+                    worksheet.Cells["J9"].Value = "COS NO.";
+                    worksheet.Cells["K9"].Value = "HAULER NAME";
+                    worksheet.Cells["L9"].Value = "SUPPLIER";
+                    worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
+                    worksheet.Cells["N9"].Value = "ECC";
+                    worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
 
-                    foreach (var dr in group)
+                    //TODO Remove this in the future
+                    worksheet.Cells["P9"].Value = "OTC COS No.";
+                    worksheet.Cells["Q9"].Value = "OTC DR No.";
+
+                    if (viewModel.ReportType == "AllDeliveries")
                     {
-                        worksheet.Cells[currentRow, 1].Value = dr.Date;
-                        worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[currentRow, 2].Value = dr.Customer.CustomerName;
-                        worksheet.Cells[currentRow, 3].Value = dr.Customer.CustomerType;
-                        worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                        worksheet.Cells[currentRow, 5].Value = dr.CustomerOrderSlip.Product.ProductName;
-                        worksheet.Cells[currentRow, 6].Value = dr.Quantity;
-                        worksheet.Cells[currentRow, 7].Value = dr.TotalAmount;
-                        worksheet.Cells[currentRow, 8].Value = dr.CustomerOrderSlip.PickUpPoint.Depot;
-                        worksheet.Cells[currentRow, 9].Value = dr.PurchaseOrder.PurchaseOrderNo;
-                        worksheet.Cells[currentRow, 10].Value = dr.AuthorityToLoadNo;
-                        worksheet.Cells[currentRow, 11].Value = dr.CustomerOrderSlip.CustomerOrderSlipNo;
-                        worksheet.Cells[currentRow, 12].Value = dr.Hauler?.SupplierName;
-                        worksheet.Cells[currentRow, 13].Value = dr.PurchaseOrder.Supplier.SupplierName;
+                        worksheet.Cells["R9"].Value = "DELIVERY DATE";
+                        worksheet.Cells["S9"].Value = "STATUS";
+                    }
 
-                        var cost = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.PurchaseOrder.Price) * dr.Quantity;
-                        worksheet.Cells[currentRow, 14].Value = cost;
-                        sumOfCost += cost;
 
-                        var freight = (dr.Freight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.Freight) : dr.Freight) * dr.Quantity;
-                        worksheet.Cells[currentRow, 15].Value = freight;
-                        sumOfFreight += freight;
+                    int currentRow = 10;
+                    string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
 
-                        var ecc = (dr.ECC > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(dr.ECC) : dr.ECC) * dr.Quantity;
-                        worksheet.Cells[currentRow, 16].Value = ecc;
-                        sumOfECC += ecc;
+                    var groupedReceipts = deliveryReceipts
+                        .OrderBy(d => d.CustomerOrderSlip.ProductId)
+                        .ThenBy(d => d.Date)
+                        .GroupBy(d => d.CustomerOrderSlip.ProductId);
 
-                        var totalFreight = dr.Freight + dr.ECC;
-                        var netTotalFreight = (totalFreight > 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(totalFreight) : totalFreight) * dr.Quantity;
-                        worksheet.Cells[currentRow, 17].Value = netTotalFreight;
-                        sumOfTotalFreight += netTotalFreight;
+                    decimal grandSumOfFreight = 0;
+                    decimal grandSumOfECC = 0;
+                    decimal grandSumOfTotalFreightAmount = 0;
+                    decimal grandTotalQuantity = 0;
 
-                        totalQuantity += dr.Quantity;
-                        totalAmount += dr.TotalAmount;
+                    foreach (var group in groupedReceipts)
+                    {
+                        string productName = group.First().CustomerOrderSlip.Product.ProductName;
+                        decimal sumOfFreight = 0;
+                        decimal sumOfECC = 0;
+                        decimal sumOfTotalFreight = 0;
+                        decimal totalQuantity = 0;
 
-                        worksheet.Cells[currentRow, 18].Value = dr.CustomerOrderSlip.OldCosNo;
-                        worksheet.Cells[currentRow, 19].Value = dr.ManualDrNo;
-
-                        if (viewModel.ReportType == "AllDeliveries")
+                        foreach (var dr in group)
                         {
-                            worksheet.Cells[currentRow, 20].Value = dr.DeliveredDate;
-                            worksheet.Cells[currentRow, 20].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 21].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+
+                            var quantity = dr.Quantity;
+                            var freightCharge = dr.Freight;
+                            var ecc = dr.ECC;
+                            var totalFreightAmount = quantity * (freightCharge + ecc);
+
+                            worksheet.Cells[currentRow, 1].Value = dr.Date;
+                            worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
+                            worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
+                            worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                            worksheet.Cells[currentRow, 5].Value = productName;
+                            worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                            worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
+                            worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
+                            worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
+                            worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
+                            worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
+                            worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
+                            worksheet.Cells[currentRow, 13].Value = freightCharge;
+                            worksheet.Cells[currentRow, 14].Value = ecc;
+                            worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
+                            worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
+                            worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
+
+                            if (viewModel.ReportType == "AllDeliveries")
+                            {
+                                worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                                worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            }
+
+                            currentRow++;
+                            totalQuantity += quantity;
+                            sumOfFreight += freightCharge;
+                            sumOfECC += ecc;
+                            sumOfTotalFreight += totalFreightAmount;
                         }
 
-                        currentRow++;
+                        // Subtotal row for each product
+                        worksheet.Cells[currentRow, 5].Value = "SUB TOTAL";
+                        worksheet.Cells[currentRow, 6].Value = totalQuantity;
+                        worksheet.Cells[currentRow, 13].Value = sumOfFreight;
+                        worksheet.Cells[currentRow, 14].Value = sumOfECC;
+                        worksheet.Cells[currentRow, 15].Value = sumOfTotalFreight;
+
+                        using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Adjust range as needed
+                        {
+                            subtotalRowRange.Style.Font.Bold = true; // Make text bold
+                            subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        }
+
+                        grandSumOfFreight += sumOfFreight;
+                        grandSumOfECC += sumOfECC;
+                        grandSumOfTotalFreightAmount += sumOfTotalFreight;
+                        grandTotalQuantity += totalQuantity;
+
+                        currentRow += 2;
                     }
 
-                    // Subtotal row for each product
-                    worksheet.Cells[currentRow, 5].Value = "SUB TOTAL";
-                    worksheet.Cells[currentRow, 6].Value = totalQuantity;
-                    worksheet.Cells[currentRow, 7].Value = totalAmount;
-                    worksheet.Cells[currentRow, 14].Value = sumOfCost;
-                    worksheet.Cells[currentRow, 15].Value = sumOfFreight;
-                    worksheet.Cells[currentRow, 16].Value = sumOfECC;
-                    worksheet.Cells[currentRow, 17].Value = sumOfTotalFreight;
+                    // Grand Total row
+                    worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
+                    worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                    worksheet.Cells[currentRow, 13].Value = grandSumOfFreight;
+                    worksheet.Cells[currentRow, 14].Value = grandSumOfECC;
+                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
 
-                    using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Adjust range as needed
+                    // Adding borders and bold styling to the total row
+                    using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Whole row
                     {
-                        subtotalRowRange.Style.Font.Bold = true; // Make text bold
-                        subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        totalRowRange.Style.Font.Bold = true; // Make text bold
+                        totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                     }
 
-                    grandSumOfCost += sumOfCost;
-                    grandSumOfFreight += sumOfFreight;
-                    grandSumOfECC += sumOfECC;
-                    grandSumOfTotalFreight += sumOfTotalFreight;
-                    grandTotalQuantity += totalQuantity;
-                    grandTotalAmount += totalAmount;
+                    // Generated by, checked by, received by footer
+                    worksheet.Cells[currentRow + 3, 1, currentRow + 3, 2].Merge = true;
+                    worksheet.Cells[currentRow + 3, 1].Value = "Generated by:";
+                    worksheet.Cells[currentRow + 3, 4].Value = "Noted & Checked by:";
+                    worksheet.Cells[currentRow + 3, 8].Value = "Received by:";
 
-                    currentRow += 2;
+                    worksheet.Cells[currentRow + 4, 1, currentRow + 4, 2].Merge = true;
+                    worksheet.Cells[currentRow + 4, 1].Value = currentUser.ToUpper();
+                    worksheet.Cells[currentRow + 4, 4].Value = "JOEYLITO M. CAILAN";
+                    worksheet.Cells[currentRow + 4, 8].Value = "IVY PAGKATIPUNAN";
+
+                    worksheet.Cells[currentRow + 5, 1, currentRow + 5, 2].Merge = true;
+                    worksheet.Cells[currentRow + 5, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
+                    worksheet.Cells[currentRow + 5, 4].Value = "LOGISTICS SUPERVISOR";
+                    worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
+
+                    // Styling and formatting (optional)
+                    worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
+                    worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
+
+                    using (var range = worksheet.Cells[$"A9:{headerColumn}"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Color.SetColor(Color.White);
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 102, 204));
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    }
+
+                    worksheet.Cells.AutoFitColumns();
+                    worksheet.View.FreezePanes(10, 1);
+                    // Return Excel file as response
+                    var stream = new MemoryStream();
+                    package.SaveAs(stream);
+                    stream.Position = 0;
+                    var fileName = $"DispatchReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx";
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
-
-                // Grand Total row
-                worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
-                worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                worksheet.Cells[currentRow, 7].Value = grandTotalAmount;
-                worksheet.Cells[currentRow, 14].Value = grandSumOfCost;
-                worksheet.Cells[currentRow, 15].Value = grandSumOfFreight;
-                worksheet.Cells[currentRow, 16].Value = grandSumOfECC;
-                worksheet.Cells[currentRow, 17].Value = grandSumOfTotalFreight;
-
-                // Adding borders and bold styling to the total row
-                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 21]) // Whole row
-                {
-                    totalRowRange.Style.Font.Bold = true; // Make text bold
-                    totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                }
-
-                // Generated by, checked by, received by footer
-                worksheet.Cells[currentRow + 3, 1, currentRow + 3, 2].Merge = true;
-                worksheet.Cells[currentRow + 3, 1].Value = "Generated by:";
-                worksheet.Cells[currentRow + 3, 4].Value = "Noted & Checked by:";
-                worksheet.Cells[currentRow + 3, 8].Value = "Received by:";
-
-                worksheet.Cells[currentRow + 4, 1, currentRow + 4, 2].Merge = true;
-                worksheet.Cells[currentRow + 4, 1].Value = currentUser.ToUpper();
-                worksheet.Cells[currentRow + 4, 4].Value = "JOEYLITO M. CAILAN";
-                worksheet.Cells[currentRow + 4, 8].Value = "IVY PAGKATIPUNAN";
-
-                worksheet.Cells[currentRow + 5, 1, currentRow + 5, 2].Merge = true;
-                worksheet.Cells[currentRow + 5, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
-                worksheet.Cells[currentRow + 5, 4].Value = "LOGISTICS SUPERVISOR";
-                worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
-
-                // Styling and formatting (optional)
-                worksheet.Cells["N"].Style.Numberformat.Format = "#,##0.0000";
-                worksheet.Cells["F,G,O:Q"].Style.Numberformat.Format = "#,##0.00";
-
-                using (var range = worksheet.Cells[$"A9:{headerColumn}"])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Font.Color.SetColor(Color.White);
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 102, 204));
-                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                }
-
-                worksheet.Cells.AutoFitColumns();
-                worksheet.View.FreezePanes(10, 1);
-                // Return Excel file as response
-                var stream = new MemoryStream();
-                package.SaveAs(stream);
-                stream.Position = 0;
-                var fileName = $"DispatchReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx";
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(DispatchReport));
             }
         }
 

@@ -18,6 +18,7 @@
     </div>
     <div class="card-body p-4">
         <form asp-action="Edit">
+            @Html.AntiForgeryToken()
             <input asp-for="ReceivingReportId" type="hidden" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -87,7 +88,7 @@
                 </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder="" />
-                    <label asp-for="SupplierInvoiceDate">SI Date</label>
+                    <label asp-for="SupplierInvoiceDate">SI / Lifting Date</label>
                     <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">

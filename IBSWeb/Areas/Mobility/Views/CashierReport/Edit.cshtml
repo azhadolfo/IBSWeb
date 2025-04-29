@@ -2,8 +2,13 @@
 
 @{
     ViewData["Title"] = "Edit Cashier Report";
-    Model.SalesDetails = Model.SalesDetails.OrderBy(x => x.Product).ToList();
+    Model.SalesDetails = Model.SalesDetails
+        .OrderBy(x => x.Product)
+        .ThenBy(x => x.PumpNumber)
+        .ToList();
 }
+
+<link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">

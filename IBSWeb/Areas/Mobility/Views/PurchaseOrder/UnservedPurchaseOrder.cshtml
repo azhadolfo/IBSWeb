@@ -1,0 +1,97 @@
+@using IBS.Utility.Constants
+@model IEnumerable<UnservedPurchaseOrderViewModel>
+
+@{
+    ViewData["Title"] = "Unserved Purchase Order";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Unserved Purchase Order</h2>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th>Customer PO#</th>
+                        <th>Date</th>
+                        <th>Depot</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Amount</th>
+                    </tr>
+                    
+                   
+                    @foreach (var stationCode in Model)
+                    {
+                        <tr>
+                            <th class="text-center bg-light" colspan="7">@stationCode.StationName</th>
+                        </tr>
+                        foreach (var item in stationCode.PurchaseOrders)
+                        {
+                            <tr>
+                                <td>@item.PurchaseOrderNo</td>
+                                <td>@item.Date.ToString(SD.Date_Format)</td>
+                                <td>@item.PickUpPoint.Depot</td>
+                                <td>@item.Product.ProductName</td>
+                                <td>@item.UnitPrice</td>
+                                <td>@item.Quantity.ToString(SD.Two_Decimal_Format)</td>
+                                <td>@item.Amount.ToString(SD.Two_Decimal_Format)</td>
+                            </tr>
+                        }
+                    }
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

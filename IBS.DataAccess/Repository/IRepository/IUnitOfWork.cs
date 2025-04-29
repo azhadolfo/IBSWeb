@@ -1,15 +1,17 @@
-﻿using IBS.DataAccess.Repository.Filpride.IRepository;
+﻿using IBS.DataAccess.Repository.Bienes.IRepository;
+using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using IBankAccountRepository = IBS.DataAccess.Repository.Filpride.IRepository.IBankAccountRepository;
 
 namespace IBS.DataAccess.Repository.IRepository
 {
     public interface IUnitOfWork : IDisposable
     {
-        IProductRepository Product { get; }
+        MasterFile.IRepository.IProductRepository Product { get; }
 
         ICompanyRepository Company { get; }
 
@@ -22,6 +24,8 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetChartOfAccountListAsyncByNo(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetChartOfAccountListAsyncById(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetChartOfAccountListAsyncByAccountTitle(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetCompanyListAsyncByName(CancellationToken cancellationToken = default);
 
@@ -48,7 +52,13 @@ namespace IBS.DataAccess.Repository.IRepository
         IOfflineRepository MobilityOffline { get; }
 
         IStationRepository MobilityStation { get; }
-
+        Mobility.IRepository.ISupplierRepository MobilitySupplier { get; }
+        Mobility.IRepository.ICustomerRepository MobilityCustomer { get; }
+        Mobility.IRepository.IBankAccountRepository MobilityBankAccount { get; }
+        Mobility.IRepository.IServiceRepository MobilityService { get; }
+        Mobility.IRepository.IProductRepository MobilityProduct { get; }
+        Mobility.IRepository.IPickUpPointRepository MobilityPickUpPoint { get; }
+        Mobility.IRepository.IEmployeeRepository MobilityEmployee { get; }
         Mobility.IRepository.IInventoryRepository MobilityInventory { get; }
 
         IGeneralLedgerRepository MobilityGeneralLedger { get; }
@@ -56,8 +66,16 @@ namespace IBS.DataAccess.Repository.IRepository
         Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; }
 
         Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; }
+        Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; }
+        Mobility.IRepository.IJournalVoucherRepository MobilityJournalVoucher { get; }
+        Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; }
+        Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; }
+        Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; }
+        Mobility.IRepository.ICollectionReceiptRepository MobilityCollectionReceipt { get; }
 
         Mobility.IRepository.ICustomerOrderSlipRepository MobilityCustomerOrderSlip { get; }
+
+        IDepositRepository MobilityDeposit { get; }
 
         Task<List<SelectListItem>> GetMobilityStationListAsyncById(CancellationToken cancellationToken = default);
 
@@ -73,9 +91,14 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetMobilityCustomerListAsyncByCode(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMobilitySupplierListAsyncById(string stationCodeClaims, CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMobilityCustomerListAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
         Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityProductListAsyncByCode(CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetMobilityProductListAsyncById(CancellationToken cancellationToken = default);
 
         #endregion
 
@@ -84,19 +107,31 @@ namespace IBS.DataAccess.Repository.IRepository
         Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; }
         Filpride.IRepository.ICustomerOrderSlipRepository FilprideCustomerOrderSlip { get; }
         IDeliveryReceiptRepository FilprideDeliveryReceipt { get; }
-        ISupplierRepository FilprideSupplier { get; }
-        ICustomerRepository FilprideCustomer { get; }
+        Filpride.IRepository.ISupplierRepository FilprideSupplier { get; }
+        Filpride.IRepository.ICustomerRepository FilprideCustomer { get; }
         IAuditTrailRepository FilprideAuditTrail { get; }
 
-        IEmployeeRepository FilprideEmployee { get; }
+        Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; }
 
-        Task<List<SelectListItem>> GetFilprideCustomerListAsync(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetFilprideCustomerListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideNonTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideCommissioneeListAsyncById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideHaulerListAsyncById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideBankAccountListById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideEmployeeListById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string company, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>> GetFilprideServiceListById(string company, CancellationToken cancellationToken = default);
 
         #endregion
 
@@ -111,20 +146,20 @@ namespace IBS.DataAccess.Repository.IRepository
         #region Accounts Receivable
         ISalesInvoiceRepository FilprideSalesInvoice { get; }
 
-        IServiceInvoiceRepository FilprideServiceInvoice { get; }
+        Filpride.IRepository.IServiceInvoiceRepository FilprideServiceInvoice { get; }
 
-        ICollectionReceiptRepository FilprideCollectionReceipt { get; }
+        Filpride.IRepository.ICollectionReceiptRepository FilprideCollectionReceipt { get; }
 
-        IDebitMemoRepository FilprideDebitMemo { get; }
+        Filpride.IRepository.IDebitMemoRepository FilprideDebitMemo { get; }
 
-        ICreditMemoRepository FilprideCreditMemo { get; }
+        Filpride.IRepository.ICreditMemoRepository FilprideCreditMemo { get; }
         #endregion
 
         #region Accounts Payable
 
-        ICheckVoucherRepository FilprideCheckVoucher { get; }
+        Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; }
 
-        IJournalVoucherRepository FilprideJournalVoucher { get; }
+        Filpride.IRepository.IJournalVoucherRepository FilprideJournalVoucher { get; }
 
         Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; }
 
@@ -140,17 +175,23 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region Master File
 
-        IBankAccountRepository FilprideBankAccount { get; }
+        Filpride.IRepository.IBankAccountRepository FilprideBankAccount { get; }
 
-        IServiceRepository FilprideService { get; }
+        Filpride.IRepository.IServiceRepository FilprideService { get; }
 
-        IPickUpPointRepository FilpridePickUpPoint { get; }
+        Filpride.IRepository.IPickUpPointRepository FilpridePickUpPoint { get; }
 
         IFreightRepository FilprideFreight { get; }
 
         IAuthorityToLoadRepository FilprideAuthorityToLoad { get; }
 
         #endregion
+
+        #endregion
+
+        #region --Bienes
+
+        IPlacementRepository BienesPlacement { get; }
 
         #endregion
 

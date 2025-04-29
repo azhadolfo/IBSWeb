@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value ?? "ALL";
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         [HttpGet]
@@ -53,7 +53,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var stationCodeClaim = await GetStationCodeClaimAsync();
 
-                Expression<Func<MobilitySalesHeader, bool>> filter = s => stationCodeClaim == "ALL" || s.StationCode == stationCodeClaim;
+                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaim; //&& s.Source == "POS";
 
                 var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
 
@@ -65,13 +65,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
                     salesHeaderWithStationName = salesHeaderWithStationName
                         .Where(s =>
-                            s.StationCodeWithName.ToLower().Contains(searchValue) ||
-                            s.SalesNo.ToLower().Contains(searchValue) ||
-                            s.Date.ToString().Contains(searchValue) ||
-                            s.Cashier.ToLower().Contains(searchValue) ||
-                            s.Shift.ToString().Contains(searchValue) ||
-                            s.TimeIn.ToString().Contains(searchValue) ||
-                            s.TimeOut.ToString().Contains(searchValue))
+                            s.stationCodeWithName.ToLower().Contains(searchValue) ||
+                            s.salesNo.ToLower().Contains(searchValue) ||
+                            s.date.ToString().Contains(searchValue) ||
+                            s.cashier.ToLower().Contains(searchValue) ||
+                            s.shift.ToString().Contains(searchValue) ||
+                            s.timeIn.ToString().Contains(searchValue) ||
+                            s.timeOut.ToString().Contains(searchValue))
                         .ToList();
                 }
 
@@ -110,17 +110,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
         }
 
-        public async Task<IActionResult> Preview(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(string? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
-            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCode, cancellationToken);
+
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCodeClaim, cancellationToken);
 
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
-                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCodeClaim, cancellationToken);
 
             if (sales == null)
             {
@@ -131,22 +134,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(sales);
         }
 
-        public async Task<IActionResult> Post(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(string? id, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (!string.IsNullOrEmpty(id))
             {
                 try
                 {
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
+
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
-                    return RedirectToAction(nameof(Preview), new { id, stationCode });
+                    return RedirectToAction(nameof(Preview), new { id });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting cashier report.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return RedirectToAction(nameof(Preview), new { id, stationCode });
+                    return RedirectToAction(nameof(Preview), new { id });
                 }
             }
 
@@ -154,14 +159,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(string? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            var sales = await _unitOfWork.MobilitySalesHeader.GetAsync(s => s.SalesNo == id && s.StationCode == stationCode, cancellationToken);
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
+            var sales = await _unitOfWork.MobilitySalesHeader
+                .GetAsync(s => s.SalesNo == id &&
+                               s.StationCode == stationCodeClaim, cancellationToken);
 
             if (sales == null)
             {

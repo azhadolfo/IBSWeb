@@ -1,15 +1,14 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -121,6 +120,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissioneeId = customerOrderSlip.CommissioneeId;
             existingRecord.CommissionRate = customerOrderSlip.CommissionRate;
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
+            existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
+            existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -138,11 +139,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                 .OrderBy(dr => dr.DeliveryReceiptId)
-                .Where(dr => dr.DeliveredDate != null)
+                .Where(dr => dr.DeliveredDate != null &&
+                             dr.Company == companyClaims)
                 .Select(dr => new SelectListItem
                 {
                     Value = dr.DeliveryReceiptId.ToString(),
@@ -151,7 +153,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(int cosId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(string companyClaims, int cosId, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
@@ -159,7 +161,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         dr.CustomerOrderSlipId == cosId &&
                         dr.DeliveredDate != null &&
                         !dr.HasAlreadyInvoiced &&
-                        dr.Status == nameof(DRStatus.ForInvoicing))
+                        dr.Status == nameof(DRStatus.ForInvoicing) &&
+                        dr.Company == companyClaims)
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.DeliveryReceiptId.ToString(),

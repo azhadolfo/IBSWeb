@@ -20,10 +20,11 @@
     </div>
     <div class="card-body p-4">
         <form method="post" id="appointSupplierForm">
+            @Html.AntiForgeryToken()
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <input asp-for="CustomerOrderSlipId" type="hidden" />
-                <input asp-for="ProductId" type="hidden" />
+                <input asp-for="CustomerOrderSlipId" type="hidden"/>
+                <input asp-for="ProductId" type="hidden"/>
 
                 <!-- Progress indicator -->
                 <div class="progress mb-4" style="height: 20px;">
@@ -59,15 +60,15 @@
                         <label class="fw-bold">Delivery Option<span class="required">*</span></label>
                         <div class="d-flex flex-column gap-3">
                             <div class="form-check p-3 border rounded">
-                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler" />
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByHauler" id="DeliveryType_ForPickUpByHauler"/>
                                 <label class="form-check-label" for="DeliveryType_ForPickUpByHauler">@SD.DeliveryOption_ForPickUpByHauler</label>
                             </div>
                             <div class="form-check p-3 border rounded">
-                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient" />
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_ForPickUpByClient" id="DeliveryType_ForPickUpByClient"/>
                                 <label class="form-check-label" for="DeliveryType_ForPickUpByClient">@SD.DeliveryOption_ForPickUpByClient</label>
                             </div>
                             <div class="form-check p-3 border rounded">
-                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery" />
+                                <input class="form-check-input" type="radio" asp-for="DeliveryOption" value="@SD.DeliveryOption_DirectDelivery" id="DeliveryType_DirectDelivery"/>
                                 <label class="form-check-label" for="DeliveryType_DirectDelivery">@SD.DeliveryOption_DirectDelivery</label>
                             </div>
                         </div>
@@ -77,7 +78,7 @@
                     <!-- Freight and SubPoRemarks fields -->
                     <div id="freightRemarksSection" class="mt-3 d-none">
                         <div class="form-floating py-2">
-                            <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" min="0.01" />
+                            <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" min="0.01"/>
                             <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
                             <span asp-validation-for="Freight" class="text-danger"></span>
                         </div>
@@ -142,7 +143,7 @@
 
                     <div class="d-flex justify-content-between mt-4">
                         <button type="button" class="btn btn-outline-secondary prev-step fw-bold" data-prev="step3">&laquo; Previous</button>
-                        <button type="submit" class="btn btn-success fw-bold" id="submitButton" disabled>Appoint Supplier  &raquo;</button>
+                        <button type="submit" class="btn btn-success fw-bold" id="submitButton" disabled>Appoint Supplier &raquo;</button>
                     </div>
                 </div>
             </div>
