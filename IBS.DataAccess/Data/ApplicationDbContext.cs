@@ -159,7 +159,7 @@ namespace IBS.DataAccess.Data
         #endregion
 
         #endregion
-        
+
         #region --MMSI
 
         public DbSet<MMSIAuditTrail> MMSIAuditTrails { get; set; }
@@ -167,6 +167,8 @@ namespace IBS.DataAccess.Data
         public DbSet<MMSICollection> MMSICollections { get; set; }
         public DbSet<MMSIDispatchTicket> MMSIDispatchTickets { get; set; }
         public DbSet<MMSITariffRate> MMSITariffRates { get; set; }
+
+        #endregion
 
         #region --Master File Entity
 

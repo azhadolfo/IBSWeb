@@ -11370,14 +11370,14 @@ namespace IBS.DataAccess.Migrations
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
-                {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", "CompanyOwner")
-                        .WithMany()
-                        .HasForeignKey("CompanyOwnerId")
-                        .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_company_owner_id");
+            {
+                b.HasOne("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", "CompanyOwner")
+                    .WithMany()
+                    .HasForeignKey("CompanyOwnerId")
+                    .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_company_owner_id");
 
-                    b.Navigation("CompanyOwner");
-            modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", b =>
+                b.Navigation("CompanyOwner");
+                modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
                         .WithMany()
@@ -11389,7 +11389,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CV")
                         .WithMany()
@@ -11401,7 +11401,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CV");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany()
@@ -11420,7 +11420,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityBankAccount", "BankAccount")
                         .WithMany()
@@ -11446,7 +11446,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11466,7 +11466,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
                         .WithMany()
@@ -11477,7 +11477,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11507,7 +11507,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11537,7 +11537,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
                         .WithMany()
@@ -11548,7 +11548,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherDetail", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityJournalVoucherHeader", "JournalVoucherHeader")
                         .WithMany()
@@ -11560,7 +11560,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("JournalVoucherHeader");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherHeader", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany()
@@ -11571,7 +11571,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CheckVoucherHeader");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityLubePurchaseHeader", "LubePurchaseHeader")
                         .WithMany("LubePurchaseDetails")
@@ -11583,7 +11583,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("LubePurchaseHeader");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeaderInvoice")
                         .WithMany()
@@ -11604,7 +11604,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CheckVoucherHeaderPayment");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityPurchaseOrder", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityPurchaseOrder", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", "PickUpPoint")
                         .WithMany()
@@ -11643,7 +11643,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityReceivingReport", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityReceivingReport", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityPurchaseOrder", "PurchaseOrder")
                         .WithMany()
@@ -11655,7 +11655,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesDetail", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilitySalesHeader", "SalesHeader")
                         .WithMany("SalesDetails")
@@ -11667,7 +11667,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("SalesHeader");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11697,7 +11697,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Service");
                 });
 
-            modelBuilder.Entity("IBS.Models.UserNotification", b =>
+                modelBuilder.Entity("IBS.Models.UserNotification", b =>
                 {
                     b.HasOne("IBS.Models.Notification", "Notification")
                         .WithMany()
@@ -11718,7 +11718,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
@@ -11728,7 +11728,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_role_claims_asp_net_roles_role_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11738,7 +11738,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_claims_asp_net_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11748,7 +11748,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_logins_asp_net_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
@@ -11765,7 +11765,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_roles_asp_net_users_user_id");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11775,51 +11775,52 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_tokens_asp_net_users_user_id");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
+                modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
                 {
                     b.Navigation("ActualPrices");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
+                modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
                 {
                     b.Navigation("Details");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
+                modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
                 {
                     b.Navigation("AppointedSuppliers");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", b =>
+                modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", b =>
                 {
                     b.Navigation("Children");
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
+                modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
                 {
                     b.Navigation("Branches");
                 });
 
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
+                modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
                 {
                     b.Navigation("Principals");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>
                 {
                     b.Navigation("LubePurchaseDetails");
                 });
 
-            modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesHeader", b =>
+                modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesHeader", b =>
                 {
                     b.Navigation("SalesDetails");
                 });
 
-            modelBuilder.Entity("IBS.Models.ApplicationUser", b =>
+                modelBuilder.Entity("IBS.Models.ApplicationUser", b =>
                 {
                     b.Navigation("UserNotifications");
                 });
 #pragma warning restore 612, 618
+            });
         }
     }
 }
