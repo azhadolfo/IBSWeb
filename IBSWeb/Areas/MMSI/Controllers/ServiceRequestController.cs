@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
-namespace IBSWeb.Areas.MMSI
+namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]
@@ -59,6 +59,8 @@ namespace IBSWeb.Areas.MMSI
         [HttpGet]
         public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             MMSIDispatchTicket model = new()
             {
                 ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
@@ -66,7 +68,7 @@ namespace IBSWeb.Areas.MMSI
                 Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
                 TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
                 Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
-                Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken)
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
             };
 
             ViewData["PortId"] = 0;
