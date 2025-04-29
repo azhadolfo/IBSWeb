@@ -81,6 +81,8 @@ namespace IBS.DataAccess.Data
         public DbSet<MobilityReceivingReport> MobilityReceivingReports { get; set; }
         public DbSet<MobilityCheckVoucherHeader> MobilityCheckVoucherHeaders { get; set; }
         public DbSet<MobilityCheckVoucherDetail> MobilityCheckVoucherDetails { get; set; }
+        public DbSet<MobilityJournalVoucherHeader> MobilityJournalVoucherHeaders { get; set; }
+        public DbSet<MobilityJournalVoucherDetail> MobilityJournalVoucherDetails { get; set; }
         public DbSet<MobilityMultipleCheckVoucherPayment> MobilityMultipleCheckVoucherPayments { get; set; }
         public DbSet<MobilityCVTradePayment> MobilityCVTradePayments { get; set; }
 
@@ -556,6 +558,30 @@ namespace IBS.DataAccess.Data
             });
 
             #endregion -- Multiple Check Voucher Payment --
+
+            #region -- Journal Voucher Header --
+
+            builder.Entity<MobilityJournalVoucherHeader>(jv =>
+            {
+                jv.HasOne(jv => jv.CheckVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(jv => jv.CVId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Journal Voucher Header --
+
+            #region -- Journal Voucher Details --
+
+            builder.Entity<MobilityJournalVoucherDetail>(cv =>
+            {
+                cv.HasOne(cv => cv.JournalVoucherHeader)
+                    .WithMany()
+                    .HasForeignKey(cv => cv.JournalVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher Details --
 
             #endregion
 
