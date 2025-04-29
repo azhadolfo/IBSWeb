@@ -213,7 +213,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     await _unitOfWork.MobilityInventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
 
-                    TempData["success"] = "Actual sounding inserted successfully.";
+                    TempData["success"] = "Actual sounding/count inserted successfully.";
                     return RedirectToAction(nameof(ActualSounding));
                 }
                 catch (Exception ex)
@@ -240,7 +240,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (lastInventory == null)
             {
-                return NotFound();
+                return Json(null);
             }
 
             return Json(new
