@@ -161,8 +161,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
+                    var companyClaims = await GetCompanyClaimAsync();
+
                     TempData["error"] = "Can't create entry, please review your input.";
                     model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                     return View(model);
@@ -210,7 +213,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
+            var companyClaims = await GetCompanyClaimAsync();
+
             model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             if (!string.IsNullOrEmpty(model.ImageName))
             {
                 model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
@@ -375,6 +381,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                var companyClaims = await GetCompanyClaimAsync();
+
                 TempData["error"] = ex.Message;
 
                 model = await _db.MMSIDispatchTickets
@@ -383,6 +391,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(cancellationToken);
 
                 model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 

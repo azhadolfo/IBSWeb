@@ -253,7 +253,6 @@ namespace IBS.DataAccess.Repository.MMSI
             model.Tugboats = await GetMMSITugboatsById(cancellationToken);
             model.TugMasters = await GetMMSITugMastersById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Customers = await GetMMSICustomersById(cancellationToken);
 
             return model;
         }
