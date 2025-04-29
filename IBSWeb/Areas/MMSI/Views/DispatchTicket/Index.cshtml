@@ -1,0 +1,245 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIDispatchTicket>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Dispatch Ticket</h2>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
+                    <button id="filterAll" class="btn btn-outline-primary active"> All</button>
+                    <button id="filterForTariff" class="btn btn-outline-primary"> For Tariff</button>
+                    <button id="filterTariffPending" class="btn btn-outline-primary"> Tariff Pending</button>
+                    <button id="filterDisapproved" class="btn btn-outline-primary"> Disapproved</button>
+                    <button id="filterForBilling" class="btn btn-outline-primary"> For Billing</button>
+                    <button id="filterBilled" class="btn btn-outline-primary"> Billed</button>
+                </div>
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">DATE</th>
+                        <th class="text-start">COS #</th>
+                        <th class="text-start">DISPATCH/ <br/> MOORING TICKET</th>
+                        <th class="text-start">DATE/TIME START</th>
+                        <th class="text-start">DATE/TIME END</th>
+                        <th class="text-start">ACTIVITY/ <br/>SERVICE TYPE</th>
+                        <th class="text-start">PORT-<br/> TERMINAL</th>
+                        <th class="text-start">TUGBOAT</th>
+                        <th class="text-start">TUG MASTER</th>
+                        <th class="text-start">VESSEL</th>
+                        <th class="text-start">STATUS</th>
+                        <th class="text-center" style="width: 100px;">Actions</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Event listeners
+        $(document).ready(function () {
+            const previewUrl = '@Url.Action("Preview", "DispatchTicket")';
+            const setTariffUrl = '@Url.Action("SetTariff", "DispatchTicket")';
+            const editTariffUrl = '@Url.Action("EditTariff", "DispatchTicket")';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[1, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [11] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "MMSI" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {"data": "createDate"},
+                    {"data": "cosNumber"},
+                    {"data": "dispatchNumber"},
+                    {"data": "dateLeft"},
+                    {"data": "dateArrived"},
+                    {"data": "activityService.activityServiceName"},
+                    {"data": "terminal.port.portName"},
+                    {"data": "tugboat.tugboatName"},
+                    {"data": "tugMaster.tugMasterName"},
+                    {"data": "vessel.vesselName"},
+                    {
+                        "data": "status",
+                        "orderable": true,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "For Tariff"){
+                                statusColor = `bg-info`
+                            }
+                            if (row.status === "Tariff Pending"){
+                                statusColor = `bg-warning`
+                            }
+                            if (row.status === "Disapproved") {
+                                statusColor = `bg-danger`
+                            }
+                            if (row.status === "For Billing"){
+                                statusColor = `bg-success`
+                            }
+                            if (row.status === "Billed") {
+                                statusColor = `bg-success`
+                            }
+
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
+                            
+                            if (row.status !== "For Tariff" && row.status !== "Tariff Pending")
+                            {
+                                actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>`;
+                            }
+                            
+                            if (row.status === "Tariff Pending") {
+                                actions += `<div class="dropdown align-content-center">
+                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
+                                            <li><a class="dropdown-item" href="${previewUrl}?id=${row.dispatchTicketId}" id="approveTariff"><i class="bi bi-eye-fill"></i> View</a></li>
+                                            <li><a class="dropdown-item" href="${editTariffUrl}?id=${row.dispatchTicketId}" id="approveTariff"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                        </ul>
+                                    </div>`;
+                            }
+                            if (row.status === "For Tariff")
+                            {
+                                actions += `<a class="btn btn-primary col-12" href="${setTariffUrl}?id=${row.dispatchTicketId}"><i class="bi bi-cash-coin"></i> Set</a>`;
+                            }
+                            
+                            actions += `</div></div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+
+            $('#filterAll').on('click', function() {
+                table.columns().search('').draw();
+            });
+
+            $('#filterForTariff').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(10).search('For Tariff', true, true).draw();
+            });
+
+            $('#filterTariffPending').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(10).search('Tariff Pending', true, true).draw();
+            });
+
+            $('#filterDisapproved').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(10).search('Disapproved', true, true).draw();
+            });
+
+            $('#filterForBilling').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(10).search('For Billing', true, true).draw();
+            });
+
+            $('#filterBilled').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(10).search('Billed', true, true).draw();
+            });
+
+            $('.btn-group button').on('click', function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            table.columns().search(''); // Clear previous filters
+            table.columns(11).search('For Posting', true, true).draw();
+        });
+    </script>
+}

@@ -1,0 +1,119 @@
+@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSIPrincipal>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2><i class="bi bi-database"></i> MMSI PRINCIPALS</h2>
+        </div>
+    </div>
+    
+    <div class="card-body">
+
+        <div class="row justify-content-end mb-2">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="Principal" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create
+                </a>
+            </div>
+        </div>
+        
+        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+            <thead>
+            <tr>
+                <th class="text-center">
+                    Name
+                </th>
+                <th class="text-center">
+                    Address
+                </th>
+                <th class="text-center">
+                    Agent Name
+                </th>
+                <th class="actions-column text-center">
+                    Actions
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.PrincipalName)
+                    </td>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.Address)
+                    </td>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.Customer.CustomerName)
+                    </td>
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Principal", new { id = item.PrincipalId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Principal", new { id = item.PrincipalId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default navigation
+
+                const href = this.getAttribute('href'); // Get the href value
+                Swal.fire({
+                    title: 'Delete?',
+                    text: "Delete this Customer?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = href; // Redirect to the href URL
+                    }
+                });
+            });
+        });
+
+        $(document).ready(function () {
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            $('#dataTable').DataTable({
+                "autoWidth": false,
+                "columnDefs": [
+                    {
+                        "targets": 3,
+                        "width": "150px",
+                        "className": "text-center",
+                        "orderable": false
+                    }
+                ]
+            });
+        });
+    </script>
+}
+

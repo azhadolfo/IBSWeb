@@ -4197,6 +4197,858 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("log_messages", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIAuditTrail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Activity")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("activity");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("document_type");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("machine_name");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mmsi_audit_trails");
+
+                    b.ToTable("mmsi_audit_trails", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIBilling", b =>
+                {
+                    b.Property<int>("MMSIBillingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("mmsi_billing_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSIBillingId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<int?>("CollectionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("collection_id");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<bool>("IsPrincipal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_principal");
+
+                    b.Property<bool>("IsUndocumented")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_undocumented");
+
+                    b.Property<bool>("IsVatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_vatable");
+
+                    b.Property<string>("LastEditedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_edited_by");
+
+                    b.Property<DateTime?>("LastEditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_edited_date");
+
+                    b.Property<string>("MMSIBillingNumber")
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("mmsi_billing_number");
+
+                    b.Property<int?>("PortId")
+                        .HasColumnType("integer")
+                        .HasColumnName("port_id");
+
+                    b.Property<int?>("PrincipalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("principal_id");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("TerminalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<int?>("VesselId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vessel_id");
+
+                    b.Property<string>("VoyageNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("voyage_number");
+
+                    b.HasKey("MMSIBillingId")
+                        .HasName("pk_mmsi_billings");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_billings_customer_id");
+
+                    b.HasIndex("PortId")
+                        .HasDatabaseName("ix_mmsi_billings_port_id");
+
+                    b.HasIndex("PrincipalId")
+                        .HasDatabaseName("ix_mmsi_billings_principal_id");
+
+                    b.HasIndex("TerminalId")
+                        .HasDatabaseName("ix_mmsi_billings_terminal_id");
+
+                    b.HasIndex("VesselId")
+                        .HasDatabaseName("ix_mmsi_billings_vessel_id");
+
+                    b.ToTable("mmsi_billings", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
+                {
+                    b.Property<int>("MMSICollectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("mmsi_collection_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSICollectionId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<DateOnly>("CheckDate")
+                        .HasColumnType("date")
+                        .HasColumnName("check_date");
+
+                    b.Property<string>("CheckNumber")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("check_number");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<DateOnly>("DepositDate")
+                        .HasColumnType("date")
+                        .HasColumnName("deposit_date");
+
+                    b.Property<decimal>("EWT")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ewt");
+
+                    b.Property<bool>("IsUndocumented")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_undocumented");
+
+                    b.Property<string>("MMSICollectionNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("mmsi_collection_number");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("MMSICollectionId")
+                        .HasName("pk_mmsi_collections");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_collections_customer_id");
+
+                    b.ToTable("mmsi_collections", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIDispatchTicket", b =>
+                {
+                    b.Property<int>("DispatchTicketId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("dispatch_ticket_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DispatchTicketId"));
+
+                    b.Property<int>("ActivityServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("activity_service_id");
+
+                    b.Property<decimal?>("BAFBillingAmount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("baf_billing_amount");
+
+                    b.Property<string>("BAFChargeType")
+                        .HasColumnType("text")
+                        .HasColumnName("baf_charge_type");
+
+                    b.Property<decimal?>("BAFDiscount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("baf_discount");
+
+                    b.Property<decimal?>("BAFNetRevenue")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("baf_net_revenue");
+
+                    b.Property<decimal?>("BAFRate")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("baf_rate");
+
+                    b.Property<string>("BaseOrStation")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("base_or_station");
+
+                    b.Property<string>("BillingId")
+                        .HasColumnType("text")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("COSNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("cos_number");
+
+                    b.Property<DateOnly>("CreateDate")
+                        .HasColumnType("date")
+                        .HasColumnName("create_date");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("DateArrived")
+                        .HasColumnType("date")
+                        .HasColumnName("date_arrived");
+
+                    b.Property<DateOnly>("DateLeft")
+                        .HasColumnType("date")
+                        .HasColumnName("date_left");
+
+                    b.Property<decimal?>("DispatchBillingAmount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("dispatch_billing_amount");
+
+                    b.Property<string>("DispatchChargeType")
+                        .HasColumnType("text")
+                        .HasColumnName("dispatch_charge_type");
+
+                    b.Property<decimal?>("DispatchDiscount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("dispatch_discount");
+
+                    b.Property<decimal?>("DispatchNetRevenue")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("dispatch_net_revenue");
+
+                    b.Property<string>("DispatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("dispatch_number");
+
+                    b.Property<decimal?>("DispatchRate")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("dispatch_rate");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("ImageName")
+                        .HasColumnType("text")
+                        .HasColumnName("image_name");
+
+                    b.Property<string>("ImageSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_saved_url");
+
+                    b.Property<string>("ImageSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_signed_url");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TariffBy")
+                        .HasColumnType("text")
+                        .HasColumnName("tariff_by");
+
+                    b.Property<DateTime?>("TariffDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("tariff_date");
+
+                    b.Property<string>("TariffEditedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("tariff_edited_by");
+
+                    b.Property<DateTime?>("TariffEditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("tariff_edited_date");
+
+                    b.Property<int>("TerminalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<TimeOnly>("TimeArrived")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_arrived");
+
+                    b.Property<TimeOnly>("TimeLeft")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_left");
+
+                    b.Property<decimal?>("TotalBilling")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_billing");
+
+                    b.Property<decimal?>("TotalHours")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_hours");
+
+                    b.Property<decimal?>("TotalNetRevenue")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_net_revenue");
+
+                    b.Property<int>("TugBoatId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_boat_id");
+
+                    b.Property<int>("TugMasterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_master_id");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vessel_id");
+
+                    b.Property<string>("VideoName")
+                        .HasColumnType("text")
+                        .HasColumnName("video_name");
+
+                    b.Property<string>("VideoSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_saved_url");
+
+                    b.Property<string>("VideoSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_signed_url");
+
+                    b.Property<string>("VoyageNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("voyage_number");
+
+                    b.HasKey("DispatchTicketId")
+                        .HasName("pk_mmsi_dispatch_tickets");
+
+                    b.HasIndex("ActivityServiceId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_activity_service_id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_customer_id");
+
+                    b.HasIndex("TerminalId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_terminal_id");
+
+                    b.HasIndex("TugBoatId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_tug_boat_id");
+
+                    b.HasIndex("TugMasterId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_tug_master_id");
+
+                    b.HasIndex("VesselId")
+                        .HasDatabaseName("ix_mmsi_dispatch_tickets_vessel_id");
+
+                    b.ToTable("mmsi_dispatch_tickets", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
+                {
+                    b.Property<int>("TariffRateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("tariff_rate_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TariffRateId"));
+
+                    b.Property<int>("ActivityServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("activity_service_id");
+
+                    b.Property<DateOnly>("AsOfDate")
+                        .HasColumnType("date")
+                        .HasColumnName("as_of_date");
+
+                    b.Property<decimal>("BAF")
+                        .HasColumnType("numeric")
+                        .HasColumnName("baf");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("Dispatch")
+                        .HasColumnType("numeric")
+                        .HasColumnName("dispatch");
+
+                    b.Property<int>("TerminalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<string>("UpdateBy")
+                        .HasColumnType("text")
+                        .HasColumnName("update_by");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("update_date");
+
+                    b.HasKey("TariffRateId")
+                        .HasName("pk_mmsi_tariff_rates");
+
+                    b.HasIndex("ActivityServiceId")
+                        .HasDatabaseName("ix_mmsi_tariff_rates_activity_service_id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_tariff_rates_customer_id");
+
+                    b.HasIndex("TerminalId")
+                        .HasDatabaseName("ix_mmsi_tariff_rates_terminal_id");
+
+                    b.ToTable("mmsi_tariff_rates", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIActivityService", b =>
+                {
+                    b.Property<int>("ActivityServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("activity_service_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ActivityServiceId"));
+
+                    b.Property<string>("ActivityServiceName")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("activity_service_name");
+
+                    b.Property<string>("ActivityServiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("activity_service_number");
+
+                    b.HasKey("ActivityServiceId")
+                        .HasName("pk_mmsi_activities_services");
+
+                    b.ToTable("mmsi_activities_services", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", b =>
+                {
+                    b.Property<int>("MMSICompanyOwnerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("mmsi_company_owner_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSICompanyOwnerId"));
+
+                    b.Property<string>("CompanyOwnerName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("company_owner_name");
+
+                    b.Property<string>("CompanyOwnerNumber")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("company_owner_number");
+
+                    b.HasKey("MMSICompanyOwnerId")
+                        .HasName("pk_mmsi_company_owners");
+
+                    b.ToTable("mmsi_company_owners", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
+                {
+                    b.Property<int>("MMSICustomerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("mmsi_customer_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSICustomerId"));
+
+                    b.Property<string>("CustomerAddress")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_address");
+
+                    b.Property<string>("CustomerBusinessStyle")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_business_style");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_name");
+
+                    b.Property<string>("CustomerNumber")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("customer_number");
+
+                    b.Property<string>("CustomerTIN")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_tin");
+
+                    b.Property<string>("CustomerTerms")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_terms");
+
+                    b.Property<bool>("HasPrincipal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_principal");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsVatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_vatable");
+
+                    b.Property<string>("Landline1")
+                        .HasColumnType("text")
+                        .HasColumnName("landline1");
+
+                    b.Property<string>("Landline2")
+                        .HasColumnType("text")
+                        .HasColumnName("landline2");
+
+                    b.Property<string>("Mobile1")
+                        .HasColumnType("text")
+                        .HasColumnName("mobile1");
+
+                    b.Property<string>("Mobile2")
+                        .HasColumnType("text")
+                        .HasColumnName("mobile2");
+
+                    b.HasKey("MMSICustomerId")
+                        .HasName("pk_mmsi_customers");
+
+                    b.ToTable("mmsi_customers", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPort", b =>
+                {
+                    b.Property<int>("PortId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("port_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PortId"));
+
+                    b.Property<string>("PortName")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("port_name");
+
+                    b.Property<string>("PortNumber")
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("port_number");
+
+                    b.HasKey("PortId")
+                        .HasName("pk_mmsi_ports");
+
+                    b.ToTable("mmsi_ports", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPrincipal", b =>
+                {
+                    b.Property<int>("PrincipalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("principal_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PrincipalId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<string>("BusinessType")
+                        .HasColumnType("text")
+                        .HasColumnName("business_type");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsVatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_vatable");
+
+                    b.Property<string>("Landline1")
+                        .HasColumnType("text")
+                        .HasColumnName("landline1");
+
+                    b.Property<string>("Landline2")
+                        .HasColumnType("text")
+                        .HasColumnName("landline2");
+
+                    b.Property<string>("Mobile1")
+                        .HasColumnType("text")
+                        .HasColumnName("mobile1");
+
+                    b.Property<string>("Mobile2")
+                        .HasColumnType("text")
+                        .HasColumnName("mobile2");
+
+                    b.Property<string>("PrincipalName")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("principal_name");
+
+                    b.Property<string>("PrincipalNumber")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("principal_number");
+
+                    b.Property<string>("TIN")
+                        .HasColumnType("text")
+                        .HasColumnName("tin");
+
+                    b.Property<string>("Terms")
+                        .HasColumnType("text")
+                        .HasColumnName("terms");
+
+                    b.HasKey("PrincipalId")
+                        .HasName("pk_mmsi_principals");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_principals_customer_id");
+
+                    b.ToTable("mmsi_principals", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITerminal", b =>
+                {
+                    b.Property<int>("TerminalId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TerminalId"));
+
+                    b.Property<int>("PortId")
+                        .HasColumnType("integer")
+                        .HasColumnName("port_id");
+
+                    b.Property<string>("TerminalName")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("terminal_name");
+
+                    b.Property<string>("TerminalNumber")
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("terminal_number");
+
+                    b.HasKey("TerminalId")
+                        .HasName("pk_mmsi_terminals");
+
+                    b.HasIndex("PortId")
+                        .HasDatabaseName("ix_mmsi_terminals_port_id");
+
+                    b.ToTable("mmsi_terminals", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugMaster", b =>
+                {
+                    b.Property<int>("TugMasterId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_master_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TugMasterId"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("TugMasterName")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("tug_master_name");
+
+                    b.Property<string>("TugMasterNumber")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("tug_master_number");
+
+                    b.HasKey("TugMasterId")
+                        .HasName("pk_mmsi_tug_masters");
+
+                    b.ToTable("mmsi_tug_masters", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
+                {
+                    b.Property<int>("TugboatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("tugboat_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TugboatId"));
+
+                    b.Property<int?>("CompanyOwnerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_owner_id");
+
+                    b.Property<bool>("IsCompanyOwned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_company_owned");
+
+                    b.Property<string>("TugboatName")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("tugboat_name");
+
+                    b.Property<string>("TugboatNumber")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)")
+                        .HasColumnName("tugboat_number");
+
+                    b.HasKey("TugboatId")
+                        .HasName("pk_mmsi_tugboats");
+
+                    b.HasIndex("CompanyOwnerId")
+                        .HasDatabaseName("ix_mmsi_tugboats_company_owner_id");
+
+                    b.ToTable("mmsi_tugboats", (string)null);
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIVessel", b =>
+                {
+                    b.Property<int>("VesselId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("vessel_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("VesselId"));
+
+                    b.Property<string>("VesselName")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("vessel_name");
+
+                    b.Property<string>("VesselNumber")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("varchar(4)")
+                        .HasColumnName("vessel_number");
+
+                    b.Property<string>("VesselType")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
+                        .HasColumnName("vessel_type");
+
+                    b.HasKey("VesselId")
+                        .HasName("pk_mmsi_vessels");
+
+                    b.ToTable("mmsi_vessels", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MasterFile.Company", b =>
                 {
                     b.Property<int>("CompanyId")
@@ -10360,6 +11212,171 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIBilling", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_mmsi_billings_mmsi_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
+                        .WithMany()
+                        .HasForeignKey("PortId")
+                        .HasConstraintName("fk_mmsi_billings_mmsi_ports_port_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPrincipal", "Principal")
+                        .WithMany()
+                        .HasForeignKey("PrincipalId")
+                        .HasConstraintName("fk_mmsi_billings_mmsi_principals_principal_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                        .WithMany()
+                        .HasForeignKey("TerminalId")
+                        .HasConstraintName("fk_mmsi_billings_mmsi_terminals_terminal_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                        .WithMany()
+                        .HasForeignKey("VesselId")
+                        .HasConstraintName("fk_mmsi_billings_mmsi_vessels_vessel_id");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Port");
+
+                    b.Navigation("Principal");
+
+                    b.Navigation("Terminal");
+
+                    b.Navigation("Vessel");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_mmsi_collections_mmsi_customers_customer_id");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIDispatchTicket", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIActivityService", "ActivityService")
+                        .WithMany()
+                        .HasForeignKey("ActivityServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_activities_services_activity_ser");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                        .WithMany()
+                        .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_terminals_terminal_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboat", "Tugboat")
+                        .WithMany()
+                        .HasForeignKey("TugBoatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tugboats_tug_boat_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugMaster", "TugMaster")
+                        .WithMany()
+                        .HasForeignKey("TugMasterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_tug_masters_tug_master_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                        .WithMany()
+                        .HasForeignKey("VesselId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_vessels_vessel_id");
+
+                    b.Navigation("ActivityService");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Terminal");
+
+                    b.Navigation("TugMaster");
+
+                    b.Navigation("Tugboat");
+
+                    b.Navigation("Vessel");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIActivityService", "ActivityService")
+                        .WithMany()
+                        .HasForeignKey("ActivityServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_activities_services_activity_service");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                        .WithMany()
+                        .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_terminals_terminal_id");
+
+                    b.Navigation("ActivityService");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Terminal");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPrincipal", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                        .WithMany("Principals")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_principals_mmsi_customers_customer_id");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITerminal", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
+                        .WithMany()
+                        .HasForeignKey("PortId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_terminals_mmsi_ports_port_id");
+
+                    b.Navigation("Port");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", "CompanyOwner")
+                        .WithMany()
+                        .HasForeignKey("CompanyOwnerId")
+                        .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_company_owner_id");
+
+                    b.Navigation("CompanyOwner");
             modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
@@ -10781,6 +11798,11 @@ namespace IBS.DataAccess.Migrations
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
                 {
                     b.Navigation("Branches");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
+                {
+                    b.Navigation("Principals");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>

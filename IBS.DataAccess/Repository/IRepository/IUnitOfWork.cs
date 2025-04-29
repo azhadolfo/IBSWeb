@@ -1,6 +1,7 @@
 ﻿using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
+using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -131,6 +132,12 @@ namespace IBS.DataAccess.Repository.IRepository
         Task<List<SelectListItem>> GetDistinctFilpridePickupPointListById(string company, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetFilprideServiceListById(string company, CancellationToken cancellationToken = default);
+
+        #endregion
+
+        #region --MMSI
+
+        IMsapRepository Msap { get; }
 
         #endregion
 

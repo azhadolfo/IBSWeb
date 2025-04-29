@@ -1,0 +1,385 @@
+@model MMSICollection
+
+@{
+    ViewData["Title"] = "Create";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    table {
+        table-layout: auto !important;
+    }
+    .card-body {
+        margin: 5px !important;
+        padding: 5px !important;
+    }
+</style>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2 class="py-2"> CREATE COLLECTION</h2>
+        </div>
+    </div>
+
+    <div class="card-body table-responsive">
+        <div class="border-2 px-3">
+            <form method="post" class="row">
+                <div class="border-2 px-3">
+                    <div asp-validation-summary="ModelOnly"></div>
+                    <input asp-for="Status" value="Created" type="hidden"></input>
+                    <input asp-for="Status" value="Created" type="hidden"></input>
+                    <div class="row">
+                        <div class="col-9">
+                            <div class="row py-2">
+                                <div class="col-2"><h3 class="m-0 p-0">Collection</h3></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-floating col-4">
+                                    <input asp-for="MMSICollectionNumber" type="text" class="form-control border-0 shadow" id="MMSICollectionNumber" placeholder="#" required>
+                                    <label asp-for="MMSICollectionNumber" for="MMSICollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
+                                </div>
+                                <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
+                                    <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
+                                        Undocumented
+                                    </label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="Date" type="date" id="Date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                                    <label asp-for="Date" for="Date" class="ms-2">Date</label>
+                                    <span asp-validation-for="Date" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <div class="form-group col-4">
+                                    <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                                    <input id="customerIsVatable" type="hidden">
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                        <option value="">Select Customer</option>
+                                    </select>
+                                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                                </div>
+                                <input type="hidden" id="undeductedAmount">
+                                <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
+                                <div class="form-floating col-4">
+                                    <input type="number" class="form-control border-0 shadow" step="0.01" id="amountShow" value="0.00"  placeholder=" " min="0">
+                                    <label class="ms-2">Amount</label>
+                                </div>
+                                <input type="hidden" asp-for="EWT" value="@Model.EWT" id="ewt">
+                                <div class="form-floating col-4">
+                                    <input type="number" class="form-control border-0 shadow" step="0.01" id="ewtShow" value="0.00" placeholder=" " min="0">
+                                    <label class="ms-2">EWT</label>
+                                </div>
+                            </div>
+                            <div class="row py-2">
+                                <div class="col-2"><h3 class="m-0 p-0">Deposit</h3></div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" readonly="">
+                                    <label class="ms-2">Bank</label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" readonly="">
+                                    <label class="ms-2">Account Number</label>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." readonly="">
+                                    <label class="ms-2">Account Name</label>
+                                </div>
+                            </div>
+                            <div class="row my-3">
+                                <div class="form-floating col-4">
+                                    <input asp-for="CheckNumber" id="CheckNumber" type="text" class="form-control border-0 shadow" placeholder="#" required>
+                                    <label asp-for="CheckNumber" for="CheckNumber" class="ms-2">Check Number<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="CheckNumber" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="CheckDate" id="CheckDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <label asp-for="CheckDate" for="CheckDate" class="ms-2">CheckDate<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="CheckDate" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <label asp-for="DepositDate" for="DepositDate" class="ms-2">Date Deposited<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="DepositDate" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="form-group col-12">
+                                    <label class="control-label mb-2">Bills Paid</label>
+                                    <select asp-for="ToCollectBillings" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" id="BillingsSelect" multiple="multiple" disabled>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-3 ps-5">
+                            <div class="row py-2">
+                                <h3 class="m-0 p-0">Bill Paid</h3>
+                            </div>
+                            <table id="dataTable" class="table table-striped table-bordered" style="width: 100%">
+                                <thead>
+                                <tr>
+                                    <th class="text-center align-middle">BILLING NUMBER</th>
+                                    <th class="text-center align-middle">BILLING AMOUNT</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                            <div class="row pt-2 justify-content-end d-flex">
+                                <div class="col-6 justify-content-center d-flex">
+                                    <label id="billingsTotal">Total: ₱ 0.00</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row justify-content-end mt-4">
+                    <div class="text-center" style="width: 250px;">
+                        <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    </div>
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-outline-primary col-12" asp-controller="Collection" asp-action="Index">
+                            <i class="bi bi-arrow-90deg-left"></i> Go Back
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function () {
+            // State management
+            let isProcessing = false;
+            let table;
+
+            // Initialize components
+            initializeSelect2();
+            initializeDataTable();
+            setupEventListeners();
+
+            // Initialize Select2
+            function initializeSelect2() {
+                $('.js-example-basic-multiple').select2();
+            }
+
+            // Initialize DataTable
+            function initializeDataTable() {
+                if ($.fn.DataTable.isDataTable('#dataTable')) {
+                    $('#dataTable').DataTable().clear().destroy();
+                }
+                table = $('#dataTable').DataTable({
+                    paging: false,
+                    info: false,
+                    order: [[0, 'asc']],
+                    lengthChange: false,
+                    searching: false
+                });
+            }
+
+            // Set up event listeners
+            function setupEventListeners() {
+                $('#customerId').on('change', handleCustomerChange);
+                $('#isUndocumentedCheckbox').on('change', handleCheckboxChanged);
+                $('.js-example-basic-multiple').on('change', debounce(handleBillSelectionChange, 100));
+            }
+
+            // Debounce function to prevent rapid event triggers
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // Handle undocumented checkbox change
+            function handleCheckboxChanged() {
+                const $checkbox = $('#isUndocumentedCheckbox');
+                const $inputField = $('#collectionNumber');
+                const $status = $('#status');
+
+                if ($checkbox.is(':checked')) {
+                    $status.text('Undocumented');
+                    $inputField.val('').prop({
+                        required: false,
+                        readonly: true
+                    });
+                } else {
+                    $status.html('Collection Number<span class="required text-danger">*</span>');
+                    $inputField.prop({
+                        required: true,
+                        readonly: false
+                    });
+                }
+            }
+
+            // Handle customer selection change
+            function handleCustomerChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const $billingsSelect = $('#BillingsSelect');
+                const customerId = $('#customerId').val();
+
+                $('#amountShow').val('0.00');
+                $('#amount').val('0.00');
+                $('#ewt').val('0.00');
+                $('#ewtShow').val('0.00');
+                $('#undeductedAmount').val('0');
+
+                // clear table
+                table.clear();
+                table.draw();
+
+                $.ajax({
+                    url: '/MMSI/Collection/GetEditBillings',
+                    type: 'GET',
+                    data: {
+                        customerId: customerId,
+                    },
+                    success: function (data) {
+                        $billingsSelect.empty();
+                        if (Array.isArray(data) && data.length > 0) {
+                            $billingsSelect.prop("disabled", false);
+                            $billingsSelect.val("0").trigger("change");
+                            $.each(data, function (index, item) {
+                                $billingsSelect.append($('<option>', {
+                                    value: item.value,
+                                    text: item.text
+                                }));
+                            });
+                        }
+                        else{
+                            $billingsSelect.prop("disabled", true);
+                            $billingsSelect.val("");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching billings:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
+                    }
+                });
+            }
+
+            // Handle bill selection change
+            function handleBillSelectionChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+                let tempData;
+
+                const selectedBills = $('.js-example-basic-multiple').val() || [];
+
+                $.ajax({
+                    url: '/MMSI/Collection/GetSelectedBillings',
+                    type: 'POST',
+                    data: { billingIds: selectedBills },
+                    success: function (result) {
+                        // Clear existing table
+                        table.clear();
+                        tempData = result;
+
+                        let undeductedTotalAmount = 0.00;
+                        let totalAmount = 0.00;
+                        let totalEwt = 0.00;
+
+                        // Populate table with new data
+                        if (result.data && Array.isArray(result.data)) {
+                            $.each(result.data, function (index, value) {
+                                let tempAmount = value.amount;
+                                let tempEwt = 0;
+                                
+                                if (value.isVatable){
+                                    tempEwt = ((value.amount/1.12) * 0.02);
+                                    tempAmount = (value.amount - tempEwt);
+                                }
+                                
+                                table.row.add([
+                                    value.mmsiBillingNumber,
+                                    `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                ]);
+                                undeductedTotalAmount += value.amount;
+                                totalAmount += tempAmount;
+                                totalEwt += tempEwt;
+                            });
+                        }
+
+                        table.draw();
+
+                        // Update totals and form fields
+                        $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
+                        $('#amount').val(totalAmount.toFixed(2));
+                        $('#ewt').val(totalEwt.toFixed(2));
+                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        $('#amountShow').val(totalAmount.toFixed(2));
+                        $('#ewtShow').val(totalEwt.toFixed(2));
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching billings:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
+                        console.log(tempData);
+
+                        // calculateEWTDeduction();
+                    }
+                });
+            }
+
+            // Calculate EWT deduction
+            function calculateEWTDeduction() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const originalAmount = parseFloat($('#undeductedAmount').val()) || 0;
+                const customerId = $('#customerId').val();
+
+                $.ajax({
+                    url: '/MMSI/Collection/IsCustomerVatable',
+                    type: 'GET',
+                    data: { customerId: customerId },
+                    success: function (result) {
+                        if (result) {
+                            const deductedAmount = originalAmount / 1.12;
+                            const ewt = originalAmount - deductedAmount;
+
+                            $('#amountShow').val(deductedAmount.toFixed(2));
+                            $('#amount').val(deductedAmount.toFixed(2));
+                            $('#ewtShow').val(ewt.toFixed(2));
+                            $('#ewt').val(ewt.toFixed(2));
+                        } else {
+                            $('#amountShow').val(originalAmount.toFixed(2));
+                            $('#amount').val(originalAmount.toFixed(2));
+                            $('#ewtShow').val('0.00');
+                            $('#ewt').val('0.00');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error checking VAT status:', error);
+                    },
+                    complete: function () {
+                        isProcessing = false;
+                    }
+                });
+            }
+        });
+    </script>
+}

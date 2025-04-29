@@ -1,0 +1,211 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIBilling>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Billing</h2>
+        <a asp-area="MMSI" asp-controller="Billing" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Create Billing
+        </a>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
+                    <button id="filterAll" class="btn btn-outline-primary active"> All</button>
+                    <button id="filterForCollection" class="btn btn-outline-primary"> For Collection</button>
+                    <button id="filterCollected" class="btn btn-outline-primary"> Collected</button>
+                </div>
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">DATE</th>
+                        <th class="text-start">BILLING #</th>
+                        <th class="text-start">TOTAL AMOUNT</th>
+                        <th class="text-start">CUSTOMER</th>
+                        <th class="text-start">PORT-TERMINAL</th>
+                        <th class="text-start">VESSEL</th>
+                        <th class="text-start">STATUS</th>
+                        <th class="text-center" style="width: 100px;">Actions</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Event listeners
+        $(document).ready(function () {
+            const previewUrl = '@Url.Action("Preview", "Billing")';
+            const editUrl = '@Url.Action("Edit", "Billing")';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[1, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [7] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetBillingList", "Billing", new { area = "MMSI" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {"data": "date"},
+                    {"data": "mmsiBillingNumber"},
+                    {"data": "amount"},
+                    {"data": "customer.customerName"},
+                    {
+                        "data": "null", // Use null since we're manually rendering it
+                        "render": function(data, type, row) {
+                            const terminal = row.terminal?.terminalName || '';
+                            const port = row.terminal?.port?.portName || '';
+                            return `${terminal}-${port}`; // You can format however you like
+                        }
+                    },
+                    {"data": "vessel.vesselName"},
+                    {
+                        "data": "status",
+                        "orderable": true,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "For Collection"){
+                                statusColor = `bg-info`
+                            }
+                            if (row.status === "Collected"){
+                                statusColor = `bg-success`
+                            }
+
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
+                            
+                            if (row.status !== "For Collection")
+                            {
+                                actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.mmsiBillingId}"><i class="bi bi-eye"></i> View</a>`
+                            }
+                            else
+                            {
+                                actions += `<div class="dropdown align-content-center">
+                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                        <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
+                                            <li><a class="dropdown-item" href="${previewUrl}?id=${row.mmsiBillingId}"><i class="bi bi-eye-fill"></i> View</a></li>
+                                            <li><a class="dropdown-item" href="${editUrl}?id=${row.mmsiBillingId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
+                                        </ul>
+                                    </div>`
+                            }
+                                `</div></div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+
+            $('#filterAll').on('click', function() {
+                table.columns().search('').draw();
+            });
+
+            $('#filterForCollection').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(6).search('For Collection', true, true).draw();
+            });
+
+            $('#filterCollected').on('click', function() {
+                table.columns().search(''); // Clear previous filters
+                table.columns(6).search('Collected', true, true).draw();
+            });
+
+            $('.btn-group button').on('click', function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
+            });
+        });
+    </script>
+}

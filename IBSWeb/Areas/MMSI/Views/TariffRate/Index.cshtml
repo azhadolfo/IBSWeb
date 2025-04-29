@@ -1,0 +1,94 @@
+@model IEnumerable<IBS.Models.MMSI.MMSITariffRate>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2><i class="bi bi-database"></i> MMSI TARIFF RATES</h2>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row justify-content-end mb-2">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="TariffRate" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create
+                </a>
+            </div>
+        </div>
+        
+        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+            <thead>
+            <tr>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.AsOfDate)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.Customer)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.Terminal.Port.PortName) - @Html.DisplayNameFor(m => m.Terminal.TerminalName)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.ActivityService.ActivityServiceName)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.Dispatch)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.BAF)
+                </th>
+                @* <th class="text-center"> *@
+                @*     Actions *@
+                @* </th> *@
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.AsOfDate)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.Customer.CustomerName)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.Terminal.Port.PortName) - @Html.DisplayFor(model => item.Terminal.TerminalName)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.ActivityService.ActivityServiceName)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.Dispatch)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.BAF)
+                    </td>
+                    
+                    @* <td class="text-center"> *@
+                    @*     <div class="dropdown"> *@
+                    @*         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button> *@
+                    @*         <ul class="dropdown-menu" aria-labelledby="actionsDropdown"> *@
+                    @*             <li><a class="dropdown-item" href="@Url.Action("Edit", "TariffRate", new { id = item.ActivityServiceId })"><i class="bi bi-pencil-fill"></i> Edit</a></li> *@
+                    @*             <li><a class="dropdown-item" href="@Url.Action("Delete", "TariffRate", new { id = item.ActivityServiceId })"><i class="bi bi-pencil-fill"></i> Delete</a></li> *@
+                    @*         </ul> *@
+                    @*     </div> *@
+                    @* </td> *@
+                    
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,423 @@
+@model IBS.Models.MMSI.MMSIBilling
+
+@{
+    ViewData["Title"] = "Preview";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    @@media print {
+        .print-bottom {
+            position: absolute;
+            bottom: 3%;
+        }
+        .print-bottom2 {
+            position: absolute;
+            bottom: 15%;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+
+    <div class="row">
+        <div class="col-8">
+            <div class="text-start">
+                <h3 class="m-0">MALAYAN MARITIME SERVICES INC.</h3>
+                <p style="font-size: 0.70em;" class="m-0">
+                    Office Address 14th Floor Jollibee Centre, San Miguel Ave., Pasig City<br/>
+                    Phone No: 633-4302 * 633-9472 * 634-4904<br/>
+                    Business Office: 10 JP LAUREL AVE, SASA, DAVAO CITY<br/>
+                    Mobile No: +639178202692
+                </p>
+            </div>
+        </div>
+        <div class="col-4">
+            @* <div class="text-end"> *@
+            @*     <img src="~/img/mmsi-logo.jpg" width="80px"/> *@
+            @* </div> *@
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-borderless">
+        <tbody>
+        <tr>
+            <td class="col-6 p-0 m-0"></td>
+            <td class="text-danger p-0 m-0"><b>BILLING STATEMENT NO.&nbsp;@Html.DisplayFor(model => model.MMSIBillingNumber)</b></td>
+        </tr>
+        </tbody>
+        </table>
+        <table class="table table-borderless">
+            @if (Model.PrincipalId != null)
+            {
+                <tbody>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Principal?.PrincipalName</b></td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>DATE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TIN:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.TIN</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.BusinessType</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Principal?.Terms</td>
+                </tr>
+                </tbody>
+            }
+            else
+            {
+                <tbody>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>BILLED TO:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark"><b>@Model.Customer?.CustomerName</b></td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>DATE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Date</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"><b>ADDRESS:</b></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TIN:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer?.CustomerTIN</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerBusinessStyle</td>
+                </tr>
+                <tr>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
+                    <td class="col-1 p-0 m-0"></td>
+                    <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTerms</td>
+                </tr>
+                </tbody>
+            }
+        </table>
+    </div>
+    
+    <div class="table-responsive mt-3 me-1">
+        <table class="table table-bordered border-dark">
+            <thead>
+            <tr>
+                <th class="text-center" colspan="4" style="border-width: 2px !important;">
+                    PARTICULARS
+                </th>
+            </tr>
+            </thead>
+        </table>
+        <div class="mt-3">
+            <table class="table table-borderless">
+                <tr>
+                    <td class="text-center align-middle" rowspan="2" style="width: 30%;">
+                        <b>FOR THE SERVICE RE:</b>
+                    </td>
+                    <td class="p-1 ps-2 border-bottom border-dark" style="width: 40%;">
+                        <b>@Model.Vessel?.VesselName</b>
+                    </td>
+                    <td class="text-start align-middle pe-2" rowspan="2" style="width: 30%;">
+                        <div class="d-flex align-items-center ms-3"> <!-- Added ms-3 for spacing -->
+                            <div class="text-end pe-2" style="flex-shrink: 0;">
+                                <b>VOYAGE #: </b>
+                            </div>
+                            <div class="flex-grow-1 border-bottom border-dark text-nowrap overflow-hidden text-ellipsis">
+                                @Model.VoyageNumber
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="p-1 ps-2 border-bottom border-dark">
+                        AT @Model.Terminal?.Port?.PortName
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-responsive mt-3 me-1">
+        <table class="table table-borderless">
+            <thead>
+            <tr>
+                <th class="text-center border border-dark">DATE</th>
+                <th class="text-center border border-dark">NATURE OF SERVICE</th>
+                <th class="text-center border border-dark">TIME START</th>
+                <th class="text-center border border-dark">TIME END</th>
+                <th class="text-center border border-dark">TOTAL HOURS</th>
+                <th class="text-center border border-dark">RATE</th>
+                <th class="text-center border border-dark">AMOUNT</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var tugboat in Model.UniqueTugboats)
+            {
+                <tr class="">
+                    <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @tugboat</td>
+                </tr>
+                
+                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.Tugboat.TugboatName == tugboat))
+                {
+                    <tr class="pb-2">
+                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                        <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
+                        <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
+                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchNetRevenue?.ToString("N2")</td>
+                    </tr>
+                }
+            }
+            @if (Model.PaidDispatchTickets.Any(dt => dt.BAFNetRevenue.HasValue))
+            {
+                <tr class="">
+                    <td colspan="8" class="p-0 m-0 pt-4">BUNKER ADJUSTMENT FACTORS</td>
+                </tr>
+                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue.HasValue))
+                {
+                    <tr class="pb-2">
+                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
+                        <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
+                        <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
+                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFRate?.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFNetRevenue?.ToString("N2")</td>
+                    </tr>
+                }
+            }
+            <tr>
+                <td colspan="8" class="pt-4 text-center">
+                    <div class="mt-4">
+                        ---------- NOTHING FOLLOWS ----------
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="p-1 border-top border-bottom border-dark print-bottom2">
+        <div class="row">
+            <div class="col-12 px-3 pb-3 d-flex justify-content-end" style="font-size: 12px;">
+                <b>@Model.Amount</b>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-7">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>
+                            Terms and Conditions:
+                        </th>
+                    </tr>
+                    </thead>
+                    <tr>
+                        <td class="border p-1 m-1">
+                            Interest at the rate of 38% per annim will be charge on all overdue accounts and in the event of
+                            judicial proceedings to enforce collections, the Customer will pay a reasonable compensation not less than
+                            25% ofthe amount due of the Attorney's fees and expense of collection in addition to the costs of suit. Any
+                            action arising out of the transaction covered by billing statement shall be brought in the appropriate courts
+                            of Pasig City and/or Metro Manila.
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            @if (Model.IsVatable)
+            {
+                <div class="col-5">
+                    <table class="table-borderless col-12">
+                        <tr class="row">
+                            <td class="col-6">
+                                VATABLE SALES:
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                @{ var vatableSales = Model.Amount / 1.12m; }
+                                <b>@vatableSales.ToString("N2") </b>
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                VAT - EXEMPT SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                ZERO RATED SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                TOTAL SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                12% VAT
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                @{ var taxAmount = (Model.Amount - (Model.Amount / 1.12m)); }
+                                <b>@taxAmount.ToString("N2") </b>
+                            </td>
+                        </tr>
+                        <tr class="row mt-1 mb-2">
+                            <td class="col-6">
+                                <b>TOTAL AMOUNT DUE:</b>
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                <div class="row border-bottom border-dark">
+                                    <div class="col-12">
+                                        <b> @Model.Amount.ToString("N2")</b>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="col-5">
+                    <table class="table-borderless col-12">
+                        <tr class="row">
+                            <td class="col-6">
+                                VATABLE SALES:
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                VAT - EXEMPT SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                ZERO RATED SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                TOTAL SALES
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1">
+                            <td class="col-6">
+                                12% VAT
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+
+                            </td>
+                        </tr>
+                        <tr class="row mt-1 mb-2">
+                            <td class="col-6">
+                                <b>TOTAL AMOUNT DUE:</b>
+                            </td>
+                            <td class="col-6 text-end border-bottom border-dark">
+                                <div class="row border-bottom border-dark">
+                                    <div class="col-12">
+                                        <b> @Model.Amount.ToString("N2")</b>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            }
+
+        </div>
+    </div>
+    
+    <div class="row pt-3 print-bottom">
+        <div class="col-8">
+            <table>
+                <tr>
+                    <td>
+                        We hereby certify that this Billing Statement is correct and Just 
+                        and the payment thereof has not been received.
+                    </td>
+                </tr>
+                <tr>
+                    <th class="pt-3">MALAYAN MARITIME SERVICES INC.</th>
+                </tr>
+                <tr>
+                    <td class="pt-3">
+                        BY:___________________________________
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="row pt-3 justify-content-end d-flex">
+        <div class="col-6 col-md-3">
+            <a onclick="window.print()" class="btn btn-primary form-control buttons"><i class="bi bi-printer"></i> Print</a>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <a asp-area="MMSI" asp-controller="Billing" asp-action="Index" class="btn btn-outline-primary border form-control buttons"><i class="bi bi-arrow-90deg-left"></i> Back to List</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+
+            table = $('#dataTable').DataTable();
+
+            table.destroy();
+
+            table = $('#dataTable').DataTable({
+                paging: false,
+                info: false,
+                order: [[0, 'asc']],
+                lengthChange: false,
+                searching: false
+            });
+
+        });
+    </script>
+}

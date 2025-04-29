@@ -58,6 +58,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Create.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Edit.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\CompanyOwner\Index.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Create.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Edit.cshtml" />
+    <AdditionalFiles Include="Areas\MMSI\Views\Principal\Index.cshtml" />
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Create.cshtml" />
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Edit.cshtml" />
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Index.cshtml" />

@@ -123,7 +123,6 @@ builder.Services.AddQuartz(q =>
                 .FindSystemTimeZoneById("Asia/Manila"))));
 });
 
-
 // Add Quartz Hosted Service
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 

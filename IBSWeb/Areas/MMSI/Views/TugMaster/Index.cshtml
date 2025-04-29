@@ -1,0 +1,114 @@
+@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSITugMaster>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2><i class="bi bi-database"></i> MMSI TUG MASTERS</h2>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row justify-content-end mb-2">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="TugMaster" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create
+                </a>
+            </div>
+        </div>
+        
+        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+            <thead>
+            <tr>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.TugMasterNumber)
+                </th>
+                <th class="text-center">
+                    @Html.DisplayNameFor(m => m.TugMasterName)
+                </th>
+                <th class="text-center">
+                    Actions
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.TugMasterNumber)
+                    </td>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.TugMasterName)
+                    </td>
+                    
+                    <td class="text-center">
+                        <div class="dropdown">
+                            <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "TugMaster", new { id = item.TugMasterId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "TugMaster", new { id = item.TugMasterId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        document.querySelectorAll('.delete-button').forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent default navigation
+
+                const href = this.getAttribute('href'); // Get the href value
+                Swal.fire({
+                    title: 'Delete?',
+                    text: "Delete this Tug Master entry?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = href; // Redirect to the href URL
+                    }
+                });
+            });
+        });
+
+        $(document).ready(function () {
+            // Check if the table is already initialized and destroy it
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            // Initialize the DataTable with your settings
+            $('#dataTable').DataTable({
+                "autoWidth": false,
+                "columnDefs": [
+                    {
+                        "targets": 2,
+                        "width": "150px",
+                        "className": "text-center",
+                        "orderable": false // Optional: disable sorting on Actions column
+                    }
+                ]
+            });
+        });
+    </script>
+}

@@ -1,0 +1,116 @@
+@model IBS.Models.MMSI.MasterFile.MMSICustomer
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2>
+                <i class="bi bi-pencil-square"></i> EDIT CUSTOMER DETAILS
+            </h2>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        
+        <form method="post" class="row">
+
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input type="hidden" asp-for="MMSICustomerId" value="@Model.MMSICustomerId">
+                <div class="row pt-2">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="CustomerName" type="text" class="form-control border-0 shadow" id="CustomerName" placeholder=" " required>
+                        <label asp-for="CustomerName" for="CustomerName" class="ms-2">Name<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="CustomerName" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="CustomerNumber" type="text" class="form-control border-0 shadow" id="CustomerNumber" placeholder=" " required>
+                        <label asp-for="CustomerNumber" for="CustomerNumber" class="ms-2">Customer Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="CustomerNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pt-2">
+                    <div class="form-floating col-12 my-2">
+                        <input asp-for="CustomerAddress" type="text" class="form-control border-0 shadow" id="CustomerAddress" placeholder=" " required>
+                        <label asp-for="CustomerAddress" for="CustomerAddress" class="ms-2">Address<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="CustomerAddress" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="CustomerTIN" type="text" class="form-control border-0 shadow" id="CustomerTIN" placeholder=" ">
+                        <label asp-for="CustomerTIN" for="CustomerTIN" class="ms-2">TIN</label>
+                        <span asp-validation-for="CustomerTIN" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="CustomerBusinessStyle" type="text" class="form-control border-0 shadow" id="CustomerBusinessStyle" placeholder=" ">
+                        <label asp-for="CustomerBusinessStyle" for="CustomerBusinessStyle" class="ms-2">BusinessStyle</label>
+                        <span asp-validation-for="CustomerBusinessStyle" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="CustomerTerms" type="text" class="form-control border-0 shadow" id="CustomerTerms" placeholder=" ">
+                        <label asp-for="CustomerTerms" for="CustomerTerms" class="ms-2">Terms</label>
+                        <span asp-validation-for="CustomerTerms" class="text-danger"></span>
+                    </div>
+                    <div class="form-check col-3 ps-5 text-start d-flex align-items-center justify-content-start">
+                        <input asp-for="IsVatable" class="form-check-input m-0 ms-2" id="IsVatable" type="checkbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsVatable">
+                            Vatable
+                        </label>
+                    </div>
+                    <div class="form-check col-3 text-start d-flex align-items-center justify-content-start">
+                        <input asp-for="IsActive" class="form-check-input m-0 ms-2" id="IsActive" type="checkbox">
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsActive">
+                            Active
+                        </label>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Mobile1" type="number" class="form-control border-0 shadow" id="Mobile1" placeholder="" maxlength="20" title="Mobile Number must not exceed 20 characters">
+                        <label asp-for="Mobile1" for="Mobile1" class="ms-2">Mobile1 #</label>
+                        <span asp-validation-for="Mobile1" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Mobile2" type="number" class="form-control border-0 shadow" id="Mobile2" placeholder="" maxlength="20" title="Mobile Number must not exceed 20 characters">
+                        <label asp-for="Mobile2" for="Mobile2" class="ms-2">Mobile2 #</label>
+                        <span asp-validation-for="Mobile2" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Landline1" type="number" class="form-control border-0 shadow" id="Landline1" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
+                        <label asp-for="Landline1" for="Landline1" class="ms-2">Landline1 #</label>
+                        <span asp-validation-for="Landline1" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="Landline2" type="number" class="form-control border-0 shadow" id="Landline2" placeholder="" maxlength="20" title="Landline Number must not exceed 20 characters">
+                        <label asp-for="Landline2" for="Landline2" class="ms-2">Landline2 #</label>
+                        <span asp-validation-for="Landline2" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-end mt-3">
+
+                <div class="text-center" style="width: 250px;">
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                </div>
+
+                <div class="text-center" style="width: 250px;">
+                    <a class="btn btn-outline-primary border col-12" asp-controller="Customer" asp-action="Index">
+                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                    </a>
+                </div>
+
+            </div>
+            
+        </form>
+    </div>
+</div>

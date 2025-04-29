@@ -1,0 +1,497 @@
+@model IEnumerable<IBS.Models.MMSI.MMSIDispatchTicket>
+
+@{
+    ViewData["Title"] = "Index";
+    
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Service Request</h2>
+        <a asp-area="MMSI" asp-controller="ServiceRequest" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Create Request
+        </a>
+    </div>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <div class="btn-group mb-3" role="group" aria-label="Filter Options">
+                    <button id="filterForPosting" class="btn btn-outline-primary active">
+                        <i class="bi bi-check-circle"></i> For Posting
+                    </button>
+                    <button id="filterCancelled" class="btn btn-outline-primary">
+                        <i class="bi bi-x-circle"></i> Cancelled
+                    </button>
+                    <button id="filterAll" class="btn btn-outline-primary">
+                        <i class="bi bi-list"></i> All
+                    </button>
+                </div>
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th data-orderable="false" class="px-3 py-1 text-center align-content-center"><input type="checkbox" class="text-center" id="selectAll"></th>
+                        <th class="text-start">DATE</th>
+                        <th class="text-start">COS #</th>
+                        <th class="text-start">DISPATCH/ <br/> MOORING TICKET</th>
+                        <th class="text-start">DATE/TIME START</th>
+                        <th class="text-start">DATE/TIME END</th>
+                        <th class="text-start">ACTIVITY/ <br/>SERVICE TYPE</th>
+                        <th class="text-start">PORT-<br/> TERMINAL</th>
+                        <th class="text-start">TUGBOAT</th>
+                        <th class="text-start">TUG MASTER</th>
+                        <th class="text-start">VESSEL</th>
+                        <th class="text-start">STATUS</th>
+                        <th class="text-center" style="width: 100px;">Actions</th>
+                    </tr>
+                    </thead>
+                </table>
+
+                <div class="row m-0 p-0 justify-content-end mt-2">
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-primary col-12 align-content-center selected-options" id="postSelected" style="display:none"><i class="bi bi-check-circle"></i> Post Selected</a>
+                    </div>
+                    <div class="text-center" style="width: 250px;">
+                        <a class="btn btn-primary col-12 align-content-center selected-options" id="cancelSelected" style="display:none"><i class="bi bi-x-circle"></i> Cancel Selected</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const selectedRecords = new Set(); // Store selected here (selection variable)
+        let allRecordsSelected = false; // Checks if all is selected
+        const optionButtons = document.querySelectorAll(".selected-options"); // Elements that will show if anything is selected
+
+        // If select all is clicked
+        function toggleSelectAll(selectAllCheckbox) {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Get all checkboxes
+            checkboxes.forEach(checkbox => {
+                // All gets checked if selectAll is checked, unchecks if unchecked
+                checkbox.checked = selectAllCheckbox.checked;
+                if (selectAllCheckbox.checked) { 
+                    selectedRecords.add(checkbox.value); // If selectAll is checked, add all checkbox to selection variable
+                } else {
+                    selectedRecords.delete(checkbox.value); // If selectAll is unchecked, remove everything from selection variable
+                }
+            });
+            toggleSelectedOptions();
+        }
+
+        // If any checkbox is checked, show the options if to post them or cancel them
+        function toggleSelectedOptions() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Get all checkboxes
+            const anyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked); // Checks if any is checked
+            optionButtons.forEach(button => {
+                button.style.display = anyChecked ? "inline-block" : "none"; // Show the post and cancel buttons
+            });
+        }
+
+        // Check if all checkboxes are selected
+        function isAllCheckboxChecked() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Get all checkboxes
+            const isAllChecked = checkboxes.length > 0 &&
+                document.querySelectorAll(".selectCheckbox:checked").length === checkboxes.length; // If all is selected, = true
+            document.getElementById("selectAll").checked = isAllChecked; // 
+        }
+
+        // Handle individual checkbox changes
+        function toggleSelect() {
+            const checkboxes = document.querySelectorAll(".selectCheckbox"); // Fresh query
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedRecords.add(checkbox.value);
+                } else {
+                    selectedRecords.delete(checkbox.value);
+                }
+            });
+            toggleSelectedOptions();
+            isAllCheckboxChecked();
+        }
+
+        // Update table based on status filter
+        function handleStatusChange(status) {
+            console.log("Status filter changed to:", status);
+
+            $.ajax({
+                url: '@Url.Action("GetDispatchTicketList", "ServiceRequest")',
+                type: "POST",
+                data: { status: status },
+                success: function (data) {
+                    // Destroy existing DataTable if initialized
+                    if ($.fn.DataTable.isDataTable("#paginatedTable")) {
+                        $("#paginatedTable").DataTable().destroy();
+                    }
+
+                    // Clear table body
+                    $("#paginatedTable tbody").empty();
+
+                    // Populate table with new data
+                    data.forEach((value, index) => {
+                        const badgeClass = {
+                            "For Posting": "bg-info",
+                            "Cancelled": "bg-secondary"
+                        }[value.status] || "bg-secondary";
+
+                        $("#paginatedTable tbody").append(`
+                                    <tr>
+                                        <td data-orderable="false" class="text-center align-content-center">
+                                            <input type="checkbox"
+                                                ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
+                                        </td>
+                                        <td class="text-start align-content-center">${value.createDate}</td>
+                                        <td class="text-start align-content-center">${value.cosNumber || ""}</td>
+                                        <td class="text-start align-content-center">${value.dispatchNumber}</td>
+                                        <td class="text-start align-content-center">
+                                            ${value.dateLeft} ${new Date("1970-01-01 " + value.timeLeft).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                        </td>
+                                        <td class="text-start align-content-center">
+                                            ${value.dateArrived} ${new Date("1970-01-01 " + value.timeArrived).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                                        </td>
+                                        <td class="text-start align-content-center">${value.activityService.activityServiceName}</td>
+                                        <td class="text-start align-content-center">${value.terminal.port.portName}-${value.terminal.terminalName}</td>
+                                        <td class="text-start align-content-center">${value.tugboat.tugboatName}</td>
+                                        <td class="text-start align-content-center">${value.tugMaster.tugMasterName}</td>
+                                        <td class="text-start align-content-center">${value.vessel.vesselName}</td>
+                                        <td class="text-start align-content-center">
+                                            <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
+                                                ${value.status}
+                                            </span>
+                                        </td>
+                                        <td class="text-start align-content-center">
+                                            <div class="d-flex justify-content-center" style="width: 150px;">
+                                                ${value.uploadName ? `
+                                                    <div class="dropdown align-content-center">
+                                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                                                            ${value.status !== "Cancelled" ? `<li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
+                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View Image</a></li>
+                                                            <li><a class="dropdown-item view-video" href="#" data-videolink="/Dispatch_Ticket_Uploads/test.mp4"><i class="bi bi-eye"></i> View Video</a></li>
+                                                        </ul>
+                                                    </div>
+                                                ` : `
+                                                    <a class="view-upload btn btn-primary custom-btn col-12" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>
+                                                `}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `);
+                    });
+
+                    // Initialize DataTable with custom options
+                    $("#paginatedTable").DataTable({
+                        order: [[1, "desc"]], // Sort by status column (index 11) descending
+                        paging: true,
+                        searching: true,
+                        info: true,
+                        lengthChange: true
+                    });
+
+                    // Ensure checkbox state is updated after DataTable init
+                    toggleSelect(); // Refresh UI state
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX error:", error);
+                }
+            });
+        }
+
+        // Event listeners
+        $(document).ready(function () {
+            
+            var editUrl = '@Url.Action("Edit", "ServiceRequest")';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[1, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [0, 11, 12] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetDispatchTicketLists", "ServiceRequest", new { area = "MMSI" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {
+                        "data": "createDate",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
+                            if (row.status !== "Cancelled") {
+                                return `<div class="row"><div class="col text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div></div> `;
+                            } else {
+                                return `<div class="row"><div class="col text-center"><input type="checkbox" disabled></div></div>`;
+                            }
+                        }
+                    },
+                    {"data": "createDate"},
+                    {"data": "cosNumber"},
+                    {"data": "dispatchNumber"},
+                    {"data": "dateLeft"},
+                    {"data": "dateArrived"},
+                    {"data": "activityService.activityServiceName"},
+                    {"data": "terminal.port.portName"},
+                    {"data": "tugboat.tugboatName"},
+                    {"data": "tugMaster.tugMasterName"},
+                    {"data": "vessel.vesselName"},
+                    {
+                        "data": null,
+                        "orderable": true,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let statusColor = ``;
+                            if (row.status === "For Posting"){
+                                statusColor = `bg-info`
+                            }
+                            else {
+                                statusColor = `bg-secondary`
+                            }
+                            
+                            return `<span class="badge rounded-pill ${statusColor}" style="font-size: 14px; color: Ivory">
+                                                ${row.status}
+                                            </span>`;
+                        }
+                    },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`; // d-flex here
+
+                            if (row.imageName || row.videoName) {
+                                actions += `<div class="dropdown w-100">
+                            <button class="btn btn-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
+                            <ul class="dropdown-menu">`;
+
+                                if (row.status !== "Cancelled") {
+                                    actions += `<li><a class="dropdown-item" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>`;
+                                }
+                                if (row.imageName) {
+                                    actions += `<li><a class="dropdown-item view-upload" href="#" data-uploadname="${row.imageSignedUrl}"><i class="bi bi-eye-fill"></i> View Image</a></li>`;
+                                }
+                                if (row.videoName) {
+                                    actions += `<li><a class="dropdown-item view-video" href="#" data-videolink="${row.videoSignedUrl}"><i class="bi bi-play-circle-fill"></i> Play Video</a></li>`;
+                                }
+                                actions += `</ul>
+                        </div>`;
+                            } else {
+                                actions += `<a class="btn btn-primary w-100" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
+                            }
+
+                            actions += `</div></div>`; // close width div
+                            return actions;
+                        },
+                    }
+
+                ]
+            });
+            
+            // "Select All" checkbox
+            $(document).on("click", "#selectAll", function () {
+                toggleSelectAll(this);
+            });
+
+            $(document).on("click", "#postSelected", function () {
+                const selectedArray = Array.from(selectedRecords); // Convert Set to Array
+                const queryString = encodeURIComponent(JSON.stringify(selectedArray));
+
+                Swal.fire({
+                    title: "Post selected requests?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/MMSI/ServiceRequest/PostSelected?records=${queryString}`;
+                    }
+                });
+            });
+
+            $(document).on("click", "#cancelSelected", function () {
+                const selectedArray = Array.from(selectedRecords);
+                const queryString = encodeURIComponent(JSON.stringify(selectedArray));
+
+                Swal.fire({
+                    title: "Cancel selected requests?",
+                    text: "This action cannot be undone.",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/MMSI/ServiceRequest/CancelSelected?records=${queryString}`;
+                    }
+                });
+            });
+
+            $('#statusDropdown').click(function (e) {
+                e.stopPropagation();
+            });
+
+            // Status filter change
+            $(document).on("change", "#statusDropdown", function () {
+                const selectedValue = $(this).val();
+                handleStatusChange(selectedValue);
+            });
+
+            // Individual checkbox change
+            $(document).on("change", ".selectCheckbox", toggleSelect);
+
+            // View upload click handler
+            $(document).on("click", ".view-upload", function () {
+                const uploadName = this.getAttribute("data-uploadname");
+                if (!uploadName) {
+                    console.error("No upload name found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    imageUrl: uploadName, 
+                    imageAlt: "Dispatch Ticket Upload",
+                    showConfirmButton: false,
+                    background: "transparent",
+                    customClass: { popup: "custom-image-popup" },
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
+                    }
+                });
+            });
+
+            // View upload click handler
+            $(document).on("click", ".view-video", function () {
+                const videoLink = this.getAttribute("data-videolink");
+                if (!videoLink) {
+                    console.error("No video found.");
+                    return;
+                }
+
+                const maxHeight = window.innerHeight * 0.8;
+                Swal.fire({
+                    html: `
+                            <video width="1280" height="720" controls>
+                                <source src="${videoLink}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            `,
+                    showConfirmButton: false,
+                    padding: 0,
+                    width: "auto",
+                    heightAuto: true,
+                    background: "transparent",
+                    didOpen: () => {
+                        $(".swal2-image").css({
+                            "max-height": `${maxHeight}px`,
+                            "height": "auto"
+                        });
+                    }
+                });
+            });
+
+            $('#filterAll').on('click', function() {
+                table.columns().search('').draw();
+            });
+
+            $('#filterForPosting').on('click', function() {
+                console.log("filter for posting");
+                table.columns().search(''); // Clear previous filters
+                table.columns(11).search('For Posting', true, true).draw();
+            });
+
+            $('#filterCancelled').on('click', function() {
+                console.log("filter cancelled");
+                table.columns().search(''); // Clear previous filters
+                table.columns(11).search('Cancelled', true, true).draw();
+            });
+
+            $('.btn-group button').on('click', function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            table.columns().search(''); // Clear previous filters
+            table.columns(11).search('For Posting', true, true).draw();
+        });
+    </script>
+}
