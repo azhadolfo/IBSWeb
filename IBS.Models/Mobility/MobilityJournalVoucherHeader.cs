@@ -26,10 +26,6 @@ namespace IBS.Models.Mobility
         [ForeignKey(nameof(CVId))]
         public MobilityCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
-        // implement this in view model
-        [NotMapped]
-        public List<SelectListItem>? CheckVoucherHeaders { get; set; }
-
         public string Particulars { get; set; }
 
         [Display(Name = "CR No")]
@@ -37,10 +33,6 @@ namespace IBS.Models.Mobility
 
         [Display(Name = "JV Reason")]
         public string JVReason { get; set; }
-
-        // implement this in view model
-        [NotMapped]
-        public List<SelectListItem>? COA { get; set; }
 
         public string StationCode { get; set; } = string.Empty;
 

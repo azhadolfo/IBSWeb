@@ -72,6 +72,7 @@ namespace IBS.DataAccess.Repository
         public Mobility.IRepository.IPurchaseOrderRepository MobilityPurchaseOrder { get; private set; }
         public Mobility.IRepository.IReceivingReportRepository MobilityReceivingReport { get; private set; }
         public Mobility.IRepository.ICheckVoucherRepository MobilityCheckVoucher { get; private set; }
+        public Mobility.IRepository.IJournalVoucherRepository MobilityJournalVoucher { get; private set; }
         public Mobility.IRepository.IServiceInvoiceRepository MobilityServiceInvoice { get; private set; }
         public Mobility.IRepository.ICreditMemoRepository MobilityCreditMemo { get; private set; }
         public Mobility.IRepository.IDebitMemoRepository MobilityDebitMemo { get; private set; }
@@ -115,7 +116,7 @@ namespace IBS.DataAccess.Repository
         #region Accounts Payable
         public Filpride.IRepository.ICheckVoucherRepository FilprideCheckVoucher { get; private set; }
 
-        public IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
+        public Filpride.IRepository.IJournalVoucherRepository FilprideJournalVoucher { get; private set; }
 
         public Filpride.IRepository.IPurchaseOrderRepository FilpridePurchaseOrder { get; private set; }
 
@@ -175,6 +176,7 @@ namespace IBS.DataAccess.Repository
             MobilityPurchaseOrder = new Mobility.PurchaseOrderRepository(_db);
             MobilityReceivingReport = new Mobility.ReceivingReportRepository(_db);
             MobilityCheckVoucher = new Mobility.CheckVoucherRepository(_db);
+            MobilityJournalVoucher = new Mobility.JournalVoucherRepository(_db);
             MobilityCustomerOrderSlip = new Mobility.CustomerOrderSlipRepository(_db);
             MobilityServiceInvoice = new Mobility.ServiceInvoiceRepository(_db);
             MobilityCreditMemo = new Mobility.CreditMemoRepository(_db);
@@ -211,7 +213,7 @@ namespace IBS.DataAccess.Repository
 
             #region Accounts Payable
             FilprideCheckVoucher = new Filpride.CheckVoucherRepository(_db);
-            FilprideJournalVoucher = new JournalVoucherRepository(_db);
+            FilprideJournalVoucher = new Filpride.JournalVoucherRepository(_db);
             FilpridePurchaseOrder = new Filpride.PurchaseOrderRepository(_db);
             FilprideReceivingReport = new Filpride.ReceivingReportRepository(_db);
             #endregion
