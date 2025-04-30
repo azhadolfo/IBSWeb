@@ -113,7 +113,7 @@
                                  </div>`
                 },
                 "ajax": {
-                    "url": "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "MMSI" })",
+                    "url": "@Url.Action("GetDispatchTicketLists", "DispatchTicket", new { area = "MMSI", filterType = ViewBag.FilterType?.ToString() })",
                     "type": "POST",
                     "data": function (d) {
                         return $.extend({}, d, {

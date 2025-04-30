@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -22,6 +23,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
         private readonly ILogger<ServiceRequestController> _logger;
+        private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService,
             ILogger<ServiceRequestController> logger)
@@ -33,7 +35,38 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index()
+        private async Task UpdateFilterTypeClaim(string filterType)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
+        }
+
+        public async Task<IActionResult> Index(string filterType)
         {
             var dispatchTickets = await _db.MMSIDispatchTickets
                 .Where(sq => sq.Status == "For Posting")
@@ -53,6 +86,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 dispatchTicket.VideoSignedUrl = await GenerateSignedUrl(dispatchTicket.VideoName);
             }
 
+            await UpdateFilterTypeClaim(filterType);
+            ViewBag.FilterType = await GetCurrentFilterType();
             return View(dispatchTickets);
         }
 
@@ -453,16 +488,45 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = await _db.MMSIDispatchTickets
-                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled")
+                var queried = _db.MMSIDispatchTickets
                     .Include(dt => dt.ActivityService)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt.Port)
                     .Include(dt => dt.Tugboat)
                     .Include(dt => dt.TugMaster)
                     .Include(dt => dt.Vessel)
-                    .ToListAsync(cancellationToken);
+                    .Where(dt => dt.Status == "For Posting" || dt.Status == "Cancelled");
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "ForPosting":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Posting");
+                            break;
+                        case "ForTariff":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Tariff");
+                            break;
+                        case "TariffPending":
+                            queried = queried.Where(dt =>
+                                dt.Status == "Tariff Pending");
+                            break;
+                        case "ForBilling":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Billing");
+                            break;
+                        case "ForCollection":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Collection");
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -471,17 +535,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     queried = queried
                     .Where(dt =>
-                        dt.COSNumber?.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber?.ToString().Contains(searchValue) == true ||
-                        dt.ActivityService?.ActivityServiceName?.ToString().Contains(searchValue) == true ||
-                        dt.Terminal?.TerminalName?.ToString().Contains(searchValue) == true ||
-                        dt.Terminal?.Port?.PortName?.ToString().Contains(searchValue) == true ||
-                        dt.Tugboat?.TugboatName?.ToString().Contains(searchValue) == true ||
-                        dt.TugMaster?.TugMasterName?.ToString().Contains(searchValue) == true ||
-                        dt.Vessel?.VesselName?.ToString().Contains(searchValue) == true ||
+                        dt.COSNumber.ToLower().Contains(searchValue) == true ||
+                        dt.DispatchNumber.ToString().Contains(searchValue) == true ||
+                        dt.ActivityService.ActivityServiceName.ToString().Contains(searchValue) == true ||
+                        dt.Terminal.TerminalName.ToString().Contains(searchValue) == true ||
+                        dt.Terminal.Port.PortName.ToString().Contains(searchValue) == true ||
+                        dt.Tugboat.TugboatName.ToString().Contains(searchValue) == true ||
+                        dt.TugMaster.TugMasterName.ToString().Contains(searchValue) == true ||
+                        dt.Vessel.VesselName.ToString().Contains(searchValue) == true ||
                         dt.Status.Contains(searchValue) == true
-                        )
-                    .ToList();
+                        );
                 }
 
                 // Column-specific search
@@ -495,15 +558,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             case "status":
                                 if (searchValue == "for posting")
                                 {
-                                    queried = queried.Where(s => s.Status == "For Posting").ToList();
+                                    queried = queried.Where(s => s.Status == "For Posting");
                                 }
                                 if (searchValue == "cancelled")
                                 {
-                                    queried = queried.Where(s => s.Status == "Cancelled").ToList();
+                                    queried = queried.Where(s => s.Status == "Cancelled");
                                 }
                                 else
                                 {
-                                    queried = queried.Where(s => s.Status != null).ToList();
+                                    queried = queried.Where(s => s.Status != null);
                                 }
                             break;
                         }
@@ -519,8 +582,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     queried = queried
                         .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}")
-                        .ToList();
+                        .OrderBy($"{columnName} {sortDirection}");
                 }
 
                 var totalRecords = queried.Count();
