@@ -13,7 +13,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2><i class="bi bi-database"></i> MMSI TUGBOATS</h2>
+            <h2>MMSI TUGBOATS</h2>
         </div>
     </div>
 
@@ -56,8 +56,8 @@
                         <div class="dropdown">
                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Tugboat", new { id = item.TugboatId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Tugboat", new { id = item.TugboatId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "Tugboat", new { id = item.TugboatId })">Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "Tugboat", new { id = item.TugboatId })">Delete</a></li>
                             </ul>
                         </div>
                     </td>
