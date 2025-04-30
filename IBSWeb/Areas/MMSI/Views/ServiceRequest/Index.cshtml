@@ -187,7 +187,7 @@
                                             <input type="checkbox"
                                                 ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
                                         </td>
-                                        <td class="text-start align-content-center">${value.createDate}</td>
+                                        <td class="text-start align-content-center">${value.date}</td>
                                         <td class="text-start align-content-center">${value.cosNumber || ""}</td>
                                         <td class="text-start align-content-center">${value.dispatchNumber}</td>
                                         <td class="text-start align-content-center">
@@ -288,7 +288,7 @@
                 },
                 "columns": [
                     {
-                        "data": "createDate",
+                        "data": null,
                         "orderable": false,
                         "render": function(data, type, row) {
                             const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
@@ -299,7 +299,7 @@
                             }
                         }
                     },
-                    {"data": "createDate"},
+                    {"data": "date"},
                     {"data": "cosNumber"},
                     {"data": "dispatchNumber"},
                     {"data": "dateLeft"},
