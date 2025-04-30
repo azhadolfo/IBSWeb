@@ -127,7 +127,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
-                        if (model.CreateDate > model.DateLeft)
+                        if (model.Date > model.DateLeft)
                         {
                             throw new ArgumentException("Date start should not be earlier than date today.");
                         }
@@ -276,7 +276,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
-                        if (model.CreateDate > model.DateLeft)
+                        if (model.Date > model.DateLeft)
                         {
                             throw new ArgumentException("Date start should not be earlier than date today.");
                         }
@@ -310,7 +310,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         var changes = new List<string>();
 
-                        if (currentModel.CreateDate != model.CreateDate) { changes.Add($"CreateDate: {currentModel.CreateDate} -> {model.CreateDate}"); }
+                        if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
                         if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
                         if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                         if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
@@ -332,7 +332,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         currentModel.EditedBy = user.UserName;
                         currentModel.EditedDate = DateTime.Now;
                         currentModel.TotalHours = (decimal)timeDifference.TotalHours;
-                        currentModel.CreateDate = model.CreateDate;
+                        currentModel.Date = model.Date;
                         currentModel.COSNumber = model.COSNumber;
                         currentModel.CustomerId = model.CustomerId;
                         currentModel.DispatchNumber = model.DispatchNumber;

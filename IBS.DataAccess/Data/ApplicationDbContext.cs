@@ -166,6 +166,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MMSIBilling> MMSIBillings { get; set; }
         public DbSet<MMSICollection> MMSICollections { get; set; }
         public DbSet<MMSIDispatchTicket> MMSIDispatchTickets { get; set; }
+        public DbSet<MMSIServiceRequest> MMSIServiceRequests { get; set; }
         public DbSet<MMSITariffRate> MMSITariffRates { get; set; }
 
         #endregion

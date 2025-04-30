@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250430090941_AddServiceRequestModelAndRenameDispatchDate")]
+    partial class AddServiceRequestModelAndRenameDispatchDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4804,10 +4807,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("baf");
 
-                    b.Property<decimal>("BAFDiscount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("baf_discount");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text")
                         .HasColumnName("created_by");
@@ -4823,10 +4822,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Dispatch")
                         .HasColumnType("numeric")
                         .HasColumnName("dispatch");
-
-                    b.Property<decimal>("DispatchDiscount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("dispatch_discount");
 
                     b.Property<int>("TerminalId")
                         .HasColumnType("integer")
