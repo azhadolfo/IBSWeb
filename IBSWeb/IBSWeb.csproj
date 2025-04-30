@@ -67,6 +67,9 @@
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Create.cshtml" />
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Edit.cshtml" />
     <_ContentIncludedByDefault Remove="Areas\Bienes\Views\BankAccount\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\MMSI\Views\Customer\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\MMSI\Views\Customer\Edit.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\MMSI\Views\Customer\Index.cshtml" />
   </ItemGroup>
 
 </Project>

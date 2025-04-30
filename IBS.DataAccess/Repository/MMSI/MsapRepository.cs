@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -119,13 +120,14 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> customers = await _dbContext.MMSICustomers.OrderBy(s => s.CustomerName).Select(s => new SelectListItem
+            return await _dbContext.FilprideCustomers
+                .Where(c => c.IsMMSI == true)
+                .OrderBy(s => s.CustomerName)
+                .Select(s => new SelectListItem
             {
-                Value = s.MMSICustomerId.ToString(),
+                Value = s.CustomerId.ToString(),
                 Text = s.CustomerName
             }).ToListAsync(cancellationToken);
-
-            return customers;
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(int portId, CancellationToken cancellationToken = default)

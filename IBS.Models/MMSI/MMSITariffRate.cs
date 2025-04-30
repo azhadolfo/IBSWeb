@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -15,7 +16,7 @@ namespace IBS.Models.MMSI
         public int CustomerId { get; set; }
 
         [ForeignKey(nameof(CustomerId))]
-        public MMSICustomer? Customer { get; set; }
+        public FilprideCustomer? Customer { get; set; }
 
         public int TerminalId { get; set; }
 

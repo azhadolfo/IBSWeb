@@ -133,8 +133,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
 
-                var mmsiCustomers = await _dbContext.MMSICustomers
-                    .Where(t => t.IsActive)
+                var mmsiCustomers = await _dbContext.FilprideCustomers
+                    .Where(t => t.IsActive && t.IsMMSI == true)
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
 
@@ -217,7 +217,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #region -- AR Ledger --
 
                 var arLedgerColStart = col + 1;
-                var customers = await _dbContext.MMSICustomers.OrderBy(t => t.CustomerName)
+                var customers = await _dbContext.FilprideCustomers
+                    .Where(c => c.IsMMSI == true && c.IsActive == true)
+                    .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
                 foreach (var customer in customers)
                 {

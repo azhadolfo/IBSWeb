@@ -297,6 +297,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             model.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
 
+            if (model.CustomerPrincipal == null)
+            {
+                ViewData["HasPrincipal"] = false;
+            }
+            else
+            {
+                ViewData["HasPrincipal"] = true;
+            }
+
             return View(model);
         }
 
@@ -526,17 +535,28 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<JsonResult> GetCustomerDetails(int customerId)
         {
-            var customerDetails = await _db.MMSICustomers
+            var customerDetails = await _db.FilprideCustomers
                 .FindAsync(customerId);
+
+            var principal = await _db.MMSIPrincipals
+                .Where(p => p.CustomerId == customerId)
+                .FirstOrDefaultAsync();
+
+            bool hasPrincipal = default;
+
+            if (principal != null)
+            {
+                hasPrincipal = true;
+            }
 
             var customerDetailsJson = new
             {
                 terms = customerDetails.CustomerTerms,
                 address = customerDetails.CustomerAddress,
-                tinNo = customerDetails.CustomerTIN,
-                businessStyle = customerDetails.CustomerBusinessStyle,
-                hasPrincipal = customerDetails.HasPrincipal,
-                isVatable = customerDetails.IsVatable
+                tinNo = customerDetails.CustomerTin,
+                businessStyle = customerDetails.BusinessStyle,
+                hasPrincipal = hasPrincipal,
+                vatType = customerDetails.VatType
             };
 
             return Json(customerDetailsJson);

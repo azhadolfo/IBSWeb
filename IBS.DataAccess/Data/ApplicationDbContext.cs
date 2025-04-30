@@ -174,7 +174,6 @@ namespace IBS.DataAccess.Data
 
         public DbSet<MMSIActivityService> MMSIActivitiesServices { get; set; }
         public DbSet<MMSICompanyOwner> MMSICompanyOwners { get; set; }
-        public DbSet<MMSICustomer> MMSICustomers { get; set; }
         public DbSet<MMSIPort> MMSIPorts { get; set; }
         public DbSet<MMSIPrincipal> MMSIPrincipals { get; set; }
         public DbSet<MMSITerminal> MMSITerminals { get; set; }

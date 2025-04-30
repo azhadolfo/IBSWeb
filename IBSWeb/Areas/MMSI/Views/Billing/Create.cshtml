@@ -381,7 +381,7 @@
                         success: function (data) {
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
-                            $vatableCheckBox.prop("checked", data.isVatable);
+                            $vatableCheckBox.prop("checked", data.vatType === "Vatable");
                             console.log(data.isVatable);
                         }
                     });

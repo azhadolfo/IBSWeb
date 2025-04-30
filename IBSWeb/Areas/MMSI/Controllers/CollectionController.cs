@@ -344,10 +344,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var customer = await _dbContext.MMSICustomers
+                var customer = await _dbContext.FilprideCustomers
                     .FindAsync(int.Parse(customerId), cancellationToken);
 
-                return Json(customer.IsVatable);
+                return Json(customer.VatType);
             }
             catch (Exception ex)
             {
