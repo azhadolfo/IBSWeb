@@ -342,6 +342,150 @@
                         </div>
                     </div>
                 }
+            
+                if (selectedCompany == "MMSI")
+                {
+                    <div class="mt-5">
+                        <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "ServiceRequest", new { area = "MMSI", filterType = "ForPosting" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-tools me-2 text-primary"></i>Service Request for Posting
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIServiceRequestForPosting.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-tools me-2 text-primary"></i>Service Request for Posting
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIServiceRequestForPosting.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-4">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForTariff" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-ticket-perforated-fill me-2 text-primary"></i>Dispatch Ticket for Tariff
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForTariff.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-ticket me-2 text-primary"></i>Dispatch Ticket for Tariff
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForTariff.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-4">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "TariffPending" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-hand-thumbs-up-fill me-2 text-primary"></i>Dispatch Ticket Tariff for Approval
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketTariffPending.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-hand-thumbs-up-fill me-2 text-primary"></i>Dispatch Ticket Tariff for Approval
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketTariffPending.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-4">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForBilling" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-receipt me-2 text-primary"></i>Dispatch Ticket for Billing
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForBilling.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-receipt me-2 text-primary"></i>Dispatch Ticket for Billing
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForBilling.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="col-md-4">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Index", "Billing", new { area = "MMSI", filterType = "ForCollection" })" class="text-decoration-none">
+                                        <div class="card shadow-sm h-100 border-0">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-dark fw-semibold">
+                                                    <i class="bi bi-cash-coin me-2 text-primary"></i>Billing for Collection
+                                                </h5>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIBillingForCollection.ToString("N0")</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <div class="card shadow-sm h-100 border-0">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title text-dark fw-semibold">
+                                                <i class="bi bi-cash-coin me-2 text-primary"></i>Billing for Collection
+                                            </h5>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIBillingForCollection.ToString("N0")</p>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            
+                        </div>
+                    </div>
+                }
             }
         </div>
     </div>
