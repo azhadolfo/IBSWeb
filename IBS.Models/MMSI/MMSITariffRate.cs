@@ -40,6 +40,10 @@ namespace IBS.Models.MMSI
 
         public DateTime? UpdateDate { get; set; }
 
+        public decimal DispatchDiscount { get; set; }
+
+        public decimal BAFDiscount { get; set; }
+
         #region -- Select Lists --
 
         [NotMapped]

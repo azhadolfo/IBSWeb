@@ -65,6 +65,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         existingModel.Dispatch = model.Dispatch;
                         existingModel.BAF = model.BAF;
+                        existingModel.DispatchDiscount = model.DispatchDiscount;
+                        existingModel.BAFDiscount = model.BAFDiscount;
                         existingModel.UpdateBy = user?.UserName;
                         existingModel.UpdateDate = DateTime.Now;
                         model = existingModel;
