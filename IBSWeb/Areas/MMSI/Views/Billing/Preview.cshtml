@@ -180,7 +180,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.Tugboat.TugboatName == tugboat))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
@@ -198,7 +198,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue.HasValue))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>

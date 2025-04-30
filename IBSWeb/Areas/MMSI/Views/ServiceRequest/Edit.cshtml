@@ -24,9 +24,9 @@
 
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="CreateDate" type="date" value="@(Model.CreateDate.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
-                        <label asp-for="CreateDate" for="CreateDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CreateDate" class="text-danger"></span>
+                        <input asp-for="Date" type="date" value="@(Model.Date.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
+                        <label asp-for="Date" for="CreateDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
                         <input asp-for="COSNumber" type="text" class="form-control border-0 shadow" id="COSNumber" placeholder="" maxlength="10" title="COS Number must not exceed 10 characters">

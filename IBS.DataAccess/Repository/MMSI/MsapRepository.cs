@@ -172,7 +172,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.CreateDate}"
+                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.Date}"
             }).ToList();
 
             return ticketsList;
@@ -363,8 +363,8 @@ namespace IBS.DataAccess.Repository.MMSI
             }
 
             var dispatchTickets = await _dbContext.MMSIDispatchTickets
-                .Where(dt => dt.CreateDate >= dateFrom
-                             && dt.CreateDate <= dateTo
+                .Where(dt => dt.Date >= dateFrom
+                             && dt.Date <= dateTo
                              && dt.Status == "Billed")
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Vessel)
@@ -372,7 +372,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.Terminal)
                 .ThenInclude(t => t.Port)
                 .Include(dt => dt.ActivityService)
-                .OrderBy(dt => dt.CreateDate)
+                .OrderBy(dt => dt.Date)
                 .ToListAsync(cancellationToken);
 
             foreach (var dispatchTicket in dispatchTickets)

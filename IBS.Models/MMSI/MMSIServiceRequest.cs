@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.MMSI
 {
-    public class MMSIDispatchTicket
+    public class MMSIServiceRequest
     {
         [Key]
         public int DispatchTicketId {  get; set; }
@@ -49,12 +49,6 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "varchar(100)")]
         public string? VoyageNumber { get; set; }
 
-        public string? DispatchChargeType { get; set; }
-
-        public string? BAFChargeType { get; set; }
-
-        public decimal? TotalHours { get; set; }
-
         public string? Status { get; set; }
 
         public string? CreatedBy { get; set; }
@@ -64,57 +58,6 @@ namespace IBS.Models.MMSI
         public string? EditedBy { get; set; }
 
         public DateTime? EditedDate { get; set; }
-
-        #region == Tariff ==
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? DispatchRate { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-
-        public decimal? DispatchBillingAmount { get; set; }
-
-        public decimal? DispatchDiscount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-
-        public decimal? DispatchNetRevenue { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-
-        public decimal? BAFRate { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? BAFBillingAmount { get; set; }
-
-        public decimal? BAFDiscount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? BAFNetRevenue { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? TotalBilling { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? TotalNetRevenue { get; set; }
-
-        public string? TariffBy { get; set; }
-
-        public DateTime? TariffDate { get; set; }
-
-        public string? TariffEditedBy { get; set; }
-
-        public DateTime? TariffEditedDate { get; set; }
-
-        #endregion == Tariff ==
 
         public string? ImageName { get; set; }
 
@@ -129,9 +72,6 @@ namespace IBS.Models.MMSI
         public string? VideoSignedUrl { get; set; }
 
         public string? BillingId { get; set; }
-
-        [NotMapped]
-        public MMSIBilling? Billing { get; set; }
 
         #region ---Columns with Table relations---
 

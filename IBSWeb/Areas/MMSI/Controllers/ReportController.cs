@@ -430,7 +430,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 foreach (var sales in salesReport)
                 {
-                    worksheet.Cells[row, 1].Value = sales.CreateDate;
+                    worksheet.Cells[row, 1].Value = sales.Date;
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MM/dd/yyyy";
 
                     worksheet.Cells[row, 2].Value = $"{sales.DispatchNumber}";
