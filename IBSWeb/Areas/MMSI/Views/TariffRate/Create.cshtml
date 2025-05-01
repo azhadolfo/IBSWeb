@@ -86,13 +86,23 @@
                 <div class="row pb-3">
                     <div class="form-floating col-6 my-2">
                         <input asp-for="Dispatch" type="number" class="form-control border-0 shadow" id="Dispatch" placeholder=" " required>
-                        <label asp-for="Dispatch" for="Dispatch" class="ms-2">Dispatch</label>
+                        <label asp-for="Dispatch" for="Dispatch" class="ms-2">Dispatch Rate</label>
                         <span asp-validation-for="Dispatch" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
+                        <input asp-for="DispatchDiscount" type="number" class="form-control border-0 shadow" id="Dispatch" placeholder=" " required>
+                        <label asp-for="DispatchDiscount" for="Dispatch" class="ms-2">Dispatch Discount</label>
+                        <span asp-validation-for="DispatchDiscount" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
                         <input asp-for="BAF" type="number" class="form-control border-0 shadow" id="BAF" placeholder=" " required>
-                        <label asp-for="BAF" for="BAF" class="ms-2">BAF</label>
+                        <label asp-for="BAF" for="BAF" class="ms-2">BAF Rate</label>
                         <span asp-validation-for="BAF" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="BAFDiscount" type="number" class="form-control border-0 shadow" id="BAF" placeholder=" " required>
+                        <label asp-for="BAFDiscount" for="BAF" class="ms-2">BAF Discount</label>
+                        <span asp-validation-for="BAFDiscount" class="text-danger"></span>
                     </div>
                 </div>
                 
