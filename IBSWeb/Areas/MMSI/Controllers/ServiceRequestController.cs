@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -122,10 +123,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
-                if (ModelState.IsValid)
+                if (!ModelState.IsValid)
                 {
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                    TempData["error"] = "Can't create entry, please review your input.";
+                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                    return View(model);
+                }
+
+                if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                     {
                         if (model.Date > model.DateLeft)
                         {
@@ -192,18 +202,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         return View(model);
                     }
-                }
-                else
-                {
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    TempData["error"] = "Can't create entry, please review your input.";
-                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
-                    return View(model);
-                }
             }
             catch (Exception ex)
             {
@@ -705,10 +703,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!string.IsNullOrEmpty(records))
             {
+                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     var recordList = JsonConvert.DeserializeObject<List<string>>(records);
-                    var posteds = new List<string>();
+                    var postedTickets = new List<string>();
 
                     foreach (var recordId in recordList)
                     {
@@ -720,7 +720,44 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
-                            posteds.Add($"{recordToUpdate.ServiceRequestId}");
+
+                            var timeStamp = DateTime.Now;
+                            var creator = await GetUserNameAsync();
+
+                            MMSIDispatchTicket newTicket = new MMSIDispatchTicket()
+                            {
+                                Date = recordToUpdate.Date,
+                                COSNumber = recordToUpdate.COSNumber,
+                                CustomerId = recordToUpdate.CustomerId,
+                                DispatchNumber = recordToUpdate.DispatchNumber,
+                                DateLeft = recordToUpdate.DateLeft,
+                                TimeLeft = recordToUpdate.TimeLeft,
+                                DateArrived = recordToUpdate.DateArrived,
+                                TimeArrived = recordToUpdate.TimeArrived,
+                                TerminalId = recordToUpdate.TerminalId,
+                                ActivityServiceId = recordToUpdate.ActivityServiceId,
+                                TugBoatId = recordToUpdate.TugBoatId,
+                                TugMasterId = recordToUpdate.TugMasterId,
+                                VesselId = recordToUpdate.VesselId,
+                                Remarks = recordToUpdate.Remarks,
+                                CreatedBy = creator,
+                                CreatedDate = timeStamp,
+                                ImageName = recordToUpdate.ImageName,
+                                ImageSavedUrl = recordToUpdate.ImageSavedUrl,
+                                VideoName = recordToUpdate.VideoName,
+                                VideoSavedUrl = recordToUpdate.VideoSavedUrl,
+                                Status = "For Tariff",
+                                TotalHours = recordToUpdate.TotalHours
+                            };
+
+                            await _db.MMSIDispatchTickets.AddAsync(newTicket, cancellationToken);
+                            await _db.SaveChangesAsync(cancellationToken);
+
+                            postedTickets.Add($"{recordToUpdate.ServiceRequestId} => #{newTicket.DispatchTicketId}");
+                        }
+                        else
+                        {
+                            throw new Exception("Service request not found.");
                         }
                     }
 
@@ -731,15 +768,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = posteds.Any()
-                            ? $"Posted: #{string.Join(", #", posteds)}"
+                        Activity = postedTickets.Any()
+                            ? $"Posted: #{string.Join(", #", postedTickets)}"
                             : $"No posting detected",
-                        DocumentType = "ServiceRequest",
+                        DocumentType = "DispatchTicket",
                         Company = await GetCompanyClaimAsync()
                     };
 
                     await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
+
+                    await transaction.CommitAsync(cancellationToken);
 
                     #endregion --Audit Trail
 
@@ -749,6 +788,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
