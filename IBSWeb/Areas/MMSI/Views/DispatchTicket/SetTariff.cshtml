@@ -110,22 +110,22 @@
                                 <div class="row justify-content-end">
                                     <div class="col text-start">
                                         <label class="mx-1">
-                                            <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "")/> Per Hour
+                                            <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "") /> Per Hour
                                         </label>
                                         <label class="mx-1">
-                                            <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "")/> Per Move
+                                            <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "") /> Per Move
                                         </label>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchRate" type="number" class="form-control border-0 shadow" id="DispatchRate" placeholder=" " min="0" required>
-                                        <label asp-for="DispatchRate" for="DispatchRate" class="ms-2">Dispatch Rate<span class="required text-danger">*</span></label>
+                                        <input asp-for="DispatchRate" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
+                                        <label asp-for="DispatchRate" class="ms-2">Dispatch Rate<span class="required text-danger">*</span></label>
                                         <span asp-validation-for="DispatchRate" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchDiscount" value="0" type="number" class="form-control border-0 shadow" id="DispatchDiscount" placeholder=" " min="0" max="100" required>
-                                        <label asp-for="DispatchDiscount" for="DispatchDiscount" class="ms-2">Dispatch Discount(%)</label>
+                                        <input asp-for="DispatchDiscount" value="0" type="number" class="form-control border-0 shadow" placeholder=" " min="0" max="100" required>
+                                        <label asp-for="DispatchDiscount" class="ms-2">Dispatch Discount(%)</label>
                                         <span asp-validation-for="DispatchDiscount" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -173,13 +173,13 @@
                                 </div>
                                 <div class="row">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" id="BAFRate" placeholder=" " min="0" required>
-                                        <label asp-for="BAFRate" for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
+                                        <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
+                                        <label asp-for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
                                         <span asp-validation-for="BAFRate" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFDiscount" value="0" type="number" class="form-control border-0 shadow" id="BAFDiscount" placeholder=" " min="0" max="100" required>
-                                        <label asp-for="BAFDiscount" for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
+                                        <input asp-for="BAFDiscount" value="0" type="number" class="form-control border-0 shadow" placeholder=" " min="0" max="100" required>
+                                        <label asp-for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
                                         <span asp-validation-for="BAFDiscount" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -242,6 +242,7 @@
 
         $(document).ready(function () {
 
+            ValueChange()
             $('#CustomerId').select2({
                 placeholder: "Select Customer", // Custom placeholder
                 allowClear: true, // Optional: adds an "x" to clear selection
@@ -256,12 +257,12 @@
                 var selectedValue2 = $('input[name="chargeType2"]:checked').val();
 
                 @* Get Dispatch/BAF Rate and Discount Value *@
-                var dispatchRate = parseFloat($('input[name="DispatchRate"]').val()) || 0;
-                var dispatchDiscountPercent = parseFloat($('input[name="DispatchDiscount"]').val()) || 0;
+                var dispatchRate = $('input[name="DispatchRate"]').val();
+                var dispatchDiscountPercent = $('input[name="DispatchDiscount"]').val();
                 var dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
 
-                var bafRate = parseFloat($('input[name="BAFRate"]').val()) || 0;
-                var bafDiscountPercent = parseFloat($('input[name="BAFDiscount"]').val()) || 0;
+                var bafRate = $('input[name="BAFRate"]').val();
+                var bafDiscountPercent = $('input[name="BAFDiscount"]').val();
                 var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
@@ -314,7 +315,7 @@
                 let dispatchTicketId = $("#DispatchTicketId").val();
 
                 $.ajax({
-                    url: '/MMSI/DispatchTicket/CheckForTariffRate/',
+                    url: '@Url.Action("CheckForTariffRate", "DispatchTicket", new { area = "MMSI" })',
                     type: 'POST',
                     data: { customerId : customerId, dispatchTicketId : dispatchTicketId },
                     success: function(result) {
@@ -322,6 +323,8 @@
                         if (result.exists){
                             $("#DispatchRate").val(result.dispatch);
                             $("#BAFRate").val(result.baf);
+                            $("#DispatchDiscount").val(result.dispatchDiscount);
+                            $("#BAFDiscount").val(result.bafDiscount);
 
                             Swal.fire({
                                 position: "center",
@@ -334,7 +337,15 @@
                                             <div class="col-6 text-center align-items-center">
                                                 <strong>BAF Rate:</strong> ₱${result.baf}
                                             </div>
-                                        </div>  `,
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6 text-center align-items-center">
+                                                <strong>Dispatch Discount:</strong> ₱${result.dispatchDiscount}
+                                            </div>
+                                            <div class="col-6 text-center align-items-center">
+                                                <strong>BAF Dicount:</strong> ₱${result.bafDiscount}
+                                            </div>
+                                        </div>`,
                                 showConfirmButton: false,
                                 timer: 3000
                             });
@@ -344,6 +355,8 @@
                         {
                             $("#DispatchRate").val(null);
                             $("#BAFRate").val(null);
+                            $("#DispatchDiscount").val(null);
+                            $("#BAFDiscount").val(null);
                             ValueChange();
                         }
 
