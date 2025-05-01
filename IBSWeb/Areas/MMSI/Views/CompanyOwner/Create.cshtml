@@ -18,7 +18,7 @@
         <form method="post" class="row">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <div class="row">
+                <div class="row pt-2">
                     <div class="form-floating col-6 my-3">
                         <input asp-for="CompanyOwnerName" type="text" class="form-control border-0 shadow" id="CompanyOwnerName" placeholder="Name" required>
                         <label asp-for="CompanyOwnerName" for="CompanyOwnerName" class="ms-2">Company Owner Name<span class="required text-danger">*</span></label>
@@ -28,6 +28,13 @@
                         <input asp-for="CompanyOwnerNumber" type="text" class="form-control border-0 shadow" id="CompanyOwnerNumber" placeholder="Number" required>
                         <label asp-for="CompanyOwnerNumber" for="CompanyOwnerNumber" class="ms-2">Company/Owner Number<span class="required text-danger">*</span></label>
                         <span asp-validation-for="CompanyOwnerNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="FixedRate" type="number" class="form-control border-0 shadow" id="FixedRate" placeholder="Fixed Rate" required>
+                        <label asp-for="FixedRate" for="FixedRate" class="ms-2">Fixed Rate<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="FixedRate" class="text-danger"></span>
                     </div>
                 </div>
             </div>
