@@ -185,7 +185,7 @@
                                     <tr>
                                         <td data-orderable="false" class="text-center align-content-center">
                                             <input type="checkbox"
-                                                ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
+                                                ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.serviceRequestId}"` : "disabled"}>
                                         </td>
                                         <td class="text-start align-content-center">${value.date}</td>
                                         <td class="text-start align-content-center">${value.cosNumber || ""}</td>
@@ -291,9 +291,9 @@
                         "data": null,
                         "orderable": false,
                         "render": function(data, type, row) {
-                            const isChecked = selectedRecords.has(String(row.dispatchTicketId)) ? 'checked' : '';
+                            const isChecked = selectedRecords.has(String(row.serviceRequestId)) ? 'checked' : '';
                             if (row.status !== "Cancelled") {
-                                return `<div class="row"><div class="col text-center"><input type="checkbox" class="selectCheckbox" value="${row.dispatchTicketId}" ${isChecked}></div></div> `;
+                                return `<div class="row"><div class="col text-center"><input type="checkbox" class="selectCheckbox" value="${row.serviceRequestId}" ${isChecked}></div></div> `;
                             } else {
                                 return `<div class="row"><div class="col text-center"><input type="checkbox" disabled></div></div>`;
                             }
@@ -368,8 +368,10 @@
             });
 
             $(document).on("click", "#postSelected", function () {
+                console.log("test");
                 const selectedArray = Array.from(selectedRecords); // Convert Set to Array
                 const queryString = encodeURIComponent(JSON.stringify(selectedArray));
+                console.log(queryString); 
 
                 Swal.fire({
                     title: "Post selected requests?",
