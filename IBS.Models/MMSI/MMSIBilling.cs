@@ -18,9 +18,10 @@ namespace IBS.Models.MMSI
 
         public string? Status {  get; set; }
 
-        public bool IsUndocumented { get; set; } = default;
+        public bool IsUndocumented { get; set; }
 
-        public bool IsVatable { get; set; } = default;
+        [Column(TypeName = "varchar(10)")]
+        public string BilledTo { get; set; }
 
         public string? VoyageNumber { get; set; }
 

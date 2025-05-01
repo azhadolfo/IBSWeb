@@ -370,7 +370,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
                     if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.PrincipalId != model.PrincipalId) { changes.Add($"PrincipalId: {currentModel.PrincipalId} -> {model.PrincipalId}"); }
-                    if (currentModel.IsVatable != model.IsVatable) { changes.Add($"IsVatable: {currentModel.IsVatable} -> {model.IsVatable}"); }
+                    if (currentModel.BilledTo != model.BilledTo) { changes.Add($"IsVatable: {currentModel.BilledTo} -> {model.BilledTo}"); }
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
                     { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", currentModel.ToBillDispatchTickets)} -> #{string.Join(", #", model.ToBillDispatchTickets)}"); }
 
@@ -402,7 +402,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.VesselId = model.VesselId;
                     currentModel.CustomerId = model.CustomerId;
                     currentModel.PrincipalId = model.PrincipalId;
-                    currentModel.IsVatable = model.IsVatable;
+                    currentModel.BilledTo = model.BilledTo;
                     currentModel.Status = "For Collection";
 
                     // get billed by current billing select list

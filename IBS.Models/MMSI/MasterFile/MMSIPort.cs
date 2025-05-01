@@ -17,5 +17,7 @@ namespace IBS.Models.MMSI.MasterFile
         [StringLength(20, ErrorMessage = "Port name cannot exceed 20 characters.")]
         [Column(TypeName = "varchar(20)")]
         public string? PortName { get; set; }
+
+        public bool HasSBMA { get; set; }
     }
 }
