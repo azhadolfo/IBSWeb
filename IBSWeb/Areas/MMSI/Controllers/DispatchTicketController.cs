@@ -860,8 +860,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var result = new
                 {
-                    Dispatch = tariffRate?.Dispatch ?? 0.00m, // Assuming Rate is a decimal property in MMSITariffRates
-                    BAF = tariffRate?.BAF ?? 0.00m, // Example second decimal; replace with your logic
+                    Dispatch = tariffRate.Dispatch, // Assuming Rate is a decimal property in MMSITariffRates
+                    BAF = tariffRate.BAF, // Example second decimal; replace with your logic
+                    DispatchDiscount = tariffRate.DispatchDiscount,
+                    BAFDiscount = tariffRate.BAFDiscount,
                     Exists = true
                 };
 
