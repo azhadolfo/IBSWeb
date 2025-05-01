@@ -1,3 +1,5 @@
+@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model IBS.Models.MMSI.MMSIBilling
 
 @{
@@ -168,11 +170,24 @@
                             
                         </div>
                     </div>
-                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-start d-none" id="VatableDiv">
-                        <input class="form-check-input m-0 ms-2" asp-for="IsVatable" type="checkbox" id="IsVatableCheckBox">
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsVatableCheckBox" style="font-size: 20px;">
-                            With Value Added Tax
-                        </label>
+                    <div class="col-3 ps-2 my-2 d-none hiddenDiv">
+                        <div class="row">
+                            <div class="col">
+                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio">
+                                <label style="font-size: 20px;">
+                                    Billed To Local
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <input asp-for="BilledTo" class="isExempt" value="PRINCIPAL" type="radio">
+                                <label style="font-size: 20px;">
+                                    Billed To Principal
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -363,8 +378,9 @@
                 const $principalDiv = $("#PrincipalDiv");
                 const $selectDiv = $("#SelectDiv");
                 const $dispatchSelect = $("#DispatchTicketSelect");
-                const $vatableDiv = $("#VatableDiv");
-                const $vatableCheckBox = $("#IsVatableCheckBox");
+                const $hiddenDiv = $(".hiddenDiv");
+                const $vatableRadioButton = $(".isVatable");
+                const $exemptRadioButton = $(".isExempt");
                 $principalDiv.removeClass("d-none");
                 $selectDiv.addClass("d-none");
                 console.log("principal should've been blanked here");
@@ -373,7 +389,7 @@
                     $dispatchSelect.prop("disabled", false);
                     $dispatchSelect.prop("required", true);
                     $dispatchSelect.val("0").trigger("change");
-                    $vatableDiv.removeClass("d-none");
+                    $hiddenDiv.removeClass("d-none");
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
                         method: "POST",
@@ -381,7 +397,8 @@
                         success: function (data) {
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
-                            $vatableCheckBox.prop("checked", data.vatType === "Vatable");
+                            $vatableRadioButton.prop("checked", data.vatType === "@SD.VatType_Vatable");
+                            $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_Exempt");
                             console.log(data.isVatable);
                         }
                     });
@@ -403,7 +420,7 @@
                         }
                     });
                 } else {
-                    $vatableDiv.addClass("d-none");
+                    $hiddenDiv.addClass("d-none");
                     $dispatchSelect.val("0").trigger("change");
                     $dispatchSelect.prop("disabled", true);
                     $principalDiv.addClass("d-none");
