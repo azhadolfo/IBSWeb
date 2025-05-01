@@ -37,49 +37,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
-        private async Task UpdateFilterTypeClaim(string filterType)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
-            {
-                var existingClaim = (await _userManager.GetClaimsAsync(user))
-                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
-
-                if (existingClaim != null)
-                {
-                    await _userManager.RemoveClaimAsync(user, existingClaim);
-                }
-
-                if (!string.IsNullOrEmpty(filterType))
-                {
-                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
-                }
-            }
-        }
-
-        private async Task<string> GetCurrentFilterType()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user != null)
-            {
-                var claims = await _userManager.GetClaimsAsync(user);
-                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
-            }
-            return null;
-        }
-
-        private async Task<string> GetUserNameAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            return user.UserName;
-        }
-
         public async Task<IActionResult> Index(string filterType)
         {
             var dispatchTickets = await _db.MMSIDispatchTickets
@@ -94,6 +51,128 @@ namespace IBSWeb.Areas.MMSI.Controllers
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(dispatchTickets);
+        }
+
+        [HttpGet]
+        public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            MMSIDispatchTicket model = new()
+            {
+                ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
+                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
+                Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
+                TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
+                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+            };
+
+            ViewData["PortId"] = 0;
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        {
+            if (!ModelState.IsValid)
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                TempData["error"] = "Can't create entry, please review your input.";
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                return View(model);
+            }
+
+            try
+            {
+                model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
+                model.Terminal.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
+                DateTime timeStamp = DateTime.Now;
+
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+
+                if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                {
+                    if (model.Date > model.DateLeft)
+                    {
+                        throw new ArgumentException("Date start should not be earlier than date today.");
+                    }
+
+                    model.CreatedBy = await GetUserNameAsync();
+                    timeStamp = DateTime.Now;
+                    model.CreatedDate = timeStamp;
+
+                    // upload file if something is submitted
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                        model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
+
+                        ViewBag.Message = "Image uploaded successfully!";
+                    }
+                    if (videoFile != null && videoFile.Length > 0)
+                    {
+                        model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                        model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
+
+                        ViewBag.Message = "Video uploaded successfully!";
+                    }
+
+                    model.Status = "For Tariff";
+                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
+                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
+                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                    model.TotalHours = (decimal)timeDifference.TotalHours;
+                    await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    var tempModel =
+                        await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
+
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = $"Create dispatch ticket: id#{tempModel.DispatchTicketId}",
+                        DocumentType = "DispatchTicket",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion --Audit Trail
+
+                    TempData["success"] = $"Dispatch Ticket #{tempModel.DispatchNumber} was successfully created.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
+                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                    return View(model);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = $"{ex.Message}";
+                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                return View(model);
+            }
         }
 
         public void ReadXLS(string FilePath)
@@ -810,6 +889,56 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 model.VideoSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.VideoName);
             }
+        }
+
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        private async Task UpdateFilterTypeClaim(string filterType)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
+        }
+
+        private async Task<string> GetUserNameAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            return user.UserName;
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName, string type)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{type}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
     }
 }

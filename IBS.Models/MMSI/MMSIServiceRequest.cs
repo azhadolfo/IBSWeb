@@ -9,7 +9,7 @@ namespace IBS.Models.MMSI
     public class MMSIServiceRequest
     {
         [Key]
-        public int DispatchTicketId {  get; set; }
+        public int ServiceRequestId {  get; set; }
 
         [Display(Name = "Date")]
         public DateOnly Date { get; set; }
@@ -72,6 +72,8 @@ namespace IBS.Models.MMSI
         public string? VideoSignedUrl { get; set; }
 
         public string? BillingId { get; set; }
+
+        public decimal? TotalHours { get; set; }
 
         #region ---Columns with Table relations---
 

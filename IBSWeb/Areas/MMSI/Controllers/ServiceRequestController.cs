@@ -68,7 +68,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(string filterType)
         {
-            var dispatchTickets = await _db.MMSIDispatchTickets
+            var dispatchTickets = await _db.MMSIServiceRequests
                 .Where(sq => sq.Status == "For Posting")
                 .Include(sq => sq.ActivityService)
                 .Include(sq => sq.Terminal).ThenInclude(t => t.Port)
@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            MMSIDispatchTicket model = new()
+            MMSIServiceRequest model = new()
             {
                 ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
                 Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
@@ -112,7 +112,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(MMSIServiceRequest model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
             model.Terminal.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
@@ -139,7 +139,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         // upload file if something is submitted
                         if (imageFile != null && imageFile.Length > 0)
                         {
-
                             model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
                             model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
 
@@ -158,11 +157,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                         TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
                         model.TotalHours = (decimal)timeDifference.TotalHours;
-                        await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
+                        await _db.MMSIServiceRequests.AddAsync(model, cancellationToken);
                         await _db.SaveChangesAsync(cancellationToken);
 
                         var tempModel =
-                            await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
+                            await _db.MMSIServiceRequests.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
 
                         #region -- Audit Trail
 
@@ -171,7 +170,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             Date = DateTime.Now,
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
-                            Activity = $"Create service request: id#{tempModel.DispatchTicketId}",
+                            Activity = $"Create service request: id#{tempModel.ServiceRequestId}",
                             DocumentType = "ServiceRequest",
                             Company = await GetCompanyClaimAsync()
                         };
@@ -218,7 +217,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIDispatchTickets.Where(dt => dt.DispatchTicketId == id)
+            var model = await _db.MMSIServiceRequests.Where(dt => dt.ServiceRequestId == id)
                 .Include(a => a.ActivityService)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
@@ -243,8 +242,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == id)
+            var model = await _db.MMSIServiceRequests
+                .Where(dt => dt.ServiceRequestId == id)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -267,7 +266,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(MMSIServiceRequest model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             var user = await _userManager.GetUserAsync(User);
             try
@@ -280,7 +279,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             throw new ArgumentException("Date start should not be earlier than date today.");
                         }
-                        var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
+                        var currentModel = await _db.MMSIServiceRequests.FindAsync(model.ServiceRequestId, cancellationToken);
                         TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
 
                         if (imageFile != null)
@@ -367,8 +366,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
                             Activity = changes.Any()
-                                ? $"Edit: id#{currentModel.DispatchTicketId}, {string.Join(", ", changes)}"
-                                : $"No changes detected: id#{currentModel.DispatchTicketId}",
+                                ? $"Edit: id#{currentModel.ServiceRequestId}, {string.Join(", ", changes)}"
+                                : $"No changes detected: id#{currentModel.ServiceRequestId}",
                             DocumentType = "ServiceRequest",
                             Company = await GetCompanyClaimAsync()
                         };
@@ -386,10 +385,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
-                        model = await _db.MMSIDispatchTickets
+                        model = await _db.MMSIServiceRequests
                         .Include(dt => dt.Terminal)
                         .ThenInclude(t => t.Port)
-                        .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
+                        .FirstOrDefaultAsync(dt => dt.ServiceRequestId == model.ServiceRequestId, cancellationToken);
 
                         model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
@@ -402,10 +401,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     TempData["error"] = "Can't create entry, please review your input.";
 
-                    model = await _db.MMSIDispatchTickets
+                    model = await _db.MMSIServiceRequests
                     .Include(dt => dt.Terminal)
                     .ThenInclude(t => t.Port)
-                    .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
+                    .FirstOrDefaultAsync(dt => dt.ServiceRequestId == model.ServiceRequestId, cancellationToken);
 
                     model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
 
@@ -420,8 +419,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["error"] = ex.Message;
 
-                model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
+                model = await _db.MMSIServiceRequests
+                .Where(dt => dt.ServiceRequestId == model.ServiceRequestId)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -455,10 +454,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken = default)
         {
-            var item = new List<MMSIDispatchTicket>();
+            var item = new List<MMSIServiceRequest>();
             if (status == "All" || status == null)
             {
-                item = await _db.MMSIDispatchTickets
+                item = await _db.MMSIServiceRequests
                     .Where(dt => dt.Status == "Cancelled" || dt.Status == "For Posting")
                     .Include(a => a.ActivityService)
                     .Include(a => a.Terminal).ThenInclude(t => t.Port)
@@ -469,7 +468,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             else
             {
-                item = await _db.MMSIDispatchTickets
+                item = await _db.MMSIServiceRequests
                     .Where(dt => dt.Status == status)
                     .Include(a => a.ActivityService)
                     .Include(a => a.Terminal).ThenInclude(t => t.Port)
@@ -490,7 +489,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = _db.MMSIDispatchTickets
+                var queried = _db.MMSIServiceRequests
                     .Include(dt => dt.ActivityService)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt.Port)
@@ -613,7 +612,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _db.MMSIServiceRequests.FindAsync(id, cancellationToken);
 
                 await _cloudStorageService.DeleteFileAsync(model.ImageName);
 
@@ -630,7 +629,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
 
-                return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
+                return RedirectToAction(nameof(Edit), new { id = model.ServiceRequestId });
             }
             catch (Exception ex)
             {
@@ -644,7 +643,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _db.MMSIServiceRequests.FindAsync(id, cancellationToken);
 
                 await _cloudStorageService.DeleteFileAsync(model.VideoName);
 
@@ -654,7 +653,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Video Deleted Successfully!";
 
-                return RedirectToAction(nameof(Edit), new { id = model.DispatchTicketId });
+                return RedirectToAction(nameof(Edit), new { id = model.ServiceRequestId });
             }
             catch (Exception ex)
             {
@@ -668,7 +667,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _db.MMSIServiceRequests.FindAsync(id, cancellationToken);
                 model.Status = "For Tariff";
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry Posted!";
@@ -687,7 +686,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _db.MMSIServiceRequests.FindAsync(id, cancellationToken);
                 model.Status = "Cancelled";
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry Cancelled";
@@ -715,13 +714,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         int idToFind = int.Parse(recordId);
 
-                        var recordToUpdate = await _db.MMSIDispatchTickets
+                        var recordToUpdate = await _db.MMSIServiceRequests
                             .FindAsync(idToFind, cancellationToken);
 
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
-                            posteds.Add($"{recordToUpdate.DispatchTicketId}");
+                            posteds.Add($"{recordToUpdate.ServiceRequestId}");
                         }
                     }
 
@@ -771,13 +770,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         int idToFind = int.Parse(recordId);
 
-                        var recordToUpdate = await _db.MMSIDispatchTickets
+                        var recordToUpdate = await _db.MMSIServiceRequests
                             .FindAsync(idToFind, cancellationToken);
 
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "Cancelled";
-                            posteds.Add(recordToUpdate.DispatchTicketId.ToString());
+                            posteds.Add(recordToUpdate.ServiceRequestId.ToString());
                         }
                     }
 
