@@ -105,7 +105,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- MMSI
 
-                    MMSIServiceRequestForPosting = await _dbContext.MMSIDispatchTickets
+                    MMSIServiceRequestForPosting = await _dbContext.MMSIServiceRequests
                         .Where(po => po.Status == "For Posting")
                         .CountAsync(),
 
