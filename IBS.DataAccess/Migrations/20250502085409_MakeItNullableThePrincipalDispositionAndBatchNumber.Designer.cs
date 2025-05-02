@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250502085409_MakeItNullableThePrincipalDispositionAndBatchNumber")]
+    partial class MakeItNullableThePrincipalDispositionAndBatchNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -215,9 +218,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("rolled_from_id");
 
-                    b.Property<int>("SettlementAccountId")
-                        .HasColumnType("integer")
-                        .HasColumnName("settlement_account_id");
+                    b.Property<string>("SettlementAccountNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("settlement_account_number");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -259,9 +263,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("RolledFromId")
                         .HasDatabaseName("ix_bienes_placements_rolled_from_id");
-
-                    b.HasIndex("SettlementAccountId")
-                        .HasDatabaseName("ix_bienes_placements_settlement_account_id");
 
                     b.ToTable("bienes_placements", (string)null);
                 });
@@ -10733,20 +10734,11 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("RolledFromId")
                         .HasConstraintName("fk_bienes_placements_bienes_placements_rolled_from_id");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "SettlementAccount")
-                        .WithMany()
-                        .HasForeignKey("SettlementAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_bienes_placements_filpride_bank_accounts_settlement_account");
-
                     b.Navigation("BankAccount");
 
                     b.Navigation("Company");
 
                     b.Navigation("RolledFrom");
-
-                    b.Navigation("SettlementAccount");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCVTradePayment", b =>
