@@ -134,7 +134,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .ToListAsync(cancellationToken);
 
                 var mmsiCustomers = await _dbContext.FilprideCustomers
-                    .Where(t => t.IsActive && t.IsMMSI == true)
+                    .Where(t => t.IsActive && t.IsMMSI)
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
 
@@ -218,7 +218,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var arLedgerColStart = col + 1;
                 var customers = await _dbContext.FilprideCustomers
-                    .Where(c => c.IsMMSI == true && c.IsActive == true)
+                    .Where(c => c.IsMMSI && c.IsActive)
                     .OrderBy(t => t.CustomerName)
                     .ToListAsync(cancellationToken);
                 foreach (var customer in customers)
