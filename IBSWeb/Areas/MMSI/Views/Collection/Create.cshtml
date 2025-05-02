@@ -306,8 +306,8 @@
                             $.each(result.data, function (index, value) {
                                 let tempAmount = value.amount;
                                 let tempEwt = 0;
-                                
-                                if (value.vatType === "Vatable"){
+
+                                if (value.billedTo === "LOCAL"){
                                     tempEwt = ((value.amount/1.12) * 0.02);
                                     tempAmount = (value.amount - tempEwt);
                                 }
@@ -339,7 +339,7 @@
                         isProcessing = false;
                         console.log(tempData);
 
-                        calculateEWTDeduction();
+                        // calculateEWTDeduction();
                     }
                 });
             }
