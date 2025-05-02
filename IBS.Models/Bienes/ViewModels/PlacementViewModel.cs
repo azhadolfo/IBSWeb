@@ -26,8 +26,10 @@ namespace IBS.Models.Bienes.ViewModels
         [Required]
         public string AccountName { get; set; }
 
+        public List<SelectListItem>? SettlementAccounts { get; set; }
+
         [Required]
-        public string SettlementAccountNumber { get; set; }
+        public int SettlementAccountId { get; set; }
 
         [Required]
         public DateOnly FromDate { get; set; }

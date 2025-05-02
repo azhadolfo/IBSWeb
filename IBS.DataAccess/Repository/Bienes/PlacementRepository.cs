@@ -51,7 +51,7 @@ namespace IBS.DataAccess.Repository.Bienes
             existingRecord.Branch = viewModel.Branch;
             existingRecord.TDAccountNumber = viewModel.TDAccountNumber;
             existingRecord.AccountName = viewModel.AccountName;
-            existingRecord.SettlementAccountNumber = viewModel.SettlementAccountNumber;
+            existingRecord.SettlementAccountId = viewModel.SettlementAccountId;
             existingRecord.DateFrom = viewModel.FromDate;
             existingRecord.DateTo = viewModel.ToDate;
             existingRecord.Remarks = viewModel.Remarks;
@@ -102,7 +102,7 @@ namespace IBS.DataAccess.Repository.Bienes
                 Branch = model.Branch,
                 TDAccountNumber = model.TDAccountNumber,
                 AccountName = model.AccountName,
-                SettlementAccountNumber = model.SettlementAccountNumber,
+                SettlementAccountId = model.SettlementAccountId,
                 DateFrom = default,
                 DateTo = default,
                 Remarks = model.Remarks,
@@ -133,6 +133,7 @@ namespace IBS.DataAccess.Repository.Bienes
             return await dbSet.Where(filter)
                 .Include(p => p.Company)
                 .Include(p => p.BankAccount)
+                .Include(p => p.SettlementAccount)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

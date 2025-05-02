@@ -152,7 +152,8 @@ namespace IBSWeb.Areas.Bienes.Controllers
             PlacementViewModel viewModel = new()
             {
                 Companies = await GetCompanies(cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                SettlementAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -185,7 +186,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     Branch = viewModel.Branch,
                     TDAccountNumber = viewModel.TDAccountNumber,
                     AccountName = viewModel.AccountName,
-                    SettlementAccountNumber = viewModel.SettlementAccountNumber,
+                    SettlementAccountId = viewModel.SettlementAccountId,
                     DateFrom = viewModel.FromDate,
                     DateTo = viewModel.ToDate,
                     Remarks = viewModel.Remarks,
@@ -268,7 +269,8 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     Branch = existingRecord.Branch,
                     TDAccountNumber = existingRecord.TDAccountNumber,
                     AccountName = existingRecord.AccountName,
-                    SettlementAccountNumber = existingRecord.SettlementAccountNumber,
+                    SettlementAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                    SettlementAccountId = existingRecord.SettlementAccountId,
                     FromDate = existingRecord.DateFrom,
                     ToDate = existingRecord.DateTo,
                     Remarks = existingRecord.Remarks,

@@ -24,7 +24,7 @@ namespace IBS.Models.Bienes
         public int BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
-        public FilprideBankAccount BankAccount { get; set; }
+        public FilprideBankAccount? BankAccount { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string Bank { get; set; }
@@ -39,8 +39,10 @@ namespace IBS.Models.Bienes
         [Column(TypeName = "varchar(10)")]
         public string Class { get; set; } = "STP";
 
-        [Column(TypeName = "varchar(100)")]
-        public string SettlementAccountNumber { get; set; }
+        public int SettlementAccountId { get; set; }
+
+        [ForeignKey(nameof(SettlementAccountId))]
+        public FilprideBankAccount? SettlementAccount { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly DateFrom { get; set; }
