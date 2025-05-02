@@ -386,6 +386,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(a => a.ActivityService)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
+                .ThenInclude(t => t.CompanyOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -617,6 +618,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (currentModel.BAFNetRevenue != model.BAFNetRevenue) { changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}"); }
                 if (currentModel.TotalBilling != model.TotalBilling) { changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}"); }
                 if (currentModel.TotalNetRevenue != model.TotalNetRevenue) { changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}"); }
+                if (currentModel.ApOtherTugs != model.ApOtherTugs) { changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}"); }
 
                 #endregion -- Changes
 
@@ -634,6 +636,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.BAFNetRevenue = model.BAFNetRevenue;
                 currentModel.TotalBilling = model.TotalBilling;
                 currentModel.TotalNetRevenue = model.TotalNetRevenue;
+                currentModel.ApOtherTugs = model.ApOtherTugs;
 
                 #region -- Audit Trail
 
