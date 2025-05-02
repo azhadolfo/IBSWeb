@@ -601,23 +601,12 @@
                                                     Check Voucher
                                                 </a>
                                                 <ul class="dropdown-menu">
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherTrade" asp-action="Index">Trade</a>
+                                                    <li class="nav-item dropend">
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index">Invoice</a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li class="nav-item dropend">
-                                                        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            Non-Trade
-                                                        </a>
-                                                        <ul class="dropdown-menu">
-                                                            <li class="nav-item dropend">
-                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Index">Invoice</a>
-                                                            </li>
-                                                            <li><hr class="dropdown-divider"></li>
-                                                            <li class="nav-item dropend">
-                                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index">Payment</a>
-                                                            </li>
-                                                        </ul>
+                                                        <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Index">Payment</a>
                                                     </li>
                                                 </ul>
                                             </li>
