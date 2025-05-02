@@ -289,7 +289,7 @@
                 const selectedBills = $('.js-example-basic-multiple').val() || [];
 
                 $.ajax({
-                    url: '/MMSI/Collection/GetSelectedBillings',
+                    url: '@Url.Action("GetSelectedBillings", "Collection", new { area = "MMSI" })',
                     type: 'POST',
                     data: { billingIds: selectedBills },
                     success: function (result) {
@@ -307,7 +307,7 @@
                                 let tempAmount = value.amount;
                                 let tempEwt = 0;
                                 
-                                if (value.isVatable){
+                                if (value.vatType === "Vatable"){
                                     tempEwt = ((value.amount/1.12) * 0.02);
                                     tempAmount = (value.amount - tempEwt);
                                 }
@@ -339,7 +339,7 @@
                         isProcessing = false;
                         console.log(tempData);
 
-                        // calculateEWTDeduction();
+                        calculateEWTDeduction();
                     }
                 });
             }
@@ -353,7 +353,7 @@
                 const customerId = $('#customerId').val();
 
                 $.ajax({
-                    url: '/MMSI/Collection/IsCustomerVatable',
+                    url: '@Url.Action("IsCustomerVatable", "Collection", new { area = "MMSI" })',
                     type: 'GET',
                     data: { customerId: customerId },
                     success: function (result) {
