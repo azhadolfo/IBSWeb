@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Utility.Constants;
 
 namespace IBS.Models.Mobility
 {
@@ -24,5 +25,10 @@ namespace IBS.Models.Mobility
         public int ShiftNumber { get; set; }
 
         public int PageNumber { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string? ApprovedBy { get; set; }
+
+        public DateTime? ApprovedDate { get; set; }
     }
 }

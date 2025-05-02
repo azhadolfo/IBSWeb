@@ -3,8 +3,10 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -103,6 +105,46 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index));
             }
+        }
+        public async Task<IActionResult> Approved(Guid id, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.MobilityDeposit
+                .GetAsync(s => s.Id == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.ApprovedBy = User.Identity!.Name;
+                model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(model.ApprovedBy!, $"Approved deposit for shift date: {model.ShiftDate} shift#: {model.ShiftNumber}", "Deposit", ipAddress, "Mobility");
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Deposit has been posted.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to approve deposit. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
         }
     }
 }
