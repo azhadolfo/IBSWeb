@@ -185,7 +185,7 @@
                                                 </a>
                                                 <ul class="dropdown-menu">
                                                     <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
+                                                        <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement</a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li class="nav-item">
@@ -440,7 +440,7 @@
                                                 </a>
                                                 <ul class="dropdown-menu">
                                                     <li class="nav-item">
-                                                        <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
+                                                        <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement</a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li class="nav-item">
@@ -581,6 +581,14 @@
                                             <li class="nav-item">
                                                 <a class="dropdown-item text-dark" asp-area="Bienes" asp-controller="Placement" asp-action="Index">Placement</a>
                                             </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="ServiceInvoice" asp-action="Index">Service Invoice</a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li class="nav-item">
+                                                <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex">Collection Receipt</a>
+                                            </li>
                                         </ul>
                                     </li>
                                     
@@ -639,11 +647,7 @@
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="DisbursementBook">Cash Disbursement</a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li class="nav-item">
-                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement Report</a>
+                                                <a class="dropdown-item text-dark" asp-area="FIlpride" asp-controller="Report" asp-action="ClearedDisbursementReport">Cleared Disbursement</a>
                                             </li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li class="nav-item">
@@ -671,18 +675,6 @@
                                             </li>
                                         </ul>
                                     </li>
-                                    
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <li class="nav-item dropdown">
-                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
-                                            <ul class="dropdown-menu">
-                                                <li class="nav-item">
-                                                    <a class="dropdown-item text-dark" asp-area="Bienes" asp-controller="BankAccount" asp-action="Index">Bank Account</a>
-                                                </li>
-                                            </ul>
-                                        </li>
-                                    }
                                 }
                                 
                                 if (selectedCompany == "MMSI")
