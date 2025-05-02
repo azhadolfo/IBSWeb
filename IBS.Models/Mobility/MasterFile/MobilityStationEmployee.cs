@@ -9,17 +9,20 @@ namespace IBS.Models.Mobility.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int EmployeeId { get; set; }
 
+        [Display(Name = "Employee Number")]
         [Column(TypeName = "varchar(10)")]
         public string EmployeeNumber { get; set; }
 
         public string? Initial { get; set; }
 
+        [Display(Name = "First Name")]
         [Column(TypeName = "varchar(100)")]
         public string FirstName { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(100)")]
         public string? MiddleName { get; set; }
 
+        [Display(Name = "Last Name")]
         [Column(TypeName = "varchar(100)")]
         public string LastName { get; set; } = string.Empty;
 
@@ -29,9 +32,11 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "varchar(255)")]
         public string? Address { get; set; }
 
+        [Display(Name = "Birth Date")]
         [Column(TypeName = "date")]
         public DateOnly? BirthDate { get; set; }
 
+        [Display(Name = "Tel No.")]
         public string? TelNo { get; set; }
 
         public string? SssNo { get; set; }
