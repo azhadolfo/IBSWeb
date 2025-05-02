@@ -21,6 +21,6 @@ namespace IBS.Models.MMSI.MasterFile
         [Column(TypeName = "varchar(50)")]
         public string CompanyOwnerName { get; set; }
 
-        public decimal? FixedRate { get; set; }
+        public decimal FixedRate { get; set; }
     }
 }
