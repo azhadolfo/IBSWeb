@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250502023203_AddApOtherTugsInDispatchTicket")]
+    partial class AddApOtherTugsInDispatchTicket
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -7259,14 +7262,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric")
                         .HasColumnName("amount");
-
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("approved_by");
-
-                    b.Property<DateTime?>("ApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("approved_date");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
