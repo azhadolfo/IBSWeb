@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -340,14 +341,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> IsCustomerVatable(string customerId, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> IsCustomerVatable(int customerId, CancellationToken cancellationToken = default)
         {
             try
             {
                 var customer = await _dbContext.FilprideCustomers
-                    .FindAsync(int.Parse(customerId), cancellationToken);
+                    .FindAsync(customerId, cancellationToken);
 
-                return Json(customer.VatType);
+                if (customer != null)
+                {
+                    return Json(customer.VatType == SD.VatType_Vatable);
+                }
+                else
+                {
+                    throw new NullReferenceException("Customer not found.");
+                }
             }
             catch (Exception ex)
             {
