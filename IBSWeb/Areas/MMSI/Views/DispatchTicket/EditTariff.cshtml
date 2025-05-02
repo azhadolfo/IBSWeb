@@ -194,32 +194,66 @@
                     </div>
                 </div>
 
-                <div class="row mt-2 pt-2 px-2">
-                    <div class="form-floating col-3 mb-3">
-                        <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly />
-                        <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
-                        <span asp-validation-for="TotalBilling" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-floating col-3 mb-3">
-                        <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly />
-                        <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
-                        <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
-                    </div>
-                    
-                    <div class="col-6">
-                        <div class="row justify-content-end mt-4 mb-2">
-                            <div class="text-center col-6" style="width: 250px;">
-                                <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
-                            </div>
-                            <div class="text-center col-6" style="width: 250px;">
-                                <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
-                                    <i class="bi bi-arrow-90deg-left"></i> Go Back
-                                </a>
+                <div class="row px-3">
+                    <div class="col-6 align-content-center px-3">
+                        <div class="row border">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col-6 mt-3 text-start">
+                                        <b><i>Ap Other Tugs</i></b>
+                                    </div>
+                                    <div class="col-6"></div>
+                                </div>
+                                <div class="row justify-content-end">
+                                    <div class="form-floating col-6 mb-3">
+                                        <input class="form-control border-0 shadow" placeholder="" id="TugProvider" value="@Model.Tugboat.CompanyOwner?.CompanyOwnerName" readonly/>
+                                        <label for="TugProvider" class="ms-2">Tug Provider</label>
+                                    </div>
+                                    <div class="form-floating col-6 mb-3">
+                                        <input asp-for="ApOtherTugs" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
+                                        <label asp-for="ApOtherTugs" class="ms-2">Ap Other Tugs<span class="required text-danger">*</span></label>
+                                        <span asp-validation-for="ApOtherTugs" class="text-danger"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div class="col-6 align-content-center px-3">
+                        <div class="row">
+                            <div class="form-floating col-6">
+                                <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly/>
+                                <label asp-for="TotalBilling" for="TotalBilling" class="ms-2">Total Billing</label>
+                                <span asp-validation-for="TotalBilling" class="text-danger"></span>
+                            </div>
 
+                            <div class="form-floating col-6">
+                                <input asp-for="TotalNetRevenue" class="form-control border-0 shadow" placeholder="" id="TotalNetRevenue" readonly/>
+                                <label asp-for="TotalNetRevenue" for="TotalNetRevenue" class="ms-2">Total Net Revenue</label>
+                                <span asp-validation-for="TotalNetRevenue" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+
+                        </div>
+                        <div class="col-6 align-content-center px-3">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="row justify-content-end mt-4 mb-2">
+                                        <div class="text-center col-6" style="width: 250px;">
+                                            <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                                        </div>
+                                        <div class="text-center col-6" style="width: 250px;">
+                                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                                <i class="bi bi-arrow-90deg-left"></i> Go Back
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
