@@ -64,7 +64,7 @@ namespace IBS.Models.Bienes
         public decimal PrincipalAmount { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string PrincipalDisposition { get; set; } = string.Empty;
+        public string? PrincipalDisposition { get; set; }
 
         public PlacementType PlacementType { get; set; }
 
@@ -127,7 +127,7 @@ namespace IBS.Models.Bienes
         public bool IsPosted { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string BatchNumber { get; set; }
+        public string? BatchNumber { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string Status { get; set; } = nameof(PlacementStatus.Unposted);

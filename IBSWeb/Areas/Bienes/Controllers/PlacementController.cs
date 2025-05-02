@@ -167,6 +167,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 viewModel.Companies = await GetCompanies(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                TempData["error"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -199,7 +200,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     EWTRate = viewModel.EWTRate / 100,
                     HasTrustFee = viewModel.HasTrustFee,
                     TrustFeeRate = viewModel.TrustFeeRate / 100,
-                    CreatedBy = User.Identity.Name,
+                    CreatedBy = User.Identity!.Name!,
                     LockedDate = viewModel.ToDate.AddDays(2).ToDateTime(TimeOnly.MinValue),
 
                 };
