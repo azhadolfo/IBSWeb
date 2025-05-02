@@ -1,4 +1,5 @@
 @using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model IBS.Models.MMSI.MMSIBilling
 
@@ -96,7 +97,8 @@
                         <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
                     </div>
                     <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
-                        <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                        <input type="hidden" asp-for="IsUndocumented"></input>
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" disabled>
                         <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
                             Undocumented
                         </label>
@@ -381,6 +383,7 @@
                 const $hiddenDiv = $(".hiddenDiv");
                 const $vatableRadioButton = $(".isVatable");
                 const $exemptRadioButton = $(".isExempt");
+                const $isUndocCheckbox = $("#isUndocumentedCheckbox");
                 $principalDiv.removeClass("d-none");
                 $selectDiv.addClass("d-none");
                 console.log("principal should've been blanked here");
@@ -399,7 +402,14 @@
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
                             $vatableRadioButton.prop("checked", data.vatType === "@SD.VatType_Vatable");
                             $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_Exempt");
-                            console.log(data.isVatable);
+                            if (data.isUndoc === "Undocumented"){
+                                $isUndocCheckbox.prop("checked", true);
+                                handleCheckboxChange();
+                            }
+                            else{
+                                $isUndocCheckbox.prop("checked", false);
+                                handleCheckboxChange();
+                            }
                         }
                     });
                     

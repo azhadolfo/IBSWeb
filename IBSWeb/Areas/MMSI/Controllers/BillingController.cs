@@ -556,7 +556,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 tinNo = customerDetails.CustomerTin,
                 businessStyle = customerDetails.BusinessStyle,
                 hasPrincipal = hasPrincipal,
-                vatType = customerDetails.VatType
+                vatType = customerDetails.VatType,
+                isUndoc = customerDetails.Type //
             };
 
             return Json(customerDetailsJson);
