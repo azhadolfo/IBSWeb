@@ -300,7 +300,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(a => a.ActivityService)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat)
+                .Include(a => a.Tugboat).ThenInclude(t => t.CompanyOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -338,6 +338,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.BAFNetRevenue = model.BAFNetRevenue;
                 currentModel.TotalBilling = model.TotalBilling;
                 currentModel.TotalNetRevenue = model.TotalNetRevenue;
+                currentModel.ApOtherTugs = model.ApOtherTugs;
 
                 #region -- Audit Trail
 
