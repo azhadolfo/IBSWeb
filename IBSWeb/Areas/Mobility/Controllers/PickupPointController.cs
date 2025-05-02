@@ -16,13 +16,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<CustomerController> _logger;
+        private readonly ILogger<PickupPointController> _logger;
 
         private readonly UserManager<IdentityUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
