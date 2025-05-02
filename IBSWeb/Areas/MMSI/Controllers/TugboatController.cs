@@ -47,7 +47,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return View(model);
                 }
 
-                if (model.IsCompanyOwned == true)
+                if (model.IsCompanyOwned)
                 {
                     model.CompanyOwnerId = null;
                 }
