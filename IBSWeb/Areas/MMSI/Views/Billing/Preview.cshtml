@@ -97,14 +97,14 @@
                     <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine1</td>
                     <td class="col-1 p-0 m-0"></td>
                     <td class="col-2 p-0 m-0"><b>TIN:</b></td>
-                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer?.CustomerTIN</td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer?.CustomerTin</td>
                 </tr>
                 <tr>
                     <td class="col-1 p-0 m-0"></td>
                     <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine2</td>
                     <td class="col-1 p-0 m-0"></td>
                     <td class="col-2 p-0 m-0"><b>BUSINESS STYLE:</b></td>
-                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerBusinessStyle</td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer?.BusinessStyle</td>
                 </tr>
                 <tr>
                     <td class="col-1 p-0 m-0"></td>
@@ -135,7 +135,7 @@
                         <b>FOR THE SERVICE RE:</b>
                     </td>
                     <td class="p-1 ps-2 border-bottom border-dark" style="width: 40%;">
-                        <b>@Model.Vessel?.VesselName</b>
+                        <b>@Model.Vessel?.VesselName @Model.Vessel?.VesselType</b>
                     </td>
                     <td class="text-start align-middle pe-2" rowspan="2" style="width: 30%;">
                         <div class="d-flex align-items-center ms-3"> <!-- Added ms-3 for spacing -->
@@ -180,7 +180,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.Tugboat.TugboatName == tugboat))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
@@ -198,7 +198,7 @@
                 @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue.HasValue))
                 {
                     <tr class="pb-2">
-                        <td class="text-center p-0">@dt.CreateDate.ToString("dd-MMM")</td>
+                        <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.ActivityService.ActivityServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
@@ -246,7 +246,7 @@
                     </tr>
                 </table>
             </div>
-            @if (Model.IsVatable)
+            @if (Model.BilledTo == "LOCAL")
             {
                 <div class="col-5">
                     <table class="table-borderless col-12">

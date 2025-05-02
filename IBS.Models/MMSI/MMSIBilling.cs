@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -17,9 +18,10 @@ namespace IBS.Models.MMSI
 
         public string? Status {  get; set; }
 
-        public bool IsUndocumented { get; set; } = default;
+        public bool IsUndocumented { get; set; }
 
-        public bool IsVatable { get; set; } = default;
+        [Column(TypeName = "varchar(10)")]
+        public string BilledTo { get; set; }
 
         public string? VoyageNumber { get; set; }
 
@@ -37,7 +39,7 @@ namespace IBS.Models.MMSI
 
         public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public MMSICustomer? Customer { get; set; }
+        public FilprideCustomer? Customer { get; set; }
 
         public int? PrincipalId { get; set; }
         [ForeignKey(nameof(PrincipalId))]

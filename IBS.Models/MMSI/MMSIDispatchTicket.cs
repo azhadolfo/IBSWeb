@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -10,8 +11,8 @@ namespace IBS.Models.MMSI
         [Key]
         public int DispatchTicketId {  get; set; }
 
-        [Display(Name = "Create Date")]
-        public DateOnly CreateDate { get; set; }
+        [Display(Name = "Date")]
+        public DateOnly Date { get; set; }
 
         [Display(Name = "Dispatch Number")]
         [Required(ErrorMessage = "Dispatch number is required.")]
@@ -136,7 +137,7 @@ namespace IBS.Models.MMSI
 
         public int? CustomerId { get; set; }
         [ForeignKey(nameof(CustomerId))]
-        public MMSICustomer? Customer { get; set; }
+        public FilprideCustomer? Customer { get; set; }
 
         public int TugBoatId { get; set; }
         [ForeignKey(nameof(TugBoatId))]

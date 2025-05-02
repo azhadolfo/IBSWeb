@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -84,7 +85,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSICompanyOwners.Where(a => a.MMSICompanyOwnerId == id).FirstOrDefault();
+            var model = await _db.MMSICompanyOwners.Where(a => a.MMSICompanyOwnerId == id).
+                FirstOrDefaultAsync(cancellationToken);
 
             return View(model);
         }
@@ -92,11 +94,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSICompanyOwner model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSICompanyOwners.FindAsync(model.MMSICompanyOwnerId);
+            var currentModel = await _db.MMSICompanyOwners.FindAsync(model.MMSICompanyOwnerId, cancellationToken);
             currentModel.CompanyOwnerNumber = model.CompanyOwnerNumber;
             currentModel.CompanyOwnerName = model.CompanyOwnerName;
+            currentModel.FixedRate = model.FixedRate;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
             TempData["success"] = "Edited successfully";
 

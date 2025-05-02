@@ -13,7 +13,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2><i class="bi bi-database"></i> MMSI TUGBOAT COMPANY/OWNER</h2>
+            <h2>MMSI TUGBOAT COMPANY/OWNER</h2>
         </div>
     </div>
 
@@ -36,6 +36,9 @@
                     <th class="text-center">
                         @Html.DisplayNameFor(m => m.CompanyOwnerName)
                     </th>
+                    <th class="text-center">
+                        @Html.DisplayNameFor(m => m.FixedRate)
+                    </th>
                     <th class="actions-column text-center">
                         Actions
                     </th>
@@ -51,13 +54,16 @@
                     <td class="text-center align-content-center">
                         @Html.DisplayFor(model => item.CompanyOwnerName)
                     </td>
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.FixedRate)
+                    </td>
 
                     <td class="text-center">
                         <div class="dropdown">
                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "CompanyOwner", new { id = item.MMSICompanyOwnerId })"><i class="bi bi-pencil-fill"></i> Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "CompanyOwner", new { id = item.MMSICompanyOwnerId })"><i class="bi bi-trash-fill"></i> Delete</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "CompanyOwner", new { id = item.MMSICompanyOwnerId })">Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "CompanyOwner", new { id = item.MMSICompanyOwnerId })">Delete</a></li>
                             </ul>
                         </div>
                     </td>

@@ -3668,6 +3668,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_filpride");
 
+                    b.Property<bool>("IsMMSI")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_mmsi");
+
                     b.Property<bool>("IsMobility")
                         .HasColumnType("boolean")
                         .HasColumnName("is_mobility");
@@ -3679,6 +3683,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("StationCode")
                         .HasColumnType("varchar(3)")
                         .HasColumnName("station_code");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("type");
 
                     b.Property<string>("VatType")
                         .IsRequired()
@@ -4252,6 +4261,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("amount");
 
+                    b.Property<string>("BilledTo")
+                        .IsRequired()
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("billed_to");
+
                     b.Property<int?>("CollectionId")
                         .HasColumnType("integer")
                         .HasColumnName("collection_id");
@@ -4279,10 +4293,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsUndocumented")
                         .HasColumnType("boolean")
                         .HasColumnName("is_undocumented");
-
-                    b.Property<bool>("IsVatable")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_vatable");
 
                     b.Property<string>("LastEditedBy")
                         .HasColumnType("text")
@@ -4456,10 +4466,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(10)")
                         .HasColumnName("cos_number");
 
-                    b.Property<DateOnly>("CreateDate")
-                        .HasColumnType("date")
-                        .HasColumnName("create_date");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text")
                         .HasColumnName("created_by");
@@ -4471,6 +4477,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
 
                     b.Property<DateOnly>("DateArrived")
                         .HasColumnType("date")
@@ -4628,6 +4638,161 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_dispatch_tickets", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIServiceRequest", b =>
+                {
+                    b.Property<int>("ServiceRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("service_request_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceRequestId"));
+
+                    b.Property<int>("ActivityServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("activity_service_id");
+
+                    b.Property<string>("BaseOrStation")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("base_or_station");
+
+                    b.Property<string>("BillingId")
+                        .HasColumnType("text")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("COSNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("cos_number");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<DateOnly>("DateArrived")
+                        .HasColumnType("date")
+                        .HasColumnName("date_arrived");
+
+                    b.Property<DateOnly>("DateLeft")
+                        .HasColumnType("date")
+                        .HasColumnName("date_left");
+
+                    b.Property<string>("DispatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("dispatch_number");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("ImageName")
+                        .HasColumnType("text")
+                        .HasColumnName("image_name");
+
+                    b.Property<string>("ImageSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_saved_url");
+
+                    b.Property<string>("ImageSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_signed_url");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TerminalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<TimeOnly>("TimeArrived")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_arrived");
+
+                    b.Property<TimeOnly>("TimeLeft")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_left");
+
+                    b.Property<decimal?>("TotalHours")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_hours");
+
+                    b.Property<int>("TugBoatId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_boat_id");
+
+                    b.Property<int>("TugMasterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_master_id");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vessel_id");
+
+                    b.Property<string>("VideoName")
+                        .HasColumnType("text")
+                        .HasColumnName("video_name");
+
+                    b.Property<string>("VideoSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_saved_url");
+
+                    b.Property<string>("VideoSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_signed_url");
+
+                    b.Property<string>("VoyageNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("voyage_number");
+
+                    b.HasKey("ServiceRequestId")
+                        .HasName("pk_mmsi_service_requests");
+
+                    b.HasIndex("ActivityServiceId")
+                        .HasDatabaseName("ix_mmsi_service_requests_activity_service_id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_service_requests_customer_id");
+
+                    b.HasIndex("TerminalId")
+                        .HasDatabaseName("ix_mmsi_service_requests_terminal_id");
+
+                    b.HasIndex("TugBoatId")
+                        .HasDatabaseName("ix_mmsi_service_requests_tug_boat_id");
+
+                    b.HasIndex("TugMasterId")
+                        .HasDatabaseName("ix_mmsi_service_requests_tug_master_id");
+
+                    b.HasIndex("VesselId")
+                        .HasDatabaseName("ix_mmsi_service_requests_vessel_id");
+
+                    b.ToTable("mmsi_service_requests", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
                 {
                     b.Property<int>("TariffRateId")
@@ -4649,6 +4814,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("baf");
 
+                    b.Property<decimal>("BAFDiscount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("baf_discount");
+
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text")
                         .HasColumnName("created_by");
@@ -4664,6 +4833,10 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("Dispatch")
                         .HasColumnType("numeric")
                         .HasColumnName("dispatch");
+
+                    b.Property<decimal>("DispatchDiscount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("dispatch_discount");
 
                     b.Property<int>("TerminalId")
                         .HasColumnType("integer")
@@ -4740,80 +4913,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("company_owner_number");
 
+                    b.Property<decimal?>("FixedRate")
+                        .HasColumnType("numeric")
+                        .HasColumnName("fixed_rate");
+
                     b.HasKey("MMSICompanyOwnerId")
                         .HasName("pk_mmsi_company_owners");
 
                     b.ToTable("mmsi_company_owners", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
-                {
-                    b.Property<int>("MMSICustomerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("mmsi_customer_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("MMSICustomerId"));
-
-                    b.Property<string>("CustomerAddress")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_address");
-
-                    b.Property<string>("CustomerBusinessStyle")
-                        .HasColumnType("text")
-                        .HasColumnName("customer_business_style");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
-
-                    b.Property<string>("CustomerNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_number");
-
-                    b.Property<string>("CustomerTIN")
-                        .HasColumnType("text")
-                        .HasColumnName("customer_tin");
-
-                    b.Property<string>("CustomerTerms")
-                        .HasColumnType("text")
-                        .HasColumnName("customer_terms");
-
-                    b.Property<bool>("HasPrincipal")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_principal");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<bool>("IsVatable")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_vatable");
-
-                    b.Property<string>("Landline1")
-                        .HasColumnType("text")
-                        .HasColumnName("landline1");
-
-                    b.Property<string>("Landline2")
-                        .HasColumnType("text")
-                        .HasColumnName("landline2");
-
-                    b.Property<string>("Mobile1")
-                        .HasColumnType("text")
-                        .HasColumnName("mobile1");
-
-                    b.Property<string>("Mobile2")
-                        .HasColumnType("text")
-                        .HasColumnName("mobile2");
-
-                    b.HasKey("MMSICustomerId")
-                        .HasName("pk_mmsi_customers");
-
-                    b.ToTable("mmsi_customers", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPort", b =>
@@ -4824,6 +4931,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("port_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PortId"));
+
+                    b.Property<bool>("HasSBMA")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_sbma");
 
                     b.Property<string>("PortName")
                         .HasMaxLength(20)
@@ -4968,8 +5079,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TugMasterNumber")
                         .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("tug_master_number");
 
                     b.HasKey("TugMasterId")
@@ -11214,10 +11324,10 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MMSI.MMSIBilling", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_mmsi_billings_mmsi_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_billings_filpride_customers_customer_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
                         .WithMany()
@@ -11252,10 +11362,10 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_mmsi_collections_mmsi_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_collections_filpride_customers_customer_id");
 
                     b.Navigation("Customer");
                 });
@@ -11269,10 +11379,10 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_activities_services_activity_ser");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_filpride_customers_customer_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
@@ -11315,6 +11425,61 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Vessel");
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIServiceRequest", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIActivityService", "ActivityService")
+                        .WithMany()
+                        .HasForeignKey("ActivityServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_activities_services_activity_ser");
+
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_mmsi_service_requests_filpride_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                        .WithMany()
+                        .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_terminals_terminal_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboat", "Tugboat")
+                        .WithMany()
+                        .HasForeignKey("TugBoatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_tugboats_tug_boat_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugMaster", "TugMaster")
+                        .WithMany()
+                        .HasForeignKey("TugMasterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_tug_masters_tug_master_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                        .WithMany()
+                        .HasForeignKey("VesselId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_vessels_vessel_id");
+
+                    b.Navigation("ActivityService");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Terminal");
+
+                    b.Navigation("TugMaster");
+
+                    b.Navigation("Tugboat");
+
+                    b.Navigation("Vessel");
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
                 {
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIActivityService", "ActivityService")
@@ -11324,12 +11489,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_tariff_rates_mmsi_activities_services_activity_service");
 
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_tariff_rates_filpride_customers_customer_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
@@ -11347,12 +11512,12 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIPrincipal", b =>
                 {
-                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICustomer", "Customer")
-                        .WithMany("Principals")
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_principals_mmsi_customers_customer_id");
+                        .HasConstraintName("fk_mmsi_principals_filpride_customers_customer_id");
 
                     b.Navigation("Customer");
                 });
@@ -11370,14 +11535,16 @@ namespace IBS.DataAccess.Migrations
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITugboat", b =>
-            {
-                b.HasOne("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", "CompanyOwner")
-                    .WithMany()
-                    .HasForeignKey("CompanyOwnerId")
-                    .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_company_owner_id");
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSICompanyOwner", "CompanyOwner")
+                        .WithMany()
+                        .HasForeignKey("CompanyOwnerId")
+                        .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_company_owner_id");
 
-                b.Navigation("CompanyOwner");
-                modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", b =>
+                    b.Navigation("CompanyOwner");
+                });
+
+            modelBuilder.Entity("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilitySupplier", "Supplier")
                         .WithMany()
@@ -11389,7 +11556,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCVTradePayment", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CV")
                         .WithMany()
@@ -11401,7 +11568,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CV");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany()
@@ -11420,7 +11587,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCheckVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityBankAccount", "BankAccount")
                         .WithMany()
@@ -11446,7 +11613,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCollectionReceipt", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11466,7 +11633,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCreditMemo", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
                         .WithMany()
@@ -11477,7 +11644,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerOrderSlip", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11507,7 +11674,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityCustomerPurchaseOrder", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11537,7 +11704,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityDebitMemo", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityServiceInvoice", "ServiceInvoice")
                         .WithMany()
@@ -11548,7 +11715,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherDetail", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityJournalVoucherHeader", "JournalVoucherHeader")
                         .WithMany()
@@ -11560,7 +11727,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("JournalVoucherHeader");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherHeader", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityJournalVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany()
@@ -11571,7 +11738,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CheckVoucherHeader");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityLubePurchaseHeader", "LubePurchaseHeader")
                         .WithMany("LubePurchaseDetails")
@@ -11583,7 +11750,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("LubePurchaseHeader");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityMultipleCheckVoucherPayment", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityCheckVoucherHeader", "CheckVoucherHeaderInvoice")
                         .WithMany()
@@ -11604,7 +11771,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CheckVoucherHeaderPayment");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityPurchaseOrder", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityPurchaseOrder", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityPickUpPoint", "PickUpPoint")
                         .WithMany()
@@ -11643,7 +11810,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Supplier");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityReceivingReport", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityReceivingReport", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilityPurchaseOrder", "PurchaseOrder")
                         .WithMany()
@@ -11655,7 +11822,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesDetail", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesDetail", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MobilitySalesHeader", "SalesHeader")
                         .WithMany("SalesDetails")
@@ -11667,7 +11834,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("SalesHeader");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityServiceInvoice", b =>
                 {
                     b.HasOne("IBS.Models.Mobility.MasterFile.MobilityCustomer", "Customer")
                         .WithMany()
@@ -11697,7 +11864,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Service");
                 });
 
-                modelBuilder.Entity("IBS.Models.UserNotification", b =>
+            modelBuilder.Entity("IBS.Models.UserNotification", b =>
                 {
                     b.HasOne("IBS.Models.Notification", "Notification")
                         .WithMany()
@@ -11718,7 +11885,7 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("User");
                 });
 
-                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
@@ -11728,7 +11895,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_role_claims_asp_net_roles_role_id");
                 });
 
-                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11738,7 +11905,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_claims_asp_net_users_user_id");
                 });
 
-                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11748,7 +11915,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_logins_asp_net_users_user_id");
                 });
 
-                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
                         .WithMany()
@@ -11765,7 +11932,7 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_roles_asp_net_users_user_id");
                 });
 
-                modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
                         .WithMany()
@@ -11775,52 +11942,46 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_asp_net_user_tokens_asp_net_users_user_id");
                 });
 
-                modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>
                 {
                     b.Navigation("ActualPrices");
                 });
 
-                modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
                 {
                     b.Navigation("Details");
                 });
 
-                modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideCustomerOrderSlip", b =>
                 {
                     b.Navigation("AppointedSuppliers");
                 });
 
-                modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideChartOfAccount", b =>
                 {
                     b.Navigation("Children");
                 });
 
-                modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
+            modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
                 {
                     b.Navigation("Branches");
                 });
 
-                modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSICustomer", b =>
-                {
-                    b.Navigation("Principals");
-                });
-
-                modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>
                 {
                     b.Navigation("LubePurchaseDetails");
                 });
 
-                modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesHeader", b =>
+            modelBuilder.Entity("IBS.Models.Mobility.MobilitySalesHeader", b =>
                 {
                     b.Navigation("SalesDetails");
                 });
 
-                modelBuilder.Entity("IBS.Models.ApplicationUser", b =>
+            modelBuilder.Entity("IBS.Models.ApplicationUser", b =>
                 {
                     b.Navigation("UserNotifications");
                 });
 #pragma warning restore 612, 618
-            });
         }
     }
 }

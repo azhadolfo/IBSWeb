@@ -114,5 +114,8 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsBienes { get; set; }
 
         public bool IsMMSI { get; set; }
+
+        [Column(TypeName = "varchar(15)")]
+        public string Type { get; set; } = string.Empty;
     }
 }

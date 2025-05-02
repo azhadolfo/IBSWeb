@@ -148,7 +148,7 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-6">
-                        <div id="PrincipalDiv" class="row @(Model.Customer.HasPrincipal ? "" : "d-none")">
+                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "" : "d-none")">
 
                             <div class="col-6" style="height: 72px;">
                                 <div class="row">
@@ -180,11 +180,24 @@
 
                         </div>
                     </div>
-                    <div class="form-check col-3 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
-                        <input class="form-check-input m-0 ms-2" asp-for="IsVatable" type="checkbox" id="IsVatableCheckBox">
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="IsVatableCheckBox" style="font-size: 20px;">
-                            With Value Added Tax
-                        </label>
+                    <div class="col-3 ps-2 my-2">
+                        <div class="row">
+                            <div class="col">
+                                <input asp-for="BilledTo" value="LOCAL" type="radio">
+                                <label style="font-size: 20px;">
+                                    Billed To Local
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <input asp-for="BilledTo" value="PRINCIPAL" type="radio">
+                                <label style="font-size: 20px;">
+                                    Billed To Principal
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -369,8 +382,7 @@
                 const $principalSelect = $("#PrincipalSelect");
                 const $selectDiv = $("#SelectDiv");
                 const $dispatchSelect = $("#DispatchTicketSelect");
-                const $vatableDiv = $("#VatableDiv");
-                const $vatableCheckBox = $("#IsVatableCheckBox");
+                //const $vatableCheckBox = $("#IsVatableCheckBox");
                 
                 $("#UsePrincipalCheckbox").prop("checked", false); // Principal checkbox: unchecks
                 $principalDiv.removeClass("d-none"); // Principal div: checkbox appears, 
@@ -381,7 +393,6 @@
                 if (customerId) {
                     $dispatchSelect.prop("disabled", false); // Tickets select: enable
                     $dispatchSelect.prop("required", true); // Tickets select: enable
-                    $vatableDiv.removeClass("d-none"); // Vatable checkbox: appears
                     
                     // Customer details: replace with selected customer's details
                     console.log("starting ajax, customerid:" + customerId);
@@ -393,7 +404,7 @@
                             console.log("inside the first ajax");
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
-                            $vatableCheckBox.prop("checked", data.isVatable);
+                            //$vatableCheckBox.prop("checked", data.vatType === "Vatable");
                             console.log(data.isVatable);
 
                             // Ticket select: update choices
@@ -421,7 +432,6 @@
                 } else {
                     $dispatchSelect.val("0").trigger("change"); // Ticket select: empties
                     $dispatchSelect.prop("disabled", true); // Ticket select: disabled
-                    $vatableDiv.addClass("d-none"); // Vatable checkbox: hidden
                     $selectDiv.addClass("d-none"); // Principal select: disappears
                     $principalDiv.addClass("d-none"); // Principal dix: disappears
                 }

@@ -10,7 +10,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2><i class="bi bi-pencil-square"></i> CREATE TUGBOAT COMPANY/OWNER</h2>
+            <h2>CREATE TUGBOAT COMPANY/OWNER</h2>
         </div>
     </div>
 
@@ -18,7 +18,7 @@
         <form method="post" class="row">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
-                <div class="row">
+                <div class="row pt-2">
                     <div class="form-floating col-6 my-3">
                         <input asp-for="CompanyOwnerName" type="text" class="form-control border-0 shadow" id="CompanyOwnerName" placeholder="Name" required>
                         <label asp-for="CompanyOwnerName" for="CompanyOwnerName" class="ms-2">Company Owner Name<span class="required text-danger">*</span></label>
@@ -30,14 +30,21 @@
                         <span asp-validation-for="CompanyOwnerNumber" class="text-danger"></span>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="form-floating col-6 my-3">
+                        <input asp-for="FixedRate" type="number" class="form-control border-0 shadow" id="FixedRate" placeholder="Fixed Rate" required>
+                        <label asp-for="FixedRate" for="FixedRate" class="ms-2">Fixed Rate<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="FixedRate" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
             <div class="row justify-content-end mt-3">
                 <div class="text-center" style="width: 250px;">
-                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
                 </div>
                 <div class="text-center" style="width: 250px;">
                     <a class="btn btn-outline-primary border col-12" asp-controller="CompanyOwner" asp-action="Index">
-                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                        Go Back
                     </a>
                 </div>
             </div>

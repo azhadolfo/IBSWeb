@@ -20,5 +20,7 @@ namespace IBS.Models.MMSI.MasterFile
         [StringLength(50, ErrorMessage = "Company/Owner name cannot exceed 50 characters.")]
         [Column(TypeName = "varchar(50)")]
         public string CompanyOwnerName { get; set; }
+
+        public decimal? FixedRate { get; set; }
     }
 }

@@ -22,6 +22,17 @@
             @Html.AntiForgeryToken()
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Type<span class="required">*</span></label>
+                    <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="" selected disabled>Select Customer Document Type</option>
+                        @foreach (DocumentType customerDocumentType in Enum.GetValues<DocumentType>())
+                        {
+                            <option value="@customerDocumentType">@customerDocumentType.ToString()</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
                 <div class="form-floating py-2 col-12">
                     <input asp-for="CustomerName" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="CustomerName" class="ms-2">Customer Name<span class="required">*</span></label>
@@ -151,9 +162,14 @@
                         <input class="form-check-input" asp-for="IsFilpride" /> FILPRIDE
                     </label>
                 </div>
-                <div class="form-check pb-2">
+                <div class="form-check">
                     <label class="form-check-label">
                         <input class="form-check-input" asp-for="IsMobility" /> MOBILITY
+                    </label>
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsMMSI" /> MMSI
                     </label>
                 </div>
                 <div class="form-check pb-2">

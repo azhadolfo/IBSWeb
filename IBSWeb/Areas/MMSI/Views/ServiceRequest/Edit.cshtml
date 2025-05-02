@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.MMSIDispatchTicket
+@model MMSIServiceRequest
 
 @{
     ViewData["Title"] = "Edit";
@@ -18,15 +18,15 @@
     <div class="card-body">
         
         <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+            <input asp-for="ServiceRequestId" value="@Model.ServiceRequestId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="CreateDate" type="date" value="@(Model.CreateDate.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
-                        <label asp-for="CreateDate" for="CreateDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CreateDate" class="text-danger"></span>
+                        <input asp-for="Date" type="date" value="@(Model.Date.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="CreateDate" placeholder=" ">
+                        <label asp-for="Date" for="CreateDate" class="ms-2">Date Today<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
                         <input asp-for="COSNumber" type="text" class="form-control border-0 shadow" id="COSNumber" placeholder="" maxlength="10" title="COS Number must not exceed 10 characters">
@@ -167,7 +167,7 @@
                         <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewImage"><i class="bi bi-eye"></i> View Image</button>
                     </div>
                     <div class="text-center" style="width: 200px">
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.DispatchTicketId">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.ServiceRequestId">
                             <i class="bi bi-trash-fill"></i> Delete Image
                         </a>
                     </div>
@@ -179,7 +179,7 @@
                         <button class="btn btn-primary custom-btn col-12 align-content-center my-1 view-video" data-videolink="@Model.VideoSignedUrl" type="button"><i class="bi bi-eye"></i> Play Video</button>
                     </div>
                     <div class="text-center" style="width: 200px">
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteVideo" data-video-id="@Model.DispatchTicketId">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteVideo" data-video-id="@Model.ServiceRequestId">
                             <i class="bi bi-trash-fill"></i> Delete Video
                         </a>
                     </div>

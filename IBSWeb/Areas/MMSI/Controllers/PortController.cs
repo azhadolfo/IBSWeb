@@ -107,6 +107,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             currentModel.PortNumber = model.PortNumber;
             currentModel.PortName = model.PortName;
+            currentModel.HasSBMA = model.HasSBMA;
 
             await _db.SaveChangesAsync();
 

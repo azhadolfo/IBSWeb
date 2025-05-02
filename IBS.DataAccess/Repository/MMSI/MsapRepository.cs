@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -39,6 +40,35 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
 
             return ports;
+        }
+
+        public async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIServiceRequest model, CancellationToken cancellationToken = default)
+        {
+            List<SelectListItem> terminals = new List<SelectListItem>();
+
+            if (model.Terminal?.Port?.PortId != null)
+            {
+                terminals = await _dbContext.MMSITerminals
+                .Where(t => t.PortId == model.Terminal.Port.PortId)
+                .OrderBy(s => s.TerminalNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalNumber + " " + s.TerminalName
+                }).ToListAsync(cancellationToken);
+            }
+            else
+            {
+                terminals = await _dbContext.MMSITerminals
+                .OrderBy(s => s.TerminalNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalNumber + " " + s.TerminalName
+                }).ToListAsync(cancellationToken);
+            }
+
+            return terminals;
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
@@ -119,13 +149,14 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> customers = await _dbContext.MMSICustomers.OrderBy(s => s.CustomerName).Select(s => new SelectListItem
+            return await _dbContext.FilprideCustomers
+                .Where(c => c.IsMMSI == true)
+                .OrderBy(s => s.CustomerName)
+                .Select(s => new SelectListItem
             {
-                Value = s.MMSICustomerId.ToString(),
+                Value = s.CustomerId.ToString(),
                 Text = s.CustomerName
             }).ToListAsync(cancellationToken);
-
-            return customers;
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(int portId, CancellationToken cancellationToken = default)
@@ -170,7 +201,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.CreateDate}"
+                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.Date}"
             }).ToList();
 
             return ticketsList;
@@ -245,6 +276,18 @@ namespace IBS.DataAccess.Repository.MMSI
             return companyOwnerList;
         }
 
+        public async Task<MMSIServiceRequest> GetDispatchTicketLists(MMSIServiceRequest model, CancellationToken cancellationToken = default)
+        {
+            model.ActivitiesServices = await GetMMSIActivitiesServicesById(cancellationToken);
+            model.Ports = await GetMMSIPortsById(cancellationToken);
+            model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
+            model.Tugboats = await GetMMSITugboatsById(cancellationToken);
+            model.TugMasters = await GetMMSITugMastersById(cancellationToken);
+            model.Vessels = await GetMMSIVesselsById(cancellationToken);
+
+            return model;
+        }
+
         public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
         {
             model.ActivitiesServices = await GetMMSIActivitiesServicesById(cancellationToken);
@@ -253,7 +296,6 @@ namespace IBS.DataAccess.Repository.MMSI
             model.Tugboats = await GetMMSITugboatsById(cancellationToken);
             model.TugMasters = await GetMMSITugMastersById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Customers = await GetMMSICustomersById(cancellationToken);
 
             return model;
         }
@@ -362,8 +404,8 @@ namespace IBS.DataAccess.Repository.MMSI
             }
 
             var dispatchTickets = await _dbContext.MMSIDispatchTickets
-                .Where(dt => dt.CreateDate >= dateFrom
-                             && dt.CreateDate <= dateTo
+                .Where(dt => dt.Date >= dateFrom
+                             && dt.Date <= dateTo
                              && dt.Status == "Billed")
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Vessel)
@@ -371,7 +413,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.Terminal)
                 .ThenInclude(t => t.Port)
                 .Include(dt => dt.ActivityService)
-                .OrderBy(dt => dt.CreateDate)
+                .OrderBy(dt => dt.Date)
                 .ToListAsync(cancellationToken);
 
             foreach (var dispatchTicket in dispatchTickets)

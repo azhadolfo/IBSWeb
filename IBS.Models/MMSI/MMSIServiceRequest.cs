@@ -1,0 +1,132 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
+using IBS.Models.MMSI.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace IBS.Models.MMSI
+{
+    public class MMSIServiceRequest
+    {
+        [Key]
+        public int ServiceRequestId {  get; set; }
+
+        [Display(Name = "Date")]
+        public DateOnly Date { get; set; }
+
+        [Display(Name = "Dispatch Number")]
+        [Required(ErrorMessage = "Dispatch number is required.")]
+        [StringLength(20, ErrorMessage = "Dispatch Number should not exceed 20 characters")]
+        [Column(TypeName = "varchar(20)")]
+        public string DispatchNumber { get; set; }
+
+        [Display(Name = "COS Number")]
+        [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
+        [Column(TypeName = "varchar(10)")]
+        public string? COSNumber {  get; set; }
+
+        [Display(Name = "Date Left")]
+        public DateOnly DateLeft { get; set; }
+
+        [Display(Name = "Date Arrived")]
+        public DateOnly DateArrived { get; set; }
+
+        [Display(Name = "Time Left")]
+        public TimeOnly TimeLeft { get; set; }
+
+        [Display(Name = "Date Arrived")]
+        public TimeOnly TimeArrived { get; set; }
+
+        [StringLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        public string? Remarks { get; set; }
+
+        [StringLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        public string? BaseOrStation { get; set; }
+
+        [StringLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        public string? VoyageNumber { get; set; }
+
+        public string? Status { get; set; }
+
+        public string? CreatedBy { get; set; }
+
+        public DateTime? CreatedDate { get; set; }
+
+        public string? EditedBy { get; set; }
+
+        public DateTime? EditedDate { get; set; }
+
+        public string? ImageName { get; set; }
+
+        public string? ImageSavedUrl { get; set; }
+
+        public string? ImageSignedUrl { get; set; }
+
+        public string? VideoName { get; set; }
+
+        public string? VideoSavedUrl { get; set; }
+
+        public string? VideoSignedUrl { get; set; }
+
+        public string? BillingId { get; set; }
+
+        public decimal? TotalHours { get; set; }
+
+        #region ---Columns with Table relations---
+
+        public int? CustomerId { get; set; }
+        [ForeignKey(nameof(CustomerId))]
+        public FilprideCustomer? Customer { get; set; }
+
+        public int TugBoatId { get; set; }
+        [ForeignKey(nameof(TugBoatId))]
+        public MMSITugboat? Tugboat { get; set; } //carries the columns of one record
+
+        public int TugMasterId { get; set; }
+        [ForeignKey(nameof(TugMasterId))]
+        public MMSITugMaster? TugMaster { get; set; } //carries the columns of one record
+
+        public int VesselId { get; set; }
+        [ForeignKey(nameof(VesselId))]
+        public MMSIVessel? Vessel { get; set; } //carries the columns of one record
+
+        public int TerminalId { get; set; }
+        [ForeignKey(nameof(TerminalId))]
+        public MMSITerminal? Terminal { get; set; } //carries the columns of one record
+
+        public int ActivityServiceId { get; set; }
+        [ForeignKey(nameof(ActivityServiceId))]
+        public MMSIActivityService? ActivityService { get; set; } //carries the columns of one record
+
+        #endregion ---Columns with Table relations---
+
+        #region ---Select Lists---
+
+        [NotMapped]
+        public List<SelectListItem>? Tugboats { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? TugMasters { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Ports { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Terminals { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Vessels { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? ActivitiesServices { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? Customers { get; set; }
+
+        #endregion ---Select Lists---
+
+    }
+}

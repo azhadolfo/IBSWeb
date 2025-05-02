@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +14,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public PrincipalController(ApplicationDbContext db, IUnitOfWork unitOfWork)
+        public PrincipalController(ApplicationDbContext db, IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager)
         {
             _db = db;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
+        }
+
+        private async Task<string> GetCompanyClaimAsync()
+        {
+            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -32,8 +42,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             MMSIPrincipal model = new MMSIPrincipal();
-            model.CustomerSelectList = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -50,9 +62,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return View(model);
                 }
 
-                var customer = await _db.MMSICustomers.FindAsync(model.CustomerId, cancellationToken);
-                model.CustomerId = customer.MMSICustomerId;
-                customer.HasPrincipal = true;
+                var customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+                model.CustomerId = customer.CustomerId;
 
                 await _db.MMSIPrincipals.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
@@ -84,18 +95,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _db.MMSIPrincipals.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
 
-                // get the customer of the principal
-                var principalsOfTheCustomer = await _db.MMSIPrincipals.Where(p => p.CustomerId == idOfCustomer).ToListAsync(cancellationToken);
-
-                // check if the customer still has principals, if 0, hasprincipal = false
-                if (principalsOfTheCustomer.Count == 0)
-                {
-                    var customer = _db.MMSICustomers.Find(idOfCustomer);
-                    customer.HasPrincipal = false;
-
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
-
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
@@ -111,8 +110,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
-            model.CustomerSelectList = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -143,10 +144,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.IsVatable = model.IsVatable;
                     currentModel.IsActive = model.IsActive;
                     currentModel.CustomerId = model.CustomerId;
-
-                    // current chosen customer
-                    var newCustomer = await _db.MMSICustomers.FindAsync(model.CustomerId, cancellationToken);
-                    newCustomer.HasPrincipal = true;
                 }
                 else
                 {
@@ -155,16 +152,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 await _db.SaveChangesAsync(cancellationToken);
-
-                // see if old customer still has principals, if not, has principal = false
-                var previousCustomerPrincipals = await _db.MMSIPrincipals.Where(p => p.CustomerId == previousCustomerId).ToListAsync(cancellationToken);
-                if (previousCustomerPrincipals.Count == 0)
-                {
-                    var customer = await _db.MMSICustomers.FindAsync(previousCustomerId, cancellationToken);
-                    customer.HasPrincipal = false;
-
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
 
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
