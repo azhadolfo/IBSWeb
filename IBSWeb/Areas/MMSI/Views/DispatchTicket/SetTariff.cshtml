@@ -4,6 +4,8 @@
     ViewData["Title"] = "Set Tariff";
 
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var filterType = ViewBag.FilterType as string;
 }
 
 <div class="card text-dark bg-white  m-4">
@@ -250,7 +252,7 @@
                                             <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                                         </div>
                                         <div class="text-center col-6" style="width: 250px;">
-                                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index" asp-area="MMSI" asp-route-filterType="@filterType">
                                                 <i class="bi bi-arrow-90deg-left"></i> Go Back
                                             </a>
                                         </div>
@@ -274,7 +276,7 @@
                                             <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                                         </div>
                                         <div class="text-center col-6" style="width: 250px;">
-                                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index">
+                                            <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index" asp-area="MMSI" asp-route-filterType="@filterType">
                                                 <i class="bi bi-arrow-90deg-left"></i> Go Back
                                             </a>
                                         </div>

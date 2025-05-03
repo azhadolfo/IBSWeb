@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     TempData["success"] = $"Dispatch Ticket #{tempModel.DispatchNumber} was successfully created.";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
@@ -275,7 +275,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             await _db.SaveChangesAsync(cancellationToken);
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
         }
 
         public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
@@ -289,6 +289,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync();
 
             await GenerateSignedUrl(model);
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(model);
         }
@@ -306,6 +307,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(cancellationToken);
 
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(model);
         }
@@ -316,7 +318,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
             try
@@ -359,7 +361,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["success"] = "Tariff entered successfully!";
 
-                return RedirectToAction(nameof(Index), new { id = currentModel.DispatchTicketId });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -392,8 +394,99 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(cancellationToken);
 
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+
+            try
+            {
+                var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
+
+                #region -- Changes
+
+                var changes = new List<string>();
+
+                if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                if (currentModel.DispatchChargeType != chargeType) { changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}"); }
+                if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
+                if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
+                if (currentModel.BAFChargeType != chargeType2) { changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {chargeType2}"); }
+                if (currentModel.BAFRate != model.BAFRate) { changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}"); }
+                if (currentModel.BAFDiscount != model.BAFDiscount) { changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}"); }
+                if (currentModel.DispatchBillingAmount != model.DispatchBillingAmount) { changes.Add($"DispatchBillingAmount: {currentModel.DispatchBillingAmount} -> {model.DispatchBillingAmount}"); }
+                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
+                if (currentModel.BAFBillingAmount != model.BAFBillingAmount) { changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}"); }
+                if (currentModel.BAFNetRevenue != model.BAFNetRevenue) { changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}"); }
+                if (currentModel.TotalBilling != model.TotalBilling) { changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}"); }
+                if (currentModel.TotalNetRevenue != model.TotalNetRevenue) { changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}"); }
+                if (currentModel.ApOtherTugs != model.ApOtherTugs) { changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}"); }
+
+                #endregion -- Changes
+
+                currentModel.Status = "Tariff Pending";
+                currentModel.CustomerId = model.CustomerId;
+                currentModel.DispatchChargeType = chargeType;
+                currentModel.DispatchRate = model.DispatchRate;
+                currentModel.DispatchDiscount = model.DispatchDiscount;
+                currentModel.BAFChargeType = chargeType2;
+                currentModel.BAFRate = model.BAFRate;
+                currentModel.BAFDiscount = model.BAFDiscount;
+                currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
+                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
+                currentModel.BAFBillingAmount = model.BAFBillingAmount;
+                currentModel.BAFNetRevenue = model.BAFNetRevenue;
+                currentModel.TotalBilling = model.TotalBilling;
+                currentModel.TotalNetRevenue = model.TotalNetRevenue;
+                currentModel.ApOtherTugs = model.ApOtherTugs;
+
+                #region -- Audit Trail
+
+                var audit = new MMSIAuditTrail
+                {
+                    Date = DateTime.Now,
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = changes.Any()
+                        ? $"Edit Tariff:#{currentModel.DispatchTicketId} {string.Join(", ", changes)}"
+                        : $"No changes detected for tariff details #{currentModel.DispatchTicketId}",
+                    DocumentType = "Tariff",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                await _db.SaveChangesAsync(cancellationToken);
+
+                #endregion -- Audit Trail
+
+                TempData["success"] = "Tariff edited successfully!";
+
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                model = await _db.MMSIDispatchTickets
+                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
+                .Include(a => a.ActivityService)
+                .Include(a => a.Terminal).ThenInclude(t => t.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .FirstOrDefaultAsync(cancellationToken);
+
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -418,6 +511,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(model);
         }
@@ -550,7 +644,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     TempData["success"] = "Entry edited successfully!";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                 }
                 else
                 {
@@ -588,96 +682,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> EditTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
-        {
-            if (!ModelState.IsValid)
-            {
-                TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            try
-            {
-                var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
-
-                #region -- Changes
-
-                var changes = new List<string>();
-
-                if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                if (currentModel.DispatchChargeType != chargeType) { changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}"); }
-                if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
-                if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
-                if (currentModel.BAFChargeType != chargeType2) { changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {chargeType2}"); }
-                if (currentModel.BAFRate != model.BAFRate) { changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}"); }
-                if (currentModel.BAFDiscount != model.BAFDiscount) { changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}"); }
-                if (currentModel.DispatchBillingAmount != model.DispatchBillingAmount) { changes.Add($"DispatchBillingAmount: {currentModel.DispatchBillingAmount} -> {model.DispatchBillingAmount}"); }
-                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
-                if (currentModel.BAFBillingAmount != model.BAFBillingAmount) { changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}"); }
-                if (currentModel.BAFNetRevenue != model.BAFNetRevenue) { changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}"); }
-                if (currentModel.TotalBilling != model.TotalBilling) { changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}"); }
-                if (currentModel.TotalNetRevenue != model.TotalNetRevenue) { changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}"); }
-                if (currentModel.ApOtherTugs != model.ApOtherTugs) { changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}"); }
-
-                #endregion -- Changes
-
-                currentModel.Status = "Tariff Pending";
-                currentModel.CustomerId = model.CustomerId;
-                currentModel.DispatchChargeType = chargeType;
-                currentModel.DispatchRate = model.DispatchRate;
-                currentModel.DispatchDiscount = model.DispatchDiscount;
-                currentModel.BAFChargeType = chargeType2;
-                currentModel.BAFRate = model.BAFRate;
-                currentModel.BAFDiscount = model.BAFDiscount;
-                currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
-                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
-                currentModel.BAFBillingAmount = model.BAFBillingAmount;
-                currentModel.BAFNetRevenue = model.BAFNetRevenue;
-                currentModel.TotalBilling = model.TotalBilling;
-                currentModel.TotalNetRevenue = model.TotalNetRevenue;
-                currentModel.ApOtherTugs = model.ApOtherTugs;
-
-                #region -- Audit Trail
-
-                var audit = new MMSIAuditTrail
-                {
-                    Date = DateTime.Now,
-                    Username = await GetUserNameAsync(),
-                    MachineName = Environment.MachineName,
-                    Activity = changes.Any()
-                        ? $"Edit Tariff:#{currentModel.DispatchTicketId} {string.Join(", ", changes)}"
-                        : $"No changes detected for tariff details #{currentModel.DispatchTicketId}",
-                    DocumentType = "Tariff",
-                    Company = await GetCompanyClaimAsync()
-                };
-
-                await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
-                #endregion -- Audit Trail
-
-                TempData["success"] = "Tariff edited successfully!";
-
-                return RedirectToAction(nameof(Index), new { id = currentModel.DispatchTicketId });
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-
-                model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(a => a.ActivityService)
-                .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .FirstOrDefaultAsync(cancellationToken);
-
-                return View(model);
-            }
-        }
-
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
             try
@@ -704,13 +708,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["success"] = "Entry Approved!";
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -740,13 +744,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["success"] = "Approval revoked successfully!";
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -776,13 +780,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["success"] = "Entry Disapproved!";
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -808,21 +812,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     _db.SaveChanges();
                     TempData["success"] = "Service Request cancelled.";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 
                 else
                 {
                     TempData["error"] = "Can't find entry, please try again.";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1009,7 +1013,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to get disbursements.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -1029,13 +1033,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await _db.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
 
-                return RedirectToAction(nameof(Index), new { id = model.DispatchTicketId });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index), new { id = id });
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
