@@ -145,5 +145,12 @@ namespace IBS.Models.Bienes
 
         [ForeignKey(nameof(RolledFromId))]
         public BienesPlacement RolledFrom { get; set; }
+
+        public bool IsSwapped { get; set; }
+
+        public int? SwappedFromId { get; set; }
+
+        [ForeignKey(nameof(SwappedFromId))]
+        public BienesPlacement SwappedFrom { get; set; }
     }
 }

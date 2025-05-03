@@ -280,7 +280,7 @@
                     @if (Model.IsPosted)
                     {
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-4">
                                 @if (Model.TerminatedBy == null)
                                 {
                                     <button type="button" id="terminateBtn" class="btn btn-warning w-100" disabled>
@@ -295,12 +295,21 @@
                                     </a>
                                 }
                             </div>
-                            <div class="col-6">
-                                @if (!Model.IsRolled)
+                            <div class="col-4">
+                                @if (!Model.IsRolled && !Model.IsSwapped)
                                 {
                                     <a id="rollOverBtn" asp-area="Bienes" asp-controller="Placement" asp-action="RollOver"
                                        asp-route-id="@Model.PlacementId" class="btn btn-info w-100">
                                         <i class="bi bi-arrow-repeat me-1"></i> Roll Over
+                                    </a>
+                                }
+                            </div>
+                            <div class="col-4">
+                                @if (!Model.IsSwapped && !Model.IsRolled)
+                                {
+                                    <a id="swappingBtn" asp-area="Bienes" asp-controller="Placement" asp-action="Swapping"
+                                       asp-route-id="@Model.PlacementId" class="btn btn-info w-100">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Swapping
                                     </a>
                                 }
                             </div>
@@ -357,7 +366,9 @@
                 interestDepositedTo: document.getElementById("InterestDepositedTo"),
                 interestStatus: document.getElementById("InterestStatus"),
                 terminatedDate: document.getElementById("TerminatedDate"),
-                terminationRemarks: document.getElementById("TerminationRemarks")
+                terminationRemarks: document.getElementById("TerminationRemarks"),
+                swappingBtn: document.getElementById("swappingBtn"),
+                
             };
 
             // Setup termination confirmation
@@ -465,6 +476,126 @@
                 });
             }
 
+            if (elements.swappingBtn) {
+                elements.swappingBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const swappingUrl = this.getAttribute('href');
+                    const message = "@(Model.TerminatedBy == null ? "Placement will also be terminated at the same time." : "")";
+
+                    // Fetch companies for selection dropdown
+                    fetch(`@Url.Action("GetCompanies", "Placement", new { area = "Bienes" })`)
+                        .then(response => response.json())
+                        .then(companies => {
+                            // Create company options for the dropdown
+                            const companyOptions = companies.map(company =>
+                                `<option value="${company.value}">${company.text}</option>`
+                            ).join('');
+
+                            // Create custom HTML content with company dropdown
+                            const htmlContent = `
+                            <div class="mb-3">
+                                <label for="companySelect" class="form-label">Select company to swap to:</label>
+                                <select id="companySelect" class="form-control">
+                                    <option value="">-- Select Company --</option>
+                                    ${companyOptions}
+                                </select>
+                            </div>
+                            <div class="text-muted small">
+                                ${message}
+                            </div>
+                    `;
+
+                            Swal.fire({
+                                title: 'Swapping Placement',
+                                html: htmlContent,
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonColor: '#17a2b8',
+                                cancelButtonColor: '#6c757d',
+                                confirmButtonText: 'Yes, swap it!',
+                                preConfirm: () => {
+                                    const selectedCompanyId = document.getElementById('companySelect').value;
+                                    if (!selectedCompanyId) {
+                                        Swal.showValidationMessage('Please select a company');
+                                        return false;
+                                    }
+                                    return {companyId: selectedCompanyId};
+                                }
+                            }).then((result) => {
+                                if (result.isConfirmed && swappingUrl) {
+                                    // Create a form to submit the data
+                                    const form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = swappingUrl;
+
+                                    // Add CSRF token
+                                    const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]');
+                                    if (antiForgeryToken) {
+                                        const tokenInput = document.createElement('input');
+                                        tokenInput.type = 'hidden';
+                                        tokenInput.name = '__RequestVerificationToken';
+                                        tokenInput.value = antiForgeryToken.value;
+                                        form.appendChild(tokenInput);
+                                    }
+
+                                    // Add selected company ID
+                                    const companyInput = document.createElement('input');
+                                    companyInput.type = 'hidden';
+                                    companyInput.name = 'companyId';
+                                    companyInput.value = result.value.companyId;
+                                    form.appendChild(companyInput);
+
+                                    // If termination details are needed, add them
+                                    if (@(Model.TerminatedBy == null ? "true" : "false")) {
+                                        // Add all termination form fields
+                                        const terminateFields = [
+                                            {name: 'terminateModel.PlacementId', value: @Model.PlacementId},
+                                            {
+                                                name: 'terminateModel.InterestDeposited',
+                                                value: elements.interestDeposited?.value || ""
+                                            },
+                                            {
+                                                name: 'terminateModel.InterestDepositedDate',
+                                                value: elements.interestDepositedDate?.value || ""
+                                            },
+                                            {
+                                                name: 'terminateModel.InterestDepositedTo',
+                                                value: elements.interestDepositedTo?.value || ""
+                                            },
+                                            {
+                                                name: 'terminateModel.InterestStatus',
+                                                value: elements.interestStatus?.value || ""
+                                            },
+                                            {
+                                                name: 'terminateModel.TerminatedDate',
+                                                value: elements.terminatedDate?.value || ""
+                                            },
+                                            {
+                                                name: 'terminateModel.TerminationRemarks',
+                                                value: elements.terminationRemarks?.value || ""
+                                            }
+                                        ];
+
+                                        terminateFields.forEach(field => {
+                                            if (field.value) {
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = field.name;
+                                                input.value = field.value;
+                                                form.appendChild(input);
+                                            }
+                                        });
+                                    }
+
+                                    // Append form to body and submit
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                }
+                            });
+                        });
+                })
+            }
+            
             if (elements.reactivateBtn) {
                 elements.reactivateBtn.addEventListener('click', function(e) {
                     e.preventDefault();
