@@ -1,4 +1,4 @@
-@model MMSIServiceRequest
+@model MMSIDispatchTicket
 
 @{
     ViewData["Title"] = "Edit";
@@ -19,7 +19,7 @@
     <div class="card-body">
         
         <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="ServiceRequestId" value="@Model.ServiceRequestId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -173,7 +173,7 @@
                         <button class="btn btn-primary custom-btn col-12 align-content-center my-1" type="button" id="viewImage"><i class="bi bi-eye"></i> View Image</button>
                     </div>
                     <div class="text-center" style="width: 200px">
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.ServiceRequestId">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteImage" data-image-id="@Model.DispatchTicketId">
                             <i class="bi bi-trash-fill"></i> Delete Image
                         </a>
                     </div>
@@ -185,7 +185,7 @@
                         <button class="btn btn-primary custom-btn col-12 align-content-center my-1 view-video" data-videolink="@Model.VideoSignedUrl" type="button"><i class="bi bi-eye"></i> Play Video</button>
                     </div>
                     <div class="text-center" style="width: 200px">
-                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteVideo" data-video-id="@Model.ServiceRequestId">
+                        <a class="btn btn-outline-primary col-12 align-content-center selected-options my-1" type="button" id="deleteVideo" data-video-id="@Model.DispatchTicketId">
                             <i class="bi bi-trash-fill"></i> Delete Video
                         </a>
                     </div>
