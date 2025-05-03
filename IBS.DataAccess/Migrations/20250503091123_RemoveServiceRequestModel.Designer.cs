@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250503091123_RemoveServiceRequestModel")]
+    partial class RemoveServiceRequestModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,6 +70,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("bank_id");
 
                     b.Property<string>("BatchNumber")
+                        .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("batch_number");
 
@@ -178,10 +182,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_rolled");
 
-                    b.Property<bool>("IsSwapped")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_swapped");
-
                     b.Property<DateTime?>("LockedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("locked_date");
@@ -207,6 +207,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("principal_amount");
 
                     b.Property<string>("PrincipalDisposition")
+                        .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("principal_disposition");
 
@@ -219,18 +220,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("rolled_from_id");
 
-                    b.Property<int>("SettlementAccountId")
-                        .HasColumnType("integer")
-                        .HasColumnName("settlement_account_id");
+                    b.Property<string>("SettlementAccountNumber")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("settlement_account_number");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
                         .HasColumnName("status");
-
-                    b.Property<int?>("SwappedFromId")
-                        .HasColumnType("integer")
-                        .HasColumnName("swapped_from_id");
 
                     b.Property<string>("TDAccountNumber")
                         .IsRequired()
@@ -267,12 +265,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("RolledFromId")
                         .HasDatabaseName("ix_bienes_placements_rolled_from_id");
-
-                    b.HasIndex("SettlementAccountId")
-                        .HasDatabaseName("ix_bienes_placements_settlement_account_id");
-
-                    b.HasIndex("SwappedFromId")
-                        .HasDatabaseName("ix_bienes_placements_swapped_from_id");
 
                     b.ToTable("bienes_placements", (string)null);
                 });
@@ -10593,27 +10585,11 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("RolledFromId")
                         .HasConstraintName("fk_bienes_placements_bienes_placements_rolled_from_id");
 
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "SettlementAccount")
-                        .WithMany()
-                        .HasForeignKey("SettlementAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_bienes_placements_filpride_bank_accounts_settlement_account");
-
-                    b.HasOne("IBS.Models.Bienes.BienesPlacement", "SwappedFrom")
-                        .WithMany()
-                        .HasForeignKey("SwappedFromId")
-                        .HasConstraintName("fk_bienes_placements_bienes_placements_swapped_from_id");
-
                     b.Navigation("BankAccount");
 
                     b.Navigation("Company");
 
                     b.Navigation("RolledFrom");
-
-                    b.Navigation("SettlementAccount");
-
-                    b.Navigation("SwappedFrom");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCVTradePayment", b =>
