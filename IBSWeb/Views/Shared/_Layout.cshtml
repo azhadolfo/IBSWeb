@@ -539,7 +539,7 @@
                                     @if (User.IsInRole("Admin"))
                                     {
                                         <li class="nav-item dropdown">
-                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Master File</a>
+                                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Mobility Master File</a>
                                             <ul class="dropdown-menu">
                                                 <li class="nav-item">
                                                     <a class="dropdown-item text-dark" asp-area="Mobility" asp-controller="Customer" asp-action="Index">Customer</a>
@@ -977,6 +977,10 @@
                                         <li><hr class="dropdown-divider"></li>
                                         <li class="nav-item">
                                             <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="PickupPoint" asp-action="Index">Pickup Points</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li class="nav-item">
+                                            <a class="dropdown-item text-dark" asp-area="Filpride" asp-controller="Employee" asp-action="Index">Employee</a>
                                         </li>
                                     </ul>
                                 </li>
