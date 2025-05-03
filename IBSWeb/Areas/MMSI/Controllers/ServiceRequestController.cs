@@ -7,6 +7,7 @@ using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -77,6 +78,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(sq => sq.TugMaster)
                 .Include(sq => sq.Vessel)
                 .ToListAsync();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+
+            if (User.IsInRole("PortCoordinator"))
+            {
+                dispatchTickets = dispatchTickets.Where(t => t.CreatedBy == currentUser.UserName)
+                    .ToList();
+            }
 
             foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
             {
@@ -563,7 +572,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 }
                                 else
                                 {
-                                    queried = queried.Where(s => s.Status != null);
+                                    queried = queried.Where(s => !string.IsNullOrEmpty(s.Status));
                                 }
                             break;
                         }
@@ -699,6 +708,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
             if (!string.IsNullOrEmpty(records))
@@ -797,6 +807,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
             if (!string.IsNullOrEmpty(records))
