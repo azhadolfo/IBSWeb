@@ -34,7 +34,6 @@
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
                     <input asp-for="Status" value="Created" type="hidden"></input>
-                    <input asp-for="Status" value="Created" type="hidden"></input>
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
@@ -47,7 +46,8 @@
                                     <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input asp-for="IsUndocumented" class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox">
+                                    <input type="hidden" asp-for="IsUndocumented"></input>
+                                    <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" disabled>
                                     <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
                                         Undocumented
                                     </label>
@@ -214,7 +214,10 @@
                 const $checkbox = $('#isUndocumentedCheckbox');
                 const $inputField = $('#MMSICollectionNumber');
                 const $status = $('#status');
+                const $hiddenInput = $("#IsUndocumented");
 
+                $hiddenInput.val($checkbox.is(":checked") ? "true" : "false");
+                
                 if ($checkbox.is(':checked')) {
                     $status.text('Undocumented');
                     $inputField.val('').prop({
@@ -222,7 +225,7 @@
                         readonly: true
                     });
                 } else {
-                    $status.html('Collection Number<span class="required text-danger">*</span>');
+                    $status.html('Collection Receipt #<span class="required text-danger">*</span>');
                     $inputField.prop({
                         required: true,
                         readonly: false
@@ -238,6 +241,7 @@
                 const $billingsSelect = $('#BillingsSelect');
                 const customerId = $('#customerId').val();
 
+                let isUndocCheckbox = $('#isUndocumentedCheckbox')
                 $('#amountShow').val('0.00');
                 $('#amount').val('0.00');
                 $('#ewt').val('0.00');
@@ -245,7 +249,7 @@
                 $('#undeductedAmount').val('0');
 
                 // clear table
-                table.clear();
+                table.clear();``
                 table.draw();
 
                 $.ajax({
@@ -276,6 +280,21 @@
                     },
                     complete: function () {
                         isProcessing = false;
+                    }
+                });
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
+                    method: "POST",
+                    data: { customerId: customerId },
+                    success: function (data) {
+                        if (data.isUndoc === "Undocumented"){
+                            isUndocCheckbox.prop("checked", true);
+                            handleCheckboxChanged();
+                        }
+                        else{
+                            isUndocCheckbox.prop("checked", false);
+                            handleCheckboxChanged();
+                        }
                     }
                 });
             }
@@ -337,7 +356,6 @@
                     },
                     complete: function () {
                         isProcessing = false;
-                        console.log(tempData);
 
                         // calculateEWTDeduction();
                     }

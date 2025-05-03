@@ -308,11 +308,13 @@
             }
 
             function handleCheckboxChange() {
-                console.log("documented/undoc: changed");
                 const $checkbox = $("#isUndocumentedCheckbox");
                 const $inputField = $("#billingNumber");
                 const $status = $("#status");
+                const $hiddenInput = $("#IsUndocumented");
 
+                $hiddenInput.val($checkbox.is(":checked") ? "true" : "false");
+                
                 if ($checkbox.is(":checked")) {
                     $status.text("Undocumented");
                     $inputField.prop("required", false).prop("disabled", true);
@@ -323,11 +325,8 @@
             }
 
             function handleUsePrincipalChange() {
-                console.log("use principal: checked");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
-                $("#PrincipalSelect").val("");
-                console.log("test");
                 const customerId = $("#CustomerId").val();
 
                 if ($checkbox.is(":checked")) {
@@ -373,7 +372,6 @@
             }
 
             function handleCustomerChange() {
-                console.log("customer: changed");
                 $("#UsePrincipalCheckbox").prop("checked", false);
                 const customerId = $(this).val();
                 // continue here
@@ -386,7 +384,6 @@
                 const $isUndocCheckbox = $("#isUndocumentedCheckbox");
                 $principalDiv.removeClass("d-none");
                 $selectDiv.addClass("d-none");
-                console.log("principal should've been blanked here");
 
                 if (customerId) {
                     $dispatchSelect.prop("disabled", false);
@@ -477,7 +474,6 @@
                     type: 'POST',
                     data: { dispatchTicketIds: selectedTickets },
                     success: function (result) {
-                        console.log('Success:', result);
                         updateDispatchTable(result.data);
                     },
                     error: function (xhr, status, error) {
