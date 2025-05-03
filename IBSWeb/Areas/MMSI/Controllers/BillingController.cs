@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -19,6 +20,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _db;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<BillingController> _logger;
+        private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public BillingController(IUnitOfWork unitOfWork, ApplicationDbContext db, UserManager<IdentityUser> userManager,
             ILogger<BillingController> logger)
@@ -29,7 +31,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken)
+        public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIBillings
                 .Include(a => a.Terminal)
@@ -38,7 +40,40 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include (a => a.Port)
                 .ToListAsync();
 
+            await UpdateFilterTypeClaim(filterType);
+            ViewBag.FilterType = await GetCurrentFilterType();
             return View(model);
+        }
+
+        private async Task UpdateFilterTypeClaim(string filterType)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var existingClaim = (await _userManager.GetClaimsAsync(user))
+                    .FirstOrDefault(c => c.Type == FilterTypeClaimType);
+
+                if (existingClaim != null)
+                {
+                    await _userManager.RemoveClaimAsync(user, existingClaim);
+                }
+
+                if (!string.IsNullOrEmpty(filterType))
+                {
+                    await _userManager.AddClaimAsync(user, new Claim(FilterTypeClaimType, filterType));
+                }
+            }
+        }
+
+        private async Task<string> GetCurrentFilterType()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                var claims = await _userManager.GetClaimsAsync(user);
+                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+            }
+            return null;
         }
 
         [HttpGet]
@@ -119,7 +154,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         TempData["success"] = $"Billing was successfully created.";
                     }
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
@@ -180,14 +215,43 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = await _db.MMSIBillings
-                    .Where(b => b.Status != "For Posting" && b.Status != "Cancelled")
+                var queried = _db.MMSIBillings
                     .Include(b => b.Customer)
                     .Include(b => b.Terminal)
                     .ThenInclude(b => b.Port)
                     .Include(b => b.Vessel)
-                    .ToListAsync(cancellationToken);
+                    .Where(b => b.Status != "For Posting" && b.Status != "Cancelled");
+
+                // Apply status filter based on filterType
+                if (!string.IsNullOrEmpty(filterTypeClaim))
+                {
+                    switch (filterTypeClaim)
+                    {
+                        case "ForPosting":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Posting");
+                            break;
+                        case "ForTariff":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Tariff");
+                            break;
+                        case "TariffPending":
+                            queried = queried.Where(dt =>
+                                dt.Status == "Tariff Pending");
+                            break;
+                        case "ForBilling":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Billing");
+                            break;
+                        case "ForCollection":
+                            queried = queried.Where(dt =>
+                                dt.Status == "For Collection");
+                            break;
+                        // Add other cases as needed
+                    }
+                }
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -195,14 +259,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(dt =>
-                        dt.Customer?.CustomerName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal?.TerminalName?.ToString().Contains(searchValue) == true ||
-                        dt.Terminal?.Port?.PortName?.ToString().Contains(searchValue) == true ||
-                        dt.Vessel?.VesselName?.ToString().Contains(searchValue) == true ||
-                        dt.Status.Contains(searchValue) == true
-                        )
-                    .ToList();
+                        .Where(dt =>
+                            dt.Customer.CustomerName.ToString().Contains(searchValue) == true ||
+                            dt.Terminal.TerminalName.ToString().Contains(searchValue) == true ||
+                            dt.Terminal.Port.PortName.ToString().Contains(searchValue) == true ||
+                            dt.Vessel.VesselName.ToString().Contains(searchValue) == true ||
+                            dt.Status.Contains(searchValue) == true
+                        );
                 }
 
                 // Column-specific search
@@ -216,15 +279,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             case "status":
                                 if (searchValue == "for collection")
                                 {
-                                    queried = queried.Where(s => s.Status == "For Collection").ToList();
+                                    queried = queried.Where(s => s.Status == "For Collection");
                                 }
                                 if (searchValue == "collected")
                                 {
-                                    queried = queried.Where(s => s.Status == "Collected").ToList();
+                                    queried = queried.Where(s => s.Status == "Collected");
                                 }
                                 else
                                 {
-                                    queried = queried.Where(s => s.Status != null).ToList();
+                                    queried = queried.Where(s => s.Status != null);
                                 }
                             break;
                         }
@@ -240,8 +303,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     queried = queried
                         .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}")
-                        .ToList();
+                        .OrderBy($"{columnName} {sortDirection}");
                 }
 
                 var totalRecords = queried.Count();
@@ -264,7 +326,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to get disbursements.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -440,21 +502,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     await _db.SaveChangesAsync();
                     TempData["success"] = "Entry edited successfully!";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
 
                 }
                 else
                 {
                     TempData["error"] = "Can't create entry, please review your input.";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
@@ -472,13 +534,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     TempData["success"] = "Billing deleted successfully!";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
                     TempData["error"] = "Can't find entry.";
 
-                    return RedirectToAction(nameof(Index));
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
@@ -492,7 +554,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     TempData["error"] = $"{ex.InnerException.Message}";
                 }
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
