@@ -281,11 +281,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIDispatchTickets.Where(dt => dt.DispatchTicketId == id)
-                .Include(a => a.ActivityService)
-                .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
+                .Include(t => t.ActivityService)
+                .Include(t => t.Terminal).ThenInclude(t => t.Port)
+                .Include(t => t.Tugboat)
+                .Include(t => t.TugMaster)
+                .Include(t => t.Vessel)
+                .Include((t => t.Customer))
                 .FirstOrDefaultAsync();
 
             await GenerateSignedUrl(model);
@@ -304,6 +305,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(a => a.Tugboat).ThenInclude(t => t.CompanyOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
+                .Include(a => a.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
 
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
@@ -391,6 +393,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .ThenInclude(t => t.CompanyOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
+                .Include(a => a.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
 
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
@@ -610,6 +613,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.TugMasterId = model.TugMasterId;
                     currentModel.VesselId = model.VesselId;
                     currentModel.Remarks = model.Remarks;
+                    currentModel.VoyageNumber = model.VoyageNumber;
                     if (imageFile != null)
                     {
                         currentModel.ImageName = model.ImageName;

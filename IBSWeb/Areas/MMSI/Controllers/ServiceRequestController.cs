@@ -201,7 +201,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
 
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                     }
                     else
                     {
@@ -353,6 +353,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         currentModel.TugMasterId = model.TugMasterId;
                         currentModel.VesselId = model.VesselId;
                         currentModel.Remarks = model.Remarks;
+                        currentModel.VoyageNumber = model.VoyageNumber;
                         if (imageFile != null)
                         {
                             currentModel.ImageName = model.ImageName;

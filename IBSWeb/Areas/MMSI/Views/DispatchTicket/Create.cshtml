@@ -90,19 +90,25 @@
                         <span asp-validation-for="COSNumber" class="text-danger"></span>
                     </div>
                 </div>
-
                 <div class="row">
-                    <div class="form-group col-6 my-2">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" title="Dispatch Number must not exceed 20 characters" required>
+                        <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring #<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="DispatchNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " maxlength="20">
+                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage#(Optional)</label>
+                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-12 my-2">
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
                         <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Customer</option>
                         </select>
                         <span class="text-danger"></span>
-                    </div>
-                    <div class="form-floating col-6 my-2">
-                        <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" title="Dispatch Number must not exceed 20 characters" required>
-                        <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring #<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="DispatchNumber" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
@@ -129,7 +135,6 @@
                         <span asp-validation-for="TimeArrived" class="text-danger"></span>
                     </div>
                 </div>
-                
                 <div class="row">
                     @if (Model.TerminalId != null)
                     {
@@ -151,7 +156,6 @@
                             <span class="text-danger"></span>
                         </div>
                     }
-
                     <div class="form-group col-6 my-2">
                         <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
                         <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
@@ -160,7 +164,6 @@
                         <span asp-validation-for="TerminalId" class="text-danger"></span>
                     </div>
                 </div>
-
                 <div class="row">
                     <div class="form-group col-6 my-2">
                         <label class="control-label ps-1 pb-1">Activity/Service Type<span class="required text-danger">*</span></label>
@@ -178,7 +181,6 @@
                         <span asp-validation-for="TugBoatId" class="text-danger"></span>
                     </div>
                 </div>
-                
                 <div class="row">
                     <div class="form-group col-6 my-2">
                         <label class="control-label pb-1">Master on Duty<span class="required text-danger">*</span></label>
@@ -213,7 +215,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="row col-12 justify-content-end my-2">
                 <div class="text-center" style="width: 150px">
                     <button class="btn btn-primary custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
