@@ -16,13 +16,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<CustomerController> _logger;
+        private readonly ILogger<PickupPointController> _logger;
 
         private readonly UserManager<IdentityUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var selected = await _unitOfWork.MobilityPickUpPoint
                         .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", model.StationCode);
+                    FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     selected.Depot = model.Depot;

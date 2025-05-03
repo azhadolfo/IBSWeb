@@ -126,7 +126,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(model.ApprovedBy!, $"Approved deposit for shift date: {model.ShiftDate} shift#: {model.ShiftNumber}", "Deposit", ipAddress, "Mobility");
+                FilprideAuditTrail auditTrailBook = new(model.ApprovedBy!, $"Approved deposit for shift date: {model.ShiftDate} shift#: {model.ShiftNumber}", "Deposit", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

@@ -696,5 +696,18 @@ namespace IBS.DataAccess.Repository
                 })
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<List<SelectListItem>> GetCompanyListAsyncById(CancellationToken cancellationToken = default)
+        {
+            return await _db.Companies
+                .OrderBy(c => c.CompanyCode)
+                .Where(c => c.IsActive)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.CompanyId.ToString(),
+                    Text = c.CompanyCode + " " + c.CompanyName
+                })
+                .ToListAsync(cancellationToken);
+        }
     }
 }

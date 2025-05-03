@@ -121,7 +121,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         await _dbContext.MobilityCustomers.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
 
-                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer {model.CustomerCode}", "Customer", "", model.StationCode);
+                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer {model.CustomerCode}", "Customer", "", nameof(Mobility));
                         await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                         ViewData["StationCode"] = stationCodeClaims;

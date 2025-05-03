@@ -24,7 +24,7 @@ namespace IBS.Models.Bienes
         public int BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
-        public FilprideBankAccount BankAccount { get; set; }
+        public FilprideBankAccount? BankAccount { get; set; }
 
         [Column(TypeName = "varchar(20)")]
         public string Bank { get; set; }
@@ -39,8 +39,10 @@ namespace IBS.Models.Bienes
         [Column(TypeName = "varchar(10)")]
         public string Class { get; set; } = "STP";
 
-        [Column(TypeName = "varchar(100)")]
-        public string SettlementAccountNumber { get; set; }
+        public int SettlementAccountId { get; set; }
+
+        [ForeignKey(nameof(SettlementAccountId))]
+        public FilprideBankAccount? SettlementAccount { get; set; }
 
         [Column(TypeName = "date")]
         public DateOnly DateFrom { get; set; }
@@ -64,7 +66,7 @@ namespace IBS.Models.Bienes
         public decimal PrincipalAmount { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string PrincipalDisposition { get; set; } = string.Empty;
+        public string? PrincipalDisposition { get; set; }
 
         public PlacementType PlacementType { get; set; }
 
@@ -127,7 +129,7 @@ namespace IBS.Models.Bienes
         public bool IsPosted { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string BatchNumber { get; set; }
+        public string? BatchNumber { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string Status { get; set; } = nameof(PlacementStatus.Unposted);
@@ -143,5 +145,12 @@ namespace IBS.Models.Bienes
 
         [ForeignKey(nameof(RolledFromId))]
         public BienesPlacement RolledFrom { get; set; }
+
+        public bool IsSwapped { get; set; }
+
+        public int? SwappedFromId { get; set; }
+
+        [ForeignKey(nameof(SwappedFromId))]
+        public BienesPlacement SwappedFrom { get; set; }
     }
 }

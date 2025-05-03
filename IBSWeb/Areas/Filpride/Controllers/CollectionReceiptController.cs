@@ -666,7 +666,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.Customers = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             return View(viewModel);
         }

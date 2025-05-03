@@ -40,18 +40,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
             _logger = logger;
         }
 
-        private async Task<List<SelectListItem>> GetCompanies(CancellationToken cancellationToken)
-        {
-            return await _dbContext.Companies
-                .Where(c => c.IsActive)
-                .Select(c => new SelectListItem
-                {
-                    Value = c.CompanyId.ToString(),
-                    Text = c.CompanyName
-                })
-                .ToListAsync(cancellationToken);
-        }
-
         private async Task<string> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -151,8 +139,9 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
             PlacementViewModel viewModel = new()
             {
-                Companies = await GetCompanies(cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                SettlementAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
             };
 
             return View(viewModel);
@@ -165,8 +154,9 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                TempData["error"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -184,7 +174,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     Branch = viewModel.Branch,
                     TDAccountNumber = viewModel.TDAccountNumber,
                     AccountName = viewModel.AccountName,
-                    SettlementAccountNumber = viewModel.SettlementAccountNumber,
+                    SettlementAccountId = viewModel.SettlementAccountId,
                     DateFrom = viewModel.FromDate,
                     DateTo = viewModel.ToDate,
                     Remarks = viewModel.Remarks,
@@ -199,7 +189,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     EWTRate = viewModel.EWTRate / 100,
                     HasTrustFee = viewModel.HasTrustFee,
                     TrustFeeRate = viewModel.TrustFeeRate / 100,
-                    CreatedBy = User.Identity.Name,
+                    CreatedBy = User.Identity!.Name!,
                     LockedDate = viewModel.ToDate.AddDays(2).ToDateTime(TimeOnly.MinValue),
 
                 };
@@ -229,7 +219,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
                 await transaction.RollbackAsync(cancellationToken);
-                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
@@ -259,7 +249,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 PlacementViewModel viewModel = new()
                 {
                     PlacementId = existingRecord.PlacementId,
-                    Companies = await GetCompanies(cancellationToken),
+                    Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken),
                     BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                     CompanyId = existingRecord.CompanyId,
                     BankId = existingRecord.BankId,
@@ -267,7 +257,8 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     Branch = existingRecord.Branch,
                     TDAccountNumber = existingRecord.TDAccountNumber,
                     AccountName = existingRecord.AccountName,
-                    SettlementAccountNumber = existingRecord.SettlementAccountNumber,
+                    SettlementAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                    SettlementAccountId = existingRecord.SettlementAccountId,
                     FromDate = existingRecord.DateFrom,
                     ToDate = existingRecord.DateTo,
                     Remarks = existingRecord.Remarks,
@@ -306,7 +297,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
@@ -332,7 +323,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
                 await transaction.RollbackAsync(cancellationToken);
-                viewModel.Companies = await GetCompanies(cancellationToken);
+                viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
@@ -613,6 +604,88 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 _logger.LogError(ex, "Failed to roll over placement. Error: {ErrorMessage}, Stack: {StackTrace}. Rollover by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Swapping(int? id, int companyId, TerminatePlacementViewModel terminateModel = null, CancellationToken cancellationToken = default)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                var user = User.Identity!.Name;
+
+                if (companyId == existingRecord.CompanyId)
+                {
+                    TempData["error"] = "The selected company matches the previously chosen company. Please select a different company.";
+                    return RedirectToAction(nameof(Preview), new { id });
+                }
+
+                existingRecord.IsSwapped = true;
+
+                // Check if termination details were provided
+                if (terminateModel.PlacementId > 0)
+                {
+                    // Apply termination details
+                    existingRecord.Status = nameof(PlacementStatus.Terminated);
+                    existingRecord.TerminatedDate = terminateModel.TerminatedDate;
+                    existingRecord.TerminatedBy = user;
+                    existingRecord.InterestDeposited = terminateModel.InterestDeposited;
+                    existingRecord.InterestDepositedDate = terminateModel.InterestDepositedDate == default ? null : terminateModel.InterestDepositedDate;
+                    existingRecord.InterestDepositedTo = terminateModel.InterestDepositedTo;
+                    existingRecord.InterestStatus = terminateModel.InterestStatus;
+                    existingRecord.TerminationRemarks = terminateModel.TerminationRemarks;
+                }
+
+                var newControlNumber = await _unitOfWork.BienesPlacement.SwappingAsync(existingRecord, companyId, user!, cancellationToken);
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(user!, $"Swapped placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                TempData["success"] = $"Swapped placement successfully. " +
+                                      $"You can now modified the newly created placement with control#{newControlNumber}";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to swap placement. Error: {ErrorMessage}, Stack: {StackTrace}. Swapped by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCompanies(int bankId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
+
+                if (companies.Count == 0)
+                {
+                    return NotFound();
+                }
+
+                return Ok(companies);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

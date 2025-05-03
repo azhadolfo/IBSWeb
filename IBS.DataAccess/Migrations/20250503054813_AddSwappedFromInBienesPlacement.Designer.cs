@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250503054813_AddSwappedFromInBienesPlacement")]
+    partial class AddSwappedFromInBienesPlacement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4443,10 +4446,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("activity_service_id");
 
-                    b.Property<decimal?>("ApOtherTugs")
-                        .HasColumnType("numeric")
-                        .HasColumnName("ap_other_tugs");
-
                     b.Property<decimal?>("BAFBillingAmount")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_billing_amount");
@@ -4653,6 +4652,161 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("mmsi_dispatch_tickets", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIServiceRequest", b =>
+                {
+                    b.Property<int>("ServiceRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("service_request_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ServiceRequestId"));
+
+                    b.Property<int>("ActivityServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("activity_service_id");
+
+                    b.Property<string>("BaseOrStation")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("base_or_station");
+
+                    b.Property<string>("BillingId")
+                        .HasColumnType("text")
+                        .HasColumnName("billing_id");
+
+                    b.Property<string>("COSNumber")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("cos_number");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<DateOnly>("DateArrived")
+                        .HasColumnType("date")
+                        .HasColumnName("date_arrived");
+
+                    b.Property<DateOnly>("DateLeft")
+                        .HasColumnType("date")
+                        .HasColumnName("date_left");
+
+                    b.Property<string>("DispatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("dispatch_number");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<string>("ImageName")
+                        .HasColumnType("text")
+                        .HasColumnName("image_name");
+
+                    b.Property<string>("ImageSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_saved_url");
+
+                    b.Property<string>("ImageSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("image_signed_url");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("remarks");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TerminalId")
+                        .HasColumnType("integer")
+                        .HasColumnName("terminal_id");
+
+                    b.Property<TimeOnly>("TimeArrived")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_arrived");
+
+                    b.Property<TimeOnly>("TimeLeft")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("time_left");
+
+                    b.Property<decimal?>("TotalHours")
+                        .HasColumnType("numeric")
+                        .HasColumnName("total_hours");
+
+                    b.Property<int>("TugBoatId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_boat_id");
+
+                    b.Property<int>("TugMasterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tug_master_id");
+
+                    b.Property<int>("VesselId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vessel_id");
+
+                    b.Property<string>("VideoName")
+                        .HasColumnType("text")
+                        .HasColumnName("video_name");
+
+                    b.Property<string>("VideoSavedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_saved_url");
+
+                    b.Property<string>("VideoSignedUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("video_signed_url");
+
+                    b.Property<string>("VoyageNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("voyage_number");
+
+                    b.HasKey("ServiceRequestId")
+                        .HasName("pk_mmsi_service_requests");
+
+                    b.HasIndex("ActivityServiceId")
+                        .HasDatabaseName("ix_mmsi_service_requests_activity_service_id");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_mmsi_service_requests_customer_id");
+
+                    b.HasIndex("TerminalId")
+                        .HasDatabaseName("ix_mmsi_service_requests_terminal_id");
+
+                    b.HasIndex("TugBoatId")
+                        .HasDatabaseName("ix_mmsi_service_requests_tug_boat_id");
+
+                    b.HasIndex("TugMasterId")
+                        .HasDatabaseName("ix_mmsi_service_requests_tug_master_id");
+
+                    b.HasIndex("VesselId")
+                        .HasDatabaseName("ix_mmsi_service_requests_vessel_id");
+
+                    b.ToTable("mmsi_service_requests", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.MMSI.MMSITariffRate", b =>
                 {
                     b.Property<int>("TariffRateId")
@@ -4773,7 +4927,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(3)")
                         .HasColumnName("company_owner_number");
 
-                    b.Property<decimal>("FixedRate")
+                    b.Property<decimal?>("FixedRate")
                         .HasColumnType("numeric")
                         .HasColumnName("fixed_rate");
 
@@ -11295,6 +11449,61 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_vessels_vessel_id");
+
+                    b.Navigation("ActivityService");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Terminal");
+
+                    b.Navigation("TugMaster");
+
+                    b.Navigation("Tugboat");
+
+                    b.Navigation("Vessel");
+                });
+
+            modelBuilder.Entity("IBS.Models.MMSI.MMSIServiceRequest", b =>
+                {
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIActivityService", "ActivityService")
+                        .WithMany()
+                        .HasForeignKey("ActivityServiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_activities_services_activity_ser");
+
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .HasConstraintName("fk_mmsi_service_requests_filpride_customers_customer_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
+                        .WithMany()
+                        .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_terminals_terminal_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboat", "Tugboat")
+                        .WithMany()
+                        .HasForeignKey("TugBoatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_tugboats_tug_boat_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugMaster", "TugMaster")
+                        .WithMany()
+                        .HasForeignKey("TugMasterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_tug_masters_tug_master_id");
+
+                    b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
+                        .WithMany()
+                        .HasForeignKey("VesselId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_mmsi_service_requests_mmsi_vessels_vessel_id");
 
                     b.Navigation("ActivityService");
 
