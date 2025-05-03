@@ -4,6 +4,8 @@
     ViewData["Title"] = "Preview";
     
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var filterType = ViewBag.FilterType as string;
 }
 
 <div class="card text-dark bg-white  m-4">
@@ -178,7 +180,7 @@
 
                 </div>
                 <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index">
+                    <a class="btn btn-outline-primary border col-12 align-content-center" asp-controller="DispatchTicket" asp-action="Index" asp-area="MMSI" asp-route-filterType="@filterType">
                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                     </a>
                 </div>

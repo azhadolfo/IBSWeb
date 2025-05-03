@@ -5,6 +5,7 @@
 
     var portId = ViewData["PortId"] as int?;
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var filterType = ViewBag.FilterType as string;
 }
 
 <div class="card shadow mt-4">
@@ -189,7 +190,7 @@
                     <button class="btn btn-primary custom-btn col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Save</button>
                 </div>
                 <div class="text-center" style="width: 150px">
-                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" type="button" asp-controller="DispatchTicket" asp-action="Index">
+                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" type="button" asp-controller="DispatchTicket" asp-action="Index" asp-area="MMSI" asp-route-filterType="@filterType">
                         <i class="bi bi-arrow-90deg-left"></i> Go Back
                     </a>
                 </div>
