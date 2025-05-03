@@ -588,6 +588,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(SalesReport));
         }
 
+        [HttpGet]
+        public IActionResult ServiceInvoiceReport()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedServiceInvoiceReport(ViewModelBook model)
+        {
+            ViewData["DateFrom"] = model.DateFrom;
+            ViewData["DateTo"] = model.DateTo;
+            var companyClaims = await GetCompanyClaimAsync();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var serviceInvoice = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims);
+
+                    if (serviceInvoice.Any())
+                    {
+                        return View(serviceInvoice);
+                    }
+
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ServiceInvoiceReport));;
+                }
+                catch (Exception ex)
+                {
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(ServiceInvoiceReport));
+                }
+            }
+
+            TempData["error"] = "Please input date from";
+            return RedirectToAction(nameof(ServiceInvoiceReport));
+        }
+
 
         [HttpGet]
         public IActionResult PurchaseOrderReport()
@@ -2846,7 +2883,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
 
-                using (var range = worksheet.Cells[row, 10, row, 22])
+                using (var range = worksheet.Cells[row, 13, row, 20])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -6730,6 +6767,153 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(DispatchReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate Service Invoice Report Excel File --
+
+        public async Task<IActionResult> GenerateServiceInvoiceReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(ServiceInvoiceReport));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(this.User);
+                var companyClaims = await GetCompanyClaimAsync();
+
+                var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
+                if (serviceReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(ServiceInvoiceReport));
+                }
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("ServiceReport");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "SERVICE REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "Transaction Date";
+                worksheet.Cells["B7"].Value = "Customer Name";
+                worksheet.Cells["C7"].Value = "Customer Address";
+                worksheet.Cells["D7"].Value = "Customer TIN";
+                worksheet.Cells["E7"].Value = "Service Invoice#";
+                worksheet.Cells["F7"].Value = "Service";
+                worksheet.Cells["G7"].Value = "Period";
+                worksheet.Cells["H7"].Value = "Due Date";
+                worksheet.Cells["I7"].Value = "G. Amount";
+                worksheet.Cells["J7"].Value = "Amount Paid";
+                worksheet.Cells["K7"].Value = "Payment Status";
+                worksheet.Cells["L7"].Value = "Instructions";
+                worksheet.Cells["M7"].Value = "Type";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:M7"])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var totalAmount = 0m;
+                var totalAmountPaid = 0m;
+
+                foreach (var sv in serviceReport)
+                {
+                    worksheet.Cells[row, 1].Value = sv.CreatedDate;
+                    worksheet.Cells[row, 2].Value = sv.Customer.CustomerName;
+                    worksheet.Cells[row, 3].Value = sv.CustomerAddress;
+                    worksheet.Cells[row, 4].Value = sv.CustomerTin;
+                    worksheet.Cells[row, 5].Value = sv.ServiceInvoiceNo;
+                    worksheet.Cells[row, 6].Value = sv.Service.Name;
+                    worksheet.Cells[row, 7].Value = sv.Period;
+                    worksheet.Cells[row, 8].Value = sv.DueDate;
+                    worksheet.Cells[row, 9].Value = sv.Amount;
+                    worksheet.Cells[row, 10].Value = sv.AmountPaid;
+                    worksheet.Cells[row, 11].Value = sv.PaymentStatus;
+                    worksheet.Cells[row, 12].Value = sv.Instructions;
+                    worksheet.Cells[row, 13].Value = sv.Type;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = "MMM yyyy";
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+
+                    totalAmount += sv.Amount;
+                    totalAmountPaid += sv.AmountPaid;
+                    row++;
+                }
+
+                worksheet.Cells[row, 8].Value = "Total ";
+                worksheet.Cells[row, 9].Value = totalAmount;
+                worksheet.Cells[row, 10].Value = totalAmountPaid;
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 13])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
+
+                using (var range = worksheet.Cells[row, 8, row, 10])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 3);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                return RedirectToAction(nameof(ServiceInvoiceReport));
             }
         }
 

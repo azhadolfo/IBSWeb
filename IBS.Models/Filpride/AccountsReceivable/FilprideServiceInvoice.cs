@@ -45,6 +45,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Required]
         [Column(TypeName = "date")]
+        [DisplayFormat(DataFormatString = "{0:MMM yyyy}")]
         public DateOnly Period { get; set; }
 
         [Required(ErrorMessage = "The Amount is required.")]
