@@ -35,22 +35,27 @@
                         <span asp-validation-for="COSNumber" class="text-danger"></span>
                     </div>
                 </div>
-
                 <div class="row">
-                    <div class="form-group col-6 my-2">
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" title="Dispatch Number must not exceed 20 characters" required>
+                        <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring #<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="DispatchNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-6 my-2">
+                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " maxlength="20">
+                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage#(Optional)</label>
+                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group col-12 my-2">
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
                         <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Customer</option>
                         </select>
                         <span class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-6 my-2">
-                        <input asp-for="DispatchNumber" type="text" class="form-control border-0 shadow" id="DispatchNumber" placeholder=" " maxlength="20" title="Dispatch Number must not exceed 20 characters" required>
-                        <label asp-for="DispatchNumber" for="DispatchNumber" class="ms-2">Dispatch/Mooring Ticket #<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="DispatchNumber" class="text-danger"></span>
-                    </div>
                 </div>
-                
                 <div class="row">
                     <div class="form-floating col-6 my-2">
                         <input type="date" asp-for="DateLeft" value="@(Model.DateLeft.ToString("yyyy-MM-dd"))" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
