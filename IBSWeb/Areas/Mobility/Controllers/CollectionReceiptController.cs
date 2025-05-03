@@ -49,13 +49,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -166,7 +159,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> CreateForService(CollectionReceiptViewModel viewModel, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var companyClaims = await GetCompanyClaimAsync();
 
             if (!ModelState.IsValid)
             {
@@ -282,7 +274,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -434,7 +426,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CollectionReceiptViewModel viewModel, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var existingModel = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
 
@@ -593,7 +584,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -615,7 +606,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var model = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
@@ -645,7 +635,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -675,7 +665,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var companyClaims = await GetCompanyClaimAsync();
             if (model != null)
             {
                 if (model.VoidedBy == null)
@@ -716,7 +705,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -741,7 +730,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var model = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -760,7 +748,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -786,7 +774,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var cr = await _unitOfWork.MobilityCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
             if (!cr.IsPrinted)
             {
@@ -794,7 +781,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
