@@ -1,0 +1,139 @@
+@model IEnumerable<FilprideServiceInvoice>
+@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    ViewData["Title"] = "Service Report";
+
+    var totalAmount = 0m;
+    var totalAmountPaid = 0m;
+}
+<style>
+    .container {
+        max-width: none;
+    }
+
+    .table-responsive {
+        overflow-y: auto;
+        max-height: 70vh;
+    }
+
+    table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .print-header, .table-responsive, .table-responsive * {
+            visibility: visible;
+        }
+
+        .print-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            position: absolute;
+            top: 0; /* Adjust this value based on your header's height */
+            left: 0;
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+    }
+</style>
+
+<div class="table-responsive">
+    <h5>SERVICE REPORT</h5>
+    <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
+    <table id="ledgerTable" class="table">
+        <thead>
+        <tr class="table-primary text-nowrap">
+            <th class="px-3">Transaction Date</th>
+            <th class="px-3">Customer Name</th>
+            <th class="px-3">Customer Address</th>
+            <th class="px-3">Customer TIN</th>
+            <th class="px-3">Service Invoice#</th>
+            <th class="px-3">Service</th>
+            <th class="px-3">Period</th>
+            <th class="px-3">Due Date</th>
+            <th class="px-3">G. Amount</th>
+            <th class="px-3">Amount Paid</th>
+            <th class="px-3">Payment Status</th>
+            <th class="px-3">Instructions</th>
+            <th class="px-3">Type</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @* Populate rows *@
+        @foreach (var sv in Model)
+        {
+            <tr class="align-text-bottom text-nowrap">
+                <td class="px-3"> @sv.CreatedDate.ToString("MMM dd, yyyy")</td>
+                <td class="px-3"> @sv.Customer.CustomerName</td>
+                <td class="px-3"> @sv.CustomerAddress</td>
+                <td class="px-3"> @sv.CustomerTin</td>
+                <td class="px-3"> @sv.ServiceInvoiceNo</td>
+                <td class="px-3"> @sv.Service.Name</td>
+                <td class="px-3"> @Html.DisplayFor(model => sv.Period)</td>
+                <td class="px-3"> @Html.DisplayFor(model => sv.DueDate)</td>
+                <td class="px-3"> @sv.Amount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="px-3"> @sv.AmountPaid.ToString(SD.Two_Decimal_Format)</td>
+                <td class="px-3"> @sv.PaymentStatus</td>
+                <td class="px-3"> @sv.Instructions</td>
+                <td class="px-3"> @sv.Type</td>
+            </tr>
+            
+            totalAmount += sv.Amount;
+            totalAmountPaid += sv.AmountPaid;
+        }
+        
+        <tr class="table-primary" style="border-top: double">
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-start px-3"><b>TOTAL:</b></td>
+            <td class="text-start px-3">@totalAmount.ToString(SD.Two_Decimal_Format)</td>
+            <td class="text-start px-3">@totalAmountPaid.ToString(SD.Two_Decimal_Format)</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row mt-5">
+    <div class="col-6 col-md-3">
+        <a onclick="printTable()" class="btn btn-primary form-control buttons">Print</a>
+    </div>
+
+    <div class="col-6 col-md-3">
+        <a asp-area="Filpride" asp-controller="Report" asp-action="ServiceInvoiceReport"
+           class="btn btn-outline-primary border form-control buttons">Back</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printTable() {
+            window.print();
+        }
+    </script>
+}
