@@ -39,13 +39,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -146,7 +139,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var existingSv = await _unitOfWork.MobilityServiceInvoice
@@ -232,7 +224,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new debit memo# {viewModel.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new debit memo# {viewModel.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -271,7 +263,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Post(int id, ViewModelDMCM viewModelDMCM, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             if (model != null)
@@ -500,7 +491,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -527,7 +518,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             if (model != null)
@@ -554,7 +544,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -580,7 +570,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var model = await _unitOfWork.MobilityDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -599,7 +588,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -685,7 +674,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
 
             if (!ModelState.IsValid)
             {
@@ -718,7 +706,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -740,7 +728,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var dm = await _unitOfWork.MobilityDebitMemo.GetAsync(x => x.DebitMemoId == id, cancellationToken);
             if (!dm.IsPrinted)
             {
@@ -748,7 +735,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
