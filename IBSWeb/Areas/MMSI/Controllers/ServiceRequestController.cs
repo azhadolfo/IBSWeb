@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         private async Task UpdateFilterTypeClaim(string filterType)
-        {
+         {
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
@@ -268,6 +268,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(model);
         }
@@ -386,7 +387,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         TempData["success"] = "Entry edited successfully!";
 
-                        return RedirectToAction(nameof(Index));
+                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                     }
                     else
                     {

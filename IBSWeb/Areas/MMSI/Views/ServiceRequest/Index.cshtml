@@ -212,13 +212,13 @@
                                                     <div class="dropdown align-content-center">
                                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                                         <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                                            ${value.status !== "Cancelled" ? `<li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
+                                                            ${value.status !== "Cancelled" ? `<li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.serviceRequestId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
                                                             <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View Image</a></li>
                                                             <li><a class="dropdown-item view-video" href="#" data-videolink="/Dispatch_Ticket_Uploads/test.mp4"><i class="bi bi-eye"></i> View Video</a></li>
                                                         </ul>
                                                     </div>
                                                 ` : `
-                                                    <a class="view-upload btn btn-primary custom-btn col-12" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>
+                                                    <a class="view-upload btn btn-primary custom-btn col-12" href="/MMSI/ServiceRequest/Edit/${value.serviceRequestId}"><i class="bi bi-pencil-square"></i> Edit</a>
                                                 `}
                                             </div>
                                         </td>
@@ -310,7 +310,7 @@
                     {"data": "tugMaster.tugMasterName"},
                     {"data": "vessel.vesselName"},
                     {
-                        "data": null,
+                        "data": "status",
                         "orderable": true,
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
@@ -340,7 +340,7 @@
                             <ul class="dropdown-menu">`;
 
                                 if (row.status !== "Cancelled") {
-                                    actions += `<li><a class="dropdown-item" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="${editUrl}?id=${row.serviceRequestId}"><i class="bi bi-pencil-square"></i> Edit</a></li>`;
                                 }
                                 if (row.imageName) {
                                     actions += `<li><a class="dropdown-item view-upload" href="#" data-uploadname="${row.imageSignedUrl}"><i class="bi bi-eye-fill"></i> View Image</a></li>`;
@@ -351,7 +351,7 @@
                                 actions += `</ul>
                         </div>`;
                             } else {
-                                actions += `<a class="btn btn-primary w-100" href="${editUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
+                                actions += `<a class="btn btn-primary w-100" href="${editUrl}?id=${row.serviceRequestId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
                             }
 
                             actions += `</div></div>`; // close width div
