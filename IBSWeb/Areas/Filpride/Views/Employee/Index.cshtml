@@ -1,5 +1,5 @@
 @using IBS.Utility.Constants
-@model IEnumerable<MobilityStationEmployee>
+@model IEnumerable<FilprideEmployee>
 
 @{
     ViewData["Title"] = "Employee";
@@ -10,7 +10,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">STATION EMPLOYEE MASTER FILE</h2>
+                <h2 class="text-white py-2">EMPLOYEE MASTER FILE</h2>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@
             <div class="col-6">
             </div>
             <div class="col-6 text-end">
-                <a asp-area="Mobility" asp-controller="StationEmployee" asp-action="Create" class="btn btn-primary">
+                <a asp-area="Filpride" asp-controller="Employee" asp-action="Create" class="btn btn-primary">
                     <i class="bi bi-plus-circle"></i> Create New
                 </a>
             </div>
@@ -84,7 +84,7 @@
                     </td>
                     <td>
                         <div class="w-100 btn-group" role="group">
-                            <a asp-area="Mobility" asp-controller="StationEmployee" asp-action="Edit" asp-route-id="@item.EmployeeId" class="btn btn-primary mx-2">
+                            <a asp-area="Filpride" asp-controller="Employee" asp-action="Edit" asp-route-id="@item.EmployeeId" class="btn btn-primary mx-2">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </a>
                         </div>
