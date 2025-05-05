@@ -38,8 +38,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         private async Task UpdateFilterTypeClaim(string filterType)
-         {
-            var user = await _userManager.GetUserAsync(User);
+        {
+        var user = await _userManager.GetUserAsync(User);
             if (user != null)
             {
                 var existingClaim = (await _userManager.GetClaimsAsync(user))
