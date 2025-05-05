@@ -39,7 +39,6 @@ namespace IBS.Services
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var previousMonth = today.AddMonths(-1);
                 await InTransit(previousMonth);
-                await CheckTheUntriggeredPurchaseOrders();
                 await AutoReversalForCvWithoutDcrDate(previousMonth);
                 await ComputeNibit(previousMonth);
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
@@ -108,67 +107,6 @@ namespace IBS.Services
                 _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
                 await transaction.RollbackAsync();
             }
-        }
-
-        private async Task CheckTheUntriggeredPurchaseOrders()
-        {
-
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                .GetUntriggeredPurchaseOrderNumbersAsync();
-
-            if (!purchaseOrders.Any())
-            {
-                return;
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                var users = await _dbContext.ApplicationUsers
-                    .Where(u => u.Department == SD.Department_TradeAndSupply ||
-                                u.Department == SD.Department_ManagementAccounting)
-                    .Select(u => u.Id)
-                    .ToListAsync();
-
-
-                var purchaseOrderNosList = string.Join(", ", purchaseOrders);
-                var message = $"Kindly trigger the following purchase orders: {purchaseOrderNosList}. " +
-                              $"To enable the creation of purchase order for the month of " +
-                              $"{DateTimeHelper.GetCurrentPhilippineTime():MMM yyyy}. \n" +
-                              $"CC: Management Accounting";
-
-                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
-
-
-                var lockCreationOfPo = await _dbContext.AppSettings
-                    .FirstOrDefaultAsync(a => a.SettingKey == AppSettingKey.LockTheCreationOfPo);
-
-                if (lockCreationOfPo == null)
-                {
-                    lockCreationOfPo = new AppSetting
-                    {
-                        SettingKey = AppSettingKey.LockTheCreationOfPo,
-                        Value = "true"
-                    };
-
-                    await _dbContext.AppSettings.AddAsync(lockCreationOfPo);
-                }
-                else
-                {
-                    lockCreationOfPo.Value = "true";
-                }
-
-                await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while processing un-triggered purchase orders notifications.");
-                await transaction.RollbackAsync();
-            }
-
         }
 
         private async Task AutoReversalForCvWithoutDcrDate(DateTime previousMonth)

@@ -287,6 +287,27 @@ namespace IBS.DataAccess.Repository.Filpride
             return result;
         }
 
+        public async Task<List<FilprideServiceInvoice>> GetServiceInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            // Fetch all delivery receipts within the date range
+            var seviceInvoices = await _db.FilprideServiceInvoices
+                .Where(dr => dr.Company == company &&
+                             DateOnly.FromDateTime(dr.CreatedDate) >= dateFrom &&
+                             DateOnly.FromDateTime(dr.CreatedDate) <= dateTo &&
+                             dr.Status == nameof(Status.Posted))
+                .Include(dr => dr.Customer)
+                .Include(dr => dr.Service)
+                .OrderBy(p => p.CreatedDate)
+                .ToListAsync(cancellationToken);
+
+            return seviceInvoices;
+        }
+
         public async Task<List<FilpridePurchaseOrder>> GetPurchaseOrderReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
