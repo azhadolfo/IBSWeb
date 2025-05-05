@@ -61,7 +61,6 @@
         public const string Department_ManagementAccounting = "Management Accounting";
         public const string Department_MIS = "MIS";
         public const string Department_Operation = "Operation";
-        public const string Department_PortCoordinator = "Port Coordinator";
         public const string Department_RCD = "RCD";
         public const string Department_RetailAdmin = "Retail Admin";
         public const string Department_RetailAudit = "Retail Audit";
