@@ -84,6 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerTin = viewModel.TinNo;
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
+            existingRecord.BalanceQuantity = existingRecord.Quantity;
             existingRecord.DeliveredPrice = viewModel.DeliveredPrice;
             existingRecord.TotalAmount = viewModel.TotalAmount;
             existingRecord.AccountSpecialist = viewModel.AccountSpecialist;
