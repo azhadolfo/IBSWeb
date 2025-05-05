@@ -192,11 +192,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
 
-            var isPoLock = await _dbContext.AppSettings
-                .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfPo)
-                .Select(s => s.Value == "true")
-                .FirstOrDefaultAsync(cancellationToken);
-
             var viewModel = new FilpridePurchaseOrder();
 
             var companyClaims = await GetCompanyClaimAsync();
@@ -204,8 +199,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
-            ViewData["IsPoLock"] = isPoLock;
 
             return View(viewModel);
         }
