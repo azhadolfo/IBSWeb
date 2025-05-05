@@ -145,72 +145,72 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                {
+                    if (model.Date > model.DateLeft)
                     {
-                        if (model.Date > model.DateLeft)
-                        {
-                            throw new ArgumentException("Date start should not be earlier than date today.");
-                        }
-
-                        model.CreatedBy = await GetUserNameAsync();
-                        timeStamp = DateTime.Now;
-                        model.CreatedDate = timeStamp;
-
-                        // upload file if something is submitted
-                        if (imageFile != null && imageFile.Length > 0)
-                        {
-                            model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                            model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
-
-                            ViewBag.Message = "Image uploaded successfully!";
-                        }
-                        if (videoFile != null && videoFile.Length > 0)
-                        {
-                            model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                            model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
-
-                            ViewBag.Message = "Video uploaded successfully!";
-                        }
-
-                        model.Status = "For Posting";
-                        DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                        DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                        TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                        model.TotalHours = (decimal)timeDifference.TotalHours;
-                        await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
-                        await _db.SaveChangesAsync(cancellationToken);
-
-                        var tempModel =
-                            await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
-
-                        #region -- Audit Trail
-
-                        var audit = new MMSIAuditTrail
-                        {
-                            Date = DateTime.Now,
-                            Username = await GetUserNameAsync(),
-                            MachineName = Environment.MachineName,
-                            Activity = $"Create service request: id#{tempModel.DispatchTicketId}",
-                            DocumentType = "ServiceRequest",
-                            Company = await GetCompanyClaimAsync()
-                        };
-
-                        await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
-                        await _db.SaveChangesAsync(cancellationToken);
-
-                        #endregion --Audit Trail
-
-                        TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
-
-                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                        throw new ArgumentException("Date start should not be earlier than date today.");
                     }
-                    else
+
+                    model.CreatedBy = await GetUserNameAsync();
+                    timeStamp = DateTime.Now;
+                    model.CreatedDate = timeStamp;
+
+                    // upload file if something is submitted
+                    if (imageFile != null && imageFile.Length > 0)
                     {
-                        TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
-                        model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
-                        ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                        model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                        model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
 
-                        return View(model);
+                        ViewBag.Message = "Image uploaded successfully!";
                     }
+                    if (videoFile != null && videoFile.Length > 0)
+                    {
+                        model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                        model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
+
+                        ViewBag.Message = "Video uploaded successfully!";
+                    }
+
+                    model.Status = "For Posting";
+                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
+                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
+                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                    model.TotalHours = (decimal)timeDifference.TotalHours;
+                    await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    var tempModel =
+                        await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
+
+                    #region -- Audit Trail
+
+                    var audit = new MMSIAuditTrail
+                    {
+                        Date = DateTime.Now,
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = $"Create service request #{tempModel.DispatchNumber}",
+                        DocumentType = "Service Request",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion --Audit Trail
+
+                    TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
+
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                }
+                else
+                {
+                    TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
+                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                    return View(model);
+                }
             }
             catch (Exception ex)
             {
@@ -318,13 +318,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var changes = new List<string>();
 
                         if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
-                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                        if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                         if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                        if (currentModel.VoyageNumber  != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                        if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                         if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
                         if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                         if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
                         if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
+                        if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
                         if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                         if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
                         if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
@@ -338,22 +340,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         currentModel.EditedBy = user.UserName;
                         currentModel.EditedDate = DateTime.Now;
-                        currentModel.TotalHours = (decimal)timeDifference.TotalHours;
                         currentModel.Date = model.Date;
-                        currentModel.COSNumber = model.COSNumber;
-                        currentModel.CustomerId = model.CustomerId;
                         currentModel.DispatchNumber = model.DispatchNumber;
+                        currentModel.COSNumber = model.COSNumber;
+                        currentModel.VoyageNumber = model.VoyageNumber;
+                        currentModel.CustomerId = model.CustomerId;
                         currentModel.DateLeft = model.DateLeft;
                         currentModel.TimeLeft = model.TimeLeft;
                         currentModel.DateArrived = model.DateArrived;
                         currentModel.TimeArrived = model.TimeArrived;
+                        currentModel.TotalHours = (decimal)timeDifference.TotalHours;
                         currentModel.TerminalId = model.TerminalId;
                         currentModel.ActivityServiceId = model.ActivityServiceId;
                         currentModel.TugBoatId = model.TugBoatId;
                         currentModel.TugMasterId = model.TugMasterId;
                         currentModel.VesselId = model.VesselId;
                         currentModel.Remarks = model.Remarks;
-                        currentModel.VoyageNumber = model.VoyageNumber;
                         if (imageFile != null)
                         {
                             currentModel.ImageName = model.ImageName;
@@ -375,9 +377,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
                             Activity = changes.Any()
-                                ? $"Edit: id#{currentModel.DispatchTicketId}, {string.Join(", ", changes)}"
-                                : $"No changes detected: id#{currentModel.DispatchTicketId}",
-                            DocumentType = "ServiceRequest",
+                                ? $"Edit service request #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
+                                : $"No changes detected: id#{currentModel.DispatchNumber}",
+                            DocumentType = "Service Request",
                             Company = await GetCompanyClaimAsync()
                         };
 
@@ -765,7 +767,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             await _db.MMSIDispatchTickets.AddAsync(newTicket, cancellationToken);
                             await _db.SaveChangesAsync(cancellationToken);
 
-                            postedTickets.Add($"{recordToUpdate.DispatchTicketId} => #{newTicket.DispatchTicketId}");
+                            postedTickets.Add($"{recordToUpdate.DispatchNumber} => #{newTicket.DispatchNumber}");
                         }
                         else
                         {
@@ -781,9 +783,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = postedTickets.Any()
-                            ? $"Posted: #{string.Join(", #", postedTickets)}"
+                            ? $"Posted service requests #{string.Join(", #", postedTickets)}"
                             : $"No posting detected",
-                        DocumentType = "DispatchTicket",
+                        DocumentType = "Service Request",
                         Company = await GetCompanyClaimAsync()
                     };
 
@@ -829,7 +831,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "Cancelled";
-                            posteds.Add(recordToUpdate.DispatchTicketId.ToString());
+                            posteds.Add(recordToUpdate.DispatchNumber.ToString());
                         }
                     }
 
@@ -841,7 +843,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = posteds.Any()
-                            ? $"Cancel: id#{string.Join(", #", posteds)}"
+                            ? $"Cancel service requests #{string.Join(", #", posteds)}"
                             : $"No cancel detected",
                         DocumentType = "ServiceRequest",
                         Company = await GetCompanyClaimAsync()
