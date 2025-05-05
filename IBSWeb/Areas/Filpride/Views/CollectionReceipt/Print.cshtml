@@ -27,9 +27,13 @@
     {
         <img src="~/img/Filpride.jpg" height="" width="130px" />
     }
-    @if (selectedCompany == "Mobility")
+    else if (selectedCompany == "Mobility")
     {
         <img src="~/img/usa88-logo.png" height="" width="130px" />
+    }
+    else if (selectedCompany == "Bienes")
+    {
+        <img src="~/img/bienes.jpg" height="" width="100px" />
     }
 </div>
 <div class="text-center">
@@ -45,6 +49,15 @@
     @if (selectedCompany == "Mobility")
     {
         <h2><u><b>&nbsp;MOBILITY GROUP CORP.&nbsp;</b></u></h2>
+        <p style="line-height: 1; margin-top:-7px;">
+            Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
+            Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />
+            VAT Reg. TIN: 776-536-510-00000
+        </p>
+    }
+    else if (selectedCompany == "Bienes")
+    {
+        <h2><u><b>&nbsp;BIENES DE ORO&nbsp;</b></u></h2>
         <p style="line-height: 1; margin-top:-7px;">
             Tower B Phoenix Sun Business Park Eulogio Rodriguez JR, ave.,<br />
             Bagumbayan Libis 1110 Quezon City NCR, Second District Philippines<br />

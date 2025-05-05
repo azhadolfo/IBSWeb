@@ -1,0 +1,214 @@
+@using IBS.Utility.Constants
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model FilprideEmployee
+
+@{
+    ViewData["Title"] = "Create Employee";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Employee</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form asp-action="Create">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <fieldset class="form-group mb-3">
+                <legend>Select Status<span class="required">*</span></legend>
+
+                <div class="form-check form-check-inline mb-3">
+                    <input class="form-check-input" type="radio" asp-for="Status" id="inlineRadio1" value="P" aria-labelledby="labelInlineRadio1">
+                    <label class="form-check-label" for="inlineRadio1" id="labelInlineRadio1">Provisionary</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="Status" id="inlineRadio2" value="R" aria-labelledby="labelInlineRadio2" >
+                    <label class="form-check-label" for="inlineRadio2" id="labelInlineRadio2">Regular</label>
+                </div>
+                <br/>
+                <span asp-validation-for="Status" class="text-danger"></span>
+            </fieldset>
+
+            <div class="form-floating mb-3">
+                <input asp-for="EmployeeNumber" class="form-control " maxlength="4" placeholder="Enter the Employee Number"/>
+                <label asp-for="EmployeeNumber" class="form-label">Employee Number<span class="required">*</span></label>
+                <span asp-validation-for="EmployeeNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Initial" class="form-control " maxlength="3" placeholder="Enter the Initial"/>
+                <label asp-for="Initial" class="form-label">Initial</label>
+                <span asp-validation-for="Initial" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="FirstName" class="form-control " placeholder="Enter the First Name"/>
+                <label asp-for="FirstName" class="form-label">First Name<span class="required">*</span></label>
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="MiddleName" class="form-control " placeholder="Enter the Middle Name"/>
+                <label asp-for="MiddleName" class="form-label">Middle Name</label>
+                <span asp-validation-for="MiddleName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="LastName" class="form-control " placeholder="Enter the Last Name"/>
+                <label asp-for="LastName" class="form-label">Last Name<span class="required">*</span></label>
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Suffix" class="form-control " maxlength="5" placeholder="Enter the Suffix"/>
+                <label asp-for="Suffix" class="form-label">Suffix</label>
+                <span asp-validation-for="Suffix" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <textarea asp-for="Address" class="form-control" placeholder="Enter address" style="height: 200px"></textarea>
+                <label asp-for="Address" class="control-label">Address<span class="required">*</span></label>
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="BirthDate" type="date" class="form-control border-0 shadow"
+                       placeholder=""
+                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                <label asp-for="BirthDate">Birth Date</label>
+                <span asp-validation-for="BirthDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="TelNo" class="form-control " maxlength="15" placeholder="Enter the Tel No."/>
+                <label asp-for="TelNo" class="form-label">Tel No.</label>
+                <span asp-validation-for="TelNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="SssNo" class="form-control " maxlength="12" placeholder="Enter the SSS No."/>
+                <label asp-for="SssNo" class="form-label">SSS No.</label>
+                <span asp-validation-for="SssNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="TinNo" class="form-control formattedTinNumberInput" maxlength="17" placeholder="Enter the TIN No."/>
+                <label asp-for="TinNo" class="form-label">TIN No.</label>
+                <span asp-validation-for="TinNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="PhilhealthNo" class="form-control " maxlength="15" placeholder="Enter the Philhealth No."/>
+                <label asp-for="PhilhealthNo" class="form-label">Philhealth No.</label>
+                <span asp-validation-for="PhilhealthNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="PagibigNo" class="form-control " maxlength="15" placeholder="Enter the Pag-ibig No."/>
+                <label asp-for="PagibigNo" class="form-label">Pag-ibig No.</label>
+                <span asp-validation-for="PagibigNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Department" class="form-label">Department<span class="required">*</span></label>
+                <select asp-for="Department" class="form-select js-select2" style="width: 100%" required>
+                    <option value="" selected disabled>Select department</option>
+                    <option value="@SD.Department_Accounting">@SD.Department_Accounting</option>
+                    <option value="@SD.Department_CreditAndCollection">@SD.Department_CreditAndCollection</option>
+                    <option value="@SD.Department_Engineering">@SD.Department_Engineering</option>
+                    <option value="@SD.Department_Finance">@SD.Department_Finance</option>
+                    <option value="@SD.Department_HRAndAdminOrLegal">@SD.Department_HRAndAdminOrLegal</option>
+                    <option value="@SD.Department_Logistics">@SD.Department_Logistics</option>
+                    <option value="@SD.Department_Marketing">@SD.Department_Marketing</option>
+                    <option value="@SD.Department_ManagementAccounting">@SD.Department_ManagementAccounting</option>
+                    <option value="@SD.Department_MIS">@SD.Department_MIS</option>
+                    <option value="@SD.Department_Operation">@SD.Department_Operation</option>
+                    <option value="@SD.Department_RCD">@SD.Department_RCD</option>
+                    <option value="@SD.Department_RetailAdmin">@SD.Department_RetailAdmin</option>
+                    <option value="@SD.Department_RetailAudit">@SD.Department_RetailAudit</option>
+                    <option value="@SD.Department_SiteDevAndSiteAcquisition">@SD.Department_SiteDevAndSiteAcquisition</option>
+                    <option value="@SD.Department_StationCashier">@SD.Department_StationCashier</option>
+                    <option value="@SD.Department_TradeAndSupply">@SD.Department_TradeAndSupply</option>
+                    <option value="@SD.Department_TrainingAndCompliance">@SD.Department_TrainingAndCompliance</option>
+                </select>
+                <span asp-validation-for="Department" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="DateHired" type="date" class="form-control border-0 shadow"
+                       placeholder=""
+                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                <label asp-for="DateHired">Date Hired</label>
+                <span asp-validation-for="DateHired" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="DateResigned" type="date" class="form-control border-0 shadow"
+                       placeholder=""
+                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                <label asp-for="DateResigned">Date Resigned</label>
+                <span asp-validation-for="DateResigned" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Position" class="form-label">Position<span class="required">*</span></label>
+                <select asp-for="Position" class="form-select js-select2" style="width: 100%" required>
+                    <option value="" selected disabled>Select position</option>
+                    <option value="N/A">N/A</option>
+                    <option value="@SD.Position_OperationManager">@SD.Position_OperationManager</option>
+                    <option value="@SD.Position_FinanceManager">@SD.Position_FinanceManager</option>
+                </select>
+                <span asp-validation-for="Position" class="text-danger"></span>
+            </div>
+
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsManagerial" /> Managerial
+                </label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Supervisor" class="form-control " placeholder="Enter the Supervisor"/>
+                <label asp-for="Supervisor" class="form-label">Supervisor<span class="required">*</span></label>
+                <span asp-validation-for="Supervisor" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Salary" class="form-control " maxlength="20" placeholder="Enter the Salary"/>
+                <label asp-for="Salary" class="form-label">Salary<span class="required">*</span></label>
+                <span asp-validation-for="Salary" class="text-danger"></span>
+            </div>
+
+            <div class="form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsActive" /> Active
+                </label>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control">Create</button>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="Employee" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

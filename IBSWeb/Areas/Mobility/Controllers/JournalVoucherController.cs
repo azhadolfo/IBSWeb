@@ -39,13 +39,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
-        }
-
         public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -154,7 +147,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(JournalVoucherViewModel? viewModel, CancellationToken cancellationToken, string[] accountNumber, decimal[]? debit, decimal[]? credit)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var companyClaims = await GetCompanyClaimAsync();
 
             if (!ModelState.IsValid)
             {
@@ -241,7 +233,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -364,7 +356,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
 
             var modelHeader = await _unitOfWork.MobilityJournalVoucher
                 .GetAsync(jv => jv.JournalVoucherHeaderId == id, cancellationToken);
@@ -403,7 +394,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                         AccountTitle = account.AccountName,
                                         Debit = details.Debit,
                                         Credit = details.Credit,
-                                        Company = companyClaims,
+                                        Company = nameof(Mobility),
                                         CreatedBy = modelHeader.CreatedBy,
                                         CreatedDate = modelHeader.CreatedDate
                                     }
@@ -433,7 +424,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                         AccountTitle = details.AccountNo + " " + details.AccountName,
                                         Debit = details.Debit,
                                         Credit = details.Credit,
-                                        Company = companyClaims,
+                                        Company = nameof(Mobility),
                                         CreatedBy = modelHeader.CreatedBy,
                                         CreatedDate = modelHeader.CreatedDate
                                     }
@@ -447,7 +438,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -474,7 +465,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
 
             var model = await _unitOfWork.MobilityJournalVoucher.GetAsync(jv => jv.JournalVoucherHeaderId == id, cancellationToken);
 
@@ -501,7 +491,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -527,7 +517,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
 
             var model = await _unitOfWork.MobilityJournalVoucher.GetAsync(jv => jv.JournalVoucherHeaderId == id, cancellationToken);
 
@@ -547,7 +536,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -633,7 +622,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var stationCodeClaims = await GetStationCodeClaimAsync();
             if (!ModelState.IsValid)
             {
@@ -704,7 +692,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -737,7 +725,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             var cv = await _unitOfWork.MobilityJournalVoucher.GetAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
             if (cv?.IsPrinted == false)
             {
@@ -745,7 +732,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, companyClaims);
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

@@ -16,9 +16,9 @@ namespace IBS.Models.Bienes.ViewModels
 
         public List<SelectListItem>? BankAccounts { get; set; }
 
-        public string Bank { get; set; } = string.Empty;
+        public string Bank { get; set; }
 
-        public string Branch { get; set; } = string.Empty;
+        public string Branch { get; set; }
 
         [Required]
         public string TDAccountNumber { get; set; }
@@ -26,8 +26,10 @@ namespace IBS.Models.Bienes.ViewModels
         [Required]
         public string AccountName { get; set; }
 
+        public List<SelectListItem>? SettlementAccounts { get; set; }
+
         [Required]
-        public string SettlementAccountNumber { get; set; }
+        public int SettlementAccountId { get; set; }
 
         [Required]
         public DateOnly FromDate { get; set; }
@@ -40,16 +42,16 @@ namespace IBS.Models.Bienes.ViewModels
         [Required]
         public string Remarks { get; set; }
 
-        public string ChequeNumber { get; set; } = string.Empty;
+        public string ChequeNumber { get; set; }
 
-        public string CVNo { get; set; } = string.Empty;
+        public string CVNo { get; set; }
 
         [Required]
         public decimal PrincipalAmount { get; set; }
 
         public decimal MaturityValue { get; set; }
 
-        public string PrincipalDisposition { get; set; } = string.Empty;
+        public string? PrincipalDisposition { get; set; }
 
         [Required]
         public PlacementType PlacementType { get; set; }
@@ -75,7 +77,7 @@ namespace IBS.Models.Bienes.ViewModels
 
         public string? FrequencyOfPayment { get; set; }
 
-        public string BatchNumber { get; set; } = string.Empty;
+        public string? BatchNumber { get; set; }
 
         public string CurrentUser { get; set; } = string.Empty;
 

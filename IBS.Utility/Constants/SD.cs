@@ -49,7 +49,7 @@
 
         #endregion Delivery Option
 
-        #region Department
+        #region Filpride Department
 
         public const string Department_Accounting = "Accounting";
         public const string Department_CreditAndCollection = "Credit and Collection";
@@ -72,14 +72,14 @@
 
         public const string CustomerType_PO = "PO";
 
-        #endregion Department
+        #endregion Filpride Department
 
-        #region Position
+        #region Filpride Position
 
         public const string Position_OperationManager = "Operation Manager";
         public const string Position_FinanceManager = "Finance Manager";
 
-        #endregion Position
+        #endregion Filpride Position
 
         #region Format string
 
@@ -88,5 +88,21 @@
         public const string Date_Format = "MMM dd, yyyy";
 
         #endregion Format string
+
+        #region Mobility Position
+
+        public const string Cashier = "CASHIER";
+        public const string Pump_Attendant = "PUMP ATTENDANT";
+        public const string Care_Taker = "CARETAKER";
+        public const string Retail_Assistant = "RETAIL ASSISTANT";
+
+        #endregion Mobility Position
+
+        #region Mobility Department
+
+        public const string PA_CA = "PA/CA";
+        public const string OIC = "OIC";
+
+        #endregion Mobility Department
     }
 }

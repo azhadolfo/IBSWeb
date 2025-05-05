@@ -51,7 +51,7 @@ namespace IBS.DataAccess.Repository.Bienes
             existingRecord.Branch = viewModel.Branch;
             existingRecord.TDAccountNumber = viewModel.TDAccountNumber;
             existingRecord.AccountName = viewModel.AccountName;
-            existingRecord.SettlementAccountNumber = viewModel.SettlementAccountNumber;
+            existingRecord.SettlementAccountId = viewModel.SettlementAccountId;
             existingRecord.DateFrom = viewModel.FromDate;
             existingRecord.DateTo = viewModel.ToDate;
             existingRecord.Remarks = viewModel.Remarks;
@@ -102,7 +102,7 @@ namespace IBS.DataAccess.Repository.Bienes
                 Branch = model.Branch,
                 TDAccountNumber = model.TDAccountNumber,
                 AccountName = model.AccountName,
-                SettlementAccountNumber = model.SettlementAccountNumber,
+                SettlementAccountId = model.SettlementAccountId,
                 DateFrom = default,
                 DateTo = default,
                 Remarks = model.Remarks,
@@ -127,12 +127,52 @@ namespace IBS.DataAccess.Repository.Bienes
             await _db.SaveChangesAsync(cancellationToken);
         }
 
+        public async Task<string> SwappingAsync(BienesPlacement model, int companyId, string user, CancellationToken cancellationToken = default)
+        {
+
+            BienesPlacement newPlacement = new()
+            {
+                ControlNumber = await GenerateControlNumberAsync(companyId, cancellationToken),
+                CompanyId = model.CompanyId,
+                BankId = model.BankId,
+                Bank = model.Bank,
+                Branch = model.Branch,
+                TDAccountNumber = model.TDAccountNumber,
+                AccountName = model.AccountName,
+                SettlementAccountId = model.SettlementAccountId,
+                DateFrom = default,
+                DateTo = default,
+                Remarks = model.Remarks,
+                ChequeNumber = model.ChequeNumber,
+                CVNo = model.CVNo,
+                BatchNumber = model.BatchNumber,
+                PrincipalAmount = model.PrincipalAmount,
+                PrincipalDisposition = model.PrincipalDisposition,
+                PlacementType = model.PlacementType,
+                InterestRate = model.InterestRate,
+                HasEWT = model.HasEWT,
+                EWTRate = model.EWTRate,
+                HasTrustFee = model.HasTrustFee,
+                TrustFeeRate = model.TrustFeeRate,
+                CreatedBy = user,
+                NumberOfYears = model.NumberOfYears,
+                FrequencyOfPayment = model.FrequencyOfPayment,
+                SwappedFromId = model.PlacementId,
+            };
+
+            await _db.BienesPlacements.AddAsync(newPlacement, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+
+            return newPlacement.ControlNumber;
+        }
+
         public override async Task<BienesPlacement> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
             CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(p => p.Company)
                 .Include(p => p.BankAccount)
+                .Include(p => p.SettlementAccount)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
