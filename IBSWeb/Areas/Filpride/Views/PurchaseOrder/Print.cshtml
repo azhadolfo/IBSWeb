@@ -231,9 +231,8 @@
             <table class="table table-hover text-center">
                 <thead class="bg-primary text-white">
                 <tr>
-                    <th>Triggered Volume</th>
-                    <th>Triggered Price</th>
-                    <th>Triggered Date</th>
+                    <th>Price</th>
+                    <th>Updated Date</th>
                     <th>Approved Date</th>
                 </tr>
                 </thead>
@@ -241,8 +240,7 @@
                 @foreach (var updatedPrice in Model.ActualPrices)
                 {
                     <tr>
-                        <td class="text-end">@updatedPrice.TriggeredVolume.ToString(SD.Four_Decimal_Format)</td>
-                        <td class="text-end">@updatedPrice.TriggeredPrice.ToString(SD.Four_Decimal_Format)</td>
+                        <td>@updatedPrice.TriggeredPrice.ToString(SD.Four_Decimal_Format)</td>
                         <td>@DateTimeHelper.GetCurrentPhilippineTimeFormatted(updatedPrice.TriggeredDate)</td>
                         <td>@(updatedPrice.ApprovedDate != null ? DateTimeHelper.GetCurrentPhilippineTimeFormatted((DateTime)updatedPrice.ApprovedDate) : "" )</td>
                     </tr>
