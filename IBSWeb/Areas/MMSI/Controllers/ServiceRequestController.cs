@@ -734,44 +734,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "For Tariff";
-
-                            var timeStamp = DateTime.Now;
-                            var creator = await GetUserNameAsync();
-
-                            MMSIDispatchTicket newTicket = new MMSIDispatchTicket()
-                            {
-                                Date = recordToUpdate.Date,
-                                COSNumber = recordToUpdate.COSNumber,
-                                CustomerId = recordToUpdate.CustomerId,
-                                DispatchNumber = recordToUpdate.DispatchNumber,
-                                DateLeft = recordToUpdate.DateLeft,
-                                TimeLeft = recordToUpdate.TimeLeft,
-                                DateArrived = recordToUpdate.DateArrived,
-                                TimeArrived = recordToUpdate.TimeArrived,
-                                TerminalId = recordToUpdate.TerminalId,
-                                ActivityServiceId = recordToUpdate.ActivityServiceId,
-                                TugBoatId = recordToUpdate.TugBoatId,
-                                TugMasterId = recordToUpdate.TugMasterId,
-                                VesselId = recordToUpdate.VesselId,
-                                Remarks = recordToUpdate.Remarks,
-                                CreatedBy = creator,
-                                CreatedDate = timeStamp,
-                                ImageName = recordToUpdate.ImageName,
-                                ImageSavedUrl = recordToUpdate.ImageSavedUrl,
-                                VideoName = recordToUpdate.VideoName,
-                                VideoSavedUrl = recordToUpdate.VideoSavedUrl,
-                                Status = "For Tariff",
-                                TotalHours = recordToUpdate.TotalHours
-                            };
-
-                            await _db.MMSIDispatchTickets.AddAsync(newTicket, cancellationToken);
-                            await _db.SaveChangesAsync(cancellationToken);
-
-                            postedTickets.Add($"{recordToUpdate.DispatchNumber} => #{newTicket.DispatchNumber}");
-                        }
-                        else
-                        {
-                            throw new Exception("Service request not found.");
+                            postedTickets.Add($"{recordToUpdate.DispatchNumber}");
                         }
                     }
 
@@ -819,7 +782,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 try
                 {
                     var recordList = JsonConvert.DeserializeObject<List<string>>(records);
-                    var posteds = new List<string>();
+                    var cancelledTickets = new List<string>();
 
                     foreach (var recordId in recordList)
                     {
@@ -831,7 +794,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         if (recordToUpdate != null)
                         {
                             recordToUpdate.Status = "Cancelled";
-                            posteds.Add(recordToUpdate.DispatchNumber.ToString());
+                            cancelledTickets.Add(recordToUpdate.DispatchNumber);
                         }
                     }
 
@@ -842,8 +805,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = posteds.Any()
-                            ? $"Cancel service requests #{string.Join(", #", posteds)}"
+                        Activity = cancelledTickets.Any()
+                            ? $"Cancel service requests #{string.Join(", #", cancelledTickets)}"
                             : $"No cancel detected",
                         DocumentType = "ServiceRequest",
                         Company = await GetCompanyClaimAsync()

@@ -141,8 +141,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create dispatch ticket: id#{tempModel.DispatchTicketId}",
-                        DocumentType = "DispatchTicket",
+                        Activity = $"Create dispatch ticket #{tempModel.DispatchNumber}",
+                        DocumentType = "Dispatch Ticket",
                         Company = await GetCompanyClaimAsync()
                     };
 
@@ -317,6 +317,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> SetTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
@@ -329,6 +330,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 currentModel.Status = "Tariff Pending";
 
+                currentModel.TariffBy = user.UserName;
                 currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.DispatchRate = model.DispatchRate;
@@ -351,8 +353,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Set Tariff:#{currentModel.DispatchTicketId}",
-                    DocumentType = "DispatchTicket",
+                    Activity = $"Set Tariff #{currentModel.DispatchTicketId}",
+                    DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
 
@@ -405,6 +407,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> EditTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
+            var user = await _userManager.GetUserAsync(User);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
@@ -421,36 +424,38 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                 if (currentModel.DispatchChargeType != chargeType) { changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}"); }
-                if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
-                if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
                 if (currentModel.BAFChargeType != chargeType2) { changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {chargeType2}"); }
+                if (currentModel.DispatchRate != model.DispatchRate) { changes.Add($"DispatchRate: {currentModel.DispatchRate} -> {model.DispatchRate}"); }
                 if (currentModel.BAFRate != model.BAFRate) { changes.Add($"BAFRate: {currentModel.BAFRate} -> {model.BAFRate}"); }
+                if (currentModel.DispatchDiscount != model.DispatchDiscount) { changes.Add($"DispatchDiscount: {currentModel.DispatchDiscount} -> {model.DispatchDiscount}"); }
                 if (currentModel.BAFDiscount != model.BAFDiscount) { changes.Add($"BAFDiscount: {currentModel.BAFDiscount} -> {model.BAFDiscount}"); }
                 if (currentModel.DispatchBillingAmount != model.DispatchBillingAmount) { changes.Add($"DispatchBillingAmount: {currentModel.DispatchBillingAmount} -> {model.DispatchBillingAmount}"); }
-                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
                 if (currentModel.BAFBillingAmount != model.BAFBillingAmount) { changes.Add($"BAFBillingAmount: {currentModel.BAFBillingAmount} -> {model.BAFBillingAmount}"); }
+                if (currentModel.DispatchNetRevenue != model.DispatchNetRevenue) { changes.Add($"DispatchNetRevenue: {currentModel.DispatchNetRevenue} -> {model.DispatchNetRevenue}"); }
                 if (currentModel.BAFNetRevenue != model.BAFNetRevenue) { changes.Add($"BAFNetRevenue: {currentModel.BAFNetRevenue} -> {model.BAFNetRevenue}"); }
+                if (currentModel.ApOtherTugs != model.ApOtherTugs) { changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}"); }
                 if (currentModel.TotalBilling != model.TotalBilling) { changes.Add($"TotalBilling: {currentModel.TotalBilling} -> {model.TotalBilling}"); }
                 if (currentModel.TotalNetRevenue != model.TotalNetRevenue) { changes.Add($"TotalNetRevenue: {currentModel.TotalNetRevenue} -> {model.TotalNetRevenue}"); }
-                if (currentModel.ApOtherTugs != model.ApOtherTugs) { changes.Add($"ApOtherTugs: {currentModel.ApOtherTugs} -> {model.ApOtherTugs}"); }
 
                 #endregion -- Changes
 
+                currentModel.TariffEditedBy = user.UserName;
+                currentModel.TariffEditedDate = DateTime.Now;
                 currentModel.Status = "Tariff Pending";
                 currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchChargeType = chargeType;
-                currentModel.DispatchRate = model.DispatchRate;
-                currentModel.DispatchDiscount = model.DispatchDiscount;
                 currentModel.BAFChargeType = chargeType2;
+                currentModel.DispatchRate = model.DispatchRate;
                 currentModel.BAFRate = model.BAFRate;
+                currentModel.DispatchDiscount = model.DispatchDiscount;
                 currentModel.BAFDiscount = model.BAFDiscount;
                 currentModel.DispatchBillingAmount = model.DispatchBillingAmount;
-                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
                 currentModel.BAFBillingAmount = model.BAFBillingAmount;
+                currentModel.DispatchNetRevenue = model.DispatchNetRevenue;
                 currentModel.BAFNetRevenue = model.BAFNetRevenue;
+                currentModel.ApOtherTugs = model.ApOtherTugs;
                 currentModel.TotalBilling = model.TotalBilling;
                 currentModel.TotalNetRevenue = model.TotalNetRevenue;
-                currentModel.ApOtherTugs = model.ApOtherTugs;
 
                 #region -- Audit Trail
 
@@ -460,8 +465,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = changes.Any()
-                        ? $"Edit Tariff:#{currentModel.DispatchTicketId} {string.Join(", ", changes)}"
-                        : $"No changes detected for tariff details #{currentModel.DispatchTicketId}",
+                        ? $"Edit tariff #{currentModel.DispatchNumber} {string.Join(", ", changes)}"
+                        : $"No changes detected for tariff details #{currentModel.DispatchNumber}",
                     DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
@@ -577,14 +582,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var changes = new List<string>();
 
-                    if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
-                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                    if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
                     if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                     if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
                     if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
+                    if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
                     if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
@@ -600,9 +607,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.EditedDate = DateTime.Now;
                     currentModel.TotalHours = (decimal)timeDifference.TotalHours;
                     currentModel.Date = model.Date;
-                    currentModel.COSNumber = model.COSNumber;
-                    currentModel.CustomerId = model.CustomerId;
                     currentModel.DispatchNumber = model.DispatchNumber;
+                    currentModel.COSNumber = model.COSNumber;
+                    currentModel.VoyageNumber = model.VoyageNumber;
+                    currentModel.CustomerId = model.CustomerId;
                     currentModel.DateLeft = model.DateLeft;
                     currentModel.TimeLeft = model.TimeLeft;
                     currentModel.DateArrived = model.DateArrived;
@@ -613,7 +621,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.TugMasterId = model.TugMasterId;
                     currentModel.VesselId = model.VesselId;
                     currentModel.Remarks = model.Remarks;
-                    currentModel.VoyageNumber = model.VoyageNumber;
                     if (imageFile != null)
                     {
                         currentModel.ImageName = model.ImageName;
@@ -635,9 +642,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit: id#{currentModel.DispatchTicketId}, {string.Join(", ", changes)}"
-                            : $"No changes detected: id#{currentModel.DispatchTicketId}",
-                        DocumentType = "ServiceRequest",
+                            ? $"Edit dispatch ticket #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
+                            : $"No changes detected for #{currentModel.DispatchNumber}",
+                        DocumentType = "Dispatch Ticket",
                         Company = await GetCompanyClaimAsync()
                     };
 
@@ -700,8 +707,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Approve Tariff:#{model.DispatchTicketId}",
-                    DocumentType = "DispatchTicket",
+                    Activity = $"Approve tariff #{model.DispatchTicketId}",
+                    DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
 
@@ -736,8 +743,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Approval Revoked:#{model.DispatchTicketId}",
-                    DocumentType = "DispatchTicket",
+                    Activity = $"Revoke Approval #{model.DispatchTicketId}",
+                    DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
 
@@ -772,8 +779,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Date = DateTime.Now,
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Disapprove Tariff:#{model.DispatchTicketId}",
-                    DocumentType = "DispatchTicket",
+                    Activity = $"Disapprove Tariff #{model.DispatchTicketId}",
+                    DocumentType = "Tariff",
                     Company = await GetCompanyClaimAsync()
                 };
 
