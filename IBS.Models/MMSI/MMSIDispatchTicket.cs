@@ -106,7 +106,7 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "numeric(18,2)")]
         public decimal? TotalNetRevenue { get; set; }
 
-        public decimal? ApOtherTugs { get; set; }
+        public decimal ApOtherTugs { get; set; }
 
         public string? TariffBy { get; set; }
 
