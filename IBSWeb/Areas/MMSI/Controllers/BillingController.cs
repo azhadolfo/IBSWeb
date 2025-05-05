@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create Billing:#{id} for dt #{string.Join(", #", model.ToBillDispatchTickets)}",
+                        Activity = $"Create billing #{newmodel.MMSIBillingNumber} for tickets #{string.Join(", #", model.ToBillDispatchTickets)}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };
@@ -427,7 +427,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
-                    if (currentModel.PortId != model.PortId) { changes.Add($"PortId: {currentModel.PortId} -> {model.PortId}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
                     if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
@@ -446,8 +445,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit Billing: #{currentModel.MMSIBillingId} {string.Join(", ", changes)}"
-                            : $"No changes detected for Billing #{currentModel.MMSIBillingId}",
+                            ? $"Edit billing #{currentModel.MMSIBillingNumber} {string.Join(", ", changes)}"
+                            : $"No changes detected for Billing #{currentModel.MMSIBillingNumber}",
                         DocumentType = "Billing",
                         Company = await GetCompanyClaimAsync()
                     };
