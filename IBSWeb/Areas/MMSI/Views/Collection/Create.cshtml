@@ -33,7 +33,7 @@
             <form method="post" class="row">
                 <div class="border-2 px-3">
                     <div asp-validation-summary="ModelOnly"></div>
-                    <input asp-for="Status" value="Created" type="hidden"></input>
+                    <input asp-for="Status" value="Created" type="hidden" />
                     <div class="row">
                         <div class="col-9">
                             <div class="row py-2">
@@ -46,7 +46,7 @@
                                     <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input type="hidden" asp-for="IsUndocumented"></input>
+                                    <input type="hidden" asp-for="IsUndocumented" />
                                     <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" disabled>
                                     <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
                                         Undocumented
@@ -249,7 +249,7 @@
                 $('#undeductedAmount').val('0');
 
                 // clear table
-                table.clear();``
+                table.clear();
                 table.draw();
 
                 $.ajax({
