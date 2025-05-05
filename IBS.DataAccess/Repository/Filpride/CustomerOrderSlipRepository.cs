@@ -89,8 +89,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.AccountSpecialist = viewModel.AccountSpecialist;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.HasCommission = viewModel.HasCommission;
-            existingRecord.CommissioneeId = viewModel.CommissioneeId;
-            existingRecord.CommissionRate = viewModel.CommissionRate;
+            existingRecord.CommissioneeId = existingRecord.HasCommission ? viewModel.CommissioneeId : null;
+            existingRecord.CommissionRate = existingRecord.HasCommission ? viewModel.CommissionRate : 0;
             existingRecord.ProductId = viewModel.ProductId;
             existingRecord.OldCosNo = viewModel.OtcCosNo;
             existingRecord.Branch = viewModel.SelectedBranch;
