@@ -211,32 +211,17 @@
                             if (data) {
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
-                                    @* TODO Remove the else condition in the future *@
                                     $('#haulerList').show();
-                                    if (parseInt(cosId) > 748) {
-                                        $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').val(data.freight);
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
-                                    }
-                                    else{
-                                        $('select[name="HaulerId"]').val("").change();
-                                        $('input[name="Freight"]').parent().show();
-                                        $('input[name="Freight"]').val("");
-                                    }
+                                    $('input[name="Freight"]').parent().show();
+                                    $('input[name="Freight"]').val(data.freight);
+                                    $('select[name="HaulerId"]').val(data.haulerId).change();
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
 
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
                                     $('input[name="Freight"]').val(data.freight);
-                                    
-                                    @* TODO Remove the else condition in the future *@
-                                    if (parseInt(cosId) > 748) {
-                                        $('select[name="HaulerId"]').val(data.haulerId).change();
-                                        console.log(data.haulerId);
-                                    }
-                                    else{
-                                        $('select[name="HaulerId"]').val("").change();
-                                    }
+                                    $('select[name="HaulerId"]').val(data.haulerId).change();
+
                                 } else {
                                     // hide the hauler list
                                     $('input[name="Freight"]').parent().hide();
