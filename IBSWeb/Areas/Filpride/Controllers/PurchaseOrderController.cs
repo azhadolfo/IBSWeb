@@ -1,22 +1,22 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Dynamic.Core;
+using System.Security.Claims;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Services.Attributes;
+using IBS.Utility.Constants;
+using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using IBSWeb.Hubs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
-using IBS.Services.Attributes;
-using IBS.Utility.Constants;
-using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -645,7 +645,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(u => u.Id)
                     .ToListAsync(cancellationToken);
 
-                var message = $"The cost for Purchase Order {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, affecting a volume of {volume:N4}L from {existingRecord.Price:N4} to {price:N4} (gross of VAT). " +
+                var message = $"The cost for Purchase Order {existingRecord.PurchaseOrderNo} has been updated by {currentUser}, from {existingRecord.Price:N4} to {price:N4} (gross of VAT). " +
                               $"Please review and approve.";
 
                 await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -676,7 +676,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(currentUser, $"Update actual price for {volume}L purchase order# {existingRecord.PurchaseOrderNo}", "Purchase Order", ipAddress, existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(currentUser, $"Update actual price for purchase order# {existingRecord.PurchaseOrderNo}, from {existingRecord.Price:N4} to {price:N4} (gross of VAT).", "Purchase Order", ipAddress, existingRecord.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await transaction.CommitAsync(cancellationToken);
 
-                TempData["success"] = $"The price for {existingRecord.PurchaseOrderNo} has been updated, affecting a volume of {volume}L.";
+                TempData["success"] = $"The price for {existingRecord.PurchaseOrderNo} has been updated, from {existingRecord.Price:N4} to {price:N4} (gross of VAT).";
 
                 return Json(new { success = true, message = TempData["success"] });
             }

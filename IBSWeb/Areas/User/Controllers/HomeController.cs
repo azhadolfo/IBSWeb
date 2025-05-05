@@ -1,15 +1,11 @@
+using System.Diagnostics;
 using IBS.DataAccess.Data;
 using IBS.Models;
-using IBSWeb.Hubs;
-using Microsoft.AspNetCore.Authorization;
+using IBS.Models.Filpride.ViewModels;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Linq.Dynamic.Core;
-using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
-using IBS.Utility.Enums;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -90,7 +86,7 @@ namespace IBSWeb.Areas.User.Controllers
                         .CountAsync(),
 
                     RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => !dr.HasReceivingReport && dr.CanceledBy == null && dr.Company == companyClaims)
+                        .Where(dr => !dr.HasReceivingReport && dr.CanceledBy == null && dr.VoidedBy == null && dr.Company == companyClaims)
                         .CountAsync(),
 
                 #endregion
