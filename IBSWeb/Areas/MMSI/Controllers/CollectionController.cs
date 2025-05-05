@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
-                        Activity = $"Create Collection: id#{id} for bill#{string.Join(", #", model.ToCollectBillings)}",
+                        Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", model.ToCollectBillings)}",
                         DocumentType = "Collection",
                         Company = await GetCompanyClaimAsync()
                     };
@@ -225,11 +225,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var changes = new List<string>();
 
+                    if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
                     if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
-                    if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
                     if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
                     if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
 
@@ -243,9 +243,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
-                            ? $"Edit Collection: #{currentModel.MMSICollectionId} {string.Join(", ", changes)}"
-                            : $"No changes detected for Collection #{currentModel.MMSICollectionId}",
-                        DocumentType = "Billing",
+                            ? $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}"
+                            : $"No changes detected for collection #{currentModel.MMSICollectionId}",
+                        DocumentType = "Collection",
                         Company = await GetCompanyClaimAsync()
                     };
 
