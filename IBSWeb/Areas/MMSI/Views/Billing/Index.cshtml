@@ -135,11 +135,9 @@
                     {"data": "amount"},
                     {"data": "customer.customerName"},
                     {
-                        "data": "null", // Use null since we're manually rendering it
+                        "data": "terminal.port.portName",
                         "render": function(data, type, row) {
-                            const terminal = row.terminal?.terminalName || '';
-                            const port = row.terminal?.port?.portName || '';
-                            return `${terminal}-${port}`; // You can format however you like
+                            return `${row.terminal.port.portName} - ${row.terminal.terminalName}`;
                         }
                     },
                     {"data": "vessel.vesselName"},

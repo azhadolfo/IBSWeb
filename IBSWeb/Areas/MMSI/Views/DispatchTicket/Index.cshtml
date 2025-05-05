@@ -145,7 +145,12 @@
                     {"data": "dateLeft"},
                     {"data": "dateArrived"},
                     {"data": "activityService.activityServiceName"},
-                    {"data": "terminal.port.portName"},
+                    {
+                        "data": "terminal.port.portName",
+                        "render": function(data, type, row) {
+                            return `${row.terminal.port.portName} - ${row.terminal.terminalName}`;
+                        }
+                    },
                     {"data": "tugboat.tugboatName"},
                     {"data": "tugMaster.tugMasterName"},
                     {"data": "vessel.vesselName"},
