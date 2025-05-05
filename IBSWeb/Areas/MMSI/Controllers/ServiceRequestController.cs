@@ -172,10 +172,38 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
 
                     model.Status = "For Posting";
+
+                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
                     DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                     TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    model.TotalHours = (decimal)timeDifference.TotalHours;
+                    var totalHours = (decimal)timeDifference.TotalHours;
+
+                    // find the nearest half hour if the customer is phil-ceb
+                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    {
+                        var wholeHours = Math.Truncate(totalHours);
+                        var fractionalPart = totalHours - wholeHours;
+
+                        if (fractionalPart >= 0.75m)
+                        {
+                            totalHours = wholeHours + 1.0m; // round up to next hour
+                        }
+                        else if (fractionalPart >= 0.25m)
+                        {
+                            totalHours = wholeHours + 0.5m; // round to half hour
+                        }
+                        else
+                        {
+                            totalHours = wholeHours; // keep as is
+                        }
+                    }
+                    if (totalHours == 0)
+                    {
+                        totalHours = 0.5m;
+                    }
+                    model.TotalHours = totalHours;
+
                     await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
@@ -288,7 +316,40 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             throw new ArgumentException("Date start should not be earlier than date today.");
                         }
                         var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
-                        TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
+
+                        model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+
+                        DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
+                        DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
+                        TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                        var totalHours = (decimal)timeDifference.TotalHours;
+
+                        // find the nearest half hour if the customer is phil-ceb
+                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                        {
+                            var wholeHours = Math.Truncate(totalHours);
+                            var fractionalPart = totalHours - wholeHours;
+
+                            if (fractionalPart >= 0.75m)
+                            {
+                                totalHours = wholeHours + 1.0m; // round up to next hour
+                            }
+                            else if (fractionalPart >= 0.25m)
+                            {
+                                totalHours = wholeHours + 0.5m; // round to half hour
+                            }
+                            else
+                            {
+                                totalHours = wholeHours; // keep as is
+                            }
+                        }
+
+                        if (totalHours == 0)
+                        {
+                            totalHours = 0.5m;
+                        }
+
+                        model.TotalHours = totalHours;
 
                         if (imageFile != null)
                         {
@@ -356,6 +417,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         currentModel.TugMasterId = model.TugMasterId;
                         currentModel.VesselId = model.VesselId;
                         currentModel.Remarks = model.Remarks;
+                        currentModel.TotalHours = model.TotalHours;
                         if (imageFile != null)
                         {
                             currentModel.ImageName = model.ImageName;

@@ -95,6 +95,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 DateTime timeStamp = DateTime.Now;
 
                 model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
@@ -127,7 +128,29 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
                     DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                     TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    model.TotalHours = (decimal)timeDifference.TotalHours;
+                    var totalHours = (decimal)timeDifference.TotalHours;
+
+                    // find the nearest half hour if the customer is phil-ceb
+                    if (model.Customer.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    {
+                        var wholeHours = Math.Truncate(totalHours);
+                        var fractionalPart = totalHours - wholeHours;
+
+                        if (fractionalPart >= 0.75m)
+                        {
+                            totalHours = wholeHours + 1.0m; // round up to next hour
+                        }
+                        else if (fractionalPart >= 0.25m)
+                        {
+                            totalHours = wholeHours + 0.5m; // round to half hour
+                        }
+                        else
+                        {
+                            totalHours = wholeHours; // keep as is
+                        }
+                    }
+
+                    model.TotalHours = totalHours;
                     await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
@@ -540,6 +563,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                     model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
 
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -553,7 +577,39 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         throw new ArgumentException("Date start should not be earlier than date today.");
                     }
                     var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
-                    TimeSpan timeDifference = model.DateArrived.ToDateTime(model.TimeArrived) - model.DateLeft.ToDateTime(model.TimeLeft);
+                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+
+                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
+                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
+                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                    var totalHours = (decimal)timeDifference.TotalHours;
+
+                    // find the nearest half hour if the customer is phil-ceb
+                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                    {
+                        var wholeHours = Math.Truncate(totalHours);
+                        var fractionalPart = totalHours - wholeHours;
+
+                        if (fractionalPart >= 0.75m)
+                        {
+                            totalHours = wholeHours + 1.0m; // round up to next hour
+                        }
+                        else if (fractionalPart >= 0.25m)
+                        {
+                            totalHours = wholeHours + 0.5m; // round to half hour
+                        }
+                        else
+                        {
+                            totalHours = wholeHours; // keep as is
+                        }
+                    }
+
+                    if (totalHours == 0)
+                    {
+                        totalHours = 0.5m;
+                    }
+
+                    model.TotalHours = totalHours;
 
                     if (imageFile != null)
                     {
@@ -605,7 +661,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     currentModel.EditedBy = user.UserName;
                     currentModel.EditedDate = DateTime.Now;
-                    currentModel.TotalHours = (decimal)timeDifference.TotalHours;
+                    currentModel.TotalHours = totalHours;
                     currentModel.Date = model.Date;
                     currentModel.DispatchNumber = model.DispatchNumber;
                     currentModel.COSNumber = model.COSNumber;
