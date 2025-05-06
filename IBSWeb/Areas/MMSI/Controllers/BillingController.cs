@@ -660,6 +660,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.Tugboat?.TugboatName == tugboat))
                     {
                         worksheet.Cells[row, 1].Value = "1";
+                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                         worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
                         worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -681,6 +682,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         foreach (var record in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0 && t.BAFNetRevenue != null))
                         {
                             worksheet.Cells[row, 1].Value = "1";
+                            worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                             worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
                             worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
