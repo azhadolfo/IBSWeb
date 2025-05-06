@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -591,6 +593,122 @@ namespace IBSWeb.Areas.MMSI.Controllers
             model = await _unitOfWork.Msap.ProcessAddress(model, cancellationToken);
 
             return View(model);
+        }
+
+        public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var billing = await _db.MMSIBillings
+                    .Where(b => b.MMSIBillingId == id)
+                    .Include(b => b.Terminal)
+                    .ThenInclude(t => t.Port)
+                    .Include(b => b.Vessel)
+                    .Include(b => b.Customer)
+                    .Include(b => b.Principal)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                // list of dispatch numbers(to be used in selectlist2, multiselect)
+                billing.ToBillDispatchTickets = await _db.MMSIDispatchTickets
+                    .Where(dt => dt.BillingId == billing.MMSIBillingId.ToString())
+                    .Select(dt => dt.DispatchNumber.ToString())
+                    .ToListAsync(cancellationToken);
+
+                // list of dispatch tickets
+                billing.PaidDispatchTickets = await _db.MMSIDispatchTickets
+                    .Where(dt => dt.BillingId == billing.MMSIBillingId.ToString())
+                    .Include(dt => dt.Tugboat)
+                    .Include(dt => dt.ActivityService)
+                    .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
+                    .ToListAsync (cancellationToken);
+
+                billing.UniqueTugboats = await _db.MMSIDispatchTickets
+                    .Where(dt => dt.BillingId == billing.MMSIBillingId.ToString())
+                    .Select(dt => dt.Tugboat.TugboatName.ToString())
+                    .Distinct() // Ensures unique values
+                    .ToListAsync(cancellationToken);
+
+                // check if there is no record
+                if (billing == null)
+                {
+                    TempData["error"] = "Billing not found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Create the Excel package
+                string currencyFormatTwoDecimal = "#,##0.00";
+                using var package = new ExcelPackage();
+
+                var worksheet = package.Workbook.Worksheets.Add($"Billing# {billing.MMSIBillingNumber}");
+
+                worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
+                worksheet.Cells["E2"].Value = $"{billing.Date}";
+                worksheet.Cells["E2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                worksheet.Cells["B3"].Value = $"{billing.Customer?.CustomerAddress}                              TERMS: {billing.Customer?.CustomerTerms}";
+                worksheet.Cells["B4"].Value = $"{billing.Customer?.CustomerTin}";
+                worksheet.Cells["E4"].Value = $"VOYAGE NO. {billing.VoyageNumber}";
+                worksheet.Cells["B6"].Value = $"FOR THE SERVICE RE: {billing.Vessel?.VesselName}";
+                worksheet.Cells["B7"].Value = $"LOCATION PORT: {billing.Port.PortName}";
+
+                var rowStart = 9;
+                var row = rowStart;
+
+                foreach (var tugboat in billing.UniqueTugboats)
+                {
+                    worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: {tugboat}";
+                    row++;
+                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.Tugboat?.TugboatName == tugboat))
+                    {
+                        worksheet.Cells[row, 1].Value = "1";
+                        worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                        worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
+                        worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
+                        worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        row++;
+                    }
+                    row++;
+                }
+
+                var ticketsWithBAF = billing.PaidDispatchTickets;
+
+                if (ticketsWithBAF != null)
+                {
+                    foreach(var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0 && t.BAFNetRevenue != null))
+                    {
+                        worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: BUNKER ADJUSTMENT FACTOR";
+                        row++;
+                        foreach (var record in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0 && t.BAFNetRevenue != null))
+                        {
+                            worksheet.Cells[row, 1].Value = "1";
+                            worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                            worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
+                            worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
+                            worksheet.Cells[row, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            row++;
+                        }
+                        row++;
+                    }
+                }
+
+                worksheet.Column(1).Width = 8.5;
+                worksheet.Column(2).Width = 60;
+                worksheet.Column(3).Width = 8.7;
+                worksheet.Column(4).Width = 9.2;
+                worksheet.Column(5).Width = 18;
+
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DotMatrix_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                ex.Message, ex.StackTrace, _userManager.GetUserAsync(User));
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]

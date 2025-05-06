@@ -397,6 +397,10 @@
         </div>
 
         <div class="col-6 col-md-3">
+            <a asp-area="MMSI" asp-controller="Billing" asp-action="Print" asp-route-id="@Model.MMSIBillingId" class="btn btn-primary border form-control buttons"><i class="bi bi-printer"></i> Dot Matrix Print</a>
+        </div>
+
+        <div class="col-6 col-md-3">
             <a asp-area="MMSI" asp-controller="Billing" asp-action="Index" class="btn btn-outline-primary border form-control buttons"><i class="bi bi-arrow-90deg-left"></i> Back to List</a>
         </div>
     </div>

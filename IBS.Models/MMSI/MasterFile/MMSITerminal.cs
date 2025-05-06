@@ -15,8 +15,8 @@ namespace IBS.Models.MMSI.MasterFile
         public string? TerminalNumber { get; set; }
 
         [Display(Name = "Terminal")]
-        [StringLength(20, ErrorMessage = "Terminal name cannot exceed 20 characters.")]
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(40, ErrorMessage = "Terminal name cannot exceed 40 characters.")]
+        [Column(TypeName = "varchar(40)")]
         public string? TerminalName { get; set; }
 
         public int PortId { get; set; }
