@@ -726,48 +726,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingRecord.Status = nameof(Status.Posted);
 
-                    var isCreationOfPoLocked = await _dbContext.AppSettings
-                        .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfPo)
-                        .Select(s => s.Value == "true")
-                        .FirstOrDefaultAsync(cancellationToken);
+                    var users = await _dbContext.ApplicationUsers
+                        .Where(u => u.Department == SD.Department_TradeAndSupply ||
+                                    u.Department == SD.Department_ManagementAccounting)
+                        .Select(u => u.Id)
+                        .ToListAsync(cancellationToken);
 
-                    var untriggeredPoNumbers = await _unitOfWork.FilpridePurchaseOrder
-                        .GetUntriggeredPurchaseOrderNumbersAsync(cancellationToken);
+                    var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available. \n" +
+                                  "CC: Management Accounting";
 
-                    if (isCreationOfPoLocked && untriggeredPoNumbers.Count == 0)
+                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+
+                    var usernames = await _dbContext.ApplicationUsers
+                        .Where(a => users.Contains(a.Id))
+                        .Select(u => u.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var username in usernames)
                     {
-                        await _unitOfWork.FilpridePurchaseOrder
-                            .UnlockTheCreationOfPurchaseOrderAsync(cancellationToken);
-
-                        var users = await _dbContext.ApplicationUsers
-                            .Where(u => u.Department == SD.Department_TradeAndSupply ||
-                                        u.Department == SD.Department_ManagementAccounting)
-                            .Select(u => u.Id)
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == username)
                             .ToListAsync(cancellationToken);
 
-                        var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available. \n" +
-                                      "CC: Management Accounting";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => users.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
+                        foreach (var hubConnection in hubConnections)
                         {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
                         }
-
                     }
 
                     #region --Audit Trail Recording

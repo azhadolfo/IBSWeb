@@ -21,8 +21,5 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task UpdateActualCostOnSalesAndReceiptsAsync(FilpridePOActualPrice model, CancellationToken cancellationToken = default);
 
-        Task<List<string>> GetUntriggeredPurchaseOrderNumbersAsync(CancellationToken cancellationToken = default);
-
-        Task UnlockTheCreationOfPurchaseOrderAsync(CancellationToken cancellationToken = default);
     }
 }
