@@ -1,4 +1,4 @@
-@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSIActivityService>
+@model IEnumerable<IBS.Models.MMSI.MasterFile.MMSITugboatOwner>
 
 @{
     ViewData["Title"] = "Index";
@@ -13,7 +13,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2>MMSI ACTIVITIES AND SERVICES</h2>
+            <h2>MMSI TUGBOAT COMPANY/OWNER</h2>
         </div>
     </div>
 
@@ -21,49 +21,54 @@
 
         <div class="row justify-content-end mb-2">
             <div class="text-center" style="width: 150px;">
-                <a class="btn btn-primary col-12 align-content-center" asp-controller="ActivityService" asp-action="Create">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="TugboatOwner" asp-action="Create">
                     <i class="bi bi-plus-circle"></i> Create
                 </a>
             </div>
         </div>
         
-        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+    <table id="dataTable" class="table table-striped table-bordered mt-3" style="width:100%">
             <thead>
-            <tr>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.ActivityServiceNumber)
-                </th>
-                <th class="text-center">
-                    @Html.DisplayNameFor(m => m.ActivityServiceName)
-                </th>
-                <th class="text-center">
-                    Actions
-                </th>
-            </tr>
+                <tr>
+                    <th class="text-center">
+                        @Html.DisplayNameFor(m => m.TugboatOwnerNumber)
+                    </th>
+                    <th class="text-center">
+                        @Html.DisplayNameFor(m => m.TugboatOwnerName)
+                    </th>
+                    <th class="text-center">
+                        @Html.DisplayNameFor(m => m.FixedRate)
+                    </th>
+                    <th class="actions-column text-center">
+                        Actions
+                    </th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var item in Model)
-            {
+                @foreach(var item in Model)
+                {
                 <tr>
                     <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.ActivityServiceNumber)
+                        @Html.DisplayFor(model => item.TugboatOwnerNumber)
                     </td>
                     <td class="text-center align-content-center">
-                        @Html.DisplayFor(model => item.ActivityServiceName)
+                        @Html.DisplayFor(model => item.TugboatOwnerName)
                     </td>
-                    
+                    <td class="text-center align-content-center">
+                        @Html.DisplayFor(model => item.FixedRate)
+                    </td>
+
                     <td class="text-center">
                         <div class="dropdown">
                             <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                             <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                <li><a class="dropdown-item" href="@Url.Action("Edit", "ActivityService", new { id = item.ActivityServiceId })">Edit</a></li>
-                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "ActivityService", new { id = item.ActivityServiceId })">Delete</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Edit", "TugboatOwner", new { id = item.TugboatOwnerId })">Edit</a></li>
+                                <li><a class="dropdown-item delete-button" href="@Url.Action("Delete", "TugboatOwner", new { id = item.TugboatOwnerId })">Delete</a></li>
                             </ul>
                         </div>
                     </td>
-                    
                 </tr>
-            }
+                }
             </tbody>
         </table>
     </div>
@@ -73,19 +78,19 @@
     <script>
         document.querySelectorAll('.delete-button').forEach(button => {
             button.addEventListener('click', function (event) {
-                event.preventDefault();
+                event.preventDefault(); // Prevent default navigation
 
-                const href = this.getAttribute('href');
+                const href = this.getAttribute('href'); // Get the href value
                 Swal.fire({
                     title: 'Delete?',
-                    text: "Delete this Activity/Service entry?",
+                    text: "Delete this Company/Owner entry?",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Yes',
                     cancelButtonText: 'No'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = href;
+                        window.location.href = href; // Redirect to the href URL
                     }
                 });
             });
@@ -95,7 +100,7 @@
             if ($.fn.DataTable.isDataTable('#dataTable')) {
                 $('#dataTable').DataTable().destroy();
             }
-            
+
             $('#dataTable').DataTable({
                 "autoWidth": false,
                 "columnDefs": [

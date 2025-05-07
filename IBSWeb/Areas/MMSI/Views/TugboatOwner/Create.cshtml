@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.MasterFile.MMSICompanyOwner
+@model MMSITugboatOwner
 
 @{
     ViewData["Title"] = "Create";
@@ -20,19 +20,19 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="row pt-2">
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="CompanyOwnerName" type="text" class="form-control border-0 shadow" id="CompanyOwnerName" placeholder="Name" required>
-                        <label asp-for="CompanyOwnerName" for="CompanyOwnerName" class="ms-2">Company Owner Name<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CompanyOwnerName" class="text-danger"></span>
+                        <input asp-for="TugboatOwnerName" type="text" class="form-control border-0 shadow" id="TugboatOwnerName" placeholder="Name" required>
+                        <label asp-for="TugboatOwnerName" for="TugboatOwnerName" class="ms-2">Tugboat Owner Name<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="TugboatOwnerName" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="CompanyOwnerNumber" type="text" class="form-control border-0 shadow" id="CompanyOwnerNumber" placeholder="Number" required>
-                        <label asp-for="CompanyOwnerNumber" for="CompanyOwnerNumber" class="ms-2">Company/Owner Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="CompanyOwnerNumber" class="text-danger"></span>
+                        <input asp-for="TugboatOwnerNumber" type="text" class="form-control border-0 shadow" id="TugboatOwnerNumber" placeholder="Number" required>
+                        <label asp-for="TugboatOwnerNumber" for="TugboatOwnerNumber" class="ms-2">Company/Owner Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="TugboatOwnerNumber" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="FixedRate" type="number" class="form-control border-0 shadow" id="FixedRate" placeholder="Fixed Rate" required>
+                        <input asp-for="FixedRate" type="number" class="form-control border-0 shadow" id="FixedRate" value="0" placeholder="Fixed Rate" required>
                         <label asp-for="FixedRate" for="FixedRate" class="ms-2">Fixed Rate<span class="required text-danger">*</span></label>
                         <span asp-validation-for="FixedRate" class="text-danger"></span>
                     </div>
@@ -43,7 +43,7 @@
                     <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
                 </div>
                 <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="CompanyOwner" asp-action="Index">
+                    <a class="btn btn-outline-primary border col-12" asp-controller="TugboatOwner" asp-action="Index">
                         Go Back
                     </a>
                 </div>

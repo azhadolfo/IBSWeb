@@ -18,12 +18,12 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> activitiesServices = await _dbContext.MMSIActivitiesServices
-                .OrderBy(s => s.ActivityServiceNumber)
+            List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
+                .OrderBy(s => s.ServiceNumber)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.ActivityServiceId.ToString(),
-                    Text = s.ActivityServiceNumber + " " + s.ActivityServiceName
+                    Value = s.ServiceId.ToString(),
+                    Text = s.ServiceNumber + " " + s.ServiceName
                 }).ToListAsync(cancellationToken);
 
             return activitiesServices;
@@ -237,11 +237,11 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSICompanyOwnerSelectListById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> companyOwnerList = await _dbContext.MMSICompanyOwners
-                .OrderBy(dt => dt.CompanyOwnerNumber).Select(s => new SelectListItem
+            List<SelectListItem> companyOwnerList = await _dbContext.MMSITugboatOwners
+                .OrderBy(dt => dt.TugboatOwnerNumber).Select(s => new SelectListItem
                 {
-                    Value = s.MMSICompanyOwnerId.ToString(),
-                    Text = $"{s.CompanyOwnerNumber} {s.CompanyOwnerName}"
+                    Value = s.TugboatOwnerId.ToString(),
+                    Text = $"{s.TugboatOwnerNumber} {s.TugboatOwnerName}"
                 }).ToListAsync(cancellationToken);
 
             return companyOwnerList;
@@ -249,7 +249,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
         {
-            model.ActivitiesServices = await GetMMSIActivitiesServicesById(cancellationToken);
+            model.Services = await GetMMSIActivitiesServicesById(cancellationToken);
             model.Ports = await GetMMSIPortsById(cancellationToken);
             model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
             model.Tugboats = await GetMMSITugboatsById(cancellationToken);
@@ -371,7 +371,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.Terminal)
                 .ThenInclude(t => t.Port)
-                .Include(dt => dt.ActivityService)
+                .Include(dt => dt.Service)
                 .OrderBy(dt => dt.Date)
                 .ToListAsync(cancellationToken);
 

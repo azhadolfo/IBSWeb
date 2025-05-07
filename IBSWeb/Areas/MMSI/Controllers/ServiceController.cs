@@ -8,20 +8,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]
-    public class CompanyOwnerController : Controller
+    public class ServiceController : Controller
     {
         private readonly ApplicationDbContext _db;
 
-        public CompanyOwnerController(ApplicationDbContext db)
+        public ServiceController(ApplicationDbContext db)
         {
             _db = db;
         }
 
         public IActionResult Index()
         {
-            var companyOwners = _db.MMSICompanyOwners.ToList();
+            var activitiesServices = _db.MMSIServices.ToList();
 
-            return View(companyOwners);
+            return View(activitiesServices);
         }
 
         [HttpGet]
@@ -31,7 +31,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSICompanyOwner model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(MMSIService model, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -42,13 +42,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return View(model);
                 }
 
-                await _db.MMSICompanyOwners.AddAsync(model, cancellationToken);
+                await _db.MMSIServices.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Creation Succeed!";
 
                 return RedirectToAction(nameof(Index));
             }
+
             catch (Exception ex)
             {
                 if (!string.IsNullOrEmpty(ex.InnerException?.Message))
@@ -63,19 +64,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
         }
+
         public IActionResult Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSICompanyOwners.Where(i => i.MMSICompanyOwnerId == id).FirstOrDefault();
+                var model = _db.MMSIServices.FirstOrDefault(i => i.ServiceId == id);
 
-                _db.MMSICompanyOwners.Remove(model);
+                _db.MMSIServices.Remove(model);
                 _db.SaveChanges();
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
+
             catch (Exception ex)
             {
                 return RedirectToAction(nameof(Index));
@@ -85,25 +88,34 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSICompanyOwners.Where(a => a.MMSICompanyOwnerId == id).
-                FirstOrDefaultAsync(cancellationToken);
+            var model = await _db.MMSIServices.FirstOrDefaultAsync(a => a.ServiceId == id, cancellationToken);
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSICompanyOwner model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MMSIService model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSICompanyOwners.FindAsync(model.MMSICompanyOwnerId, cancellationToken);
-            currentModel.CompanyOwnerNumber = model.CompanyOwnerNumber;
-            currentModel.CompanyOwnerName = model.CompanyOwnerName;
-            currentModel.FixedRate = model.FixedRate;
+            try
+            {
+                var currentModel = await _db.MMSIServices.FindAsync(model.ServiceId);
 
-            await _db.SaveChangesAsync(cancellationToken);
+                currentModel.ServiceNumber = model.ServiceNumber;
+                currentModel.ServiceName = model.ServiceName;
 
-            TempData["success"] = "Edited successfully";
+                await _db.SaveChangesAsync(cancellationToken);
 
-            return RedirectToAction(nameof(Index));
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                TempData["error"] = "An error occurred while editing the entry. Please try again.";
+
+                return View(model);
+            }
         }
     }
 }

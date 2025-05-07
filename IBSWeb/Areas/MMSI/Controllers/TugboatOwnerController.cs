@@ -2,25 +2,26 @@ using IBS.DataAccess.Data;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
     [Area(nameof(MMSI))]
     [CompanyAuthorize(nameof(MMSI))]
-    public class ActivityServiceController : Controller
+    public class TugboatOwnerController : Controller
     {
         private readonly ApplicationDbContext _db;
 
-        public ActivityServiceController(ApplicationDbContext db)
+        public TugboatOwnerController(ApplicationDbContext db)
         {
             _db = db;
         }
 
         public IActionResult Index()
         {
-            var activitiesServices = _db.MMSIActivitiesServices.ToList();
+            var companyOwners = _db.MMSITugboatOwners.ToList();
 
-            return View(activitiesServices);
+            return View(companyOwners);
         }
 
         [HttpGet]
@@ -30,7 +31,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIActivityService model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(MMSITugboatOwner model, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -41,14 +42,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return View(model);
                 }
 
-                await _db.MMSIActivitiesServices.AddAsync(model, cancellationToken);
+                await _db.MMSITugboatOwners.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Creation Succeed!";
 
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 if (!string.IsNullOrEmpty(ex.InnerException?.Message))
@@ -63,21 +63,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
         }
-
         public IActionResult Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSIActivitiesServices.Where(i => i.ActivityServiceId == id).FirstOrDefault();
+                var model = _db.MMSITugboatOwners.Where(i => i.TugboatOwnerId == id).FirstOrDefault();
 
-                _db.MMSIActivitiesServices.Remove(model);
+                _db.MMSITugboatOwners.Remove(model);
                 _db.SaveChanges();
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 return RedirectToAction(nameof(Index));
@@ -87,34 +85,25 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSIActivitiesServices.Where(a => a.ActivityServiceId == id).FirstOrDefault();
+            var model = await _db.MMSITugboatOwners.Where(a => a.TugboatOwnerId == id).
+                FirstOrDefaultAsync(cancellationToken);
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIActivityService model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(MMSITugboatOwner model, CancellationToken cancellationToken)
         {
-            try
-            {
-                var currentModel = await _db.MMSIActivitiesServices.FindAsync(model.ActivityServiceId);
+            var currentModel = await _db.MMSITugboatOwners.FindAsync(model.TugboatOwnerId, cancellationToken);
+            currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
+            currentModel.TugboatOwnerName = model.TugboatOwnerName;
+            currentModel.FixedRate = model.FixedRate;
 
-                currentModel.ActivityServiceNumber = model.ActivityServiceNumber;
-                currentModel.ActivityServiceName = model.ActivityServiceName;
+            await _db.SaveChangesAsync(cancellationToken);
 
-                await _db.SaveChangesAsync();
+            TempData["success"] = "Edited successfully";
 
-                TempData["success"] = "Edited successfully";
-                return RedirectToAction(nameof(Index));
-            }
-
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                TempData["error"] = "An error occurred while editing the entry. Please try again.";
-
-                return View(model);
-            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

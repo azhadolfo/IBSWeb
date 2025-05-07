@@ -24,10 +24,10 @@ namespace IBS.Models.MMSI.MasterFile
 
         public bool IsCompanyOwned { get; set; }
 
-        public int? CompanyOwnerId { get; set; }
+        public int? TugboatOwnerId { get; set; }
 
-        [ForeignKey(nameof(CompanyOwnerId))]
-        public MMSICompanyOwner? CompanyOwner { get; set; }
+        [ForeignKey(nameof(TugboatOwnerId))]
+        public MMSITugboatOwner? TugboatOwner { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CompanyList { get; set; }
