@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -72,7 +73,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #region -- Audit Trail
 
-                    var audit = new MMSIAuditTrail
+                    var audit = new FilprideAuditTrail
                     {
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
@@ -82,7 +83,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync()
                     };
 
-                    await _dbContext.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     #endregion -- Audit Trail
@@ -237,7 +238,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #region -- Audit Trail
 
-                    var audit = new MMSIAuditTrail
+                    var audit = new FilprideAuditTrail
                     {
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
@@ -249,7 +250,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync()
                     };
 
-                    await _dbContext.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     #endregion -- Audit Trail

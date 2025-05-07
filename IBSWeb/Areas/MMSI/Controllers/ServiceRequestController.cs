@@ -4,6 +4,7 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -212,7 +213,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #region -- Audit Trail
 
-                    var audit = new MMSIAuditTrail
+                    var audit = new FilprideAuditTrail
                     {
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
@@ -222,7 +223,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync()
                     };
 
-                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
                     #endregion --Audit Trail
@@ -433,7 +434,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         #region -- Audit Trail
 
-                        var audit = new MMSIAuditTrail
+                        var audit = new FilprideAuditTrail
                         {
                             Date = DateTime.Now,
                             Username = await GetUserNameAsync(),
@@ -445,7 +446,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             Company = await GetCompanyClaimAsync()
                         };
 
-                        await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                        await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                         await _db.SaveChangesAsync(cancellationToken);
 
                         #endregion --Audit Trail
@@ -802,7 +803,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #region -- Audit Trail
 
-                    var audit = new MMSIAuditTrail
+                    var audit = new FilprideAuditTrail
                     {
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
@@ -814,7 +815,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync()
                     };
 
-                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -862,7 +863,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #region -- Audit Trail
 
-                    var audit = new MMSIAuditTrail
+                    var audit = new FilprideAuditTrail
                     {
                         Date = DateTime.Now,
                         Username = await GetUserNameAsync(),
@@ -874,7 +875,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync()
                     };
 
-                    await _db.MMSIAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
 
                     #endregion --Audit Trail
