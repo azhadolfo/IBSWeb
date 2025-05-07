@@ -23,10 +23,10 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
-        public int ActivityServiceId {  get; set; }
+        public int ServiceId {  get; set; }
 
-        [ForeignKey(nameof(ActivityServiceId))]
-        public MMSIActivityService? ActivityService { get; set; }
+        [ForeignKey(nameof(ServiceId))]
+        public MMSIService? Service { get; set; }
 
         public decimal Dispatch {  get; set; }
 
@@ -53,7 +53,7 @@ namespace IBS.Models.MMSI
         public List<SelectListItem>? Ports { get; set; }
 
         [NotMapped]
-        public List<SelectListItem>? ActivitiesServices { get; set; }
+        public List<SelectListItem>? Services { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? Terminals { get; set; }

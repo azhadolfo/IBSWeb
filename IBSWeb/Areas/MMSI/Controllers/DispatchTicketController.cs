@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var dispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled")
-                .Include(a => a.ActivityService)
+                .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
                 .Include(a => a.TugMaster)
@@ -61,7 +61,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             MMSIDispatchTicket model = new()
             {
-                ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
+                Services = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
                 Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
                 Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
                 TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
@@ -305,7 +305,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIDispatchTickets.Where(dt => dt.DispatchTicketId == id)
-                .Include(t => t.ActivityService)
+                .Include(t => t.Service)
                 .Include(t => t.Terminal).ThenInclude(t => t.Port)
                 .Include(t => t.Tugboat)
                 .Include(t => t.TugMaster)
@@ -324,9 +324,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
-                .Include(a => a.ActivityService)
+                .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat).ThenInclude(t => t.CompanyOwner)
+                .Include(a => a.Tugboat).ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .Include(a => a.Customer)
@@ -397,7 +397,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(a => a.ActivityService)
+                .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
                 .Include(a => a.TugMaster)
@@ -413,10 +413,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
-                .Include(a => a.ActivityService)
+                .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
-                .ThenInclude(t => t.CompanyOwner)
+                .ThenInclude(t => t.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .Include(a => a.Customer)
@@ -510,7 +510,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(a => a.ActivityService)
+                .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t.Port)
                 .Include(a => a.Tugboat)
                 .Include(a => a.TugMaster)
@@ -650,7 +650,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
                     if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
-                    if (currentModel.ActivityServiceId != model.ActivityServiceId) { changes.Add($"ActivityServiceId: {currentModel.ActivityServiceId} -> {model.ActivityServiceId}"); }
+                    if (currentModel.Service != model.Service) { changes.Add($"Service: {currentModel.Service} -> {model.Service}"); }
                     if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
                     if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
@@ -673,7 +673,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.DateArrived = model.DateArrived;
                     currentModel.TimeArrived = model.TimeArrived;
                     currentModel.TerminalId = model.TerminalId;
-                    currentModel.ActivityServiceId = model.ActivityServiceId;
+                    currentModel.ServiceId = model.ServiceId;
                     currentModel.TugBoatId = model.TugBoatId;
                     currentModel.TugMasterId = model.TugMasterId;
                     currentModel.VesselId = model.VesselId;
@@ -924,7 +924,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 item = await _db.MMSIDispatchTickets
                     .Where(dt => dt.Status != "Cancelled" && dt.Status != "For Posting")
-                    .Include(a => a.ActivityService)
+                    .Include(a => a.Service)
                     .Include(a => a.Terminal).ThenInclude(t => t.Port)
                     .Include(a => a.Tugboat)
                     .Include(a => a.TugMaster)
@@ -935,7 +935,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 item = await _db.MMSIDispatchTickets
                     .Where(dt => dt.Status == status)
-                    .Include(a => a.ActivityService)
+                    .Include(a => a.Service)
                     .Include(a => a.Terminal).ThenInclude(t => t.Port)
                     .Include(a => a.Tugboat)
                     .Include(a => a.TugMaster)
@@ -955,7 +955,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var filterTypeClaim = await GetCurrentFilterType();
 
                 var queried = _db.MMSIDispatchTickets
-                        .Include(dt => dt.ActivityService)
+                        .Include(dt => dt.Service)
                         .Include(dt => dt.Terminal)
                         .ThenInclude(dt => dt.Port)
                         .Include(dt => dt.Tugboat)
@@ -1001,7 +1001,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Where(dt =>
                         dt.COSNumber.ToLower().Contains(searchValue) == true ||
                         dt.DispatchNumber.ToString().Contains(searchValue) == true ||
-                        dt.ActivityService.ActivityServiceName.ToString().Contains(searchValue) == true ||
+                        dt.Service.ServiceName.ToString().Contains(searchValue) == true ||
                         dt.Terminal.TerminalName.ToString().Contains(searchValue) == true ||
                         dt.Terminal.Port.PortName.ToString().Contains(searchValue) == true ||
                         dt.Tugboat.TugboatName.ToString().Contains(searchValue) == true ||
@@ -1119,7 +1119,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tariffRate = await _db.MMSITariffRates
                 .Where(t => t.CustomerId == customerId &&
                             t.TerminalId == dispatchModel.TerminalId &&
-                            t.ActivityServiceId == dispatchModel.ActivityServiceId &&
+                            t.ServiceId == dispatchModel.ServiceId &&
                             t.AsOfDate <= dispatchModel.DateLeft)
                 .OrderByDescending(t => t.AsOfDate)
                 .FirstOrDefaultAsync(cancellationToken);

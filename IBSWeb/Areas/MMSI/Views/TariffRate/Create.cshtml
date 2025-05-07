@@ -37,10 +37,10 @@
                     </div>
                     <div class="form-group col-6 my-3">
                         <label class="control-label ps-1 pb-1">Type of Service<span class="required text-danger">*</span></label>
-                        <select asp-for="ActivityServiceId" id="ActivityServiceSelect" asp-items="@Model.ActivitiesServices" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select asp-for="ServiceId" id="ActivityServiceSelect" asp-items="@Model.Services" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Service Type</option>
                         </select>
-                        <span asp-validation-for="ActivityServiceId" class="text-danger"></span>
+                        <span asp-validation-for="ServiceId" class="text-danger"></span>
                     </div>
                 </div>
 

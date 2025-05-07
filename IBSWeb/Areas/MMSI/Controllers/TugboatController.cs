@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (model.IsCompanyOwned)
                 {
-                    model.CompanyOwnerId = null;
+                    model.TugboatOwnerId = null;
                 }
 
                 await _db.MMSITugboats.AddAsync(model, cancellationToken);
@@ -110,11 +110,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if(model.IsCompanyOwned)
             {
-                currentModel.CompanyOwnerId = null;
+                currentModel.TugboatOwnerId = null;
             }
             else
             {
-                currentModel.CompanyOwnerId = model.CompanyOwnerId;
+                currentModel.TugboatOwnerId = model.TugboatOwnerId;
             }
 
             currentModel.IsCompanyOwned = model.IsCompanyOwned;

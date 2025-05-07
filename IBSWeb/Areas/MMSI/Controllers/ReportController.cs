@@ -181,13 +181,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #region -- AP Ledger --
 
                 var apLedgerColStart = col + 1;
-                var tugboatOwners = await _dbContext.MMSICompanyOwners
-                    .OrderBy(t => t.CompanyOwnerName)
+                var tugboatOwners = await _dbContext.MMSITugboatOwners
+                    .OrderBy(t => t.TugboatOwnerName)
                     .ToListAsync(cancellationToken);
                 foreach (var tugboatOwner in tugboatOwners)
                 {
                     col++;
-                    worksheet.Cells[headerRow, col].Value = $"{tugboatOwner.CompanyOwnerName}";
+                    worksheet.Cells[headerRow, col].Value = $"{tugboatOwner.TugboatOwnerName}";
                 }
                 var apLedgerColEnd = col;
                 // formatting of main category
@@ -451,7 +451,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
 
                     worksheet.Cells[row, 9].Value = $"{sales.Terminal.TerminalName}";
-                    worksheet.Cells[row, 10].Value = $"{sales.ActivityService.ActivityServiceName}";
+                    worksheet.Cells[row, 10].Value = $"{sales.Service.ServiceName}";
                     worksheet.Cells[row, 11].Value = $"{sales.DateLeft:MM/dd/yyyy} {sales.TimeLeft:HH:mm}";
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
@@ -518,7 +518,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var companyOwner in tugboatOwners)
                     {
                         writingCol++;
-                        if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.CompanyOwner.CompanyOwnerName == companyOwner.CompanyOwnerName)
+                        if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner.TugboatOwnerName == companyOwner.TugboatOwnerName)
                         {
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -556,7 +556,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.ActivityService.ActivityServiceName == "ASSIST")
+                                sales.Service.ServiceName == "ASSIST")
                             {
                                 worksheet.Cells[row, writingCol].Value = 1;
                             }
@@ -571,7 +571,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         writingCol++;
                         if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                            sales.ActivityService.ActivityServiceName == "TENDING")
+                            sales.Service.ServiceName == "TENDING")
                         {
                             worksheet.Cells[row, writingCol].Value = 1;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -580,7 +580,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // other tugs(not company owned)
                     writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned && sales.ActivityService.ActivityServiceName == "TENDING")
+                    if (!sales.Tugboat.IsCompanyOwned && sales.Service.ServiceName == "TENDING")
                     {
                         worksheet.Cells[row, writingCol].Value = "1";
                     }
@@ -593,7 +593,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.ActivityService.ActivityServiceName == "TENDING" &&
+                                sales.Service.ServiceName == "TENDING" &&
                                 sales.Vessel.VesselType == category)
                             {
                                 worksheet.Cells[row, writingCol].Value = sales.TotalHours;

@@ -29,7 +29,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var tariffRates = await _dbContext.MMSITariffRates
                 .Include(t => t.Customer)
                 .Include(t => t.Terminal).ThenInclude(t => t.Port)
-                .Include(t => t.ActivityService)
+                .Include(t => t.Service)
                 .ToListAsync(cancellationToken);
 
             return View(tariffRates);
@@ -58,7 +58,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var user = await _userManager.GetUserAsync(User);
                     var existingModel = await _dbContext.MMSITariffRates
-                        .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ActivityServiceId == model.ActivityServiceId)
+                        .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ServiceId == model.ServiceId)
                         .FirstOrDefaultAsync(cancellationToken);
 
                     if (existingModel != null)
@@ -109,7 +109,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = await _dbContext.MMSITariffRates
                 .Include(t => t.Terminal).ThenInclude(t => t.Port)
-                .FirstOrDefaultAsync(t => t.ActivityServiceId == id, cancellationToken);
+                .FirstOrDefaultAsync(t => t.ServiceId == id, cancellationToken);
             model = await GetSelectLists(model, cancellationToken);
 
             return View(model);
@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             currentModel.AsOfDate = model.AsOfDate;
             currentModel.CustomerId = model.CustomerId;
-            currentModel.ActivityServiceId = model.ActivityServiceId;
+            currentModel.ServiceId = model.ServiceId;
             currentModel.TerminalId = model.TerminalId;
             currentModel.Dispatch = model.Dispatch;
             currentModel.BAF = model.BAF;
@@ -156,7 +156,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
             model.Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken);
-            model.ActivitiesServices = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken);
+            model.Services = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId != default)
             {
                 var terminal = await _dbContext.MMSITerminals
@@ -174,7 +174,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<bool> CheckIfExisting(DateOnly date, int customerId, int terminalId, int activityServiceId, decimal dispatch, decimal baf, CancellationToken cancellationToken = default)
         {
             var model = await _dbContext.MMSITariffRates
-                .Where(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ActivityServiceId == activityServiceId)
+                .Where(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ServiceId == activityServiceId)
                 .FirstOrDefaultAsync(cancellationToken);
             return (model != null);
         }

@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.MasterFile.MMSIActivityService
+@model MMSIService
 
 @{
     ViewData["Title"] = "Create";
@@ -20,14 +20,14 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <div class="row">
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="ActivityServiceName" type="text" class="form-control border-0 shadow" id="ActivityServiceName" placeholder="Name" required>
-                        <label asp-for="ActivityServiceName" for="ActivityServiceName" class="ms-2">Activity/Service<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="ActivityServiceName" class="text-danger"></span>
+                        <input asp-for="ServiceName" type="text" class="form-control border-0 shadow" id="ServiceName" placeholder="Name" required>
+                        <label asp-for="ServiceName" for="ServiceName" class="ms-2">Activity/Service<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="ServiceName" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="ActivityServiceNumber" type="text" class="form-control border-0 shadow" id="ActivityServiceNumber" placeholder="Number" required>
-                        <label asp-for="ActivityServiceNumber" for="ActivityServiceNumber" class="ms-2">Activity/Service number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="ActivityServiceNumber" class="text-danger"></span>
+                        <input asp-for="ServiceNumber" type="text" class="form-control border-0 shadow" id="ServiceNumber" placeholder="Number" required>
+                        <label asp-for="ServiceNumber" for="ServiceNumber" class="ms-2">Activity/Service number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="ServiceNumber" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -36,7 +36,7 @@
                     <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
                 </div>
                 <div class="text-center" style="width: 250px;">
-                    <a class="btn btn-outline-primary border col-12" asp-controller="ActivityService" asp-action="Index">
+                    <a class="btn btn-outline-primary border col-12" asp-controller="Service" asp-action="Index">
                         Go Back
                     </a>
                 </div>

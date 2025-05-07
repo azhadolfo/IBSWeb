@@ -157,9 +157,9 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; } //carries the columns of one record
 
-        public int ActivityServiceId { get; set; }
-        [ForeignKey(nameof(ActivityServiceId))]
-        public MMSIActivityService? ActivityService { get; set; } //carries the columns of one record
+        public int ServiceId { get; set; }
+        [ForeignKey(nameof(ServiceId))]
+        public MMSIService? Service { get; set; } //carries the columns of one record
 
         #endregion ---Columns with Table relations---
 
@@ -181,7 +181,7 @@ namespace IBS.Models.MMSI
         public List<SelectListItem>? Vessels { get; set; }
 
         [NotMapped]
-        public List<SelectListItem>? ActivitiesServices { get; set; }
+        public List<SelectListItem>? Services { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? Customers { get; set; }

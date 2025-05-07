@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250507060812_ModifyTugOwnerAndServiceModels")]
+    partial class ModifyTugOwnerAndServiceModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4808,9 +4811,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("service_number");
 
                     b.HasKey("ServiceId")
-                        .HasName("pk_mmsi_services");
+                        .HasName("pk_mmsi_activities_services");
 
-                    b.ToTable("mmsi_services", (string)null);
+                    b.ToTable("mmsi_activities_services", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSITerminal", b =>
@@ -4939,9 +4942,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("tugboat_owner_number");
 
                     b.HasKey("TugboatOwnerId")
-                        .HasName("pk_mmsi_tugboat_owners");
+                        .HasName("pk_mmsi_company_owners");
 
-                    b.ToTable("mmsi_tugboat_owners", (string)null);
+                    b.ToTable("mmsi_company_owners", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIVessel", b =>
@@ -11224,7 +11227,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_services_service_id");
+                        .HasConstraintName("fk_mmsi_dispatch_tickets_mmsi_activities_services_service_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
@@ -11281,7 +11284,7 @@ namespace IBS.DataAccess.Migrations
                         .HasForeignKey("ServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_services_service_id");
+                        .HasConstraintName("fk_mmsi_tariff_rates_mmsi_activities_services_service_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
@@ -11326,7 +11329,7 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITugboatOwner", "TugboatOwner")
                         .WithMany()
                         .HasForeignKey("TugboatOwnerId")
-                        .HasConstraintName("fk_mmsi_tugboats_mmsi_tugboat_owners_tugboat_owner_id");
+                        .HasConstraintName("fk_mmsi_tugboats_mmsi_company_owners_tugboat_owner_id");
 
                     b.Navigation("TugboatOwner");
                 });

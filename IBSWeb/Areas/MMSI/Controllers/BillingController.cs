@@ -192,7 +192,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var intDispatchTicketIds = dispatchTicketIds.Select(int.Parse).ToList();
                 var dispatchTickets = await _db.MMSIDispatchTickets
                     .Include(t => t.Tugboat)
-                    .Include(t => t.ActivityService)
+                    .Include(t => t.Service)
                     .Where(t => intDispatchTicketIds.Contains(t.DispatchTicketId)) // Assuming Id is the primary key
                     .ToListAsync();
 
@@ -581,7 +581,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             model.PaidDispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == model.MMSIBillingId.ToString())
                 .Include(dt => dt.Tugboat)
-                .Include(dt => dt.ActivityService)
+                .Include(dt => dt.Service)
                 .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
                 .ToListAsync (cancellationToken);
 
@@ -619,7 +619,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 billing.PaidDispatchTickets = await _db.MMSIDispatchTickets
                     .Where(dt => dt.BillingId == billing.MMSIBillingId.ToString())
                     .Include(dt => dt.Tugboat)
-                    .Include(dt => dt.ActivityService)
+                    .Include(dt => dt.Service)
                     .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
                     .ToListAsync (cancellationToken);
 
@@ -662,7 +662,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         worksheet.Cells[row, 1].Value = "1";
                         worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                        worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                         worksheet.Cells[row, 4].Value = $"{ticket.DispatchRate}";
                         worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         worksheet.Cells[row, 5].Value = $"{ticket.DispatchBillingAmount}";
@@ -684,7 +684,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             worksheet.Cells[row, 1].Value = "1";
                             worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, 2].Value = $"{ticket.ActivityService?.ActivityServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
+                            worksheet.Cells[row, 2].Value = $"{ticket.Service?.ServiceName}          {ticket.DateLeft} {ticket.TimeLeft}          {ticket.DateArrived} {ticket.TimeArrived}";
                             worksheet.Cells[row, 4].Value = $"{ticket.BAFRate}";
                             worksheet.Cells[row, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, 5].Value = $"{ticket.BAFNetRevenue}";
