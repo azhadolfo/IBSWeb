@@ -136,6 +136,15 @@
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
                                 <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue?.ToString("N2")</td>
                             </tr>
+                            @if (!Model.Tugboat.IsCompanyOwned)
+                            {
+                                <tr>
+                                    <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>AP OTHER TUGS: </b></td>
+                                    <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString("N2")</td>
+                                    <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>TUGBOAT OWNER:</b></td>
+                                    <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</td>
+                                </tr>
+                            }
                             <tr>
                                 <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
                                 <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling?.ToString("N2")</b></td>

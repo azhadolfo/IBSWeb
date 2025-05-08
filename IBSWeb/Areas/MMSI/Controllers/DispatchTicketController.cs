@@ -308,6 +308,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(t => t.Service)
                 .Include(t => t.Terminal).ThenInclude(t => t.Port)
                 .Include(t => t.Tugboat)
+                .ThenInclude(t => t.TugboatOwner)
                 .Include(t => t.TugMaster)
                 .Include(t => t.Vessel)
                 .Include((t => t.Customer))
