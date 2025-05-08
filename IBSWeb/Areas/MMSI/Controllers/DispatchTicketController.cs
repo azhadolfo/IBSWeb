@@ -577,7 +577,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         throw new ArgumentException("Date start should not be earlier than date today.");
                     }
-                    var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
+                    var currentModel = await _db.MMSIDispatchTickets
+                        .FindAsync(model.DispatchTicketId, cancellationToken);
+                    model.Tugboat = await _db.MMSITugboats.FindAsync(model.TugBoatId, cancellationToken);
                     model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
 
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
@@ -657,6 +659,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
                     if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
                     if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
+
+                    if (currentModel.TugBoatId != model.TugBoatId && model.Tugboat.IsCompanyOwned && currentModel.ApOtherTugs != 0)
+                    {
+                        changes.Add($"ApOtherTugs: '{currentModel.ApOtherTugs}' -> '0'");
+                        currentModel.ApOtherTugs = 0;
+                    }
 
                     #endregion -- Changes
 
