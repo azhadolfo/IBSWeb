@@ -8,23 +8,16 @@ namespace IBS.Models.MMSI.MasterFile
         [Key]
         public int VesselId { get; set; }
 
-        [Display(Name = "Vessel Number")]
-        [Required(ErrorMessage = "Vessel number is required.")]
         [StringLength(4, MinimumLength = 4, ErrorMessage = "Vessel number must be exactly 4 characters.")]
-        [RegularExpression(@"^\d+$", ErrorMessage = "Vessel number must be numeric.")]
         [Column(TypeName = "varchar(4)")]
         public string VesselNumber { get; set; }
 
-        [Display(Name = "Vessel Name")]
-        [Required(ErrorMessage = "Vessel name is required.")]
-        [StringLength(25, ErrorMessage = "Vessel name cannot exceed 25 characters.")]
-        [Column(TypeName = "varchar(25)")]
+        [StringLength(50, ErrorMessage = "Vessel name cannot exceed 50 characters.")]
+        [Column(TypeName = "varchar(50)")]
         public string VesselName { get; set; }
 
-        [Display(Name = "Vessel Type")]
-        [Required(ErrorMessage = "Vessel type is required.")]
-        [StringLength(25, ErrorMessage = "Vessel name cannot exceed 25 characters.")]
-        [Column(TypeName = "varchar(25)")]
+        [StringLength(20, ErrorMessage = "Vessel name cannot exceed 20 characters.")]
+        [Column(TypeName = "varchar(20)")]
         public string? VesselType { get; set; }
     }
 }
