@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250507091641_ModifyVarLengthOfPortName")]
+    partial class ModifyVarLengthOfPortName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4723,8 +4726,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("text")
                         .HasColumnName("address");
 
                     b.Property<string>("BusinessType")
@@ -4761,14 +4763,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("PrincipalName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
                         .HasColumnName("principal_name");
 
                     b.Property<string>("PrincipalNumber")
                         .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("varchar(4)")
+                        .HasColumnType("text")
                         .HasColumnName("principal_number");
 
                     b.Property<string>("TIN")
@@ -4799,8 +4800,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("service_name");
 
                     b.Property<string>("ServiceNumber")
@@ -4829,8 +4830,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("port_id");
 
                     b.Property<string>("TerminalName")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
                         .HasColumnName("terminal_name");
 
                     b.Property<string>("TerminalNumber")
@@ -4862,14 +4863,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TugMasterName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(30)")
                         .HasColumnName("tug_master_name");
 
                     b.Property<string>("TugMasterNumber")
                         .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("varchar(5)")
+                        .HasColumnType("text")
                         .HasColumnName("tug_master_number");
 
                     b.HasKey("TugMasterId")
@@ -4893,8 +4893,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TugboatName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
                         .HasColumnName("tugboat_name");
 
                     b.Property<string>("TugboatNumber")
@@ -4958,8 +4958,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VesselName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
                         .HasColumnName("vessel_name");
 
                     b.Property<string>("VesselNumber")
@@ -4969,8 +4969,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("vessel_number");
 
                     b.Property<string>("VesselType")
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("varchar(25)")
                         .HasColumnName("vessel_type");
 
                     b.HasKey("VesselId")
