@@ -331,18 +331,18 @@
                 var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
-                var dispatchRevenue = 0;
-                var dispatchBilling = 0;
-                var bafRevenue = 0;
-                var bafBilling = 0;
+                let dispatchRevenue = 0;
+                let dispatchBilling = 0;
+                let bafRevenue = 0;
+                let bafBilling = 0;
 
                 if (selectedValue === "Per hour") {
                     dispatchRevenue = (dispatchRate * @Model.TotalHours) - (dispatchDiscountAmount * @Model.TotalHours);
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
-                    dispatchBilling = dispatchRate;
+                    dispatchRevenue = parseFloat(dispatchRate) - parseFloat(dispatchDiscountAmount);
+                    dispatchBilling = parseFloat(parseFloat(dispatchRate).toFixed(2)); // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -350,15 +350,19 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = bafRate - bafDiscountAmount;
-                    bafBilling = bafRate;
+                    bafRevenue = parseFloat(bafRate) - parseFloat(bafDiscountAmount);
+                    bafBilling = parseFloat(parseFloat(bafRate).toFixed(2)); // Ensure two decimal places
                 }
 
                 var dispatchRevenueFormatted = dispatchRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 var dispatchBillingFormatted = dispatchBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                console.log("dispatchRevenueFormatted " + dispatchRevenueFormatted);
+                console.log("dispatchBillingFormatted " + dispatchBillingFormatted);
 
                 var bafRevenueFormatted = bafRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 var bafBillingFormatted = bafBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                console.log("bafRevenueFormatted " + bafRevenueFormatted);
+                console.log("bafBillingFormatted " + bafBillingFormatted);
 
                 $('input[name="DispatchBillingAmount"]').val(dispatchBillingFormatted);
                 $('input[name="BAFBillingAmount"]').val(bafBillingFormatted);

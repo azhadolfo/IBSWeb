@@ -210,29 +210,6 @@
 
                 <div class="row px-3">
                     <div class="col-6 align-content-center px-3">
-                        <div class="row border">
-                            <div class="col">
-                                <div class="row">
-                                    <div class="col-6 mt-3 text-start">
-                                        <b><i>Ap Other Tugs</i></b>
-                                    </div>
-                                    <div class="col-6"></div>
-                                </div>
-                                <div class="row justify-content-end">
-                                    <div class="form-floating col-6 mb-3">
-                                        <input class="form-control border-0 shadow" placeholder="" id="TugProvider" value="@Model.Tugboat.TugboatOwner?.TugboatOwnerName" readonly/>
-                                        <label for="TugProvider" class="ms-2">Tug Provider</label>
-                                    </div>
-                                    <div class="form-floating col-6 mb-3">
-                                        <input asp-for="ApOtherTugs" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
-                                        <label asp-for="ApOtherTugs" class="ms-2">Ap Other Tugs<span class="required text-danger">*</span></label>
-                                        <span asp-validation-for="ApOtherTugs" class="text-danger"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 align-content-center px-3">
                         <div class="row">
                             <div class="form-floating col-6">
                                 <input asp-for="TotalBilling" class="form-control border-0 shadow" placeholder="" id="TotalBilling" readonly/>
@@ -247,10 +224,34 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-6">
-
+                    @if (!Model.Tugboat.IsCompanyOwned)
+                    {
+                        <div class="col-6 align-content-center px-3">
+                            <div class="row border">
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col-6 mt-3 text-start">
+                                            <b><i>Ap Other Tugs</i></b>
+                                        </div>
+                                        <div class="col-6"></div>
+                                    </div>
+                                    <div class="row justify-content-end">
+                                        <div class="form-floating col-6 mb-3">
+                                            <input class="form-control border-0 shadow" placeholder="" id="TugProvider" value="@Model.Tugboat.TugboatOwner.TugboatOwnerName" readonly/>
+                                            <label for="TugProvider" class="ms-2">Tug Provider</label>
+                                        </div>
+                                        <div class="form-floating col-6 mb-3">
+                                            <input asp-for="ApOtherTugs" value="@Model.Tugboat.TugboatOwner.FixedRate" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
+                                            <label asp-for="ApOtherTugs" class="ms-2">Ap Other Tugs<span class="required text-danger">*</span></label>
+                                            <span asp-validation-for="ApOtherTugs" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                    }
+                    else
+                    {
                         <div class="col-6 align-content-center px-3">
                             <div class="row">
                                 <div class="col-12">
@@ -267,8 +268,25 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 </div>
+                @if(!Model.Tugboat.IsCompanyOwned)
+                {
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row justify-content-end mt-4 mb-2">
+                                <div class="text-center col-6" style="width: 250px;">
+                                    <button class="btn btn-primary col-12 align-content-center selected-options" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
+                                </div>
+                                <div class="text-center col-6" style="width: 250px;">
+                                    <a class="btn btn-outline-primary col-12 align-content-center selected-options" asp-controller="DispatchTicket" asp-action="Index" asp-area="MMSI" asp-route-filterType="@filterType">
+                                        <i class="bi bi-arrow-90deg-left"></i> Go Back
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </form>
     </div>
@@ -310,8 +328,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
-                    dispatchBilling = dispatchRate;
+                    dispatchRevenue = parseFloat(dispatchRate) - parseFloat(dispatchDiscountAmount);
+                    dispatchBilling = parseFloat(parseFloat(dispatchRate).toFixed(2)); // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -319,8 +337,8 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = bafRate - bafDiscountAmount;
-                    bafBilling = bafRate;
+                    bafRevenue = parseFloat(bafRate) - parseFloat(bafDiscountAmount);
+                    bafBilling = parseFloat(parseFloat(bafRate).toFixed(2)); // Ensure two decimal places
                 }
 
                 var dispatchRevenueFormatted = dispatchRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
