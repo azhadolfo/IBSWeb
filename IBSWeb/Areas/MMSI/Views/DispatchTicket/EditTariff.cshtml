@@ -341,11 +341,11 @@
                     bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
-                var dispatchRevenueFormatted = dispatchRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                var dispatchBillingFormatted = dispatchBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var dispatchRevenueFormatted = formatNumber(dispatchRevenue);
+                var dispatchBillingFormatted = formatNumber(dispatchBilling);
 
-                var bafRevenueFormatted = bafRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                var bafBillingFormatted = bafBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var bafRevenueFormatted = formatNumber(bafRevenue);
+                var bafBillingFormatted = formatNumber(bafBilling);
 
                 $('input[name="DispatchBillingAmount"]').val(dispatchBillingFormatted);
                 $('input[name="BAFBillingAmount"]').val(bafBillingFormatted);
@@ -354,11 +354,11 @@
                 
                 @* Calculate, Parse, Format, and Display Total Billings/ Revenue *@
                 var totalBilling = dispatchBilling + bafBilling;
-                var formattedTotalBilling = totalBilling.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var formattedTotalBilling = formatNumber(totalBilling);
                 $('input[name="TotalBilling"]').val(formattedTotalBilling);
 
                 var totalRevenue = dispatchRevenue + bafRevenue;
-                var formattedTotalRevenue = totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                var formattedTotalRevenue = formatNumber(totalRevenue);
                 $('input[name="TotalNetRevenue"]').val(formattedTotalRevenue);
             }
 
