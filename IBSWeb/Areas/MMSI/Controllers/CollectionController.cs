@@ -6,6 +6,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -75,7 +76,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", model.ToCollectBillings)}",
@@ -240,7 +241,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
