@@ -347,7 +347,7 @@
                         $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
                         $('#amount').val(totalAmount.toFixed(2));
                         $('#ewt').val(totalEwt.toFixed(2));
-                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        $('#undeductedAmount').val(undeductedTotalAmount);
                         $('#amountShow').val(totalAmount.toFixed(2));
                         $('#ewtShow').val(totalEwt.toFixed(2));
                     },
@@ -367,7 +367,7 @@
                 if (isProcessing) return;
                 isProcessing = true;
 
-                const originalAmount = parseFloat($('#undeductedAmount').val()) || 0;
+                const originalAmount = $('#undeductedAmount').val() || 0;
                 const customerId = $('#customerId').val();
 
                 $.ajax({
