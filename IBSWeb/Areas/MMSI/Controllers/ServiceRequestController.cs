@@ -8,6 +8,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -215,7 +216,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = $"Create service request #{tempModel.DispatchNumber}",
@@ -436,7 +437,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         var audit = new FilprideAuditTrail
                         {
-                            Date = DateTime.Now,
+                            Date = DateTimeHelper.GetCurrentPhilippineTime(),
                             Username = await GetUserNameAsync(),
                             MachineName = Environment.MachineName,
                             Activity = changes.Any()
@@ -805,7 +806,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = postedTickets.Any()
@@ -865,7 +866,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = cancelledTickets.Any()
