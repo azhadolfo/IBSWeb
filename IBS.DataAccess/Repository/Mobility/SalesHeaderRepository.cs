@@ -663,10 +663,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
             }
-            else
-            {
-                return "DSR0000000001";
-            }
+
+            return "POS0000000001";
         }
 
         private async Task<int> GenerateOfflineNo(string stationCode)
@@ -1520,10 +1518,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
             }
-            else
-            {
-                return "FMS0000000001";
-            }
+
+            return "DSR0000000001";
         }
     }
 }
