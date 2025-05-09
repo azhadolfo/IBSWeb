@@ -309,12 +309,12 @@
                 var selectedValue2 = $('input[name="chargeType2"]:checked').val();
                 
                 @* Get Dispatch/BAF Rate and Discount Value *@
-                var dispatchRate = parseFloat($('input[name="DispatchRate"]').val()) || 0;
-                var dispatchDiscountPercent = parseFloat($('input[name="DispatchDiscount"]').val()) || 0;
+                var dispatchRate = parseNumber($('input[name="DispatchRate"]').val()) || 0;
+                var dispatchDiscountPercent = parseNumber($('input[name="DispatchDiscount"]').val()) || 0;
                 var dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
 
-                var bafRate = parseFloat($('input[name="BAFRate"]').val()) || 0;
-                var bafDiscountPercent = parseFloat($('input[name="BAFDiscount"]').val()) || 0;
+                var bafRate = parseNumber($('input[name="BAFRate"]').val()) || 0;
+                var bafDiscountPercent = parseNumber($('input[name="BAFDiscount"]').val()) || 0;
                 var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
@@ -328,8 +328,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = parseFloat(dispatchRate) - parseFloat(dispatchDiscountAmount);
-                    dispatchBilling = parseFloat(parseFloat(dispatchRate).toFixed(2)); // Ensure two decimal places
+                    dispatchRevenue = parseNumber(dispatchRate) - parseNumber(dispatchDiscountAmount);
+                    dispatchBilling = parseNumber(dispatchRate); // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -337,8 +337,8 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = parseFloat(bafRate) - parseFloat(bafDiscountAmount);
-                    bafBilling = parseFloat(parseFloat(bafRate).toFixed(2)); // Ensure two decimal places
+                    bafRevenue = parseNumber(bafRate) - parseNumber(bafDiscountAmount);
+                    bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
                 var dispatchRevenueFormatted = dispatchRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
