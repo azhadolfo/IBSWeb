@@ -341,8 +341,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = parseFloat(dispatchRate) - parseFloat(dispatchDiscountAmount);
-                    dispatchBilling = parseFloat(parseFloat(dispatchRate).toFixed(2)); // Ensure two decimal places
+                    dispatchRevenue = parseNumber(dispatchRate) - parseNumber(dispatchDiscountAmount);
+                    dispatchBilling = parseNumber(dispatchRate); // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -350,8 +350,8 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = parseFloat(bafRate) - parseFloat(bafDiscountAmount);
-                    bafBilling = parseFloat(parseFloat(bafRate).toFixed(2)); // Ensure two decimal places
+                    bafRevenue = parseNumber(bafRate) - parseNumber(bafDiscountAmount);
+                    bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
                 var dispatchRevenueFormatted = dispatchRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
