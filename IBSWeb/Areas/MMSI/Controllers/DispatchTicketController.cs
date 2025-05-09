@@ -9,6 +9,7 @@ using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -162,7 +163,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = $"Create dispatch ticket #{tempModel.DispatchNumber}",
@@ -375,7 +376,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var audit = new FilprideAuditTrail
                 {
-                    Date = DateTime.Now,
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = $"Set Tariff #{currentModel.DispatchTicketId}",
@@ -486,7 +487,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var audit = new FilprideAuditTrail
                 {
-                    Date = DateTime.Now,
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = changes.Any()
@@ -704,7 +705,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var audit = new FilprideAuditTrail
                     {
-                        Date = DateTime.Now,
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
                         Username = await GetUserNameAsync(),
                         MachineName = Environment.MachineName,
                         Activity = changes.Any()
@@ -770,7 +771,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var audit = new FilprideAuditTrail
                 {
-                    Date = DateTime.Now,
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = $"Approve tariff #{model.DispatchTicketId}",
@@ -806,7 +807,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var audit = new FilprideAuditTrail
                 {
-                    Date = DateTime.Now,
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = $"Revoke Approval #{model.DispatchTicketId}",
@@ -842,7 +843,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var audit = new FilprideAuditTrail
                 {
-                    Date = DateTime.Now,
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync(),
                     MachineName = Environment.MachineName,
                     Activity = $"Disapprove Tariff #{model.DispatchTicketId}",
