@@ -106,6 +106,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get cashier reports. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
                 return RedirectToAction(nameof(Index));
             }
         }
