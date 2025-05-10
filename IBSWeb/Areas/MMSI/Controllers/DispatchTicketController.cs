@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using OfficeOpenXml;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -26,16 +27,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly IUserAccessService _userAccessService;
         private readonly ILogger<DispatchTicketController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService, ILogger<DispatchTicketController> logger)
+            UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService,
+            ILogger<DispatchTicketController> logger, IUserAccessService userAccessService)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = clousStorageService;
+            _userAccessService = userAccessService;
             _logger = logger;
         }
 
@@ -58,6 +62,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create dispatch ticket", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
 
             MMSIDispatchTicket model = new()
@@ -324,6 +334,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> SetTariff(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Set tariff", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(a => a.Service)
@@ -413,6 +429,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTariff(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Set tariff", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(a => a.Service)
@@ -526,6 +548,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTicket(int id, CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create dispatch ticket", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
@@ -762,6 +790,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Approve tariff", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
@@ -798,6 +832,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> RevokeApproval(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Approve tariff", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
@@ -834,6 +874,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Disapprove(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Approve tariff", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
