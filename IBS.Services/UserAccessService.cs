@@ -8,7 +8,7 @@ namespace IBS.Services
 {
     public interface IUserAccessService
     {
-        Task<bool> CheckAccess(IdentityUser? user, string moduleName, CancellationToken cancellationToken = default);
+        Task<bool> CheckAccess(string id, string moduleName, CancellationToken cancellationToken = default);
     }
 
     public class UserAccessService : IUserAccessService
@@ -22,10 +22,10 @@ namespace IBS.Services
             _dbContext = dbContext;
         }
 
-        public async Task<bool> CheckAccess(IdentityUser? user, string moduleName, CancellationToken cancellationToken = default)
+        public async Task<bool> CheckAccess(string id, string moduleName, CancellationToken cancellationToken = default)
         {
             var userAccess = await _dbContext.MMSIUserAccesses?
-                .FirstOrDefaultAsync(a => a.UserId == user.Id, cancellationToken);
+                .FirstOrDefaultAsync(a => a.UserId == id, cancellationToken);
 
             if (userAccess == null)
             {
