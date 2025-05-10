@@ -195,7 +195,7 @@
                     <tr class="align-text-bottom">
                         <td class="text-start">@customerType.ToString()</td>
                         <td class="text-end">@overAllQuantitySum.ToString(SD.Two_Decimal_Format)</td>
-                        <td class="text-end">@overallAmountSum.ToString(SD.Two_Decimal_Format)</td>
+                        <td class="text-end">@overallNetOfAmountSum.ToString(SD.Two_Decimal_Format)</td>
                         <td class="text-end">@overallAverageSellingPrice.ToString(SD.Four_Decimal_Format)</td>
                     </tr>
 
@@ -206,7 +206,7 @@
                     <td class="text-center"><b>TOTAL:</b></td>
                     <td class="text-end">@overallTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@overallTotalAmount.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(overallTotalAmount != 0 || overallTotalQuantity != 0 ? (overallTotalAmount / overallTotalQuantity).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@(overallTotalAmount != 0 && overallTotalQuantity != 0 ? (overallTotalAmount / overallTotalQuantity).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>
@@ -249,7 +249,7 @@
                 <tr class="table-primary" style="border-top: double">
                     <td class="text-end">@totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@totalAmountForBiodiesel.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(totalAmountForBiodiesel != 0 || totalQuantityForBiodiesel != 0 ? (totalAmountForBiodiesel / totalQuantityForBiodiesel).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@(totalAmountForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? (totalAmountForBiodiesel / totalQuantityForBiodiesel).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>
@@ -279,10 +279,10 @@
                     var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
                     var econogasAmountSum = listForEconogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var econogasNetOfAmountSum = econogasAmountSum != 0m ? econogasAmountSum / 1.12m : 0;
-                    var econogasAverageSellingPrice = econogasNetOfAmountSum != 0m || econogasQuantitySum != 0m ? econogasNetOfAmountSum / econogasQuantitySum : 0m;
+                    var econogasAverageSellingPrice = econogasNetOfAmountSum != 0m && econogasQuantitySum != 0m ? econogasNetOfAmountSum / econogasQuantitySum : 0m;
                     <tr class="align-text-bottom text-end">
                         <td>@econogasQuantitySum.ToString(SD.Two_Decimal_Format)</td>
-                        <td>@econogasAmountSum.ToString(SD.Two_Decimal_Format)</td>
+                        <td>@econogasNetOfAmountSum.ToString(SD.Two_Decimal_Format)</td>
                         <td>@econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format)</td>
                     </tr>
 
@@ -292,7 +292,7 @@
                 <tr class="table-primary" style="border-top: double">
                     <td class="text-end">@totalQuantityForEconogas.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@totalAmountForEconogas.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(totalAmountForEconogas != 0 || totalQuantityForEconogas != 0 ? (totalAmountForEconogas / totalQuantityForEconogas).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@(totalAmountForEconogas != 0 && totalQuantityForEconogas != 0 ? (totalAmountForEconogas / totalQuantityForEconogas).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>
@@ -322,10 +322,10 @@
                     var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
                     var envirogasAmountSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.TotalAmount);
                     var envirogasNetOfAmountSum = envirogasAmountSum != 0m ? envirogasAmountSum / 1.12m : 0;
-                    var envirogasAverageSellingPrice = envirogasNetOfAmountSum != 0m || envirogasQuantitySum != 0m ? envirogasNetOfAmountSum / envirogasQuantitySum : 0m;
+                    var envirogasAverageSellingPrice = envirogasNetOfAmountSum != 0m && envirogasQuantitySum != 0m ? envirogasNetOfAmountSum / envirogasQuantitySum : 0m;
                     <tr class="align-text-bottom text-end">
                         <td>@envirogasQuantitySum.ToString(SD.Two_Decimal_Format)</td>
-                        <td>@envirogasAmountSum.ToString(SD.Two_Decimal_Format)</td>
+                        <td>@envirogasNetOfAmountSum.ToString(SD.Two_Decimal_Format)</td>
                         <td>@envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format)</td>
                     </tr>
 
@@ -335,7 +335,7 @@
                 <tr class="table-primary" style="border-top: double">
                     <td class="text-end">@totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@totalAmountForEnvirogas.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(totalAmountForEnvirogas != 0 || totalQuantityForEnvirogas != 0 ? (totalAmountForEnvirogas / totalQuantityForEnvirogas).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@(totalAmountForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? (totalAmountForEnvirogas / totalQuantityForEnvirogas).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>
