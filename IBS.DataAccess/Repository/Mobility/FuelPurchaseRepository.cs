@@ -28,15 +28,15 @@ namespace IBS.DataAccess.Repository.Mobility
                    join product in _db.Products on fuel.ProductCode equals product.ProductCode
                    select new
                    {
-                       fuel.FuelPurchaseId,
-                       fuel.StationCode,
-                       fuel.FuelPurchaseNo,
-                       fuel.ShiftDate,
-                       fuel.ProductCode,
-                       product.ProductName,
-                       fuel.ReceivedBy,
-                       fuel.PostedBy,
-                       station.StationName
+                       fuelPurchaseId = fuel.FuelPurchaseId,
+                       stationCode = fuel.StationCode,
+                       fuelPurchaseNo = fuel.FuelPurchaseNo,
+                       shiftDate = fuel.ShiftDate,
+                       productCode = fuel.ProductCode,
+                       productName = product.ProductName,
+                       receivedBy = fuel.ReceivedBy,
+                       postedBy = fuel.PostedBy,
+                       stationName = station.StationName
                    }.ToExpando();
         }
 

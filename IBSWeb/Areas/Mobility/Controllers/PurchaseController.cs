@@ -1,9 +1,11 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+﻿using System.Linq.Dynamic.Core;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models.Mobility;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
+using IBS.Models;
 using IBS.Services.Attributes;
 
 namespace IBSWeb.Areas.Mobility.Controllers
@@ -25,31 +27,94 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Fuel(CancellationToken cancellationToken)
+        public async Task<string> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
             var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
-
-            Expression<Func<MobilityFuelPurchase, bool>> filter = s => s.StationCode == stationCodeClaim;
-
-            IEnumerable<MobilityFuelPurchase> fuelPurchaseList = await _unitOfWork
-                .MobilityFuelPurchase
-                .GetAllAsync(filter, cancellationToken);
-
-            var result = _unitOfWork.MobilityFuelPurchase.GetFuelPurchaseJoin(fuelPurchaseList, cancellationToken);
-
-            return View(result);
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
-        public async Task<IActionResult> PreviewFuel(string? id, string? stationCode, CancellationToken cancellationToken)
+        [HttpGet]
+        public IActionResult Fuel()
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetFuelPurchase([FromForm] DataTablesParameters parameters,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var stationCodeClaim = await GetStationCodeClaimAsync();
+
+                var fuelPurchaseList = await _unitOfWork
+                    .MobilityFuelPurchase
+                    .GetAllAsync(x => x.StationCode == stationCodeClaim, cancellationToken);
+
+                var query = _unitOfWork.MobilityFuelPurchase.GetFuelPurchaseJoin(fuelPurchaseList, cancellationToken);
+
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    query = query
+                        .Where(s =>
+                            s.stationCode.ToLower().Contains(searchValue) ||
+                            s.fuelPurchaseNo.ToLower().Contains(searchValue) ||
+                            s.shiftDate.ToString().Contains(searchValue) ||
+                            s.productName.ToLower().Contains(searchValue) ||
+                            s.receivedBy.ToLower().Contains(searchValue))
+                        .ToList();
+                }
+
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    query = query
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = query.Count();
+
+                var pagedData = query
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get fuel purchases. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Fuel));
+            }
+        }
+
+        public async Task<IActionResult> PreviewFuel(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
-            MobilityFuelPurchase? fuelPurchase = await _unitOfWork.MobilityFuelPurchase.GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
+            var fuelPurchase = await _unitOfWork.MobilityFuelPurchase
+                .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCodeClaim, cancellationToken);
 
             if (fuelPurchase == null)
             {
@@ -65,22 +130,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(fuelPurchase);
         }
 
-        public async Task<IActionResult> PostFuel(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostFuel(string? id, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(id) || !string.IsNullOrEmpty(stationCode))
+            if (!string.IsNullOrEmpty(id))
             {
                 try
                 {
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
-                    return RedirectToAction(nameof(PreviewFuel), new { id, stationCode });
+                    return RedirectToAction(nameof(PreviewFuel), new { id });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting fuel delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return RedirectToAction(nameof(PreviewFuel), new { id, stationCode });
+                    return RedirectToAction(nameof(PreviewFuel), new { id });
                 }
             }
 
@@ -88,16 +154,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> EditFuel(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditFuel(string? id, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
             MobilityFuelPurchase fuelPurchase = await _unitOfWork
                 .MobilityFuelPurchase
-                .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken);
+                .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCodeClaim, cancellationToken);
 
             if (fuelPurchase != null)
             {
@@ -131,40 +199,96 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
         }
 
-        public async Task<IActionResult> Lube(CancellationToken cancellationToken)
+        [HttpGet]
+        public IActionResult Lube(CancellationToken cancellationToken)
         {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
-
-            Expression<Func<MobilityLubePurchaseHeader, bool>> filter = s => s.StationCode == stationCodeClaim;
-
-            IEnumerable<MobilityLubePurchaseHeader> lubePurchaseHeaders = await _unitOfWork
-                .MobilityLubePurchaseHeader
-                .GetAllAsync(filter, cancellationToken);
-
-            var result = _unitOfWork.MobilityLubePurchaseHeader.GetLubePurchaseJoin(lubePurchaseHeaders, cancellationToken);
-
-            return View(result);
+            return View();
         }
 
-        public async Task<IActionResult> PreviewLube(string? id, string? stationCode, CancellationToken cancellationToken)
+        [HttpPost]
+        public async Task<IActionResult> GetLubePurchase([FromForm] DataTablesParameters parameters,
+            CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(stationCode))
+            try
+            {
+                var stationCodeClaim = await GetStationCodeClaimAsync();
+
+                var lubePurchaseHeaders = await _unitOfWork
+                    .MobilityLubePurchaseHeader
+                    .GetAllAsync(x => x.StationCode == stationCodeClaim, cancellationToken);
+
+                var query = _unitOfWork.MobilityLubePurchaseHeader.GetLubePurchaseJoin(lubePurchaseHeaders, cancellationToken);
+
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    query = query
+                        .Where(s =>
+                            s.stationCode.ToLower().Contains(searchValue) ||
+                            s.lubePurchaseHeaderNo.ToLower().Contains(searchValue) ||
+                            s.shiftDate.ToString().Contains(searchValue) ||
+                            s.supplierName.ToLower().Contains(searchValue) ||
+                            s.salesInvoice.ToLower().Contains(searchValue) ||
+                            s.receivedBy.ToLower().Contains(searchValue))
+                        .ToList();
+                }
+
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    query = query
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = query.Count();
+
+                var pagedData = query
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to get lube purchases. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Fuel));
+            }
+        }
+
+        public async Task<IActionResult> PreviewLube(string? id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(id))
             {
                 return NotFound();
             }
 
+            var stationCodeClaim = await GetStationCodeClaimAsync();
+
             var lube = await _unitOfWork.MobilityLubePurchaseHeader
-                .GetAsync(l => l.LubePurchaseHeaderNo == id, cancellationToken);
+                .GetAsync(l => l.LubePurchaseHeaderNo == id && l.StationCode == stationCodeClaim, cancellationToken);
 
             if (lube == null)
             {
                 return BadRequest();
             }
 
-            SupplierDto supplier = await _unitOfWork.FilprideSupplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
-            StationDto station = await _unitOfWork.MobilityStation.MapStationToDTO(lube.StationCode, cancellationToken);
+            var supplier = await _unitOfWork.FilprideSupplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(lube.StationCode, cancellationToken);
 
             ViewData["SupplierName"] = supplier.SupplierName;
             ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
@@ -172,22 +296,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
             return View(lube);
         }
 
-        public async Task<IActionResult> PostLube(string? id, string? stationCode, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostLube(string? id, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrEmpty(id) || !string.IsNullOrEmpty(stationCode))
+            if (!string.IsNullOrEmpty(id))
             {
                 try
                 {
+                    var stationCodeClaim = await GetStationCodeClaimAsync();
                     var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCode, cancellationToken);
+                    await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
-                    return RedirectToAction(nameof(PreviewLube), new { id, stationCode });
+                    return RedirectToAction(nameof(PreviewLube), new { id });
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error on posting lube delivery.");
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    return RedirectToAction(nameof(PreviewLube), new { id, stationCode });
+                    return RedirectToAction(nameof(PreviewLube), new { id });
                 }
             }
 

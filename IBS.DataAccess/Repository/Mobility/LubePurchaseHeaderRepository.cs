@@ -29,16 +29,16 @@ namespace IBS.DataAccess.Repository.Mobility
                    join supplier in _db.FilprideSuppliers on lube.SupplierCode equals supplier.SupplierCode
                    select new
                    {
-                       lube.LubePurchaseHeaderId,
-                       lube.StationCode,
-                       lube.LubePurchaseHeaderNo,
-                       lube.ShiftDate,
-                       lube.SupplierCode,
-                       supplier.SupplierName,
-                       lube.SalesInvoice,
-                       lube.ReceivedBy,
-                       lube.PostedBy,
-                       station.StationName
+                       lubePurchaseHeaderId =  lube.LubePurchaseHeaderId,
+                       stationCode = lube.StationCode,
+                       lubePurchaseHeaderNo = lube.LubePurchaseHeaderNo,
+                       shiftDate = lube.ShiftDate,
+                       supplierCode = lube.SupplierCode,
+                       supplierName = supplier.SupplierName,
+                       salesInvoice = lube.SalesInvoice,
+                       receivedBy = lube.ReceivedBy,
+                       postedBy = lube.PostedBy,
+                       stationName = station.StationName
                    }.ToExpando();
         }
 
