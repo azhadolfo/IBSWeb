@@ -5,6 +5,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
@@ -24,14 +25,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _db;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<BillingController> _logger;
+        private readonly IUserAccessService _userAccessService;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public BillingController(IUnitOfWork unitOfWork, ApplicationDbContext db, UserManager<IdentityUser> userManager,
-            ILogger<BillingController> logger)
+            ILogger<BillingController> logger, IUserAccessService userAccessService)
         {
             _unitOfWork = unitOfWork;
             _db = db;
             _userManager = userManager;
+            _userAccessService = userAccessService;
             _logger = logger;
         }
 
@@ -83,6 +86,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create billing", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             MMSIBilling model = new()
             {
                 Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken),
@@ -337,6 +346,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
+            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create billing", cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var model = await _db.MMSIBillings
                 .Include(b => b.Customer)
                 .FirstOrDefaultAsync(b => b.MMSIBillingId == id, cancellationToken);
