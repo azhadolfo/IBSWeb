@@ -1,0 +1,135 @@
+@model MMSIUserAccess
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2>EDIT USER ACCESS FOR @Model.UserName</h2>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <form method="post" class="row">
+            <div class="border-2 px-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                <input type="hidden" asp-for="Id" value="@Model.Id"/>
+                <input type="hidden" asp-for="UserId" value="@Model.UserId"/>
+                <div class="row pt-3">
+                    <div class="col-3">
+                        <h5>Dispatch Ticket</h5>
+                    </div>
+                    <div class="col-3">
+                        <h5>Tariff</h5>
+                    </div>
+                    <div class="col-3">
+                        <h5>Billing</h5>
+                    </div>
+                    <div class="col-3">
+                        <h5>Collection</h5>
+                    </div>
+                </div>
+                <div class="row pb-3">
+                    <div class="col-3 ps-2">
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanCreateServiceRequest" class="form-check-input m-0 ms-2" type="checkbox" id="canCreateServiceRequest">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canCreateServiceRequest">
+                                    Create Service Request
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanPostServiceRequest" class="form-check-input m-0 ms-2" type="checkbox" id="canPostServiceRequest">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canPostServiceRequest">
+                                    Post Service Request
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanCreateDispatchTicket" class="form-check-input m-0 ms-2" type="checkbox" id="canCreateDispatchTicket">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canCreateDispatchTicket">
+                                    Create Dispatch Ticket
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3 ps-2">
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanSetTariff" class="form-check-input m-0 ms-2" type="checkbox" id="canSetTariff">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canSetTariff">
+                                    Set Tariff
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanApproveTariff" class="form-check-input m-0 ms-2" type="checkbox" id="canApproveTariff">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canApproveTariff">
+                                    Approve Tariff
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3 ps-2">
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanCreateBilling" class="form-check-input m-0 ms-2" type="checkbox" id="canCreateBilling">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canCreateBilling">
+                                    Create Billing
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3 ps-2">
+                        <div class="row">
+                            <div class="col-12">
+                                <input asp-for="CanCreateCollection" class="form-check-input m-0 ms-2" type="checkbox" id="canCreateCollection">
+                                <label class="text-decoration-underline form-check-label ps-1 m-0" for="canCreateCollection">
+                                    Create Collection
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-end mt-3">
+                <div class="text-center" style="width: 250px;">
+                    <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton">Submit</button>
+                </div>
+                <div class="text-center" style="width: 250px;">
+                    <a class="btn btn-outline-primary border col-12" asp-controller="UserAccess" asp-action="Index">
+                        Go Back
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+    <script>
+
+        $(document).ready(function () {
+
+            $('#isCompanyOwnedCheckBox').on('click', checkboxChanged);
+
+            function checkboxChanged() {
+                let $checkbox = $('#isCompanyOwnedCheckBox');
+                let $inputField = $('#companyNameSelect');
+
+                if ($checkbox.prop("checked")) {
+                    $inputField.prop("required", false).prop("disabled", true).val("0").trigger("change");
+                } else {
+                    $inputField.prop("required", true).prop("disabled", false);
+                }
+            }
+        });
+
+    </script>
+}

@@ -87,6 +87,7 @@ builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<GoogleDriveImportService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
+builder.Services.AddScoped<IUserAccessService, UserAccessService>();
 builder.Services.AddSignalR();
 
 // Add Quartz services

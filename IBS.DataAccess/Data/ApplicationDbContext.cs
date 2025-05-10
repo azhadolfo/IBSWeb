@@ -177,6 +177,7 @@ namespace IBS.DataAccess.Data
         public DbSet<MMSITerminal> MMSITerminals { get; set; }
         public DbSet<MMSITugboat> MMSITugboats { get; set; }
         public DbSet<MMSITugMaster> MMSITugMasters { get; set; }
+        public DbSet<MMSIUserAccess> MMSIUserAccesses { get; set; }
         public DbSet<MMSIVessel> MMSIVessels { get; set; }
         #endregion
 
