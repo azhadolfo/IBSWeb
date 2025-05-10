@@ -86,7 +86,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create billing", cancellationToken))
+
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Create billing", cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -346,7 +347,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(await _userManager.GetUserAsync(User), "Create billing", cancellationToken))
+            if (!await _userAccessService.CheckAccess( _userManager.GetUserId(User), "Create billing", cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
