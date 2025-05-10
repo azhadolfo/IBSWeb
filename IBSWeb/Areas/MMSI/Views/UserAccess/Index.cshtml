@@ -1,0 +1,78 @@
+@model IEnumerable<MMSIUserAccess>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+
+<div class="card shadow mt-4">
+
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="col-12 text-center text-white">
+            <h2>MMSI USER ACCESS</h2>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row justify-content-end mb-2">
+            <div class="text-center" style="width: 150px;">
+                <a class="btn btn-primary col-12 align-content-center" asp-controller="UserAccess" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Create 
+                </a>
+            </div>
+        </div>
+
+        <table id="dataTable" class="table table-striped table-bordered" style="width:100%">
+            <thead>
+            <tr>
+                <th class="text-center">UserId</th>
+                <th class="text-center">Username</th>
+                <th class="text-center" style="width: 100px;">ACTIONS</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.UserId)
+                    </td>
+                    <td class="text-center align-middle">
+                        @Html.DisplayFor(model => item.UserName)
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center">
+                            <div style="width:150px;">
+                                <a class="btn btn-primary col-12" type="button" asp-controller="UserAccess" asp-action="Edit" asp-route-id="@item.Id" aria-expanded="false">Edit</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Check if DataTable exists and destroy it
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                $('#dataTable').DataTable().destroy();
+            }
+
+            // Initialize DataTable
+            $('#dataTable').DataTable({
+                columnDefs: [
+                    { targets: 2, width: '100px' }
+                ],
+                autoWidth: false
+            });
+        });
+    </script>
+}
