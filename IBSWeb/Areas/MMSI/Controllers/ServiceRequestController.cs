@@ -9,6 +9,7 @@ using IBS.Models.MMSI;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -108,7 +109,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Create service request", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -787,7 +788,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Post service request", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.PostServiceRequest, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
