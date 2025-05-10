@@ -139,7 +139,7 @@ namespace IBS.DataAccess.Repository.IRepository
 
         #region --MMSI
 
-        IMsapRepository Msap { get; }
+        IServiceRequestRepository ServiceRequest { get; }
 
         #endregion
 

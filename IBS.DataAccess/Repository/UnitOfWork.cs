@@ -149,7 +149,7 @@ namespace IBS.DataAccess.Repository
 
         #region --MMSI
 
-        public IMsapRepository Msap { get; private set; }
+        public IServiceRequestRepository ServiceRequest { get; private set; }
 
         #endregion
 
@@ -242,7 +242,7 @@ namespace IBS.DataAccess.Repository
 
             #region --MMSI
 
-            Msap = new MsapRepository(_db);
+            ServiceRequest = new ServiceRequestRepository(_db);
 
             #endregion
 
