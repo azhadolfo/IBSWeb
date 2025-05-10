@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Create dispatch ticket", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateDispatchTicket, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -334,7 +334,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> SetTariff(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Set tariff", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.SetTariff, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -429,7 +429,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTariff(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Set tariff", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.SetTariff, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -548,7 +548,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTicket(int id, CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Create dispatch ticket", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateDispatchTicket, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -790,7 +790,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Approve(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Approve tariff", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.ApproveTariff, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -832,7 +832,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> RevokeApproval(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Approve tariff", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.ApproveTariff, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -874,7 +874,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Disapprove(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), "Approve tariff", cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.ApproveTariff, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));

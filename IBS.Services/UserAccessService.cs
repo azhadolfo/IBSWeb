@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
+using IBS.Utility.Enums;
 
 namespace IBS.Services
 {
     public interface IUserAccessService
     {
-        Task<bool> CheckAccess(string id, string moduleName, CancellationToken cancellationToken = default);
+        Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default);
     }
 
     public class UserAccessService : IUserAccessService
@@ -22,7 +23,7 @@ namespace IBS.Services
             _dbContext = dbContext;
         }
 
-        public async Task<bool> CheckAccess(string id, string moduleName, CancellationToken cancellationToken = default)
+        public async Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default)
         {
             var userAccess = await _dbContext.MMSIUserAccesses?
                 .FirstOrDefaultAsync(a => a.UserId == id, cancellationToken);
@@ -32,21 +33,21 @@ namespace IBS.Services
                 return false;
             }
 
-            switch (moduleName)
+            switch (procedure)
             {
-                case "Create service request":
+                case ProcedureEnum.CreateServiceRequest:
                     return userAccess.CanCreateServiceRequest;
-                case "Post service request":
+                case ProcedureEnum.PostServiceRequest:
                     return userAccess.CanPostServiceRequest;
-                case "Create dispatch ticket":
+                case ProcedureEnum.CreateDispatchTicket:
                     return userAccess.CanCreateDispatchTicket;
-                case "Set tariff":
+                case ProcedureEnum.SetTariff:
                     return userAccess.CanSetTariff;
-                case "Approve tariff":
+                case ProcedureEnum.ApproveTariff:
                     return userAccess.CanApproveTariff;
-                case "Create billing":
+                case ProcedureEnum.CreateBilling:
                     return userAccess.CanCreateBilling;
-                case "Create collection":
+                case ProcedureEnum.CreateCollection:
                     return userAccess.CanCreateCollection;
                 default:
                     return false;
