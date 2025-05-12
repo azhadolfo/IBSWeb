@@ -838,7 +838,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CancelSelected(string records, CancellationToken cancellationToken = default)
         {
             if (!string.IsNullOrEmpty(records))
