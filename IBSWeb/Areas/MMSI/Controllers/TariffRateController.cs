@@ -154,9 +154,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
-            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
-            model.Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken);
-            model.Services = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken);
+            model.Customers = await _unitOfWork.TariffTable.GetMMSICustomersById(cancellationToken);
+            model.Ports = await _unitOfWork.TariffTable.GetMMSIPortsById(cancellationToken);
+            model.Services = await _unitOfWork.TariffTable.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId != default)
             {
                 var terminal = await _dbContext.MMSITerminals
@@ -164,7 +164,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Include(t => t.Port)
                     .FirstOrDefaultAsync(cancellationToken);
                 model.Terminal = terminal;
-                model.Terminals = await _unitOfWork.Msap.GetMMSITerminalsById(terminal.PortId, cancellationToken);
+                model.Terminals = await _unitOfWork.TariffTable.GetMMSITerminalsById(terminal.PortId, cancellationToken);
             }
 
             return model;

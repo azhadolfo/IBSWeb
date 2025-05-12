@@ -149,7 +149,14 @@ namespace IBS.DataAccess.Repository
 
         #region --MMSI
 
-        public IMsapRepository Msap { get; private set; }
+        public IServiceRequestRepository ServiceRequest { get; private set; }
+        public IDispatchTicketRepository DispatchTicket { get; private set; }
+        public IBillingRepository Billing { get; private set; }
+        public ICollectionRepository Collection { get; private set; }
+        public IMMSIReportRepository MMSIReport { get; private set; }
+        public ITariffTableRepository TariffTable { get; private set; }
+        public ITerminalRepository Terminal { get; private set; }
+        public ITugboatRepository Tugboat { get; private set; }
 
         #endregion
 
@@ -242,7 +249,14 @@ namespace IBS.DataAccess.Repository
 
             #region --MMSI
 
-            Msap = new MsapRepository(_db);
+            ServiceRequest = new ServiceRequestRepository(_db);
+            DispatchTicket = new DispatchTicketRepository(_db);
+            Billing = new BillingRepository(_db);
+            Collection = new CollectionRepository(_db);
+            MMSIReport = new MMSIReportRepository(_db);
+            TariffTable = new TariffTableRepository(_db);
+            Terminal = new TerminalRepository(_db);
+            Tugboat = new TugboatRepository(_db);
 
             #endregion
 

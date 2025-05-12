@@ -85,9 +85,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             MMSIBilling model = new()
             {
-                Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken),
-                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
-                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken)
+                Customers = await _unitOfWork.Billing.GetMMSICustomersById(cancellationToken),
+                Vessels = await _unitOfWork.Billing.GetMMSIVesselsById(cancellationToken),
+                Ports = await _unitOfWork.Billing.GetMMSIPortsById(cancellationToken)
             };
 
             return View(model);
@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (model.IsUndocumented)
                     {
-                        model.MMSIBillingNumber = await _unitOfWork.Msap.GenerateBillingNumber(cancellationToken);
+                        model.MMSIBillingNumber = await _unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
                     }
 
                     // create it first so it generates id
@@ -163,7 +163,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     TempData["error"] = "Can't create entry, please review your input.";
-                    model = await _unitOfWork.Msap.GetBillingLists(model, cancellationToken);
+                    model = await _unitOfWork.Billing.GetBillingLists(model, cancellationToken);
 
                     return View(model);
                 }
@@ -179,7 +179,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     TempData["error"] = $"{ex.InnerException.Message}";
                 }
 
-                model = await _unitOfWork.Msap.GetBillingLists(model, cancellationToken);
+                model = await _unitOfWork.Billing.GetBillingLists(model, cancellationToken);
 
                 return View(model);
             }
@@ -342,13 +342,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(b => b.MMSIBillingId == id, cancellationToken);
 
             // get select lists
-            model = await _unitOfWork.Msap.GetBillingLists(model, cancellationToken);
+            model = await _unitOfWork.Billing.GetBillingLists(model, cancellationToken);
 
             // get billed by current billing select list
-            var unbilledDT = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken);
+            var unbilledDT = await _unitOfWork.Billing.GetMMSIUnbilledTicketsById(cancellationToken);
 
             // get not yet billed tickets select list
-            model.UnbilledDispatchTickets = await _unitOfWork.Msap.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
+            model.UnbilledDispatchTickets = await _unitOfWork.Billing.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
 
             // add the both select list above
             model.UnbilledDispatchTickets.AddRange(unbilledDT);
@@ -395,7 +395,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             if (!currentModel.IsUndocumented)
                             {
                                 // replace with new generated
-                                currentModel.MMSIBillingNumber = await _unitOfWork.Msap.GenerateBillingNumber(cancellationToken);
+                                currentModel.MMSIBillingNumber = await _unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
                             }
                             else
                             {
@@ -471,10 +471,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.Status = "For Collection";
 
                     // get billed by current billing select list
-                    var unbilledDT = await _unitOfWork.Msap.GetMMSIUnbilledTicketsById(cancellationToken);
+                    var unbilledDT = await _unitOfWork.Billing.GetMMSIUnbilledTicketsById(cancellationToken);
 
                     // get not yet billed tickets select list
-                    model.UnbilledDispatchTickets = await _unitOfWork.Msap.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
+                    model.UnbilledDispatchTickets = await _unitOfWork.Billing.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
 
                     // add the both select list above
                     model.UnbilledDispatchTickets.AddRange(unbilledDT);
@@ -592,7 +592,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Distinct() // Ensures unique values
                 .ToListAsync(cancellationToken);
 
-            model = await _unitOfWork.Msap.ProcessAddress(model, cancellationToken);
+            model = await _unitOfWork.Billing.ProcessAddress(model, cancellationToken);
 
             return View(model);
         }
@@ -824,7 +824,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
         {
             // bills uncollected but with the same customers
-            var list = await _unitOfWork.Msap.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
 
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == billingId.ToString())
@@ -832,7 +832,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (model?.FirstOrDefault()?.CustomerId == customerId)
             {
-                list?.AddRange(await _unitOfWork.Msap.GetMMSIBilledTicketsById(billingId, cancellationToken));
+                list?.AddRange(await _unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
             }
 
             return list;

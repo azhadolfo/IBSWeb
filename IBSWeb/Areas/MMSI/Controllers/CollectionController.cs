@@ -41,7 +41,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             var model = new MMSICollection();
-            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
             return View(model);
         }
 
@@ -58,7 +58,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (model.IsUndocumented)
                     {
-                        model.MMSICollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
+                        model.MMSICollectionNumber = await _unitOfWork.Collection.GenerateCollectionNumber(cancellationToken);
                     }
 
                     await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
@@ -115,8 +115,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     TempData["error"] = "There was an error creating the collection.";
 
-                    model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
-                    model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+                    model.Billings = await _unitOfWork.Collection.GetMMSIUncollectedBillingsById(cancellationToken);
+                    model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
 
                     return View(model);
                 }
@@ -125,8 +125,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 TempData["error"] = ex.Message;
 
-                model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
-                model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+                model.Billings = await _unitOfWork.Collection.GetMMSIUncollectedBillingsById(cancellationToken);
+                model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
 
                 return View(model);
             }
@@ -205,7 +205,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .ToListAsync(cancellationToken);
 
             // selection of customers
-            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
 
             // get bills with same customer
             model.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
@@ -380,7 +380,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<List<SelectListItem>?> GetEditBillings(int? customerId, int collectionId, CancellationToken cancellationToken = default)
         {
             // bills uncollected but with the same customers
-            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
             // get the current model
             var model = await _dbContext.MMSICollections.FindAsync(collectionId, cancellationToken);
@@ -388,7 +388,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             // if the model WAS having previous customer, fetch it previous bills as well
             if (model?.CustomerId == customerId)
             {
-                list?.AddRange(await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken));
+                list?.AddRange(await _unitOfWork.Collection.GetMMSICollectedBillsById(collectionId, cancellationToken));
             }
 
             return list;
@@ -397,7 +397,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<List<SelectListItem>?> GetUncollectedBillings(int? customerId, CancellationToken cancellationToken = default)
         {
             // bills uncollected by customer
-            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
             return list;
         }

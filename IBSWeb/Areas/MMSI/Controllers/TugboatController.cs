@@ -30,7 +30,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             MMSITugboat tugboat = new MMSITugboat();
-            tugboat.CompanyList = await _unitOfWork.Msap.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            tugboat.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(tugboat);
         }
@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = _db.MMSITugboats.Where(a => a.TugboatId == id).FirstOrDefault();
-            model.CompanyList = await _unitOfWork.Msap.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(model);
         }

@@ -110,11 +110,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             MMSIDispatchTicket model = new()
             {
-                Services = await _unitOfWork.Msap.GetMMSIActivitiesServicesById(cancellationToken),
-                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken),
-                Tugboats = await _unitOfWork.Msap.GetMMSITugboatsById(cancellationToken),
-                TugMasters = await _unitOfWork.Msap.GetMMSITugMastersById(cancellationToken),
-                Vessels = await _unitOfWork.Msap.GetMMSIVesselsById(cancellationToken),
+                Services = await _unitOfWork.ServiceRequest.GetMMSIActivitiesServicesById(cancellationToken),
+                Ports = await _unitOfWork.ServiceRequest.GetMMSIPortsById(cancellationToken),
+                Tugboats = await _unitOfWork.ServiceRequest.GetMMSITugboatsById(cancellationToken),
+                TugMasters = await _unitOfWork.ServiceRequest.GetMMSITugMastersById(cancellationToken),
+                Vessels = await _unitOfWork.ServiceRequest.GetMMSIVesselsById(cancellationToken),
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
             };
 
@@ -132,14 +132,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
 
                 if (!ModelState.IsValid)
                 {
                     var companyClaims = await GetCompanyClaimAsync();
 
                     TempData["error"] = "Can't create entry, please review your input.";
-                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
                     model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -236,7 +236,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
-                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                     return View(model);
@@ -245,7 +245,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = $"{ex.Message}";
-                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                 return View(model);
@@ -286,7 +286,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+            model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             if (!string.IsNullOrEmpty(model.ImageName))
             {
@@ -465,7 +465,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         .ThenInclude(t => t.Port)
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
-                        model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                        model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
 
                         ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -481,7 +481,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .ThenInclude(t => t.Port)
                     .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
-                    model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                    model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
 
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -499,7 +499,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
-                model = await _unitOfWork.Msap.GetDispatchTicketLists(model, cancellationToken);
+                model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
                 model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;

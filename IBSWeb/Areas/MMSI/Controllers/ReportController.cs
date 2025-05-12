@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var extractedBy = _userManager.GetUserName(this.User);
 
                 // get rr data from chosen date
-                var salesReport = await _unitOfWork.Msap.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
+                var salesReport = await _unitOfWork.MMSIReport.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
 
                 // check if there is no record
                 if (salesReport.Count == 0)
