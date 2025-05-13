@@ -6,6 +6,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -76,12 +77,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
+            var model = ServiceRequestToDispatchTicket(vm);
+
             if (!ModelState.IsValid)
             {
                 var companyClaims = await GetCompanyClaimAsync();
-
                 TempData["error"] = "Can't create entry, please review your input.";
                 model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
                 model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
@@ -551,8 +553,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditTicket(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> EditTicket(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Can't apply edit, please review your input.";
+                return RedirectToAction("EditTicket", new { id = vm.DispatchTicketId });
+            }
+
+            var model = ServiceRequestToDispatchTicket(vm);
+
             var user = await _userManager.GetUserAsync(User);
             try
             {
@@ -1232,6 +1242,39 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
             return $"{fileName}-{type}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+        }
+
+        public MMSIDispatchTicket ServiceRequestToDispatchTicket(ServiceRequestViewModel vm)
+        {
+            var model = new MMSIDispatchTicket
+            {
+                Date = vm.Date,
+                COSNumber = vm.COSNumber,
+                DispatchNumber = vm.DispatchNumber,
+                VoyageNumber = vm.VoyageNumber,
+                CustomerId = vm.CustomerId,
+                DateLeft = vm.DateLeft,
+                TimeLeft = vm.TimeLeft,
+                DateArrived = vm.DateArrived,
+                TimeArrived = vm.TimeArrived,
+                TerminalId = vm.TerminalId,
+                ServiceId = vm.ServiceId,
+                TugBoatId = vm.TugBoatId,
+                TugMasterId = vm.TugMasterId,
+                VesselId = vm.VesselId,
+                Remarks = vm.Remarks,
+                DispatchChargeType = string.Empty,
+                BAFChargeType = string.Empty,
+                TariffBy = string.Empty,
+                TariffEditedBy = string.Empty,
+            };
+
+            if (vm.DispatchTicketId != null)
+            {
+                model.DispatchTicketId = vm.DispatchTicketId ?? 0;
+            }
+
+            return model;
         }
     }
 }
