@@ -343,14 +343,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SetTariff(MMSIDispatchTicket model, string chargeType, string chargeType2, CancellationToken cancellationToken)
+        public async Task<IActionResult> SetTariff(TariffViewModel vm, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
             var user = await _userManager.GetUserAsync(User);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
             }
+
+            var model = TariffVmToDispatchTicket(vm);
 
             try
             {
@@ -1273,6 +1275,28 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 model.DispatchTicketId = vm.DispatchTicketId ?? 0;
             }
+
+            return model;
+        }
+
+        public MMSIDispatchTicket TariffVmToDispatchTicket(TariffViewModel vm)
+        {
+            var model = new MMSIDispatchTicket
+            {
+                DispatchTicketId = vm.DispatchTicketId,
+                CustomerId = vm.CustomerId,
+                DispatchRate = vm.DispatchRate,
+                DispatchDiscount = vm.DispatchDiscount,
+                DispatchBillingAmount = vm.DispatchBillingAmount,
+                DispatchNetRevenue = vm.DispatchNetRevenue,
+                BAFRate = vm.BAFRate,
+                BAFDiscount = vm.BAFDiscount,
+                BAFBillingAmount = vm.BAFBillingAmount,
+                BAFNetRevenue = vm.BAFNetRevenue,
+                TotalBilling = vm.TotalBilling,
+                TotalNetRevenue = vm.TotalNetRevenue,
+                ApOtherTugs = vm.ApOtherTugs ?? 0
+            };
 
             return model;
         }
