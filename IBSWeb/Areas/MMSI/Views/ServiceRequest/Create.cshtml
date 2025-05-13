@@ -203,7 +203,7 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-12 my-2">
-                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" maxlength="100" placeholder=" ">
                         <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>

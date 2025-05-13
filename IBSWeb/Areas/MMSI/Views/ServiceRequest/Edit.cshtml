@@ -19,7 +19,7 @@
     <div class="card-body">
         
         <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="DispatchTicketId" style="display:none">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -148,7 +148,7 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-12 my-2">
-                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" maxlength="100" placeholder=" ">
                         <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
