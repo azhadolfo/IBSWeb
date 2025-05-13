@@ -114,27 +114,27 @@
                             <tbody>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
                                 <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString("N2")</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
                                 <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString("N2")</td>
                             </tr>
                             @if (!Model.Tugboat.IsCompanyOwned)
                             {
@@ -147,9 +147,9 @@
                             }
                             <tr>
                                 <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling?.ToString("N2")</b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString("N2")</b></td>
                                 <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue?.ToString("N2")</b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString("N2")</b></td>
                             </tr>
                             </tbody>
                         </table>

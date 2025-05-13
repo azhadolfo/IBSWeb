@@ -6,6 +6,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -124,8 +126,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
+            var model = ServiceRequestToDispatchTicket(vm);
+
+            if (!ModelState.IsValid)
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+                TempData["error"] = "Can't create entry, please review your input.";
+                model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
+                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+
+                return View(model);
+            }
+
             model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
             model.Terminal.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
             DateTime timeStamp = DateTime.Now;
@@ -133,18 +148,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
-
-                if (!ModelState.IsValid)
-                {
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    TempData["error"] = "Can't create entry, please review your input.";
-                    model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
-                    return View(model);
-                }
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
@@ -246,6 +249,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 TempData["error"] = $"{ex.Message}";
                 model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
+                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync(), cancellationToken);
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                 return View(model);
@@ -304,177 +308,169 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIDispatchTicket model, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Edit(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Can't apply edit, please review your input.";
+                return RedirectToAction("Edit", new { id = vm.DispatchTicketId });
+            }
+
+            var model = ServiceRequestToDispatchTicket(vm);
+
             var user = await _userManager.GetUserAsync(User);
             try
             {
-                if (ModelState.IsValid)
+                if (model.Date > model.DateLeft)
                 {
-                    if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                    throw new ArgumentException("Date start should not be earlier than date today.");
+                }
+
+                if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
+                {
+                    // get the original entry
+                    var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
+
+                    // calculate for the hours of the new entry
+                    DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
+                    DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
+                    TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
+                    var totalHours = (decimal)timeDifference.TotalHours;
+
+                    // find the nearest half hour if the new customer is phil-ceb
+                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+                    if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
                     {
-                        if (model.Date > model.DateLeft)
+                        var wholeHours = Math.Truncate(totalHours);
+                        var fractionalPart = totalHours - wholeHours;
+
+                        if (fractionalPart >= 0.75m)
                         {
-                            throw new ArgumentException("Date start should not be earlier than date today.");
+                            totalHours = wholeHours + 1.0m; // round up to next hour
                         }
-                        var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
-
-                        model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
-
-                        DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
-                        DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
-                        TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                        var totalHours = (decimal)timeDifference.TotalHours;
-
-                        // find the nearest half hour if the customer is phil-ceb
-                        if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
+                        else if (fractionalPart >= 0.25m)
                         {
-                            var wholeHours = Math.Truncate(totalHours);
-                            var fractionalPart = totalHours - wholeHours;
-
-                            if (fractionalPart >= 0.75m)
-                            {
-                                totalHours = wholeHours + 1.0m; // round up to next hour
-                            }
-                            else if (fractionalPart >= 0.25m)
-                            {
-                                totalHours = wholeHours + 0.5m; // round to half hour
-                            }
-                            else
-                            {
-                                totalHours = wholeHours; // keep as is
-                            }
+                            totalHours = wholeHours + 0.5m; // round to half hour
+                        }
+                        else
+                        {
+                            totalHours = wholeHours; // keep as is
                         }
 
                         if (totalHours == 0)
                         {
                             totalHours = 0.5m;
                         }
-
-                        model.TotalHours = totalHours;
-
-                        if (imageFile != null)
-                        {
-                            // delete existing before replacing
-                            if (!string.IsNullOrEmpty(currentModel.ImageName))
-                            {
-                                await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
-                            }
-
-                            model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
-                            model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
-                        }
-
-                        if (videoFile != null)
-                        {
-                            if (!string.IsNullOrEmpty(currentModel.VideoName))
-                            {
-                                await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
-                            }
-
-                            model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
-                            model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
-                        }
-
-                        #region -- Changes
-
-                        var changes = new List<string>();
-
-                        if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
-                        if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                        if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                        if (currentModel.VoyageNumber  != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                        if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                        if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
-                        if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
-                        if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
-                        if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
-                        if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
-                        if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
-                        if (currentModel.ServiceId != model.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}"); }
-                        if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
-                        if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
-                        if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
-                        if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
-                        if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
-                        if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
-
-                        #endregion -- Changes
-
-                        currentModel.EditedBy = user.UserName;
-                        currentModel.EditedDate = DateTime.Now;
-                        currentModel.Date = model.Date;
-                        currentModel.DispatchNumber = model.DispatchNumber;
-                        currentModel.COSNumber = model.COSNumber;
-                        currentModel.VoyageNumber = model.VoyageNumber;
-                        currentModel.CustomerId = model.CustomerId;
-                        currentModel.DateLeft = model.DateLeft;
-                        currentModel.TimeLeft = model.TimeLeft;
-                        currentModel.DateArrived = model.DateArrived;
-                        currentModel.TimeArrived = model.TimeArrived;
-                        currentModel.TotalHours = (decimal)timeDifference.TotalHours;
-                        currentModel.TerminalId = model.TerminalId;
-                        currentModel.ServiceId = model.ServiceId;
-                        currentModel.TugBoatId = model.TugBoatId;
-                        currentModel.TugMasterId = model.TugMasterId;
-                        currentModel.VesselId = model.VesselId;
-                        currentModel.Remarks = model.Remarks;
-                        currentModel.TotalHours = model.TotalHours;
-                        if (imageFile != null)
-                        {
-                            currentModel.ImageName = model.ImageName;
-                            currentModel.ImageSignedUrl = model.ImageSignedUrl;
-                            currentModel.ImageSavedUrl = model.ImageSavedUrl;
-                        }
-                        if (videoFile != null)
-                        {
-                            currentModel.VideoName = model.VideoName;
-                            currentModel.VideoSignedUrl = model.VideoSignedUrl;
-                            currentModel.VideoSavedUrl = model.VideoSavedUrl;
-                        }
-
-                        #region -- Audit Trail
-
-                        var audit = new FilprideAuditTrail
-                        {
-                            Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                            Username = await GetUserNameAsync(),
-                            MachineName = Environment.MachineName,
-                            Activity = changes.Any()
-                                ? $"Edit service request #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
-                                : $"No changes detected: id#{currentModel.DispatchNumber}",
-                            DocumentType = "Service Request",
-                            Company = await GetCompanyClaimAsync()
-                        };
-
-                        await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                        await _db.SaveChangesAsync(cancellationToken);
-
-                        #endregion --Audit Trail
-
-                        TempData["success"] = "Entry edited successfully!";
-
-                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                     }
-                    else
+
+                    model.TotalHours = totalHours;
+
+                    if (imageFile != null)
                     {
-                        TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
+                        // delete existing before replacing
+                        if (!string.IsNullOrEmpty(currentModel.ImageName))
+                        {
+                            await _cloudStorageService.DeleteFileAsync(currentModel.ImageName);
+                        }
 
-                        model = await _db.MMSIDispatchTickets
-                        .Include(dt => dt.Terminal)
-                        .ThenInclude(t => t.Port)
-                        .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
-
-                        model = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(model, cancellationToken);
-
-                        ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
-                        return View(model);
+                        model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
+                        model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName);
                     }
+
+                    if (videoFile != null)
+                    {
+                        if (!string.IsNullOrEmpty(currentModel.VideoName))
+                        {
+                            await _cloudStorageService.DeleteFileAsync(currentModel.VideoName);
+                        }
+
+                        model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
+                        model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName);
+                    }
+
+                    #region -- Changes
+
+                    var changes = new List<string>();
+
+                    if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
+                    if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
+                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                    if (currentModel.VoyageNumber  != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
+                    if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
+                    if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
+                    if (currentModel.TimeArrived != model.TimeArrived) { changes.Add($"TimeArrived: {currentModel.TimeArrived} -> {model.TimeArrived}"); }
+                    if (currentModel.TotalHours != model.TotalHours) { changes.Add($"TotalHours: {currentModel.TotalHours} -> {model.TotalHours}"); }
+                    if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
+                    if (currentModel.ServiceId != model.ServiceId) { changes.Add($"ServiceId: {currentModel.ServiceId} -> {model.ServiceId}"); }
+                    if (currentModel.TugBoatId != model.TugBoatId) { changes.Add($"TugBoatId: {currentModel.TugBoatId} -> {model.TugBoatId}"); }
+                    if (currentModel.TugMasterId != model.TugMasterId) { changes.Add($"TugMasterId: {currentModel.TugMasterId} -> {model.TugMasterId}"); }
+                    if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
+                    if (currentModel.Remarks != model.Remarks) { changes.Add($"Remarks: '{currentModel.Remarks}' -> '{model.Remarks}'"); }
+                    if (imageFile != null && currentModel.ImageName != model.ImageName) { changes.Add($"ImageName: '{currentModel.ImageName}' -> '{model.ImageName}'"); }
+                    if (videoFile != null && currentModel.VideoName != model.VideoName) { changes.Add($"VideoName: '{currentModel.VideoName}' -> '{model.VideoName}'"); }
+
+                    #endregion -- Changes
+
+                    currentModel.EditedBy = user.UserName;
+                    currentModel.EditedDate = DateTime.Now;
+                    currentModel.Date = model.Date;
+                    currentModel.DispatchNumber = model.DispatchNumber;
+                    currentModel.COSNumber = model.COSNumber;
+                    currentModel.VoyageNumber = model.VoyageNumber;
+                    currentModel.CustomerId = model.CustomerId;
+                    currentModel.DateLeft = model.DateLeft;
+                    currentModel.TimeLeft = model.TimeLeft;
+                    currentModel.DateArrived = model.DateArrived;
+                    currentModel.TimeArrived = model.TimeArrived;
+                    currentModel.TotalHours = (decimal)timeDifference.TotalHours;
+                    currentModel.TerminalId = model.TerminalId;
+                    currentModel.ServiceId = model.ServiceId;
+                    currentModel.TugBoatId = model.TugBoatId;
+                    currentModel.TugMasterId = model.TugMasterId;
+                    currentModel.VesselId = model.VesselId;
+                    currentModel.Remarks = model.Remarks;
+                    currentModel.TotalHours = model.TotalHours;
+                    if (imageFile != null)
+                    {
+                        currentModel.ImageName = model.ImageName;
+                        currentModel.ImageSignedUrl = model.ImageSignedUrl;
+                        currentModel.ImageSavedUrl = model.ImageSavedUrl;
+                    }
+                    if (videoFile != null)
+                    {
+                        currentModel.VideoName = model.VideoName;
+                        currentModel.VideoSignedUrl = model.VideoSignedUrl;
+                        currentModel.VideoSavedUrl = model.VideoSavedUrl;
+                    }
+
+                    #region -- Audit Trail
+
+                    var audit = new FilprideAuditTrail
+                    {
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
+                        Username = await GetUserNameAsync(),
+                        MachineName = Environment.MachineName,
+                        Activity = changes.Any()
+                            ? $"Edit service request #{currentModel.DispatchNumber}, {string.Join(", ", changes)}"
+                            : $"No changes detected: id#{currentModel.DispatchNumber}",
+                        DocumentType = "Service Request",
+                        Company = await GetCompanyClaimAsync()
+                    };
+
+                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
+                    await _db.SaveChangesAsync(cancellationToken);
+
+                    #endregion --Audit Trail
+
+                    TempData["success"] = "Entry edited successfully!";
+
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                 }
                 else
                 {
-                    TempData["error"] = "Can't create entry, please review your input.";
+                    TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
                     model = await _db.MMSIDispatchTickets
                     .Include(dt => dt.Terminal)
@@ -926,6 +922,39 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 throw new Exception("Upload name invalid.");
             }
+        }
+
+        public MMSIDispatchTicket ServiceRequestToDispatchTicket(ServiceRequestViewModel vm)
+        {
+            var model = new MMSIDispatchTicket
+            {
+                Date = vm.Date,
+                COSNumber = vm.COSNumber,
+                DispatchNumber = vm.DispatchNumber,
+                VoyageNumber = vm.VoyageNumber,
+                CustomerId = vm.CustomerId,
+                DateLeft = vm.DateLeft,
+                TimeLeft = vm.TimeLeft,
+                DateArrived = vm.DateArrived,
+                TimeArrived = vm.TimeArrived,
+                TerminalId = vm.TerminalId,
+                ServiceId = vm.ServiceId,
+                TugBoatId = vm.TugBoatId,
+                TugMasterId = vm.TugMasterId,
+                VesselId = vm.VesselId,
+                Remarks = vm.Remarks,
+                DispatchChargeType = string.Empty,
+                BAFChargeType = string.Empty,
+                TariffBy = string.Empty,
+                TariffEditedBy = string.Empty,
+            };
+
+            if (vm.DispatchTicketId != null)
+            {
+                model.DispatchTicketId = vm.DispatchTicketId ?? 0;
+            }
+
+            return model;
         }
     }
 }

@@ -14,14 +14,9 @@ namespace IBS.Models.MMSI
         [Display(Name = "Date")]
         public DateOnly Date { get; set; }
 
-        [Display(Name = "Dispatch Number")]
-        [Required(ErrorMessage = "Dispatch number is required.")]
-        [StringLength(20, ErrorMessage = "Dispatch Number should not exceed 20 characters")]
         [Column(TypeName = "varchar(20)")]
         public string DispatchNumber { get; set; }
 
-        [Display(Name = "COS Number")]
-        [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
         [Column(TypeName = "varchar(10)")]
         public string? COSNumber {  get; set; }
 
@@ -37,29 +32,26 @@ namespace IBS.Models.MMSI
         [Display(Name = "Date Arrived")]
         public TimeOnly TimeArrived { get; set; }
 
-        [StringLength(100)]
         [Column(TypeName = "varchar(100)")]
         public string? Remarks { get; set; }
 
-        [StringLength(100)]
         [Column(TypeName = "varchar(100)")]
         public string? BaseOrStation { get; set; }
 
-        [StringLength(100)]
         [Column(TypeName = "varchar(100)")]
         public string? VoyageNumber { get; set; }
 
-        public string? DispatchChargeType { get; set; }
+        public string DispatchChargeType { get; set; }
 
-        public string? BAFChargeType { get; set; }
+        public string BAFChargeType { get; set; }
 
-        public decimal? TotalHours { get; set; }
+        public decimal TotalHours { get; set; }
 
-        public string? Status { get; set; }
+        public string Status { get; set; }
 
-        public string? CreatedBy { get; set; }
+        public string CreatedBy { get; set; }
 
-        public DateTime? CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         public string? EditedBy { get; set; }
 
@@ -69,52 +61,52 @@ namespace IBS.Models.MMSI
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
-        public decimal? DispatchRate { get; set; }
+        public decimal DispatchRate { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
 
-        public decimal? DispatchBillingAmount { get; set; }
+        public decimal DispatchBillingAmount { get; set; }
 
-        public decimal? DispatchDiscount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-
-        public decimal? DispatchNetRevenue { get; set; }
+        public decimal DispatchDiscount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
 
-        public decimal? BAFRate { get; set; }
+        public decimal DispatchNetRevenue { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
-        public decimal? BAFBillingAmount { get; set; }
 
-        public decimal? BAFDiscount { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,2)")]
-        public decimal? BAFNetRevenue { get; set; }
+        public decimal BAFRate { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
-        public decimal? TotalBilling { get; set; }
+        public decimal BAFBillingAmount { get; set; }
+
+        public decimal BAFDiscount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,2)")]
-        public decimal? TotalNetRevenue { get; set; }
+        public decimal BAFNetRevenue { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
+        [Column(TypeName = "numeric(18,2)")]
+        public decimal TotalBilling { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.00;(#,##0.00)}", ApplyFormatInEditMode = false)]
+        [Column(TypeName = "numeric(18,2)")]
+        public decimal TotalNetRevenue { get; set; }
 
         public decimal ApOtherTugs { get; set; }
 
-        public string? TariffBy { get; set; }
+        public string TariffBy { get; set; }
 
-        public DateTime? TariffDate { get; set; }
+        public DateTime TariffDate { get; set; }
 
-        public string? TariffEditedBy { get; set; }
+        public string TariffEditedBy { get; set; }
 
-        public DateTime? TariffEditedDate { get; set; }
+        public DateTime TariffEditedDate { get; set; }
 
         #endregion == Tariff ==
 
@@ -187,6 +179,5 @@ namespace IBS.Models.MMSI
         public List<SelectListItem>? Customers { get; set; }
 
         #endregion ---Select Lists---
-
     }
 }
