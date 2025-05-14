@@ -334,10 +334,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(a => a.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            model.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
+            var viewModel = DispatchTicketModelToTariffVm(model);
+
+            viewModel.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
             ViewBag.FilterType = await GetCurrentFilterType();
 
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpPost]
@@ -398,17 +400,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-
-                model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .FirstOrDefaultAsync(cancellationToken);
-
-                return View(model);
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
             }
         }
 
@@ -426,24 +418,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(a => a.Customer)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            model.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
+            var viewModel = DispatchTicketModelToTariffVm(model);
+
+            viewModel.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
             ViewBag.FilterType = await GetCurrentFilterType();
 
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditTariff(TariffViewModel vm, string chargeType, string chargeType2, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditTariff(TariffViewModel viewModel, string chargeType, string chargeType2, CancellationToken cancellationToken)
         {
             var user = await _userManager.GetUserAsync(User);
 
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(EditTariff), new { id = vm.DispatchTicketId } );
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
             }
 
-            var model = TariffVmToDispatchTicket(vm);
+            var model = TariffVmToDispatchTicket(viewModel);
 
             try
             {
@@ -514,17 +508,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-
-                model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .FirstOrDefaultAsync(cancellationToken);
-
-                return View(model);
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
             }
         }
 
@@ -1297,6 +1281,56 @@ namespace IBSWeb.Areas.MMSI.Controllers
             };
 
             if (model.DispatchTicketId != null)
+            {
+                viewModel.DispatchTicketId = model.DispatchTicketId;
+            }
+
+            return viewModel;
+        }
+
+        public TariffViewModel DispatchTicketModelToTariffVm(MMSIDispatchTicket model)
+        {
+            var viewModel = new TariffViewModel
+            {
+                DispatchTicketId = model.DispatchTicketId,
+                DispatchNumber = model.DispatchNumber,
+                COSNumber = model.COSNumber,
+                VoyageNumber = model.VoyageNumber,
+                Date = model.Date,
+                TugMasterName = model.TugMaster?.TugMasterName,
+                DateLeft = model.DateLeft,
+                TimeLeft = model.TimeLeft,
+                DateArrived = model.DateArrived,
+                TimeArrived = model.TimeArrived,
+                TugboatName = model.Tugboat?.TugboatName,
+                VesselName = model.Vessel?.VesselName,
+                VesselType = model.Vessel?.VesselType,
+                TerminalName = model.Terminal?.TerminalName,
+                PortName = model.Terminal?.Port?.PortName,
+                IsTugboatCompanyOwned = model.Tugboat?.IsCompanyOwned,
+                TugboatOwnerName = model.Tugboat?.TugboatOwner?.TugboatOwnerName,
+                FixedRate = model.Tugboat?.TugboatOwner?.FixedRate,
+                Remarks = model.Remarks,
+                CustomerName = model.Customer?.CustomerName,
+                TotalHours = model.TotalHours,
+                ImageName = model.ImageName,
+                DispatchChargeType = model.DispatchChargeType,
+                BAFChargeType = model.BAFChargeType,
+                CustomerId = model.CustomerId,
+                DispatchRate = model.DispatchRate,
+                DispatchDiscount = model.DispatchDiscount,
+                DispatchBillingAmount = model.DispatchBillingAmount,
+                DispatchNetRevenue = model.DispatchNetRevenue,
+                BAFRate = model.BAFRate,
+                BAFDiscount = model.BAFDiscount,
+                BAFBillingAmount = model.BAFBillingAmount,
+                BAFNetRevenue = model.BAFNetRevenue,
+                TotalBilling = model.TotalBilling,
+                TotalNetRevenue = model.TotalNetRevenue,
+                ApOtherTugs = model.ApOtherTugs
+            };
+
+            if (model?.DispatchTicketId != null)
             {
                 viewModel.DispatchTicketId = model.DispatchTicketId;
             }
