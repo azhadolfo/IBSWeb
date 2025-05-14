@@ -234,8 +234,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
-                    TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync(), cancellationToken);
+                    TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                     return View(viewModel);
@@ -243,9 +244,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                TempData["error"] = $"{ex.Message}";
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync(), cancellationToken);
+                TempData["error"] = $"{ex.Message}";
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                 return View(viewModel);

@@ -61,36 +61,32 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            MMSIDispatchTicket model = new()
-            {
-                Services = await _unitOfWork.DispatchTicket.GetMMSIActivitiesServicesById(cancellationToken),
-                Ports = await _unitOfWork.DispatchTicket.GetMMSIPortsById(cancellationToken),
-                Tugboats = await _unitOfWork.DispatchTicket.GetMMSITugboatsById(cancellationToken),
-                TugMasters = await _unitOfWork.DispatchTicket.GetMMSITugMastersById(cancellationToken),
-                Vessels = await _unitOfWork.DispatchTicket.GetMMSIVesselsById(cancellationToken),
-                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
-            };
+            var viewModel = new ServiceRequestViewModel();
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             ViewData["PortId"] = 0;
 
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
-            var model = ServiceRequestToDispatchTicket(vm);
+            var companyClaims = await GetCompanyClaimAsync();
 
             if (!ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-                TempData["error"] = "Can't create entry, please review your input.";
-                model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-                return View(model);
+                TempData["error"] = "Can't create entry, please review your input.";
+                ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
+
+                return View(viewModel);
             }
+
+            var model = ServiceRequestToDispatchTicket(viewModel);
 
             try
             {
@@ -184,21 +180,23 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
+                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
-                    model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
-                    return View(model);
+                    return View(viewModel);
                 }
 
             }
             catch (Exception ex)
             {
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 TempData["error"] = $"{ex.Message}";
-                model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
-                return View(model);
+                return View(viewModel);
             }
         }
 
@@ -533,61 +531,48 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditTicket(int id, CancellationToken cancellationToken = default)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             var model = await _db.MMSIDispatchTickets
                 .Where(dt => dt.DispatchTicketId == id)
                 .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var companyClaims = await GetCompanyClaimAsync();
+            var viewModel = DispatchTicketModelToServiceRequestVm(model);
 
-            model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+
             if (!string.IsNullOrEmpty(model.ImageName))
             {
-                model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
+                viewModel.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
             }
             if (!string.IsNullOrEmpty(model.VideoName))
             {
-                model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
+                viewModel.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
             }
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
             ViewBag.FilterType = await GetCurrentFilterType();
 
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditTicket(ServiceRequestViewModel vm, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> EditTicket(ServiceRequestViewModel viewModel, IFormFile? imageFile, IFormFile? videoFile, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Can't apply edit, please review your input.";
-                return RedirectToAction("EditTicket", new { id = vm.DispatchTicketId });
+                return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
 
-            var model = ServiceRequestToDispatchTicket(vm);
+            var model = ServiceRequestToDispatchTicket(viewModel);
 
             var user = await _userManager.GetUserAsync(User);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Can't create entry, please review your input.";
-
-                    model = await _db.MMSIDispatchTickets
-                        .Include(dt => dt.Terminal)
-                        .ThenInclude(t => t.Port)
-                        .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
-
-                    model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
-
-                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
-                    return View(model);
-                }
-
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
                     if (model.Date > model.DateLeft)
@@ -742,36 +727,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
-
-                    model = await _db.MMSIDispatchTickets
-                    .Include(dt => dt.Terminal)
-                    .ThenInclude(t => t.Port)
-                    .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
-
-                    model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
-                    return View(model);
+                    return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
                 }
             }
             catch (Exception ex)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
                 TempData["error"] = ex.Message;
-
-                model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == model.DispatchTicketId)
-                .Include(dt => dt.Terminal).ThenInclude(t => t.Port)
-                .FirstOrDefaultAsync(cancellationToken);
-
-                model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-                model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
-                return View(model);
+                return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
         }
 
@@ -1302,6 +1268,40 @@ namespace IBSWeb.Areas.MMSI.Controllers
             };
 
             return model;
+        }
+
+        public ServiceRequestViewModel DispatchTicketModelToServiceRequestVm(MMSIDispatchTicket model)
+        {
+            var viewModel = new ServiceRequestViewModel
+            {
+                Date = model.Date,
+                COSNumber = model.COSNumber,
+                DispatchNumber = model.DispatchNumber,
+                VoyageNumber = model.VoyageNumber,
+                CustomerId = model.CustomerId,
+                DateLeft = model.DateLeft,
+                TimeLeft = model.TimeLeft,
+                DateArrived = model.DateArrived,
+                TimeArrived = model.TimeArrived,
+                TerminalId = model.TerminalId,
+                ServiceId = model.ServiceId,
+                TugBoatId = model.TugBoatId,
+                TugMasterId = model.TugMasterId,
+                VesselId = model.VesselId,
+                Terminal = model.Terminal,
+                Remarks = model.Remarks,
+                ImageName = model.ImageName,
+                ImageSignedUrl = model.ImageSignedUrl,
+                VideoName = model.VideoName,
+                VideoSignedUrl = model.VideoSignedUrl,
+            };
+
+            if (model.DispatchTicketId != null)
+            {
+                viewModel.DispatchTicketId = model.DispatchTicketId;
+            }
+
+            return viewModel;
         }
     }
 }
