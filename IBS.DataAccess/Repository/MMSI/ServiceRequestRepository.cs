@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,7 +43,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return ports;
         }
 
-        public async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSITerminalsById(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> terminals = new List<SelectListItem>();
 
@@ -116,14 +117,18 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
-        public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
+        public async Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
         {
             model.Services = await GetMMSIActivitiesServicesById(cancellationToken);
             model.Ports = await GetMMSIPortsById(cancellationToken);
-            model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
             model.Tugboats = await GetMMSITugboatsById(cancellationToken);
             model.TugMasters = await GetMMSITugMastersById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
+
+            if (model.TerminalId != null)
+            {
+                model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
+            }
 
             return model;
         }

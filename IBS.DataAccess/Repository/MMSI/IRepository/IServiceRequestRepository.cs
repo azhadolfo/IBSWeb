@@ -1,5 +1,6 @@
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.MMSI.IRepository
@@ -16,7 +17,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default);
 
-        Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default);
+        Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default);
 
     }
 }

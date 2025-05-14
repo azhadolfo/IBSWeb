@@ -21,7 +21,7 @@ namespace IBS.Models.MMSI.ViewModels
         [StringLength(100)]
         public string? VoyageNumber { get; set; }
 
-        public int CustomerId { get; set; }
+        public int? CustomerId { get; set; }
 
         public DateOnly DateLeft { get; set; }
 
@@ -43,6 +43,14 @@ namespace IBS.Models.MMSI.ViewModels
         public int TugMasterId { get; set; }
 
         public int VesselId { get; set; }
+
+        public string? ImageName { get; set; }
+
+        public string? VideoName { get; set; }
+
+        public string? ImageSignedUrl { get; set; }
+
+        public string? VideoSignedUrl { get; set; }
 
         [StringLength(100)]
         public string? Remarks { get; set; }
