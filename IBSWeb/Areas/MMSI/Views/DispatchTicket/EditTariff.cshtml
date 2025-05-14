@@ -302,6 +302,14 @@
 
         $(document).ready(function () {
 
+            ValueChange()
+            $('#CustomerId').select2({
+                placeholder: "Select Customer", // Custom placeholder
+                allowClear: true, // Optional: adds an "x" to clear selection
+                width: '100%', // Ensures it respects your width:100% style
+                theme: 'classic'
+            });
+
             function ValueChange() 
             {
                 @* Get if per hour or per move *@
@@ -309,12 +317,12 @@
                 var selectedValue2 = $('input[name="chargeType2"]:checked').val();
                 
                 @* Get Dispatch/BAF Rate and Discount Value *@
-                var dispatchRate = parseNumber($('input[name="DispatchRate"]').val()) || 0;
-                var dispatchDiscountPercent = parseNumber($('input[name="DispatchDiscount"]').val()) || 0;
+                var dispatchRate = $('input[name="DispatchRate"]').val() || 0;
+                var dispatchDiscountPercent = $('input[name="DispatchDiscount"]').val() || 0;
                 var dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
 
-                var bafRate = parseNumber($('input[name="BAFRate"]').val()) || 0;
-                var bafDiscountPercent = parseNumber($('input[name="BAFDiscount"]').val()) || 0;
+                var bafRate = $('input[name="BAFRate"]').val() || 0;
+                var bafDiscountPercent = $('input[name="BAFDiscount"]').val() || 0;
                 var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
@@ -328,8 +336,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = parseNumber(dispatchRate) - parseNumber(dispatchDiscountAmount);
-                    dispatchBilling = parseNumber(dispatchRate); // Ensure two decimal places
+                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
+                    dispatchBilling = parseNumber(dispatchRate) // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -337,7 +345,7 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = parseNumber(bafRate) - parseNumber(bafDiscountAmount);
+                    bafRevenue = bafRate - bafDiscountAmount;
                     bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
