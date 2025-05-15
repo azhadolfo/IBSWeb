@@ -10,6 +10,7 @@ using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,17 +29,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
+        private readonly IUserAccessService _userAccessService;
         private readonly ILogger<ServiceRequestController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService,
-            ILogger<ServiceRequestController> logger)
+            ILogger<ServiceRequestController> logger, IUserAccessService userAccessService)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
+            _userAccessService = userAccessService;
         }
 
         private async Task UpdateFilterTypeClaim(string filterType)
@@ -108,6 +111,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateServiceRequest, cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
 
             var viewModel = new ServiceRequestViewModel();
@@ -798,6 +807,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PostSelected(string records, CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.PostServiceRequest, cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             if (!string.IsNullOrEmpty(records))
             {
                 await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);

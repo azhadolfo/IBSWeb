@@ -198,15 +198,12 @@
                         <td class="text-end">@overallNetOfAmountSum.ToString(SD.Two_Decimal_Format)</td>
                         <td class="text-end">@overallAverageSellingPrice.ToString(SD.Four_Decimal_Format)</td>
                     </tr>
-
-                    overallTotalQuantity += overAllQuantitySum;
-                    overallTotalAmount += overallNetOfAmountSum;
                 }
                 <tr class="table-primary" style="border-top: double">
                     <td class="text-center"><b>TOTAL:</b></td>
                     <td class="text-end">@overallTotalQuantity.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@overallTotalAmount.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@(overallTotalAmount != 0 && overallTotalQuantity != 0 ? (overallTotalAmount / overallTotalQuantity).ToString(SD.Four_Decimal_Format) : 0m)</td>
+                    <td class="text-end">@totalSalesNetOfVat.ToString(SD.Two_Decimal_Format)</td>
+                    <td class="text-end">@(totalSalesNetOfVat != 0 && overallTotalQuantity != 0 ? (totalSalesNetOfVat / overallTotalQuantity).ToString(SD.Four_Decimal_Format) : 0m)</td>
                 </tr>
                 </tbody>
             </table>

@@ -248,6 +248,18 @@ namespace IBS.DataAccess.Repository.MMSI
             return companyOwnerList;
         }
 
+        public async Task<List<SelectListItem>> GetMMSIUsersSelectListById(CancellationToken cancellationToken = default)
+        {
+            List<SelectListItem> list = await _dbContext.Users
+                .OrderBy(dt => dt.UserName).Select(s => new SelectListItem
+                {
+                    Value = s.Id.ToString(),
+                    Text = $"{s.UserName}"
+                }).ToListAsync(cancellationToken);
+
+            return list;
+        }
+
         public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
         {
             model.Services = await GetMMSIActivitiesServicesById(cancellationToken);

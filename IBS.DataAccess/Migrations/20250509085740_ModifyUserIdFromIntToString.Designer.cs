@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250509085740_ModifyUserIdFromIntToString")]
+    partial class ModifyUserIdFromIntToString
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4401,28 +4404,28 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("ap_other_tugs");
 
-                    b.Property<decimal>("BAFBillingAmount")
+                    b.Property<decimal?>("BAFBillingAmount")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_billing_amount");
 
                     b.Property<string>("BAFChargeType")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("baf_charge_type");
 
-                    b.Property<decimal>("BAFDiscount")
+                    b.Property<decimal?>("BAFDiscount")
                         .HasColumnType("numeric")
                         .HasColumnName("baf_discount");
 
-                    b.Property<decimal>("BAFNetRevenue")
+                    b.Property<decimal?>("BAFNetRevenue")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_net_revenue");
 
-                    b.Property<decimal>("BAFRate")
+                    b.Property<decimal?>("BAFRate")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("baf_rate");
 
                     b.Property<string>("BaseOrStation")
+                        .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("base_or_station");
 
@@ -4431,15 +4434,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("billing_id");
 
                     b.Property<string>("COSNumber")
+                        .HasMaxLength(10)
                         .HasColumnType("varchar(10)")
                         .HasColumnName("cos_number");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
@@ -4459,29 +4462,29 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date_left");
 
-                    b.Property<decimal>("DispatchBillingAmount")
+                    b.Property<decimal?>("DispatchBillingAmount")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_billing_amount");
 
                     b.Property<string>("DispatchChargeType")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("dispatch_charge_type");
 
-                    b.Property<decimal>("DispatchDiscount")
+                    b.Property<decimal?>("DispatchDiscount")
                         .HasColumnType("numeric")
                         .HasColumnName("dispatch_discount");
 
-                    b.Property<decimal>("DispatchNetRevenue")
+                    b.Property<decimal?>("DispatchNetRevenue")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_net_revenue");
 
                     b.Property<string>("DispatchNumber")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("dispatch_number");
 
-                    b.Property<decimal>("DispatchRate")
+                    b.Property<decimal?>("DispatchRate")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("dispatch_rate");
 
@@ -4506,6 +4509,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("image_signed_url");
 
                     b.Property<string>("Remarks")
+                        .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("remarks");
 
@@ -4514,25 +4518,22 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("service_id");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<string>("TariffBy")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("tariff_by");
 
-                    b.Property<DateTime>("TariffDate")
+                    b.Property<DateTime?>("TariffDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("tariff_date");
 
                     b.Property<string>("TariffEditedBy")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("tariff_edited_by");
 
-                    b.Property<DateTime>("TariffEditedDate")
+                    b.Property<DateTime?>("TariffEditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("tariff_edited_date");
 
@@ -4548,15 +4549,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("time without time zone")
                         .HasColumnName("time_left");
 
-                    b.Property<decimal>("TotalBilling")
+                    b.Property<decimal?>("TotalBilling")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_billing");
 
-                    b.Property<decimal>("TotalHours")
+                    b.Property<decimal?>("TotalHours")
                         .HasColumnType("numeric")
                         .HasColumnName("total_hours");
 
-                    b.Property<decimal>("TotalNetRevenue")
+                    b.Property<decimal?>("TotalNetRevenue")
                         .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_net_revenue");
 
@@ -4585,6 +4586,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("video_signed_url");
 
                     b.Property<string>("VoyageNumber")
+                        .HasMaxLength(100)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("voyage_number");
 

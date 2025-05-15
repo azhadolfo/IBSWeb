@@ -4,9 +4,11 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -22,14 +24,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<CollectionController> _logger;
+        private readonly IUserAccessService _userAccessService;
 
         public CollectionController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ILogger<CollectionController> logger)
+            UserManager<IdentityUser> userManager, ILogger<CollectionController> logger,
+            IUserAccessService userAccessService)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _logger = logger;
+            _userAccessService = userAccessService;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -40,6 +45,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateCollection, cancellationToken))
+            {
+                TempData["error"] = "Access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var model = new MMSICollection();
             model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
             return View(model);
