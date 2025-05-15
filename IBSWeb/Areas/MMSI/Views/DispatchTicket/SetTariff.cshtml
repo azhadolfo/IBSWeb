@@ -341,8 +341,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = parseNumber(dispatchRate) - parseNumber(dispatchDiscountAmount);
-                    dispatchBilling = parseNumber(dispatchRate); // Ensure two decimal places
+                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
+                    dispatchBilling = parseNumber(dispatchRate) // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -350,19 +350,15 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = parseNumber(bafRate) - parseNumber(bafDiscountAmount);
+                    bafRevenue = bafRate - bafDiscountAmount;
                     bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
                 var dispatchRevenueFormatted = formatNumber(dispatchRevenue);
                 var dispatchBillingFormatted = formatNumber(dispatchBilling);
-                console.log("dispatchRevenueFormatted " + dispatchRevenueFormatted);
-                console.log("dispatchBillingFormatted " + dispatchBillingFormatted);
 
                 var bafRevenueFormatted = formatNumber(bafRevenue);
                 var bafBillingFormatted = formatNumber(bafBilling);
-                console.log("bafRevenueFormatted " + bafRevenueFormatted);
-                console.log("bafBillingFormatted " + bafBillingFormatted);
 
                 $('input[name="DispatchBillingAmount"]').val(dispatchBillingFormatted);
                 $('input[name="BAFBillingAmount"]').val(bafBillingFormatted);
@@ -388,7 +384,6 @@
                     type: 'POST',
                     data: { customerId : customerId, dispatchTicketId : dispatchTicketId },
                     success: function(result) {
-                        console.log(result);
                         if (result.exists){
                             $("#DispatchRate").val(result.dispatch);
                             $("#BAFRate").val(result.baf);
