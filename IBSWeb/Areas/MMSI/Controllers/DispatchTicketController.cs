@@ -1043,6 +1043,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Take(parameters.Length)
                     .ToList();
 
+                foreach (var dispatchTicket in pagedData.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
+                {
+                    dispatchTicket.ImageSignedUrl = await GenerateSignedUrl(dispatchTicket.ImageName);
+                }
+                foreach (var dispatchTicket in pagedData.Where(dt => !string.IsNullOrEmpty(dt.VideoName)))
+                {
+                    dispatchTicket.VideoSignedUrl = await GenerateSignedUrl(dispatchTicket.VideoName);
+                }
+
                 return Json(new
                 {
                     draw = parameters.Draw,
