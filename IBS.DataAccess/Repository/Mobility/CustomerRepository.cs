@@ -47,7 +47,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 existingCustomer.EditedBy = model.EditedBy;
                 existingCustomer.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy, $"Edited customer {existingCustomer.CustomerCode}", "Customer", "", "Mobility");
+                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy, $"Edited customer {existingCustomer.CustomerCode}", "Customer", nameof(Mobility));
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);

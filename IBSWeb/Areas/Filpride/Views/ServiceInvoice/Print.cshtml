@@ -17,7 +17,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var decimalFormat = Model.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var decimalFormat = Model.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
 <table class="w-100">
@@ -82,7 +82,7 @@
             <tr>
                 <td>
                     <span><b>Billed To:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.Customer.CustomerName) &nbsp;<br />
+                    &nbsp; @Html.DisplayFor(model => model.Customer!.CustomerName) &nbsp;<br />
 
                     <span><b>Address:</b></span>
                     &nbsp; @Html.DisplayFor(model => model.CustomerAddress) &nbsp;<br />
@@ -91,7 +91,7 @@
                     &nbsp; @Html.DisplayFor(model => model.CustomerTin) &nbsp;<br />
 
                     <span><b>Business Style:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.Customer.BusinessStyle) &nbsp;
+                    &nbsp; @Html.DisplayFor(model => model.Customer!.BusinessStyle) &nbsp;
                 </td>
 
                 <td class="w-25 text-nowrap">
@@ -117,7 +117,7 @@
             </tr>
 
             <tr style="height:80px;">
-                <td>@Html.DisplayFor(model => model.Service.Name)</td>
+                <td>@Html.DisplayFor(model => model.Service!.Name)</td>
 
                 <td class="pt-2">
                     <p style="line-height:15px">
@@ -263,7 +263,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

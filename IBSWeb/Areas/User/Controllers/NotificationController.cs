@@ -37,7 +37,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var notifications = await _unitOfWork.Notifications.GetUserNotificationsAsync(_userManager.GetUserId(User));
+            var notifications = await _unitOfWork.Notifications.GetUserNotificationsAsync(_userManager.GetUserId(User)!);
             return View(notifications);
         }
 
@@ -52,7 +52,7 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNotificationCount()
         {
-            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User));
+            var count = await _unitOfWork.Notifications.GetUnreadNotificationCountAsync(_userManager.GetUserId(User)!);
 
             if (count <= 0)
             {

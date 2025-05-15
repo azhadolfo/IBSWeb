@@ -23,9 +23,15 @@ namespace IBSWeb.Areas.User.Controllers
             _dbContext = dbContext;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }

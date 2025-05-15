@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -84,6 +90,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             FilprideSupplier model = new();
+
             model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => !coa.HasChildren)
                 .OrderBy(coa => coa.AccountNumber)
@@ -93,8 +100,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.AccountNumber + " " + s.AccountName
                 })
                 .ToListAsync(cancellationToken);
+
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.AccountNumber.Contains("2010302"))
+                .Where(coa => coa.AccountNumber!.Contains("2010302"))
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
@@ -115,13 +123,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var companyClaims = await GetCompanyClaimAsync();
 
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierName", "Supplier already exist.");
                     return View(model);
                 }
 
-                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch, model.Category, companyClaims, cancellationToken))
+                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch!, model.Category, companyClaims, cancellationToken))
                 {
                     ModelState.AddModelError("SupplierTin", "Tin number already exist.");
                     return View(model);
@@ -132,13 +145,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (registration != null && registration.Length > 0)
                     {
                         model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                     }
 
                     if (document != null && document.Length > 0)
                     {
                         model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                     }
 
                     model.SupplierCode = await _unitOfWork.FilprideSupplier
@@ -147,7 +160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Company = companyClaims;
                     await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new supplier {model.SupplierCode}", "Supplier", model.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -215,18 +228,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var companyClaims = await GetCompanyClaimAsync();
 
                     if (registration != null && registration.Length > 0)
                     {
                         model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                     }
 
                     if (document != null && document.Length > 0)
                     {
                         model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);

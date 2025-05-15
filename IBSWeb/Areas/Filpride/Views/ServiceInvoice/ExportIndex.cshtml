@@ -80,7 +80,7 @@
                     @Html.DisplayNameFor(model => model.Customer)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Service.Name)
+                    @Html.DisplayNameFor(model => model.Service!.Name)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Period)
@@ -107,10 +107,10 @@
                             @Html.DisplayFor(modelItem => item.ServiceInvoiceNo)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Customer.CustomerName)
+                            @Html.DisplayFor(modelItem => item.Customer!.CustomerName)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Service.Name)
+                            @Html.DisplayFor(modelItem => item.Service!.Name)
                         </td>
                         <td>
                             @item.Period.ToString("MMM yyyy")

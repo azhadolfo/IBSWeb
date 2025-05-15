@@ -104,25 +104,25 @@
                                 <tbody>
                                 <tr>
                                     <td>
-                                        <select asp-for="AccountingEntries[0].AccountTitle" 
+                                        <select asp-for="AccountingEntries![0].AccountTitle" 
                                                 class="form-select form-select-sm chart-of-accounts default-expense js-select2 w-100"
                                                 style="width: 100%" required>
                                             <option value="">-- Select Account --</option>
-                                            @foreach (var account in Model.ChartOfAccounts)
+                                            @foreach (var account in Model.ChartOfAccounts!)
                                             {
                                                 <option value="@account.Value">@account.Text</option>
                                             }
                                         </select>
-                                        <span asp-validation-for="AccountingEntries[0].AccountTitle" class="text-danger"></span>
+                                        <span asp-validation-for="AccountingEntries![0].AccountTitle" class="text-danger"></span>
                                     </td>
                                     <td>
-                                        <input type="number" asp-for="AccountingEntries[0].Amount" class="form-control form-control-sm text-end amount" value="0" />
+                                        <input type="number" asp-for="AccountingEntries![0].Amount" class="form-control form-control-sm text-end amount" value="0" />
                                     </td>
                                     <td class="text-center">
-                                        <input type="checkbox" asp-for="AccountingEntries[0].Vatable" class="form-check-input vatable default-vatable" />
+                                        <input type="checkbox" asp-for="AccountingEntries![0].Vatable" class="form-check-input vatable default-vatable" />
                                     </td>
                                     <td>
-                                        <select asp-for="AccountingEntries[0].TaxPercentage" class="form-select form-select-sm taxable">
+                                        <select asp-for="AccountingEntries![0].TaxPercentage" class="form-select form-select-sm taxable">
                                             <option value="0" selected="">0%</option>
                                             <option value="0.01">1%</option>
                                             <option value="0.02">2%</option>
@@ -131,13 +131,13 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" asp-for="AccountingEntries[0].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
+                                        <input type="number" asp-for="AccountingEntries![0].VatAmount" class="form-control form-control-sm text-end vat-amount" readonly />
                                     </td>
                                     <td>
-                                        <input type="number" asp-for="AccountingEntries[0].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
+                                        <input type="number" asp-for="AccountingEntries![0].TaxAmount" class="form-control form-control-sm text-end tax-amount" readonly />
                                     </td>
                                     <td>
-                                        <input type="number" asp-for="AccountingEntries[0].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
+                                        <input type="number" asp-for="AccountingEntries![0].NetOfVatAmount" class="form-control form-control-sm text-end net-of-vat" readonly />
                                     </td>
                                     <td class="text-center">
                                         <button class="btn btn-danger btn-sm" disabled>

@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface IPickUpPointRepository : IRepository<MobilityPickUpPoint>
     {
-        Task<List<SelectListItem>> GetMobilityTradeSupplierListAsyncById(string company, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMobilityTradeSupplierListAsyncById(string stationCode, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetDistinctPickupPointList(CancellationToken cancellationToken = default);
 

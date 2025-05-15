@@ -118,7 +118,7 @@
     <table class="w-100">
         <tbody>
             <tr style="padding-left:10px;">
-                <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+                <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier!.SupplierName)</td>
                 <td class="w-25 text-end">Date: &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr style="padding-left:10px;">
@@ -145,7 +145,7 @@
         </thead>
         <tbody>
             <tr>
-                <td class="w-25">@Html.DisplayFor(model => model.Product.ProductName)</td>
+                <td class="w-25">@Html.DisplayFor(model => model.Product!.ProductName)</td>
                 <td class="w-25">@Model.Quantity.ToString(SD.Two_Decimal_Format)</td>
                 <td class="w-25">@Model.Price.ToString(SD.Four_Decimal_Format)</td>
                 <td class="w-25">@Model.Amount.ToString(SD.Two_Decimal_Format)</td>
@@ -207,7 +207,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>
@@ -229,7 +229,7 @@
     }
 }
 
-@if (Model.ActualPrices.Any())
+@if (Model.ActualPrices!.Any())
 {
     <div class="page-break"></div>
 
@@ -248,7 +248,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var updatedPrice in Model.ActualPrices)
+                @foreach (var updatedPrice in Model.ActualPrices!)
                 {
                     <tr>
                         <td>@updatedPrice.TriggeredPrice.ToString(SD.Four_Decimal_Format)</td>

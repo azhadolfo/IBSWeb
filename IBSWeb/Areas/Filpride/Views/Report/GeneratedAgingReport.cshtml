@@ -122,14 +122,14 @@
                 
                 <tr class="align-text-bottom">
                     <td>@invoice.TransactionDate.ToString("MMM")</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerType)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerTerms)</td>
-                    <td>@(invoice.Customer.WithHoldingTax ? 1 : 0)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerName)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerType)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerTerms)</td>
+                    <td>@(invoice.Customer!.WithHoldingTax ? 1 : 0)</td>
                     <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
                     <td>@Html.DisplayFor(model => invoice.DueDate)</td>
                     <td>@Html.DisplayFor(model => invoice.SalesInvoiceNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
+                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt!.DeliveryReceiptNo)</td>
                     <td class="text-end">@gross.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@invoice.AmountPaid.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@adjustedGross.ToString(SD.Two_Decimal_Format)</td>

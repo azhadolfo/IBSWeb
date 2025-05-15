@@ -55,9 +55,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -82,7 +88,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        private async Task<string> GetCurrentFilterType()
+        private async Task<string?> GetCurrentFilterType()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
@@ -146,15 +152,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.DeliveryReceiptNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                        s.Customer.CustomerName?.ToLower().Contains(searchValue) == true ||
+                        s.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
                         s.ManualDrNo.ToLower().Contains(searchValue) ||
-                        s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
-                        s.CustomerOrderSlip.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.CustomerOrderSlip!.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
+                        s.CustomerOrderSlip!.Product!.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
-                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.PurchaseOrder!.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
+                        s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -201,6 +207,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             var isDrLock = await _dbContext.AppSettings
                 .Where(s => s.SettingKey == AppSettingKey.LockTheCreationOfDr)
                 .Select(s => s.Value == "true")
@@ -221,6 +233,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -273,8 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     if (viewModel.IsECCEdited)
@@ -284,7 +300,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy.ToUpper()}. " +
+                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy!.ToUpper()}. " +
                                       $"Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -317,7 +333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"Please be informed that {model.CreatedBy.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
+                        var message = $"Please be informed that {model.CreatedBy!.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
 
@@ -350,8 +366,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var hauler = await _unitOfWork.FilprideSupplier
                             .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
 
-                        var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy.ToUpper()}." +
-                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                        var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
+                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler!.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
                                       $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -413,6 +429,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             try
             {
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
@@ -430,23 +451,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(a => new SelectListItem
                     {
                         Value = a.PurchaseOrderId.ToString(),
-                        Text = $"{a.PurchaseOrder.PurchaseOrderNo} - {a.Supplier.SupplierName} (Unserved: {a.UnservedQuantity})"
+                        Text = $"{a.PurchaseOrder!.PurchaseOrderNo} - {a.Supplier!.SupplierName} (Unserved: {a.UnservedQuantity})"
                     })
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 DeliveryReceiptViewModel viewModel = new()
                 {
                     DeliveryReceiptId = existingRecord.DeliveryReceiptId,
                     Date = existingRecord.Date,
-                    CustomerId = existingRecord.Customer.CustomerId,
+                    CustomerId = existingRecord.Customer!.CustomerId,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                     CustomerAddress = existingRecord.CustomerAddress,
                     CustomerTin = existingRecord.CustomerTin,
                     CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
                     CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken),
-                    PurchaseOrderId = (int)existingRecord.PurchaseOrderId,
+                    PurchaseOrderId = (int)existingRecord.PurchaseOrderId!,
                     PurchaseOrders = purchaseOrders,
-                    Product = existingRecord.CustomerOrderSlip.Product.ProductName,
+                    Product = existingRecord.CustomerOrderSlip!.Product!.ProductName,
                     CosVolume = existingRecord.CustomerOrderSlip.Quantity,
                     RemainingVolume = existingRecord.CustomerOrderSlip.BalanceQuantity + existingRecord.Quantity,
                     Price = existingRecord.CustomerOrderSlip.DeliveredPrice,
@@ -459,8 +480,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption,
                     HaulerId = existingRecord.HaulerId,
                     Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                    Driver = existingRecord.Driver,
-                    PlateNo = existingRecord.PlateNo,
+                    Driver = existingRecord.Driver!,
+                    PlateNo = existingRecord.PlateNo!,
                     ATLNo = existingRecord.AuthorityToLoadNo,
                     HasReceivingReport = existingRecord.HasReceivingReport,
                 };
@@ -484,6 +505,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -502,7 +528,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser.ToUpper()}. " +
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser!.ToUpper()}. " +
                                       $"Please review and approve.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -535,7 +561,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"Please be informed that {viewModel.CurrentUser.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
+                        var message = $"Please be informed that {viewModel.CurrentUser!.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
 
@@ -568,8 +594,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var hauler = await _unitOfWork.FilprideSupplier
                             .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
 
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser.ToUpper()} to update the Hauler/Freight." +
-                                      $" Please review and approve the changes from '{existingRecord.Hauler.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
+                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser!.ToUpper()} to update the Hauler/Freight." +
+                                      $" Please review and approve the changes from '{existingRecord.Hauler!.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
                                       $" to '{hauler.SupplierName}' with a freight cost of '{viewModel.Freight:N4}'.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -704,8 +730,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(DRStatus.PendingDelivery);
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy!, $"Approved delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Delivery receipt approved successfully.";
@@ -766,7 +791,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.CustomerOrderSlipId.ToString(),
-                        Text = dr.CustomerOrderSlip.CustomerOrderSlipNo
+                        Text = dr.CustomerOrderSlip!.CustomerOrderSlipNo
                     });
 
                 orderSlips = orderSlips.Union(existingCos);
@@ -787,9 +812,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var cos = await _dbContext.FilprideCustomerOrderSlips
                 .Include(cos => cos.Product)
-                .Include(cos => cos.AppointedSuppliers)
+                .Include(cos => cos.AppointedSuppliers)!
                 .ThenInclude(a => a.Supplier)
-                .Include(cos => cos.AppointedSuppliers)
+                .Include(cos => cos.AppointedSuppliers)!
                 .ThenInclude(a => a.PurchaseOrder)
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == id);
 
@@ -800,13 +825,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (initialPoId != null && currentVolume != null)
             {
-                var existingSelection = cos.AppointedSuppliers.FirstOrDefault(sp => sp.PurchaseOrderId == initialPoId);
-                existingSelection.UnservedQuantity += (decimal)currentVolume;
+                var existingSelection = cos.AppointedSuppliers!.FirstOrDefault(sp => sp.PurchaseOrderId == initialPoId);
+                existingSelection!.UnservedQuantity += (decimal)currentVolume;
             }
 
             return Json(new
             {
-                Product = cos.Product.ProductName,
+                Product = cos.Product!.ProductName,
                 cos.Quantity,
                 RemainingVolume = cos.BalanceQuantity,
                 Price = cos.DeliveredPrice,
@@ -816,13 +841,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cos.Driver,
                 cos.PlateNo,
                 cos.Freight,
-                PurchaseOrders = cos.AppointedSuppliers
+                PurchaseOrders = cos.AppointedSuppliers!
                     .Where(a => a.UnservedQuantity > 0 || (initialPoId.HasValue && a.PurchaseOrderId == initialPoId))
                     .Select(a => new
                     {
                         a.PurchaseOrderId,
-                        a.PurchaseOrder.PurchaseOrderNo,
-                        a.Supplier.SupplierName,
+                        a.PurchaseOrder!.PurchaseOrderNo,
+                        a.Supplier!.SupplierName,
                         a.UnservedQuantity,
                         a.AtlNo,
                         IsCurrentlySelected = initialPoId.HasValue && a.PurchaseOrderId == initialPoId
@@ -880,9 +905,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideDeliveryReceipt.PostAsync(existingRecord, cancellationToken);
 
-
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Mark as delivered the delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -920,8 +943,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -960,7 +982,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(DRStatus.Voided);
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
                         if (existingInventory != null)
                         {
@@ -972,7 +993,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (connectedReceivingReport != null)
                         {
-                            await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy, ipAddress, cancellationToken);
+                            await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
                         }
 
                         await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
@@ -981,7 +1002,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
                         await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1028,11 +1049,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
                 worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
                 worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
-                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip.OldCosNo;
-                worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot.ToUpper();
-                worksheet.Cells["C12"].Value = deliveryReceipt.Customer.CustomerName.ToUpper();
+                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip!.OldCosNo;
+                worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint!.Depot.ToUpper();
+                worksheet.Cells["C12"].Value = deliveryReceipt.Customer!.CustomerName.ToUpper();
                 worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
-                worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product.ProductName;
+                worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product!.ProductName;
                 worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
                 worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
 
@@ -1085,10 +1106,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(User.Identity.Name,
-                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt",
-                    ipAddress, model.Company);
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Record lifting date of delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

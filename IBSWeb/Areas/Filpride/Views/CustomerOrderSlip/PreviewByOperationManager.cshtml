@@ -15,7 +15,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var decimalFormat = Model.CustomerOrderSlip.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var decimalFormat = Model.CustomerOrderSlip!.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
     
 }
 
@@ -56,7 +56,7 @@
             </p>
         }
         <h3><b>CUSTOMER ORDER SLIP</b></h3>
-        <h6 class="text-end"><b>No.&nbsp;@Html.DisplayFor(model => model.CustomerOrderSlip.CustomerOrderSlipNo)</b></h6>
+        <h6 class="text-end"><b>No.&nbsp;@Html.DisplayFor(model => model.CustomerOrderSlip!.CustomerOrderSlipNo)</b></h6>
     </div>
 
     <div class="table-responsive">
@@ -103,7 +103,7 @@
                     <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
                     <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                     <td>@Model.VatAmount.ToString(decimalFormat)</td>
-                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip.DeliveredPrice)</td>
+                    <td>@Html.DisplayFor(model => model.CustomerOrderSlip!.DeliveredPrice)</td>
                     <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
                 </tr>
             </tbody>
@@ -113,7 +113,7 @@
     <div class="table-responsive">
         <table class="table table-bordered">
             <tr>
-                <td><b>REMARKS:</b> @Html.DisplayFor(model => model.CustomerOrderSlip.Remarks)</td>
+                <td><b>REMARKS:</b> @Html.DisplayFor(model => model.CustomerOrderSlip!.Remarks)</td>
             </tr>
         </table>
     </div>
@@ -129,7 +129,7 @@
                 <tr><td class="text-center col-6">COS Price</td><td class="col-6">@Html.DisplayFor(model => model.NetOfVatCosPrice)</td></tr>
                 <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
                 <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
-                <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip.CommissionRate)</td></tr>
+                <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip!.CommissionRate)</td></tr>
                 <tr><td class="text-center">Gross Margin</td><td><input type="text" id="grossMarginInput" value="@Html.DisplayFor(model => model.GrossMargin)" class="form-control" /></td></tr>
                 <input type="hidden" id="isGrossMarginChanged" name="isGrossMarginChanged" value="false" />
             </tbody>

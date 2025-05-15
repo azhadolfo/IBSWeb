@@ -1,13 +1,10 @@
 ﻿@model IEnumerable<SalesReportViewModel>
 @using IBS.Utility.Constants
 @using IBS.Utility.Enums
-@using Microsoft.AspNetCore.Identity
 @{
     ViewData["Title"] = "Sales Report";
-    
-    var totalQuantity = 0m;
+
     var totalFreight = 0m;
-    var totalAmount = 0m;
     var totalVat = 0m;
     var totalSalesNetOfVat = 0m;
     var totalFreightNetOfVat = 0m;
@@ -105,27 +102,27 @@
                 var quantity = viewModel.DeliveryReceipt.Quantity;
                 var freight = (viewModel.DeliveryReceipt?.Freight ?? 0) * quantity;
                 var freightNetOfVat = freight / 1.12m;
-                var salesNetOfVat = viewModel.DeliveryReceipt.TotalAmount != 0 ? viewModel.DeliveryReceipt.TotalAmount / 1.12m : 0;
+                var salesNetOfVat = viewModel.DeliveryReceipt!.TotalAmount != 0 ? viewModel.DeliveryReceipt.TotalAmount / 1.12m : 0;
                 var vat = salesNetOfVat * .12m;
                     
                 <tr class="align-text-bottom">
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.DeliveredDate)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer.CustomerName)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer.CustomerType)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.AccountSpecialist)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer!.CustomerName)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Customer!.CustomerType)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip!.AccountSpecialist)</td>
                     <td>@Html.DisplayFor(model => viewModel.SalesInvoiceNo)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip!.CustomerOrderSlipNo)</td>
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.DeliveryReceiptNo)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.PurchaseOrder.PurchaseOrderNo)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.DeliveryOption)</td>
-                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip.Product.ProductName)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.PurchaseOrder!.PurchaseOrderNo)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip!.DeliveryOption)</td>
+                    <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.CustomerOrderSlip!.Product!.ProductName)</td>
                     <td class="text-end">@quantity.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@freight.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@viewModel.DeliveryReceipt.TotalAmount.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@vat.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@salesNetOfVat.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end">@freightNetOfVat.ToString(SD.Two_Decimal_Format)</td>
-                    <td class="text-end">@viewModel.DeliveryReceipt.CustomerOrderSlip.CommissionRate.ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@viewModel.DeliveryReceipt.CustomerOrderSlip!.CommissionRate.ToString(SD.Four_Decimal_Format)</td>
                     <td>@viewModel.DeliveryReceipt.CustomerOrderSlip.Commissionee?.SupplierName</td>
                     <td>@Html.DisplayFor(model => viewModel.DeliveryReceipt.Remarks)</td>
                 </tr>
@@ -227,7 +224,7 @@
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+                    var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
 
                     // Computation for Biodiesel
                     var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
@@ -270,7 +267,7 @@
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForEconogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS").ToList();
+                    var listForEconogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS").ToList();
 
                     // Computation for Econogas
                     var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
@@ -313,7 +310,7 @@
                 @foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    var listForEnvirogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS").ToList();
+                    var listForEnvirogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Envirogas
                     var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);

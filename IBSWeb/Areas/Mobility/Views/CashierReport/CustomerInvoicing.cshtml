@@ -127,7 +127,7 @@
                 var customerSelect = `<div class="form-group py-2 col-12">
                     <label class="control-label">Customer List<span class="required">*</span></label>
                     <select name="CustomerPos[${newIndex}].CustomerCodeName" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                        @foreach (var customer in Model.Customers)
+                        @foreach (var customer in Model.Customers!)
                         {
                             <option value="@customer.Value">@customer.Text</option>
                         }
@@ -148,7 +148,7 @@
                 var productSelect = `<div class="form-group py-2 col-12">
                     <label class="control-label">Product List<span class="required">*</span></label>
                     <select name="ProductDetails[${newIndex}].LubesId" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                        @foreach (var lube in Model.Lubes)
+                        @foreach (var lube in Model.Lubes!)
                         {
                             <option value="@lube.Value">@lube.Text</option>
                         }

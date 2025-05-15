@@ -7,9 +7,6 @@
 @inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Purchase Journal Book";
-    var dateFrom = ViewBag.DateFrom;
-    var dateTo = ViewBag.DateTo;
-    var lastRecord = ViewBag.LastRecord;
 
     DateTime now = DateTimeHelper.GetCurrentPhilippineTime();
 
@@ -31,7 +28,7 @@
 }
 <style>
     body {
-        margin: 0 100 0 0;
+        margin: 0 100px 0 0;
         padding: 0;
     }
 
@@ -144,16 +141,16 @@ Date Issued: @* @CS.DateIssued *@
                                 @po.Date.ToString("MM/dd/yyyy")
                             </td>
                             <td>
-                                @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierName)
+                                @Html.DisplayFor(model => po.PurchaseOrder!.Supplier!.SupplierName)
                             </td>
                             <td>
-                                @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierTin)
+                                @Html.DisplayFor(model => po.PurchaseOrder!.Supplier!.SupplierTin)
                             </td>
                             <td>
-                                @Html.DisplayFor(model => po.PurchaseOrder.Supplier.SupplierAddress)
+                                @Html.DisplayFor(model => po.PurchaseOrder!.Supplier!.SupplierAddress)
                             </td>
                             <td>
-                                @Html.DisplayFor(model => po.PurchaseOrder.Product.ProductName)
+                                @Html.DisplayFor(model => po.PurchaseOrder!.Product!.ProductName)
                             </td>
                             <td class="text-end">
                                 @quantity.ToString(SD.Two_Decimal_Format)
@@ -219,7 +216,7 @@ Date Issued: @* @CS.DateIssued *@
             <br />
             <b>Version :</b> @* @CS.Version *@
             <br />
-            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <b>Printed By :</b> @UserManager.GetUserName(User)!.ToUpper()
             <br />
             <b>Date & Time Printed :</b> @now.ToString("MM/dd/yyyy hh:mm tt")
         </em>

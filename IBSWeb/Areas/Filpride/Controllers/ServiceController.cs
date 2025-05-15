@@ -31,9 +31,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -104,6 +110,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -121,15 +132,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var unearned = await _dbContext.FilprideChartOfAccounts
                         .FindAsync(services.UnearnedId, cancellationToken);
 
-                    services.CurrentAndPreviousNo = currentAndPrevious.AccountNumber;
+                    services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
                     services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
 
-                    services.UnearnedNo = unearned.AccountNumber;
+                    services.UnearnedNo = unearned!.AccountNumber;
                     services.UnearnedTitle = unearned.AccountName;
 
                     services.Company = companyClaims;
 
-                    services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
+                    services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
 
                     services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
 

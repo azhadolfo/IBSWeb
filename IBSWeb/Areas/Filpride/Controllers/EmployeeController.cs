@@ -27,9 +27,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -75,7 +81,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(model);
             }
         }
@@ -99,6 +105,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             var existingModel = await _dbContext.FilprideEmployees.FindAsync(model.EmployeeId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
 
             try
             {

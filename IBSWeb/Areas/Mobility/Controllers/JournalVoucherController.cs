@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -69,14 +75,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     journalVoucherHeader = journalVoucherHeader
                     .Where(s =>
-                        s.JournalVoucherHeaderNo.ToLower().Contains(searchValue) ||
+                        s.JournalVoucherHeaderNo!.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.References?.Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.CheckVoucherHeaderNo.Contains(searchValue) == true ||
-                        s.Particulars.ToLower().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.CheckVoucherHeaderNo?.Contains(searchValue) == true ||
+                        s.Particulars.ToLower().Contains(searchValue) ||
                         s.CRNo?.ToLower().Contains(searchValue) == true ||
                         s.JVReason.ToLower().ToString().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -148,9 +154,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
-                viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel!.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
                 viewModel.CheckVoucherHeaders = await _dbContext.MobilityCheckVoucherHeaders
                     .OrderBy(c => c.CheckVoucherHeaderId)
@@ -179,7 +190,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         return View(viewModel);
                     }
 
-                    var generateJVNo = await _unitOfWork.MobilityJournalVoucher.GenerateCodeAsync(stationCodeClaims, viewModel.Type, cancellationToken);
+                    var generateJVNo = await _unitOfWork.MobilityJournalVoucher.GenerateCodeAsync(stationCodeClaims, viewModel!.Type, cancellationToken);
 
                     var model = new MobilityJournalVoucherHeader
                     {
@@ -190,7 +201,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Particulars = viewModel.Particulars,
                         CRNo = viewModel.CRNo,
                         JVReason = viewModel.JVReason,
-                        CreatedBy = User.Identity.Name,
+                        CreatedBy = User.Identity!.Name,
                         CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                         Type = viewModel.Type,
                         StationCode = stationCodeClaims,
@@ -209,8 +220,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var currentAccountNumber = accountNumber[i];
                     var accountTitle = await _dbContext.FilprideChartOfAccounts
                         .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
-                    var currentDebit = debit[i];
-                    var currentCredit = credit[i];
+
+                    if (accountTitle == null)
+                    {
+                        return NotFound();
+                    }
+
+                    var currentDebit = debit![i];
+                    var currentCredit = credit![i];
                     totalDebit += debit[i];
                     totalCredit += credit[i];
 
@@ -232,8 +249,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -246,7 +262,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             catch (Exception ex)
             {
-                viewModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel!.COA = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
                 viewModel.CheckVoucherHeaders = await _dbContext.MobilityCheckVoucherHeaders
                     .OrderBy(c => c.CheckVoucherHeaderId)
@@ -387,7 +403,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = modelHeader.Date,
-                                        Reference = modelHeader.JournalVoucherHeaderNo,
+                                        Reference = modelHeader.JournalVoucherHeaderNo!,
                                         Description = modelHeader.Particulars,
                                         AccountId = account.AccountId,
                                         AccountNo = account.AccountNumber,
@@ -419,7 +435,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                     new FilprideJournalBook
                                     {
                                         Date = modelHeader.Date,
-                                        Reference = modelHeader.JournalVoucherHeaderNo,
+                                        Reference = modelHeader.JournalVoucherHeaderNo!,
                                         Description = modelHeader.Particulars,
                                         AccountTitle = details.AccountNo + " " + details.AccountName,
                                         Debit = details.Debit,
@@ -437,8 +453,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -490,8 +505,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -535,8 +549,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -563,11 +576,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var existingHeaderModel = await _unitOfWork.MobilityJournalVoucher
@@ -680,7 +688,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         AccountName = viewModel.AccountTitle[i],
                         Debit = viewModel.Debit[i],
                         Credit = viewModel.Credit[i],
-                        TransactionNo = viewModel.JournalVoucherHeaderNo,
+                        TransactionNo = viewModel.JournalVoucherHeaderNo!,
                         JournalVoucherHeaderId = viewModel.JournalVoucherHeaderId
                     });
                 }
@@ -691,8 +699,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -730,9 +737,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

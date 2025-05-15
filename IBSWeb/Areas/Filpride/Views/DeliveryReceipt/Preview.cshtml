@@ -15,7 +15,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var decimalFormat = Model.Customer.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var decimalFormat = Model.Customer!.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 
 }
 
@@ -66,7 +66,7 @@
     <table class="w-100">
         <tbody>
             <tr>
-                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip.Customer?.CustomerName.ToUpper()</td>
+                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip!.Customer?.CustomerName.ToUpper()</td>
                 <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>

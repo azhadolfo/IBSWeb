@@ -29,9 +29,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -49,6 +55,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             var model = new FilpridePickUpPoint();
             model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
@@ -66,7 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    model.CreatedBy = _userManager.GetUserName(User);
+                    model.CreatedBy = _userManager.GetUserName(User)!;
                     model.CreatedDate = DateTime.Now;
 
                     await _dbContext.FilpridePickUpPoints.AddAsync(model, cancellationToken);
@@ -101,6 +113,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 var model = await _unitOfWork.FilpridePickUpPoint
                     .GetAsync(p => p.PickUpPointId == id, cancellationToken);
                 model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
@@ -128,7 +146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var selected = await _unitOfWork.FilpridePickUpPoint
                         .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", model.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     selected.Depot = model.Depot;

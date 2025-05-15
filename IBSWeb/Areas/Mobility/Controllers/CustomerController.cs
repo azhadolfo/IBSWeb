@@ -27,11 +27,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         [HttpGet]
@@ -111,6 +117,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     var stationCodeClaims = await GetStationCodeClaimAsync();
 
+                    if (stationCodeClaims == null)
+                    {
+                        return NotFound();
+                    }
+
                     //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
                     bool IsTinExist = false;
                     if (!IsTinExist)
@@ -121,7 +132,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         await _dbContext.MobilityCustomers.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
 
-                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer {model.CustomerCode}", "Customer", "", nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer {model.CustomerCode}", "Customer", nameof(Mobility));
                         await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                         ViewData["StationCode"] = stationCodeClaims;
@@ -201,6 +212,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
             ViewData["StationCode"] = stationCodeClaims;
 
             var customer = await _dbContext.MobilityCustomers.FindAsync(id);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
             customer.MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken);
 
             return View(customer);

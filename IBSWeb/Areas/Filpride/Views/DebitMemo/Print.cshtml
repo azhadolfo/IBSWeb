@@ -18,7 +18,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice.Customer.CustomerType;
+    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -66,16 +66,16 @@
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerName) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.Customer!.CustomerName) &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice.CustomerAddress) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerAddress) &nbsp;<br />
 
                         <span><b>TIN:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice.CustomerTin) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerTin) &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice.Customer.BusinessStyle) &nbsp;
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.Customer!.BusinessStyle) &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -106,9 +106,9 @@
             </thead>
             <tbody>
                 <tr style="height:80px;">
-                    <td>@Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)</td>
-                    <td>@Model.SalesInvoice.TransactionDate.ToString(SD.Date_Format)</td>
-                    <td>@Html.DisplayFor(model => model.SalesInvoice.Product.ProductName)</td>
+                    <td>@Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)</td>
+                    <td>@Model.SalesInvoice!.TransactionDate.ToString(SD.Date_Format)</td>
+                    <td>@Html.DisplayFor(model => model.SalesInvoice!.Product!.ProductName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td>@Model.DebitAmount.ToString(decimalFormat)</td>
                 </tr>
@@ -129,7 +129,7 @@
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
                                         <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.VatType == "Vatable")
+                                            @if (Model.SalesInvoice.Customer!.VatType == "Vatable")
                                             {
                                                 <p style="height: 9px;">@netOfVatAmount.ToString(decimalFormat)</p>
                                             }
@@ -186,16 +186,16 @@ else if (Model.Source == "Service Invoice")
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerName) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName) &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerAddress) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerAddress) &nbsp;<br />
 
                         <span><b>TIN:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerTin) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerTin) &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.BusinessStyle) &nbsp;
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle) &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -220,13 +220,13 @@ else if (Model.Source == "Service Invoice")
             </thead>
             <tbody>
                 <tr style="height:80px;">
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)</td>
+                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)</td>
                     <td class="pt-2">
                         <p style="line-height:15px">
                             @Model.Period.ToString("MMMM yyyy")
                         </p>
                     </td>
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice.Service.Name)</td>
+                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.Service!.Name)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td class="pt-2">
                         <p style="line-height:15px">
@@ -261,7 +261,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice.Customer.VatType == "Zero Rated")
+                                        @if (Model.ServiceInvoice!.Customer!.VatType == "Zero Rated")
                                         {
                                             <td class="text-end">@Model.DebitAmount.ToString(decimalFormat)</td>
                                         }
@@ -342,7 +342,7 @@ else if (Model.Source == "Service Invoice")
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

@@ -31,9 +31,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -88,14 +94,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(model);
                     }
 
-                    model.Company = await GetCompanyClaimAsync();
+                    var companyClaims = await GetCompanyClaimAsync();
 
-                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    model.Company = companyClaims;
+
+                    model.CreatedBy = _userManager.GetUserName(User);
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", "", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", model.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -147,7 +160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", "", existingModel.Company);
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", existingModel.Company);
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);

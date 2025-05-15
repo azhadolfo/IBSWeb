@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Customer Order Slip";
     var userDepartment = ViewBag.GetUserDepartment;
-    var proofIsClicked = false;
 }
 
 <div class="card shadow border-0 mt-4">
@@ -20,13 +19,13 @@
         
         <div class="row mt-2">
             <div class="col-6">
-                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer.CustomerName):</b> @Html.DisplayFor(model => model.Customer.CustomerName)</h6>
+                <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Customer!.CustomerName):</b> @Html.DisplayFor(model => model.Customer!.CustomerName)</h6>
                 <h6 class="px-2"><b>@Html.DisplayNameFor(model => model.Address):</b> @Html.DisplayFor(model => model.Address)</h6>
             </div>
 
             <div class="col-6" style="white-space: nowrap;">
                 <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.Date):</b> @Html.DisplayFor(model => model.Date)</h6>
-                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation.StationName):</b> @Html.DisplayFor(model => model.MobilityStation.StationName)</h6>
+                <h6 class="px-2 text-end"><b>@Html.DisplayNameFor(model => model.MobilityStation!.StationName):</b> @Html.DisplayFor(model => model.MobilityStation!.StationName)</h6>
             </div>
         </div>
 
@@ -38,14 +37,14 @@
                     <th class="text-center">@Html.DisplayNameFor(Model => Model.Quantity)</th>
                     <th class="text-center">@Html.DisplayNameFor(Model => Model.Price)</th>
                     <th class="text-center">@Html.DisplayNameFor(Model => Model.Amount)</th>
-                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Product.ProductName)</th>
+                    <th class="text-center">@Html.DisplayNameFor(Model => Model.Product!.ProductName)</th>
                 </tr>
             </thead>
             <tr>
                 <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Quantity)</td>
                 <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Price)</td>
                 <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Amount)</td>
-                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product.ProductName)</td>
+                <td class="text-center font-monospace">@Html.DisplayFor(Model => Model.Product!.ProductName)</td>
             </tr>
         </table>
 

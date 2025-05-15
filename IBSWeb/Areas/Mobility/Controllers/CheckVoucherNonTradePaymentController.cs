@@ -50,9 +50,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -87,9 +93,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var stationCodeClaims = await GetStationCodeClaimAsync();
 
                 var checkVoucherDetails = await _dbContext.MobilityCheckVoucherDetails
-                                                        .Where(cvd => cvd.CheckVoucherHeader.StationCode == stationCodeClaims && cvd.CheckVoucherHeader.CvType == nameof(CVType.Payment) && cvd.AccountName.StartsWith("Cash in Bank"))
+                                                        .Where(cvd => cvd.CheckVoucherHeader!.StationCode == stationCodeClaims && cvd.CheckVoucherHeader.CvType == nameof(CVType.Payment) && cvd.AccountName.StartsWith("Cash in Bank"))
                                                         .Include(cvd => cvd.CheckVoucherHeader)
-                                                        .ThenInclude(cvh => cvh.Supplier)
+                                                        .ThenInclude(cvh => cvh!.Supplier)
                                                         .Include(cvd => cvd.Supplier)
                                                         .ToListAsync(cancellationToken);
 
@@ -102,12 +108,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     .Where(s =>
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Payee.ToLower().Contains(searchValue) == true ||
+                        s.CheckVoucherHeader?.Payee?.ToLower().Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.Date.ToString(SD.Date_Format).Contains(searchValue) == true ||
                         s.Amount.ToString().Contains(searchValue) ||
                         s.AmountPaid.ToString().Contains(searchValue) ||
                         s.CheckVoucherHeader?.Reference?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader.Status.ToLower().Contains(searchValue)
+                        s.CheckVoucherHeader!.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -266,8 +272,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                            FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                            FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                             await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -279,9 +284,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         for (int j = 0; j < updateMultipleInvoicingVoucher.Count; j++)
                         {
-                            if (updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.IsPaid)
+                            if (updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice!.IsPaid)
                             {
-                                updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.Paid);
+                                updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice!.Status = nameof(CheckVoucherInvoiceStatus.Paid);
                             }
                         }
 
@@ -315,7 +320,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 if (existingHeaderModel != null)
                 {
-                    existingHeaderModel.CanceledBy = User.Identity.Name;
+                    existingHeaderModel.CanceledBy = User.Identity!.Name;
                     existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                     existingHeaderModel.CancellationRemarks = cancellationRemarks;
@@ -348,7 +353,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     foreach (var cv in getCVs)
                     {
-                        cv.CheckVoucherHeaderInvoice.AmountPaid -= cv.AmountPaid;
+                        cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
                         cv.CheckVoucherHeaderInvoice.IsPaid = false;
                     }
                 }
@@ -356,7 +361,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy!, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -419,14 +424,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         foreach (var cv in getCVs)
                         {
-                            cv.CheckVoucherHeaderInvoice.AmountPaid -= cv.AmountPaid;
+                            cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
                             cv.CheckVoucherHeaderInvoice.IsPaid = false;
                             cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
                         }
                     }
 
                     existingHeaderModel.PostedBy = null;
-                    existingHeaderModel.VoidedBy = User.Identity.Name;
+                    existingHeaderModel.VoidedBy = User.Identity!.Name;
                     existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
 
@@ -437,8 +442,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     //re-compute amount paid in trade and payment voucher
                     #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy!, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -491,14 +495,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var checkVoucher = await _dbContext.MobilityCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeader.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeader.StationCode == stationCodeClaims ||
+                .Where(cvd => cvd.CheckVoucherHeader!.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeader.StationCode == stationCodeClaims ||
                               cvd.SupplierId != null && cvd.CheckVoucherHeader.PostedBy != null && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) && cvd.CheckVoucherHeaderId == cvd.CheckVoucherHeader.CheckVoucherHeaderId && cvd.CheckVoucherHeader.StationCode == stationCodeClaims)
                 .Include(cvd => cvd.CheckVoucherHeader)
                 .OrderBy(cvd => cvd.CheckVoucherDetailId)
                 .Select(cvd => new SelectListItem
                 {
                     Value = cvd.CheckVoucherHeaderId.ToString(),
-                    Text = cvd.CheckVoucherHeader.CheckVoucherHeaderNo
+                    Text = cvd.CheckVoucherHeader!.CheckVoucherHeaderNo
                 })
                 .Distinct()
                 .ToListAsync();
@@ -538,10 +542,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 Total = existingHeaderModel.AmountPaid,
                 BankId = existingHeaderModel.BankId ?? 0,
                 Banks = bankAccounts,
-                CheckNo = existingHeaderModel.CheckNo,
+                CheckNo = existingHeaderModel.CheckNo!,
                 CheckDate = existingHeaderModel.CheckDate ?? default,
                 Particulars = index >= 0 ? particulars.Substring(0, index).Trim() : particulars,
-                Payee = existingHeaderModel.SupplierId != null ? existingHeaderModel.Supplier.SupplierName : existingDetailsModel.Supplier.SupplierName,
+                Payee = existingHeaderModel.SupplierId != null ? existingHeaderModel.Supplier!.SupplierName : existingDetailsModel.Supplier!.SupplierName,
                 PayeeAddress = existingHeaderModel.Address,
                 PayeeTin = existingHeaderModel.Tin,
                 MultipleSupplierId = existingHeaderModel.SupplierId != null ? existingHeaderModel.SupplierId : existingDetailsModel.SupplierId,
@@ -628,7 +632,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     }
 
                     var invoicingVoucher = await _dbContext.MobilityCheckVoucherHeaders
-                        .Where(cv => viewModel.MultipleCvId.Contains(cv.CheckVoucherHeaderId))
+                        .Where(cv => viewModel.MultipleCvId!.Contains(cv.CheckVoucherHeaderId))
                         .OrderBy(cv => cv.CheckVoucherHeaderId)
                         .ToListAsync(cancellationToken);
 
@@ -639,14 +643,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         var cv = viewModel.PaymentDetails.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
 
                         var getCVDetails = await _dbContext.MobilityCheckVoucherDetails
-                            .Where(i => cv.CVId == i.CheckVoucherHeaderId &&
+                            .Where(i => cv!.CVId == i.CheckVoucherHeaderId &&
                                         i.SupplierId != null &&
                                         i.SupplierId == viewModel.MultipleSupplierId &&
-                                        i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+                                        i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing))
                             .OrderBy(i => i.CheckVoucherHeaderId)
                             .FirstOrDefaultAsync(cancellationToken);
 
-                        if (getCVDetails != null && getCVDetails.CheckVoucherHeaderId == cv.CVId)
+                        if (getCVDetails != null && getCVDetails.CheckVoucherHeaderId == cv!.CVId)
                         {
                             getCVDetails.AmountPaid += cv.AmountPaid;
                             isForTheBir = getCVDetails.SupplierId == 133 && !getCVDetails.IsUserSelected; //BIR Supplier Id
@@ -659,30 +663,27 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region -- Check Voucher Header --
 
-                        if (existingHeaderModel != null)
-                        {
-                            existingHeaderModel.Date = viewModel.TransactionDate;
-                            existingHeaderModel.PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault();
-                            existingHeaderModel.SINo = invoicingVoucher.Select(i => i.SINo).FirstOrDefault();
-                            existingHeaderModel.SupplierId = viewModel.MultipleSupplierId;
-                            existingHeaderModel.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
-                            existingHeaderModel.Total = viewModel.Total;
-                            existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
-                            existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            existingHeaderModel.Category = "Non-Trade";
-                            existingHeaderModel.CvType = nameof(CVType.Payment);
-                            existingHeaderModel.Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo));
-                            existingHeaderModel.BankId = viewModel.BankId;
-                            existingHeaderModel.Payee = viewModel.Payee;
-                            existingHeaderModel.Address = viewModel.PayeeAddress;
-                            existingHeaderModel.Tin = viewModel.PayeeTin;
-                            existingHeaderModel.CheckNo = viewModel.CheckNo;
-                            existingHeaderModel.CheckDate = viewModel.CheckDate;
-                            existingHeaderModel.CheckAmount = viewModel.Total;
-                            existingHeaderModel.Total = viewModel.Total;
-                        }
+                    existingHeaderModel.Date = viewModel.TransactionDate;
+                    existingHeaderModel.PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault();
+                    existingHeaderModel.SINo = invoicingVoucher.Select(i => i.SINo).FirstOrDefault();
+                    existingHeaderModel.SupplierId = viewModel.MultipleSupplierId;
+                    existingHeaderModel.Particulars = $"{viewModel.Particulars} Payment for {string.Join(",", invoicingVoucher.Select(i => i.CheckVoucherHeaderNo))}";
+                    existingHeaderModel.Total = viewModel.Total;
+                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.Category = "Non-Trade";
+                    existingHeaderModel.CvType = nameof(CVType.Payment);
+                    existingHeaderModel.Reference = string.Join(", ", invoicingVoucher.Select(inv => inv.CheckVoucherHeaderNo));
+                    existingHeaderModel.BankId = viewModel.BankId;
+                    existingHeaderModel.Payee = viewModel.Payee;
+                    existingHeaderModel.Address = viewModel.PayeeAddress;
+                    existingHeaderModel.Tin = viewModel.PayeeTin;
+                    existingHeaderModel.CheckNo = viewModel.CheckNo;
+                    existingHeaderModel.CheckDate = viewModel.CheckDate;
+                    existingHeaderModel.CheckAmount = viewModel.Total;
+                    existingHeaderModel.Total = viewModel.Total;
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
 
                     #endregion -- Check Voucher Header --
 
@@ -695,7 +696,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 continue;
                             }
 
-                            cv.CheckVoucherHeaderInvoice.AmountPaid -= cv.AmountPaid;
+                            cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
                             cv.CheckVoucherHeaderInvoice.IsPaid = false;
                         }
 
@@ -718,7 +719,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region--Update invoicing voucher
 
                     var updateMultipleInvoicingVoucher = await _dbContext.MobilityMultipleCheckVoucherPayments
-                        .Where(mcvp => viewModel.MultipleCvId.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                        .Where(mcvp => viewModel.MultipleCvId!.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
                         .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
                         .ToListAsync(cancellationToken);
 
@@ -729,7 +730,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             continue;
                         }
 
-                        payment.CheckVoucherHeaderInvoice.AmountPaid += payment.AmountPaid;
+                        payment.CheckVoucherHeaderInvoice!.AmountPaid += payment.AmountPaid;
                         if (payment.CheckVoucherHeaderInvoice?.AmountPaid >= payment.CheckVoucherHeaderInvoice?.InvoiceAmount)
                         {
                             payment.CheckVoucherHeaderInvoice.IsPaid = true;
@@ -757,7 +758,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 AccountNo = viewModel.AccountNumber[i],
                                 AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 Debit = viewModel.Debit[i],
                                 Credit = viewModel.Credit[i],
@@ -778,14 +779,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (file != null && file.Length > 0)
                     {
                         existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName);
+                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
                     }
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -912,7 +912,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Select(cvd => new
                 {
                     RemainingCredit = cvd.Credit - cvd.AmountPaid,
-                    Particulars = cvd.CheckVoucherHeader.Particulars
+                    Particulars = cvd.CheckVoucherHeader!.Particulars
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
@@ -949,7 +949,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 return Json(new
                 {
-                    Payee = invoice.Supplier.SupplierName,
+                    Payee = invoice.Supplier!.SupplierName,
                     PayeeAddress = invoice.Supplier.SupplierAddress,
                     PayeeTin = invoice.Supplier.SupplierTin,
                     invoice.Particulars,
@@ -1002,6 +1002,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -1041,7 +1046,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     bool isForTheBir = false;
                     var invoicingVoucher = await _dbContext.MobilityCheckVoucherHeaders
-                        .Where(cv => viewModel.MultipleCvId.Contains(cv.CheckVoucherHeaderId))
+                        .Where(cv => viewModel.MultipleCvId!.Contains(cv.CheckVoucherHeaderId))
                         .OrderBy(cv => cv.CheckVoucherHeaderId)
                         .ToListAsync(cancellationToken);
 
@@ -1049,11 +1054,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         var cv = viewModel.PaymentDetails.FirstOrDefault(c => c.CVId == invoice.CheckVoucherHeaderId);
 
+                        if (cv == null)
+                        {
+                            return NotFound();
+                        }
+
                         var getCVDetails = await _dbContext.MobilityCheckVoucherDetails
                             .Where(i => cv.CVId == i.CheckVoucherHeaderId &&
                                         i.SupplierId != null &&
                                         i.SupplierId == viewModel.MultipleSupplierId &&
-                                        i.CheckVoucherHeader.CvType == nameof(CVType.Invoicing))
+                                        i.CheckVoucherHeader!.CvType == nameof(CVType.Invoicing))
                             .OrderBy(i => i.CheckVoucherHeaderId)
                             .FirstOrDefaultAsync(cancellationToken);
 
@@ -1072,7 +1082,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         MobilityCheckVoucherHeader checkVoucherHeader = new()
                         {
-                            CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, invoicingVoucher.Select(i => i.Type).FirstOrDefault(), cancellationToken),
+                            CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, invoicingVoucher.Select(i => i.Type).FirstOrDefault() ?? throw new InvalidOperationException(), cancellationToken),
                             Date = viewModel.TransactionDate,
                             PONo = invoicingVoucher.Select(i => i.PONo).FirstOrDefault(),
                             SINo = invoicingVoucher.Select(i => i.SINo).FirstOrDefault(),
@@ -1118,7 +1128,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region--Update invoicing voucher
 
                 var updateMultipleInvoicingVoucher = await _dbContext.MobilityMultipleCheckVoucherPayments
-                    .Where(mcvp => viewModel.MultipleCvId.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
+                    .Where(mcvp => viewModel.MultipleCvId!.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == checkVoucherHeader.CheckVoucherHeaderId)
                     .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
                     .ToListAsync(cancellationToken);
 
@@ -1129,7 +1139,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         continue;
                     }
 
-                    payment.CheckVoucherHeaderInvoice.AmountPaid += payment.AmountPaid;
+                    payment.CheckVoucherHeaderInvoice!.AmountPaid += payment.AmountPaid;
                     if (payment.CheckVoucherHeaderInvoice?.AmountPaid >= payment.CheckVoucherHeaderInvoice?.InvoiceAmount)
                     {
                         payment.CheckVoucherHeaderInvoice.IsPaid = true;
@@ -1173,14 +1183,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (file != null && file.Length > 0)
                     {
                         checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName);
+                        checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
                     }
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1259,7 +1268,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var query = _dbContext.MobilityCheckVoucherDetails
                     .Include(cvd => cvd.CheckVoucherHeader)
                     .Where(cvd =>
-                        cvd.CheckVoucherHeader.PostedBy != null &&
+                        cvd.CheckVoucherHeader!.PostedBy != null &&
                         cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing) &&
                         (
                             (cvd.CheckVoucherHeader.SupplierId != null &&
@@ -1293,7 +1302,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var cvList = checkVouchers
                     .OrderBy(cv => cv.CheckVoucherDetailId)
                     .Select(cv => new {
-                        Id = cv.CheckVoucherHeader.CheckVoucherHeaderId,
+                        Id = cv.CheckVoucherHeader!.CheckVoucherHeaderId,
                         CVNumber = cv.CheckVoucherHeader.CheckVoucherHeaderNo
                     })
                     .Distinct()
@@ -1410,6 +1419,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 viewModel.Employees = await _dbContext.MobilityStationEmployees
@@ -1443,7 +1457,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                        MobilityCheckVoucherHeader checkVoucherHeader = new()
                        {
-                           CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, viewModel.DocumentType, cancellationToken),
+                           CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, viewModel.DocumentType!, cancellationToken),
                            Date = viewModel.TransactionDate,
                            Particulars = viewModel.Particulars,
                            PONo = [],
@@ -1512,15 +1526,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                    if (viewModel.SupportingFile != null && viewModel.SupportingFile.Length > 0)
                    {
                        checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(viewModel.SupportingFile.FileName);
-                       checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(viewModel.SupportingFile, checkVoucherHeader.SupportingFileSavedFileName);
+                       checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(viewModel.SupportingFile, checkVoucherHeader.SupportingFileSavedFileName!);
                    }
 
                 #endregion Uploading File
 
                 #region --Audit Trail Recording
 
-                   var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                   FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                   FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1552,7 +1565,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create advances to employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -1599,15 +1612,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 TransactionDate = existingHeaderModel.Date,
                 EmployeeId = existingHeaderModel.EmployeeId ?? 0,
                 Employees = employees,
-                Payee = existingHeaderModel.Payee,
+                Payee = existingHeaderModel.Payee!,
                 PayeeAddress = existingHeaderModel.Address,
                 PayeeTin = existingHeaderModel.Tin,
                 Total = existingHeaderModel.Total,
                 BankId = existingHeaderModel.BankId ?? 0,
                 Banks = bankAccounts,
-                CheckNo = existingHeaderModel.CheckNo,
+                CheckNo = existingHeaderModel.CheckNo!,
                 CheckDate = existingHeaderModel.CheckDate ?? default,
-                Particulars = existingHeaderModel.Particulars
+                Particulars = existingHeaderModel.Particulars!
             };
 
             return View(model);
@@ -1697,7 +1710,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 AccountNo = advancesToOfficerTitle.AccountNumber,
                                 AccountName = advancesToOfficerTitle.AccountName,
-                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 Debit = viewModel.Total,
                                 Credit = 0,
@@ -1708,7 +1721,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 AccountNo = cashInBankTitle.AccountNumber,
                                 AccountName = cashInBankTitle.AccountName,
-                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                 CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                 Debit = 0,
                                 Credit = viewModel.Total,
@@ -1724,8 +1737,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1794,6 +1806,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var viewModel = new AdvancesToSupplierViewModel();
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             viewModel.Suppliers = await _unitOfWork.GetMobilitySupplierListAsyncById(stationCodeClaims, cancellationToken);
 
@@ -1814,6 +1830,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> CreateAdvancesToSupplier(AdvancesToSupplierViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -1841,7 +1862,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                        MobilityCheckVoucherHeader checkVoucherHeader = new()
                        {
-                           CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, viewModel.DocumentType, cancellationToken),
+                           CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultiplePaymentAsync(stationCodeClaims, viewModel.DocumentType!, cancellationToken),
                            Date = viewModel.TransactionDate,
                            Particulars = viewModel.Particulars,
                            PONo = [],
@@ -1925,15 +1946,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                    if (viewModel.SupportingFile != null && viewModel.SupportingFile.Length > 0)
                    {
                        checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(viewModel.SupportingFile.FileName);
-                       checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(viewModel.SupportingFile, checkVoucherHeader.SupportingFileSavedFileName);
+                       checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(viewModel.SupportingFile, checkVoucherHeader.SupportingFileSavedFileName!);
                    }
 
                 #endregion Uploading File
 
                 #region --Audit Trail Recording
 
-                   var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                   FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                   FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1981,6 +2001,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             var supplier = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
             var bankAccounts = await _dbContext.MobilityBankAccounts
@@ -1998,15 +2023,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 TransactionDate = existingHeaderModel.Date,
                 SupplierId = existingHeaderModel.SupplierId ?? 0,
                 Suppliers = supplier,
-                Payee = existingHeaderModel.Payee,
+                Payee = existingHeaderModel.Payee!,
                 PayeeAddress = existingHeaderModel.Address,
                 PayeeTin = existingHeaderModel.Tin,
                 Total = existingHeaderModel.Total,
                 BankId = existingHeaderModel.BankId ?? 0,
                 Banks = bankAccounts,
-                CheckNo = existingHeaderModel.CheckNo,
+                CheckNo = existingHeaderModel.CheckNo!,
                 CheckDate = existingHeaderModel.CheckDate ?? default,
-                Particulars = existingHeaderModel.Particulars
+                Particulars = existingHeaderModel.Particulars!
             };
 
             return View(model);
@@ -2017,6 +2042,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> EditAdvancesToSupplier(AdvancesToSupplierViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -2092,7 +2122,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                            {
                                AccountNo = advancesToSupplierTitle.AccountNumber,
                                AccountName = advancesToSupplierTitle.AccountName,
-                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = grossAmount,
                                Credit = 0,
@@ -2103,7 +2133,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                            {
                                AccountNo = ewtTitle.AccountNumber,
                                AccountName = ewtTitle.AccountName,
-                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = 0,
                                Credit = ewtAmount,
@@ -2113,7 +2143,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                            {
                                AccountNo = cashInBankTitle.AccountNumber,
                                AccountName = cashInBankTitle.AccountName,
-                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                               TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                                CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
                                Debit = 0,
                                Credit = netOfEwtAmount,
@@ -2129,8 +2159,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Check Voucher Non Trade Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var department = ViewData["Department"].ToString();
+    var department = ViewData["Department"]!.ToString();
 }
 
 <style>

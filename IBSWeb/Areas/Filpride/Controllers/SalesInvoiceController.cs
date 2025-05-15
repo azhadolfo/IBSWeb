@@ -38,9 +38,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -78,13 +84,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     salesInvoices = salesInvoices
                         .Where(s =>
-                            s.SalesInvoiceNo.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.SalesInvoiceNo!.ToLower().Contains(searchValue) ||
+                            s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
                             s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
-                            s.Product.ProductName.ToLower().Contains(searchValue) ||
+                            s.Product!.ProductName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue) ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
                             s.Status.ToLower().Contains(searchValue) ||
                             s.Remarks.ToLower().Contains(searchValue) ||
                             s.DeliveryReceipt?.DeliveryReceiptNo.ToLower().Contains(searchValue) == true
@@ -134,6 +140,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             FilprideSalesInvoice viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
@@ -148,6 +159,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(FilprideSalesInvoice model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -167,8 +183,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -229,12 +244,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<JsonResult> GetProductAndDRDetails(int cosId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return Json(null);
+            }
             var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(c => c.CustomerOrderSlipId == cosId, cancellationToken);
             if (cos != null)
             {
                 return Json(new
                 {
-                    cos.Product.ProductId,
+                    cos.Product!.ProductId,
                     ProductName = $"{cos.Product.ProductCode} {cos.Product.ProductName}",
                     cos.Product.ProductUnit,
                     cos.DeliveredPrice,
@@ -253,6 +272,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
                 salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
@@ -297,6 +320,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -333,8 +361,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", ipAddress, existingRecord.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", existingRecord.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -400,8 +427,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -480,8 +506,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -525,8 +550,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -575,8 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", ipAddress, si.Company);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -610,8 +633,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     receivingReportId,
                     dr.PurchaseOrderId,
                     OtherRefNo = dr.ManualDrNo,
-                    Remarks = $"Customer PO# {dr.CustomerOrderSlip.CustomerPoNo}" +
-                              (!dr.Customer.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
+                    Remarks = $"Customer PO# {dr.CustomerOrderSlip!.CustomerPoNo}" +
+                              (!dr.Customer!.HasBranch ? "" : $"\nBranch: {dr.CustomerOrderSlip.Branch}")
                 });
             }
 

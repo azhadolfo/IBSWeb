@@ -28,9 +28,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -76,7 +82,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create station employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(model);
             }
         }
@@ -100,6 +106,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             var existingModel = await _dbContext.MobilityStationEmployees.FindAsync(model.EmployeeId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
 
             try
             {

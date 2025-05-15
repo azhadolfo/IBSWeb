@@ -30,9 +30,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -68,6 +74,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var companyClaims = await GetCompanyClaimAsync();
 
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
                     //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
 
                     bool isTinExist = false;
@@ -80,7 +91,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
 
-                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer {model.CustomerCode}", "Customer", "", model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer {model.CustomerCode}", "Customer", model.Company);
                         await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                         await transaction.CommitAsync(cancellationToken);

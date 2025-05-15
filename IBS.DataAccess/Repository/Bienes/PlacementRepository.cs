@@ -79,7 +79,7 @@ namespace IBS.DataAccess.Repository.Bienes
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit placement# {existingRecord.ControlNumber}", "Placement", "", nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);

@@ -90,7 +90,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                @for (var i = 0; i < Model.AccountingEntries.Count; i++)
+                                @for (var i = 0; i < Model.AccountingEntries!.Count; i++)
                                 {
                                     <tr>
                                         <td>
@@ -98,7 +98,7 @@
                                                     class="form-select form-select-sm chart-of-accounts default-expense js-select2 w-100"
                                                     style="width: 100%">
                                                 <option value="">-- Select Account --</option>
-                                                @foreach (var account in Model.ChartOfAccounts)
+                                                @foreach (var account in Model.ChartOfAccounts!)
                                                 {
                                                     <option value="@account.Value">@account.Text</option>
                                                 }

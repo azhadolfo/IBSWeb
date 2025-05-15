@@ -5,8 +5,6 @@
 @{
     ViewData["Title"] = "Customer Order Slip";
     var userDepartment = ViewBag.userDepartment;
-    var currentStationCode = ViewData["CurrentStationCode"] as string;
-    var currentStationName = ViewData["CurrentStationName"] as string;
 }
 
 <style>
@@ -134,7 +132,7 @@
                             @item.Date.ToString("yyyy/MM/dd")
                         </td>
                         <td class="text-start align-middle">
-                            @item.Customer.CustomerName
+                            @item.Customer!.CustomerName
                         </td>
                         <td class="text-start align-middle">
                             @item.Driver
@@ -143,7 +141,7 @@
                             @item.PlateNo
                         </td>
                         <td class="text-start align-middle">
-                            @item.Product.ProductName
+                            @item.Product!.ProductName
                         </td>
                         <td class="text-end align-middle">
                             @Html.DisplayFor(model => item.Quantity)

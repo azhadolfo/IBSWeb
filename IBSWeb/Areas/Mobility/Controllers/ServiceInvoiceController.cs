@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -70,14 +76,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     serviceInvoices = serviceInvoices
                         .Where(s =>
                             s.ServiceInvoiceNo.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
-                            s.Service.ServiceNo.ToLower().Contains(searchValue) ||
-                            s.Service.Name.ToLower().Contains(searchValue) ||
+                            s.Customer?.CustomerName.ToLower().Contains(searchValue) == true ||
+                            s.Customer?.CustomerTerms.ToLower().Contains(searchValue) == true ||
+                            s.Service?.ServiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.Service?.Name.ToLower().Contains(searchValue) == true ||
                             s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.Instructions?.ToLower().Contains(searchValue) == true ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy?.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
                 }
@@ -153,6 +159,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 viewModel.Customers = await _dbContext.MobilityCustomers
@@ -222,8 +233,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -405,7 +415,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -450,7 +460,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -516,7 +526,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -544,10 +554,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            if (id == null)
-            {
-                return NotFound();
-            }
+
             var existingRecord = await _unitOfWork.MobilityServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == id, cancellationToken);
 
             if (existingRecord == null)
@@ -618,6 +625,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var customer = await _dbContext.MobilityCustomers
                         .FirstOrDefaultAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
+                if (customer == null)
+                {
+                    return NotFound();
+                }
+
                 #region --Saving the default properties
 
                     existingRecord.Discount = viewModel.Discount;
@@ -647,7 +659,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edited service invoice# {existingRecord.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited service invoice# {existingRecord.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -674,9 +686,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

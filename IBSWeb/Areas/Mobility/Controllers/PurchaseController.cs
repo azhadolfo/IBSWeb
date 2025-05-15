@@ -27,9 +27,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -136,9 +142,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = await GetStationCodeClaimAsync();
-                    var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
+                    var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                    if (stationCodeClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    var postedBy = _userManager.GetUserName(User)!;
+                    await _unitOfWork.MobilityFuelPurchase.PostAsync(id, postedBy, stationCodeClaims, cancellationToken);
                     TempData["success"] = "Fuel delivery approved successfully.";
                     return RedirectToAction(nameof(PreviewFuel), new { id });
                 }
@@ -302,9 +314,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = await GetStationCodeClaimAsync();
-                    var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
+                    var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                    if (stationCodeClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    var postedBy = _userManager.GetUserName(User)!;
+                    await _unitOfWork.MobilityLubePurchaseHeader.PostAsync(id, postedBy, stationCodeClaims, cancellationToken);
                     TempData["success"] = "Lube delivery approved successfully.";
                     return RedirectToAction(nameof(PreviewLube), new { id });
                 }

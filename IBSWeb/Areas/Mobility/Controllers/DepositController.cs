@@ -33,11 +33,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public IActionResult Index()
@@ -125,8 +131,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(model.ApprovedBy!, $"Approved deposit for shift date: {model.ShiftDate} shift#: {model.ShiftNumber}", "Deposit", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(model.ApprovedBy!, $"Approved deposit for shift date: {model.ShiftDate} shift#: {model.ShiftNumber}", "Deposit", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

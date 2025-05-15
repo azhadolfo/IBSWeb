@@ -7,7 +7,7 @@
 
 <style>
     body {
-        margin: 0 100 0 0;
+        margin: 0 100px 0 0;
         padding: 0;
     }
 
@@ -76,7 +76,7 @@
         <em>
             <strong>Software Name :</strong> Integrated Business System (IBS)
             <br />
-            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <b>Printed By :</b> @UserManager.GetUserName(User)!.ToUpper()
             <br />
             <b>Date & Time Printed :</b> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
         </em>

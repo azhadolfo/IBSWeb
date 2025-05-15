@@ -1,7 +1,4 @@
 ﻿@model IEnumerable<FilprideJournalVoucherHeader>
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Export Journal Voucher";
 }
@@ -80,7 +77,7 @@
                     @Html.DisplayNameFor(model => model.Date)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.CheckVoucherHeader.CheckVoucherHeaderNo)
+                    @Html.DisplayNameFor(model => model.CheckVoucherHeader!.CheckVoucherHeaderNo)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.CRNo)
@@ -110,7 +107,7 @@
                             @item.Date.ToString("MM/dd/yyyy")
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.CheckVoucherHeader.CheckVoucherHeaderNo)
+                            @Html.DisplayFor(modelItem => item.CheckVoucherHeader!.CheckVoucherHeaderNo)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.CRNo)

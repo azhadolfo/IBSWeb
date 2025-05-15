@@ -35,7 +35,7 @@
         </span>
     </h3>
     <div class="text-end" style="margin-top:-60px;">
-        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header.CheckVoucherHeaderNo)</b></h6>
+        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header!.CheckVoucherHeaderNo)</b></h6>
     </div>
 </div>
 
@@ -44,18 +44,18 @@
         <thead>
             <tr style="border: 1px solid black;">
                 <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
-                <td colspan="2" class="text-end"><b>Date : </b>@Model.Header.Date.ToString(SD.Date_Format)</td>
+                <td colspan="2" class="text-end"><b>Date : </b>@Model.Header!.Date.ToString(SD.Date_Format)</td>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                <td>@Html.DisplayFor(model => model.Header.Payee)</td>
+                <td>@Html.DisplayFor(model => model.Header!.Payee)</td>
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                <td>@Html.DisplayFor(model => model.Header.Address)</td>
+                <td>@Html.DisplayFor(model => model.Header!.Address)</td>
                 <td style="width:5%;">PO # :</td>
                 <td>
                     @if (Model.Header.PONo != null)
@@ -76,10 +76,10 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">TIN # :</td>
-                <td>@Html.DisplayFor(model => model.Header.Tin)</td>
+                <td>@Html.DisplayFor(model => model.Header!.Tin)</td>
                 <td>SI # :</td>
                 <td>
-                    @for (int i = 0; i < Model.Header.SINo.Length; i++)
+                    @for (int i = 0; i < Model.Header.SINo!.Length; i++)
                     {
                         if (i != Model.Header.SINo.Length - 1)
                         {
@@ -111,7 +111,7 @@
         <tbody>
             <tr>
                 <td style="width:20%; padding-left:20px;">Payee :</td>
-                <td>@Html.DisplayFor(model => model.Header.Payee)</td>
+                <td>@Html.DisplayFor(model => model.Header!.Payee)</td>
                 <td class="text-end">@Model.Header.Total.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             <tr>
@@ -166,12 +166,12 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">Particulars :</td>
-                <td><p style="margin: 0; padding: 0; text-align: justify">@Html.DisplayFor(model => model.Header.Particulars)</p></td>
+                <td><p style="margin: 0; padding: 0; text-align: justify">@Html.DisplayFor(model => model.Header!.Particulars)</p></td>
                 <td></td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Check #:</td>
-                <td>@Html.DisplayFor(model => model.Header.CheckNo)</td>
+                <td>@Html.DisplayFor(model => model.Header!.CheckNo)</td>
                 <td></td>
             </tr>
             <tr>
@@ -202,7 +202,7 @@
                 <th class="text-end">CREDIT</th>
             </tr>
 
-            @foreach (var cv in Model.Details.OrderBy(model => model.CheckVoucherDetailId))
+            @foreach (var cv in Model.Details!.OrderBy(model => model.CheckVoucherDetailId))
             {
                 <tr>
                     <td style="width:60%; padding-left:20px;">@cv.AccountNo&nbsp;@cv.AccountName</td>
@@ -214,8 +214,8 @@
             <tr style="border-bottom:double;"></tr>
             <tr>
                 <td></td>
-                <td class="text-end">@Model.Details.Sum(d => d.Debit).ToString(SD.Two_Decimal_Format)</td>
-                <td class="text-end">@Model.Details.Sum(d => d.Credit).ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@Model.Details!.Sum(d => d.Debit).ToString(SD.Two_Decimal_Format)</td>
+                <td class="text-end">@Model.Details!.Sum(d => d.Credit).ToString(SD.Two_Decimal_Format)</td>
             </tr>
         </tbody>
     </table>
@@ -275,7 +275,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTime().ToString("MM/dd/yyyy hh:mm tt")
                 </em>

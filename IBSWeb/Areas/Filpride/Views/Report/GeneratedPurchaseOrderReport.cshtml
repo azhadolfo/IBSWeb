@@ -53,7 +53,7 @@
 @if (Model.Any())
 {
     <div class="table-responsive">
-        <h5>@ViewData["Title"].ToString().ToUpper()</h5>
+        <h5>@ViewData["Title"]!.ToString()!.ToUpper()</h5>
         <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
         <table id="ledgerTable" class="table">
             <thead>
@@ -78,10 +78,10 @@
                         <td>@Html.DisplayFor(model => purchase.PurchaseOrderNo)</td>
                         <td>@Html.DisplayFor(model => purchase.OldPoNo)</td>
                         <td>@Html.DisplayFor(model => purchase.Date)</td>
-                        <td>@Html.DisplayFor(model => purchase.Supplier.SupplierName)</td>
-                        <td>@Html.DisplayFor(model => purchase.Product.ProductName)</td>
+                        <td>@Html.DisplayFor(model => purchase.Supplier!.SupplierName)</td>
+                        <td>@Html.DisplayFor(model => purchase.Product!.ProductName)</td>
                         <td class="text-end">@purchase.Quantity.ToString(SD.Two_Decimal_Format)</td>
-                        <td>@Html.DisplayFor(model => purchase.Product.ProductUnit)</td>
+                        <td>@Html.DisplayFor(model => purchase.Product!.ProductUnit)</td>
                         <td class="text-end">@purchase.Price.ToString(SD.Four_Decimal_Format)</td>
                         <td class="text-end">@purchase.Amount.ToString(SD.Two_Decimal_Format)</td>
                         <td>@Html.DisplayFor(model => purchase.Remarks)</td>

@@ -25,6 +25,19 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
         }
 
+        private async Task<string?> GetStationCodeClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
+        }
+
         public IActionResult GetTransaction()
         {
             return View();
@@ -32,13 +45,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> DisplayByTransaction(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken)
         {
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
                 .MobilityGeneralLedger
-                .GetLedgerViewByTransaction(dateFrom, dateTo, stationCodeClaim, cancellationToken);
+                .GetLedgerViewByTransaction(dateFrom, dateTo, stationCodeClaims, cancellationToken);
 
             return View(ledgers);
         }
@@ -52,13 +68,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             if (!string.IsNullOrEmpty(journal))
             {
-                var user = await _userManager.GetUserAsync(User);
-                var claims = await _userManager.GetClaimsAsync(user);
-                var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+                var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                if (stationCodeClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork
                     .MobilityGeneralLedger
-                    .GetLedgerViewByJournal(dateFrom, dateTo, stationCodeClaim, journal, cancellationToken);
+                    .GetLedgerViewByJournal(dateFrom, dateTo, stationCodeClaims, journal, cancellationToken);
 
                 ViewData["Journal"] = journal.ToUpper();
                 return View(ledgers);
@@ -83,21 +102,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             accountNo = string.IsNullOrEmpty(accountNo) ? "ALL" : accountNo;
             productCode = string.IsNullOrEmpty(productCode) ? "ALL" : productCode;
-            var user = await _userManager.GetUserAsync(User);
-            var claims = await _userManager.GetClaimsAsync(user);
-            var stationCodeClaim = claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             MobilityChartOfAccount chartOfAccount = await _unitOfWork.MobilityChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
             SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
 
-            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.MobilityGeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaim, accountNo, productCode, cancellationToken);
+            IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.MobilityGeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaims, accountNo, productCode, cancellationToken);
 
             if (exportToExcel && ledgers.Any())
             {
                 try
                 {
-                    var excelBytes = _unitOfWork.MobilityGeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, ViewData["AccountNo"], ViewData["AccountName"], productCode);
+                    var excelBytes = _unitOfWork.MobilityGeneralLedger.ExportToExcel(ledgers, dateTo, dateFrom, ViewData["AccountNo"]!, ViewData["AccountName"]!, productCode);
 
                     // Return the Excel file as a download
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GeneralLedger.xlsx");

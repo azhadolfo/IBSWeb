@@ -18,7 +18,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    var customerType = Model.ServiceInvoice.Customer.CustomerType;
+    var customerType = Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -46,16 +46,16 @@
         <tr>
             <td>
                 <span><b>Sold to:</b></span>
-                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerName) &nbsp;<br />
+                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName) &nbsp;<br />
 
                 <span><b>Address:</b></span>
-                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerAddress) &nbsp;<br />
+                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerAddress) &nbsp;<br />
 
                 <span><b>TIN:</b></span>
-                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerTin) &nbsp;<br />
+                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerTin) &nbsp;<br />
 
                 <span><b>Business Style:</b></span>
-                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice.Customer.BusinessStyle) &nbsp;
+                &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle) &nbsp;
             </td>
 
             <td class="w-25 text-nowrap">
@@ -80,13 +80,13 @@
         </thead>
         <tbody>
         <tr style="height:80px;">
-            <td>@Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)</td>
+            <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)</td>
             <td class="pt-2">
                 <p style="line-height:15px">
                     @Model.Period.ToString("MMMM yyyy")
                 </p>
             </td>
-            <td>@Html.DisplayFor(model => model.ServiceInvoice.Service.Name)</td>
+            <td>@Html.DisplayFor(model => model.ServiceInvoice!.Service!.Name)</td>
             <td>@Html.DisplayFor(model => model.Description)</td>
             <td class="pt-2">
                 <p style="line-height:15px">
@@ -201,7 +201,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

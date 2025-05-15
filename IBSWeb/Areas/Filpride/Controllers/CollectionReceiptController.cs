@@ -48,9 +48,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -90,6 +96,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
                     .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
 
@@ -100,14 +111,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     collectionReceipts = collectionReceipts
                         .Where(s =>
-                            s.CollectionReceiptNo.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.CollectionReceiptNo!.ToLower().Contains(searchValue) ||
+                            s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
                             s.SINo?.ToLower().Contains(searchValue) == true ||
                             s.SVNo?.ToLower().Contains(searchValue) == true ||
                             s.MultipleSI?.Contains(searchValue) == true ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
@@ -155,6 +166,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -175,6 +191,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> SingleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
@@ -207,6 +228,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
                                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
+                    if (existingSalesInvoice == null)
+                    {
+                        return NotFound();
+                    }
+
                     var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
 
                     model.SINo = existingSalesInvoice.SalesInvoiceNo;
@@ -219,14 +245,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
                         model.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
                         model.IsCertificateUpload = true;
                     }
 
@@ -269,8 +295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -302,6 +327,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
@@ -314,6 +344,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> MultipleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
@@ -345,7 +380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(model);
                     }
 
-                    model.MultipleSI = new string[model.MultipleSIId.Length];
+                    model.MultipleSI = new string[model.MultipleSIId!.Length];
                     model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
                     var salesInvoice = new FilprideSalesInvoice();
                     for (int i = 0; i < model.MultipleSIId.Length; i++)
@@ -356,13 +391,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (salesInvoice != null)
                         {
-                            model.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
+                            model.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
                             model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
                             model.Type = salesInvoice.Type;
                         }
                     }
 
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, model.Type, cancellationToken);
+                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, model.Type!, cancellationToken);
 
                     model.CollectionReceiptNo = generateCRNo;
                     model.CreatedBy = _userManager.GetUserName(this.User);
@@ -371,14 +406,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
                         model.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
                         model.IsCertificateUpload = true;
                     }
 
@@ -444,6 +479,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> MultipleCollectionEdit(int? id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -503,7 +544,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(model);
                     }
 
-                    existingModel.MultipleSIId = new int[model.MultipleSIId.Length];
+                    existingModel.MultipleSIId = new int[model.MultipleSIId!.Length];
                     existingModel.MultipleSI = new string[model.MultipleSIId.Length];
                     existingModel.SIMultipleAmount = new decimal[model.MultipleSIId.Length];
                     existingModel.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
@@ -517,9 +558,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (salesInvoice != null)
                         {
                             existingModel.MultipleSIId[i] = model.MultipleSIId[i];
-                            existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo;
+                            existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
                             existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
-                            existingModel.SIMultipleAmount[i] = model.SIMultipleAmount[i];
+                            existingModel.SIMultipleAmount[i] = model.SIMultipleAmount![i];
                         }
                     }
 
@@ -540,14 +581,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
                         model.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
                         model.IsCertificateUpload = true;
                     }
 
@@ -617,7 +658,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 AccountNo = accountNo,
                                 AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo,
+                                Source = existingModel.CollectionReceiptNo!,
                                 Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
                                 Amount = currentAccountAmount,
                                 CreatedBy = _userManager.GetUserName(this.User),
@@ -666,6 +707,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideCollectionReceipt();
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -677,6 +723,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> CreateForService(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
@@ -708,6 +759,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+
+                    if (existingServiceInvoice == null)
+                    {
+                        return NotFound();
+                    }
+
                     var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, existingServiceInvoice.Type, cancellationToken);
 
                     model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
@@ -720,14 +777,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
                         model.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
                         model.IsCertificateUpload = true;
                     }
 
@@ -770,8 +827,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -851,9 +907,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var si = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == invoiceNo, cancellationToken);
 
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = si.Customer!.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = si.Customer!.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -870,7 +926,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
 
-                decimal netOfVatAmount = sv.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
+                decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
                 decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                 decimal withHoldingVatAmount = sv.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
@@ -897,8 +953,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(filprideSalesInvoice => filprideSalesInvoice.Customer)
                     .FirstOrDefaultAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
 
+                if (si == null)
+                {
+                    return Json(null);
+                }
+
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
                 decimal withHoldingTaxAmount = si.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                 decimal withHoldingVatAmount = si.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
@@ -930,6 +991,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
@@ -982,6 +1048,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var companyClaims = await GetCompanyClaimAsync();
 
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
                     #region --Saving default value
 
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
@@ -1010,14 +1081,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName);
+                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
                         model.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName);
+                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
                         model.IsCertificateUpload = true;
                     }
 
@@ -1088,7 +1159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 AccountNo = accountNo,
                                 AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo,
+                                Source = existingModel.CollectionReceiptNo!,
                                 Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
                                 Amount = currentAccountAmount,
                                 CreatedBy = _userManager.GetUserName(this.User),
@@ -1112,8 +1183,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, existingModel.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -1158,12 +1228,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.SalesInvoiceId != null)
                         {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo, model.SINo, model.Company, cancellationToken);
+                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
                             offsetAmount = offset.Sum(o => o.Amount);
                         }
                         else
                         {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo, model.SVNo, model.Company, cancellationToken);
+                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
                             offsetAmount = offset.Sum(o => o.Amount);
                         }
 
@@ -1171,21 +1241,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.SalesInvoiceId != null)
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
                         }
                         else if (model.MultipleSIId != null)
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI, model.SIMultipleAmount, offsetAmount, cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
                         }
                         else
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
                         }
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1243,15 +1312,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         if (model.SINo != null)
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
                         }
                         else if (model.SVNo != null)
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
                         }
                         else if (model.MultipleSI != null)
                         {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId, model.SIMultipleAmount, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                            await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
                         }
                         else
                         {
@@ -1261,8 +1330,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1304,8 +1372,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1336,9 +1403,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", ipAddress, cr.Company);
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1359,7 +1425,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var amount = salesInvoice.Amount;
                 var amountPaid = salesInvoice.AmountPaid;
                 var netAmount = salesInvoice.Amount - salesInvoice.Discount;
-                var vatAmount = salesInvoice.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount((netAmount / 1.12m) * 0.12m) : 0;
+                var vatAmount = salesInvoice.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount((netAmount / 1.12m) * 0.12m) : 0;
                 var ewtAmount = salesInvoice.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.01m) : 0;
                 var wvatAmount = salesInvoice.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.05m) : 0;
                 var balance = amount - amountPaid;
@@ -1393,9 +1459,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", ipAddress, findIdOfCR.Company);
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", findIdOfCR.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1578,10 +1643,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 23].Value = item.CancellationRemarks;
                     if (item.MultipleSIId != null)
                     {
-                        worksheet.Cells[row, 24].Value = string.Join(", ", item.MultipleSI.Select(si => si.ToString()));
+                        worksheet.Cells[row, 24].Value = string.Join(", ", item.MultipleSI!.Select(si => si.ToString()));
                         worksheet.Cells[row, 25].Value = string.Join(", ", item.MultipleSIId.Select(siId => siId.ToString()));
-                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount.Select(multipleSI => multipleSI.ToString(SD.Two_Decimal_Format)));
-                        worksheet.Cells[row, 27].Value = string.Join(", ", item.MultipleTransactionDate.Select(multipleTransactionDate => multipleTransactionDate.ToString("yyyy-MM-dd")));
+                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount!.Select(multipleSI => multipleSI.ToString(SD.Two_Decimal_Format)));
+                        worksheet.Cells[row, 27].Value = string.Join(", ", item.MultipleTransactionDate!.Select(multipleTransactionDate => multipleTransactionDate.ToString("yyyy-MM-dd")));
                     }
                     worksheet.Cells[row, 28].Value = item.CustomerId;
                     worksheet.Cells[row, 29].Value = item.SalesInvoiceId;

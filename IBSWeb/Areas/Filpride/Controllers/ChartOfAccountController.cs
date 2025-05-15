@@ -56,10 +56,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var parentAccount = await _dbContext.FilprideChartOfAccounts
                     .Where(c => c.AccountId == parentId)
                     .FirstOrDefaultAsync(cancellationToken);
-                int? lastSeries = int.Parse(_dbContext.FilprideChartOfAccounts
+
+                var lastSeries = int.Parse((_dbContext.FilprideChartOfAccounts
                     .Where(c => c.ParentAccountId == parentId)
                     .OrderByDescending(c => c.AccountNumber)
-                    .FirstOrDefaultAsync(cancellationToken)?.Result?.AccountNumber ?? parentAccount.AccountNumber);
+                    .FirstOrDefaultAsync(cancellationToken).Result?.AccountNumber ?? parentAccount?.AccountNumber) ?? string.Empty);
 
                 var levelToCreate = parentAccount?.Level + 1;
 
@@ -67,7 +68,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     IsMain = false,
                     AccountType = parentAccount?.AccountType,
-                    NormalBalance = parentAccount.NormalBalance ?? "",
+                    NormalBalance = parentAccount?.NormalBalance ?? "",
                     AccountName = accountName,
                     ParentAccountId = parentId,
                     CreatedBy = User.Identity?.Name,
@@ -106,12 +107,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var existingAccount = _dbContext.FilprideChartOfAccounts
+                var existingAccount = await _dbContext.FilprideChartOfAccounts
                     .FindAsync(accountId, cancellationToken);
 
-                existingAccount.Result.AccountName = accountName;
-                existingAccount.Result.EditedBy = User.Identity?.Name;
-                existingAccount.Result.EditedDate = DateTime.UtcNow;
+                if (existingAccount == null)
+                {
+                    return NotFound();
+                }
+
+                existingAccount.AccountName = accountName;
+                existingAccount.EditedBy = User.Identity!.Name;
+                existingAccount.EditedDate = DateTime.UtcNow;
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
 

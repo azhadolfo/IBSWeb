@@ -30,9 +30,9 @@ namespace IBSWeb.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(IdentityRole model)
         {
-            if (!_roleManager.RoleExistsAsync(model.Name).GetAwaiter().GetResult())
+            if (!await _roleManager.RoleExistsAsync(model.Name!))
             {
-                _roleManager.CreateAsync(new IdentityRole(model.Name)).GetAwaiter().GetResult();
+                await _roleManager.CreateAsync(new IdentityRole(model.Name!));
             }
 
             return RedirectToAction(nameof(Index));

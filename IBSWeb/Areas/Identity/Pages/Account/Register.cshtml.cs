@@ -84,16 +84,16 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             [Required]
             public string Department { get; set; }
-            public string? StationAccess {  get; set; }
+            public string StationAccess {  get; set; }
 
             [Required]
-            public string? Role { get; set; }
+            public string Role { get; set; }
 
             [ValidateNever]
             public IEnumerable<SelectListItem> RoleList { get; set; }
 
             [NotMapped]
-            public IEnumerable<SelectListItem>? MobilityStations { get; set; }
+            public IEnumerable<SelectListItem> MobilityStations { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used

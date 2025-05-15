@@ -32,9 +32,9 @@
                 <td>@firstLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
                 <td>@firstLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
             </tr>
-            @if (firstLevel.Children.Any(c => c.Balance != 0))
+            @if (firstLevel.Children!.Any(c => c.Balance != 0))
             {
-                foreach (var secondLevel in firstLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
+                foreach (var secondLevel in firstLevel.Children!.Where(x => x.Debit != 0 || x.Credit != 0))
                 {
                     <tr class="second-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
                         <td style="padding-left: 20px;">
@@ -46,9 +46,9 @@
                         <td>@secondLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
                         <td>@secondLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
                     </tr>
-                    if (secondLevel.Children.Any(c => c.Balance != 0))
+                    if (secondLevel.Children!.Any(c => c.Balance != 0))
                     {
-                        foreach (var thirdLevel in secondLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
+                        foreach (var thirdLevel in secondLevel.Children!.Where(x => x.Debit != 0 || x.Credit != 0))
                         {
                             <tr class="third-level" style="display: none;" onclick="toggleSubAccount(this)" title="Click to expand/collapse">
                                 <td style="padding-left: 40px;">
@@ -60,9 +60,9 @@
                                 <td>@thirdLevel.Credit.ToString(SD.Two_Decimal_Format)</td>
                                 <td>@thirdLevel.Balance.ToString(SD.Two_Decimal_Format)</td>
                             </tr>
-                            if (thirdLevel.Children.Any(c => c.Balance != 0))
+                            if (thirdLevel.Children!.Any(c => c.Balance != 0))
                             {
-                                foreach (var fourthLevel in thirdLevel.Children.Where(x => x.Debit != 0 || x.Credit != 0))
+                                foreach (var fourthLevel in thirdLevel.Children!.Where(x => x.Debit != 0 || x.Credit != 0))
                                 {
                                     <tr class="fourth-level" style="display: none;" title="Click to expand/collapse">
                                         <td style="padding-left: 60px;">

@@ -2,8 +2,6 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride;
-using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -17,7 +15,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -49,9 +46,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -86,12 +89,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     collectionReceipts = collectionReceipts
                         .Where(s =>
-                            s.CollectionReceiptNo.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
+                            s.CollectionReceiptNo!.ToLower().Contains(searchValue) ||
+                            s.Customer!.CustomerName.ToLower().Contains(searchValue) ||
                             s.SVNo?.ToLower().Contains(searchValue) == true ||
                             s.Customer.CustomerName.ToLower().Contains(searchValue) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
@@ -139,6 +142,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var viewModel = new CollectionReceiptViewModel();
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsync(stationCodeClaims, cancellationToken);
 
             viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
@@ -159,6 +167,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> CreateForService(CollectionReceiptViewModel viewModel, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -186,14 +199,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         if (bir2306 != null && bir2306.Length > 0)
                         {
                             viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                            viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName);
+                            viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
                             viewModel.IsCertificateUpload = true;
                         }
 
                         if (bir2307 != null && bir2307.Length > 0)
                         {
                             viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                            viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName);
+                            viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
                             viewModel.IsCertificateUpload = true;
                         }
 
@@ -273,8 +286,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -301,7 +313,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -338,7 +350,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var sv = await _unitOfWork.MobilityServiceInvoice.GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
 
-                decimal netOfVatAmount = sv.Customer.VatType == SD.VatType_Vatable ? _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
+                decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
                 decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.MobilityCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                 decimal withHoldingVatAmount = sv.Customer.WithHoldingVat ? _unitOfWork.MobilityCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
@@ -359,10 +371,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (id == null)
             {
                 return NotFound();
             }
+
             var existingModel = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (existingModel == null)
@@ -392,7 +411,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     })
                     .ToListAsync(cancellationToken),
                 CollectionReceiptId = existingModel.CollectionReceiptId,
-                SVNo = existingModel.ServiceInvoice.ServiceInvoiceNo,
+                SVNo = existingModel.ServiceInvoice!.ServiceInvoiceNo,
                 Total = existingModel.Total,
                 CustomerId = existingModel.CustomerId,
                 TransactionDate = existingModel.TransactionDate,
@@ -427,6 +446,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(CollectionReceiptViewModel viewModel, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             var existingModel = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
 
             if (!ModelState.IsValid)
@@ -451,14 +476,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (bir2306 != null && bir2306.Length > 0)
                     {
                         viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName);
+                        viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
                         viewModel.IsCertificateUpload = true;
                     }
 
                     if (bir2307 != null && bir2307.Length > 0)
                     {
                         viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName);
+                        viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
                         viewModel.IsCertificateUpload = true;
                     }
 
@@ -558,7 +583,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 AccountNo = accountNo,
                                 AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo,
+                                Source = existingModel.CollectionReceiptNo!,
                                 Reference = existingModel.SVNo,
                                 Amount = currentAccountAmount,
                                 CreatedBy = _userManager.GetUserName(this.User),
@@ -583,8 +608,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -607,6 +631,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             var model = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (model != null)
@@ -624,18 +654,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         List<MobilityOffsettings>? offset = new List<MobilityOffsettings>();
                         var offsetAmount = 0m;
 
-                        offset = await _unitOfWork.MobilityCollectionReceipt.GetOffsettings(model.CollectionReceiptNo, model.SVNo, stationCodeClaims, cancellationToken);
+                        offset = await _unitOfWork.MobilityCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, stationCodeClaims, cancellationToken);
                         offsetAmount = offset.Sum(o => o.Amount);
 
                         ///TODO: waiting for ma'am LSA journal entries
                         //await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
 
-                        await _unitOfWork.MobilityCollectionReceipt.UpdateSV(model.ServiceInvoice.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                        await _unitOfWork.MobilityCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -650,7 +679,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, User.Identity.Name);
+                        ex.Message, ex.StackTrace, User.Identity!.Name);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -694,7 +723,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         }
                         if (model.SVNo != null)
                         {
-                            await _unitOfWork.MobilityCollectionReceipt.RemoveSVPayment(model.ServiceInvoice.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                            await _unitOfWork.MobilityCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
                         }
                         else
                         {
@@ -704,8 +733,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -747,8 +775,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -779,9 +806,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

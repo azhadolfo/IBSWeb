@@ -112,13 +112,13 @@
                         @if (item.Source == "Sales Invoice")
                         {
                             <td>
-                                @Html.DisplayFor(modelItem => item.SalesInvoice.SalesInvoiceNo)
+                                @Html.DisplayFor(modelItem => item.SalesInvoice!.SalesInvoiceNo)
                             </td>
                         }
                         else
                         {
                             <td>
-                                @Html.DisplayFor(modelItem => item.ServiceInvoice.ServiceInvoiceNo)
+                                @Html.DisplayFor(modelItem => item.ServiceInvoice!.ServiceInvoiceNo)
                             </td>
                         }
                         <td>

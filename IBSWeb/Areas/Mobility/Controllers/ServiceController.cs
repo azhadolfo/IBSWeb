@@ -30,11 +30,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user ==  null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -100,6 +106,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -112,10 +123,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     }
 
                     var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
-                        .FindAsync(services.CurrentAndPreviousId, cancellationToken);
+                        .FindAsync(services.CurrentAndPreviousId, cancellationToken) ?? throw new NullReferenceException();
 
                     var unearned = await _dbContext.FilprideChartOfAccounts
-                        .FindAsync(services.UnearnedId, cancellationToken);
+                        .FindAsync(services.UnearnedId, cancellationToken) ?? throw new NullReferenceException();
 
                     services.CurrentAndPreviousNo = currentAndPrevious.AccountNumber;
                     services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
@@ -125,7 +136,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     services.StationCode = stationCodeClaims;
 
-                    services.CreatedBy = _userManager.GetUserName(this.User).ToUpper();
+                    services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
 
                     services.ServiceNo = await _unitOfWork.MobilityService.GetLastNumber(stationCodeClaims, cancellationToken);
 
@@ -194,10 +205,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
                 }
                 return RedirectToAction(nameof(Index));
             }

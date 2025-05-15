@@ -1,11 +1,9 @@
-﻿@using IBS.Utility
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
 @using IBS.Utility.Helpers
 @model DeliveryReceiptViewModel
 
 @{
     ViewData["Title"] = "Create Delivery Receipt";
-    bool creationOfDrIsLock = true;
     DateTime today = DateTimeHelper.GetCurrentPhilippineTime();
     DateTime maxDate = Model.IsTheCreationLockForTheMonth ? new DateTime(today.Year, today.Month, 1).AddDays(-1) : DateTime.MaxValue;
 }

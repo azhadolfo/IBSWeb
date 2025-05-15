@@ -32,11 +32,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -86,14 +92,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         return View(model);
                     }
 
-                    model.StationCode = await GetStationCodeClaimAsync();
+                    model.StationCode = await GetStationCodeClaimAsync() ?? throw new NullReferenceException();
 
-                    model.CreatedBy = _userManager.GetUserName(this.User);
+                    model.CreatedBy = _userManager.GetUserName(User);
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", "", nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -108,11 +114,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     return View(model);
                 }
             }
-            else
-            {
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
-            }
+
+            ModelState.AddModelError("", "The information you submitted is not valid!");
+            return View(model);
         }
 
         [HttpGet]
@@ -142,7 +146,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", "", nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);

@@ -81,8 +81,8 @@
                             <tr>
                                 <td>@item.PurchaseOrderNo</td>
                                 <td>@item.Date.ToString(SD.Date_Format)</td>
-                                <td>@item.PickUpPoint.Depot</td>
-                                <td>@item.Product.ProductName</td>
+                                <td>@item.PickUpPoint!.Depot</td>
+                                <td>@item.Product!.ProductName</td>
                                 <td>@item.UnitPrice</td>
                                 <td>@item.Quantity.ToString(SD.Two_Decimal_Format)</td>
                                 <td>@item.Amount.ToString(SD.Two_Decimal_Format)</td>

@@ -38,9 +38,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -69,13 +75,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     creditMemos = creditMemos
                     .Where(s =>
-                        s.CreditMemoNo.ToLower().Contains(searchValue) ||
+                        s.CreditMemoNo!.ToLower().Contains(searchValue) ||
                         (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
                         s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.CreditAmount.ToString().Contains(searchValue) ||
                         s.Remarks?.ToLower().Contains(searchValue) == true ||
                         s.Description.ToLower().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -140,6 +146,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CreditMemoViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             var existingSv = await _unitOfWork.MobilityServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
@@ -222,8 +233,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new credit memo# {viewModel.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new credit memo# {viewModel.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -320,8 +330,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy!, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -391,12 +400,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                             viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv.Customer.VatType == "Vatable")
+                            if (existingSv.Customer!.VatType == "Vatable")
                             {
                                 viewModelDMCM.Total = -model.Amount ?? 0;
                                 viewModelDMCM.NetAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
                                 viewModelDMCM.VatAmount = (model.Amount ?? 0 - existingSv.Discount) - viewModelDMCM.NetAmount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service!.Percent / 100m);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -405,7 +414,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service.Percent / 100m);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service!.Percent / 100m);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -624,8 +633,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -677,8 +685,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -721,8 +728,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -770,9 +776,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

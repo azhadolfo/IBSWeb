@@ -31,9 +31,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -69,6 +75,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> BeginningInventory(BeginningInventoryViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -85,7 +97,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return View(viewModel);
                     }
 
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
                     await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Beginning balance created successfully";
@@ -178,7 +190,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var product = await _dbContext.Products
                     .FindAsync(viewModel.ProductId, cancellationToken);
 
-                ViewData["Product"] = product.ProductName;
+                ViewData["Product"] = product!.ProductName;
                 ViewBag.ProductId = viewModel.ProductId;
                 ViewBag.POId = viewModel.POId;
 
@@ -239,7 +251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var product = await _dbContext.Products
                     .FindAsync(viewModel.ProductId, cancellationToken);
 
-                ViewData["Product"] = product.ProductName;
+                ViewData["Product"] = product!.ProductName;
                 ViewBag.ProductId = viewModel.ProductId;
                 ViewBag.POId = viewModel.POId;
 
@@ -258,7 +270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
+                .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber!.StartsWith("6010103")))
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -301,13 +313,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> ActualInventory(ActualInventoryViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
                     await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Actual inventory created successfully";
@@ -329,7 +347,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
+                        .Where(coa => coa.Level == 4 &&
+                                      (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
+                                       coa.AccountName.StartsWith("Cost of Goods Sold") ||
+                                       coa.AccountNumber!.StartsWith("6010103")))
                         .Select(s => new SelectListItem
                         {
                             Value = s.AccountNumber,
@@ -346,7 +367,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
             viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 && (coa.AccountName.StartsWith("AR-Non Trade Receivable") || coa.AccountName.StartsWith("Cost of Goods Sold") || coa.AccountNumber.StartsWith("6010103")))
+                .Where(coa => coa.Level == 4 &&
+                              (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
+                               coa.AccountName.StartsWith("Cost of Goods Sold") ||
+                               coa.AccountNumber!.StartsWith("6010103")))
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,

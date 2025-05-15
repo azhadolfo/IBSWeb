@@ -17,7 +17,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    var customerType = Model.ServiceInvoice.Customer.CustomerType;
+    var customerType = Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -50,23 +50,23 @@
         <tr>
             <td colspan="2" style="padding-left:10px;">
                 Received from: &nbsp;
-                    @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerName)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName)
             </td>
         </tr>
         <tr>
             <td colspan="2" class="w-50" style="padding-left:10px;">
                 Address: &nbsp;
-                    @Html.DisplayFor(model => model.ServiceInvoice.CustomerAddress)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.CustomerAddress)
             </td>
         </tr>
         <tr>
             <td style="padding-left:10px;">
                 TIN: &nbsp;
-                    @Html.DisplayFor(model => model.ServiceInvoice.CustomerTin)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.CustomerTin)
             </td>
             <td style="padding-left:10px;">
                 Buss. Style: &nbsp;
-                    @Html.DisplayFor(model => model.ServiceInvoice.Customer.BusinessStyle)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle)
             </td>
         </tr>
         @{
@@ -117,7 +117,7 @@
         <tr>
             <td colspan="2" style="padding-left:10px;">
                 IN FULL/PARTIAL payment of:
-                    @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)
             </td>
         </tr>
         <tr>
@@ -142,7 +142,7 @@
                     @Model.ServiceInvoice?.CreatedDate.ToString(SD.Date_Format)
             </td>
             <td style="width:33%">
-                    @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                    @Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)
             </td>
             <td style="width:33%">@Model.Total.ToString(decimalFormat)</td>
         </tr>
@@ -393,7 +393,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

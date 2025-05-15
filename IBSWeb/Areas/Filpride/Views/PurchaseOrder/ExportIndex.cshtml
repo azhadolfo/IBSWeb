@@ -110,10 +110,10 @@
                             @item.Date.ToString("MM/dd/yyyy")
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Supplier.SupplierName)
+                            @Html.DisplayFor(modelItem => item.Supplier!.SupplierName)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Product.ProductName)
+                            @Html.DisplayFor(modelItem => item.Product!.ProductName)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Amount)

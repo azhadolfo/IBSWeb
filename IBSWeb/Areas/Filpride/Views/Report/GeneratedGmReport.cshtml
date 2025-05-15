@@ -8,7 +8,6 @@
 @{
     ViewData["Title"] = "GM Report";
 
-    string currencyFormat = "N4";
     var totalVolume = 0m;
     decimal averagePurchasePrice = 0m;
     decimal averageSalePrice = 0m;
@@ -17,7 +16,6 @@
     decimal totalWHTAmount = 0m;
     decimal totalPurchaseAmountNet = 0m;
     decimal totalSaleAmount = 0m;
-    decimal totalSalePerLiter = 0m;
     decimal totalGMPerLiter = 0m;
     decimal totalGMAmount = 0m;
     decimal totalFreightCharge = 0m;
@@ -161,7 +159,7 @@
             var saleAmountGross = volume * salePricePerLiter;
             var gmPerLiter = (salePricePerLiter - purchasePerLiter);
             var gmAmount = volume * gmPerLiter;
-            var freightChargePerLiter = (rr.DeliveryReceipt.Freight) + (rr.DeliveryReceipt?.ECC ?? 0m);
+            var freightChargePerLiter = (rr.DeliveryReceipt!.Freight) + (rr.DeliveryReceipt?.ECC ?? 0m);
             var commissionPerLiter = (rr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
             var commissionAmount = commissionPerLiter * volume;
             var netMarginPerLiter = gmPerLiter - freightChargePerLiter;
@@ -278,18 +276,18 @@
             
             @foreach (var customerType in Enum.GetValues<CustomerType>())
             {
-                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
+                var list = Model.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
 
                 // Computation for Overall
-                var overallQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
-                var overallSalesSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
+                var overallSalesSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                 var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
                 var overallPurchasesSum = list.Sum(s => s.Amount);
                 var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
                 var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                var overallFreightSum = list.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                 var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
-                var overallCommissionSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var overallCommissionSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                 var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
                 var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
                 
@@ -351,19 +349,19 @@
 
             @foreach (var customerType in Enum.GetValues<CustomerType>())
             {
-                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
+                var list = Model.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForBiodiesel = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
 
                 // Computation for Biodiesel
-                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
-                var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity);
+                var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                 var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
                 var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
                 var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
                 var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                 var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
-                var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                 var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
                 var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
 
@@ -424,19 +422,19 @@
 
             @foreach (var customerType in Enum.GetValues<CustomerType>())
             {
-                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                var listForEconogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS").ToList();
+                var list = Model.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForEconogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS").ToList();
 
                 // Computation for Econogas
-                var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
-                var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity);
+                var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                 var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
                 var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
                 var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
                 var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                 var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
-                var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                 var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
                 var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
 
@@ -498,19 +496,19 @@
 
             @foreach (var customerType in Enum.GetValues<CustomerType>())
             {
-                var list = Model.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                var listForEnvirogas = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS").ToList();
+                var list = Model.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                var listForEnvirogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS").ToList();
 
                 // Computation for Envirogas
-                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
-                var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity);
+                var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                 var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
                 var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
                 var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
                 var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                 var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
-                var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                 var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
                 var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
 

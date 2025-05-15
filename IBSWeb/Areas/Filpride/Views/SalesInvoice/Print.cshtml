@@ -8,7 +8,7 @@
 @{
     ViewData["Title"] = "Print Sales Invoice";
     decimal netDiscount = Model.Amount - Model.Discount;
-    decimal netOfVatAmount = Model.Customer.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+    decimal netOfVatAmount = Model.Customer!.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
     decimal vatAmount = Model.Customer.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
     decimal withHoldingTaxAmount = Model.Customer.WithHoldingTax ? (netDiscount / 1.12m) * 0.01m : 0;
     decimal withHoldingVatAmount = Model.Customer.WithHoldingVat ? (netDiscount / 1.12m) * 0.05m : 0;
@@ -73,7 +73,7 @@
             <tr>
                 <td>
                     <span><b>Sold to:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.Customer.CustomerName) &nbsp;<br />
+                    &nbsp; @Html.DisplayFor(model => model.Customer!.CustomerName) &nbsp;<br />
 
                     <span><b>Address:</b></span>
                     &nbsp; @Html.DisplayFor(model => model.CustomerAddress) &nbsp;<br />
@@ -82,7 +82,7 @@
                     &nbsp; @Html.DisplayFor(model => model.CustomerTin) &nbsp;<br />
 
                     <span><b>Business Style:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.Customer.BusinessStyle) &nbsp;
+                    &nbsp; @Html.DisplayFor(model => model.Customer!.BusinessStyle) &nbsp;
                 </td>
 
                 <td class="w-25 text-nowrap">
@@ -112,8 +112,8 @@
             </tr>
 
             <tr style="height:80px;">
-                <td>@Html.DisplayFor(model => model.Product.ProductName)</td>
-                <td>@Html.DisplayFor(model => model.Product.ProductUnit)</td>
+                <td>@Html.DisplayFor(model => model.Product!.ProductName)</td>
+                <td>@Html.DisplayFor(model => model.Product!.ProductUnit)</td>
                 <td>@Model.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.UnitPrice.ToString(SD.Four_Decimal_Format)</td>
                 <td>@Model.Amount.ToString(decimalFormat)</td>

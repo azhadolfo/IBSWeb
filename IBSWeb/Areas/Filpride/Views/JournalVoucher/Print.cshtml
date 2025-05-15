@@ -51,7 +51,7 @@
     }
     <h3><span style="display: inline-block;"><b>JOURNAL VOUCHER</b></span></h3>
     <div class="text-end" style="margin-top:-60px;">
-        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header.JournalVoucherHeaderNo)</b></h6>
+        <h6><b>No.&nbsp;@Html.DisplayFor(model => model.Header!.JournalVoucherHeaderNo)</b></h6>
     </div>
 </div>
 
@@ -62,14 +62,14 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="w-25 text-end">Date : @Model.Header.Date.ToString(SD.Date_Format)</td>
+                <td class="w-25 text-end">Date : @Model.Header!.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
                 <td>CATEGORY : </td>
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Html.DisplayFor(model => model.Header.CheckVoucherHeader.Category)
+                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.Category)
                     }
                 </td>
                 <td></td>
@@ -86,7 +86,7 @@
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Html.DisplayFor(model => model.Header.CheckVoucherHeader.CheckVoucherHeaderNo)
+                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckVoucherHeaderNo)
                     }
                 </td>
                 <td>CR # :</td>
@@ -97,7 +97,7 @@
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Html.DisplayFor(model => model.Header.CheckVoucherHeader.CheckNo)
+                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckNo)
                     }
                 </td>
                 <td>AMOUNT :</td>
@@ -129,16 +129,16 @@
                 <td>
                     @if (Model.Header.CheckVoucherHeader != null)
                     {
-                        @Html.DisplayFor(model => model.Header.CheckVoucherHeader.Payee)
+                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.Payee)
                     }
                 </td>
                 <td>JV Reason :</td>
-                <td>@Html.DisplayFor(model => model.Header.JVReason)</td>
+                <td>@Html.DisplayFor(model => model.Header!.JVReason)</td>
             </tr>
 
             <tr>
                 <td>PARTICULARS:</td>
-                <td><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Header.Particulars)</pre></td>
+                <td><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Header!.Particulars)</pre></td>
                 <td></td>
                 <td></td>
             </tr>
@@ -159,7 +159,7 @@
                 <th class="text-end">DEBIT</th>
                 <th class="text-end">CREDIT</th>
             </tr>
-            @foreach (var jvd in Model.Details)
+            @foreach (var jvd in Model.Details!)
             {
                 <tr>
                     <td style="width:60%; padding-left:20px;">@jvd.AccountNo&nbsp;@jvd.AccountName</td>
@@ -234,7 +234,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

@@ -17,7 +17,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice.Customer.CustomerType;
+    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -84,11 +84,11 @@
                     Received from: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.Customer.CustomerName)
+                        @Html.DisplayFor(model => model.SalesInvoice!.Customer!.CustomerName)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.CustomerName)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName)
                     }
                 </td>
             </tr>
@@ -97,11 +97,11 @@
                     Address: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.CustomerAddress)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerAddress)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.CustomerAddress)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.CustomerAddress)
                     }
                 </td>
             </tr>
@@ -110,22 +110,22 @@
                     TIN: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.CustomerTin)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerTin)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.CustomerTin)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.CustomerTin)
                     }
                 </td>
                 <td style="padding-left:10px;">
                     Buss. Style: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.Customer.BusinessStyle)
+                        @Html.DisplayFor(model => model.SalesInvoice!.Customer!.BusinessStyle)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.Customer.BusinessStyle)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle)
                     }
                 </td>
             </tr>
@@ -179,11 +179,11 @@
                     IN FULL/PARTIAL payment of:
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)
+                        @Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)
                     }
                 </td>
             </tr>
@@ -218,11 +218,11 @@
                 <td style="width:33%">
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice.SalesInvoiceNo)
+                        @Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice.ServiceInvoiceNo)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)
                     }
                 </td>
                 <td style="width:33%">@Model.Total.ToString(decimalFormat)</td>
@@ -474,7 +474,7 @@
                     <br/>
                     <strong>Version :</strong> @CS.Version
                     <br/>
-                    <strong>Printed By :</strong> @UserManager.GetUserName(User).ToUpper()
+                    <strong>Printed By :</strong> @UserManager.GetUserName(User)!.ToUpper()
                     <br/>
                     <strong>Date & Time Printed :</strong> @DateTimeHelper.GetCurrentPhilippineTimeFormatted()
                 </em>

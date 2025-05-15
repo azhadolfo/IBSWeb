@@ -40,9 +40,15 @@ namespace IBSWeb.Areas.Bienes.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -70,8 +76,8 @@ namespace IBSWeb.Areas.Bienes.Controllers
                             .Where(s =>
                                 s.ControlNumber.ToLower().Contains(searchValue) ||
                                 s.CreatedDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                                s.Company.CompanyName.ToLower().Contains(searchValue) == true ||
-                                s.BankAccount.Bank.ToLower().Contains(searchValue) == true ||
+                                s.Company.CompanyName.ToLower().Contains(searchValue) ||
+                                s.BankAccount?.Bank.ToLower().Contains(searchValue) == true ||
                                 s.TDAccountNumber.ToLower().Contains(searchValue) ||
                                 s.PrincipalAmount.ToString().Contains(searchValue)
                         )
@@ -137,6 +143,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             PlacementViewModel viewModel = new()
             {
                 Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken),
@@ -151,6 +162,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
         public async Task<IActionResult> Create(PlacementViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -202,8 +218,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.AddAsync(model, cancellationToken);
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new placement# {model.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -238,13 +253,13 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var existingRecord = await _unitOfWork.BienesPlacement
-                    .GetAsync(p => p.PlacementId == id, cancellationToken);
-
-                if (existingRecord == null)
+                if (companyClaims == null)
                 {
                     return BadRequest();
                 }
+
+                var existingRecord = await _unitOfWork.BienesPlacement
+                    .GetAsync(p => p.PlacementId == id, cancellationToken);
 
                 PlacementViewModel viewModel = new()
                 {
@@ -294,6 +309,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
@@ -306,7 +326,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
             try
             {
-                viewModel.CurrentUser = User.Identity.Name;
+                viewModel.CurrentUser = User.Identity!.Name!;
 
                 await _unitOfWork.BienesPlacement.UpdateAsync(viewModel, cancellationToken);
 
@@ -381,13 +401,13 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     return RedirectToAction(nameof(Preview), new { id });
                 }
 
-                existingRecord.PostedBy = User.Identity.Name;
+                existingRecord.PostedBy = User.Identity!.Name!;
                 existingRecord.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.Status = nameof(PlacementStatus.Posted);
                 existingRecord.IsPosted = true;
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Placement posted successfully.";
@@ -433,7 +453,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 existingRecord.Status = nameof(PlacementStatus.Terminated);
                 existingRecord.TerminatedDate = viewModel.TerminatedDate;
-                existingRecord.TerminatedBy = User.Identity.Name;
+                existingRecord.TerminatedBy = User.Identity!.Name!;
                 existingRecord.InterestDeposited = viewModel.InterestDeposited;
                 existingRecord.InterestDepositedDate = viewModel.InterestDepositedDate == default ? null : viewModel.InterestDepositedDate;
                 existingRecord.InterestDepositedTo = viewModel.InterestDepositedTo;
@@ -441,7 +461,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.TerminationRemarks = viewModel.TerminationRemarks;
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -484,8 +504,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.InterestStatus = null;
                 existingRecord.TerminationRemarks = null;
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Reactivate placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Reactivate placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -531,7 +550,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
 
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -552,7 +571,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RollOver(int? id, TerminatePlacementViewModel terminateModel = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> RollOver(int? id, TerminatePlacementViewModel? terminateModel = null, CancellationToken cancellationToken = default)
         {
             if (id == null)
             {
@@ -571,7 +590,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.IsRolled = true;
 
                 // Check if termination details were provided
-                if (terminateModel.PlacementId > 0)
+                if (terminateModel?.PlacementId > 0)
                 {
                     // Apply termination details
                     existingRecord.Status = nameof(PlacementStatus.Terminated);
@@ -586,8 +605,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -608,7 +626,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Swapping(int? id, int companyId, TerminatePlacementViewModel terminateModel = null, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Swapping(int? id, int companyId, TerminatePlacementViewModel? terminateModel = null, CancellationToken cancellationToken = default)
         {
             if (id == null)
             {
@@ -633,7 +651,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.IsSwapped = true;
 
                 // Check if termination details were provided
-                if (terminateModel.PlacementId > 0)
+                if (terminateModel?.PlacementId > 0)
                 {
                     // Apply termination details
                     existingRecord.Status = nameof(PlacementStatus.Terminated);
@@ -648,8 +666,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 var newControlNumber = await _unitOfWork.BienesPlacement.SwappingAsync(existingRecord, companyId, user!, cancellationToken);
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(user!, $"Swapped placement# {existingRecord.ControlNumber}", "Placement", ipAddress, nameof(Bienes));
+                FilprideAuditTrail auditTrailBook = new(user!, $"Swapped placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);

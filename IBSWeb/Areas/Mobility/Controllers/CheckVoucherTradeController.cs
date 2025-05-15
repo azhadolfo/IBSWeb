@@ -2,8 +2,6 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride;
-using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -17,7 +15,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -53,9 +50,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -99,14 +102,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     checkVoucherHeaders = checkVoucherHeaders
                     .Where(s =>
-                        s.CheckVoucherHeaderNo.ToLower().Contains(searchValue) ||
+                        s.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
                         s.Total.ToString().Contains(searchValue) ||
-                        s.Amount?.ToString().Contains(searchValue) == true ||
+                        s.Amount?.ToString()!.Contains(searchValue) == true ||
                         s.Category.ToLower().Contains(searchValue) ||
                         s.CvType?.ToLower().Contains(searchValue) == true ||
-                        s.CreatedBy.ToLower().Contains(searchValue)
+                        s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -155,7 +158,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             CheckVoucherTradeViewModel model = new();
             model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -191,10 +194,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (!ModelState.IsValid)
             {
                 viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                     .Select(s => new SelectListItem
                     {
                         Value = s.AccountNumber,
@@ -247,7 +255,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         if (cv.Count() > 0)
                         {
                             viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                                 .Select(s => new SelectListItem
                                 {
                                     Value = s.AccountNumber,
@@ -300,7 +308,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region -- Get PO --
 
                     var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
-                                                    .GetAsync(po => viewModel.POSeries.Contains(po.PurchaseOrderNo), cancellationToken);
+                                                    .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
+
+                    if (getPurchaseOrder == null)
+                    {
+                        return NotFound();
+                    }
 
                 #endregion -- Get PO --
 
@@ -314,7 +327,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Date = viewModel.TransactionDate,
                         PONo = viewModel.POSeries,
                         SupplierId = viewModel.SupplierId,
-                        Particulars = $"{viewModel.Particulars}. Advances# {viewModel.AdvancesCVNo}",
+                        Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
                         Reference = viewModel.AdvancesCVNo,
                         BankId = viewModel.BankId,
                         CheckNo = viewModel.CheckNo,
@@ -367,6 +380,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     foreach (var item in viewModel.RRs)
                     {
                         var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
+
+                        if (getReceivingReport == null)
+                        {
+                            return NotFound();
+                        }
+
                         getReceivingReport.AmountPaid += item.Amount;
 
                         cvTradePaymentModel.Add(
@@ -388,14 +407,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (file != null && file.Length > 0)
                     {
                         cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName);
+                        cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
                     }
 
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -410,7 +428,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             catch (Exception ex)
             {
                 viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                     .Select(s => new SelectListItem
                     {
                         Value = s.AccountNumber,
@@ -448,7 +466,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create check voucher trade. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -494,7 +512,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var receivingReports = await query
                 .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(rr => rr.Supplier)
+                .ThenInclude(rr => rr!.Supplier)
                 .OrderBy(rr => rr.ReceivingReportNo)
                 .ToListAsync(cancellationToken);
 
@@ -579,15 +597,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             CheckVoucherTradeViewModel model = new()
             {
                 SupplierId = existingHeaderModel.SupplierId ?? 0,
-                Payee = existingHeaderModel.Payee,
+                Payee = existingHeaderModel.Payee!,
                 SupplierAddress = existingHeaderModel.Address,
                 SupplierTinNo = existingHeaderModel.Tin,
                 POSeries = existingHeaderModel.PONo,
                 TransactionDate = existingHeaderModel.Date,
                 BankId = existingHeaderModel.BankId,
-                CheckNo = existingHeaderModel.CheckNo,
+                CheckNo = existingHeaderModel.CheckNo!,
                 CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
-                Particulars = existingHeaderModel.Particulars,
+                Particulars = existingHeaderModel.Particulars!,
                 CVId = existingHeaderModel.CheckVoucherHeaderId,
                 CVNo = existingHeaderModel.CheckVoucherHeaderNo,
                 CreatedBy = _userManager.GetUserName(this.User),
@@ -618,7 +636,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             model.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber,
@@ -654,11 +672,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var existingHeaderModel = await _unitOfWork.MobilityCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
                 viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber.Contains(excludedNumber)) && !coa.HasChildren)
+                    .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
                     .Select(s => new SelectListItem
                     {
                         Value = s.AccountNumber,
@@ -716,7 +738,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             AccountName = viewModel.AccountTitle[i],
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
-                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo,
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
                             CheckVoucherHeaderId = viewModel.CVId,
                             SupplierId = i == 0 ? viewModel.SupplierId : null,
                             BankId = i == 2 ? viewModel.BankId : null,
@@ -756,6 +778,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     {
                         var recevingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
 
+                        if (recevingReport == null)
+                        {
+                            return NotFound();
+                        }
+
                         recevingReport.AmountPaid -= item.AmountPaid;
                     }
 
@@ -766,6 +793,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     foreach (var item in viewModel.RRs)
                     {
                         var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
+
+                        if (getReceivingReport == null)
+                        {
+                            return NotFound();
+                        }
+
                         getReceivingReport.AmountPaid += item.Amount;
 
                         cvTradePaymentModel.Add(
@@ -788,13 +821,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (file != null && file.Length > 0)
                     {
                         existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName);
+                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
                     }
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -811,7 +843,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to edit check voucher trade. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -849,11 +881,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var rrValue = header.RRNo[i];
 
                     var rr = await _dbContext.MobilityReceivingReports
-                                .FirstOrDefaultAsync(p => p.StationCode == stationCodeClaims && p.ReceivingReportNo == rrValue);
+                                .FirstOrDefaultAsync(p => p.StationCode == stationCodeClaims && p.ReceivingReportNo == rrValue, cancellationToken);
 
                     if (rr != null)
                     {
-                        siArray[i] = rr.SupplierInvoiceNumber;
+                        siArray[i] = rr.SupplierInvoiceNumber!;
                     }
                 }
 
@@ -877,9 +909,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -918,6 +949,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         if (item.DocumentType == "RR")
                         {
                             var receivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                            if (receivingReport == null)
+                            {
+                                return NotFound();
+                            }
 
                             receivingReport.IsPaid = true;
                             receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -1017,8 +1053,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -1031,7 +1066,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to post check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, User.Identity.Name);
+                        ex.Message, ex.StackTrace, User.Identity!.Name);
                     await transaction.RollbackAsync(cancellationToken);
 
                     TempData["error"] = ex.Message;
@@ -1054,7 +1089,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     if (model.CanceledBy == null)
                     {
-                        model.CanceledBy = User.Identity.Name;
+                        model.CanceledBy = User.Identity!.Name;
                         model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Canceled);
                         model.CancellationRemarks = cancellationRemarks;
@@ -1072,6 +1107,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 var receivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
 
+                                if (receivingReport == null)
+                                {
+                                    return NotFound();
+                                }
+
                                 receivingReport.IsPaid = false;
                                 receivingReport.AmountPaid -= item.AmountPaid;
                             }
@@ -1081,8 +1121,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1126,7 +1165,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             model.PostedBy = null;
                         }
 
-                        model.VoidedBy = User.Identity.Name;
+                        model.VoidedBy = User.Identity!.Name;
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
@@ -1147,7 +1186,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             {
                                 var receivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
 
-                                receivingReport.IsPaid = false;
+                                receivingReport!.IsPaid = false;
                                 receivingReport.AmountPaid -= item.AmountPaid;
                             }
                         }
@@ -1171,8 +1210,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -1235,7 +1273,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var advancesVoucher = await _dbContext.MobilityCheckVoucherDetails
                 .Include(cv => cv.CheckVoucherHeader)
                 .FirstOrDefaultAsync(cv =>
-                        cv.CheckVoucherHeader.SupplierId == supplierId &&
+                        cv.CheckVoucherHeader!.SupplierId == supplierId &&
                         cv.CheckVoucherHeader.IsAdvances &&
                         cv.CheckVoucherHeader.Total > cv.CheckVoucherHeader.AmountPaid &&
                         cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
@@ -1247,7 +1285,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return (string.Empty, 0 );
             }
 
-            return (advancesVoucher.CheckVoucherHeader.CheckVoucherHeaderNo, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);
+            return (advancesVoucher.CheckVoucherHeader!.CheckVoucherHeaderNo!, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);
         }
     }
 }

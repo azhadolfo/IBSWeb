@@ -330,13 +330,13 @@ namespace IBS.DataAccess.Repository.Mobility
 
             FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
                 $"Created new receiving report# {model.ReceivingReportNo}",
-                "Receiving Report", "",
-                "Mobility");
+                "Receiving Report",
+                nameof(Mobility));
 
             FilprideAuditTrail auditTrailPost = new(model.PostedBy,
                 $"Posted receiving report# {model.ReceivingReportNo}",
-                "Receiving Report", "",
-                "Mobility");
+                "Receiving Report",
+                nameof(Mobility));
 
             await _db.AddAsync(auditTrailCreate, cancellationToken);
             await _db.AddAsync(auditTrailPost, cancellationToken);

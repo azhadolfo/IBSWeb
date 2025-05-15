@@ -36,9 +36,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -187,8 +193,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var currentShift = 1;
             var currentPage = 1;
             var isFirstRow = true;
-            var lastFmsData = groupedData.FirstOrDefault().FirstOrDefault(x => x.Source == "FMS");
-            var lastPosData = groupedData.FirstOrDefault().FirstOrDefault(x => x.Source == "POS");
+            var lastFmsData = groupedData.FirstOrDefault()?.FirstOrDefault(x => x.Source == "FMS");
+            var lastPosData = groupedData.FirstOrDefault()?.FirstOrDefault(x => x.Source == "POS");
 
 
             foreach (var group in groupedData)

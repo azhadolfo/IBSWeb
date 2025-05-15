@@ -51,9 +51,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -78,7 +84,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        private async Task<string> GetCurrentFilterType()
+        private async Task<string?> GetCurrentFilterType()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user != null)
@@ -111,8 +117,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(cos => cos.Product)
                     .Include(cos => cos.Supplier)
                     .Include(cos => cos.PickUpPoint)
-                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
+                    .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
                     .Include(cos => cos.AppointedSuppliers)
                     .Where(cos => cos.Company == companyClaims);
 
@@ -162,11 +168,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     query = query.Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.OldCosNo.ToLower().Contains(searchValue) ||
-                        (s.PurchaseOrder != null && s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue)) ||
+                        (s.PurchaseOrder != null && s.PurchaseOrder.PurchaseOrderNo!.ToLower().Contains(searchValue)) ||
                         (s.Customer != null && s.Customer.CustomerName.ToLower().Contains(searchValue)) ||
                         (isDateSearch && s.Date == searchDate) ||
                         (s.PickUpPoint != null && s.PickUpPoint.Depot.ToLower().Contains(searchValue)) ||
-                        s.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.Product!.ProductName.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue));
@@ -193,12 +199,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.CustomerOrderSlipNo,
                         cos.OldCosNo,
                         cos.PurchaseOrderId,
-                        cos.PurchaseOrder.PurchaseOrderNo,
-                        cos.PickUpPoint.Depot,
+                        cos.PurchaseOrder!.PurchaseOrderNo,
+                        cos.PickUpPoint!.Depot,
                         cos.PickUpPointId,
                         cos.Date,
-                        cos.Customer.CustomerName,
-                        cos.Product.ProductName,
+                        cos.Customer!.CustomerName,
+                        cos.Product!.ProductName,
                         cos.Quantity,
                         cos.TotalAmount,
                         cos.Status,
@@ -207,8 +213,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.PlateNo,
                         cos.BalanceQuantity,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
-                        AppointedSupplierPOs = cos.AppointedSuppliers
-                            .Select(a => a.PurchaseOrder.PurchaseOrderNo)
+                        AppointedSupplierPOs = cos.AppointedSuppliers!
+                            .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
                     })
                     .ToListAsync(cancellationToken);
@@ -236,6 +242,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             CustomerOrderSlipViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
@@ -252,6 +263,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -263,8 +279,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
                         Date = viewModel.Date,
                         CustomerId = viewModel.CustomerId,
-                        CustomerAddress = viewModel.CustomerAddress,
-                        CustomerTin = viewModel.TinNo,
+                        CustomerAddress = viewModel.CustomerAddress!,
+                        CustomerTin = viewModel.TinNo!,
                         CustomerPoNo = viewModel.CustomerPoNo,
                         Quantity = viewModel.Quantity,
                         BalanceQuantity = viewModel.Quantity,
@@ -279,7 +295,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         OldCosNo = viewModel.OtcCosNo,
                         Terms = viewModel.Terms,
                         Branch = viewModel.SelectedBranch,
-                        CustomerType = viewModel.CustomerType,
+                        CustomerType = viewModel.CustomerType!,
                     };
 
                     if (model.Branch != null)
@@ -288,7 +304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Where(b => b.BranchName == model.Branch)
                             .FirstOrDefaultAsync(cancellationToken);
 
-                        model.CustomerAddress = branch.BranchAddress;
+                        model.CustomerAddress = branch!.BranchAddress;
                         model.CustomerTin = branch.BranchTin;
                     }
 
@@ -301,8 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -341,6 +356,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var exisitingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
@@ -399,6 +419,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> EditCos(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -490,7 +516,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{viewModel.CurrentUser.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
+                        var message = $"{viewModel.CurrentUser!.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
                         message += $"\nKindly reappoint the supplier/hauler, if necessary.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsAndLogisticUsers, message);
@@ -590,7 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CustomerOrderSlip = customerOrderSlip,
                 NetOfVatCosPrice = vatCalculator.ComputeNetOfVat(customerOrderSlip.DeliveredPrice),
                 NetOfVatFreightCharge = customerOrderSlip.Freight != 0
-                    ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight)
+                    ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight!)
                     : (decimal)customerOrderSlip.Freight,
                 VatAmount = vatCalculator.ComputeVatAmount(
                     vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount)),
@@ -602,7 +628,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CustomerOrderSlipForApprovalViewModel model, CancellationToken cancellationToken)
         {
             var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
-                .Include(p => p.PurchaseOrder).ThenInclude(p => p.ActualPrices)
+                .Include(p => p.PurchaseOrder).ThenInclude(p => p!.ActualPrices)
                 .Where(a => a.CustomerOrderSlipId == customerOrderSlipId)
                 .ToListAsync(cancellationToken);
 
@@ -612,8 +638,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             foreach (var supplier in appointedSuppliers)
             {
                 var po = supplier.PurchaseOrder;
-                bool hasTriggeredPrices = po.UnTriggeredQuantity != po.Quantity &&
-                                         po.ActualPrices.Any(p => p.IsApproved);
+                bool hasTriggeredPrices = po!.UnTriggeredQuantity != po.Quantity &&
+                                         po.ActualPrices!.Any(p => p.IsApproved);
 
                 if (hasTriggeredPrices)
                 {
@@ -634,7 +660,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             decimal weightedCostTotal = 0m;
             decimal totalCOSVolume = 0m;
 
-            foreach (var price in po.ActualPrices.Where(p => p.IsApproved).OrderBy(p => p.TriggeredDate))
+            foreach (var price in po.ActualPrices!.Where(p => p.IsApproved).OrderBy(p => p.TriggeredDate))
             {
                 var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCOSVolume);
 
@@ -705,19 +731,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var subPoModel = new FilpridePurchaseOrder
                             {
-                                PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo.Type, cancellationToken),
+                                PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo!.Type!, cancellationToken),
                                 Date = DateOnly.FromDateTime(DateTime.UtcNow),
                                 SupplierId = existingPo.SupplierId,
                                 ProductId = existingRecord.ProductId,
                                 Terms = existingPo.Terms,
                                 Quantity = item.Quantity,
-                                Price = (decimal)existingRecord.Freight,
+                                Price = (decimal)existingRecord.Freight!,
                                 Amount = item.Quantity * (decimal)existingRecord.Freight,
                                 Remarks = $"{existingRecord.SubPORemarks}\nPlease note: The values in this purchase order are for the freight charge.",
                                 Company = existingPo.Company,
                                 IsSubPo = true,
                                 CustomerId = existingRecord.CustomerId,
-                                SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo, existingPo.Company, cancellationToken),
+                                SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo!, existingPo.Company, cancellationToken),
                                 CreatedBy = existingRecord.FirstApprovedBy,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 PostedBy = existingRecord.FirstApprovedBy,
@@ -732,14 +758,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --Audit Trail Recording
 
-                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy,
+                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy!,
                                 $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
-                                "Purchase Order", "",
+                                "Purchase Order",
                                 subPoModel.Company);
 
-                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy,
+                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy!,
                                 $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
-                                "Purchase Order", "",
+                                "Purchase Order",
                                 subPoModel.Company);
 
                             await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
@@ -761,10 +787,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var userCreated = await _dbContext.ApplicationUsers
                             .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
 
-                        var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy.ToUpper()} (OM). " +
+                        var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy!.ToUpper()} (OM). " +
                                            $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
 
-                        await _unitOfWork.Notifications.AddNotificationAsync(userCreated.Id, notification);
+                        await _unitOfWork.Notifications.AddNotificationAsync(userCreated!.Id, notification);
 
                         var hubConnections = await _dbContext.HubConnections
                             .Where(h => h.UserName == userCreated.UserName)
@@ -778,8 +804,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -825,8 +850,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
                 }
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
@@ -862,7 +886,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.Disapproved);
 
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy!, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -919,6 +943,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
@@ -940,6 +969,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> AppointSupplier(CustomerOrderSlipAppointingSupplierViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.CurrentUser = _userManager.GetUserName(User);
 
             if (ModelState.IsValid)
@@ -999,8 +1034,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     TempData["success"] = "Appointed supplier successfully.";
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -1038,6 +1072,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
@@ -1048,9 +1087,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
                     PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
                     COSVolume = existingRecord.Quantity,
-                    DeliveryOption = existingRecord.DeliveryOption,
+                    DeliveryOption = existingRecord.DeliveryOption!,
                     Freight = existingRecord.Freight ?? 0,
-                    PickUpPointId = (int)existingRecord.PickUpPointId,
+                    PickUpPointId = (int)existingRecord.PickUpPointId!,
                     PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
                     SubPoRemarks = existingRecord.SubPORemarks,
 
@@ -1090,6 +1129,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> ReAppointSupplier(CustomerOrderSlipAppointingSupplierViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.CurrentUser = _userManager.GetUserName(User);
 
             if (ModelState.IsValid)
@@ -1113,7 +1158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{viewModel.CurrentUser.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. " +
+                        var message = $"{viewModel.CurrentUser!.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. " +
                                       $"Please reappoint your hauler if necessary.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(logisticUsers, message);
@@ -1178,8 +1223,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     TempData["success"] = "Reappointed supplier successfully.";
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -1233,7 +1277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(p => p.PickUpPoint)
                 .Include(p => p.Supplier)
                 .Where(p => supplierIdList.Contains(p.SupplierId) &&
-                            p.PickUpPoint.Depot == depot &&
+                            p.PickUpPoint!.Depot == depot &&
                             p.ProductId == productId &&
                             !p.IsReceived && !p.IsSubPo &&
                             p.Status == nameof(Status.Posted) &&
@@ -1247,7 +1291,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Text = p.PurchaseOrderNo,
                 AvailableBalance = p.Quantity - p.QuantityReceived,
                 p.SupplierId,
-                p.Supplier.SupplierName,
+                p.Supplier!.SupplierName,
                 PreviousQuantity = previouslyAppointedPOs
                     .FirstOrDefault(x => x.PurchaseOrderId == p.PurchaseOrderId)?.Quantity ?? 0, // Now safe
                 IsPreSelected = previouslyAppointedPOs
@@ -1281,12 +1325,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
             var viewModel = new CustomerOrderSlipAppointingHauler
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                DeliveryOption = existingRecord.DeliveryOption,
+                DeliveryOption = existingRecord.DeliveryOption!,
                 Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
             };
             return View(viewModel);
@@ -1297,13 +1347,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> AppointHauler(CustomerOrderSlipAppointingHauler viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
 
                     var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
@@ -1338,8 +1394,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.Driver = viewModel.Driver;
                     existingCos.PlateNo = viewModel.PlateNo;
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Appoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Appointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -1370,17 +1426,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
             var viewModel = new CustomerOrderSlipAppointingHauler
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
-                DeliveryOption = existingRecord.DeliveryOption,
+                DeliveryOption = existingRecord.DeliveryOption!,
                 Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                HaulerId = (int)existingRecord.HaulerId,
-                Freight = (decimal)existingRecord.Freight,
-                Driver = existingRecord.Driver,
-                PlateNo = existingRecord.PlateNo
+                HaulerId = (int)existingRecord.HaulerId!,
+                Freight = (decimal)existingRecord.Freight!,
+                Driver = existingRecord.Driver!,
+                PlateNo = existingRecord.PlateNo!
             };
             return View(viewModel);
         }
@@ -1391,13 +1454,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
+                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
 
                     var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
@@ -1429,8 +1497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.Driver = viewModel.Driver;
                     existingCos.PlateNo = viewModel.PlateNo;
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", ipAddress, existingCos.Company);
+                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser, $"Reappoint hauler in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = "Reappointed hauler successfully.";
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -1468,7 +1535,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingRecord.Status = nameof(CosStatus.Closed);
 
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User), $"Closed customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", "", existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Closed customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "Customer order slip closed successfully.";
@@ -1490,9 +1557,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var filprideProduct = await _dbContext.Products.FindAsync(productId);
-            var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct.ProductCode, cancellationToken);
+            var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct!.ProductCode, cancellationToken);
             var purchaseOrder = await _dbContext.MobilityPurchaseOrders
-                .Where(p => p.ProductId == mobilityProduct.ProductId && p.StationCode == stationCode && p.PostedBy != null && !p.IsReceived)
+                .Where(p => p.ProductId == mobilityProduct!.ProductId && p.StationCode == stationCode && p.PostedBy != null && !p.IsReceived)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),

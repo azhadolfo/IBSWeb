@@ -37,9 +37,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -75,13 +81,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     purchaseOrders = purchaseOrders
                     .Where(s =>
                         s.PurchaseOrderNo.ToLower().Contains(searchValue) ||
-                        s.Supplier.SupplierName.ToLower().Contains(searchValue) ||
-                        s.PickUpPoint.Depot.ToLower().Contains(searchValue) ||
-                        s.Product.ProductName.ToLower().Contains(searchValue) ||
+                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                        s.PickUpPoint?.Depot.ToLower().Contains(searchValue) == true ||
+                        s.Product?.ProductName.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.Remarks.ToString().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.CreatedBy?.ToLower().Contains(searchValue) == true ||
                         s.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
@@ -129,6 +135,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             var viewModel = new PurchaseOrderViewModel();
 
             viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
@@ -143,6 +154,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
@@ -181,8 +197,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -215,6 +230,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
 
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -238,7 +258,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     SupplierId = existingRecord.SupplierId,
                     Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken),
                     PickUpPointId = existingRecord.PickUpPointId,
-                    PickUpPoints = await _unitOfWork.MobilityPickUpPoint.GetDistinctPickupPointList(),
+                    PickUpPoints = await _unitOfWork.MobilityPickUpPoint.GetDistinctPickupPointList(cancellationToken),
                     ProductId = existingRecord.ProductId,
                     Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken),
                     Terms = existingRecord.Terms,
@@ -262,6 +282,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -300,8 +326,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -348,10 +373,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var pickupPoint = await _dbContext.MobilityPickUpPoints
                     .FindAsync(pickupPointId, cancellationToken);
 
+                if (pickupPoint == null)
+                {
+                    return NotFound();
+                }
+
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint.Depot} to {pickupPoint.Depot}. \nNote: {notes}", "Purchase Order", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint?.Depot} to {pickupPoint.Depot}. \nNote: {notes}", "Purchase Order", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -410,8 +439,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -430,12 +458,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = await _dbContext.MobilityPurchaseOrders.FindAsync(id, cancellationToken);
 
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             var hasAlreadyBeenUsed =
                 await _dbContext.FilprideReceivingReports.AnyAsync(
                     rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
                     cancellationToken) ||
                 await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
-                    cv.CvType == "Trade" && cv.PONo.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+                    cv.CvType == "Trade" && cv.PONo!.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
 
             if (hasAlreadyBeenUsed)
             {
@@ -458,8 +491,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -492,8 +524,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -524,9 +555,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -548,7 +578,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .GroupBy(po => po.StationCode)
                 .Select(g => new UnservedPurchaseOrderViewModel
                 {
-                    StationName = $"{g.Key} {g.First().MobilityStation.StationName} {g.First().MobilityStation.Initial}",
+                    StationName = $"{g.Key} {g.First().MobilityStation!.StationName} {g.First().MobilityStation!.Initial}",
                     PurchaseOrders = g.ToList()
                 })
                 .ToListAsync(cancellationToken);

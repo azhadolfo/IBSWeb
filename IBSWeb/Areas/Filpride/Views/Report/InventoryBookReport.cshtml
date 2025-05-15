@@ -39,7 +39,7 @@ Number of Records:                  @numberOfRecords
 Amount Field Control Total:         @amountFieldControlTotal
 Period Covered:                     @dateFrom to @dateTo
 Transaction cut-off Date & Time:    @lastRecord
-Extracted By:                       @UserManager.GetUserName(User).ToUpper()
+Extracted By:                       @UserManager.GetUserName(User)!.ToUpper()
 </pre>
 
     <h3><b>INVENTORY BOOK</b></h3>
@@ -135,7 +135,7 @@ Extracted By:                       @UserManager.GetUserName(User).ToUpper()
             <br />
             <strong>Version :</strong> @CS.Version
             <br />
-            <b>Printed By :</b> @UserManager.GetUserName(User).ToUpper()
+            <b>Printed By :</b> @UserManager.GetUserName(User)!.ToUpper()
             <br />
             <b>Date & Time Printed :</b> @now.ToString("MM/dd/yyyy hh:mm tt")
         </em>

@@ -94,7 +94,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
             public string Company { get; set; }
 
             [Display(Name = "Station")]
-            public string? StationCode { get; set; }
+            public string StationCode { get; set; }
         }
 
         public async Task OnGetAsync(string returnUrl = null)

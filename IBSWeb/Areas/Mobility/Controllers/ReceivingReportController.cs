@@ -37,16 +37,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -69,10 +81,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             try
             {
-                var stationCodeClaim = await GetStationCodeClaimAsync();
+                var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                if (stationCodeClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var receivingReports = await _unitOfWork.MobilityReceivingReport
-                    .GetAllAsync(rr => rr.StationCode == stationCodeClaim, cancellationToken);
+                    .GetAllAsync(rr => rr.StationCode == stationCodeClaims, cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -82,11 +99,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     receivingReports = receivingReports
                     .Where(s =>
                         s.ReceivingReportNo.ToLower().Contains(searchValue) ||
-                        s.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue) ||
+                        s.PurchaseOrder?.PurchaseOrderNo.ToLower().Contains(searchValue) == true ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.QuantityReceived.ToString().Contains(searchValue) ||
                         s.Amount.ToString().Contains(searchValue) ||
-                        s.CreatedBy.ToLower().Contains(searchValue) ||
+                        s.CreatedBy?.ToLower().Contains(searchValue) == true ||
                         s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
@@ -133,13 +150,19 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null || companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             ReceivingReportViewModel viewModel = new()
             {
                 DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken),
                 Stations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
                 PurchaseOrders = await _dbContext.MobilityPurchaseOrders
-                    .Where(po => po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                    .Where(po => po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                     .Select(po => new SelectListItem
                     {
                         Value = po.PurchaseOrderId.ToString(),
@@ -155,7 +178,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null || companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -173,7 +202,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                         viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                             .Where(po =>
-                                po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                                po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                             .Select(po => new SelectListItem
                             {
                                 Value = po.PurchaseOrderId.ToString(),
@@ -186,10 +215,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     MobilityReceivingReport model = new()
                     {
-                        ReceivingReportNo = await _unitOfWork.MobilityReceivingReport.GenerateCodeAsync(stationCodeClaim, existingPo.Type, cancellationToken),
+                        ReceivingReportNo = await _unitOfWork.MobilityReceivingReport.GenerateCodeAsync(stationCodeClaims, existingPo.Type, cancellationToken),
                         Date = viewModel.Date,
                         Remarks = viewModel.Remarks,
-                        StationCode = stationCodeClaim,
+                        StationCode = stationCodeClaims,
                         CreatedBy = _userManager.GetUserName(User),
                         GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
                         PurchaseOrderNo = existingPo.PurchaseOrderNo,
@@ -211,7 +240,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", nameof(Mobility));
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -227,7 +256,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                         .Where(po =>
-                            po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                            po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                         .Select(po => new SelectListItem
                         {
                             Value = po.PurchaseOrderId.ToString(),
@@ -242,7 +271,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                 .Where(po =>
-                    po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                    po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -257,10 +286,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var stationCodeClaim = await GetStationCodeClaimAsync();
-            if (id == 0)
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null || companyClaims == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             try
@@ -291,7 +321,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     AuthorityToLoadNo = existingRecord.AuthorityToLoadNo,
                     PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                         .Where(po =>
-                            po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                            po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                         .Select(po => new SelectListItem
                         {
                             Value = po.PurchaseOrderId.ToString(),
@@ -314,13 +344,19 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null || companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     viewModel.CurrentUser = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityReceivingReport.UpdateAsync(viewModel, stationCodeClaim, cancellationToken);
+                    await _unitOfWork.MobilityReceivingReport.UpdateAsync(viewModel, stationCodeClaims, cancellationToken);
 
                     TempData["success"] = "Receiving report updated successfully.";
                     return RedirectToAction(nameof(Index));
@@ -330,7 +366,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
                     viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                         .Where(po =>
-                            po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                            po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                         .Select(po => new SelectListItem
                         {
                             Value = po.PurchaseOrderId.ToString(),
@@ -344,7 +380,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             viewModel.DrList = await _unitOfWork.FilprideDeliveryReceipt.GetDeliveryReceiptListAsync(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _dbContext.MobilityPurchaseOrders
                 .Where(po =>
-                    po.StationCode == stationCodeClaim && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
+                    po.StationCode == stationCodeClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
@@ -384,11 +420,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var receivingReport = await _unitOfWork.MobilityReceivingReport.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (receivingReport == null)
@@ -406,9 +437,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -435,14 +465,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     if (model.PostedBy == null)
                     {
-                        model.PostedBy = _userManager.GetUserName(this.User);
+                        model.PostedBy = _userManager.GetUserName(User);
                         model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Posted);
 
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -486,7 +516,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         si => si.ReceivingReportId == model.ReceivingReportId && si.Status != nameof(Status.Voided),
                         cancellationToken) ||
                     await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
-                        cv.CvType == "Trade" && cv.RRNo.Contains(model.ReceivingReportNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+                        cv.CvType == "Trade" && cv.RRNo!.Contains(model.ReceivingReportNo) && cv.Status != nameof(Status.Voided), cancellationToken);
 
                 if (hasAlreadyBeenUsed)
                 {
@@ -518,7 +548,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -565,7 +595,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -600,7 +630,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
             return Json(new
             {
-                Product = drDetails.CustomerOrderSlip.PurchaseOrder.Product.ProductName,
+                Product = drDetails.CustomerOrderSlip!.PurchaseOrder!.Product!.ProductName,
                 drDetails.Quantity
             });
         }
@@ -642,10 +672,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     rrListCanceled = rrCanceled
                 });
             }
-            else
-            {
-                return Json(null);
-            }
+
+            return Json(null);
         }
     }
 }

@@ -32,9 +32,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _dbContext = dbContext;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -51,9 +57,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             try
             {
-                var stationCodeClaim = await GetStationCodeClaimAsync();
+                var stationCodeClaims = await GetStationCodeClaimAsync();
 
-                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaim && s.Source == "FMS";
+                Expression<Func<MobilitySalesHeader, bool>> filter = s => s.StationCode == stationCodeClaims && s.Source == "FMS";
 
                 var salesHeaders = await _unitOfWork.MobilitySalesHeader.GetAllAsync(filter, cancellationToken);
 
@@ -119,13 +125,18 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            var stationCodeClaimss = await GetStationCodeClaimAsync();
 
-            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCodeClaim, cancellationToken);
+            if (stationCodeClaimss == null)
+            {
+                return BadRequest();
+            }
+
+            var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCodeClaimss, cancellationToken);
 
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
-                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCodeClaim, cancellationToken);
+                .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCodeClaimss, cancellationToken);
 
             if (sales == null)
             {
@@ -142,10 +153,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 try
                 {
-                    var stationCodeClaim = await GetStationCodeClaimAsync();
+                    var stationCodeClaims = await GetStationCodeClaimAsync();
 
-                    var postedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCodeClaim, cancellationToken);
+                    if (stationCodeClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    var postedBy = _userManager.GetUserName(User)!;
+                    await _unitOfWork.MobilitySalesHeader.PostAsync(id, postedBy, stationCodeClaims, cancellationToken);
                     TempData["success"] = "Cashier report approved successfully.";
                     return RedirectToAction(nameof(Preview), new { id });
                 }
@@ -168,11 +184,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            var stationCodeClaim = await GetStationCodeClaimAsync();
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             var sales = await _unitOfWork.MobilitySalesHeader
                 .GetAsync(s => s.SalesNo == id &&
-                               s.StationCode == stationCodeClaim, cancellationToken);
+                               s.StationCode == stationCodeClaims, cancellationToken);
 
             if (sales == null)
             {
@@ -211,7 +227,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new AdjustReportViewModel
             {
-                OfflineList = await _unitOfWork.MobilityOffline.GetOfflineListAsync(GetStationCodeClaimAsync().Result, cancellationToken)
+                OfflineList = await _unitOfWork.MobilityOffline
+                    .GetOfflineListAsync(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken)
             };
 
             return View(model);
@@ -269,7 +286,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var model = new CustomerInvoicingViewModel
             {
-                DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result,cancellationToken),
+                DsrList = await _unitOfWork.MobilitySalesHeader
+                    .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(),cancellationToken),
                 Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };
@@ -291,7 +309,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result, cancellationToken);
+                    viewModel.DsrList = await _unitOfWork.MobilitySalesHeader
+                        .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
                     viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -299,7 +318,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
             }
 
-            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader.GetUnpostedDsrList(GetStationCodeClaimAsync().Result, cancellationToken);
+            viewModel.DsrList = await _unitOfWork.MobilitySalesHeader
+                .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken);
             viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
             viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["error"] = "The submitted information is invalid.";

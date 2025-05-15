@@ -54,7 +54,7 @@
                                 <tr>
                                     @if (inventory == inventoryWithSamePoId.First())
                                     {
-                                        <td rowspan="@inventoryWithSamePoId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
+                                        <td rowspan="@inventoryWithSamePoId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder!.PurchaseOrderNo) </td>
                                     }
                                     <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
                                     <td>@Html.DisplayFor(model => inventory.Particular)</td>
@@ -85,7 +85,7 @@
                                 <tr>
                                     @if (inventory == inventoryWithSamePoId.First())
                                     {
-                                        <td rowspan="@inventoryWithSamePoId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder.PurchaseOrderNo) </td>
+                                        <td rowspan="@inventoryWithSamePoId.Count"> @Html.DisplayFor(model => inventory.PurchaseOrder!.PurchaseOrderNo) </td>
                                     }
                                     <td>@inventory.Date.ToString("MM/dd/yyyy")</td>
                                     <td>@Html.DisplayFor(model => inventory.Particular)</td>

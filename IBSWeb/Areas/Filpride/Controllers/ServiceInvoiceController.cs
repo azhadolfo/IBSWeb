@@ -38,9 +38,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -79,14 +85,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     serviceInvoices = serviceInvoices
                         .Where(s =>
                             s.ServiceInvoiceNo.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerName.ToLower().Contains(searchValue) ||
-                            s.Customer.CustomerTerms.ToLower().Contains(searchValue) ||
-                            s.Service.ServiceNo.ToLower().Contains(searchValue) ||
-                            s.Service.Name.ToLower().Contains(searchValue) ||
+                            s.Customer?.CustomerName.ToLower().Contains(searchValue) == true ||
+                            s.Customer?.CustomerTerms.ToLower().Contains(searchValue) == true ||
+                            s.Service?.ServiceNo?.ToLower().Contains(searchValue) == true ||
+                            s.Service?.Name.ToLower().Contains(searchValue) == true ||
                             s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Amount.ToString().Contains(searchValue) ||
                             s.Instructions?.ToLower().Contains(searchValue) == true ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy?.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
                 }
@@ -134,6 +140,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideServiceInvoice();
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
             return View(viewModel);
@@ -144,6 +155,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(FilprideServiceInvoice model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
             model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
@@ -185,7 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -245,7 +261,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     decimal netOfVatAmount = 0;
                     decimal vatAmount = 0;
 
-                    if (model.Customer.VatType == SD.VatType_Vatable)
+                    if (model.Customer!.VatType == SD.VatType_Vatable)
                     {
                         netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.Total);
                         vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
@@ -255,7 +271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         netOfVatAmount = model.Total;
                     }
 
-                    if (model.Customer.WithHoldingTax)
+                    if (model.Customer!.WithHoldingTax)
                     {
                         withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
                     }
@@ -274,7 +290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         sales.SoldTo = model.Customer.CustomerName;
                         sales.TinNo = model.Customer.CustomerTin;
                         sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service.Name;
+                        sales.Description = model.Service!.Name;
                         sales.Amount = model.Total;
                         sales.VatAmount = vatAmount;
                         sales.VatableSales = netOfVatAmount;
@@ -293,7 +309,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         sales.SoldTo = model.Customer.CustomerName;
                         sales.TinNo = model.Customer.CustomerTin;
                         sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service.Name;
+                        sales.Description = model.Service!.Name;
                         sales.Amount = model.Total;
                         sales.VatExemptSales = model.Total;
                         sales.Discount = model.Discount;
@@ -311,7 +327,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         sales.SoldTo = model.Customer.CustomerName;
                         sales.TinNo = model.Customer.CustomerTin;
                         sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service.Name;
+                        sales.Description = model.Service!.Name;
                         sales.Amount = model.Total;
                         sales.ZeroRated = model.Total;
                         sales.Discount = model.Discount;
@@ -399,8 +415,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                Date = postedDate,
                                Reference = model.ServiceInvoiceNo,
                                Description = model.Service.Name,
-                               AccountNo = model.Service.CurrentAndPreviousNo,
-                               AccountTitle = model.Service.CurrentAndPreviousTitle,
+                               AccountNo = model.Service!.CurrentAndPreviousNo!,
+                               AccountTitle = model.Service!.CurrentAndPreviousTitle!,
                                Debit = 0,
                                Credit = Math.Round((netOfVatAmount), 4),
                                Company = model.Company,
@@ -441,7 +457,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -484,7 +500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -547,7 +563,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -575,10 +591,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            if (id == null)
+
+            if (companyClaims == null)
             {
-                return NotFound();
+                return BadRequest();
             }
+
             var existingModel = await _unitOfWork.FilprideServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == id, cancellationToken);
 
             if (existingModel == null)
@@ -613,6 +631,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var customer = await _dbContext.FilprideCustomers
                         .FirstOrDefaultAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
+                    if (customer == null)
+                    {
+                        return NotFound();
+                    }
+
                     #region --Saving the default properties
 
                     existingModel.Discount = model.Discount;
@@ -642,7 +665,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", ipAddress, existingModel.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", existingModel.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -674,7 +697,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", ipAddress, sv.Company);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", sv.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

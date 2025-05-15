@@ -15,7 +15,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    decimal freight = (decimal)Model.CustomerOrderSlip.Freight;
+    decimal freight = (decimal)Model.CustomerOrderSlip!.Freight!;
 
 }
 
@@ -61,7 +61,7 @@
                 </tr>
                 <tr>
                     <td><b>Date Booked:</b> @Model.DateBooked.ToString(SD.Date_Format)</td>
-                    <td class="text-end"><b>Load Port:</b> @Model.CustomerOrderSlip.PickUpPoint.Depot</td>
+                    <td class="text-end"><b>Load Port:</b> @Model.CustomerOrderSlip?.PickUpPoint?.Depot</td>
                 </tr>
                 <tr>
                     <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
@@ -94,21 +94,21 @@
             </thead>
             <tbody>
                 
-                @foreach (var cos in Model.Details.OrderBy(d => d.CustomerOrderSlip.CustomerId))
+                @foreach (var cos in Model.Details.OrderBy(d => d.CustomerOrderSlip!.CustomerId))
                 {
                     <tr>
                         <td>
-                            @cos.CustomerOrderSlip.CustomerOrderSlipNo
+                            @cos.CustomerOrderSlip!.CustomerOrderSlipNo
                         </td>
                         <td>
-                            @cos.CustomerOrderSlip.Customer.CustomerName
+                            @cos.CustomerOrderSlip!.Customer!.CustomerName
                         </td>
                         <td>
-                            @cos.CustomerOrderSlip.Product.ProductName
+                            @cos.CustomerOrderSlip!.Product!.ProductName
                         </td>
                         <td>
                             @{
-                                var quantity = cos.CustomerOrderSlip.AppointedSuppliers
+                                var quantity = cos.CustomerOrderSlip!.AppointedSuppliers!
                                     .Where(a => a.SupplierId == Model.SupplierId)
                                     .Select(a => a.Quantity)
                                     .FirstOrDefault();
@@ -116,14 +116,14 @@
                             @quantity.ToString(SD.Two_Decimal_Format)
                         </td>
                         <td>
-                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers
+                            @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
                                 .Where(a => a.SupplierId == Model.SupplierId)
-                                .Select(a => a.PurchaseOrder.SupplierSalesOrderNo))
+                                .Select(a => a.PurchaseOrder!.SupplierSalesOrderNo))
                         </td>
                         <td>
-                            @string.Join(", ", cos.CustomerOrderSlip.AppointedSuppliers
+                            @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
                                 .Where(a => a.SupplierId == Model.SupplierId)
-                                .Select(x => x.PurchaseOrder.PurchaseOrderNo))
+                                .Select(x => x.PurchaseOrder!.PurchaseOrderNo))
                         </td>
                         <td>
                             @cos.CustomerOrderSlip.CustomerPoNo
@@ -144,7 +144,7 @@
                     <td><b>Driver:</b> @Model.CustomerOrderSlip?.Driver</td>
                 </tr>
                 <tr>
-                    <td><b>Plate #:</b> @Model.CustomerOrderSlip.PlateNo</td>
+                    <td><b>Plate #:</b> @Model.CustomerOrderSlip?.PlateNo</td>
                 </tr>
                 <tr>
                     <td class="mt-5"><b>Remarks:</b><pre>@Model.Remarks</pre></td>

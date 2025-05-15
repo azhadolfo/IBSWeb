@@ -91,7 +91,7 @@
     <table class="w-100">
         <tbody>
         <tr style="padding-left:10px;">
-            <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier.SupplierName)</td>
+            <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.Supplier!.SupplierName)</td>
             <td class="w-25 text-end">Date: &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
         </tr>
         <tr style="padding-left:10px;">
@@ -118,7 +118,7 @@
         </thead>
         <tbody>
         <tr>
-            <td class="w-25">@Html.DisplayFor(model => model.Product.ProductName)</td>
+            <td class="w-25">@Html.DisplayFor(model => model.Product!.ProductName)</td>
             <td class="w-25">@Model.Quantity.ToString(SD.Two_Decimal_Format)</td>
             <td class="w-25">@Model.UnitPrice.ToString(SD.Four_Decimal_Format)</td>
             <td class="w-25">@Model.Amount.ToString(SD.Two_Decimal_Format)</td>

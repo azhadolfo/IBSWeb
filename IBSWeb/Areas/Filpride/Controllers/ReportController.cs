@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -79,6 +85,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateTo = model.DateTo;
 
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -133,6 +144,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -182,6 +199,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -229,6 +251,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.SelectedFiltering = selectedFiltering;
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (dateFrom == default && dateTo == default)
             {
                 TempData["error"] = "Please input Date From and Date To";
@@ -260,9 +287,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var po = _dbContext
                          .FilprideReceivingReports
                          .Include(rr => rr.PurchaseOrder)
-                         .ThenInclude(po => po.Supplier)
+                         .ThenInclude(po => po!.Supplier)
                          .Include(rr => rr.PurchaseOrder)
-                         .ThenInclude(po => po.Product)
+                         .ThenInclude(po => po!.Product)
                          .AsEnumerable()
                          .Where(rr => rr.POId >= from && rr.POId <= to && rr.PostedBy != null)
                          .OrderBy(rr => rr.POId)
@@ -285,6 +312,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -321,6 +354,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -355,6 +394,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateFrom = model.DateFrom;
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -391,6 +435,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -426,6 +475,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateTo = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -460,6 +514,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateFrom = model.DateFrom.ToString("MMMM dd, yyyy");
             ViewBag.DateTo = model.DateTo.ToString("MMMM dd, yyyy"); ;
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -563,6 +622,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -575,7 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     TempData["error"] = "No records found!";
-                    return RedirectToAction(nameof(SalesReport));;
+                    return RedirectToAction(nameof(SalesReport));
                 }
                 catch (Exception ex)
                 {
@@ -600,6 +664,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -612,7 +681,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     TempData["error"] = "No records found!";
-                    return RedirectToAction(nameof(ServiceInvoiceReport));;
+                    return RedirectToAction(nameof(ServiceInvoiceReport));
                 }
                 catch (Exception ex)
                 {
@@ -638,6 +707,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -675,6 +749,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -711,6 +790,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -741,6 +824,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GmReport()
         {
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             ViewModelBook viewmodel = new()
             {
@@ -756,6 +843,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewData["DateFrom"] = model.DateFrom;
             ViewData["DateTo"] = model.DateTo;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -1073,8 +1164,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var auditTrail = await _unitOfWork.FilprideReport.GetAuditTrails(model.DateFrom, model.DateTo, companyClaims);
                     if (auditTrail.Count == 0)
@@ -1109,7 +1205,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"25"}\t{"25"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"25"}\t{"25"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"Username"}\t{"Username"}\t{"27"}\t{"46"}\t{"20"}\t{firstRecord.Username}");
                     fileContent.AppendLine($"{"MachineName"}\t{"Machine Name"}\t{"48"}\t{"77"}\t{"30"}\t{firstRecord.MachineName}");
                     fileContent.AppendLine($"{"Activity"}\t{"Activity"}\t{"79"}\t{"278"}\t{"200"}\t{firstRecord.Activity}");
@@ -1158,8 +1254,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (disbursementBooks.Count == 0)
@@ -1196,7 +1296,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description",-18}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"CVNo",-8}\t{"CV No",-18}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.CVNo}");
                     fileContent.AppendLine($"{"Payee",-8}\t{"Payee",-18}\t{"25"}\t{"124"}\t{"100"}\t{firstRecord.Payee}");
                     fileContent.AppendLine($"{"Particulars"}\t{"Particulars",-18}\t{"126"}\t{"325"}\t{"200"}\t{firstRecord.Particulars}");
@@ -1252,8 +1352,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (cashReceiptBooks.Count == 0)
@@ -1290,7 +1394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description",-18}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"RefNo",-8}\t{"Ref No.",-18}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.RefNo}");
                     fileContent.AppendLine($"{"CustomerName"}\t{"Customer Name",-18}\t{"25"}\t{"40"}\t{"16"}\t{firstRecord.CustomerName}");
                     fileContent.AppendLine($"{"Bank",-8}\t{"Bank",-18}\t{"42"}\t{"141"}\t{"100"}\t{firstRecord.Bank}");
@@ -1345,8 +1449,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (generalBooks.Count == 0)
@@ -1383,7 +1491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"Reference"}\t{"Reference"}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.Reference}");
                     fileContent.AppendLine($"{"Description"}\t{"Description"}\t{"25"}\t{"74"}\t{"50"}\t{firstRecord.Description}");
                     fileContent.AppendLine($"{"AccountTitle"}\t{"Account Title"}\t{"76"}\t{"125"}\t{"50"}\t{firstRecord.AccountNo + " " + firstRecord.AccountTitle}");
@@ -1435,8 +1543,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateTo = model.DateTo;
                     var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, dateTo, companyClaims);
                     if (inventoryBooks.Count == 0)
@@ -1473,7 +1585,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"ProductCode",-8}\t{"Product Code",-8}\t{"12"}\t{"31"}\t{"20"}\t{firstRecord.Product.ProductCode}");
                     fileContent.AppendLine($"{"ProductName",-8}\t{"Product Name",-8}\t{"33"}\t{"82"}\t{"50"}\t{firstRecord.Product.ProductName}");
                     fileContent.AppendLine($"{"Unit",-8}\t{"Unit",-8}\t{"84"}\t{"85"}\t{"2"}\t{firstRecord.Product.ProductUnit}");
@@ -1536,8 +1648,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo, companyClaims);
                     if (journalBooks.Count == 0)
@@ -1574,7 +1690,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"Reference",-8}\t{"Reference",-8}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.Reference}");
                     fileContent.AppendLine($"{"Description",-8}\t{"Description",-8}\t{"25"}\t{"74"}\t{"50"}\t{firstRecord.Description}");
                     fileContent.AppendLine($"{"AccountTitle",-8}\t{"Account Title",-8}\t{"76"}\t{"125"}\t{"50"}\t{firstRecord.AccountTitle}");
@@ -1626,8 +1742,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     if (poListFrom != null && poListTo != null)
                     {
@@ -1682,7 +1802,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name",-18}\t{"Description",-18}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"Date",-18}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.Date}");
+                    fileContent.AppendLine($"{"Date",-18}\t{"Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
                     fileContent.AppendLine($"{"SupplierName",-18}\t{"Supplier Name",-18}\t{"12"}\t{"61"}\t{"50"}\t{firstRecord.SupplierName}");
                     fileContent.AppendLine($"{"SupplierTin",-18}\t{"Supplier TIN",-18}\t{"63"}\t{"82"}\t{"20"}\t{firstRecord.SupplierTin}");
                     fileContent.AppendLine($"{"SupplierAddress",-18}\t{"Supplier Address",-18}\t{"84"}\t{"283"}\t{"200"}\t{firstRecord.SupplierAddress}");
@@ -1740,8 +1860,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var dateFrom = model.DateFrom;
                     var dateTo = model.DateTo;
-                    var extractedBy = _userManager.GetUserName(this.User);
+                    var extractedBy = _userManager.GetUserName(User)!;
                     var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
 
                     if (soaList != null || siList != null)
                     {
@@ -1789,7 +1913,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
                     fileContent.AppendLine();
                     fileContent.AppendLine($"{"Field Name",-18}\t{"Description",-18}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                    fileContent.AppendLine($"{"TransactionDate",-18}\t{"Tran. Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord.TransactionDate}");
+                    fileContent.AppendLine($"{"TransactionDate",-18}\t{"Tran. Date",-18}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.TransactionDate}");
                     fileContent.AppendLine($"{"SerialNo",-18}\t{"Serial Number",-18}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.SerialNo}");
                     fileContent.AppendLine($"{"Date",-18}\t{"Customer Name",-18}\t{"25"}\t{"124"}\t{"100"}\t{firstRecord.SoldTo}");
                     fileContent.AppendLine($"{"TinNo",-18}\t{"Tin#",-18}\t{"126"}\t{"145"}\t{"20"}\t{firstRecord.TinNo}");
@@ -1846,8 +1970,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             var disbursementBooks = _unitOfWork.FilprideReport.GetDisbursementBooks(model.DateFrom, model.DateTo, companyClaims);
             if (disbursementBooks.Count == 0)
@@ -1966,8 +2094,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             var cashReceiptBooks = _unitOfWork.FilprideReport.GetCashReceiptBooks(model.DateFrom, model.DateTo, companyClaims);
             if (cashReceiptBooks.Count == 0)
@@ -2083,8 +2215,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
             if (generalBooks.Count == 0)
@@ -2194,8 +2330,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateTo = model.DateTo;
             var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             var inventoryBooks = _unitOfWork.FilprideReport.GetInventoryBooks(dateFrom, dateTo, companyClaims);
             if (inventoryBooks.Count == 0)
@@ -2321,8 +2461,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             var journalBooks = _unitOfWork.FilprideReport.GetJournalBooks(model.DateFrom, model.DateTo, companyClaims);
             if (journalBooks.Count == 0)
@@ -2432,8 +2576,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (poListFrom != null || poListTo != null || selectedFiltering == "UnpostedRR" || selectedFiltering == "POLiquidation" || selectedFiltering == "RRDate" || selectedFiltering == "DueDate")
             {
@@ -2571,8 +2719,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
+            var extractedBy = _userManager.GetUserName(User)!;
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (soaList != null || siList != null || selectedDocument != null)
             {
@@ -2731,8 +2883,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 if (dateTo.Month <= 9 && dateTo.Year == 2024)
                 {
@@ -2817,7 +2973,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var quantity = dr.DeliveryReceipt.Quantity;
                     var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
-                    var segment = dr.DeliveryReceipt.TotalAmount;
+                    var segment = dr.DeliveryReceipt!.TotalAmount;
                     var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                     var vat = salesNetOfVat * .12m;
                     var freightNetOfVat = freightAmount / 1.12m;
@@ -2834,7 +2990,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Value = dr.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
                     worksheet.Cells[row, 11].Value = dr.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName;
+                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName;
                     worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
                     worksheet.Cells[row, 15].Value = freightAmount;
                     worksheet.Cells[row, 16].Value = segment;
@@ -3087,9 +3243,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = salesReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
-                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
-                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
+                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
+                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
+                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Overall
                     var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
@@ -3226,6 +3382,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var extractedBy = _userManager.GetUserName(this.User);
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var salesReport = await _unitOfWork.FilprideReport.GetSalesInvoiceReport(dateFrom, dateTo, companyClaims, cancellationToken);
                 if (salesReport.Count == 0)
@@ -3322,7 +3482,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Value = dr.PurchaseOrder?.PurchaseOrderNo;
                     worksheet.Cells[row, 11].Value = dr.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                    worksheet.Cells[row, 13].Value = dr.Product.ProductName;
+                    worksheet.Cells[row, 13].Value = dr.Product!.ProductName;
                     worksheet.Cells[row, 14].Value = quantity;
                     worksheet.Cells[row, 15].Value = freightAmount;
                     worksheet.Cells[row, 16].Value = segment;
@@ -3720,8 +3880,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var purchaseOrderReport =
                     await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo,
@@ -3834,8 +3998,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var clearedDisbursementReport =
                     await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo,
@@ -3905,20 +4073,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var getCategoryInChartOfAccount = await _dbContext.FilprideChartOfAccounts
                         .Include(coa => coa.ParentAccount) // Level 3
-                        .ThenInclude(a => a.ParentAccount) // Level 2
-                        .ThenInclude(a => a.ParentAccount) // Level 1
-                        .Where(coa => coa.AccountNumber == invoiceDebit.AccountNo)
+                        .ThenInclude(a => a!.ParentAccount) // Level 2
+                        .ThenInclude(a => a!.ParentAccount) // Level 1
+                        .Where(coa => coa.AccountNumber == invoiceDebit!.AccountNo)
                         .FirstOrDefaultAsync(cancellationToken);
 
                     var levelOneAccount = getCategoryInChartOfAccount?.ParentAccount?.ParentAccount;
 
-                    worksheet.Cells[row, 1].Value = $"{levelOneAccount.AccountNumber} " +
+                    worksheet.Cells[row, 1].Value = $"{levelOneAccount!.AccountNumber} " +
                                                     $"{levelOneAccount.AccountName}";
-                    worksheet.Cells[row, 2].Value = $"{invoiceDebit.AccountNo} {invoiceDebit.AccountName}";
+                    worksheet.Cells[row, 2].Value = $"{invoiceDebit!.AccountNo} {invoiceDebit.AccountName}";
                     worksheet.Cells[row, 3].Value = cd.Payee;
                     worksheet.Cells[row, 4].Value = cd.Date;
                     worksheet.Cells[row, 5].Value = cd.CheckVoucherHeaderNo;
-                    worksheet.Cells[row, 6].Value = cd.BankAccount.AccountName;
+                    worksheet.Cells[row, 6].Value = cd.BankAccount!.AccountName;
                     worksheet.Cells[row, 7].Value = cd.CheckNo;
                     worksheet.Cells[row, 8].Value = cd.Particulars;
                     worksheet.Cells[row, 9].Value = cd.Total;
@@ -3973,8 +4141,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 // get rr data from chosen date
                 var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims);
@@ -4284,8 +4456,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // query a group by supplier
                     var supplierByRr = purchaseReport
-                        .OrderBy(rr => rr.PurchaseOrder.Supplier.SupplierName)
-                        .GroupBy(rr => rr.PurchaseOrder.Supplier.SupplierName);
+                        .OrderBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
+                        .GroupBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName);
 
                     // for each supplier
                     foreach (var rrSupplier in supplierByRr)
@@ -4293,14 +4465,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         int startingColumn = 2;
 
                         // get name of group supplier
-                        purchaseReportWorksheet.Cells[row, 2].Value = rrSupplier.First().PurchaseOrder.Supplier.SupplierName;
+                        purchaseReportWorksheet.Cells[row, 2].Value = rrSupplier.First().PurchaseOrder!.Supplier!.SupplierName;
                         purchaseReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                         purchaseReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
 
                         // group each product of supplier
                         var productBySupplier = rrSupplier
-                            .OrderBy(p => p.PurchaseOrder.Product.ProductName)
-                            .GroupBy(rr => rr.PurchaseOrder.Product.ProductName);
+                            .OrderBy(p => p.PurchaseOrder!.Product!.ProductName)
+                            .GroupBy(rr => rr.PurchaseOrder!.Product!.ProductName);
 
                         // get volume, net purchases, and average cost per liter
                         foreach (var product in productBySupplier)
@@ -4414,8 +4586,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 // fetch sales report
                 var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
@@ -4513,7 +4689,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
                             worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt.DeliveryReceiptNo; // New DR #
                             worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName; // Items
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
                             worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
@@ -4651,7 +4827,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["C8"].Value = "ACCT TYPE";
                     worksheet.Cells["D8"].Value = "COS #";
                     worksheet.Cells["E8"].Value = "OTC COS #";
-                    worksheet.Cells["F8"].Value = "DR #";;
+                    worksheet.Cells["F8"].Value = "DR #";
                     worksheet.Cells["G8"].Value = "OTC DR #";
                     worksheet.Cells["H8"].Value = "ITEMS";
                     worksheet.Cells["I8"].Value = "VOLUME";
@@ -4669,10 +4845,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #endregion
 
                     groupedByProductReport = salesReport
-                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName)
-                        .ThenBy(sr => sr.DeliveryReceipt.Customer.CustomerName)
+                        .OrderBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName)
+                        .ThenBy(sr => sr.DeliveryReceipt.Customer!.CustomerName)
                         .ThenBy(sr => sr.DeliveryReceipt.DeliveredDate)
-                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName);
+                        .GroupBy(sr => sr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName);
 
                     // shows by product
                     foreach (var product in groupedByProductReport)
@@ -4691,7 +4867,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 5].Value = transaction.DeliveryReceipt.CustomerOrderSlip?.OldCosNo; // Old COS #
                             worksheet.Cells[row, 6].Value = transaction.DeliveryReceipt?.DeliveryReceiptNo; // New DR #
                             worksheet.Cells[row, 7].Value = transaction.DeliveryReceipt?.ManualDrNo; // Old DR #
-                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName; // Items
+                            worksheet.Cells[row, 8].Value = transaction.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName; // Items
                             worksheet.Cells[row, 9].Value = transaction.DeliveryReceipt.Quantity; // Volume
                             worksheet.Cells[row, 10].Value = transaction.DeliveryReceipt.TotalAmount; // Total
                             worksheet.Cells[row, 11].Value = transaction.DeliveryReceipt.Remarks; // Remarks
@@ -4855,22 +5031,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 1].Style.Font.Bold = true;
 
                             worksheet.Cells[row, 2].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                                 .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 3].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                                 .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 4].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                                 .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 5].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                                 .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 6].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                                 .Sum(cg => cg.DeliveryReceipt.Quantity);
                             worksheet.Cells[row, 7].Value = customerGroup
-                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                                .Where(cg => cg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                                 .Sum(cg => cg.DeliveryReceipt.TotalAmount);
                             worksheet.Cells[row, 8].Value = customerGroup
                                 .Sum(cg => cg.DeliveryReceipt.Quantity);
@@ -4884,22 +5060,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         worksheet.Cells[row, 1].Value = "Total";
                         worksheet.Cells[row, 2].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "BIODIESEL")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                             .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 3].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "BIODIESEL")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                             .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 4].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ECONOGAS")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                             .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 5].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ECONOGAS")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                             .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 6].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ENVIROGAS")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                             .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
                         worksheet.Cells[row, 7].Value = ct
-                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product.ProductName == "ENVIROGAS")
+                            .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                             .Sum(si => si.DeliveryReceipt.TotalAmount); // Total Amount
                         worksheet.Cells[row, 8].Value = ct
                             .Sum(si => si.DeliveryReceipt.Quantity); // Total Volume
@@ -4926,22 +5102,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 1].Value = "Grand Total";
                     worksheet.Cells[row, 2].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                         .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 3].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                         .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 4].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                         .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 5].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                         .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 6].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                         .Sum(si => si.DeliveryReceipt.Quantity);
                     worksheet.Cells[row, 7].Value = salesReport
-                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                        .Where(si => si.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                         .Sum(si => si.DeliveryReceipt.TotalAmount);
                     worksheet.Cells[row, 8].Value = salesReport
                         .Sum(si => si.DeliveryReceipt.Quantity);
@@ -4986,13 +5162,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 1].Style.Font.Italic = true;
                         worksheet.Cells[row, 1].Style.Font.Bold = true;
                         worksheet.Cells[row, 2].Value = typeGroup
-                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL")
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL")
                             .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 3].Value = typeGroup
-                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ECONOGAS")
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS")
                             .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 4].Value = typeGroup
-                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "ENVIROGAS")
+                            .Where(tg => tg.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS")
                             .Sum(tg => tg.DeliveryReceipt.Quantity);
                         worksheet.Cells[row, 5].Value = typeGroup
                             .Sum(tg => tg.DeliveryReceipt.Quantity);
@@ -5068,12 +5244,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var startingSummaryTableRow = 0;
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
 
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 using var package = new ExcelPackage();
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
@@ -5569,21 +5749,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
-                    var list = purchaseReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip.Product?.ProductName == "BIODIESEL").ToList();
-                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ECONOGAS").ToList();
-                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder.Product?.ProductName == "ENVIROGAS").ToList();
+                    var list = purchaseReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                    listForBiodiesel = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
+                    listForEconogas = list.Where(s => s.DeliveryReceipt!.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
+                    listForEnvirogas = list.Where(s => s.DeliveryReceipt!.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Overall
-                    var overallQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
-                    var overallSalesSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
+                    var overallSalesSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                     var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
                     var overallPurchasesSum = list.Sum(s => s.Amount);
                     var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
                     var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                     var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
-                    var overallCommissionSum = list.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var overallCommissionSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
                     var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
 
@@ -5607,15 +5787,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     gmReportWorksheet.Cells[rowForSummary, 10].Style.Numberformat.Format = currencyFormat;
 
                     // Computation for Biodiesel
-                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity);
-                    var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity);
+                    var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                     var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
                     var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
                     var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
                     var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                     var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
-                    var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt.CustomerOrderSlip!.CommissionRate);
                     var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
                     var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
 
@@ -5638,15 +5818,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     gmReportWorksheet.Cells[rowForSummary, 19].Style.Numberformat.Format = currencyFormat;
 
                     // Computation for Econogas
-                    var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity);
-                    var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity);
+                    var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt.CustomerOrderSlip!.DeliveredPrice);
                     var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
                     var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
                     var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
                     var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                     var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
-                    var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
                     var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
 
@@ -5669,15 +5849,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     gmReportWorksheet.Cells[rowForSummary, 28].Style.Numberformat.Format = currencyFormat;
 
                     // Computation for Envirogas
-                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity);
-                    var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.DeliveredPrice);
+                    var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity);
+                    var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
                     var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
                     var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
                     var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
                     var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
+                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
                     var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
-                    var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt.Quantity * s.DeliveryReceipt.CustomerOrderSlip.CommissionRate);
+                    var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
                     var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
 
@@ -5853,8 +6033,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var collectionReceiptReport = await _unitOfWork.FilprideReport
                     .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims);
@@ -5977,8 +6161,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 string currencyFormat = "#,##0.00";
 
                 var tradePayableReport = await _unitOfWork.FilprideReport
@@ -6075,7 +6264,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion
 
                 int row = 8;
-                IEnumerable<IGrouping<object, FilprideReceivingReport>> categorized = default;
+                IEnumerable<IGrouping<object, FilprideReceivingReport>> categorized = null!;
 
                 #region == Initialize Variables ==
 
@@ -6146,7 +6335,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
 
                     // in the month-year loop by supplier
-                    foreach (var supplier in allSupplier)
+                    foreach (var supplier in allSupplier!)
                     {
                         // when starting in new supplier, go to beginning
                         i = 1;
@@ -6173,15 +6362,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     whichPayment = "purchases";
                                     break;
                                 case 3:
-                                    categorized = default;
                                     forPayment = true;
                                     break;
                                 case 4:
-                                    categorized = default;
                                     forEnding = true;
-                                    break;
-                                default:
-                                    categorized = default;
                                     break;
                             }
 
@@ -6194,9 +6378,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         break;
                                     case "purchases":
                                         categorized = purchasesPaid;
-                                        break;
-                                    default:
-                                        categorized = default;
                                         break;
                                 }
                             }
@@ -6475,8 +6656,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User)!;
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var salesInvoice = await _dbContext.FilprideSalesInvoices
                     .Where(si => si.PostedBy != null && si.Company == companyClaims)
@@ -6556,7 +6741,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatTwoDecimal = "#,##0.00";
 
                 var totalQuantity = 0m;
-                var totalUnitPrice = 0m;
                 var totalFreight = 0m;
                 var totalFreightPerLiter = 0m;
                 var totalVatPerLiter = 0m;
@@ -6947,6 +7131,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             ViewBag.DateFrom = model.DateFrom.ToString("MMMM dd, yyyy");
             ViewBag.DateTo = model.DateTo.ToString("MMMM dd, yyyy");
             var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (ModelState.IsValid)
             {
@@ -6993,8 +7181,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var unservedVolume = item.Quantity - item.DeliveredQuantity;
 
                         worksheet.Cells[row, 1].Value = item.Date;
-                        worksheet.Cells[row, 2].Value = item.Customer.CustomerName;
-                        worksheet.Cells[row, 3].Value = item.Product.ProductName;
+                        worksheet.Cells[row, 2].Value = item.Customer!.CustomerName;
+                        worksheet.Cells[row, 3].Value = item.Product!.ProductName;
                         worksheet.Cells[row, 4].Value = item.CustomerPoNo;
                         worksheet.Cells[row, 5].Value = item.CustomerOrderSlipNo;
                         worksheet.Cells[row, 6].Value = item.DeliveredPrice;
@@ -7056,7 +7244,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
-                var currentUser = _userManager.GetUserName(User);
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+                var currentUser = _userManager.GetUserName(User)!;
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
@@ -7122,9 +7314,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
 
                     var groupedReceipts = deliveryReceipts
-                        .OrderBy(d => d.CustomerOrderSlip.ProductId)
+                        .OrderBy(d => d.CustomerOrderSlip!.ProductId)
                         .ThenBy(d => d.Date)
-                        .GroupBy(d => d.CustomerOrderSlip.ProductId);
+                        .GroupBy(d => d.CustomerOrderSlip!.ProductId);
 
                     decimal grandSumOfFreight = 0;
                     decimal grandSumOfECC = 0;
@@ -7133,7 +7325,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var group in groupedReceipts)
                     {
-                        string productName = group.First().CustomerOrderSlip.Product.ProductName;
+                        string productName = group.First().CustomerOrderSlip!.Product!.ProductName;
                         decimal sumOfFreight = 0;
                         decimal sumOfECC = 0;
                         decimal sumOfTotalFreight = 0;
@@ -7280,8 +7472,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var dateFrom = model.DateFrom;
                 var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
+                var extractedBy = _userManager.GetUserName(User);
                 var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
 
                 var serviceReport = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
@@ -7338,7 +7534,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Populate the data rows
                 int row = 8;
-                string currencyFormat = "#,##0.0000";
                 string currencyFormatTwoDecimal = "#,##0.00";
 
                 var totalAmount = 0m;
@@ -7347,11 +7542,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var sv in serviceReport)
                 {
                     worksheet.Cells[row, 1].Value = sv.CreatedDate;
-                    worksheet.Cells[row, 2].Value = sv.Customer.CustomerName;
+                    worksheet.Cells[row, 2].Value = sv.Customer!.CustomerName;
                     worksheet.Cells[row, 3].Value = sv.CustomerAddress;
                     worksheet.Cells[row, 4].Value = sv.CustomerTin;
                     worksheet.Cells[row, 5].Value = sv.ServiceInvoiceNo;
-                    worksheet.Cells[row, 6].Value = sv.Service.Name;
+                    worksheet.Cells[row, 6].Value = sv.Service!.Name;
                     worksheet.Cells[row, 7].Value = sv.Period;
                     worksheet.Cells[row, 8].Value = sv.DueDate;
                     worksheet.Cells[row, 9].Value = sv.Amount;

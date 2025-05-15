@@ -21,6 +21,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task PostAsync(FilprideReceivingReport model, CancellationToken cancellationToken = default);
 
-        Task VoidReceivingReportAsync(int receivingReportId, string currentUser, string ipAddress, CancellationToken cancellationToken = default);
+        Task VoidReceivingReportAsync(int receivingReportId, string currentUser, CancellationToken cancellationToken = default);
     }
 }

@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -71,8 +77,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
@@ -297,8 +303,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date >= firstDayOfMonth &&
                         gl.Date <= lastDayOfMonth &&
@@ -465,8 +471,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var currentLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date >= dateFrom &&
                         gl.Date <= dateTo &&
@@ -477,8 +483,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var priorLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date < dateFrom &&
                         gl.AccountId != null && //Uncomment this if the GL is fixed
@@ -678,8 +684,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date <= lastDayOfMonth &&
                         gl.AccountId != null && //Uncomment this if the GL is fixed

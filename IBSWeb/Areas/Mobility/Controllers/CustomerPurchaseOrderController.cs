@@ -25,11 +25,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -48,12 +54,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["StationCode"] = stationCodeClaims;
-            string stationCodeClaimsString = stationCodeClaims.ToString();
 
             MobilityCustomerPurchaseOrder model = new()
             {
-                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken),
+                Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaims, cancellationToken),
                 MobilityStations = await _unitOfWork.GetMobilityStationListAsyncByCode(cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
             };
@@ -65,8 +75,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(MobilityCustomerPurchaseOrder model, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["StationCode"] = stationCodeClaims;
-            string stationCodeClaimsString = stationCodeClaims.ToString();
             if (ModelState.IsValid)
             {
                 try
@@ -84,6 +98,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var getMobilityStation = await _dbContext.MobilityStations
                                         .Where(s => s.StationCode == stationCodeClaims)
                                         .FirstOrDefaultAsync(cancellationToken);
+
+                    if (getMobilityStation == null)
+                    {
+                        return NotFound();
+                    }
 
                     #endregion -- get mobility station --
 
@@ -123,7 +142,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken);
+                    model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaims, cancellationToken);
                     TempData["error"] = ex.Message;
                     return View(model);
                 }
@@ -131,7 +150,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             else
             {
                 model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaimsString, cancellationToken);
+                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeClaims, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(model);
             }
@@ -156,6 +175,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Include(s => s.MobilityStation)
                 .Where(cos => cos.CustomerPurchaseOrderId == id)
                 .FirstOrDefaultAsync();
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 

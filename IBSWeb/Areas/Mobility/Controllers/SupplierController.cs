@@ -40,11 +40,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         private string? GenerateFileNameToSave(string incomingFileName)
@@ -93,7 +99,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 })
                 .ToListAsync(cancellationToken);
             model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.AccountNumber.Contains("2010302"))
+                .Where(coa => coa.AccountNumber!.Contains("2010302"))
                 .Select(s => new SelectListItem
                 {
                     Value = s.AccountNumber + " " + s.AccountName,
@@ -114,6 +120,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 var stationCodeClaims = await GetStationCodeClaimAsync();
 
+                if (stationCodeClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 if (await _dbContext.MobilitySuppliers
                         .AnyAsync(s => s.StationCode == stationCodeClaims && s.SupplierName == model.SupplierName && s.Category == model.Category, cancellationToken))
                 {
@@ -133,13 +144,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     if (registration != null && registration.Length > 0)
                     {
                         model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                     }
 
                     if (document != null && document.Length > 0)
                     {
                         model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                     }
 
                     model.SupplierCode = await _unitOfWork.MobilitySupplier
@@ -148,7 +159,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.StationCode = stationCodeClaims;
                     await _unitOfWork.MobilitySupplier.AddAsync(model, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new supplier {model.SupplierCode}", "Supplier", "", nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new supplier {model.SupplierCode}", "Supplier", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await _unitOfWork.SaveAsync(cancellationToken);
@@ -217,18 +228,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                    if (stationCodeClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
                     model.StationCode = stationCodeClaims;
 
                     if (registration != null && registration.Length > 0)
                     {
                         model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName);
+                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                     }
 
                     if (document != null && document.Length > 0)
                     {
                         model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName);
+                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                     }
 
                     model.EditedBy = _userManager.GetUserName(User);

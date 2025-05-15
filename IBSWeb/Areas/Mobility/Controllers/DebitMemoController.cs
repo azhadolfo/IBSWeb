@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _logger = logger;
         }
 
-        public async Task<string> GetStationCodeClaimAsync()
+        public async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
@@ -69,13 +75,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     debitMemos = debitMemos
                         .Where(s =>
-                            s.DebitMemoNo.ToLower().Contains(searchValue) ||
+                            s.DebitMemoNo!.ToLower().Contains(searchValue) ||
                             (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.DebitAmount.ToString().Contains(searchValue) ||
                             s.Remarks?.ToLower().Contains(searchValue) == true ||
                             s.Description.ToLower().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
@@ -140,6 +146,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
 
             var existingSv = await _unitOfWork.MobilityServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
@@ -223,8 +234,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new debit memo# {viewModel.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(viewModel.CreatedBy, $"Create new debit memo# {viewModel.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -240,7 +250,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -293,12 +303,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                                 viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                                if (existingSv.Customer.VatType == "Vatable")
+                                if (existingSv.Customer!.VatType == "Vatable")
                                 {
                                     viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
                                     viewModelDMCM.NetAmount = _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
                                     viewModelDMCM.VatAmount = _unitOfWork.MobilityServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
                                     if (existingSv.Customer.WithHoldingVat)
                                     {
                                         viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -307,7 +317,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 else
                                 {
                                     viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
                                     if (existingSv.Customer.WithHoldingVat)
                                     {
                                         viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -491,7 +501,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -505,7 +515,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to post debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, User.Identity.Name);
+                        ex.Message, ex.StackTrace, User.Identity!.Name);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
@@ -544,7 +554,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -588,7 +598,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         #region --Audit Trail Recording
 
                         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -705,8 +715,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -721,7 +730,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to terminate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity.Name);
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(viewModel);
             }
         }
@@ -733,9 +742,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, nameof(Mobility));
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", nameof(Mobility));
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

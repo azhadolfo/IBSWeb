@@ -40,9 +40,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -75,7 +81,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DateBooked.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.ValidUntil.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
-                        s.CustomerOrderSlip.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
+                        s.CustomerOrderSlip?.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
                         s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
@@ -123,6 +129,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             BookATLViewModel viewModel = new()
             {
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
@@ -138,6 +149,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(BookATLViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -158,7 +174,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ValidUntil = viewModel.Date.AddDays(4),
                     UppiAtlNo = viewModel.UPPIAtlNo,
                     Remarks = "Please secure delivery documents. FILPRIDE DR / SUPPLIER DR / WITHDRAWAL CERTIFICATE",
-                    CreatedBy = _userManager.GetUserName(User),
+                    CreatedBy = _userManager.GetUserName(User)!,
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                     SupplierId = viewModel.SupplierId,
                     Company = companyClaims
@@ -200,13 +216,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (allHaveAtlNo)
                     {
-                        appointedSuppliers.First().CustomerOrderSlip.Status = nameof(CosStatus.ForApprovalOfOM);
+                        appointedSuppliers.First().CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
                     }
                 }
 
                 await _dbContext.FilprideBookAtlDetails.AddRangeAsync(bookDetails, cancellationToken);
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load", "", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = "ATL booked successfully";
@@ -262,9 +278,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
                 .Where(a => a.SupplierId == supplierId &&
-                            a.CustomerOrderSlip.Status == nameof(CosStatus.ForAtlBooking) &&
+                            a.CustomerOrderSlip!.Status == nameof(CosStatus.ForAtlBooking) &&
                             a.AtlNo == null)
-                .GroupBy(a => new { a.CustomerOrderSlipId, a.CustomerOrderSlip.CustomerOrderSlipNo })
+                .GroupBy(a => new { a.CustomerOrderSlipId, a.CustomerOrderSlip!.CustomerOrderSlipNo })
                 .Select(g => new SelectListItem
                 {
                     Value = g.Key.CustomerOrderSlipId.ToString(),
@@ -300,6 +316,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> UpdateValidityDate(int id, DateOnly newValidUntil, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -309,7 +331,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingAtl.ValidUntil = newValidUntil;
 
-                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load", "", companyClaims);
+                FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);

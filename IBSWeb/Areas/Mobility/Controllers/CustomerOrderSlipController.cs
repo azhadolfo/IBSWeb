@@ -37,16 +37,28 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _cloudStorageService = cloudStorageService;
         }
 
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -65,6 +77,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #endregion -- get user department --
 
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["CurrentStationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
@@ -77,7 +95,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Apply sorting and execute the query
             var sortedCustomerOrderSlip = await customerOrderSlip
                 .OrderBy(cos => cos.CustomerOrderSlipNo)
-                .ThenBy(cos => cos.MobilityStation.StationName)
+                .ThenBy(cos => cos.MobilityStation!.StationName)
                 .ThenBy(cos => cos.Date)
                 .ToListAsync(cancellationToken);
 
@@ -89,7 +107,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            string stationCodeString = stationCodeClaims.ToString();
+
+            if (stationCodeClaims == null)
+            {
+                return NotFound();
+            }
+
             ViewData["CurrentStationCode"] = stationCodeClaims; // get
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
@@ -111,6 +134,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(MobilityCustomerOrderSlip model, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["CurrentStationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
@@ -127,6 +156,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
 
+                    if (selectedCustomer == null)
+                    {
+                        return NotFound();
+                    }
+
                     #endregion -- selected customer --
 
                     #region -- Get mobility station --
@@ -134,6 +168,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var getMobilityStation = await _dbContext.MobilityStations
                         .Where(s => s.StationCode == stationCodeClaims)
                         .FirstOrDefaultAsync(cancellationToken);
+
+                    if (getMobilityStation == null)
+                    {
+                        return NotFound();
+                    }
 
                     #endregion -- get mobility station --
 
@@ -192,19 +231,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     return View(model);
                 }
             }
-            else
-            {
-                model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
-            }
+
+            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            model.Customers = await _unitOfWork.GetMobilityCustomerListAsyncById(stationCodeString, cancellationToken);
+            ModelState.AddModelError("", "The information you submitted is not valid!");
+            return View(model);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["CurrentStationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
@@ -213,6 +256,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .ToListAsync(cancellationToken);
 
             var customerOrderSlip = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
+
+            if (customerOrderSlip == null)
+            {
+                return NotFound();
+            }
+
             customerOrderSlip.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             customerOrderSlip.MobilityStations = await _unitOfWork.GetMobilityStationListWithCustomersAsyncByCode(mobilityPOCustomers, cancellationToken);
             customerOrderSlip.Customers = await GetInitialCustomers(customerOrderSlip.StationCode, cancellationToken);
@@ -224,6 +273,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Edit(MobilityCustomerOrderSlip model, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["CurrentStationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
             string stationCodeString = stationCodeClaims.ToString();
@@ -240,6 +295,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         .Where(c => c.CustomerId == model.CustomerId)
                         .FirstOrDefaultAsync(cancellationToken);
 
+                    if (selectedCustomer == null)
+                    {
+                        return NotFound();
+                    }
+
                     #endregion -- selected customer --
 
                     #region -- GetMobilityStation --
@@ -248,11 +308,22 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                                 .Where(s => s.StationCode == stationCodeClaims)
                                                 .FirstOrDefaultAsync(cancellationToken);
 
+                    if (getMobilityStation == null)
+                    {
+                        return NotFound();
+                    }
+
                     #endregion -- getMobilityStation --
 
                     #region -- Assign New Values --
 
                     var existingModel = await _dbContext.MobilityCustomerOrderSlips.FindAsync(model.CustomerOrderSlipId);
+
+                    if (existingModel == null)
+                    {
+                        return NotFound();
+                    }
+
                     existingModel.Date = model.Date;
                     existingModel.PricePerLiter = model.PricePerLiter;
                     existingModel.Address = model.Address;
@@ -319,6 +390,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             ViewData["StationCode"] = stationCodeClaims;
             ViewData["CurrentStationName"] = await _unitOfWork.GetMobilityStationNameAsync(stationCodeClaims, cancellationToken);
 
@@ -337,7 +414,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Include(p => p.Product)
                 .Include(s => s.MobilityStation)
                 .Where(cos => cos.CustomerOrderSlipId == id)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             model.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
 
@@ -365,15 +447,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 .Include(m => m.Product)
                                 .FirstOrDefaultAsync(m => m.CustomerOrderSlipId == model.CustomerOrderSlipId, cancellationToken);
 
+                            if (existingModel == null)
+                            {
+                                return NotFound();
+                            }
+
                             existingModel.SavedFileName = GenerateFileNameToSave(file.FileName);
-                            existingModel.SavedUrl = await _cloudStorageService.UploadFileAsync(file, existingModel.SavedFileName);
+                            existingModel.SavedUrl = await _cloudStorageService.UploadFileAsync(file, existingModel.SavedFileName!);
 
                             if (model.CheckPicture != null)
                             {
                                 if (model.CheckPicture.Length > 20000000 || model.CheckPicture.ContentType.StartsWith("image"))
                                 {
                                     existingModel.CheckPictureSavedFileName = GenerateFileNameToSave(model.CheckPicture.FileName);
-                                    existingModel.CheckPictureSavedUrl = await _cloudStorageService.UploadFileAsync(model.CheckPicture, existingModel.CheckPictureSavedFileName);
+                                    existingModel.CheckPictureSavedUrl = await _cloudStorageService.UploadFileAsync(model.CheckPicture, existingModel.CheckPictureSavedFileName!);
                                     existingModel.CheckNo = model.CheckNo;
                                 }
                                 else
@@ -412,6 +499,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> ApproveCOS(int id, CancellationToken cancellationToken)
         {
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             model.Status = "Approved";
             model.ApprovedBy = _userManager.GetUserName(User);
             model.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -427,6 +520,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> DisapproveCOS(int id, string message, CancellationToken cancellationToken)
         {
             var model = await _dbContext.MobilityCustomerOrderSlips.FindAsync(id);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             model.Status = "Disapproved";
             model.DisapprovalRemarks = message;
             model.DisapprovedBy = _userManager.GetUserName(User);
@@ -492,7 +591,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             if (!string.IsNullOrWhiteSpace(model.SavedFileName))
             {
                 model.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SavedFileName);
-                model.CheckPictureSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.CheckPictureSavedFileName);
+                model.CheckPictureSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.CheckPictureSavedFileName!);
             }
         }
 
@@ -544,7 +643,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel);
+                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel)!;
                 }
                 catch (JsonSerializationException)
                 {
@@ -607,12 +706,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     foreach (var item in model)
                     {
                         worksheet.Cells[row, 1].Value = item.CustomerOrderSlipNo ?? "N/A";
-                        worksheet.Cells[row, 2].Value = item.MobilityStation.StationName ?? "N/A";
+                        worksheet.Cells[row, 2].Value = item.MobilityStation?.StationName ?? "N/A";
                         worksheet.Cells[row, 3].Value = item.Date.ToString("O") ?? "N/A";
-                        worksheet.Cells[row, 4].Value = item.Customer.CustomerName ?? "N/A";
+                        worksheet.Cells[row, 4].Value = item.Customer?.CustomerName ?? "N/A";
                         worksheet.Cells[row, 5].Value = item.Driver ?? "N/A";
                         worksheet.Cells[row, 6].Value = item.PlateNo ?? "N/A";
-                        worksheet.Cells[row, 7].Value = item.Product.ProductName;
+                        worksheet.Cells[row, 7].Value = item.Product?.ProductName;
                         worksheet.Cells[row, 8].Value = item.PricePerLiter;
                         worksheet.Cells[row, 9].Value = item.Quantity;
                         worksheet.Cells[row, 10].Value = item.Amount;
@@ -643,7 +742,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Inline = false  // This forces a download
                     };
 
-                    Response.Headers.Add("Content-Disposition", contentDisposition.ToString());
+                    Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
                 }
@@ -659,12 +758,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
-        public async Task<IActionResult> PrintCosList(string jsonModel, CancellationToken cancellationToken)
+        public IActionResult PrintCosList(string jsonModel, CancellationToken cancellationToken)
         {
             try
             {
@@ -672,7 +769,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel);
+                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel)!;
                 }
                 catch (JsonSerializationException)
                 {

@@ -39,9 +39,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -79,14 +85,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     debitMemos = debitMemos
                         .Where(s =>
-                            s.DebitMemoNo.ToLower().Contains(searchValue) ||
-                            (s.SalesInvoice?.SalesInvoiceNo.ToLower().Contains(searchValue) == true) ||
-                            (s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true) ||
+                            s.DebitMemoNo!.ToLower().Contains(searchValue) ||
+                            s.SalesInvoice?.SalesInvoiceNo!.ToLower().Contains(searchValue) == true ||
+                            s.ServiceInvoice?.ServiceInvoiceNo.ToLower().Contains(searchValue) == true ||
                             s.TransactionDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.DebitAmount.ToString().Contains(searchValue) ||
                             s.Remarks?.ToLower().Contains(searchValue) == true ||
                             s.Description.ToLower().Contains(searchValue) ||
-                            s.CreatedBy.ToLower().Contains(searchValue)
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                             )
                         .ToList();
                 }
@@ -160,6 +166,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(FilprideDebitMemo model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
 
             model.SalesInvoices = await _dbContext.FilprideSalesInvoices
                 .Where(si => si.Company == companyClaims && si.PostedBy != null)
@@ -251,22 +262,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
+                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
                         model.Type = existingSalesInvoice.Type;
-                        model.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                        model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
                     }
                     else if (model.Source == "Service Invoice")
                     {
                         model.SalesInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv.Type, cancellationToken);
+                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv!.Type, cancellationToken);
                         model.Type = existingSv.Type;
                         model.DebitAmount = model.Amount ?? 0;
                     }
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -336,7 +346,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.SalesInvoiceId != null)
                         {
-                            var (salesAcctNo, salesAcctTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.SalesInvoice.Product.ProductCode);
+                            var (salesAcctNo, salesAcctTitle) = _unitOfWork.FilprideSalesInvoice.GetSalesAccountTitle(model.SalesInvoice!.Product!.ProductCode);
                             var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
 
                             #region --Retrieval of SI
@@ -353,10 +363,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.SalesInvoice.Customer.VatType == "Vatable")
+                            if (model.SalesInvoice.Customer!.VatType == "Vatable")
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -368,14 +378,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.NetSales = sales.VatableSales;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI.DueDate;
+                                sales.DueDate = existingSI!.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
                                 sales.Company = model.Company;
                             }
                             else if (model.SalesInvoice.Customer.VatType == "Exempt")
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -386,14 +396,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI.DueDate;
+                                sales.DueDate = existingSI!.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
                                 sales.Company = model.Company;
                             }
                             else
                             {
                                 sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
                                 sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
                                 sales.Address = model.SalesInvoice.Customer.CustomerAddress;
@@ -404,7 +414,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 sales.NetSales = sales.Amount;
                                 sales.CreatedBy = model.CreatedBy;
                                 sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI.DueDate;
+                                sales.DueDate = existingSI!.DueDate;
                                 sales.DocumentId = model.SalesInvoiceId;
                                 sales.Company = model.Company;
                             }
@@ -445,7 +455,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
-                                    Reference = model.DebitMemoNo,
+                                    Reference = model.DebitMemoNo!,
                                     Description = model.SalesInvoice.Product.ProductName,
                                     AccountId = arTradeReceivableTitle.AccountId,
                                     AccountNo = arTradeReceivableTitle.AccountNumber,
@@ -465,7 +475,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountId = arTradeCwt.AccountId,
                                         AccountNo = arTradeCwt.AccountNumber,
@@ -484,7 +494,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountId = arTradeCwv.AccountId,
                                         AccountNo = arTradeCwv.AccountNumber,
@@ -502,7 +512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
-                                    Reference = model.DebitMemoNo,
+                                    Reference = model.DebitMemoNo!,
                                     Description = model.SalesInvoice.Product.ProductName,
                                     AccountId = salesTitle.AccountId,
                                     AccountNo = salesTitle.AccountNumber,
@@ -521,7 +531,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.SalesInvoice.Product.ProductName,
                                         AccountId = vatOutputTitle.AccountId,
                                         AccountNo = vatOutputTitle.AccountNumber,
@@ -556,12 +566,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv.Customer.VatType == "Vatable")
+                            if (existingSv!.Customer!.VatType == "Vatable")
                             {
                                 viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
                                 viewModelDMCM.NetAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
                                 viewModelDMCM.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -570,7 +580,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
                                 if (existingSv.Customer.WithHoldingVat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -583,14 +593,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.ServiceInvoice.Customer.VatType == "Vatable")
+                            if (model.ServiceInvoice!.Customer!.VatType == "Vatable")
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service.Name;
+                                sales.Description = model.ServiceInvoice.Service!.Name;
                                 sales.Amount = viewModelDMCM.Total;
                                 sales.VatAmount = viewModelDMCM.VatAmount;
                                 sales.VatableSales = viewModelDMCM.Total / 1.12m;
@@ -605,11 +615,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else if (model.ServiceInvoice.Customer.VatType == "Exempt")
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service.Name;
+                                sales.Description = model.ServiceInvoice.Service!.Name;
                                 sales.Amount = viewModelDMCM.Total;
                                 sales.VatExemptSales = viewModelDMCM.Total;
                                 //sales.Discount = model.Discount;
@@ -623,11 +633,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo;
+                                sales.SerialNo = model.DebitMemoNo!;
                                 sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
                                 sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
                                 sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service.Name;
+                                sales.Description = model.ServiceInvoice.Service!.Name;
                                 sales.Amount = viewModelDMCM.Total;
                                 sales.ZeroRated = viewModelDMCM.Total;
                                 //sales.Discount = model.Discount;
@@ -650,7 +660,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountId = arNonTradeTitle.AccountId,
                                         AccountNo = arNonTradeTitle.AccountNumber,
@@ -669,7 +679,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountId = arTradeCwt.AccountId,
                                         AccountNo = arTradeCwt.AccountNumber,
@@ -688,7 +698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountId = arTradeCwv.AccountId,
                                         AccountNo = arTradeCwv.AccountNumber,
@@ -707,10 +717,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 ledgers.Add(new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
-                                    Reference = model.DebitMemoNo,
+                                    Reference = model.DebitMemoNo!,
                                     Description = model.ServiceInvoice.Service.Name,
-                                    AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
-                                    AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
+                                    AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo!,
+                                    AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle!,
                                     Debit = 0,
                                     Credit = viewModelDMCM.NetAmount,
                                     Company = model.Company,
@@ -725,7 +735,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
-                                        Reference = model.DebitMemoNo,
+                                        Reference = model.DebitMemoNo!,
                                         Description = model.ServiceInvoice.Service.Name,
                                         AccountId = vatOutputTitle.AccountId,
                                         AccountNo = vatOutputTitle.AccountNumber,
@@ -751,8 +761,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -803,8 +812,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -847,8 +855,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", ipAddress, model.Company);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
@@ -949,6 +956,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     .FilprideDebitMemos
                                     .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
 
+                    if (existingDM == null)
+                    {
+                        return NotFound();
+                    }
+
                     if (model.Source == "Sales Invoice")
                     {
                         model.ServiceInvoiceId = null;
@@ -964,7 +976,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion -- Saving Default Enries --
 
-                        existingDM.DebitAmount = (decimal)(model.Quantity * model.AdjustedPrice);
+                        existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
                     }
                     else if (model.Source == "Service Invoice")
                     {
@@ -990,7 +1002,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", ipAddress, existingSv.Company);
+                    FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -1021,9 +1033,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Audit Trail Recording
 
-                var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", ipAddress, dm.Company);
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", dm.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1054,7 +1065,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(dm => recordIds.Contains(dm.DebitMemoId))
                 .Include(dm => dm.SalesInvoice)
                 .Include(dm => dm.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
+                .ThenInclude(sv => sv!.Service)
                 .OrderBy(dm => dm.DebitMemoNo)
                 .ToListAsync();
 

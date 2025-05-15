@@ -116,7 +116,7 @@
                             }
                             else if (item.MultipleSIId != null)
                             {
-                                for (int i = 0; i < item.MultipleSI.Length; i++)
+                                for (int i = 0; i < item.MultipleSI!.Length; i++)
                                 {
                                     var siNo = $"{item.MultipleSI[i]}, ";
                                     @siNo
@@ -130,15 +130,15 @@
                         <td>
                             @if (item.SalesInvoiceId != null)
                             {
-                                @Html.DisplayFor(modelItem => item.SalesInvoice.Customer.CustomerName)
+                                @Html.DisplayFor(modelItem => item.SalesInvoice!.Customer!.CustomerName)
                             }
                             else if (item.MultipleSIId != null)
                             {
-                                @Html.DisplayFor(modelItem => item.Customer.CustomerName)
+                                @Html.DisplayFor(modelItem => item.Customer!.CustomerName)
                             }
                             else
                             {
-                                @Html.DisplayFor(modelItem => item.ServiceInvoice.Customer.CustomerName)
+                                @Html.DisplayFor(modelItem => item.ServiceInvoice!.Customer!.CustomerName)
                             }
                         </td>
                         <td class="text-end px-4">

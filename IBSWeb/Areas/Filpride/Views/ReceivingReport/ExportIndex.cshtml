@@ -80,7 +80,7 @@
                     @Html.DisplayNameFor(model => model.Date)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.PurchaseOrder.PurchaseOrderNo)
+                    @Html.DisplayNameFor(model => model.PurchaseOrder!.PurchaseOrderNo)
                 </th>
                 <th>
                     Delivered
@@ -89,7 +89,7 @@
                     Received
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.PurchaseOrder.CreatedBy)
+                    @Html.DisplayNameFor(model => model.PurchaseOrder!.CreatedBy)
                 </th>
                 <th>
                     Status
@@ -110,7 +110,7 @@
                             @item.Date.ToString("MM/dd/yyyy")
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.PurchaseOrder.PurchaseOrderNo)
+                            @Html.DisplayFor(modelItem => item.PurchaseOrder!.PurchaseOrderNo)
                         </td>
                         <td>
                             @item.QuantityDelivered.ToString("N0")
@@ -119,7 +119,7 @@
                             @item.QuantityReceived.ToString("N0")
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.PurchaseOrder.CreatedBy)
+                            @Html.DisplayFor(modelItem => item.PurchaseOrder!.CreatedBy)
                         </td>
                         <td>
                             @{

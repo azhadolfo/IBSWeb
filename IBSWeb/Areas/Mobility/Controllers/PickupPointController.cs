@@ -29,11 +29,17 @@ namespace IBSWeb.Areas.Mobility.Controllers
             _userManager = userManager;
             _dbContext = dbContext;
         }
-        private async Task<string> GetStationCodeClaimAsync()
+        private async Task<string?> GetStationCodeClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "StationCode").Value;
+            return claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -51,6 +57,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
             var model = new MobilityPickUpPoint();
             model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
             model.StationCode = stationCodeClaims;
@@ -68,7 +79,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 try
                 {
-                    model.CreatedBy = _userManager.GetUserName(User);
+                    model.CreatedBy = _userManager.GetUserName(User)!;
                     model.CreatedDate = DateTime.Now;
 
                     await _dbContext.MobilityPickUpPoints.AddAsync(model, cancellationToken);
@@ -102,10 +113,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     return NotFound();
                 }
 
-                var companyClaims = await GetStationCodeClaimAsync();
+                var stationCodeClaims = await GetStationCodeClaimAsync();
+
+                if (stationCodeClaims == null)
+                {
+                    return BadRequest();
+                }
+
                 var model = await _unitOfWork.MobilityPickUpPoint
                     .GetAsync(p => p.PickUpPointId == id, cancellationToken);
-                model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
                 return View(model);
             }
@@ -130,7 +147,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var selected = await _unitOfWork.MobilityPickUpPoint
                         .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity.Name, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", "", nameof(Mobility));
+                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     selected.Depot = model.Depot;

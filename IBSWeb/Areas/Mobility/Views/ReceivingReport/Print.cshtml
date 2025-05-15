@@ -37,7 +37,7 @@
     <table class="table-bordered w-100">
         <tbody>
         <tr>
-            <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder.Supplier.SupplierName)</td>
+            <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder!.Supplier!.SupplierName)</td>
         </tr>
         </tbody>
     </table>
@@ -62,7 +62,7 @@
             <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrderNo)</td>
             <td class="text-center p-lg-4">@Html.DisplayFor(model => model.SupplierInvoiceNumber)</td>
             <td class="text-center p-lg-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
-            <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrder.Product.ProductName)</td>
+            <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrder!.Product!.ProductName)</td>
             <td class="text-center p-lg-4">@Model.QuantityDelivered.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-center p-lg-4">@Model.QuantityReceived.ToString(SD.Two_Decimal_Format)</td>
             <td class="text-center p-lg-4">@Model.GainOrLoss.ToString(SD.Two_Decimal_Format)</td>

@@ -1,9 +1,6 @@
 @model IEnumerable<FilprideServiceInvoice>
 @using IBS.Utility.Constants
-@using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Service Report";
 
@@ -82,11 +79,11 @@
         {
             <tr class="align-text-bottom text-nowrap">
                 <td class="px-3"> @sv.CreatedDate.ToString("MMM dd, yyyy")</td>
-                <td class="px-3"> @sv.Customer.CustomerName</td>
+                <td class="px-3"> @sv.Customer!.CustomerName</td>
                 <td class="px-3"> @sv.CustomerAddress</td>
                 <td class="px-3"> @sv.CustomerTin</td>
                 <td class="px-3"> @sv.ServiceInvoiceNo</td>
-                <td class="px-3"> @sv.Service.Name</td>
+                <td class="px-3"> @sv.Service!.Name</td>
                 <td class="px-3"> @Html.DisplayFor(model => sv.Period)</td>
                 <td class="px-3"> @Html.DisplayFor(model => sv.DueDate)</td>
                 <td class="px-3"> @sv.Amount.ToString(SD.Two_Decimal_Format)</td>

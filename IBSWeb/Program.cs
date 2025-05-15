@@ -93,9 +93,6 @@ builder.Services.AddSignalR();
 // Add Quartz services
 builder.Services.AddQuartz(q =>
 {
-    // Use DI with Quartz
-    q.UseMicrosoftDependencyInjectionJobFactory();
-
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
     var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));

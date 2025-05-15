@@ -9,7 +9,6 @@
     ViewData["Title"] = "AR Per Customer Report";
     
     decimal totalQuantity = 0m;
-    decimal totalUnitPrice = 0m;
     decimal totalFreight = 0m;
     decimal totalFreightPerLiter = 0m;
     decimal totalVatPerLiter = 0m;
@@ -114,20 +113,20 @@
                 var ewtBalance = ewtAmount - isEwtAmountPaid;
                 
                 <tr class="align-text-bottom">
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerCode)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerName)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerType)</td>
-                    <td>@Html.DisplayFor(model => invoice.Customer.CustomerTerms)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerCode)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerName)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerType)</td>
+                    <td>@Html.DisplayFor(model => invoice.Customer!.CustomerTerms)</td>
                     <td>@Html.DisplayFor(model => invoice.TransactionDate)</td>
                     <td>@Html.DisplayFor(model => invoice.DueDate)</td>
                     <td>@Html.DisplayFor(model => invoice.SalesInvoiceNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.DeliveryReceiptNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.CustomerOrderSlip.CustomerPoNo)</td>
-                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo)</td>
+                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt!.DeliveryReceiptNo)</td>
+                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt!.CustomerOrderSlip!.CustomerPoNo)</td>
+                    <td>@Html.DisplayFor(model => invoice.DeliveryReceipt!.CustomerOrderSlip!.CustomerOrderSlipNo)</td>
                     <td>@Html.DisplayFor(model => invoice.Remarks)</td>
-                    <td>@Html.DisplayFor(model => invoice.Product.ProductName)</td>
+                    <td>@Html.DisplayFor(model => invoice.Product!.ProductName)</td>
                     <td>@invoice.Quantity.ToString(SD.Two_Decimal_Format)</td>
-                    <td>@Html.DisplayFor(model => invoice.Product.ProductUnit)</td>
+                    <td>@Html.DisplayFor(model => invoice.Product!.ProductUnit)</td>
                     <td class="text-end">@invoice.UnitPrice.ToString(SD.Four_Decimal_Format)</td>
                     <td class="text-end">@(freight?.ToString(SD.Two_Decimal_Format) ?? "0.0000")</td>
                     <td class="text-end">@(invoice.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format) ?? "0.0000")</td>

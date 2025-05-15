@@ -55,7 +55,7 @@
 @if (Model.Any())
 {
     <div class="table-responsive">
-        <h5>@ViewData["Title"].ToString().ToUpper()</h5>
+        <h5>@ViewData["Title"]!.ToString()!.ToUpper()</h5>
         <h6>Date Range: @ViewData["DateFrom"] - @ViewData["DateTo"]</h6>
         <table id="ledgerTable" class="table">
             <thead>
@@ -82,7 +82,7 @@
                     <td>@Html.DisplayFor(model => cleared.Payee)</td>
                     <td>@Html.DisplayFor(model => cleared.Date)</td>
                     <td>@Html.DisplayFor(model => cleared.CheckVoucherHeaderNo)</td>
-                    <td>@Html.DisplayFor(model => cleared.BankAccount.AccountName)</td>
+                    <td>@Html.DisplayFor(model => cleared.BankAccount!.AccountName)</td>
                     <td>@Html.DisplayFor(model => cleared.CheckNo)</td>
                     <td>@Html.DisplayFor(model => cleared.Particulars)</td>
                     <td class="text-end">@cleared.Total.ToString(SD.Two_Decimal_Format)</td>

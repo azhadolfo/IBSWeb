@@ -27,7 +27,7 @@ namespace IBS.Models.Filpride.Books
         {
         }
 
-        public FilprideAuditTrail(string username, string activity, string documentType, string ipAddress, string company)
+        public FilprideAuditTrail(string username, string activity, string documentType, string company)
         {
             Username = username;
             Date = DateTimeHelper.GetCurrentPhilippineTime();

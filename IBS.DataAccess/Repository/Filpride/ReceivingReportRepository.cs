@@ -333,12 +333,12 @@ namespace IBS.DataAccess.Repository.Filpride
 
             FilprideAuditTrail auditTrailCreate = new(model.PostedBy,
                 $"Created new receiving report# {model.ReceivingReportNo}",
-                "Receiving Report", "",
+                "Receiving Report",
                 model.Company);
 
             FilprideAuditTrail auditTrailPost = new(model.PostedBy,
                 $"Posted receiving report# {model.ReceivingReportNo}",
-                "Receiving Report", "",
+                "Receiving Report",
                 model.Company);
 
             await _db.AddAsync(auditTrailCreate, cancellationToken);
@@ -532,7 +532,7 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task VoidReceivingReportAsync(int receivingReportId, string currentUser, string ipAddress, CancellationToken cancellationToken = default)
+        public async Task VoidReceivingReportAsync(int receivingReportId, string currentUser, CancellationToken cancellationToken = default)
         {
             var model = await GetAsync(r => r.ReceivingReportId == receivingReportId, cancellationToken);
 
@@ -580,7 +580,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", ipAddress, model.Company);
+            FilprideAuditTrail auditTrailBook = new(currentUser, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
             await _db.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording

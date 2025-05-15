@@ -78,13 +78,13 @@
                     @Html.DisplayNameFor(model => model.SalesInvoiceNo)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Customer.CustomerName)
+                    @Html.DisplayNameFor(model => model.Customer!.CustomerName)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.TransactionDate)
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Customer.CustomerTerms)
+                    @Html.DisplayNameFor(model => model.Customer!.CustomerTerms)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Amount)
@@ -108,13 +108,13 @@
                             @Html.DisplayFor(model => invoice.SalesInvoiceNo)
                         </td>
                         <td>
-                            @Html.DisplayFor(model => invoice.Customer.CustomerName)
+                            @Html.DisplayFor(model => invoice.Customer!.CustomerName)
                         </td>
                         <td>
                             @Html.DisplayFor(model => invoice.TransactionDate)
                         </td>
                         <td>
-                            @Html.DisplayFor(model => invoice.Customer.CustomerTerms)
+                            @Html.DisplayFor(model => invoice.Customer!.CustomerTerms)
                         </td>
                         <td>
                             @Html.DisplayFor(model => invoice.Amount)
