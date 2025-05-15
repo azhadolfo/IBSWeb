@@ -672,6 +672,25 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.TugMasterId = model.TugMasterId;
                     currentModel.VesselId = model.VesselId;
                     currentModel.Remarks = model.Remarks;
+
+                    // reset the state of tariff
+                    currentModel.Status = "For Tariff";
+                    currentModel.DispatchRate = default;
+                    currentModel.DispatchBillingAmount = default;
+                    currentModel.DispatchDiscount = default;
+                    currentModel.DispatchNetRevenue = default;
+                    currentModel.BAFRate = default;
+                    currentModel.BAFBillingAmount = default;
+                    currentModel.BAFDiscount = default;
+                    currentModel.BAFNetRevenue = default;
+                    currentModel.TotalBilling = default;
+                    currentModel.TotalNetRevenue = default;
+                    currentModel.ApOtherTugs = default;
+                    currentModel.TariffBy = string.Empty;
+                    currentModel.TariffDate = default;
+                    currentModel.TariffEditedBy = string.Empty;
+                    currentModel.TariffEditedDate = default;
+
                     if (imageFile != null)
                     {
                         currentModel.ImageName = model.ImageName;
