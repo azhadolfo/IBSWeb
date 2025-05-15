@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/08/2025 11:37:17" ReportInfo.Modified="05/09/2025 12:23:20" ReportInfo.CreatorVersion="2024.2.20.0">
+  <Dictionary>
+    <BusinessObjectDataSource Name="GeneralLedgerBook" ReferenceName="GeneralLedgerBook" DataType="System.Int32" Enabled="true">
+      <Column Name="Date" DataType="System.DateTime"/>
+      <Column Name="Reference" DataType="System.String"/>
+      <Column Name="AccountNo" DataType="System.String"/>
+      <Column Name="AccountTitle" DataType="System.String"/>
+      <Column Name="Description" DataType="System.String"/>
+      <Column Name="Debit" DataType="System.Decimal"/>
+      <Column Name="Credit" DataType="System.Decimal"/>
+    </BusinessObjectDataSource>
+    <Parameter Name="Parameter" DataType="System.String" AsString=""/>
+    <Total Name="Total" Expression="[GeneralLedgerBook.Debit]" Evaluator="Data1"/>
+    <Total Name="Total1" Expression="[GeneralLedgerBook.Credit]" Evaluator="Data1" PrintOn="ReportSummary1"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="355.6" PaperHeight="215.9" RawPaperSize="5" Watermark.Font="Arial, 60pt" LastPageSource="261" FirstPageSource="261">
+    <PageHeaderBand Name="PageHeader1" Width="1268.57" Height="85.05">
+      <PictureObject Name="Picture1" Left="1143.45" Width="122.85" Height="37.8" ImageLocation="C:\Users\Administrator\source\repos\IBSWeb\IBSWeb\wwwroot\img\Filpride-logo.png" ImageFormat="Png"/>
+      <TextObject Name="Text4" Left="94.5" Top="37.8" Width="94.5" Height="18.9" Text="[DateFrom]" Font="Arial, 10pt"/>
+      <TextObject Name="Text5" Left="94.5" Top="56.7" Width="94.5" Height="18.9" Text="[DateTo]" Font="Arial, 10pt"/>
+      <TextObject Name="Text1" Width="274.05" Height="28.35" Text="General Ledger by Transaction" Font="Arial Rounded MT Bold, 16pt"/>
+      <TextObject Name="Text7" Top="37.8" Width="94.5" Height="18.9" Text="Date from:" Font="Arial, 10pt"/>
+      <TextObject Name="Text8" Top="56.7" Width="94.5" Height="18.9" Text="Date to:" Font="Arial, 10pt"/>
+    </PageHeaderBand>
+    <ColumnHeaderBand Name="ColumnHeader1" Top="89.05" Width="1268.57" Height="28.35">
+      <TableObject Name="Table2" Width="1285.2" Height="18.9" Fill.Color="Silver">
+        <TableColumn Name="Column8" Width="68.85"/>
+        <TableColumn Name="Column9" Width="116.1"/>
+        <TableColumn Name="Column10" Width="475.2"/>
+        <TableColumn Name="Column11" Width="78.3"/>
+        <TableColumn Name="Column12" Width="201.15"/>
+        <TableColumn Name="Column13" Width="163.35"/>
+        <TableColumn Name="Column14" Width="182.25"/>
+        <TableRow Name="Row2">
+          <TableCell Name="Cell8" Text="Date" HorzAlign="Center" Font="Arial, 10pt"/>
+          <TableCell Name="Cell9" Text="Reference" HorzAlign="Center" Font="Arial, 10pt"/>
+          <TableCell Name="Cell10" Text="Description" HorzAlign="Center" Font="Arial, 10pt"/>
+          <TableCell Name="Cell11" Text="Account Title" HorzAlign="Center" Font="Arial, 10pt" ColSpan="2"/>
+          <TableCell Name="Cell12" Font="Arial, 10pt"/>
+          <TableCell Name="Cell13" Text="Debit" HorzAlign="Center" Font="Arial, 10pt"/>
+          <TableCell Name="Cell14" Text="Credit" HorzAlign="Center" Font="Arial, 10pt"/>
+        </TableRow>
+      </TableObject>
+    </ColumnHeaderBand>
+    <DataBand Name="Data1" Top="121.4" Width="1268.57" Height="66.15" DataSource="GeneralLedgerBook">
+      <TableObject Name="Table1" Width="1247.4" Height="66.15">
+        <TableColumn Name="Column1" Width="70.2"/>
+        <TableColumn Name="Column2" Width="117.45"/>
+        <TableColumn Name="Column3" Width="476.55"/>
+        <TableColumn Name="Column4" Width="79.65"/>
+        <TableColumn Name="Column5" Width="202.5"/>
+        <TableColumn Name="Column6" Width="117.45"/>
+        <TableColumn Name="Column7" Width="183.6"/>
+        <TableRow Name="Row1" Height="66.15">
+          <TableCell Name="Cell1" Text="[GeneralLedgerBook.Date]" Font="Arial, 10pt"/>
+          <TableCell Name="Cell2" Text="[GeneralLedgerBook.Reference]" Font="Arial, 10pt"/>
+          <TableCell Name="Cell3" Text="[GeneralLedgerBook.Description]" Font="Arial, 10pt"/>
+          <TableCell Name="Cell4" Text="[GeneralLedgerBook.AccountNo]" Padding="5, 1, 2, 1" Font="Arial, 10pt"/>
+          <TableCell Name="Cell5" Text="[GeneralLedgerBook.AccountTitle]" Font="Arial, 10pt"/>
+          <TableCell Name="Cell6" Text="[GeneralLedgerBook.Debit]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 10pt"/>
+          <TableCell Name="Cell7" Text="[GeneralLedgerBook.Credit]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 10pt"/>
+        </TableRow>
+      </TableObject>
+    </DataBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="191.55" Width="1268.57" Height="18.9">
+      <TableObject Name="Table3" Width="1247.4" Height="18.9" PrintOnParent="true">
+        <TableColumn Name="Column15" Width="70.2"/>
+        <TableColumn Name="Column16" Width="117.45"/>
+        <TableColumn Name="Column17" Width="476.55"/>
+        <TableColumn Name="Column18" Width="79.65"/>
+        <TableColumn Name="Column19" Width="202.5"/>
+        <TableColumn Name="Column20" Width="117.45"/>
+        <TableColumn Name="Column21" Width="183.6"/>
+        <TableRow Name="Row3">
+          <TableCell Name="Cell15" Font="Arial, 10pt"/>
+          <TableCell Name="Cell16" Font="Arial, 10pt"/>
+          <TableCell Name="Cell17" Font="Arial, 10pt"/>
+          <TableCell Name="Cell18" Font="Arial, 10pt"/>
+          <TableCell Name="Cell19" Text="TOTAL:" HorzAlign="Right" Font="Arial, 10pt, style=Bold"/>
+          <TableCell Name="Cell20" Text="[Total]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 10pt"/>
+          <TableCell Name="Cell21" Text="[Total1]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 10pt"/>
+        </TableRow>
+      </TableObject>
+    </ReportSummaryBand>
+  </ReportPage>
+</Report>
