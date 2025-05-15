@@ -561,6 +561,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
@@ -667,6 +669,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
+
+                if (User.IsInRole("PortCoordinator"))
+                {
+                    pagedData = pagedData.Where(t => t.CreatedBy == currentUser.UserName)
+                        .ToList();
+                }
 
                 foreach (var dispatchTicket in pagedData.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
                 {
