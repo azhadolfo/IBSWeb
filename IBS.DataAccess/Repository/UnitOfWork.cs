@@ -149,6 +149,7 @@ namespace IBS.DataAccess.Repository
 
         #region --MMSI
 
+        public IMsapRepository Msap { get; private set; }
         public IServiceRequestRepository ServiceRequest { get; private set; }
         public IDispatchTicketRepository DispatchTicket { get; private set; }
         public IBillingRepository Billing { get; private set; }
@@ -249,6 +250,7 @@ namespace IBS.DataAccess.Repository
 
             #region --MMSI
 
+            Msap = new MsapRepository(_db);
             ServiceRequest = new ServiceRequestRepository(_db);
             DispatchTicket = new DispatchTicketRepository(_db);
             Billing = new BillingRepository(_db);
