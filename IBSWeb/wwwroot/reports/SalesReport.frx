@@ -1,0 +1,415 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/09/2025 11:54:48" ReportInfo.Modified="05/12/2025 10:24:49" ReportInfo.CreatorVersion="2024.2.20.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+    public double SafeDivide(double a, double b)
+    {
+      return (b != 0) ? a / b : 0.0;
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="SalesReport" ReferenceName="SalesReport" DataType="System.Int32" Enabled="true">
+      <Column Name="DeliveryReceipt.DeliveredDate" DataType="System.DateTime"/>
+      <Column Name="DeliveryReceipt.Customer.CustomerName" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.Customer.CustomerType" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.AccountSpecialist" DataType="System.String"/>
+      <Column Name="SalesInvoiceNo" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.DeliveryReceiptNo" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.PurchaseOrder.PurchaseOrderNo" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.DeliveryOption" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.Product.ProductName" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.Quantity" DataType="System.Decimal"/>
+      <Column Name="DeliveryReceipt.Freight" DataType="System.Decimal"/>
+      <Column Name="DeliveryReceipt.TotalAmount" DataType="System.Decimal"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.CommissionRate" DataType="System.Decimal"/>
+      <Column Name="DeliveryReceipt.CustomerOrderSlip.Commissionee.SupplierName" DataType="System.String"/>
+      <Column Name="DeliveryReceipt.Remarks" DataType="System.String"/>
+    </BusinessObjectDataSource>
+    <Parameter Name="Parameter" DataType="System.String" AsString=""/>
+    <Total Name="TotalQuantity" Expression="[SalesReport.DeliveryReceipt.Quantity]" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalFreight" Expression="[SalesReport.DeliveryReceipt.Quantity] * [SalesReport.DeliveryReceipt.Freight]" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalSalesGVAT" Expression="[SalesReport.DeliveryReceipt.TotalAmount]" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalVAT" Expression="IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12) * ToDecimal(.12),ToDecimal(0))" Evaluator="Data1"/>
+    <Total Name="TotalSalesNVAT" Expression="IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0))" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalFreightNVAT" Expression="(ToDecimal([SalesReport.DeliveryReceipt.Freight]) * ToDecimal([SalesReport.DeliveryReceipt.Quantity])) / ToDecimal(1.12)" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalCommission" Expression="[SalesReport.DeliveryReceipt.CustomerOrderSlip.CommissionRate]" Evaluator="Data1" PrintOn="ReportSummary1"/>
+    <Total Name="TotalVolumeOverallRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeOverallIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeOverallGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeOverallReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeBiodieselRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeBiodieselIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeBiodieselGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeBiodieselReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEconogasRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEconogasIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEconogasGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEconogasReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEnvirogasRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEnvirogasIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEnvirogasGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEnvirogasReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATOverallRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATOverallIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATOverallGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATOverallReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATBiodieselRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATBiodieselIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATBiodieselGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATBiodieselReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEconogasRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEconogasIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEconogasGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEconogasReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEnvirogasRetail" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Retail&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEnvirogasIndustrial" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Industrial&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEnvirogasGovernment" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Government&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEnvirogasReseller" Expression="IIf([SalesReport.DeliveryReceipt.Customer.CustomerType] == &quot;Reseller&quot; &amp;&amp; [SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="GrandTotalOverallVolume" Expression="[TotalVolumeOverallRetail] + [TotalVolumeOverallIndustrial] + [TotalVolumeOverallGovernment] + [TotalVolumeOverallReseller]" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeOverall" Expression="[SalesReport.DeliveryReceipt.Quantity]" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATOverall" Expression="IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeBiodiesel" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATBiodiesel" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;BIODIESEL&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEconogas" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEconogas" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ECONOGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalVolumeEnvirogas" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,[SalesReport.DeliveryReceipt.Quantity],ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+    <Total Name="TotalSalesNVATEnvirogas" Expression="IIf([SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName] == &quot;ENVIROGAS&quot;,IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0)),ToDecimal(0))" Evaluator="Data1" PrintOn="Child1"/>
+  </Dictionary>
+  <ReportPage Name="Page1" Landscape="true" PaperWidth="355.6" PaperHeight="215.9" RawPaperSize="5" Watermark.Font="Arial, 60pt" LastPageSource="261" FirstPageSource="261">
+    <PageHeaderBand Name="PageHeader1" Width="1268.57" Height="85.05">
+      <PictureObject Name="Picture1" Left="1143.45" Width="122.85" Height="37.8" ImageLocation="C:\Users\Administrator\source\repos\IBSWeb\IBSWeb\wwwroot\img\Filpride-logo.png" ImageFormat="Png"/>
+      <TextObject Name="DateFrom" Left="94.5" Top="37.8" Width="94.5" Height="18.9" Text="[DateFrom]" Font="Arial, 10pt"/>
+      <TextObject Name="DateTo" Left="94.5" Top="56.7" Width="94.5" Height="18.9" Text="[DateTo]" Font="Arial, 10pt"/>
+      <TextObject Name="Text1" Width="151.2" Height="28.35" Text="Sales Report" Font="Arial Rounded MT Bold, 16pt"/>
+      <TextObject Name="Text7" Top="37.8" Width="94.5" Height="18.9" Text="Date from:" Font="Arial, 10pt"/>
+      <TextObject Name="Text8" Top="56.7" Width="94.5" Height="18.9" Text="Date to:" Font="Arial, 10pt"/>
+      <TextObject Name="Text9" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Text="Overall" Font="Arial, 10pt"/>
+      <TextObject Name="Text10" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Border.Lines="All" Fill.Color="RosyBrown" Text="[TotalSalesNVATOverallRetail]" Font="Arial, 10pt"/>
+      <TextObject Name="Text11" Left="-9450" Top="-9450" Width="94.5" Height="18.9" Text="[TotalSalesNVATOverallRetail]" Font="Arial, 10pt"/>
+    </PageHeaderBand>
+    <ColumnHeaderBand Name="ColumnHeader1" Top="89.05" Width="1268.57" Height="47.25">
+      <TableObject Name="Table2" Width="1276.05" Height="37.8" Fill.Color="Silver">
+        <TableColumn Name="Column6" Width="69.15"/>
+        <TableColumn Name="Column7" Width="69.15"/>
+        <TableColumn Name="Column8" Width="69.15"/>
+        <TableColumn Name="Column9" Width="69.15"/>
+        <TableColumn Name="Column10" Width="40.8"/>
+        <TableColumn Name="Column11" Width="50.25"/>
+        <TableColumn Name="Column12" Width="50.25"/>
+        <TableColumn Name="Column13" Width="50.25"/>
+        <TableColumn Name="Column14" Width="59.7"/>
+        <TableColumn Name="Column15" Width="69.15"/>
+        <TableColumn Name="Column16" Width="69.15"/>
+        <TableColumn Name="Column17" Width="69.15"/>
+        <TableColumn Name="Column18" Width="69.15"/>
+        <TableColumn Name="Column19" Width="69.15"/>
+        <TableColumn Name="Column20" Width="69.15"/>
+        <TableColumn Name="Column21" Width="69.15"/>
+        <TableColumn Name="Column22" Width="88.05"/>
+        <TableColumn Name="Column23" Width="106.95"/>
+        <TableColumn Name="Column24" Width="69.15"/>
+        <TableRow Name="Row2" Height="37.8">
+          <TableCell Name="Cell6" Text="Date Delivered" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell7" Text="Customer Name" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell8" Text="Segment" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell9" Text="Specialist" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell10" Text="SI #" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell11" Text="COS #" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell12" Text="DR #" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell13" Text="PO #" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell14" Text="Delivery Option" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell15" Text="Items" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell16" Text="Quantity" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell17" Text="Freight" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell18" Text="Sales G. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell19" Text="VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell20" Text="Sales N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell21" Text="Freight N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell22" Text="Commission" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell23" Text="Commissionee" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+          <TableCell Name="Cell24" Text="Remarks" HorzAlign="Center" VertAlign="Center" Font="Arial, 9pt, style=Bold"/>
+        </TableRow>
+      </TableObject>
+    </ColumnHeaderBand>
+    <DataBand Name="Data1" Top="140.3" Width="1268.57" Height="85.05" DataSource="SalesReport">
+      <TableObject Name="Table3" Width="1276.05" Height="85.05">
+        <TableColumn Name="Column25" Width="69.15"/>
+        <TableColumn Name="Column26" Width="69.15"/>
+        <TableColumn Name="Column27" Width="69.15"/>
+        <TableColumn Name="Column28" Width="69.15"/>
+        <TableColumn Name="Column29" Width="40.8"/>
+        <TableColumn Name="Column30" Width="50.25"/>
+        <TableColumn Name="Column31" Width="50.25"/>
+        <TableColumn Name="Column32" Width="50.25"/>
+        <TableColumn Name="Column33" Width="59.7"/>
+        <TableColumn Name="Column34" Width="69.15"/>
+        <TableColumn Name="Column35" Width="69.15"/>
+        <TableColumn Name="Column36" Width="69.15"/>
+        <TableColumn Name="Column37" Width="69.15"/>
+        <TableColumn Name="Column38" Width="69.15"/>
+        <TableColumn Name="Column39" Width="69.15"/>
+        <TableColumn Name="Column40" Width="69.15"/>
+        <TableColumn Name="Column41" Width="88.05"/>
+        <TableColumn Name="Column42" Width="106.95"/>
+        <TableColumn Name="Column43" Width="69.15"/>
+        <TableRow Name="Row3" Height="85.05">
+          <TableCell Name="Cell25" Text="[SalesReport.DeliveryReceipt.DeliveredDate]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell26" Text="[SalesReport.DeliveryReceipt.Customer.CustomerName]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell27" Text="[SalesReport.DeliveryReceipt.Customer.CustomerType]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell28" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.AccountSpecialist]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell29" Text="[SalesReport.SalesInvoiceNo]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell30" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.CustomerOrderSlipNo]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell31" Text="[SalesReport.DeliveryReceipt.DeliveryReceiptNo]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell32" Text="[SalesReport.DeliveryReceipt.PurchaseOrder.PurchaseOrderNo]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell33" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.DeliveryOption]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell34" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.Product.ProductName]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell35" Text="[SalesReport.DeliveryReceipt.Quantity]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell36" Text="[ToDecimal([SalesReport.DeliveryReceipt.Freight]) * ToDecimal([SalesReport.DeliveryReceipt.Quantity])]&#13;&#10;" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell37" Text="[SalesReport.DeliveryReceipt.TotalAmount]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell38" Text="[IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12) * ToDecimal(.12),ToDecimal(0))]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell39" Text="[IIf(ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) != 0,ToDecimal([SalesReport.DeliveryReceipt.TotalAmount]) / ToDecimal(1.12),ToDecimal(0))]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell40" Text="[(ToDecimal([SalesReport.DeliveryReceipt.Freight]) * ToDecimal([SalesReport.DeliveryReceipt.Quantity])) / ToDecimal(1.12) ]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell41" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.CommissionRate]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+          <TableCell Name="Cell42" Text="[SalesReport.DeliveryReceipt.CustomerOrderSlip.Commissionee.SupplierName]" Font="Arial, 8pt"/>
+          <TableCell Name="Cell43" Text="[SalesReport.DeliveryReceipt.Remarks]" Font="Arial, 8pt"/>
+        </TableRow>
+      </TableObject>
+    </DataBand>
+    <ReportSummaryBand Name="ReportSummary1" Top="229.35" Width="1268.57" Height="151.2" CanBreak="true" KeepWithData="true">
+      <TableObject Name="Table5" Width="1276.05" Height="28.35">
+        <TableColumn Name="Column63" Width="69.15"/>
+        <TableColumn Name="Column64" Width="69.15"/>
+        <TableColumn Name="Column65" Width="69.15"/>
+        <TableColumn Name="Column66" Width="69.15"/>
+        <TableColumn Name="Column67" Width="40.8"/>
+        <TableColumn Name="Column68" Width="50.25"/>
+        <TableColumn Name="Column69" Width="50.25"/>
+        <TableColumn Name="Column70" Width="50.25"/>
+        <TableColumn Name="Column71" Width="59.7"/>
+        <TableColumn Name="Column72" Width="69.15"/>
+        <TableColumn Name="Column73" Width="69.15"/>
+        <TableColumn Name="Column74" Width="69.15"/>
+        <TableColumn Name="Column75" Width="69.15"/>
+        <TableColumn Name="Column76" Width="69.15"/>
+        <TableColumn Name="Column77" Width="69.15"/>
+        <TableColumn Name="Column78" Width="69.15"/>
+        <TableColumn Name="Column79" Width="88.05"/>
+        <TableColumn Name="Column80" Width="106.95"/>
+        <TableColumn Name="Column81" Width="69.15"/>
+        <TableRow Name="Row5" Height="28.35">
+          <TableCell Name="Cell63" Font="Arial, 8pt"/>
+          <TableCell Name="Cell64" Font="Arial, 8pt"/>
+          <TableCell Name="Cell65" Font="Arial, 8pt"/>
+          <TableCell Name="Cell66" Font="Arial, 8pt"/>
+          <TableCell Name="Cell67" Font="Arial, 8pt"/>
+          <TableCell Name="Cell68" Font="Arial, 8pt"/>
+          <TableCell Name="Cell69" Font="Arial, 8pt"/>
+          <TableCell Name="Cell70" Font="Arial, 8pt"/>
+          <TableCell Name="Cell71" Font="Arial, 8pt"/>
+          <TableCell Name="Cell72" Text="TOTAL:" Font="Arial, 8pt, style=Bold"/>
+          <TableCell Name="Cell73" Text="[TotalQuantity]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell74" Text="[TotalFreight]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell75" Text="[TotalSalesGVAT]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell76" Text="[TotalVAT]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell77" Text="[TotalSalesNVAT]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell78" Text="[TotalFreightNVAT]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell79" Text="[TotalCommission]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 7pt, style=Bold"/>
+          <TableCell Name="Cell80" Font="Arial, 8pt"/>
+          <TableCell Name="Cell81" Font="Arial, 8pt"/>
+        </TableRow>
+      </TableObject>
+      <ChildBand Name="Child1" Top="384.55" Width="1268.57" Height="217.41">
+        <TableObject Name="Table6" Width="368.47" Height="207.96" PrintOnParent="true">
+          <TableColumn Name="Column82" Width="85.03"/>
+          <TableColumn Name="Column83" Width="94.48"/>
+          <TableColumn Name="Column84" Width="94.48"/>
+          <TableColumn Name="Column85" Width="94.48"/>
+          <TableRow Name="Row6" Height="22.06">
+            <TableCell Name="Cell82" Fill.Color="Silver" Text="Overall" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold" ColSpan="4"/>
+            <TableCell Name="Cell83" Fill.Color="Silver" Font="Arial, 10pt"/>
+            <TableCell Name="Cell84" Fill.Color="Silver" Font="Arial, 10pt"/>
+            <TableCell Name="Cell85" Fill.Color="Silver" Font="Arial, 10pt"/>
+          </TableRow>
+          <TableRow Name="Row7" Height="22.06">
+            <TableCell Name="Cell87" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Segment" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell88" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Volume" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell89" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Sales N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell90" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Ave. SP" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          </TableRow>
+          <TableRow Name="Row8" Height="40.96">
+            <TableCell Name="Cell92" Text="Retail" Padding="2, 8, 2, 1" Font="Arial, 8pt"/>
+            <TableCell Name="Cell93" Text="[TotalVolumeOverallRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell94" Text="[TotalSalesNVATOverallRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell95" Text="[SafeDivide([TotalSalesNVATOverallRetail], [TotalVolumeOverallRetail])]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row11" Height="31.51">
+            <TableCell Name="Cell106" Text="Industrial" Font="Arial, 8pt"/>
+            <TableCell Name="Cell107" Text="[TotalVolumeOverallIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell108" Text="[TotalSalesNVATOverallIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell109" Text="[SafeDivide([TotalSalesNVATOverallIndustrial],[TotalVolumeOverallIndustrial])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row9" Height="31.51">
+            <TableCell Name="Cell97" Text="Government" Font="Arial, 8pt"/>
+            <TableCell Name="Cell98" Text="[TotalVolumeOverallGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell99" Text="[TotalSalesNVATOverallGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell100" Text="[SafeDivide([TotalSalesNVATOverallGovernment],[TotalVolumeOverallGovernment])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row10" Height="31.51">
+            <TableCell Name="Cell102" Text="Reseller" Font="Arial, 8pt"/>
+            <TableCell Name="Cell103" Text="[TotalVolumeOverallReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell104" Text="[TotalSalesNVATOverallReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell105" Text="[SafeDivide([TotalSalesNVATOverallReseller], [TotalVolumeOverallReseller])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row30" Height="28.35">
+            <TableCell Name="Cell169" Text="TOTAL:" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell170" Text="[TotalVolumeOverall]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell171" Text="[TotalSalesNVATOverall]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell172" Text="[SafeDivide([TotalSalesNVATOverall], [TotalVolumeOverall])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+          </TableRow>
+        </TableObject>
+        <TableObject Name="Table7" Left="396.9" Width="273.99" Height="207.96" PrintOnParent="true">
+          <TableColumn Name="Column86" Width="85.03"/>
+          <TableColumn Name="Column87" Width="94.48"/>
+          <TableColumn Name="Column88" Width="94.48"/>
+          <TableRow Name="Row12" Height="22.06">
+            <TableCell Name="Cell110" Fill.Color="Silver" Text="Biodiesel" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold" ColSpan="3"/>
+            <TableCell Name="Cell111" Fill.Color="Silver" Font="Arial, 10pt"/>
+            <TableCell Name="Cell112" Fill.Color="Silver" Font="Arial, 10pt"/>
+          </TableRow>
+          <TableRow Name="Row13" Height="22.06">
+            <TableCell Name="Cell114" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Volume" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell115" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Sales N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell116" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Ave. SP" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          </TableRow>
+          <TableRow Name="Row14" Height="40.96">
+            <TableCell Name="Cell118" Text="[TotalVolumeBiodieselRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell119" Text="[TotalSalesNVATBiodieselRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell120" Text="[SafeDivide([TotalSalesNVATBiodieselRetail],[TotalVolumeBiodieselRetail])]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row15" Height="31.51">
+            <TableCell Name="Cell122" Text="[TotalVolumeBiodieselIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell123" Text="[TotalSalesNVATBiodieselIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell124" Text="[SafeDivide([TotalSalesNVATBiodieselIndustrial],[TotalVolumeBiodieselIndustrial])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row16" Height="31.51">
+            <TableCell Name="Cell126" Text="[TotalVolumeBiodieselGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell127" Text="[TotalSalesNVATBiodieselGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell128" Text="[SafeDivide([TotalSalesNVATBiodieselGovernment], [TotalVolumeBiodieselGovernment])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row17" Height="31.51">
+            <TableCell Name="Cell130" Text="[TotalVolumeBiodieselReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell131" Text="[TotalSalesNVATBiodieselReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell132" Text="[SafeDivide([TotalSalesNVATBiodieselReseller],[TotalVolumeBiodieselReseller])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row31" Height="28.35">
+            <TableCell Name="Cell173" Text="[TotalVolumeBiodiesel]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell174" Text="[TotalSalesNVATBiodiesel]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell175" Text="[SafeDivide([TotalSalesNVATBiodiesel],[TotalVolumeBiodiesel])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+          </TableRow>
+        </TableObject>
+        <TableObject Name="Table8" Left="699.3" Width="273.99" Height="207.96" PrintOnParent="true">
+          <TableColumn Name="Column89" Width="85.03"/>
+          <TableColumn Name="Column90" Width="94.48"/>
+          <TableColumn Name="Column91" Width="94.48"/>
+          <TableRow Name="Row18" Height="22.06">
+            <TableCell Name="Cell133" Fill.Color="Silver" Text="Econogas" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold" ColSpan="3"/>
+            <TableCell Name="Cell134" Fill.Color="Silver" Font="Arial, 10pt"/>
+            <TableCell Name="Cell135" Fill.Color="Silver" Font="Arial, 10pt"/>
+          </TableRow>
+          <TableRow Name="Row19" Height="22.06">
+            <TableCell Name="Cell136" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Volume" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell137" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Sales N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell138" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Ave. SP" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          </TableRow>
+          <TableRow Name="Row20" Height="40.96">
+            <TableCell Name="Cell139" Text="[TotalVolumeEconogasRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell140" Text="[TotalSalesNVATEconogasRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell141" Text="[SafeDivide([TotalSalesNVATEconogasRetail],[TotalVolumeEconogasRetail])]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row21" Height="31.51">
+            <TableCell Name="Cell142" Text="[TotalVolumeEconogasIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell143" Text="[TotalSalesNVATEconogasIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell144" Text="[SafeDivide([TotalSalesNVATEconogasIndustrial],[TotalVolumeEconogasIndustrial])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row22" Height="31.51">
+            <TableCell Name="Cell145" Text="[TotalVolumeEconogasGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell146" Text="[TotalSalesNVATEconogasGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell147" Text="[SafeDivide([TotalSalesNVATEconogasGovernment],[TotalVolumeEconogasGovernment])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row23" Height="31.51">
+            <TableCell Name="Cell148" Text="[TotalVolumeEconogasReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell149" Text="[TotalSalesNVATEconogasReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell150" Text="[SafeDivide([TotalSalesNVATEconogasReseller],[TotalVolumeEconogasReseller])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row32" Height="28.35">
+            <TableCell Name="Cell176" Text="[TotalVolumeEconogas]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell177" Text="[TotalSalesNVATEconogas]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell178" Text="[SafeDivide([TotalSalesNVATEconogas],[TotalVolumeEconogas])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+          </TableRow>
+        </TableObject>
+        <TableObject Name="Table9" Left="1001.7" Width="273.99" Height="207.96" PrintOnParent="true">
+          <TableColumn Name="Column92" Width="85.03"/>
+          <TableColumn Name="Column93" Width="94.48"/>
+          <TableColumn Name="Column94" Width="94.48"/>
+          <TableRow Name="Row24" Height="22.06">
+            <TableCell Name="Cell151" Fill.Color="Silver" Text="Envirogas" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold" ColSpan="3"/>
+            <TableCell Name="Cell152" Fill.Color="Silver" Font="Arial, 10pt"/>
+            <TableCell Name="Cell153" Fill.Color="Silver" Font="Arial, 10pt"/>
+          </TableRow>
+          <TableRow Name="Row25" Height="22.06">
+            <TableCell Name="Cell154" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Volume" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell155" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Sales N. VAT" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+            <TableCell Name="Cell156" Border.Lines="Top, Bottom" Fill.Color="Silver" Text="Ave. SP" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt, style=Bold"/>
+          </TableRow>
+          <TableRow Name="Row26" Height="40.96">
+            <TableCell Name="Cell157" Text="[TotalVolumeEnvirogasRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell158" Text="[TotalSalesNVATEnvirogasRetail]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell159" Text="[SafeDivide([TotalSalesNVATEnvirogasRetail],[TotalVolumeEnvirogasRetail])]" Padding="2, 8, 2, 1" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row27" Height="31.51">
+            <TableCell Name="Cell160" Text="[TotalVolumeEnvirogasIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell161" Text="[TotalSalesNVATEnvirogasIndustrial]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell162" Text="[SafeDivide([TotalSalesNVATEnvirogasIndustrial],[TotalVolumeEnvirogasIndustrial])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row28" Height="31.51">
+            <TableCell Name="Cell163" Text="[TotalVolumeEnvirogasGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell164" Text="[TotalSalesNVATEnvirogasGovernment]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell165" Text="[SafeDivide([TotalSalesNVATEnvirogasGovernment],[TotalVolumeEnvirogasGovernment])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row29" Height="31.51">
+            <TableCell Name="Cell166" Text="[TotalVolumeEnvirogasReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell167" Text="[TotalSalesNVATEnvirogasReseller]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt"/>
+            <TableCell Name="Cell168" Text="[SafeDivide([TotalSalesNVATEnvirogasReseller],[TotalVolumeEnvirogasReseller])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt"/>
+          </TableRow>
+          <TableRow Name="Row33" Height="28.35">
+            <TableCell Name="Cell179" Text="[TotalVolumeEnvirogas]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell180" Text="[TotalSalesNVATEnvirogas]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+            <TableCell Name="Cell181" Text="[SafeDivide([TotalSalesNVATEnvirogas],[TotalVolumeEnvirogas])]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="4" HorzAlign="Right" Font="Arial, 8pt, style=Bold"/>
+          </TableRow>
+        </TableObject>
+      </ChildBand>
+    </ReportSummaryBand>
+    <PageFooterBand Name="PageFooter1" Top="605.96" Width="1268.57" Height="18.9">
+      <TextObject Name="Text12" Left="1171.8" Width="103.95" Height="18.9" Text="[PageN] of [TotalPages#]" HorzAlign="Right" VertAlign="Center" Font="Arial, 10pt"/>
+    </PageFooterBand>
+  </ReportPage>
+</Report>

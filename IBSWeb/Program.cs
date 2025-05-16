@@ -66,6 +66,7 @@ else
 }
 
 // Add services to the container.
+builder.Services.AddFastReport();
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -81,6 +82,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 });
 
+FastReport.Utils.RegisteredObjects.AddConnection(typeof(FastReport.Data.PostgresDataConnection));
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
@@ -129,6 +131,7 @@ builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 
+app.UseFastReport();
 app.UseSerilogRequestLogging(); // Logs HTTP requests to the terminal
 
 // Configure the HTTP request pipeline.
