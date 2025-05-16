@@ -22,12 +22,15 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public SalesReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
+        private readonly ILogger<SalesReportController> _logger;
+
+        public SalesReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<SalesReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
         }
 
         private async Task<string> GetCompanyClaimAsync()
@@ -44,42 +47,48 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GeneratedSalesReport(ViewModelBook model)
+        public async Task<IActionResult> GeneratedSalesReport(ViewModelBook model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            if (ModelState.IsValid)
+
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
-
-                    if (sales.Any())
-                    {
-                        var report = new WebReport();
-
-                        var reportPath = Path.Combine(_webHostEnvironment.WebRootPath, "reports", "SalesReport.frx");
-                        report.Report.Load(reportPath);
-
-                        report.Report.SetParameterValue("DateFrom", model.DateFrom.ToString(SD.Date_Format));
-                        report.Report.SetParameterValue("DateTo", model.DateTo.ToString(SD.Date_Format));
-                        report.Report.Dictionary.RegisterBusinessObject(sales, "SalesReport", 4, true);
-                        report.Report.GetDataSource("SalesReport").Enabled = true;
-
-                        return View(report);
-                    }
-
-                    TempData["error"] = "No records found!";
-                    return RedirectToAction(nameof(SalesReport));;
-                }
-                catch (Exception ex)
-                {
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(SalesReport));
-                }
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(SalesReport));
             }
 
-            TempData["error"] = "Please input date from";
-            return RedirectToAction(nameof(SalesReport));
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims);
+
+                if (sales.Any())
+                {
+                    var report = new WebReport();
+
+                    var reportPath = Path.Combine(_webHostEnvironment.WebRootPath, "reports", "SalesReport.frx");
+                    report.Report.Load(reportPath);
+
+                    report.Report.SetParameterValue("DateFrom", model.DateFrom.ToString(SD.Date_Format));
+                    report.Report.SetParameterValue("DateTo", model.DateTo.ToString(SD.Date_Format));
+                    report.Report.Dictionary.RegisterBusinessObject(sales, "SalesReport", 4, true);
+                    report.Report.GetDataSource("SalesReport").Enabled = true;
+
+                    return View(report);
+                }
+
+                TempData["error"] = "No records found!";
+                return RedirectToAction(nameof(SalesReport));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Generate by: {UserName}",
+                    ex.Message, ex.StackTrace, User.Identity!.Name);
+                return RedirectToAction(nameof(SalesReport));
+            }
         }
     }
 }
