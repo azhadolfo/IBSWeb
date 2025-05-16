@@ -990,6 +990,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         .Include(dt => dt.Tugboat)
                         .Include(dt => dt.TugMaster)
                         .Include(dt => dt.Vessel)
+                        .Include(dt => dt.Customer)
                         .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled");
 
                 // Apply status filter based on filterType

@@ -80,7 +80,7 @@
                         <th class="text-start">ACTIVITY/ <br/>SERVICE TYPE</th>
                         <th class="text-start">PORT-<br/> TERMINAL</th>
                         <th class="text-start">TUGBOAT</th>
-                        <th class="text-start">TUG MASTER</th>
+                        <th class="text-start">CUSTOMER</th>
                         <th class="text-start">VESSEL</th>
                         <th class="text-start">STATUS</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
@@ -152,7 +152,21 @@
                         }
                     },
                     {"data": "tugboat.tugboatName"},
-                    {"data": "tugMaster.tugMasterName"},
+                    {
+                        "data": "customer.customerName",
+                        "orderable": true,
+                        "className": "text-center", // Center the <td> content
+                        "render": function(data, type, row) {
+
+                            let customerIdVariable = row.customerId;
+                            if (customerIdVariable !== null){
+                                return `${row.customer.customerName}`;
+                            }
+                            else{
+                                return `(For Customer Assigning)`;
+                            }
+                        }
+                    },
                     {"data": "vessel.vesselName"},
                     {
                         "data": "status",
@@ -187,7 +201,7 @@
                         "render": function(data, type, row) {
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
                             
-                            if (row.status !== "For Tariff" && row.status !== "Tariff Pending")
+                            if (row.status !== "For Tariff" && row.status !== "Tariff Pending" && row.status !== "Pending")
                             {
                                 actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>`;
                             }
@@ -220,6 +234,11 @@
                                         actions += `<li><a class="dropdown-item" href="${editTicketUrl}?id=${row.dispatchTicketId}" id="editTicket"><i class="bi bi-pencil-square"></i> Edit Ticket</a></li>
                                         </ul>
                                     </div>`;
+                            }
+
+                            if (row.status === "Pending")
+                            {
+                                actions += `<a class="btn btn-primary col-12" href="${editTicketUrl}?id=${row.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit Ticket</a>`;
                             }
                             
                             actions += `</div></div>`;
