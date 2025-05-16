@@ -291,6 +291,17 @@
                 var existingVideoName = '@Model.VideoName';
                 var newImage = document.getElementById('imageUpload').files.length > 0;
                 var newVideo = document.getElementById('videoUpload').files.length > 0;
+                var form = document.getElementById('submitButton').form;
+
+                function trySubmit() {
+                    // Check if the form is valid using HTML5 validation
+                    if (form.checkValidity()) {
+                        form.submit(); // Submit if valid
+                    } else {
+                        // Trigger validation UI (show error messages)
+                        form.reportValidity();
+                    }
+                }
 
                 if ((existingImageName && existingImageName !== "" && newImage) || (existingVideoName && existingVideoName !== "" && newVideo)) {
                     Swal.fire({
@@ -301,12 +312,12 @@
                         cancelButtonText: "Cancel"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            document.getElementById('submitButton').form.submit();
+                            trySubmit();
                         }
                     });
                 }
                 else {
-                    document.getElementById('submitButton').form.submit();
+                    trySubmit();
                 }
             });
 
