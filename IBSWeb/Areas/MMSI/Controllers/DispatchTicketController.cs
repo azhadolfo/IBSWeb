@@ -109,11 +109,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
-                    if (model.Date > model.DateLeft)
-                    {
-                        throw new ArgumentException("Date start should not be earlier than date today.");
-                    }
-
                     model.CreatedBy = await GetUserNameAsync();
                     timeStamp = DateTime.Now;
                     model.CreatedDate = timeStamp;
@@ -585,10 +580,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
-                    if (model.Date > model.DateLeft)
-                    {
-                        throw new ArgumentException("Date start should not be earlier than date today.");
-                    }
                     var currentModel = await _db.MMSIDispatchTickets
                         .FindAsync(model.DispatchTicketId, cancellationToken);
                     model.Tugboat = await _db.MMSITugboats.FindAsync(model.TugBoatId, cancellationToken);
