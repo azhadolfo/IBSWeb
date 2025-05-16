@@ -4240,14 +4240,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("collection_id");
 
                     b.Property<string>("CreatedBy")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
-                    b.Property<DateTime?>("CreatedDate")
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int?>("CustomerId")
+                    b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
 
@@ -4272,10 +4273,11 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("last_edited_date");
 
                     b.Property<string>("MMSIBillingNumber")
+                        .IsRequired()
                         .HasColumnType("varchar(10)")
                         .HasColumnName("mmsi_billing_number");
 
-                    b.Property<int?>("PortId")
+                    b.Property<int>("PortId")
                         .HasColumnType("integer")
                         .HasColumnName("port_id");
 
@@ -4284,14 +4286,15 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("principal_id");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("status");
 
-                    b.Property<int?>("TerminalId")
+                    b.Property<int>("TerminalId")
                         .HasColumnType("integer")
                         .HasColumnName("terminal_id");
 
-                    b.Property<int?>("VesselId")
+                    b.Property<int>("VesselId")
                         .HasColumnType("integer")
                         .HasColumnName("vessel_id");
 
@@ -11228,11 +11231,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_filpride_customers_customer_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_ports_port_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPrincipal", "Principal")
@@ -11243,11 +11250,15 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSITerminal", "Terminal")
                         .WithMany()
                         .HasForeignKey("TerminalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_terminals_terminal_id");
 
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIVessel", "Vessel")
                         .WithMany()
                         .HasForeignKey("VesselId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_mmsi_vessels_vessel_id");
 
                     b.Navigation("Customer");

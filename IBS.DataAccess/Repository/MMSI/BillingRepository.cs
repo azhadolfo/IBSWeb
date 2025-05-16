@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,11 +20,11 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> ports = await _dbContext.MMSIPorts
-                .OrderBy(s => s.PortNumber)
+                .OrderBy(s => s.PortName)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -44,10 +45,10 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
+            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
             {
                 Value = s.VesselId.ToString(),
-                Text = s.VesselNumber + " " + s.VesselName + " " + s.VesselType
+                Text = s.VesselName
             }).ToListAsync(cancellationToken);
 
             return vessels;
@@ -57,6 +58,28 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             return await _dbContext.FilprideCustomers
                 .Where(c => c.IsMMSI == true)
+                .OrderBy(s => s.CustomerName)
+                .Select(s => new SelectListItem
+            {
+                Value = s.CustomerId.ToString(),
+                Text = s.CustomerName
+            }).ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesById(CancellationToken cancellationToken = default)
+        {
+            var dispatchToBeBilled = await _dbContext.MMSIDispatchTickets
+                .Where(t => t.Status == "For Billing")
+                .Include(t => t.Customer)
+                .ToListAsync(cancellationToken);
+
+            var listOfCustomerWithBillableTickets = dispatchToBeBilled
+                .Select(t => t.Customer.CustomerId)
+                .Distinct()
+                .ToList();
+
+            return await _dbContext.FilprideCustomers
+                .Where(c => c.IsMMSI == true && listOfCustomerWithBillableTickets.Contains(c.CustomerId))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
             {
@@ -109,12 +132,12 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
-        public async Task<MMSIBilling> GetBillingLists(MMSIBilling model, CancellationToken cancellationToken = default)
+        public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
         {
             model.Ports = await GetMMSIPortsById(cancellationToken);
             model.Terminals = await GetMMSIAllTerminalsById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Customers = await GetMMSICustomersById(cancellationToken);
+            model.Customers = await GetMMSICustomersWithBillablesById(cancellationToken);
 
             return model;
         }

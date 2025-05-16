@@ -88,5 +88,6 @@ namespace IBS.Models.MMSI.ViewModels
         public List<SelectListItem>? Customers { get; set; }
 
         #endregion
+
     }
 }
