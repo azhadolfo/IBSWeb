@@ -377,7 +377,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.Status = "Tariff Pending";
 
                 currentModel.TariffBy = user.UserName;
-                currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.DispatchRate = model.DispatchRate;
                 currentModel.DispatchDiscount = model.DispatchDiscount;
@@ -489,7 +488,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TariffEditedBy = user.UserName;
                 currentModel.TariffEditedDate = DateTime.Now;
                 currentModel.Status = "Tariff Pending";
-                currentModel.CustomerId = model.CustomerId;
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.BAFChargeType = chargeType2;
                 currentModel.DispatchRate = model.DispatchRate;
