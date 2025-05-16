@@ -821,7 +821,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                         if (recordToUpdate != null)
                         {
-                            recordToUpdate.Status = "For Tariff";
+                            recordToUpdate.Status = "Pending";
                             postedTickets.Add($"{recordToUpdate.DispatchNumber}");
                         }
                     }
