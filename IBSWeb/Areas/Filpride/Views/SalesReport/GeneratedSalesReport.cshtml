@@ -1,0 +1,10 @@
+@using FastReport.Web
+@model WebReport
+
+@{
+    ViewData["Title"] = "Sales Report";
+}
+
+<div class="justify-content-center align-content-center" style="display: flex;">
+    @await Model.Render()
+</div>
