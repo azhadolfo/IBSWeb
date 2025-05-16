@@ -525,13 +525,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var terminals = await _db
                 .MMSITerminals
                 .Where(t => t.PortId == portId)
-                .OrderBy(t => t.TerminalId)
+                .OrderBy(t => t.TerminalName)
                 .ToListAsync(cancellationToken);
 
             var terminalsList = terminals.Select(t => new SelectListItem
             {
                 Value = t.TerminalId.ToString(),
-                Text = t.TerminalNumber + " " + t.TerminalName
+                Text = t.TerminalName
             }).ToList();
 
             return Json(terminalsList);

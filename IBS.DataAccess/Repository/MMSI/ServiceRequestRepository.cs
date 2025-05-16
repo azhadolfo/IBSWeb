@@ -20,11 +20,11 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
-                .OrderBy(s => s.ServiceNumber)
+                .OrderBy(s => s.ServiceName)
                 .Select(s => new SelectListItem
                 {
                     Value = s.ServiceId.ToString(),
-                    Text = s.ServiceNumber + " " + s.ServiceName
+                    Text = s.ServiceName
                 }).ToListAsync(cancellationToken);
 
             return activitiesServices;
@@ -33,11 +33,11 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> ports = await _dbContext.MMSIPorts
-                .OrderBy(s => s.PortNumber)
+                .OrderBy(s => s.PortName)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -51,21 +51,21 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 terminals = await _dbContext.MMSITerminals
                 .Where(t => t.PortId == model.Terminal.Port.PortId)
-                .OrderBy(s => s.TerminalNumber)
+                .OrderBy(s => s.TerminalName)
                 .Select(s => new SelectListItem
                 {
                     Value = s.TerminalId.ToString(),
-                    Text = s.TerminalNumber + " " + s.TerminalName
+                    Text = s.TerminalName
                 }).ToListAsync(cancellationToken);
             }
             else
             {
                 terminals = await _dbContext.MMSITerminals
-                .OrderBy(s => s.TerminalNumber)
+                .OrderBy(s => s.TerminalName)
                 .Select(s => new SelectListItem
                 {
                     Value = s.TerminalId.ToString(),
-                    Text = s.TerminalNumber + " " + s.TerminalName
+                    Text = s.TerminalName
                 }).ToListAsync(cancellationToken);
             }
 
@@ -74,10 +74,12 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITugboatsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> tugBoats = await _dbContext.MMSITugboats.OrderBy(s => s.TugboatNumber).Select(s => new SelectListItem
+            List<SelectListItem> tugBoats = await _dbContext.MMSITugboats
+                .OrderBy(s => s.TugboatName)
+                .Select(s => new SelectListItem
             {
                 Value = s.TugboatId.ToString(),
-                Text = s.TugboatNumber + " " + s.TugboatName
+                Text = s.TugboatName
             }).ToListAsync(cancellationToken);
 
             return tugBoats;
@@ -85,10 +87,12 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITugMastersById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> tugMasters = await _dbContext.MMSITugMasters.OrderBy(s => s.TugMasterNumber).Select(s => new SelectListItem
+            List<SelectListItem> tugMasters = await _dbContext.MMSITugMasters
+                .OrderBy(s => s.TugMasterName)
+                .Select(s => new SelectListItem
             {
                 Value = s.TugMasterId.ToString(),
-                Text = s.TugMasterNumber + " " + s.TugMasterName
+                Text = s.TugMasterName
             }).ToListAsync(cancellationToken);
 
             return tugMasters;
@@ -96,25 +100,15 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
+            List<SelectListItem> vessels = await _dbContext.MMSIVessels
+                .OrderBy(s => s.VesselName)
+                .Select(s => new SelectListItem
             {
                 Value = s.VesselId.ToString(),
-                Text = s.VesselNumber + " " + s.VesselName + " " + s.VesselType
+                Text = $"{s.VesselName} ({s.VesselType})"
             }).ToListAsync(cancellationToken);
 
             return vessels;
-        }
-
-        public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true)
-                .OrderBy(s => s.CustomerName)
-                .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
         }
 
         public async Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
