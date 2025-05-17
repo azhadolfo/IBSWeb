@@ -130,6 +130,28 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
+        public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesById(CancellationToken cancellationToken = default)
+        {
+            var billingsToBeCollected = await _dbContext.MMSIBillings
+                .Where(t => t.Status == "For Collection")
+                .Include(t => t.Customer)
+                .ToListAsync(cancellationToken);
+
+            var listOfCustomerWithCollectibleBillings = billingsToBeCollected
+                .Select(t => t.Customer.CustomerId)
+                .Distinct()
+                .ToList();
+
+            return await _dbContext.FilprideCustomers
+                .Where(c => c.IsMMSI == true && listOfCustomerWithCollectibleBillings.Contains(c.CustomerId))
+                .OrderBy(s => s.CustomerName)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMMSIUncollectedBillingsById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> billingsList = await _dbContext.MMSIBillings

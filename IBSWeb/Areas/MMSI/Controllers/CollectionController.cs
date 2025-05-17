@@ -51,8 +51,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = new MMSICollection();
-            model.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
+            var model = new MMSICollection
+            {
+                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken)
+            };
             return View(model);
         }
 
