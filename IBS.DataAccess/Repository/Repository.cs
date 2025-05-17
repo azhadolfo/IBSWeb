@@ -35,7 +35,7 @@ namespace IBS.DataAccess.Repository
             return await query.ToListAsync(cancellationToken);
         }
 
-        public virtual async Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter).FirstOrDefaultAsync(cancellationToken);
         }
@@ -88,7 +88,7 @@ namespace IBS.DataAccess.Repository
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default)
+        public async Task<ProductDto?> MapProductToDTO(string productCode, CancellationToken cancellationToken = default)
         {
             return await _db.Set<Product>()
                 .Where(p => p.ProductCode == productCode)
@@ -101,7 +101,7 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default)
+        public async Task<StationDto?> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default)
         {
             return await _db.Set<MobilityStation>()
                 .Where(s => s.StationCode == stationCode)
@@ -115,14 +115,14 @@ namespace IBS.DataAccess.Repository
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
+        public async Task<SupplierDto?> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default)
         {
             return await _db.Set<FilprideSupplier>()
                 .Where(s => s.SupplierCode == supplierCode)
                 .Select(s => new SupplierDto
                 {
                     SupplierId = s.SupplierId,
-                    SupplierCode = s.SupplierCode,
+                    SupplierCode = s.SupplierCode!,
                     SupplierName = s.SupplierName
                 })
                 .FirstOrDefaultAsync(cancellationToken);
@@ -236,14 +236,14 @@ namespace IBS.DataAccess.Repository
             return netOfVatAmount * VatRate;
         }
 
-        public async Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
+        public async Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default)
         {
             return await _db.Set<FilprideCustomer>()
                 .Where(c => c.CustomerId == customerId || c.CustomerCode == customerCode)
                 .Select(c => new CustomerDto
                 {
                     CustomerId = c.CustomerId,
-                    CustomerCode = c.CustomerCode,
+                    CustomerCode = c.CustomerCode!,
                     CustomerName = c.CustomerName,
                     CustomerAddress = c.CustomerAddress,
                     CustomerTin = c.CustomerTin,
@@ -265,14 +265,7 @@ namespace IBS.DataAccess.Repository
                     entitySet.Remove(entity);
                 }
 
-                try
-                {
-                    await _db.SaveChangesAsync(cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    throw;
-                }
+                await _db.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -313,7 +306,7 @@ namespace IBS.DataAccess.Repository
                .Select(coa => new AccountTitleDto
                {
                    AccountId = coa.AccountId,
-                   AccountNumber = coa.AccountNumber,
+                   AccountNumber = coa.AccountNumber!,
                    AccountName = coa.AccountName
                })
                .ToListAsync(cancellationToken);

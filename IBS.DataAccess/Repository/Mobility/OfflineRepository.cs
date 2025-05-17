@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository.Mobility
             _db = db;
         }
 
-        public async Task<MobilityOffline> GetOffline(int offlineId, CancellationToken cancellationToken = default)
+        public async Task<MobilityOffline?> GetOffline(int offlineId, CancellationToken cancellationToken = default)
         {
             return await _db.MobilityOfflines
                 .FirstOrDefaultAsync(o => o.OfflineId == offlineId, cancellationToken);
@@ -42,13 +42,13 @@ namespace IBS.DataAccess.Repository.Mobility
             var offlineList = await _db.MobilityOfflines
                 .ToListAsync(cancellationToken);
 
-            var selectedOffline = offlineList.Find(o => o.OfflineId == model.SelectedOfflineId);
+            var selectedOffline = offlineList.Find(o => o.OfflineId == model.SelectedOfflineId) ?? throw new NullReferenceException("Selected offline not found.");
 
             var salesHeader = await _db.MobilitySalesHeaders
                 .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo && s.StationCode == selectedOffline.StationCode, cancellationToken);
 
             var salesDetail = await _db.MobilitySalesDetails
-                .Where(s => s.SalesHeaderId == salesHeader.SalesHeaderId)
+                .Where(s => s.SalesHeaderId == salesHeader!.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
             var detailToUpdate = salesDetail
@@ -56,19 +56,19 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (model.AffectedDSRNo == selectedOffline.FirstDsrNo)
             {
-                detailToUpdate.Closing = model.FirstDsrClosingAfter;
+                detailToUpdate!.Closing = model.FirstDsrClosingAfter;
                 selectedOffline.Balance -= model.FirstDsrClosingAfter - model.FirstDsrClosingBefore;
             }
             else
             {
-                detailToUpdate.Opening = model.SecondDsrOpeningAfter;
+                detailToUpdate!.Opening = model.SecondDsrOpeningAfter;
                 selectedOffline.Balance -= model.SecondDsrOpeningBefore - model.SecondDsrOpeningAfter;
             }
 
             detailToUpdate.Liters = detailToUpdate.Closing - detailToUpdate.Opening;
             detailToUpdate.Value = detailToUpdate.Liters * detailToUpdate.Price;
 
-            salesHeader.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
+            salesHeader!.FuelSalesTotalAmount = salesDetail.Sum(s => s.Value);
             salesHeader.TotalSales = salesHeader.FuelSalesTotalAmount + salesHeader.LubesTotalAmount;
             salesHeader.GainOrLoss = salesHeader.SafeDropTotalAmount - salesHeader.TotalSales;
 
@@ -87,7 +87,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     var problematicDsr = await _db.MobilitySalesHeaders
                    .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == selectedOffline.FirstDsrNo, cancellationToken);
 
-                    problematicDsr.IsTransactionNormal = true;
+                    problematicDsr!.IsTransactionNormal = true;
                 }
 
                 var secondDsrHasPendingOffline = offlineList.Any(o => !o.IsResolve && (o.FirstDsrNo == selectedOffline.SecondDsrNo || o.SecondDsrNo == selectedOffline.SecondDsrNo));
@@ -97,7 +97,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     var problematicDsr = await _db.MobilitySalesHeaders
                    .FirstOrDefaultAsync(s => s.StationCode == selectedOffline.StationCode && s.SalesNo == selectedOffline.SecondDsrNo, cancellationToken);
 
-                    problematicDsr.IsTransactionNormal = true;
+                    problematicDsr!.IsTransactionNormal = true;
                 }
             }
 

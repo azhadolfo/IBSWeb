@@ -44,10 +44,10 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideAuthorityToLoad> query = dbSet
                 .Include(atl => atl.Supplier)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Hauler)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Customer)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint);
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po!.Product)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Hauler)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Customer)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint);
 
             if (filter != null)
             {
@@ -57,17 +57,17 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<FilprideAuthorityToLoad> GetAsync(Expression<Func<FilprideAuthorityToLoad, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideAuthorityToLoad?> GetAsync(Expression<Func<FilprideAuthorityToLoad, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Supplier)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Hauler)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr.Customer)
-                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
-                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.AppointedSuppliers).ThenInclude(a => a.PurchaseOrder)
-                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Customer)
-                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos.Product)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(po => po!.Product)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Hauler)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(dr => dr!.Customer)
+                .Include(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.AppointedSuppliers)!.ThenInclude(a => a.PurchaseOrder)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Customer)
+                .Include(atl => atl.Details).ThenInclude(atl => atl.CustomerOrderSlip).ThenInclude(cos => cos!.Product)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

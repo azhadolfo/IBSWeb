@@ -33,13 +33,14 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityCheckVoucherHeader? lastCv = await _db
                 .MobilityCheckVoucherHeaders
-                .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade" && x.CheckVoucherHeaderNo.Contains("CV"))
+                .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade"
+                            && x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -55,13 +56,14 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             MobilityCheckVoucherHeader? lastCv = await _db
                 .MobilityCheckVoucherHeaders
-                .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade" && x.CheckVoucherHeaderNo.Contains("CV"))
+                .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade"
+                            && x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -103,7 +105,7 @@ namespace IBS.DataAccess.Repository.Mobility
         //     }
         // }
 
-        public override async Task<MobilityCheckVoucherHeader> GetAsync(Expression<Func<MobilityCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityCheckVoucherHeader?> GetAsync(Expression<Func<MobilityCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(x => x.Employee)
@@ -147,7 +149,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -169,7 +171,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(4);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -203,7 +205,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -225,7 +227,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(4);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -233,7 +235,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
             else
             {
-                return "PYTU00000001";
+                return "CVNU00000001";
             }
         }
     }

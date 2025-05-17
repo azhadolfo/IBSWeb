@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
     {
         Task CalculateTheBeginningInventory(MobilityInventory model, CancellationToken cancellationToken = default);
 
-        Task<MobilityInventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default);
+        Task<MobilityInventory?> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default);
 
         Task CalculateTheActualSounding(MobilityInventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default);
     }

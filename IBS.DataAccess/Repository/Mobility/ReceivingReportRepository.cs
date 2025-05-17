@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             IQueryable<MobilityReceivingReport> query = dbSet
                 .Include(rr => rr.PurchaseOrder)
-                .ThenInclude(dr => dr.Product);
+                .ThenInclude(dr => dr!.Product);
 
             if (filter != null)
             {
@@ -96,13 +96,13 @@ namespace IBS.DataAccess.Repository.Mobility
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<MobilityReceivingReport> GetAsync(Expression<Func<MobilityReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityReceivingReport?> GetAsync(Expression<Func<MobilityReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return  await dbSet.Where(filter)
                 .Include(po => po.PurchaseOrder)
-                .ThenInclude(po => po.Product)
+                .ThenInclude(po => po!.Product)
                 .Include(po => po.PurchaseOrder)
-                .ThenInclude(po => po.Supplier)
+                .ThenInclude(po => po!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             //PENDING process the method here
 
-            await UpdatePOAsync(receivingReport.PurchaseOrder.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
+            await UpdatePOAsync(receivingReport.PurchaseOrder!.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -118,7 +118,7 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task UpdateAsync(ReceivingReportViewModel viewModel, string stationCodeClaim, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.MobilityReceivingReports
-                .FindAsync(viewModel.ReceivingReportId, cancellationToken);
+                .FindAsync(viewModel.ReceivingReportId, cancellationToken) ?? throw new NullReferenceException("Receiving report not found");
 
             #region --Retrieve PO
 
@@ -130,7 +130,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #endregion --Retrieve PO
 
-            var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
+            var totalAmountRR = existingPo!.Quantity - existingPo.QuantityReceived;
 
             if (viewModel.QuantityDelivered > totalAmountRR)
             {
@@ -157,13 +157,13 @@ namespace IBS.DataAccess.Repository.Mobility
             }
 
             var deliveryReceipt = await _db.FilprideDeliveryReceipts
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po.Product)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(po => po!.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .Include(dr => dr.Hauler)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.PickUpPoint)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint)
                 .Include(dr => dr.Customer)
-                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
                 .FirstOrDefaultAsync(cancellationToken);
 
             var freight = deliveryReceipt?.CustomerOrderSlip?.DeliveryOption == SD.DeliveryOption_DirectDelivery
@@ -288,16 +288,16 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             var getPurchasOrder = await _db.MobilityPurchaseOrders
                 .Include(p => p.PickUpPoint)
-                .FirstOrDefaultAsync(p => p.PurchaseOrderNo == deliveryReceipt.CustomerOrderSlip.CustomerPoNo, cancellationToken);
+                .FirstOrDefaultAsync(p => p.PurchaseOrderNo == deliveryReceipt.CustomerOrderSlip!.CustomerPoNo, cancellationToken);
 
             MobilityReceivingReport model = new()
             {
                 Date = deliveredDate,
-                PurchaseOrderId = getPurchasOrder.PurchaseOrderId,
+                PurchaseOrderId = getPurchasOrder!.PurchaseOrderId,
                 PurchaseOrderNo = getPurchasOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
-                TruckOrVessels = getPurchasOrder.PickUpPoint.Depot,
+                TruckOrVessels = getPurchasOrder.PickUpPoint!.Depot,
                 AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 CreatedBy = "SYSTEM GENERATED",
@@ -316,7 +316,7 @@ namespace IBS.DataAccess.Repository.Mobility
                                             "Please contact the TNS department to verify the appointed supplier.");
             }
 
-            var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
+            var freight = deliveryReceipt.CustomerOrderSlip!.DeliveryOption == SD.DeliveryOption_DirectDelivery
                 ? deliveryReceipt.Freight
                 : 0;
 

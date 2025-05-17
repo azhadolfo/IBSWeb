@@ -40,7 +40,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastJv != null)
             {
-                string lastSeries = lastJv.JournalVoucherHeaderNo;
+                string lastSeries = lastJv.JournalVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastJv != null)
             {
-                string lastSeries = lastJv.JournalVoucherHeaderNo;
+                string lastSeries = lastJv.JournalVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -74,11 +74,11 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public override async Task<MobilityJournalVoucherHeader> GetAsync(Expression<Func<MobilityJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityJournalVoucherHeader?> GetAsync(Expression<Func<MobilityJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cv => cv.CheckVoucherHeader)
-                .ThenInclude(supplier => supplier.Supplier)
+                .ThenInclude(supplier => supplier!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             IQueryable<MobilityJournalVoucherHeader> query = dbSet
                 .Include(cv => cv.CheckVoucherHeader)
-                .ThenInclude(supplier => supplier.Supplier);
+                .ThenInclude(supplier => supplier!.Supplier);
 
             if (filter != null)
             {

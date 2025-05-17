@@ -175,8 +175,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public List<FilprideSalesBook> GetSalesBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedDocument, string company)
         {
-            Func<FilprideSalesBook, object> orderBy = null;
-            Func<FilprideSalesBook, bool> query = null;
+            Func<FilprideSalesBook, object>? orderBy = null;
+            Func<FilprideSalesBook, bool>? query = null;
 
             switch (selectedDocument)
             {
@@ -251,8 +251,8 @@ namespace IBS.DataAccess.Repository.Filpride
                              dr.DeliveredDate >= dateFrom &&
                              dr.DeliveredDate <= dateTo &&
                              (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced)))
-                .Include(dr => dr.CustomerOrderSlip.Product)
-                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos.Commissionee)
+                .Include(dr => dr.CustomerOrderSlip!.Product)
+                .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
@@ -376,7 +376,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var receivingReportsQuery = _db.FilprideReceivingReports
                 .Where(rr => rr.Company == company
                             && rr.Status == nameof(Status.Posted)
-                            && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt.CustomerId)));
+                            && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt!.CustomerId)));
 
             // Apply date filter based on dateSelectionType
             if (dateSelectionType == "RRDate")
@@ -396,19 +396,19 @@ namespace IBS.DataAccess.Repository.Filpride
             // Include necessary related entities
             var receivingReports = await receivingReportsQuery
                 .Include(rr => rr.PurchaseOrder)
-                    .ThenInclude(po => po.Supplier)
+                    .ThenInclude(po => po!.Supplier)
                 .Include(rr => rr.PurchaseOrder)
-                    .ThenInclude(po => po.Product)
+                    .ThenInclude(po => po!.Product)
                 .Include(rr => rr.DeliveryReceipt)
-                    .ThenInclude(dr => dr.CustomerOrderSlip)
-                        .ThenInclude(cos => cos.PickUpPoint)
+                    .ThenInclude(dr => dr!.CustomerOrderSlip)
+                        .ThenInclude(cos => cos!.PickUpPoint)
                 .Include(rr => rr.DeliveryReceipt)
-                    .ThenInclude(dr => dr.CustomerOrderSlip)
-                        .ThenInclude(cos => cos.Commissionee)
+                    .ThenInclude(dr => dr!.CustomerOrderSlip)
+                        .ThenInclude(cos => cos!.Commissionee)
                 .Include(rr => rr.DeliveryReceipt)
-                    .ThenInclude(dr => dr.Customer)
+                    .ThenInclude(dr => dr!.Customer)
                 .Include(rr => rr.DeliveryReceipt)
-                    .ThenInclude(dr => dr.Hauler)
+                    .ThenInclude(dr => dr!.Hauler)
                 .ToListAsync(cancellationToken);
 
             // For the additional delivery receipts part, apply similar date filtering logic
@@ -421,7 +421,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.Hauler)
-                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po.Product)
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
                 .ToListAsync(cancellationToken);
 
             var allReports = receivingReports
@@ -450,9 +450,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(cr => cr.Company == company && cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo)
                 .Include(cr => cr.SalesInvoice)
                 .Include(cr => cr.Customer)
-                .OrderBy(cr => cr.Customer.CustomerCode)
-                .ThenBy(cr => cr.Customer.CustomerName)
-                .ThenBy(cr => cr.Customer.CustomerType) // Order by TransactionDate
+                .OrderBy(cr => cr.Customer!.CustomerCode)
+                .ThenBy(cr => cr.Customer!.CustomerName)
+                .ThenBy(cr => cr.Customer!.CustomerType) // Order by TransactionDate
                 .ToListAsync(cancellationToken);
 
             return collectionReceipts;
@@ -465,13 +465,13 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var receivingReports = _db.FilprideReceivingReports
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+            var receivingReports = await _db.FilprideReceivingReports
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .Where(rr => rr.Company == company && rr.Date <= dateTo)
                 .OrderBy(rr => rr.Date.Year)
                 .ThenBy(rr => rr.Date.Month)
-                .ThenBy(rr => rr.PurchaseOrder.Supplier.SupplierName)
-                .ToList();
+                .ThenBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
+                .ToListAsync(cancellationToken);
 
             return receivingReports;
         }

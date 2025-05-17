@@ -37,13 +37,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilpridePurchaseOrder? lastPo = await _db
                 .FilpridePurchaseOrders
-                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG") && c.Type == nameof(DocumentType.Documented))
+                .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastPo != null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo;
+                string lastSeries = lastPo.PurchaseOrderNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -59,13 +59,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilpridePurchaseOrder? lastPo = await _db
                 .FilpridePurchaseOrders
-                .Where(c => c.Company == company && !c.PurchaseOrderNo.StartsWith("POBEG") && c.Type == nameof(DocumentType.Undocumented))
+                .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastPo != null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo;
+                string lastSeries = lastPo.PurchaseOrderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -77,7 +77,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilpridePurchaseOrder> GetAsync(Expression<Func<FilpridePurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilpridePurchaseOrder?> GetAsync(Expression<Func<FilpridePurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(p => p.Supplier)
@@ -156,7 +156,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<string> GenerateCodeForSubPoAsync(string purchaseOrderNo, string company, CancellationToken cancellationToken = default)
         {
             var latestSubPoCode = await _db.FilpridePurchaseOrders
-                .Where(po => po.IsSubPo && po.Company == company && po.SubPoSeries.Contains(purchaseOrderNo))
+                .Where(po => po.IsSubPo && po.Company == company && po.SubPoSeries!.Contains(purchaseOrderNo))
                 .OrderByDescending(po => po.SubPoSeries)
                 .Select(po => po.SubPoSeries)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -173,7 +173,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task UpdateActualCostOnSalesAndReceiptsAsync(FilpridePOActualPrice model, CancellationToken cancellationToken = default)
         {
             var receivingReports = await _db.FilprideReceivingReports
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .Where(r => r.POId == model.PurchaseOrderId && r.Status == nameof(Status.Posted) && !r.IsCostUpdated)
                 .OrderBy(r => r.ReceivingReportId)
                 .ToListAsync(cancellationToken);
@@ -189,8 +189,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 for (int i = 0; i < receivingReports.Count; i++)
                 {
 
-                    var isSupplierVatable = receivingReports[i].PurchaseOrder.Supplier.VatType == SD.VatType_Vatable;
-                    var isSupplierTaxable = receivingReports[i].PurchaseOrder.Supplier.TaxType == SD.TaxType_WithTax;
+                    var isSupplierVatable = receivingReports[i].PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable;
+                    var isSupplierTaxable = receivingReports[i].PurchaseOrder!.Supplier!.TaxType == SD.TaxType_WithTax;
 
                     #region Update RR Amount
 
@@ -208,7 +208,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     var inventory = inventories.FirstOrDefault(inv => inv.Reference == receivingReports[i].ReceivingReportNo);
 
-                    inventory.Cost = ComputeNetOfVat(model.TriggeredPrice);
+                    inventory!.Cost = ComputeNetOfVat(model.TriggeredPrice);
                     inventory.Total = inventory.Quantity * inventory.Cost;
 
                     if (inventories[0].InventoryId == inventory.InventoryId)
@@ -224,7 +224,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     var purchaseBook = await _db.FilpridePurchaseBooks
                         .FirstOrDefaultAsync(p => p.Company == receivingReports[i].Company && p.DocumentNo == receivingReports[i].ReceivingReportNo, cancellationToken);
 
-                    purchaseBook.Amount = receivingReports[i].Amount;
+                    purchaseBook!.Amount = receivingReports[i].Amount;
                     purchaseBook.NetPurchases = isSupplierVatable ? ComputeNetOfVat(receivingReports[i].Amount) : receivingReports[i].Amount;
                     purchaseBook.VatAmount = isSupplierVatable ? ComputeVatAmount(purchaseBook.NetPurchases) : purchaseBook.NetPurchases;
                     purchaseBook.WhtAmount = isSupplierTaxable ? ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m) : 0;

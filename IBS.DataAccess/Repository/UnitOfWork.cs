@@ -585,11 +585,8 @@ namespace IBS.DataAccess.Repository
                     Value = s.ServiceId.ToString(),
                     Text = s.Name
                 })
-                .ToListAsync(cancellationToken);;
+                .ToListAsync(cancellationToken);
         }
-
-
-
 
         #endregion
 
@@ -626,7 +623,7 @@ namespace IBS.DataAccess.Repository
                 .Where(p => p.Department == SD.Department_StationCashier)
                 .Select(p => new SelectListItem
                 {
-                    Value = p.UserName.ToString(),
+                    Value = p.UserName!.ToString(),
                     Text = p.UserName.ToString()
                 })
                 .ToListAsync(cancellationToken);
@@ -639,8 +636,8 @@ namespace IBS.DataAccess.Repository
                 .Where(p => p.Department == SD.Department_StationCashier)
                 .Select(p => new SelectListItem
                 {
-                    Value = p.StationAccess.ToString(),
-                    Text = p.UserName.ToString()
+                    Value = p.StationAccess!.ToString(),
+                    Text = p.UserName!.ToString()
                 })
                 .ToListAsync(cancellationToken);
         }

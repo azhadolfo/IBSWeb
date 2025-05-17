@@ -38,7 +38,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCm != null)
             {
-                string lastSeries = lastCm.CreditMemoNo;
+                string lastSeries = lastCm.CreditMemoNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -60,7 +60,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCm != null)
             {
-                string lastSeries = lastCm.CreditMemoNo;
+                string lastSeries = lastCm.CreditMemoNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -72,13 +72,13 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public override async Task<MobilityCreditMemo> GetAsync(Expression<Func<MobilityCreditMemo, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityCreditMemo?> GetAsync(Expression<Func<MobilityCreditMemo, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
+                .ThenInclude(sv => sv!.Service)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -86,9 +86,9 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             IQueryable<MobilityCreditMemo> query = dbSet
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Service);
+                .ThenInclude(sv => sv!.Service);
 
             if (filter != null)
             {

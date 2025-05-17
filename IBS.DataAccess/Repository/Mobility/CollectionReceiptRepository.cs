@@ -39,7 +39,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CollectionReceiptNo;
+                string lastSeries = lastCv.CollectionReceiptNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CollectionReceiptNo;
+                string lastSeries = lastCv.CollectionReceiptNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -144,9 +144,9 @@ namespace IBS.DataAccess.Repository.Mobility
             IQueryable<MobilityCollectionReceipt> query = dbSet
                 .Include(cr => cr.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service);
+                .ThenInclude(sv => sv!.Service);
 
             if (filter != null)
             {
@@ -156,14 +156,14 @@ namespace IBS.DataAccess.Repository.Mobility
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<MobilityCollectionReceipt> GetAsync(Expression<Func<MobilityCollectionReceipt, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityCollectionReceipt?> GetAsync(Expression<Func<MobilityCollectionReceipt, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cr => cr.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
+                .ThenInclude(sv => sv!.Service)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

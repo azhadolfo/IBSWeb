@@ -33,13 +33,14 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideCheckVoucherHeader? lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade" && x.CheckVoucherHeaderNo.Contains("CV"))
+                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade" &&
+                            x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -55,13 +56,14 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideCheckVoucherHeader? lastCv = await _db
                 .FilprideCheckVoucherHeaders
-                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade" && x.CheckVoucherHeaderNo.Contains("CV"))
+                .Where(x => x.Company == company && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade" &&
+                            x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -92,7 +94,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken) ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
 
-            var detailsVoucher = _db.FilprideCheckVoucherDetails.Where(cvd => invoiceVoucher.CheckVoucherHeaderNo.Contains(cvd.TransactionNo)).Select(cvd => cvd.AmountPaid).Sum();
+            var detailsVoucher = _db.FilprideCheckVoucherDetails.Where(cvd => invoiceVoucher.CheckVoucherHeaderNo!.Contains(cvd.TransactionNo)).Select(cvd => cvd.AmountPaid).Sum();
 
             invoiceVoucher.AmountPaid += paymentAmount;
 
@@ -102,7 +104,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideCheckVoucherHeader> GetAsync(Expression<Func<FilprideCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideCheckVoucherHeader?> GetAsync(Expression<Func<FilprideCheckVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(x => x.Employee)
@@ -146,7 +148,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -168,7 +170,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(4);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -202,7 +204,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -224,7 +226,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CheckVoucherHeaderNo;
+                string lastSeries = lastCv.CheckVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(4);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -232,7 +234,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
             else
             {
-                return "PYTU00000001";
+                return "CVNU00000001";
             }
         }
     }

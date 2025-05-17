@@ -47,7 +47,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 existingCustomer.EditedBy = model.EditedBy;
                 existingCustomer.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy, $"Edited customer {existingCustomer.CustomerCode}", "Customer", nameof(Mobility));
+                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy!, $"Edited customer {existingCustomer.CustomerCode}", "Customer", nameof(Mobility));
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -68,7 +68,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (lastCustomer != null)
             {
-                string lastCode = lastCustomer.CustomerCode;
+                string lastCode = lastCustomer.CustomerCode!;
                 string numericPart = lastCode.Substring(3);
 
                 // Parse the numeric part and increment it by one

@@ -103,7 +103,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var sortedInventory = await _db.FilprideInventories
                 .Where(i => i.Company == receivingReport.Company &&
-                            i.ProductId == receivingReport.PurchaseOrder.Product.ProductId &&
+                            i.ProductId == receivingReport.PurchaseOrder!.Product!.ProductId &&
                             i.POId == receivingReport.POId)
                 .OrderBy(i => i.Date)
                 .ThenBy(i => i.InventoryId)
@@ -127,7 +127,7 @@ namespace IBS.DataAccess.Repository.Filpride
             FilprideInventory inventory = new()
             {
                 Date = receivingReport.Date,
-                ProductId = receivingReport.PurchaseOrder.ProductId,
+                ProductId = receivingReport.PurchaseOrder!.ProductId,
                 POId = receivingReport.POId,
                 Particular = "Purchases",
                 Reference = receivingReport.ReceivingReportNo,
@@ -214,7 +214,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var sortedInventory = await _db.FilprideInventories
                 .Where(i => i.Company == deliveryReceipt.Company &&
-                            i.ProductId == deliveryReceipt.CustomerOrderSlip.ProductId &&
+                            i.ProductId == deliveryReceipt.CustomerOrderSlip!.ProductId &&
                             i.POId == deliveryReceipt.PurchaseOrderId)
                 .OrderBy(i => i.Date)
                 .ThenBy(i => i.InventoryId)
@@ -250,7 +250,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var inventory = new FilprideInventory
             {
                 Date = (DateOnly)deliveryReceipt.DeliveredDate!,
-                ProductId = deliveryReceipt.CustomerOrderSlip.ProductId,
+                ProductId = deliveryReceipt.CustomerOrderSlip!.ProductId,
                 Particular = "Sales",
                 Reference = deliveryReceipt.DeliveryReceiptNo,
                 Quantity = deliveryReceipt.Quantity,
@@ -287,7 +287,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     inventoryBalance = transaction.InventoryBalance;
 
                     // Update journal entries if needed
-                    await UpdateJournalEntriesAsync(transaction.Reference, costOfGoodsSold, cancellationToken);
+                    await UpdateJournalEntriesAsync(transaction.Reference!, costOfGoodsSold, cancellationToken);
                 }
                 else if (transaction.Particular == "Purchases")
                 {
@@ -360,7 +360,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var previousInventory = sortedInventory.FirstOrDefault();
 
-                decimal total = previousInventory.Total;
+                decimal total = previousInventory!.Total;
                 decimal inventoryBalance = previousInventory.InventoryBalance;
                 decimal totalBalance = previousInventory.TotalBalance;
                 decimal averageCost = inventoryBalance == 0 && totalBalance == 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;
@@ -436,7 +436,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var previousInventory = inventories.FirstOrDefault();
 
-            decimal total = previousInventory.Total;
+            decimal total = previousInventory!.Total;
             decimal inventoryBalance = previousInventory.InventoryBalance;
             decimal totalBalance = previousInventory.TotalBalance;
             decimal averageCost = inventoryBalance == 0 && totalBalance == 0 ? previousInventory.AverageCost : totalBalance / inventoryBalance;

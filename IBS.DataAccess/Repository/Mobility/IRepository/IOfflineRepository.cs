@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility.IRepository
     {
         Task<List<SelectListItem>> GetOfflineListAsync(string stationCode, CancellationToken cancellationToken = default);
 
-        Task<MobilityOffline> GetOffline(int offlineId, CancellationToken cancellationToken = default);
+        Task<MobilityOffline?> GetOffline(int offlineId, CancellationToken cancellationToken = default);
 
         Task InsertEntry(AdjustReportViewModel model, CancellationToken cancellationToken = default);
     }

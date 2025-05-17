@@ -26,7 +26,7 @@ namespace IBS.Services.Attributes
 
                 // Assuming "Department" is a property in your ApplicationUser model
                 var userDepartment = dbContext.ApplicationUsers
-                    .Where(u => u.Id == user.Id)
+                    .Where(u => u.Id == user!.Id)
                     .Select(u => u.Department)
                     .FirstOrDefault();
 

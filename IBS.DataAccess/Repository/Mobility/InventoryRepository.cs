@@ -54,7 +54,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     AccountTitle = inventoryAcctTitle,
                     Debit = Math.Round(model.TotalCost, 4),
                     Credit = 0,
-                    StationCode = model.StationCode,
+                    StationCode = model.StationCode!,
                     ProductCode = model.ProductCode,
                     JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true
@@ -67,7 +67,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     AccountTitle = "Retained Earnings",
                     Debit = 0,
                     Credit = Math.Round(model.TotalCost, 4),
-                    StationCode = model.StationCode,
+                    StationCode = model.StationCode!,
                     ProductCode = model.ProductCode,
                     JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true
@@ -81,7 +81,7 @@ namespace IBS.DataAccess.Repository.Mobility
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<MobilityInventory> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
+        public async Task<MobilityInventory?> GetLastInventoryAsync(string productCode, string stationCode, CancellationToken cancellationToken = default)
         {
             return await _db.MobilityInventories
                 .Where(i => i.ProductCode == productCode && i.StationCode == stationCode)
@@ -133,7 +133,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     AccountTitle = inventory.TotalCost > 0 ? inventoryAcctTitle : "Advances from Officers and Employees",
                     Debit = Math.Round(Math.Abs(inventory.TotalCost), 4),
                     Credit = 0,
-                    StationCode = inventory.StationCode,
+                    StationCode = inventory.StationCode!,
                     ProductCode = inventory.ProductCode,
                     JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true
@@ -146,7 +146,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     AccountTitle = inventory.TotalCost > 0 ? "Gain on Inventory - Fuel" : inventoryAcctTitle,
                     Debit = 0,
                     Credit = Math.Round(Math.Abs(inventory.TotalCost), 4),
-                    StationCode = inventory.StationCode,
+                    StationCode = inventory.StationCode!,
                     ProductCode = inventory.ProductCode,
                     JournalReference = nameof(JournalType.Inventory),
                     IsValidated = true

@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.IRepository
     {
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
 
-        Task<T> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
+        Task<T?> GetAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
 
         Task AddAsync(T entity, CancellationToken cancellationToken = default);
 
@@ -49,13 +49,13 @@ namespace IBS.DataAccess.Repository.IRepository
 
         // Retrieving DTOs (Data Transfer Objects)
 
-        Task<ProductDto> MapProductToDTO(string productCode, CancellationToken cancellationToken = default);
+        Task<ProductDto?> MapProductToDTO(string productCode, CancellationToken cancellationToken = default);
 
-        Task<StationDto> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default);
+        Task<StationDto?> MapStationToDTO(string stationCode, CancellationToken cancellationToken = default);
 
-        Task<SupplierDto> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default);
+        Task<SupplierDto?> MapSupplierToDTO(string supplierCode, CancellationToken cancellationToken = default);
 
-        Task<CustomerDto> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
+        Task<CustomerDto?> MapCustomerToDTO(int? customerId, string? customerCode, CancellationToken cancellationToken = default);
 
         Task<List<AccountTitleDto>> GetListOfAccountTitleDto(CancellationToken cancellationToken = default);
     }

@@ -27,7 +27,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastSupplier != null)
             {
-                string lastCode = lastSupplier.SupplierCode;
+                string lastCode = lastSupplier.SupplierCode!;
                 string numericPart = lastCode.Substring(1);
 
                 // Parse the numeric part and increment it by one
@@ -107,7 +107,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingSupplier.EditedBy = model.EditedBy;
                 existingSupplier.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier",  existingSupplier.Company);
+                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy!, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier",  existingSupplier.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);

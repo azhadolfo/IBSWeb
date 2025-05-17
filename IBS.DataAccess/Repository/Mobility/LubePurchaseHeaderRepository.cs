@@ -133,7 +133,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     var previousInventory = sortedInventory.FirstOrDefault();
 
                     decimal totalCost = lube.Piece * lube.CostPerPiece;
-                    decimal runningCost = previousInventory.RunningCost + totalCost;
+                    decimal runningCost = previousInventory!.RunningCost + totalCost;
                     decimal inventoryBalance = previousInventory.InventoryBalance + lube.Piece;
                     decimal unitCostAverage = runningCost / inventoryBalance;
 
@@ -331,7 +331,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     var lubesPurchaseDetail = new MobilityLubePurchaseDetail
                     {
-                        LubePurchaseHeaderId = lubeHeader.LubePurchaseHeaderId,
+                        LubePurchaseHeaderId = lubeHeader!.LubePurchaseHeaderId,
                         LubePurchaseHeaderNo = lubeHeader.LubePurchaseHeaderNo,
                         StationCode = lubeHeader.StationCode,
                         Quantity = lubeDelivery.quantity,
@@ -376,7 +376,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public override async Task<MobilityLubePurchaseHeader> GetAsync(Expression<Func<MobilityLubePurchaseHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityLubePurchaseHeader?> GetAsync(Expression<Func<MobilityLubePurchaseHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet
                 .Include(sh => sh.LubePurchaseDetails)

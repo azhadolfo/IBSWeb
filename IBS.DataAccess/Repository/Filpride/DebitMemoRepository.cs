@@ -40,7 +40,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastDm != null)
             {
-                string lastSeries = lastDm.DebitMemoNo;
+                string lastSeries = lastDm.DebitMemoNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -62,7 +62,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastDm != null)
             {
-                string lastSeries = lastDm.DebitMemoNo;
+                string lastSeries = lastDm.DebitMemoNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -74,17 +74,17 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideDebitMemo> GetAsync(Expression<Func<FilprideDebitMemo, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideDebitMemo?> GetAsync(Expression<Func<FilprideDebitMemo, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(c => c.SalesInvoice)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(s => s!.Product)
                 .Include(c => c.SalesInvoice)
-                .ThenInclude(s => s.Customer)
+                .ThenInclude(s => s!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
+                .ThenInclude(sv => sv!.Service)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -92,13 +92,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideDebitMemo> query = dbSet
                 .Include(c => c.SalesInvoice)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(s => s!.Product)
                 .Include(c => c.SalesInvoice)
-                .ThenInclude(s => s.Customer)
+                .ThenInclude(s => s!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
-                .ThenInclude(sv => sv.Service);
+                .ThenInclude(sv => sv!.Service);
 
             if (filter != null)
             {

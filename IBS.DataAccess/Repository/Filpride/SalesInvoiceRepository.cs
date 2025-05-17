@@ -19,9 +19,9 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<DateOnly> ComputeDueDateAsync(string customerTerms, DateOnly transactionDate)
+        public DateOnly ComputeDueDateAsync(string customerTerms, DateOnly transactionDate)
         {
-            if (customerTerms != null)
+            if (!string.IsNullOrEmpty(customerTerms))
             {
                 DateOnly dueDate;
 
@@ -95,10 +95,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         return transactionDate;
                 }
             }
-            else
-            {
-                throw new ArgumentException("No record found.");
-            }
+
+            throw new ArgumentException("No record found.");
         }
 
         public async Task PostAsync(FilprideSalesInvoice salesInvoice, CancellationToken cancellationToken = default)
@@ -108,11 +106,11 @@ namespace IBS.DataAccess.Repository.Filpride
             var salesBook = new FilprideSalesBook();
 
             salesBook.TransactionDate = salesInvoice.TransactionDate;
-            salesBook.SerialNo = salesInvoice.SalesInvoiceNo;
-            salesBook.SoldTo = salesInvoice.Customer.CustomerName;
+            salesBook.SerialNo = salesInvoice.SalesInvoiceNo!;
+            salesBook.SoldTo = salesInvoice.Customer!.CustomerName;
             salesBook.TinNo = salesInvoice.Customer.CustomerTin;
             salesBook.Address = salesInvoice.Customer.CustomerAddress;
-            salesBook.Description = salesInvoice.Product.ProductName;
+            salesBook.Description = salesInvoice.Product!.ProductName;
             salesBook.Amount = salesInvoice.Amount - salesInvoice.Discount;
 
             switch (salesInvoice.Customer.VatType)
@@ -167,7 +165,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastSi != null)
             {
-                string lastSeries = lastSi.SalesInvoiceNo;
+                string lastSeries = lastSi.SalesInvoiceNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -189,7 +187,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastSi != null)
             {
-                string lastSeries = lastSi.SalesInvoiceNo;
+                string lastSeries = lastSi.SalesInvoiceNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -201,12 +199,12 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideSalesInvoice> GetAsync(Expression<Func<FilprideSalesInvoice, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideSalesInvoice?> GetAsync(Expression<Func<FilprideSalesInvoice, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.Hauler)
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -215,7 +213,7 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideSalesInvoice> query = dbSet
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
-                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr.Hauler);
+                .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler);
 
             if (filter != null)
             {

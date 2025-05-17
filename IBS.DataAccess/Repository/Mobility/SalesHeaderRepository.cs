@@ -384,7 +384,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     decimal quantity = product.Sum(p => p.Liters - p.Calibration);
 
-                    if (quantity > previousInventory.InventoryBalance)
+                    if (quantity > previousInventory!.InventoryBalance)
                     {
                         throw new InvalidOperationException("The quantity exceeds the available inventory.");
                     }
@@ -534,10 +534,6 @@ namespace IBS.DataAccess.Repository.Mobility
                     //await _db.MobilityGeneralLedgers.AddRangeAsync(journals, cancellationToken);
                     await _db.SaveChangesAsync(cancellationToken);
                 }
-                else
-                {
-                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                }
             }
             catch (Exception ex)
             {
@@ -593,7 +589,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 if (changes.Any())
                 {
                     var salesDetailRepo = new SalesDetailRepository(_db);
-                    await salesDetailRepo.LogChangesAsync(existingDetail.SalesDetailId, changes, model.EditedBy, cancellationToken);
+                    await salesDetailRepo.LogChangesAsync(existingDetail.SalesDetailId, changes, model.EditedBy!, cancellationToken);
 
                     headerModified = true;
                     existingSalesHeader.IsModified = true;
@@ -606,7 +602,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (existingSalesHeader.Particular != model.Particular)
             {
-                headerChanges["Particular"] = (existingSalesHeader.Particular, model.Particular);
+                headerChanges["Particular"] = (existingSalesHeader.Particular!, model.Particular!);
                 existingSalesHeader.Particular = model.Particular;
             }
 
@@ -625,7 +621,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (headerChanges.Any())
             {
-                await LogChangesAsync(existingSalesHeader.SalesHeaderId, headerChanges, model.EditedBy, cancellationToken);
+                await LogChangesAsync(existingSalesHeader.SalesHeaderId, headerChanges, model.EditedBy!, cancellationToken);
                 headerModified = true;
             }
 
@@ -687,7 +683,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             var lubeSalesHeader = new MobilitySalesHeader
             {
-                SalesNo = await GenerateSeriesNumber(stationCode.StationCode),
+                SalesNo = await GenerateSeriesNumber(stationCode!.StationCode),
                 Date = lube.BusinessDate,
                 Cashier = lube.Cashier,
                 Shift = lube.Shift,
@@ -911,7 +907,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return newRecords;
         }
 
-        public override async Task<MobilitySalesHeader> GetAsync(Expression<Func<MobilitySalesHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilitySalesHeader?> GetAsync(Expression<Func<MobilitySalesHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet
                 .Include(sh => sh.SalesDetails)
@@ -995,8 +991,8 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (viewModel.IncludePo)
                 {
-                    var updatedCustomers = new List<string>(existingSalesHeader.Customers ?? new string[0]);
-                    var updatedPOSalesAmount = new List<decimal>(existingSalesHeader.POSalesAmount ?? new decimal[0]);
+                    var updatedCustomers = new List<string>(existingSalesHeader.Customers!);
+                    var updatedPOSalesAmount = new List<decimal>(existingSalesHeader.POSalesAmount);
 
                     for (int i = 0; i < viewModel.CustomerPos.Count; i++)
                     {
@@ -1031,7 +1027,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         {
                             SalesHeaderId = existingSalesHeader.SalesHeaderId,
                             SalesNo = existingSalesHeader.SalesNo,
-                            Product = product.ProductCode,
+                            Product = product!.ProductCode,
                             StationCode = existingSalesHeader.StationCode,
                             Particular = $"{product.ProductName}",
                             Liters = viewModel.ProductDetails[i].Quantity,
@@ -1057,7 +1053,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (changes.Count > 0)
                 {
-                    await LogChangesAsync(existingSalesHeader.SalesHeaderId, changes, viewModel.User, cancellationToken);
+                    await LogChangesAsync(existingSalesHeader.SalesHeaderId, changes, viewModel.User!, cancellationToken);
                 }
 
                 await _db.SaveChangesAsync(cancellationToken);

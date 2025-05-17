@@ -136,7 +136,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 });
 
                 decimal totalCost = fuelPurchase.Quantity * netOfVatPrice;
-                decimal runningCost = previousInventory.RunningCost + totalCost;
+                decimal runningCost = previousInventory!.RunningCost + totalCost;
                 decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
                 decimal unitCostAverage = runningCost / inventoryBalance;
 

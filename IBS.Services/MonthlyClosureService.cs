@@ -152,8 +152,8 @@ namespace IBS.Services
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                            Reference = cv.CheckVoucherHeaderNo,
-                            Description = cv.Particulars,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
                             AccountNo = cvDetails.AccountNo,
                             AccountTitle = cvDetails.AccountName,
                             Debit = cvDetails.Credit,
@@ -166,8 +166,8 @@ namespace IBS.Services
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = DateOnly.FromDateTime(startOfMonth),
-                            Reference = cv.CheckVoucherHeaderNo,
-                            Description = cv.Particulars,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
                             AccountNo = cvDetails.AccountNo,
                             AccountTitle = cvDetails.AccountName,
                             Debit = cvDetails.Debit,
@@ -180,8 +180,8 @@ namespace IBS.Services
                         journalBooks.Add(new FilprideJournalBook
                         {
                             Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                            Reference = cv.CheckVoucherHeaderNo,
-                            Description = cv.Particulars,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
                             AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
                             Debit = cvDetails.Credit,
                             Credit = cvDetails.Debit,
@@ -193,8 +193,8 @@ namespace IBS.Services
                         journalBooks.Add(new FilprideJournalBook
                         {
                             Date = DateOnly.FromDateTime(endOfPreviousMonth),
-                            Reference = cv.CheckVoucherHeaderNo,
-                            Description = cv.Particulars,
+                            Reference = cv.CheckVoucherHeaderNo!,
+                            Description = cv.Particulars!,
                             AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
                             Debit = cvDetails.Debit,
                             Credit = cvDetails.Credit,
@@ -234,8 +234,8 @@ namespace IBS.Services
                 var generalLedgers = _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
-                    .ThenInclude(ac => ac.ParentAccount) // Level 2
-                    .ThenInclude(ac => ac.ParentAccount) // Level 1
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
                     .Where(gl =>
                         gl.Date.Month == previousMonth.Month &&
                         gl.Date.Year == previousMonth.Year &&

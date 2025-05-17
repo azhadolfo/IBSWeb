@@ -93,7 +93,7 @@ namespace IBS.Services
                     var posSales = posSalesModel
                         .FirstOrDefault(s => s.StationName == fms.StationName);
 
-                    var message = $"{posSales.Message} {purchase.Message} || {fms.Message}";
+                    var message = $"{posSales!.Message} {purchase!.Message} || {fms.Message}";
                     logMessage = new("Information", $"{fms.StationName}", message);
 
                     if (!string.IsNullOrEmpty(purchase.OpeningFileStatus) ||

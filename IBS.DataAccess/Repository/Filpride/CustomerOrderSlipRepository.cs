@@ -50,8 +50,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PickUpPoint)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier);
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier);
 
             if (filter != null)
             {
@@ -61,7 +61,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<FilprideCustomerOrderSlip> GetAsync(Expression<Func<FilprideCustomerOrderSlip, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideCustomerOrderSlip?> GetAsync(Expression<Func<FilprideCustomerOrderSlip, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cos => cos.Customer)
@@ -69,19 +69,20 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cos => cos.Product)
                 .Include(cos => cos.Supplier)
                 .Include(cos => cos.PickUpPoint)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(cos => cos.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task UpdateAsync(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken = default)
         {
-            var existingRecord = await GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+            var existingRecord = await GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId,
+                cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerId = viewModel.CustomerId;
-            existingRecord.CustomerAddress = viewModel.CustomerAddress;
-            existingRecord.CustomerTin = viewModel.TinNo;
+            existingRecord.CustomerAddress = viewModel.CustomerAddress!;
+            existingRecord.CustomerTin = viewModel.TinNo!;
             existingRecord.CustomerPoNo = viewModel.CustomerPoNo;
             existingRecord.Quantity = viewModel.Quantity;
             existingRecord.BalanceQuantity = existingRecord.Quantity;
@@ -96,7 +97,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.OldCosNo = viewModel.OtcCosNo;
             existingRecord.Branch = viewModel.SelectedBranch;
             existingRecord.Terms = viewModel.Terms;
-            existingRecord.CustomerType = viewModel.CustomerType;
+            existingRecord.CustomerType = viewModel.CustomerType!;
 
             if (existingRecord.Branch != null)
             {
@@ -104,7 +105,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     .Where(b => b.BranchName == existingRecord.Branch)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                existingRecord.CustomerAddress = branch.BranchAddress;
+                existingRecord.CustomerAddress = branch!.BranchAddress;
                 existingRecord.CustomerTin = branch.BranchTin;
             }
 
@@ -113,7 +114,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -203,7 +204,7 @@ namespace IBS.DataAccess.Repository.Filpride
             foreach (var item in appointedSupplier)
             {
                 var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
-                totalPoAmount += item.Quantity * ComputeNetOfVat(po.Price);
+                totalPoAmount += item.Quantity * ComputeNetOfVat(po!.Price);
             }
 
             netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
@@ -213,7 +214,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
 
             // Calculate new net cost price using the provided gross margin
-            decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost);
+            decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost)!;
             return Math.Round(newNetOfVatCosPrice * 1.12m, 4);
         }
 

@@ -21,7 +21,8 @@ namespace IBS.DataAccess.Repository.Bienes
 
         public async Task<string> GenerateControlNumberAsync(int companyId, CancellationToken cancellationToken = default)
         {
-            var company = await _db.Companies.FindAsync(companyId, cancellationToken);
+            var company = await _db.Companies.FindAsync(companyId, cancellationToken)
+                          ?? throw new NullReferenceException("Company not found.");
 
             var lastRecord = await _db.BienesPlacements
                 .Where(p => p.CompanyId == companyId)
@@ -166,7 +167,7 @@ namespace IBS.DataAccess.Repository.Bienes
             return newPlacement.ControlNumber;
         }
 
-        public override async Task<BienesPlacement> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
+        public override async Task<BienesPlacement?> GetAsync(Expression<Func<BienesPlacement, bool>> filter,
             CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)

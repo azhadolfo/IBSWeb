@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository.MasterFile
 
             if (lastCompany != null)
             {
-                string lastCode = lastCompany.CompanyCode;
+                string lastCode = lastCompany.CompanyCode!;
                 string numericPart = lastCode.Substring(1);
 
                 // Parse the numeric part and increment it by one

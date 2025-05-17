@@ -38,7 +38,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastJv != null)
             {
-                string lastSeries = lastJv.JournalVoucherHeaderNo;
+                string lastSeries = lastJv.JournalVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -60,7 +60,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastJv != null)
             {
-                string lastSeries = lastJv.JournalVoucherHeaderNo;
+                string lastSeries = lastJv.JournalVoucherHeaderNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -72,11 +72,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideJournalVoucherHeader> GetAsync(Expression<Func<FilprideJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideJournalVoucherHeader?> GetAsync(Expression<Func<FilprideJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cv => cv.CheckVoucherHeader)
-                .ThenInclude(supplier => supplier.Supplier)
+                .ThenInclude(supplier => supplier!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
@@ -84,7 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideJournalVoucherHeader> query = dbSet
                 .Include(cv => cv.CheckVoucherHeader)
-                .ThenInclude(supplier => supplier.Supplier);
+                .ThenInclude(supplier => supplier!.Supplier);
 
             if (filter != null)
             {

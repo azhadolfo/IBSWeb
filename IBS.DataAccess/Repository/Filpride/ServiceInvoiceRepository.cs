@@ -16,7 +16,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             _db = db;
         }
-        
+
         public async Task<string> GenerateCodeAsync(string company, string type, CancellationToken cancellationToken = default)
         {
             if (type == nameof(DocumentType.Documented))
@@ -28,8 +28,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 return await GenerateCodeForUnDocumented(company, cancellationToken);
             }
         }
-        
-        
+
+
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
             FilprideServiceInvoice? lastSv = await _db
@@ -74,7 +74,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideServiceInvoice> GetAsync(Expression<Func<FilprideServiceInvoice, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideServiceInvoice?> GetAsync(Expression<Func<FilprideServiceInvoice, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(s => s.Customer)

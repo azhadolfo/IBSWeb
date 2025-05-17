@@ -53,7 +53,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CollectionReceiptNo;
+                string lastSeries = lastCv.CollectionReceiptNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -75,7 +75,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCv != null)
             {
-                string lastSeries = lastCv.CollectionReceiptNo;
+                string lastSeries = lastCv.CollectionReceiptNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -122,7 +122,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = cashInBankTitle.AccountId,
                         AccountNo = cashInBankTitle.AccountNumber,
@@ -142,7 +142,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = cwt.AccountId,
                         AccountNo = cwt.AccountNumber,
@@ -162,7 +162,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = cwv.AccountId,
                         AccountNo = cwv.AccountNumber,
@@ -185,7 +185,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = account.AccountId,
                         AccountNo = account.AccountNumber,
@@ -207,7 +207,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = arTradeTitle.AccountId,
                         AccountNo = arTradeTitle.AccountNumber,
@@ -228,7 +228,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = arTradeCwt.AccountId,
                         AccountNo = arTradeCwt.AccountNumber,
@@ -248,7 +248,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideGeneralLedgerBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
                         Description = "Collection for Receivable",
                         AccountId = arTradeCwv.AccountId,
                         AccountNo = arTradeCwv.AccountNumber,
@@ -272,12 +272,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 new FilprideCashReceiptBook
                 {
                     Date = collectionReceipt.TransactionDate,
-                    RefNo = collectionReceipt.CollectionReceiptNo,
-                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                    RefNo = collectionReceipt.CollectionReceiptNo!,
+                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                     Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                     CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                     COA = $"{cashInBankTitle.AccountNumber} {cashInBankTitle.AccountName}",
-                    Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                    Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                     Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount,
                     Credit = 0,
                     Company = collectionReceipt.Company,
@@ -293,12 +293,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideCashReceiptBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        RefNo = collectionReceipt.CollectionReceiptNo,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                        RefNo = collectionReceipt.CollectionReceiptNo!,
+                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                         Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{cwt.AccountNumber} {cwt.AccountName}",
-                        Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                        Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
@@ -314,12 +314,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideCashReceiptBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        RefNo = collectionReceipt.CollectionReceiptNo,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                        RefNo = collectionReceipt.CollectionReceiptNo!,
+                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                         Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{cwv.AccountNumber} {cwv.AccountName}",
-                        Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                        Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
@@ -338,12 +338,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideCashReceiptBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        RefNo = collectionReceipt.CollectionReceiptNo,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                        RefNo = collectionReceipt.CollectionReceiptNo!,
+                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                         Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{account.AccountNumber} {account.AccountName}",
-                        Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                        Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
@@ -357,12 +357,12 @@ namespace IBS.DataAccess.Repository.Filpride
                 new FilprideCashReceiptBook
                 {
                     Date = collectionReceipt.TransactionDate,
-                    RefNo = collectionReceipt.CollectionReceiptNo,
-                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                    RefNo = collectionReceipt.CollectionReceiptNo!,
+                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                     Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                     CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                     COA = $"{arTradeTitle.AccountNumber} {arTradeTitle.AccountName}",
-                    Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                    Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                     Debit = 0,
                     Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount + offsetAmount,
                     Company = collectionReceipt.Company,
@@ -377,12 +377,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideCashReceiptBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        RefNo = collectionReceipt.CollectionReceiptNo,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                        RefNo = collectionReceipt.CollectionReceiptNo!,
+                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                         Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{arTradeCwt.AccountNumber} {arTradeCwt.AccountName}",
-                        Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                        Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
                         Company = collectionReceipt.Company,
@@ -398,12 +398,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     new FilprideCashReceiptBook
                     {
                         Date = collectionReceipt.TransactionDate,
-                        RefNo = collectionReceipt.CollectionReceiptNo,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.Customer.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer.CustomerName : collectionReceipt.ServiceInvoice.Customer.CustomerName,
+                        RefNo = collectionReceipt.CollectionReceiptNo!,
+                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
                         Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{arTradeCwv.AccountNumber} {arTradeCwv.AccountName}",
-                        Particulars = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice.ServiceInvoiceNo,
+                        Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
                         Company = collectionReceipt.Company,
@@ -528,7 +528,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     var siValue = siNo[i];
                     salesInvoice = await _db.FilprideSalesInvoices
-                                .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue);
+                                .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken) ?? throw new NullReferenceException("SalesInvoice not found");
 
                     var amountPaid = salesInvoice.AmountPaid + paidAmount[i] + offsetAmount;
 
@@ -597,13 +597,13 @@ namespace IBS.DataAccess.Repository.Filpride
             IQueryable<FilprideCollectionReceipt> query = dbSet
                 .Include(cr => cr.Customer)
                 .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Customer)
+                .ThenInclude(s => s!.Customer)
                 .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(s => s!.Product)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service);
+                .ThenInclude(sv => sv!.Service);
 
             if (filter != null)
             {
@@ -613,18 +613,18 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<FilprideCollectionReceipt> GetAsync(Expression<Func<FilprideCollectionReceipt, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideCollectionReceipt?> GetAsync(Expression<Func<FilprideCollectionReceipt, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(cr => cr.Customer)
                 .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Customer)
+                .ThenInclude(s => s!.Customer)
                 .Include(cr => cr.SalesInvoice)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(s => s!.Product)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Customer)
+                .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv.Service)
+                .ThenInclude(sv => sv!.Service)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

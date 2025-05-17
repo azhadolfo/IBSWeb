@@ -98,7 +98,7 @@ namespace IBS.DataAccess.Repository.Mobility
             return await query.ToListAsync(cancellationToken);
         }
 
-        public override async Task<MobilityPurchaseOrder> GetAsync(Expression<Func<MobilityPurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<MobilityPurchaseOrder?> GetAsync(Expression<Func<MobilityPurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(po => po.Product)
@@ -110,7 +110,7 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task UpdateAsync(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.MobilityPurchaseOrders
-                .FindAsync(viewModel.PurchaseOrderId, cancellationToken);
+                .FindAsync(viewModel.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
 
             existingRecord.Date = viewModel.Date;
             existingRecord.SupplierId = viewModel.SupplierId;

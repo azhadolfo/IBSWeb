@@ -91,7 +91,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         parentAccount.Debit += account.Value.Debit;
                         parentAccount.Credit += account.Value.Credit;
                         parentAccount.Balance += account.Value.Balance;
-                        parentAccount.Children.Add(account.Value);
+                        parentAccount.Children!.Add(account.Value);
                     }
                 }
             }
@@ -128,7 +128,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastAccount != null)
             {
-                var accountNo = int.Parse(lastAccount.AccountNumber);
+                var accountNo = int.Parse(lastAccount.AccountNumber!);
                 var generatedNo = accountNo + 1;
 
                 return generatedNo.ToString();

@@ -122,13 +122,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideReceivingReport? lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastRr != null)
             {
-                string lastSeries = lastRr.ReceivingReportNo;
+                string lastSeries = lastRr.ReceivingReportNo!;
                 string numericPart = lastSeries.Substring(2);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -144,13 +144,13 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideReceivingReport? lastRr = await _db
                 .FilprideReceivingReports
-                .Where(rr => rr.Company == company && !rr.ReceivingReportNo.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
+                .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
             if (lastRr != null)
             {
-                string lastSeries = lastRr.ReceivingReportNo;
+                string lastSeries = lastRr.ReceivingReportNo!;
                 string numericPart = lastSeries.Substring(3);
                 int incrementedNumber = int.Parse(numericPart) + 1;
 
@@ -167,7 +167,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var rrNoHashSet = new HashSet<string>(rrNos);
 
             var rrList = await _db.FilprideReceivingReports
-                .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
+                .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo!) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
                 .ThenBy(rr => rr.ReceivingReportId) // Secondary ordering by Id
                 .Where(rr => rr.Company == company)
                 .Select(rr => new SelectListItem
@@ -234,21 +234,21 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public override async Task<FilprideReceivingReport> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
+        public override async Task<FilprideReceivingReport?> GetAsync(Expression<Func<FilprideReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
-                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier)
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr!.Customer)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
         public override async Task<IEnumerable<FilprideReceivingReport>> GetAllAsync(Expression<Func<FilprideReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideReceivingReport> query = dbSet
-                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr.Customer)
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Product)
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po.Supplier);
+                .Include(rr => rr.DeliveryReceipt).ThenInclude(dr => dr!.Customer)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier);
 
             if (filter != null)
             {
@@ -264,11 +264,11 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId,
                 Date = liftingDate,
-                POId = deliveryReceipt.PurchaseOrder.PurchaseOrderId,
+                POId = deliveryReceipt.PurchaseOrder!.PurchaseOrderId,
                 PONo = deliveryReceipt.PurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
-                TruckOrVessels = deliveryReceipt.CustomerOrderSlip.PickUpPoint.Depot,
+                TruckOrVessels = deliveryReceipt.CustomerOrderSlip!.PickUpPoint!.Depot,
                 AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
@@ -292,7 +292,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 : 0;
 
             model.ReceivedDate = model.Date;
-            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type, cancellationToken);
+            model.ReceivingReportNo = await GenerateCodeAsync(model.Company, model.Type!, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
 
@@ -377,9 +377,8 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal vatAmount = 0;
             decimal ewtAmount = 0;
             decimal netOfEwtAmount = 0;
-            decimal advanceEwtAmount = 0;
 
-            if (model.PurchaseOrder.Supplier.VatType == SD.VatType_Vatable)
+            if (model.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable)
             {
                 netOfVatAmount = ComputeNetOfVat(model.Amount);
                 vatAmount = ComputeVatAmount(netOfVatAmount);
@@ -396,7 +395,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 var advancesVoucher = await _db.FilprideCheckVoucherDetails
                     .Include(cv => cv.CheckVoucherHeader)
                     .FirstOrDefaultAsync(cv =>
-                        cv.CheckVoucherHeader.SupplierId == model.PurchaseOrder.SupplierId &&
+                        cv.CheckVoucherHeader!.SupplierId == model.PurchaseOrder.SupplierId &&
                         cv.CheckVoucherHeader.IsAdvances &&
                         cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
                         cv.AccountName.Contains("Expanded Withholding Tax") &&
@@ -413,7 +412,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
 
-            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product.ProductCode);
+            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product!.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
             var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
@@ -423,7 +422,7 @@ namespace IBS.DataAccess.Repository.Filpride
             ledgers.Add(new FilprideGeneralLedgerBook
             {
                 Date = model.Date,
-                Reference = model.ReceivingReportNo,
+                Reference = model.ReceivingReportNo!,
                 Description = "Receipt of Goods",
                 AccountId = inventoryTitle.AccountId,
                 AccountNo = inventoryTitle.AccountNumber,
@@ -440,7 +439,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = model.Date,
-                    Reference = model.ReceivingReportNo,
+                    Reference = model.ReceivingReportNo!,
                     Description = "Receipt of Goods",
                     AccountId = vatInputTitle.AccountId,
                     AccountNo = vatInputTitle.AccountNumber,
@@ -456,7 +455,7 @@ namespace IBS.DataAccess.Repository.Filpride
             ledgers.Add(new FilprideGeneralLedgerBook
             {
                 Date = model.Date,
-                Reference = model.ReceivingReportNo,
+                Reference = model.ReceivingReportNo!,
                 Description = "Receipt of Goods",
                 AccountId = apTradeTitle.AccountId,
                 AccountNo = apTradeTitle.AccountNumber,
@@ -474,7 +473,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
                     Date = model.Date,
-                    Reference = model.ReceivingReportNo,
+                    Reference = model.ReceivingReportNo!,
                     Description = "Receipt of Goods",
                     AccountId = ewtTitle.AccountId,
                     AccountNo = ewtTitle.AccountNumber,
@@ -514,14 +513,14 @@ namespace IBS.DataAccess.Repository.Filpride
                 SupplierName = model.PurchaseOrder.Supplier.SupplierName,
                 SupplierTin = model.PurchaseOrder.Supplier.SupplierTin,
                 SupplierAddress = model.PurchaseOrder.Supplier.SupplierAddress,
-                DocumentNo = model.ReceivingReportNo,
+                DocumentNo = model.ReceivingReportNo!,
                 Description = model.PurchaseOrder.Product.ProductName,
                 Amount = model.Amount,
                 VatAmount = vatAmount,
                 WhtAmount = ewtAmount,
                 NetPurchases = netOfVatAmount,
                 CreatedBy = model.CreatedBy,
-                PONo = model.PurchaseOrder.PurchaseOrderNo,
+                PONo = model.PurchaseOrder.PurchaseOrderNo!,
                 DueDate = model.DueDate,
                 Company = model.Company
             };
@@ -538,7 +537,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var existingInventory = await _db.FilprideInventories
                 .Include(i => i.Product)
-                .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo && i.Company == model.Company, cancellationToken);
+                .FirstOrDefaultAsync(i => i.Reference == model!.ReceivingReportNo && i.Company == model.Company, cancellationToken);
 
             if (model == null || existingInventory == null)
             {

@@ -74,7 +74,7 @@ namespace IBS.DataAccess.Repository.Mobility
             }
         }
 
-        public async override Task<MobilityServiceInvoice> GetAsync(Expression<Func<MobilityServiceInvoice, bool>> filter, CancellationToken cancellationToken = default)
+        public async override Task<MobilityServiceInvoice?> GetAsync(Expression<Func<MobilityServiceInvoice, bool>> filter, CancellationToken cancellationToken = default)
         {
             return await dbSet.Where(filter)
                 .Include(s => s.Customer)
