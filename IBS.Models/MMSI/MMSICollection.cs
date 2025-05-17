@@ -11,7 +11,7 @@ namespace IBS.Models.MMSI
         [Key]
         public int MMSICollectionId { get; set; }
 
-        public string? MMSICollectionNumber { get; set; }
+        public string MMSICollectionNumber { get; set; }
 
         public string CheckNumber { get; set; }
 
@@ -27,30 +27,20 @@ namespace IBS.Models.MMSI
 
         public decimal EWT { get; set; }
 
-        public int? CustomerId { get; set; }
+        public int CustomerId { get; set; }
 
         public bool IsUndocumented { get; set; }
 
-        public string? CreatedBy { get; set; }
+        public string CreatedBy { get; set; }
 
-        public DateTime? CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         #region --Objects--
 
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        [NotMapped]
-        public List<MMSIBilling>? PaidBills { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Billings { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Customers { get; set; }
-
-        [NotMapped]
-        public List<string>? ToCollectBillings { get; set; }
+        public List<MMSIBilling> PaidBills { get; set; }
 
         #endregion
 
