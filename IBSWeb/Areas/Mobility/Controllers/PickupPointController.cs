@@ -122,6 +122,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 var model = await _unitOfWork.MobilityPickUpPoint
                     .GetAsync(p => p.PickUpPointId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
                 model.Suppliers = await _unitOfWork.MobilityPickUpPoint.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
 
                 return View(model);
@@ -146,6 +152,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     var selected = await _unitOfWork.MobilityPickUpPoint
                         .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
+
+                    if (selected == null)
+                    {
+                        return NotFound();
+                    }
 
                     FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);

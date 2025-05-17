@@ -1028,7 +1028,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var dm = await _unitOfWork.FilprideDebitMemo.GetAsync(x => x.DebitMemoId == id, cancellationToken);
+            var dm = await _unitOfWork.FilprideDebitMemo
+                .GetAsync(x => x.DebitMemoId == id, cancellationToken);
+
+            if (dm == null)
+            {
+                return NotFound();
+            }
+
             if (!dm.IsPrinted)
             {
                 #region --Audit Trail Recording

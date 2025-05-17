@@ -176,7 +176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(User);
                     model.Amount = model.Quantity * model.UnitPrice;
-                    model.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(model.Terms, model.TransactionDate);
+                    model.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(model.Terms, model.TransactionDate);
                     model.Company = companyClaims;
 
                     if (model.Amount >= model.Discount)
@@ -277,6 +277,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+
+                if (salesInvoice == null)
+                {
+                    return NotFound();
+                }
+
                 salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                 salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
@@ -352,7 +358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
                     existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
                     existingRecord.Terms = model.Terms;
-                    existingRecord.DueDate = await _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
+                    existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
                     existingRecord.CustomerAddress = model.CustomerAddress;
                     existingRecord.CustomerTin = model.CustomerTin;
 
@@ -455,6 +461,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             var existingInventory = await _dbContext.FilprideInventories
                 .Include(i => i.Product)
@@ -594,6 +605,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var si = await _unitOfWork.FilprideSalesInvoice.GetAsync(x => x.SalesInvoiceId == id, cancellationToken);
+
+            if (si == null)
+            {
+                return NotFound();
+            }
+
             if (!si.IsPrinted)
             {
                 #region --Audit Trail Recording

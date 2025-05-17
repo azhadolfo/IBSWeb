@@ -681,6 +681,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var supplier = await _unitOfWork.FilprideSupplier
                         .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.Date = viewModel.TransactionDate;
@@ -985,6 +990,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
+
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
             var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
@@ -1198,7 +1209,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideCheckVoucher.GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+            var cv = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
             if (!cv.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -1491,6 +1509,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == bankId && (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility));
 
+            if (bankAccount == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = bankAccount.BankAccountId,
@@ -1515,6 +1538,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetCompanyById(int companyId)
         {
             var company = await _unitOfWork.Company.GetAsync(c => c.CompanyId == companyId);
+
+            if (company == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = company.CompanyId,
@@ -1541,6 +1570,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
             var employee = await _unitOfWork.FilprideEmployee.GetAsync(e => e.EmployeeId == employeeId && e.Company == companyClaims);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = employee.EmployeeId,
@@ -1565,8 +1600,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCustomerById(int customerId)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            var customer = await _unitOfWork.FilprideCustomer.GetAsync(e => e.CustomerId == customerId && (companyClaims == nameof(Filpride) ? e.IsFilpride : e.IsMobility));
+            var customer = await _unitOfWork.FilprideCustomer
+                .GetAsync(e => e.CustomerId == customerId);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = customer.CustomerId,
@@ -1591,8 +1632,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSupplierById(int supplierId)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(e => e.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? e.IsFilpride : e.IsMobility));
+            var supplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(e => e.SupplierId == supplierId);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = supplier.SupplierId,

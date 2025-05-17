@@ -187,7 +187,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.MobilityCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-            var modelDetails = await _dbContext.MobilityCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
+
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
 
             if (modelHeader != null)
             {

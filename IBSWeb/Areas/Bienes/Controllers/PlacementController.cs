@@ -261,6 +261,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
 
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
                 PlacementViewModel viewModel = new()
                 {
                     PlacementId = existingRecord.PlacementId,
@@ -451,6 +456,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == viewModel.PlacementId, cancellationToken);
 
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
                 existingRecord.Status = nameof(PlacementStatus.Terminated);
                 existingRecord.TerminatedDate = viewModel.TerminatedDate;
                 existingRecord.TerminatedBy = User.Identity!.Name!;
@@ -495,6 +505,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
 
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
                 existingRecord.Status = existingRecord.IsLocked ? nameof(PlacementStatus.Locked) : nameof(PlacementStatus.Posted);
                 existingRecord.TerminatedDate = null;
                 existingRecord.TerminatedBy = null;
@@ -537,6 +552,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
 
                 var user = User.Identity!.Name;
 
@@ -584,6 +604,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
 
                 var user = User.Identity!.Name;
 
@@ -639,6 +664,11 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 var existingRecord = await _unitOfWork.BienesPlacement
                     .GetAsync(p => p.PlacementId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
 
                 var user = User.Identity!.Name;
 

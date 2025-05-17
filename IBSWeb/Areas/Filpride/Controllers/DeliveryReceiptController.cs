@@ -366,6 +366,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var hauler = await _unitOfWork.FilprideSupplier
                             .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
 
+                        if (hauler == null)
+                        {
+                            return NotFound();
+                        }
+
                         var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
                                       $" Please review and approve the changes from '{customerOrderSlip.Hauler!.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
                                       $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
@@ -521,6 +526,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                             .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
 
+                    if (existingRecord == null)
+                    {
+                        return NotFound();
+                    }
+
                     if (viewModel.IsECCEdited)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
@@ -593,6 +603,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var hauler = await _unitOfWork.FilprideSupplier
                             .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
+
+                        if (hauler == null)
+                        {
+                            return NotFound();
+                        }
 
                         var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser!.ToUpper()} to update the Hauler/Freight." +
                                       $" Please review and approve the changes from '{existingRecord.Hauler!.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
@@ -890,6 +905,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId, cancellationToken);
 
+                if (existingCos == null)
+                {
+                    return NotFound();
+                }
+
                 if (existingCos.Status == nameof(CosStatus.Completed))
                 {
                     existingCos.IsDelivered = true;
@@ -960,7 +980,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
+            var model = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             var existingInventory = await _dbContext.FilprideInventories
                 .Include(i => i.Product)

@@ -142,7 +142,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideBankAccount model, CancellationToken cancellationToken)
         {
-            var existingModel = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);

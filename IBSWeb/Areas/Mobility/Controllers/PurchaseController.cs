@@ -130,8 +130,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var product = await _unitOfWork.Product.MapProductToDTO(fuelPurchase.ProductCode, cancellationToken);
             var station = await _unitOfWork.MobilityStation.MapStationToDTO(fuelPurchase.StationCode, cancellationToken);
 
-            ViewData["ProductName"] = product.ProductName;
-            ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
+            ViewData["ProductName"] = product!.ProductName;
+            ViewData["Station"] = $"{station!.StationCode} - {station.StationName}";
 
             return View(fuelPurchase);
         }
@@ -175,7 +175,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var stationCodeClaim = await GetStationCodeClaimAsync();
 
-            MobilityFuelPurchase fuelPurchase = await _unitOfWork
+            var fuelPurchase = await _unitOfWork
                 .MobilityFuelPurchase
                 .GetAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCodeClaim, cancellationToken);
 
@@ -302,8 +302,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var supplier = await _unitOfWork.FilprideSupplier.MapSupplierToDTO(lube.SupplierCode, cancellationToken);
             var station = await _unitOfWork.MobilityStation.MapStationToDTO(lube.StationCode, cancellationToken);
 
-            ViewData["SupplierName"] = supplier.SupplierName;
-            ViewData["Station"] = $"{station.StationCode} - {station.StationName}";
+            ViewData["SupplierName"] = supplier!.SupplierName;
+            ViewData["Station"] = $"{station!.StationCode} - {station.StationName}";
 
             return View(lube);
         }

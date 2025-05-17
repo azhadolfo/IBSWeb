@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            MobilityChartOfAccount account = await _unitOfWork.MobilityChartOfAccount
+            var account = await _unitOfWork.MobilityChartOfAccount
                 .GetAsync(c => c.AccountId == id, cancellationToken);
 
             if (account == null)

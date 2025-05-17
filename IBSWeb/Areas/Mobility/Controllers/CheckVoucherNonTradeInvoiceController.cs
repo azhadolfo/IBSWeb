@@ -790,6 +790,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var supplier = await _unitOfWork.MobilitySupplier
                         .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
                     existingModel.EditedBy = User.Identity!.Name;
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingModel.Date = viewModel.TransactionDate;
@@ -1104,8 +1109,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.MobilityCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-            var modelDetails = await _dbContext.MobilityCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
-            var supplierName = await _dbContext.MobilitySuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
+
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
 
             if (modelHeader != null)
             {
@@ -1318,7 +1326,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.MobilityCheckVoucher.GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+            var cv = await _unitOfWork.MobilityCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
             if (!cv.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -1648,7 +1663,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> GetBankAccountById(int bankId)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var bankAccount = await _unitOfWork.MobilityBankAccount.GetAsync(b => b.BankAccountId == bankId && b.StationCode == stationCodeClaims);
+            var bankAccount = await _unitOfWork.MobilityBankAccount
+                .GetAsync(b => b.BankAccountId == bankId && b.StationCode == stationCodeClaims);
+
+            if (bankAccount == null)
+            {
+                return NotFound();
+            }
 
             return Json(new
             {
@@ -1674,6 +1695,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> GetCompanyById(int companyId)
         {
             var company = await _unitOfWork.Company.GetAsync(c => c.CompanyId == companyId);
+
+            if (company == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = company.CompanyId,
@@ -1699,7 +1726,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> GetEmployeeById(int employeeId)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var employee = await _unitOfWork.MobilityEmployee.GetAsync(e => e.EmployeeId == employeeId && e.StationCode == stationCodeClaims);
+            var employee = await _unitOfWork.MobilityEmployee
+                .GetAsync(e => e.EmployeeId == employeeId && e.StationCode == stationCodeClaims);
+
+            if (employee == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = employee.EmployeeId,
@@ -1725,7 +1759,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> GetCustomerById(int customerId)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var customer = await _unitOfWork.MobilityCustomer.GetAsync(e => e.CustomerId == customerId && e.StationCode == stationCodeClaims);
+            var customer = await _unitOfWork.MobilityCustomer
+                .GetAsync(e => e.CustomerId == customerId && e.StationCode == stationCodeClaims);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = customer.CustomerId,
@@ -1751,7 +1792,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> GetSupplierById(int supplierId)
         {
             var stationCodeClaims = await GetStationCodeClaimAsync();
-            var supplier = await _unitOfWork.MobilitySupplier.GetAsync(e => e.SupplierId == supplierId && e.StationCode == stationCodeClaims);
+            var supplier = await _unitOfWork.MobilitySupplier
+                .GetAsync(e => e.SupplierId == supplierId && e.StationCode == stationCodeClaims);
+
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
             return Json(new
             {
                 id = supplier.SupplierId,

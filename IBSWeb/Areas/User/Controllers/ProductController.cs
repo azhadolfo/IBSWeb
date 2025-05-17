@@ -91,7 +91,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Product product = await _unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
+            var product = await _unitOfWork.Product.GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Product product = await _unitOfWork
+            var product = await _unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -152,7 +152,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Product product = await _unitOfWork
+            var product = await _unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -175,7 +175,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Product product = await _unitOfWork
+            var product = await _unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Product product = await _unitOfWork
+            var product = await _unitOfWork
                 .Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 

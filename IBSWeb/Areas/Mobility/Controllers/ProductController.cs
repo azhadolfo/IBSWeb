@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityProduct product = await _unitOfWork.MobilityProduct.GetAsync(c => c.ProductId == id, cancellationToken);
+            var product = await _unitOfWork.MobilityProduct.GetAsync(c => c.ProductId == id, cancellationToken);
 
             if (product != null)
             {
@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityProduct product = await _unitOfWork
+            var product = await _unitOfWork
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityProduct product = await _unitOfWork
+            var product = await _unitOfWork
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -161,7 +161,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityProduct product = await _unitOfWork
+            var product = await _unitOfWork
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
@@ -181,7 +181,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityProduct product = await _unitOfWork
+            var product = await _unitOfWork
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 

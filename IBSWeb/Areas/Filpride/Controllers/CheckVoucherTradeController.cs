@@ -548,6 +548,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
                 .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
@@ -612,7 +617,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId,
+                        cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -827,7 +840,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.FilprideCheckVoucher.GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+            var cv = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
             if (!cv.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -847,6 +867,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
+
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
             var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
@@ -1153,6 +1179,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         cv.CheckVoucherHeaderNo == model.Reference &&
                                         cv.Company == model.Company,
                                     cancellationToken);
+
+                            if (advances == null)
+                            {
+                                return NotFound();
+                            }
 
                             advances.AmountPaid -= advances.AmountPaid;
                         }
@@ -2269,6 +2300,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
                 .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
@@ -2320,7 +2356,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -2484,6 +2527,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
                 .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
@@ -2535,7 +2583,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)

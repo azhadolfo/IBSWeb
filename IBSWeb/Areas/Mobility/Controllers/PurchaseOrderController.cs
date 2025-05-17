@@ -173,6 +173,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var supplier = await _unitOfWork.MobilitySupplier
                         .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
                     MobilityPurchaseOrder model = new()
                     {
                         PurchaseOrderNo = await _unitOfWork.MobilityPurchaseOrder.GenerateCodeAsync(stationCodeClaims, viewModel.Type, cancellationToken),
@@ -303,6 +308,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var suppliers = await _unitOfWork.MobilitySupplier
                         .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
+                    if (suppliers == null)
+                    {
+                        return NotFound();
+                    }
+
                     viewModel.Suppliers = await _unitOfWork.MobilitySupplier.GetMobilityTradeSupplierListAsyncById(stationCodeClaims, cancellationToken);
                     viewModel.Products = await _unitOfWork.MobilityProduct.GetProductListAsyncById(cancellationToken);
 
@@ -369,6 +379,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var purchaseOrder = await _unitOfWork.MobilityPurchaseOrder
                     .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                if (purchaseOrder == null)
+                {
+                    return NotFound();
+                }
 
                 var pickupPoint = await _dbContext.MobilityPickUpPoints
                     .FindAsync(pickupPointId, cancellationToken);
@@ -550,7 +565,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.MobilityPurchaseOrder.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.MobilityPurchaseOrder
+                .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+
+            if (po == null)
+            {
+                return NotFound();
+            }
+
             if (!po.IsPrinted)
             {
                 #region --Audit Trail Recording

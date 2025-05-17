@@ -376,6 +376,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var modelHeader = await _unitOfWork.MobilityJournalVoucher
                 .GetAsync(jv => jv.JournalVoucherHeaderId == id, cancellationToken);
 
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
+
             var modelDetails = await _dbContext.MobilityJournalVoucherDetails
                 .Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId)
                 .ToListAsync();
@@ -580,6 +585,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var existingHeaderModel = await _unitOfWork.MobilityJournalVoucher
                 .GetAsync(cvh => cvh.JournalVoucherHeaderId == id, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.MobilityJournalVoucherDetails
                 .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
                 .ToListAsync();
@@ -652,6 +663,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var existingHeaderModel = await _unitOfWork.MobilityJournalVoucher
                 .GetAsync(jv => jv.JournalVoucherHeaderId == viewModel.JournalVoucherHeaderId, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
 
             var existingDetailsModel = await _dbContext.MobilityJournalVoucherDetails
                 .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)

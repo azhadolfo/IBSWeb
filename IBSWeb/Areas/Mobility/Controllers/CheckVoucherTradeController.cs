@@ -303,6 +303,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 .MobilitySupplier
                                 .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
                 #endregion --Retrieve Supplier
 
                 #region -- Get PO --
@@ -585,6 +590,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var existingHeaderModel = await _unitOfWork.MobilityCheckVoucher
                 .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
@@ -670,7 +680,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CheckVoucherTradeViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
-            var existingHeaderModel = await _unitOfWork.MobilityCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+            var existingHeaderModel = await _unitOfWork.MobilityCheckVoucher
+                .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             var stationCodeClaims = await GetStationCodeClaimAsync();
             if (stationCodeClaims == null)
             {
@@ -720,7 +737,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --CV Details Entry
 
-                    var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
+                    var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                        .ToListAsync(cancellationToken);
 
                     _dbContext.RemoveRange(existingDetailsModel);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -904,7 +923,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
         {
-            var cv = await _unitOfWork.MobilityCheckVoucher.GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+            var cv = await _unitOfWork.MobilityCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
             if (!cv.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -924,8 +950,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
         public async Task<IActionResult> Post(int id, int? supplierId, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.MobilityCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-            var modelDetails = await _dbContext.MobilityCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
-            var supplierName = await _dbContext.MobilitySuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
             if (modelHeader != null)
             {
@@ -1202,6 +1226,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                         cv.CheckVoucherHeaderNo == model.Reference &&
                                         cv.StationCode == model.StationCode,
                                     cancellationToken);
+
+                            if (advances == null)
+                            {
+                                return NotFound();
+                            }
 
                             advances.AmountPaid -= advances.AmountPaid;
                         }

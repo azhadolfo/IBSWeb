@@ -191,7 +191,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
             {
@@ -267,7 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -287,7 +287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -310,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -330,7 +330,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideSupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 

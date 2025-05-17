@@ -155,6 +155,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var existingSv = await _unitOfWork.MobilityServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
 
+            if (existingSv == null)
+            {
+                return NotFound();
+            }
+
             if (!ModelState.IsValid)
             {
                 viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
@@ -312,7 +317,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 var existingCM = await _unitOfWork
                     .MobilityCreditMemo
-                    .GetAsync(cm => cm.CreditMemoId == viewModel.CreditMemoId);
+                    .GetAsync(cm => cm.CreditMemoId == viewModel.CreditMemoId, cancellationToken);
+
+                if (existingCM == null)
+                {
+                    return NotFound();
+                }
 
                 #region -- Saving Default Enries --
 
@@ -395,6 +405,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         {
                             var existingSv = await _unitOfWork.MobilityServiceInvoice
                                                     .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+
+                            if (existingSv == null)
+                            {
+                                return NotFound();
+                            }
 
                             #region --SV Computation--
 
@@ -771,7 +786,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cm = await _unitOfWork.MobilityCreditMemo.GetAsync(x => x.CreditMemoId == id, cancellationToken);
+            var cm = await _unitOfWork.MobilityCreditMemo
+                .GetAsync(x => x.CreditMemoId == id, cancellationToken);
+
+            if (cm == null)
+            {
+                return NotFound();
+            }
+
             if (!cm.IsPrinted)
             {
                 #region --Audit Trail Recording

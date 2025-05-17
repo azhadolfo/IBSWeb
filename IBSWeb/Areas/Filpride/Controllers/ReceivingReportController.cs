@@ -235,7 +235,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Retrieve PO
 
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                        .GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+
+                    if (existingPo == null)
+                    {
+                        return NotFound();
+                    }
 
                     #endregion --Retrieve PO
 
@@ -371,7 +377,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Date = model.Date;
                     existingModel.POId = model.POId;
 
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == model.POId);
+                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                        .GetAsync(po => po.PurchaseOrderId == model.POId);
+
+                    if (existingPo == null)
+                    {
+                        return NotFound();
+                    }
 
                     existingModel.PONo = existingPo.PurchaseOrderNo;
 
@@ -607,7 +619,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLiquidations(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+
+            if (po == null)
+            {
+                return NotFound();
+            }
 
             var rrPostedOnly = await _dbContext
                 .FilprideReceivingReports
@@ -649,7 +667,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var rr = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+            var rr = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+
+            if (rr == null)
+            {
+                return NotFound();
+            }
+
             if (!rr.IsPrinted)
             {
                 #region --Audit Trail Recording

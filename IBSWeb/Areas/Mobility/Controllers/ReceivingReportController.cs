@@ -191,7 +191,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     #region --Retrieve PO
 
-                    var existingPo = await _unitOfWork.MobilityPurchaseOrder.GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+                    var existingPo = await _unitOfWork.MobilityPurchaseOrder
+                        .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                    if (existingPo == null)
+                    {
+                        return NotFound();
+                    }
 
                     #endregion --Retrieve PO
 
@@ -432,7 +438,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var rr = await _unitOfWork.MobilityReceivingReport.GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+            var rr = await _unitOfWork.MobilityReceivingReport
+                .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+
+            if (rr == null)
+            {
+                return NotFound();
+            }
+
             if (!rr.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -638,7 +651,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLiquidations(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.MobilityPurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.MobilityPurchaseOrder
+                .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+
+            if (po == null)
+            {
+                return NotFound();
+            }
 
             var rrPostedOnly = await _dbContext
                 .MobilityReceivingReports

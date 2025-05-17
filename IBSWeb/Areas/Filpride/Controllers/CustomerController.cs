@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == id, cancellationToken);
+            var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer != null)
             {
@@ -168,7 +168,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -188,7 +188,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -211,7 +211,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -231,7 +231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            FilprideCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 

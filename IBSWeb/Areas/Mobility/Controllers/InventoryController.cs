@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             IEnumerable<MobilityInventory> inventories;
-            ProductDto productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
+            var productDetails = await _unitOfWork.Product.MapProductToDTO(model.ProductCode, cancellationToken);
             model.StationCode = stationCodeClaims;
 
             var endingBalance = await _dbContext.MobilityInventories
@@ -99,11 +99,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             //inventories = await _unitOfWork.MobilityInventory.GetAllAsync(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo, cancellationToken);
-            StationDto stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
+            var stationDetails = await _unitOfWork.MobilityStation.MapStationToDTO(model.StationCode, cancellationToken);
 
-            ViewData["Station"] = $"{stationDetails.StationCode} {stationDetails.StationName.ToUpper()}";
+            ViewData["Station"] = $"{stationDetails!.StationCode} {stationDetails.StationName.ToUpper()}";
 
-            ViewData["Product"] = $"{productDetails.ProductCode} {productDetails.ProductName.ToUpper()}";
+            ViewData["Product"] = $"{productDetails!.ProductCode} {productDetails.ProductName.ToUpper()}";
             return View(inventories);
         }
 
@@ -173,29 +173,27 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityInventory inventory = await _unitOfWork.MobilityInventory
+            var inventory = await _unitOfWork.MobilityInventory
                 .GetAsync(i => i.InventoryId == id, cancellationToken);
 
-            IEnumerable<MobilityGeneralLedger> ledgerEntries = await _unitOfWork.MobilityGeneralLedger
+            if (inventory == null)
+            {
+                return NotFound();
+            }
+
+            var ledgerEntries = await _unitOfWork.MobilityGeneralLedger
                 .GetAllAsync(l => l.Reference == inventory.TransactionNo && l.StationCode == inventory.StationCode, cancellationToken);
 
-            if (inventory != null && ledgerEntries != null)
+            foreach (var entry in ledgerEntries)
             {
-                foreach (var entry in ledgerEntries)
-                {
-                    entry.IsValidated = true;
-                }
-
-                inventory.ValidatedBy = _userManager.GetUserName(User);
-                inventory.ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                return Ok();
+                entry.IsValidated = true;
             }
-            else
-            {
-                return BadRequest();
-            }
+
+            inventory.ValidatedBy = _userManager.GetUserName(User);
+            inventory.ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            return Ok();
         }
 
         [HttpGet]
@@ -218,6 +216,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     var inventory = await _unitOfWork.MobilityInventory
                         .GetAsync(i => i.InventoryId == viewModel.InventoryId, cancellationToken);
+
+                    if (inventory == null)
+                    {
+                        return NotFound();
+                    }
 
                     await _unitOfWork.MobilityInventory.CalculateTheActualSounding(inventory, viewModel, cancellationToken);
 

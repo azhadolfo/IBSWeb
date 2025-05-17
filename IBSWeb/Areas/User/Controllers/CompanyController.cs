@@ -85,7 +85,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
+            var company = await _unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -128,7 +128,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
+            var company = await _unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -148,7 +148,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
+            var company = await _unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -171,7 +171,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
+            var company = await _unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
@@ -191,7 +191,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            Company company = await _unitOfWork
+            var company = await _unitOfWork
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 

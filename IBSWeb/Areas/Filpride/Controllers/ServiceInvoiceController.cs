@@ -174,6 +174,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
+                    if (customer == null)
+                    {
+                        return NotFound();
+                    }
+
                     #endregion --Retrieval of Customer
 
                     #region --Saving the default properties
@@ -691,6 +696,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+
+            if (sv == null)
+            {
+                return NotFound();
+            }
+
             if (!sv.IsPrinted)
             {
                 #region --Audit Trail Recording

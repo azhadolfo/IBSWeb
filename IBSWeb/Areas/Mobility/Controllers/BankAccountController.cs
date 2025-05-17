@@ -4,11 +4,8 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -131,7 +128,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideBankAccount model, CancellationToken cancellationToken)
         {
-            var existingModel = await _unitOfWork.MobilityBankAccount.GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
+            var existingModel = await _unitOfWork.MobilityBankAccount
+                .GetAsync(b => b.BankAccountId == model.BankAccountId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);

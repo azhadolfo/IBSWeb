@@ -134,6 +134,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var station = await _unitOfWork.MobilityStation.MapStationToDTO(stationCodeClaimss, cancellationToken);
 
+            if (station == null)
+            {
+                return NotFound();
+            }
+
             var sales = await _dbContext.MobilitySalesHeaders
                 .Include(s => s.SalesDetails)
                 .FirstOrDefaultAsync(s => s.SalesNo == id && s.StationCode == stationCodeClaimss, cancellationToken);

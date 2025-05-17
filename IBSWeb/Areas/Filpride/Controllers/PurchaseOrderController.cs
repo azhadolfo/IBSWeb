@@ -296,6 +296,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
+            if (purchaseOrder == null)
+            {
+                return NotFound();
+            }
+
             purchaseOrder.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
             purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, purchaseOrder.SupplierId, cancellationToken);
@@ -534,6 +539,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+
+            if (po == null)
+            {
+                return NotFound();
+            }
+
             if (!po.IsPrinted)
             {
                 #region --Audit Trail Recording
@@ -842,6 +853,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
                     .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                if (purchaseOrder == null)
+                {
+                    return NotFound();
+                }
 
                 var pickupPoint = await _dbContext.FilpridePickUpPoints
                     .FindAsync(pickupPointId, cancellationToken);

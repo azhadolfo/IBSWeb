@@ -194,7 +194,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Retrieval of Customer
 
-                var customer = await _unitOfWork.MobilityCustomer.GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+                var customer = await _unitOfWork.MobilityCustomer
+                    .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                if (customer == null)
+                {
+                    return NotFound();
+                }
 
                 #endregion --Retrieval of Customer
 
@@ -681,7 +687,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var sv = await _unitOfWork.MobilityServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+            var sv = await _unitOfWork.MobilityServiceInvoice
+                .GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+
+            if (sv == null)
+            {
+                return NotFound();
+            }
+
             if (!sv.IsPrinted)
             {
                 #region --Audit Trail Recording

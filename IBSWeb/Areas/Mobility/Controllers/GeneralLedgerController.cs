@@ -110,9 +110,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return BadRequest();
             }
 
-            MobilityChartOfAccount chartOfAccount = await _unitOfWork.MobilityChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
+            var chartOfAccount = await _unitOfWork.MobilityChartOfAccount.GetAsync(c => c.AccountNumber == accountNo, cancellationToken);
 
-            SetViewData(chartOfAccount, accountNo, productCode, dateFrom, dateTo);
+            SetViewData(chartOfAccount!, accountNo, productCode, dateFrom, dateTo);
 
             IEnumerable<GeneralLedgerView> ledgers = await _unitOfWork.MobilityGeneralLedger.GetLedgerViewByAccountNo(dateFrom, dateTo, stationCodeClaims, accountNo, productCode, cancellationToken);
 

@@ -191,6 +191,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (modelHeader == null)
+            {
+                return NotFound();
+            }
+
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);

@@ -190,7 +190,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilitySupplier supplier = await _unitOfWork.MobilitySupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
+            var supplier = await _unitOfWork.MobilitySupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier != null)
             {
@@ -274,7 +274,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilitySupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -294,7 +294,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilitySupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -317,7 +317,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilitySupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
@@ -337,7 +337,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilitySupplier supplier = await _unitOfWork
+            var supplier = await _unitOfWork
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 

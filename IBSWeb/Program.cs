@@ -83,7 +83,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
+//builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<GoogleDriveImportService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();

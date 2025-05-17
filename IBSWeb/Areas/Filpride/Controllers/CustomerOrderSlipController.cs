@@ -370,7 +370,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder.GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
+                var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
+
+                if (getPurchaseOrder == null)
+                {
+                    return NotFound();
+                }
 
                 CustomerOrderSlipViewModel viewModel = new()
                 {
@@ -433,12 +439,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                    if (existingRecord == null)
+                    {
+                        return NotFound();
+                    }
+
                     viewModel.CurrentUser = _userManager.GetUserName(User);
 
                     if (string.IsNullOrEmpty(viewModel.Terms))
                     {
                         var customer = await _unitOfWork.FilprideCustomer
                             .GetAsync(cos => cos.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                        if (customer == null)
+                        {
+                            return NotFound();
+                        }
 
                         viewModel.Terms = customer.CustomerTerms;
                     }
@@ -701,6 +718,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
                 var oldPrice = existingRecord.DeliveredPrice;
 
                 if (existingRecord == null)
@@ -880,6 +902,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
                 if (existingRecord.DisapprovedBy == null)
                 {
                     existingRecord.DisapprovedBy = _userManager.GetUserName(User);
@@ -950,6 +977,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
 
             var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
             {
@@ -1079,6 +1111,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
 
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
                 {
@@ -1333,6 +1370,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
             var viewModel = new CustomerOrderSlipAppointingHauler
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -1435,6 +1478,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
             var viewModel = new CustomerOrderSlipAppointingHauler
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -1532,6 +1580,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
 
                 existingRecord.Status = nameof(CosStatus.Closed);
 

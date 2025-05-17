@@ -297,8 +297,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
             // Query your database to get hauler details for the COS
-            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip  // Replace with your actual context and model
+            var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                 .GetAsync(c => c.CustomerOrderSlipId == cosId && c.Company == companyClaims);
+
+            if (existingCos == null)
+            {
+                return NotFound(null);
+            }
 
             var haulerDetails = new
             {
@@ -328,6 +333,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var existingAtl = await _unitOfWork.FilprideAuthorityToLoad
                     .GetAsync(atl => atl.AuthorityToLoadId == id, cancellationToken);
+
+                if (existingAtl == null)
+                {
+                    return NotFound();
+                }
 
                 existingAtl.ValidUntil = newValidUntil;
 

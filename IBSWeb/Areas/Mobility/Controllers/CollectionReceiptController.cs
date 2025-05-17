@@ -218,6 +218,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         }
                         var existingServiceInvoice = await _unitOfWork.MobilityServiceInvoice
                             .GetAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
+
+                        if (existingServiceInvoice == null)
+                        {
+                            return NotFound();
+                        }
+
                         var generateCRNo = await _unitOfWork.MobilityCollectionReceipt.GenerateCodeAsync(stationCodeClaims, existingServiceInvoice.Type, cancellationToken);
 
                         decimal offsetAmount = 0;
@@ -348,7 +354,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             if (isServices)
             {
-                var sv = await _unitOfWork.MobilityServiceInvoice.GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
+                var sv = await _unitOfWork.MobilityServiceInvoice
+                    .GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
+
+                if (sv == null)
+                {
+                    return NotFound();
+                }
 
                 decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
                 decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.MobilityCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
@@ -452,7 +464,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return BadRequest();
             }
 
-            var existingModel = await _unitOfWork.MobilityCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
+            var existingModel = await _unitOfWork.MobilityCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -801,7 +819,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cr = await _unitOfWork.MobilityCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+            var cr = await _unitOfWork.MobilityCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+
+            if (cr == null)
+            {
+                return NotFound();
+            }
+
             if (!cr.IsPrinted)
             {
                 #region --Audit Trail Recording

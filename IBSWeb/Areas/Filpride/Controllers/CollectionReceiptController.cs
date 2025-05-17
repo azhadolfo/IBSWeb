@@ -527,7 +527,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MultipleCollectionEdit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
-            var existingModel = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -906,6 +912,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var si = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == invoiceNo, cancellationToken);
 
+                if (si == null)
+                {
+                    return NotFound();
+                }
+
                 decimal netDiscount = si.Amount - si.Discount;
                 decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
                 decimal withHoldingTaxAmount = si.Customer!.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
@@ -924,7 +935,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (isServices && !isSales)
             {
-                var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
+                var sv = await _unitOfWork.FilprideServiceInvoice
+                    .GetAsync(s => s.ServiceInvoiceId == invoiceNo, cancellationToken);
+
+                if (sv == null)
+                {
+                    return NotFound();
+                }
 
                 decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
                 decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
@@ -1038,7 +1055,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
         {
-            var existingModel = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
 
             if (ModelState.IsValid)
             {
@@ -1398,7 +1421,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var cr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+            var cr = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+
+            if (cr == null)
+            {
+                return NotFound();
+            }
+
             if (!cr.IsPrinted)
             {
                 #region --Audit Trail Recording

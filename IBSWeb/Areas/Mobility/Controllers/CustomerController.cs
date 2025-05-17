@@ -48,7 +48,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .MobilityCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -68,7 +68,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .MobilityCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -165,7 +165,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .MobilityCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityCustomer customer = await _unitOfWork
+            var customer = await _unitOfWork
                 .MobilityCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 

@@ -79,7 +79,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityStation station = await _unitOfWork
+            var station = await _unitOfWork
                 .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -122,7 +122,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityStation station = await _unitOfWork
+            var station = await _unitOfWork
                 .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -142,7 +142,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityStation station = await _unitOfWork
+            var station = await _unitOfWork
                 .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -165,7 +165,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityStation station = await _unitOfWork
+            var station = await _unitOfWork
                 .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
@@ -185,7 +185,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            MobilityStation station = await _unitOfWork
+            var station = await _unitOfWork
                 .MobilityStation
                 .GetAsync(c => c.StationId == id, cancellationToken);
 
