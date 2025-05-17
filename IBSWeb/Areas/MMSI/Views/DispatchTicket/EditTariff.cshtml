@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.MMSIDispatchTicket
+@model TariffViewModel
 
 @{
     ViewData["Title"] = "Edit Tariff";
@@ -34,7 +34,7 @@
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>CUSTOMER:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Customer.CustomerName</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.CustomerName</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VOYAGE #:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VoyageNumber</td>
                     </tr>
@@ -42,25 +42,25 @@
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Date</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster.TugMasterName</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMasterName</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatName</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugboatName</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
                         <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselName</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VesselName</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.PortName - @Model.TerminalName</td>
                         <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL TYPE:</b></td>
-                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselType</td>
+                        <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VesselType</td>
                     </tr>
                     <tr>
                         <td class="m-0 p-0 pt-3 ps-4" style="width: 120px;"><b>REMARKS: </b></td>
@@ -89,13 +89,6 @@
                 <div class="row d-flex justify-content-start px-3">
                     <div class="form-group col-12 pe-3 text-start">
                         <div class="row mt-2">
-                            <div class="col-4 d-flex align-items-center">
-                                <label class="control-label ps-1 me-2" for="CustomerId">Customer<span class="required text-danger">*</span></label>
-                                <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" required>
-                                    <option value="">Choose an option...</option>
-                                </select>
-                                <span asp-validation-for="CustomerId" class="text-danger"></span>
-                            </div>
                             <div class="col-3 d-flex justify-content-start align-items-center">
                                 <b>Total Hours:</b>
                                 <span class="ms-2">@Model.TotalHours?.ToString("N2")</span>
@@ -224,7 +217,7 @@
                             </div>
                         </div>
                     </div>
-                    @if (!Model.Tugboat.IsCompanyOwned)
+                    @if ((bool)!Model.IsTugboatCompanyOwned)
                     {
                         <div class="col-6 align-content-center px-3">
                             <div class="row border">
@@ -237,7 +230,7 @@
                                     </div>
                                     <div class="row justify-content-end">
                                         <div class="form-floating col-6 mb-3">
-                                            <input class="form-control border-0 shadow" placeholder="" id="TugProvider" value="@Model.Tugboat.TugboatOwner.TugboatOwnerName" readonly/>
+                                            <input class="form-control border-0 shadow" placeholder="" id="TugProvider" value="@Model.TugboatOwnerName" readonly/>
                                             <label for="TugProvider" class="ms-2">Tug Provider</label>
                                         </div>
                                         <div class="form-floating col-6 mb-3">
@@ -270,7 +263,7 @@
                         </div>
                     }
                 </div>
-                @if(!Model.Tugboat.IsCompanyOwned)
+                @if((bool)!Model.IsTugboatCompanyOwned)
                 {
                     <div class="row">
                         <div class="col-12">
@@ -302,6 +295,14 @@
 
         $(document).ready(function () {
 
+            ValueChange()
+            $('#CustomerId').select2({
+                placeholder: "Select Customer", // Custom placeholder
+                allowClear: true, // Optional: adds an "x" to clear selection
+                width: '100%', // Ensures it respects your width:100% style
+                theme: 'classic'
+            });
+
             function ValueChange() 
             {
                 @* Get if per hour or per move *@
@@ -309,12 +310,12 @@
                 var selectedValue2 = $('input[name="chargeType2"]:checked').val();
                 
                 @* Get Dispatch/BAF Rate and Discount Value *@
-                var dispatchRate = parseNumber($('input[name="DispatchRate"]').val()) || 0;
-                var dispatchDiscountPercent = parseNumber($('input[name="DispatchDiscount"]').val()) || 0;
+                var dispatchRate = $('input[name="DispatchRate"]').val() || 0;
+                var dispatchDiscountPercent = $('input[name="DispatchDiscount"]').val() || 0;
                 var dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
 
-                var bafRate = parseNumber($('input[name="BAFRate"]').val()) || 0;
-                var bafDiscountPercent = parseNumber($('input[name="BAFDiscount"]').val()) || 0;
+                var bafRate = $('input[name="BAFRate"]').val() || 0;
+                var bafDiscountPercent = $('input[name="BAFDiscount"]').val() || 0;
                 var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
@@ -328,8 +329,8 @@
                     dispatchBilling = dispatchRate * @Model.TotalHours;
                 }
                 if (selectedValue === "Per move") {
-                    dispatchRevenue = parseNumber(dispatchRate) - parseNumber(dispatchDiscountAmount);
-                    dispatchBilling = parseNumber(dispatchRate); // Ensure two decimal places
+                    dispatchRevenue = dispatchRate - dispatchDiscountAmount;
+                    dispatchBilling = parseNumber(dispatchRate) // Ensure two decimal places
                 }
 
                 if (selectedValue2 === "Per hour") {
@@ -337,7 +338,7 @@
                     bafBilling = bafRate * @Model.TotalHours;
                 }
                 if (selectedValue2 === "Per move") {
-                    bafRevenue = parseNumber(bafRate) - parseNumber(bafDiscountAmount);
+                    bafRevenue = bafRate - bafDiscountAmount;
                     bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 

@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250515022800_ImproveBillingModel")]
+    partial class ImproveBillingModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4277,10 +4280,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(10)")
                         .HasColumnName("mmsi_billing_number");
 
-                    b.Property<int?>("MMSICollectionId")
-                        .HasColumnType("integer")
-                        .HasColumnName("mmsi_collection_id");
-
                     b.Property<int>("PortId")
                         .HasColumnType("integer")
                         .HasColumnName("port_id");
@@ -4311,9 +4310,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_mmsi_billings_customer_id");
-
-                    b.HasIndex("MMSICollectionId")
-                        .HasDatabaseName("ix_mmsi_billings_mmsi_collection_id");
 
                     b.HasIndex("PortId")
                         .HasDatabaseName("ix_mmsi_billings_port_id");
@@ -4353,15 +4349,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("check_number");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("created_by");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
 
@@ -4382,7 +4377,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("is_undocumented");
 
                     b.Property<string>("MMSICollectionNumber")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("mmsi_collection_number");
 
@@ -4958,62 +4952,6 @@ namespace IBS.DataAccess.Migrations
                         .HasName("pk_mmsi_tugboat_owners");
 
                     b.ToTable("mmsi_tugboat_owners", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIUserAccess", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("CanApproveTariff")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_approve_tariff");
-
-                    b.Property<bool>("CanCreateBilling")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_create_billing");
-
-                    b.Property<bool>("CanCreateCollection")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_create_collection");
-
-                    b.Property<bool>("CanCreateDispatchTicket")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_create_dispatch_ticket");
-
-                    b.Property<bool>("CanCreateServiceRequest")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_create_service_request");
-
-                    b.Property<bool>("CanPostServiceRequest")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_post_service_request");
-
-                    b.Property<bool>("CanPrintReport")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_print_report");
-
-                    b.Property<bool>("CanSetTariff")
-                        .HasColumnType("boolean")
-                        .HasColumnName("can_set_tariff");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("user_id");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("user_name");
-
-                    b.HasKey("Id")
-                        .HasName("pk_mmsi_user_accesses");
-
-                    b.ToTable("mmsi_user_accesses", (string)null);
                 });
 
             modelBuilder.Entity("IBS.Models.MMSI.MasterFile.MMSIVessel", b =>
@@ -11244,11 +11182,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_mmsi_billings_filpride_customers_customer_id");
 
-                    b.HasOne("IBS.Models.MMSI.MMSICollection", null)
-                        .WithMany("PaidBills")
-                        .HasForeignKey("MMSICollectionId")
-                        .HasConstraintName("fk_mmsi_billings_mmsi_collections_mmsi_collection_id");
-
                     b.HasOne("IBS.Models.MMSI.MasterFile.MMSIPort", "Port")
                         .WithMany()
                         .HasForeignKey("PortId")
@@ -11291,8 +11224,6 @@ namespace IBS.DataAccess.Migrations
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
                         .HasConstraintName("fk_mmsi_collections_filpride_customers_customer_id");
 
                     b.Navigation("Customer");
@@ -11838,11 +11769,6 @@ namespace IBS.DataAccess.Migrations
             modelBuilder.Entity("IBS.Models.Filpride.MasterFile.FilprideCustomer", b =>
                 {
                     b.Navigation("Branches");
-                });
-
-            modelBuilder.Entity("IBS.Models.MMSI.MMSICollection", b =>
-                {
-                    b.Navigation("PaidBills");
                 });
 
             modelBuilder.Entity("IBS.Models.Mobility.MobilityLubePurchaseHeader", b =>

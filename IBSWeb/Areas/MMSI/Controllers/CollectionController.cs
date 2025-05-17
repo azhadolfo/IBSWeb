@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -51,96 +52,137 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = new MMSICollection();
-            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            var model = new CreateCollectionViewModel
+            {
+                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken)
+            };
+
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(MMSICollection model, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "There was an error creating the collection.";
+
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
+
+                return View(viewModel);
+            }
+
             try
             {
-                if (ModelState.IsValid)
+                var model = CreateCollectionVmToCollectionModel(viewModel);
+
+                var dateNow = DateTime.Now;
+                model.CreatedBy = await GetUserNameAsync();
+                model.CreatedDate = dateNow;
+                model.Status = "Create";
+
+                if (model.IsUndocumented)
                 {
-                    var dateNow = DateTime.Now;
-                    model.CreatedBy = await GetUserNameAsync();
-                    model.CreatedDate = dateNow;
-
-                    if (model.IsUndocumented)
-                    {
-                        model.MMSICollectionNumber = await _unitOfWork.Msap.GenerateCollectionNumber(cancellationToken);
-                    }
-
-                    await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    // save first then refetch again so it has auto generated id
-                    var refetchModel = await _dbContext.MMSICollections
-                        .Where(c => c.CreatedDate == dateNow)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    int id = refetchModel.MMSICollectionId;
-
-
-                    #region -- Audit Trail
-
-                    var audit = new FilprideAuditTrail
-                    {
-                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                        Username = await GetUserNameAsync(),
-                        MachineName = Environment.MachineName,
-                        Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", model.ToCollectBillings)}",
-                        DocumentType = "Collection",
-                        Company = await GetCompanyClaimAsync()
-                    };
-
-                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    #endregion -- Audit Trail
-
-                    //
-                    foreach(var collectBills in model.ToCollectBillings)
-                    {
-                        // find the billings that was collected and mark them as collected
-                        var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
-                        billingChosen.Status = "Collected";
-                        billingChosen.CollectionId = refetchModel.MMSICollectionId;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                    }
-
-
-                    if (model.IsUndocumented)
-                    {
-                        TempData["success"] = $"Collection was successfully created. Control Number: {model.MMSICollectionNumber}";
-                    }
-                    else
-                    {
-                        TempData["success"] = $"Collection was successfully created.";
-                    }
-
-                    return RedirectToAction(nameof(Index));
+                    model.MMSICollectionNumber = await _unitOfWork.Collection.GenerateCollectionNumber(cancellationToken);
                 }
                 else
                 {
-                    TempData["error"] = "There was an error creating the collection.";
-
-                    model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
-                    model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
-
-                    return View(model);
+                    model.MMSICollectionNumber = viewModel.MMSICollectionNumber ?? string.Empty;
                 }
+
+                await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                // save first then refetch again so it has auto generates id
+                var refetchModel = await _dbContext.MMSICollections
+                    .Where(c => c.CreatedDate == dateNow)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                int id = refetchModel.MMSICollectionId;
+
+
+                #region -- Audit Trail
+
+                var audit = new FilprideAuditTrail
+                {
+                    Date = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Username = await GetUserNameAsync(),
+                    MachineName = Environment.MachineName,
+                    Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", viewModel.ToCollectBillings)}",
+                    DocumentType = "Collection",
+                    Company = await GetCompanyClaimAsync()
+                };
+
+                await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #endregion -- Audit Trail
+
+                //
+                foreach(var collectBills in viewModel.ToCollectBillings)
+                {
+                    // find the billings that was collected and mark them as collected
+                    var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
+                    billingChosen.Status = "Collected";
+                    billingChosen.CollectionId = refetchModel.MMSICollectionId;
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                if (model.IsUndocumented)
+                {
+                    TempData["success"] = $"Collection was successfully created. Control Number: {model.MMSICollectionNumber}";
+                }
+                else
+                {
+                    TempData["success"] = $"Collection was successfully created.";
+                }
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
 
-                model.Billings = await _unitOfWork.Msap.GetMMSIUncollectedBillingsById(cancellationToken);
-                model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
 
-                return View(model);
+                return View(viewModel);
             }
+        }
+
+        public MMSICollection CreateCollectionVmToCollectionModel(CreateCollectionViewModel viewModel)
+        {
+            var model = new MMSICollection
+            {
+                IsUndocumented = viewModel.IsUndocumented,
+                Date = viewModel.Date,
+                CustomerId = viewModel.CustomerId,
+                Amount = viewModel.Amount,
+                EWT = viewModel.EWT,
+                CheckNumber = viewModel.CheckNumber,
+                CheckDate = viewModel.CheckDate,
+                DepositDate = viewModel.DepositDate,
+            };
+
+            return model;
+        }
+
+        public CreateCollectionViewModel CollectionModelToCreateCollectionVm(MMSICollection model)
+        {
+            var viewModel = new CreateCollectionViewModel
+            {
+                MMSICollectionId = model.MMSICollectionId,
+                MMSICollectionNumber = model.MMSICollectionNumber,
+                IsUndocumented = model.IsUndocumented,
+                Date = model.Date,
+                CustomerId = model.CustomerId,
+                Amount = model.Amount,
+                EWT = model.EWT,
+                CheckNumber = model.CheckNumber,
+                CheckDate = model.CheckDate,
+                DepositDate = model.DepositDate,
+            };
+
+            return viewModel;
         }
 
         [HttpPost]
@@ -209,92 +251,94 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = _dbContext.MMSICollections.Find(id);
 
+            var viewModel = CollectionModelToCreateCollectionVm(model);
+
             // default contents of billing field from previous create
-            model.ToCollectBillings = await _dbContext.MMSIBillings
+            viewModel.ToCollectBillings = await _dbContext.MMSIBillings
                 .Where(b => b.CollectionId == model.MMSICollectionId)
                 .Select(b => b.MMSIBillingId.ToString())
                 .ToListAsync(cancellationToken);
 
             // selection of customers
-            model.Customers = await _unitOfWork.Msap.GetMMSICustomersById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
 
             // get bills with same customer
-            model.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
+            viewModel.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
 
-            return View(model);
+            return View(viewModel);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Edit(MMSICollection model, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-
-                    var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
-
-                    #region -- Changes
-
-                    var changes = new List<string>();
-
-                    if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
-                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
-                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                    if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
-                    if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
-                    if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
-                    if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
-
-                    #endregion -- Changes
-
-                    #region -- Audit Trail
-
-                    var audit = new FilprideAuditTrail
-                    {
-                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                        Username = await GetUserNameAsync(),
-                        MachineName = Environment.MachineName,
-                        Activity = changes.Any()
-                            ? $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}"
-                            : $"No changes detected for collection #{currentModel.MMSICollectionId}",
-                        DocumentType = "Collection",
-                        Company = await GetCompanyClaimAsync()
-                    };
-
-                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    #endregion -- Audit Trail
-
-                    currentModel.Date = model.Date;
-                    currentModel.CustomerId = model.CustomerId;
-                    currentModel.CheckNumber = model.CheckNumber;
-                    currentModel.CheckDate = model.CheckDate;
-                    currentModel.DepositDate = model.DepositDate;
-                    currentModel.Amount = model.Amount;
-                    currentModel.EWT = model.EWT;
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Collection modified successfully";
-
-                    return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    TempData["error"] = "There was an error updating the collection.";
-
-                    return View(model);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                TempData["error"] = ex.Message;
-
-                return View(model);
-            }
-        }
+        // [HttpPost]
+        // public async Task<IActionResult> Edit(MMSICollection viewModel, CancellationToken cancellationToken = default)
+        // {
+        //     try
+        //     {
+        //         if (ModelState.IsValid)
+        //         {
+        //
+        //             var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
+        //
+        //             #region -- Changes
+        //
+        //             var changes = new List<string>();
+        //
+        //             if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
+        //             if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
+        //             if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+        //             if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
+        //             if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
+        //             if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
+        //             if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
+        //
+        //             #endregion -- Changes
+        //
+        //             #region -- Audit Trail
+        //
+        //             var audit = new FilprideAuditTrail
+        //             {
+        //                 Date = DateTimeHelper.GetCurrentPhilippineTime(),
+        //                 Username = await GetUserNameAsync(),
+        //                 MachineName = Environment.MachineName,
+        //                 Activity = changes.Any()
+        //                     ? $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}"
+        //                     : $"No changes detected for collection #{currentModel.MMSICollectionId}",
+        //                 DocumentType = "Collection",
+        //                 Company = await GetCompanyClaimAsync()
+        //             };
+        //
+        //             await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
+        //             await _dbContext.SaveChangesAsync(cancellationToken);
+        //
+        //             #endregion -- Audit Trail
+        //
+        //             currentModel.Date = model.Date;
+        //             currentModel.CustomerId = model.CustomerId;
+        //             currentModel.CheckNumber = model.CheckNumber;
+        //             currentModel.CheckDate = model.CheckDate;
+        //             currentModel.DepositDate = model.DepositDate;
+        //             currentModel.Amount = model.Amount;
+        //             currentModel.EWT = model.EWT;
+        //
+        //             await _dbContext.SaveChangesAsync(cancellationToken);
+        //             TempData["success"] = "Collection modified successfully";
+        //
+        //             return RedirectToAction(nameof(Index));
+        //         }
+        //         else
+        //         {
+        //             TempData["error"] = "There was an error updating the collection.";
+        //
+        //             return View(model);
+        //         }
+        //
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         TempData["error"] = ex.Message;
+        //
+        //         return View(model);
+        //     }
+        // }
 
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken = default)
         {
@@ -391,7 +435,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<List<SelectListItem>?> GetEditBillings(int? customerId, int collectionId, CancellationToken cancellationToken = default)
         {
             // bills uncollected but with the same customers
-            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
             // get the current model
             var model = await _dbContext.MMSICollections.FindAsync(collectionId, cancellationToken);
@@ -399,7 +443,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             // if the model WAS having previous customer, fetch it previous bills as well
             if (model?.CustomerId == customerId)
             {
-                list?.AddRange(await _unitOfWork.Msap.GetMMSICollectedBillsById(collectionId, cancellationToken));
+                list?.AddRange(await _unitOfWork.Collection.GetMMSICollectedBillsById(collectionId, cancellationToken));
             }
 
             return list;
@@ -408,7 +452,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<List<SelectListItem>?> GetUncollectedBillings(int? customerId, CancellationToken cancellationToken = default)
         {
             // bills uncollected by customer
-            var list = await _unitOfWork.Msap.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
+            var list = await _unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
             return list;
         }

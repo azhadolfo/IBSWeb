@@ -1,4 +1,4 @@
-@model MMSIDispatchTicket
+@model ServiceRequestViewModel
 
 @{
     ViewData["Title"] = "Create";
@@ -103,15 +103,6 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="form-group col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="form-floating col-6 my-2">
                         <input type="date" asp-for="DateLeft" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
                         <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start<span class="required text-danger">*</span></label>
@@ -203,7 +194,7 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-12 my-2">
-                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" maxlength="100" placeholder=" ">
                         <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>

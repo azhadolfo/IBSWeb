@@ -343,7 +343,7 @@
                     </div>
                 }
             
-                if (selectedCompany == "MMSI")
+                if (selectedCompany == "MMSI" && !User.IsInRole("PortCoordinator"))
                 {
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
