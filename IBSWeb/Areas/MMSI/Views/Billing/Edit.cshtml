@@ -148,7 +148,7 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-6">
-                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "" : "d-none")">
+                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "d-none" : "")">
 
                             <div class="col-6" style="height: 72px;">
                                 <div class="row">
@@ -156,13 +156,15 @@
                                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
                                         @if (string.IsNullOrEmpty(Model.PrincipalId.ToString()))
                                         {
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
+                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                                                 <option value="">Select Principal</option>
                                             </select>
                                         }
                                         else
                                         {
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                                                 <option value="">Select Principal</option>
                                             </select>
                                         }
@@ -172,7 +174,7 @@
                             </div>
 
                             <div class="form-check col-6 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
-                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
+                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "") disabled>
                                 <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox" style="font-size: 20px;">
                                     Use Principal
                                 </label>

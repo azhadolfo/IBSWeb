@@ -212,6 +212,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 ToBillDispatchTickets = viewModel.ToBillDispatchTickets,
             };
 
+            if (viewModel.MMSIBillingId != null)
+            {
+                model.MMSIBillingId = viewModel.MMSIBillingId ?? 0;
+
+                if (model.MMSIBillingId == 0)
+                {
+                    throw new NullReferenceException("MMSIBillingId cannot be zero.");
+                }
+            }
+
             return model;
         }
 
@@ -405,6 +415,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             // get select lists
             viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
 
+            viewModel.Terminals = await _unitOfWork.Billing.GetMMSITerminalsByPortId(viewModel.PortId, cancellationToken);
+
             // get billed by current billing select list
             var unbilledDT = await _unitOfWork.Billing.GetMMSIUnbilledTicketsById(cancellationToken);
 
@@ -424,6 +436,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
 
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersById(cancellationToken);
+
             if (model.CustomerPrincipal == null)
             {
                 ViewData["HasPrincipal"] = false;
@@ -437,40 +451,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(MMSIBilling model, IFormFile? file, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(CreateBillingViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
+                    var model = CreateBillingVmToBillingModel(viewModel);
+
                     // get previous version
                     var currentModel = await _db.MMSIBillings.FindAsync(model.MMSIBillingId, cancellationToken);
-
-                    // handle what to do if isUndoc value exists
-                    if(model.IsUndocumented != null)
-                    {
-                        // if new value is undoc:
-                        if (model.IsUndocumented)
-                        {
-                            // and previous value is doc
-                            if (!currentModel.IsUndocumented)
-                            {
-                                // replace with new generated
-                                currentModel.MMSIBillingNumber = await _unitOfWork.Billing.GenerateBillingNumber(cancellationToken);
-                            }
-                            else
-                            {
-                                // if was already undoc, maintain the old generated
-                                model.MMSIBillingNumber = currentModel.MMSIBillingNumber;
-                            }
-                        }
-                        // if new is documented
-                        if (!model.IsUndocumented)
-                        {
-                            // replace it with new regardless of past type
-                            currentModel.MMSIBillingNumber = model.MMSIBillingNumber;
-                        }
-                    }
 
                     // empty list of string
                     List<string> idsOfBilledTickets = null;
@@ -494,8 +484,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
                     if (currentModel.VesselId != model.VesselId) { changes.Add($"VesselId: {currentModel.VesselId} -> {model.VesselId}"); }
-                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-                    if (currentModel.PrincipalId != model.PrincipalId) { changes.Add($"PrincipalId: {currentModel.PrincipalId} -> {model.PrincipalId}"); }
                     if (currentModel.BilledTo != model.BilledTo) { changes.Add($"IsVatable: {currentModel.BilledTo} -> {model.BilledTo}"); }
                     if (!currentModel.ToBillDispatchTickets.OrderBy(x => x).SequenceEqual(model.ToBillDispatchTickets.OrderBy(x => x)))
                     { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", currentModel.ToBillDispatchTickets)} -> #{string.Join(", #", model.ToBillDispatchTickets)}"); }
@@ -526,8 +514,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.PortId = model.PortId;
                     currentModel.TerminalId = model.TerminalId;
                     currentModel.VesselId = model.VesselId;
-                    currentModel.CustomerId = model.CustomerId;
-                    currentModel.PrincipalId = model.PrincipalId;
                     currentModel.BilledTo = model.BilledTo;
                     currentModel.Status = "For Collection";
 

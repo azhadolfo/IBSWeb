@@ -11,6 +11,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default);
 
+        Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken = default);
+
         Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default);

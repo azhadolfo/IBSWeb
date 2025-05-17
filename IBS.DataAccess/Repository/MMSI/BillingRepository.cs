@@ -43,6 +43,23 @@ namespace IBS.DataAccess.Repository.MMSI
             return terminals;
         }
 
+        public async Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken)
+        {
+            var terminals = await _dbContext
+                .MMSITerminals
+                .Where(t => t.PortId == portId)
+                .OrderBy(t => t.TerminalName)
+                .ToListAsync(cancellationToken);
+
+            var terminalsList = terminals.Select(t => new SelectListItem
+            {
+                Value = t.TerminalId.ToString(),
+                Text = t.TerminalName
+            }).ToList();
+
+            return terminalsList;
+        }
+
         public async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
