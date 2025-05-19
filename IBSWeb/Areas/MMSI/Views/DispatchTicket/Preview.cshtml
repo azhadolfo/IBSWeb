@@ -162,7 +162,7 @@
         <div class="row">
             <div class="row col-12 justify-content-end mb-4">
                 <div class="text-center" style="width: 250px;">
-                    @if ((Model.Status != "Billed" && Model.Status != "Disapproved") 
+                    @if ((Model.Status != "Billed") 
                     || !string.IsNullOrEmpty(Model.ImageName))
                     {
                         <div class="dropdown align-content-center">
@@ -171,13 +171,20 @@
                                 
                                 @if (Model.Status == "For Billing")
                                 {
-                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Revoke Approval</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Tariff Pending"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
                                 }
                                 
                                 @if (Model.Status == "Tariff Pending")
                                 {
-                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
-                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
+                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
+                                }
+                                
+                                @if (Model.Status == "Disapproved")
+                                {
+                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Tariff Pending"</a></li>
                                 }
                                 
                                 @if (!string.IsNullOrEmpty(Model.ImageName))
@@ -253,7 +260,7 @@
                 var imageId = this.getAttribute('data-id');
 
                 Swal.fire({
-                    title: "Revoke tariff approval?",
+                    title: "Revoke tariff status?",
                     text: "This tariff will be editable again.",
                     showCancelButton: true,
                     confirmButtonText: "Yes",
