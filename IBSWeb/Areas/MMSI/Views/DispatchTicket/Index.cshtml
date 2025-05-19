@@ -64,7 +64,7 @@
                 <div class="btn-group mb-3" role="group" aria-label="Filter Options">
                     <button id="filterAll" class="btn btn-outline-primary active"> All</button>
                     <button id="filterForTariff" class="btn btn-outline-primary"> For Tariff</button>
-                    <button id="filterTariffPending" class="btn btn-outline-primary"> Tariff Pending</button>
+                    <button id="filterForApproval" class="btn btn-outline-primary"> For Approval</button>
                     <button id="filterDisapproved" class="btn btn-outline-primary"> Disapproved</button>
                     <button id="filterForBilling" class="btn btn-outline-primary"> For Billing</button>
                     <button id="filterBilled" class="btn btn-outline-primary"> Billed</button>
@@ -177,7 +177,7 @@
                             if (row.status === "For Tariff"){
                                 statusColor = `bg-info`
                             }
-                            if (row.status === "Tariff Pending"){
+                            if (row.status === "For Approval"){
                                 statusColor = `bg-warning`
                             }
                             if (row.status === "Disapproved") {
@@ -201,12 +201,12 @@
                         "render": function(data, type, row) {
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
                             
-                            if (row.status !== "For Tariff" && row.status !== "Tariff Pending" && row.status !== "Pending")
+                            if (row.status !== "For Tariff" && row.status !== "For Approval" && row.status !== "Pending")
                             {
                                 actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.dispatchTicketId}"><i class="bi bi-eye"></i> View</a>`;
                             }
                             
-                            if (row.status === "Tariff Pending") {
+                            if (row.status === "For Approval") {
                                 actions += `<div class="dropdown align-content-center">
                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                         <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
@@ -259,7 +259,7 @@
 
             $('#filterTariffPending').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                table.columns(10).search('Tariff Pending', true, true).draw();
+                table.columns(10).search('For Approval', true, true).draw();
             });
 
             $('#filterDisapproved').on('click', function() {

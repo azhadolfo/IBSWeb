@@ -171,11 +171,11 @@
                                 
                                 @if (Model.Status == "For Billing")
                                 {
-                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Tariff Pending"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "For Approval"</a></li>
                                     <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
                                 }
                                 
-                                @if (Model.Status == "Tariff Pending")
+                                @if (Model.Status == "For Approval")
                                 {
                                     <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
                                     <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
@@ -184,7 +184,7 @@
                                 @if (Model.Status == "Disapproved")
                                 {
                                     <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
-                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Tariff Pending"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "For Approval"</a></li>
                                 }
                                 
                                 @if (!string.IsNullOrEmpty(Model.ImageName))

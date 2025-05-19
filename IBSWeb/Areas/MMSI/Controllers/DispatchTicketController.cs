@@ -369,7 +369,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var currentModel = await _db.MMSIDispatchTickets.FindAsync(model.DispatchTicketId, cancellationToken);
 
-                currentModel.Status = "Tariff Pending";
+                currentModel.Status = "For Approval";
 
                 currentModel.TariffBy = user.UserName;
                 currentModel.DispatchChargeType = chargeType;
@@ -482,7 +482,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 currentModel.TariffEditedBy = user.UserName;
                 currentModel.TariffEditedDate = DateTime.Now;
-                currentModel.Status = "Tariff Pending";
+                currentModel.Status = "For Approval";
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.BAFChargeType = chargeType2;
                 currentModel.DispatchRate = model.DispatchRate;
@@ -814,7 +814,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
-                model.Status = "Tariff Pending";
+                model.Status = "For Approval";
 
                 #region -- Audit Trail
 
@@ -1006,9 +1006,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             queried = queried.Where(dt =>
                                 dt.Status == "For Tariff");
                             break;
-                        case "TariffPending":
+                        case "ForApproval":
                             queried = queried.Where(dt =>
-                                dt.Status == "Tariff Pending");
+                                dt.Status == "For Approval");
                             break;
                         case "ForBilling":
                             queried = queried.Where(dt =>
