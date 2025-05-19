@@ -172,7 +172,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(b => new SelectListItem
                 {
                     Value = b.MMSIBillingId.ToString(),
-                    Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
+                    Text = $"{b.MMSIBillingNumber}"
                 }).ToListAsync(cancellationToken);
 
             return billingsList;
@@ -190,7 +190,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var billingsList = billings.Select(b => new SelectListItem
             {
                 Value = b.MMSIBillingId.ToString(),
-                Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
+                Text = $"{b.MMSIBillingNumber}"
             }).ToList();
 
             return billingsList;
