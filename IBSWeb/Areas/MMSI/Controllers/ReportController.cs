@@ -518,7 +518,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var companyOwner in tugboatOwners)
                     {
                         writingCol++;
-                        if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner.TugboatOwnerName == companyOwner.TugboatOwnerName)
+                        if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner?.TugboatOwnerName == companyOwner.TugboatOwnerName)
                         {
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
