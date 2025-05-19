@@ -423,6 +423,40 @@
                     }
                 });
             }
+            
+            function checkDispatchAndBafValues (event) {
+
+                event.preventDefault();
+                
+                let dispatchRateVal = $('input[name="DispatchRate"]').val();
+                let bafRateVal = $('input[name="BAFRate"]').val();
+                let dispatchRate = parseNumber(dispatchRateVal);
+                let bafRate = parseNumber(bafRateVal);
+                console.log("testing check values");
+
+                const form = document.getElementById("myForm");
+
+                // checks if form is valid
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // checks if values are both zero
+                if ((dispatchRate === 0 || dispatchRate === "" || dispatchRate == null) &&
+                    (bafRate === 0 || bafRate === "" || bafRate == null)) {
+                    console.log("error");
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Dispatch rate and BAF rate cannot be both zero"
+                    });
+                }
+                else{
+                    console.log("else");
+                    document.getElementById('myForm').requestSubmit();
+                }
+            }
 
             $('input[name="DispatchRate"]').on('input', function ()
             { ValueChange(); });
@@ -438,6 +472,8 @@
 
             $("#CustomerId").on('change', function ()
             { CustomerChange(); });
+            
+            $("#submitButton").on("click", checkDispatchAndBafValues);
 
             $(document).on('change', 'input[name="chargeType"]', ValueChange);
             $(document).on('change', 'input[name="chargeType2"]', ValueChange);
