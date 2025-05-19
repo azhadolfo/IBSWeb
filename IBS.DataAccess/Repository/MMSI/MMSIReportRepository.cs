@@ -26,7 +26,9 @@ namespace IBS.DataAccess.Repository.MMSI
             var dispatchTickets = await _dbContext.MMSIDispatchTickets
                 .Where(dt => dt.Date >= dateFrom
                              && dt.Date <= dateTo
-                             && dt.Status == "Billed")
+                             && dt.Status != "For Posting"
+                             && dt.Status != "Cancelled"
+                             && dt.Status != "Disapproved")
                 .Include(dt => dt.Customer)
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Tugboat)
