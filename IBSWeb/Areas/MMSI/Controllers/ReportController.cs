@@ -456,7 +456,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
                     worksheet.Cells[row, 13].Value = sales.TotalHours;
-                    worksheet.Cells[row, 14]. Value = sales.TotalNetRevenue;
+                    worksheet.Cells[row, 14].Value = sales.TotalBilling;
                     worksheet.Cells[row, 15].Value = sales.TotalBilling;
                     using (var range = worksheet.Cells[row, 13, row, 15])
                     {
@@ -464,15 +464,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
-                    worksheet.Cells[row, 27].Value = sales.TotalBilling; // BALANCE to change operation
+                    // BALANCE
+                    worksheet.Cells[row, 27].Value = sales.TotalBilling;
                     worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                    worksheet.Cells[row, 28].Value = sales.ApOtherTugs; // AP OTHER TUGS
+                    // AP OTHER TUGS
+                    worksheet.Cells[row, 28].Value = sales.ApOtherTugs;
                     worksheet.Cells[row, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                    worksheet.Cells[row, 29].Value = sales.TotalBilling; // NET SALES to change operation
+                    // NET SALES
+                    worksheet.Cells[row, 29].Value = sales.TotalBilling - sales.ApOtherTugs;
                     worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
@@ -488,7 +491,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         writingCol++;
                         if (sales.Tugboat?.TugboatName == tugboat.TugboatName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
+                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling - sales.ApOtherTugs;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             worksheet.Column(writingCol).Width = 10;
