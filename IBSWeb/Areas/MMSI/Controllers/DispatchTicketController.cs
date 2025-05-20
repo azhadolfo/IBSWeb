@@ -1054,9 +1054,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 {
                                     queried = queried.Where(s => s.Status == "For Tariff");
                                 }
-                                if (searchValue == "tariff pending")
+                                if (searchValue == "for approval")
                                 {
-                                    queried = queried.Where(s => s.Status == "Tariff Pending");
+                                    queried = queried.Where(s => s.Status == "For Approval");
                                 }
                                 if (searchValue == "disapproved")
                                 {
