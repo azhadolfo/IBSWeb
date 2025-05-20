@@ -120,24 +120,24 @@
                                 </div>
                                 <div class="row">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchRate" type="number" class="form-control border-0 shadow" id="DispatchRate" placeholder=" " min="0" required>
+                                        <input asp-for="DispatchRate" step="0.01" type="number" class="form-control border-0 shadow" id="DispatchRate" placeholder=" " min="0" required>
                                         <label asp-for="DispatchRate" for="DispatchRate" class="ms-2">Dispatch Rate<span class="required text-danger">*</span></label>
                                         <span asp-validation-for="DispatchRate" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchDiscount" value="@Model.DispatchDiscount" type="number" class="form-control border-0 shadow" id="DispatchDiscount" placeholder=" " min="0" max="100" required>
+                                        <input asp-for="DispatchDiscount" step="0.01" value="@Model.DispatchDiscount" type="number" class="form-control border-0 shadow" id="DispatchDiscount" placeholder=" " min="0" max="100" required>
                                         <label asp-for="DispatchDiscount" for="DispatchDiscount" class="ms-2">Dispatch Discount(%)</label>
                                         <span asp-validation-for="DispatchDiscount" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchBillingAmount" class="form-control border-0 shadow" placeholder="" id="DispatchBillingAmount" readonly/>
+                                        <input asp-for="DispatchBillingAmount" class="form-control border-0 shadow" id="DispatchBillingAmount" readonly />
                                         <label asp-for="DispatchBillingAmount" for="DispatchBillingAmount" class="ms-2">Dispatch Billing</label>
                                         <span asp-validation-for="DispatchBillingAmount" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="DispatchNetRevenue" class="form-control border-0 shadow" placeholder="" id="DispatchNetRevenue" readonly/>
+                                        <input asp-for="DispatchNetRevenue" class="form-control border-0 shadow" id="DispatchNetRevenue" readonly/>
                                         <label asp-for="DispatchNetRevenue" for="DispatchNetRevenue" class="ms-2">Dispatch Net Revenue</label>
                                         <span asp-validation-for="DispatchNetRevenue" class="text-danger"></span>
                                     </div>
@@ -174,24 +174,24 @@
                                 </div>
                                 <div class="row">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" id="BAFRate" placeholder=" " min="0" required>
+                                        <input asp-for="BAFRate" step="0.01" type="number" class="form-control border-0 shadow" id="BAFRate" placeholder=" " min="0" required>
                                         <label asp-for="BAFRate" for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
                                         <span asp-validation-for="BAFRate" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFDiscount" value="@Model.BAFDiscount" type="number" class="form-control border-0 shadow" id="BAFDiscount" placeholder=" " min="0" max="100" required>
+                                        <input asp-for="BAFDiscount" step="0.01" value="@Model.BAFDiscount" type="number" class="form-control border-0 shadow" id="BAFDiscount" placeholder=" " min="0" max="100" required>
                                         <label asp-for="BAFDiscount" for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
                                         <span asp-validation-for="BAFDiscount" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFBillingAmount" class="form-control border-0 shadow" placeholder="" id="BAFBillingAmount" readonly/>
+                                        <input asp-for="BAFBillingAmount" class="form-control border-0 shadow" id="BAFBillingAmount" readonly/>
                                         <label asp-for="BAFBillingAmount" for="BAFBillingAmount" class="ms-2">BAF Billing</label>
                                         <span asp-validation-for="BAFBillingAmount" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFNetRevenue" class="form-control border-0 shadow" placeholder="" id="BAFNetRevenue" readonly/>
+                                        <input asp-for="BAFNetRevenue" class="form-control border-0 shadow" id="BAFNetRevenue" readonly/>
                                         <label asp-for="BAFNetRevenue" for="BAFNetRevenue" class="ms-2">BAF Net Revenue</label>
                                         <span asp-validation-for="BAFNetRevenue" class="text-danger"></span>
                                     </div>
@@ -438,8 +438,29 @@
                         text: "Dispatch rate and BAF rate cannot be both zero"
                     });
                 }
-                else{
-                    console.log("else");
+                else
+                {
+                    let dispatchBillingAmountInput = $('input[name="DispatchBillingAmount"]');
+                    let bafBillingAmountInput = $('input[name="BAFBillingAmount"]');
+                    let dispatchNetRevenueInput = $('input[name="DispatchNetRevenue"]');
+                    let bafNetRevenueInput = $('input[name="BAFNetRevenue"]');
+                    
+                    let parsedDispatchBillingAmount = parseNumber(dispatchBillingAmountInput.val());
+                    let parsedBAFBillingAmount = parseNumber(bafBillingAmountInput.val());
+                    let parsedDispatchNetRevenue = parseNumber(dispatchNetRevenueInput.val());
+                    let parsedBAFNetRevenue = parseNumber(bafNetRevenueInput.val());
+
+                    dispatchBillingAmountInput.val(parsedDispatchBillingAmount);
+                    bafBillingAmountInput.val(parsedBAFBillingAmount);
+                    dispatchNetRevenueInput.val(parsedDispatchNetRevenue);
+                    bafNetRevenueInput.val(parsedBAFNetRevenue);
+                    
+                    let totalBilling = parsedDispatchBillingAmount + parsedBAFBillingAmount;
+                    $('input[name="TotalBilling"]').val(totalBilling);
+
+                    let totalRevenue = parsedDispatchNetRevenue + parsedBAFNetRevenue;
+                    $('input[name="TotalNetRevenue"]').val(totalRevenue);
+                    
                     document.getElementById('myForm').requestSubmit();
                 }
             }
