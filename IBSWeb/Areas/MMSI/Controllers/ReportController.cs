@@ -430,6 +430,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 foreach (var sales in salesReport)
                 {
+                    decimal totalBillingToUse = 0;
+                    if (sales.BillingId == null)
+                    {
+                        totalBillingToUse = sales.TotalNetRevenue;
+                    }
+                    else
+                    {
+                        totalBillingToUse = sales.TotalBilling;
+                    }
+
                     worksheet.Cells[row, 1].Value = sales.Date;
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MM/dd/yyyy";
 
@@ -456,8 +466,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
                     worksheet.Cells[row, 13].Value = sales.TotalHours;
-                    worksheet.Cells[row, 14].Value = sales.TotalBilling;
-                    worksheet.Cells[row, 15].Value = sales.TotalBilling;
+                    worksheet.Cells[row, 14].Value = totalBillingToUse;
+                    worksheet.Cells[row, 15].Value = totalBillingToUse;
                     using (var range = worksheet.Cells[row, 13, row, 15])
                     {
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -465,7 +475,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
 
                     // BALANCE
-                    worksheet.Cells[row, 27].Value = sales.TotalBilling;
+                    worksheet.Cells[row, 27].Value = totalBillingToUse;
                     worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
@@ -475,7 +485,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     // NET SALES
-                    worksheet.Cells[row, 29].Value = sales.TotalBilling - sales.ApOtherTugs;
+                    worksheet.Cells[row, 29].Value = totalBillingToUse - sales.ApOtherTugs;
                     worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
@@ -491,7 +501,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         writingCol++;
                         if (sales.Tugboat?.TugboatName == tugboat.TugboatName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling - sales.ApOtherTugs;
+                            worksheet.Cells[row, writingCol].Value = totalBillingToUse;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             worksheet.Column(writingCol).Width = 10;
@@ -501,7 +511,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     writingCol++;
                     if (!sales.Tugboat.IsCompanyOwned)
                     {
-                        worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
+                        worksheet.Cells[row, writingCol].Value = totalBillingToUse - sales.ApOtherTugs;
                         worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                         worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         worksheet.Column(writingCol).Width = 10;
@@ -525,7 +535,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         writingCol++;
                         if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner?.TugboatOwnerName == companyOwner.TugboatOwnerName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
+                            worksheet.Cells[row, writingCol].Value = totalBillingToUse;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             worksheet.Column(writingCol).Width = 10;
@@ -541,7 +551,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         writingCol++;
                         if (sales.Customer?.CustomerName == customer.CustomerName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
+                            worksheet.Cells[row, writingCol].Value = totalBillingToUse;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             worksheet.Column(writingCol).Width = 10;
