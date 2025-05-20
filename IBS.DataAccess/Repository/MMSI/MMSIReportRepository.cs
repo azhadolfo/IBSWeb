@@ -40,15 +40,21 @@ namespace IBS.DataAccess.Repository.MMSI
 
             foreach (var dispatchTicket in dispatchTickets)
             {
-                dispatchTicket.Billing = await _dbContext.MMSIBillings
-                    .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
-                    .Include(b => b.Customer)
-                    .Include(b => b.Principal)
-                    .FirstOrDefaultAsync(cancellationToken);
+                if (dispatchTicket.BillingId != null)
+                {
+                    dispatchTicket.Billing = await _dbContext.MMSIBillings
+                        .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
+                        .Include(b => b.Customer)
+                        .Include(b => b.Principal)
+                        .FirstOrDefaultAsync(cancellationToken);
 
-                dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
-                    .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                    if (dispatchTicket.Billing?.CollectionId != null)
+                    {
+                        dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
+                            .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
+                            .FirstOrDefaultAsync(cancellationToken);
+                    }
+                }
             }
 
             return dispatchTickets;

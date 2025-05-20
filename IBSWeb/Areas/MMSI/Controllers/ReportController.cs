@@ -439,19 +439,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 3].Value = $"{sales.Billing?.MMSIBillingNumber}";
                     worksheet.Cells[row, 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                    worksheet.Cells[row, 4].Value = $"{sales.Customer.CustomerName}";
-                    worksheet.Cells[row, 5].Value = $"{sales.Vessel.VesselName}";
-                    worksheet.Cells[row, 6].Value = $"{sales.Vessel.VesselType}";
-                    worksheet.Cells[row, 7].Value = $"{sales.Tugboat.TugboatName}";
+                    worksheet.Cells[row, 4].Value = $"{sales.Customer?.CustomerName}";
+                    worksheet.Cells[row, 5].Value = $"{sales.Vessel?.VesselName}";
+                    worksheet.Cells[row, 6].Value = $"{sales.Vessel?.VesselType}";
+                    worksheet.Cells[row, 7].Value = $"{sales.Tugboat?.TugboatName}";
 
-                    worksheet.Cells[row, 8].Value = $"{sales.Terminal.Port.PortName}";
-                    if (sales.Vessel.VesselType == "Foreign")
+                    worksheet.Cells[row, 8].Value = $"{sales.Terminal?.Port?.PortName}";
+                    if (sales.Vessel?.VesselType == "Foreign")
                     {
                         worksheet.Cells[row, 8].Style.Font.Color.SetColor(Color.Red);
                     }
 
-                    worksheet.Cells[row, 9].Value = $"{sales.Terminal.TerminalName}";
-                    worksheet.Cells[row, 10].Value = $"{sales.Service.ServiceName}";
+                    worksheet.Cells[row, 9].Value = $"{sales.Terminal?.TerminalName}";
+                    worksheet.Cells[row, 10].Value = $"{sales.Service?.ServiceName}";
                     worksheet.Cells[row, 11].Value = $"{sales.DateLeft:MM/dd/yyyy} {sales.TimeLeft:HH:mm}";
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
@@ -486,7 +486,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var tugboat in mmsiTugboats)
                     {
                         writingCol++;
-                        if (sales.Tugboat.TugboatName == tugboat.TugboatName)
+                        if (sales.Tugboat?.TugboatName == tugboat.TugboatName)
                         {
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -536,7 +536,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var customer in mmsiCustomers)
                     {
                         writingCol++;
-                        if (sales.Customer.CustomerName == customer.CustomerName)
+                        if (sales.Customer?.CustomerName == customer.CustomerName)
                         {
                             worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
@@ -558,7 +558,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.Service.ServiceName == "ASSIST")
+                                sales.Service?.ServiceName == "ASSIST")
                             {
                                 worksheet.Cells[row, writingCol].Value = 1;
                             }
@@ -573,7 +573,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         writingCol++;
                         if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                            sales.Service.ServiceName == "TENDING")
+                            sales.Service?.ServiceName == "TENDING")
                         {
                             worksheet.Cells[row, writingCol].Value = 1;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -582,7 +582,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // other tugs(not company owned)
                     writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned && sales.Service.ServiceName == "TENDING")
+                    if (!sales.Tugboat.IsCompanyOwned && sales.Service?.ServiceName == "TENDING")
                     {
                         worksheet.Cells[row, writingCol].Value = "1";
                     }
@@ -595,8 +595,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.Service.ServiceName == "TENDING" &&
-                                sales.Vessel.VesselType == category)
+                                sales.Service?.ServiceName == "TENDING" &&
+                                sales.Vessel?.VesselType == category)
                             {
                                 worksheet.Cells[row, writingCol].Value = sales.TotalHours;
                                 worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -608,9 +608,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     dynamicEndCol = writingCol;
 
                     writingCol += 2;
-                    worksheet.Cells[row, writingCol].Value = sales.Billing.IsUndocumented ? "DOC" : "UNDOC";
+                    worksheet.Cells[row, writingCol].Value = sales.Billing != null ? (sales.Billing.IsUndocumented ? "UNDOC" : "DOC") : null;
                     writingCol++;
-                    worksheet.Cells[row, writingCol].Value = !string.IsNullOrEmpty(sales.Billing.PrincipalId.ToString()) ? $"{sales.Billing.Principal.PrincipalName}" : "";
+                    worksheet.Cells[row, writingCol].Value = !string.IsNullOrEmpty(sales.Billing?.PrincipalId.ToString()) ? $"{sales.Billing?.Principal?.PrincipalName}" : "";
 
                     // next record
                     row++;
