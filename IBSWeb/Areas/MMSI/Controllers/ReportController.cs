@@ -468,7 +468,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                    //worksheet.Cells[row, 28].Value = $"{sales.TotalBilling}"; // AP OTHER TUGS
+                    worksheet.Cells[row, 28].Value = sales.ApOtherTugs; // AP OTHER TUGS
+                    worksheet.Cells[row, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     worksheet.Cells[row, 29].Value = sales.TotalBilling; // NET SALES to change operation
                     worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
