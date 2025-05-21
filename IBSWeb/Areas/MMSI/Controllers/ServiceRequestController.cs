@@ -182,7 +182,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
                     DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                     TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = (decimal)timeDifference.TotalHours;
+                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
                     // find the nearest half hour if the customer is phil-ceb
                     if (model.Customer?.CustomerName == "PHIL-CEB MARINE SERVICES INC.")
@@ -335,7 +335,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
                     DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                     TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
-                    var totalHours = (decimal)timeDifference.TotalHours;
+                    var totalHours = Math.Round((decimal)timeDifference.TotalHours, 2);
 
                     // find the nearest half hour if the new customer is phil-ceb
                     model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
