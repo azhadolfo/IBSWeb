@@ -842,7 +842,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var principalsList = principals.Select(t => new SelectListItem
             {
                 Value = t.PrincipalId.ToString(),
-                Text = t.PrincipalNumber + " " + t.PrincipalName
+                Text = t.PrincipalName
             }).ToList();
 
             return principalsList;
