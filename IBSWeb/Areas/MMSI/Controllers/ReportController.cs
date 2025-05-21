@@ -423,6 +423,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var dynamicStartCol = 0;
                 var dynamicEndCol = 0;
+                var colOfSumOfAr = 0;
 
                 // contents starts here
                 var row = 7;
@@ -587,6 +588,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // write sum of AR
                     writingCol++;
+                    colOfSumOfAr = writingCol;
 
                     if (sumOfAr != 0)
                     {
@@ -727,7 +729,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(12).Width = 17;
                 worksheet.Column(13).Width = 7;
                 worksheet.Column(14).Width = 13;
-                worksheet.Column(15).Width = 13;
+                worksheet.Column(15).Width = 14;
                 worksheet.Column(16).Width = 12;
                 worksheet.Column(17).Width = 12;
                 worksheet.Column(18).Width = 12;
@@ -739,9 +741,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(24).Width = 12;
                 worksheet.Column(25).Width = 12;
                 worksheet.Column(26).Width = 12;
-                worksheet.Column(27).Width = 10;
+                worksheet.Column(27).Width = 14;
                 worksheet.Column(28).Width = 9;
                 worksheet.Column(29).Width = 14;
+                worksheet.Column(colOfSumOfAr).Width = 13;
 
                 var excelBytes = package.GetAsByteArray();
 
