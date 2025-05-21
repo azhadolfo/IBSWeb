@@ -246,11 +246,14 @@
                 </table>
                 
                 <div class="row py-3 justify-content-end d-flex">
-                    <div class="col-3">
-                        <label>Total Dispatch Amount: ₱<label id="DispatchAmountTotal"></label></label>
+                    <div class="col-2">
+                        <label>Total Dispatch: ₱<label id="DispatchAmountTotal"></label></label>
                     </div>
                     <div class="col-2">
-                        <label>Total BAF Amount: ₱<label id="BAFAmountTotal"></label></label>
+                        <label>Total BAF: ₱<label id="BAFAmountTotal"></label></label>
+                    </div>
+                    <div class="col-2">
+                        <label>Total Amount: ₱<label id="OverallTotal"></label></label>
                     </div>
                 </div>
 
@@ -510,8 +513,10 @@
                     `);
                 });
 
-                $("#DispatchAmountTotal").text(totalDispatchAmount.toFixed(2));
-                $("#BAFAmountTotal").text(totalBAFAmount.toFixed(2));
+                let overallAmount = totalDispatchAmount + totalBAFAmount;
+                $("#DispatchAmountTotal").text(formatNumber(totalDispatchAmount));
+                $("#BAFAmountTotal").text(formatNumber(totalBAFAmount));
+                $("#OverallTotal").text(formatNumber(overallAmount));
 
                 table = initializeDataTable('#dataTable');
             }
