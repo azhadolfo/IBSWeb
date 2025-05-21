@@ -174,12 +174,12 @@
                                 </div>
                                 <div class="row">
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFRate" type="number" class="form-control border-0 shadow" placeholder=" " min="0" required>
+                                        <input asp-for="BAFRate" type="number" step="0.01" class="form-control border-0 shadow" placeholder=" " min="0" required>
                                         <label asp-for="BAFRate" class="ms-2">BAF Rate<span class="required text-danger">*</span></label>
                                         <span asp-validation-for="BAFRate" class="text-danger"></span>
                                     </div>
                                     <div class="form-floating col-6 mb-3">
-                                        <input asp-for="BAFDiscount" value="0" type="number" class="form-control border-0 shadow" placeholder=" " min="0" max="100" required>
+                                        <input asp-for="BAFDiscount" value="0" step="0.01" type="number" class="form-control border-0 shadow" placeholder=" " min="0" max="100" required>
                                         <label asp-for="BAFDiscount" class="ms-2">BAF Discount(%)</label>
                                         <span asp-validation-for="BAFDiscount" class="text-danger"></span>
                                     </div>
