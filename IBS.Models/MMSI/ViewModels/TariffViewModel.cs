@@ -11,17 +11,17 @@ namespace IBS.Models.MMSI.ViewModels
 
         public int? CustomerId { get; set; }
 
-        public decimal DispatchRate { get; set; }
+        public decimal? DispatchRate { get; set; }
 
-        public decimal DispatchDiscount { get; set; }
+        public decimal? DispatchDiscount { get; set; }
 
         public decimal DispatchBillingAmount { get; set; }
 
         public decimal DispatchNetRevenue { get; set; }
 
-        public decimal BAFRate { get; set; }
+        public decimal? BAFRate { get; set; }
 
-        public decimal BAFDiscount { get; set; }
+        public decimal? BAFDiscount { get; set; }
 
         public decimal BAFBillingAmount { get; set; }
 
