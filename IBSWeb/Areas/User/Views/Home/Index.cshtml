@@ -349,7 +349,7 @@
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
                         <div class="row g-4">
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "ServiceRequest", new { area = "MMSI", filterType = "ForPosting" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -376,7 +376,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForTariff" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -403,7 +403,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForApproval" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -430,7 +430,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForBilling" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -457,7 +457,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "Billing", new { area = "MMSI", filterType = "ForCollection" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
