@@ -11,7 +11,7 @@
     ViewData["Title"] = "Print Check Voucher";
     int supplierId = Model.Header?.SupplierId == null ? Model.Supplier!.SupplierId : 0;
         
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

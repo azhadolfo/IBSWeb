@@ -133,19 +133,15 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(int portId, CancellationToken cancellationToken = default)
         {
-            if (portId != null)
-            {
-                List<SelectListItem> terminals = await _dbContext.MMSITerminals
-                    .Where(t => t.PortId == portId)
-                    .OrderBy(s => s.TerminalNumber).Select(s => new SelectListItem
-                    {
-                        Value = s.TerminalId.ToString(),
-                        Text = s.TerminalNumber + " " + s.TerminalName
-                    }).ToListAsync(cancellationToken);
+            List<SelectListItem> terminals = await _dbContext.MMSITerminals
+                .Where(t => t.PortId == portId)
+                .OrderBy(s => s.TerminalNumber).Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalNumber + " " + s.TerminalName
+                }).ToListAsync(cancellationToken);
 
-                return terminals;
-            }
-            else return null;
+            return terminals;
         }
 
         public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(CancellationToken cancellationToken = default)
@@ -173,7 +169,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.Date}"
+                Text = $"{b.DispatchNumber} - {b.Customer!.CustomerName}, {b.Date}"
             }).ToList();
 
             return ticketsList;
@@ -199,7 +195,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(s => new SelectListItem
                 {
                     Value = s.MMSIBillingId.ToString(),
-                    Text = $"{s.MMSIBillingNumber} - {s.Customer.CustomerName}, {s.Date}"
+                    Text = $"{s.MMSIBillingNumber} - {s.Customer!.CustomerName}, {s.Date}"
                 }).ToListAsync(cancellationToken);
 
             return billingsList;
@@ -212,7 +208,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(b => new SelectListItem
                 {
                     Value = b.MMSIBillingId.ToString(),
-                    Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
+                    Text = $"{b.MMSIBillingNumber} - {b.Customer!.CustomerName}, {b.Date}"
                 }).ToListAsync(cancellationToken);
 
             return billingsList;
@@ -230,7 +226,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var billingsList = billings.Select(b => new SelectListItem
             {
                 Value = b.MMSIBillingId.ToString(),
-                Text = $"{b.MMSIBillingNumber} - {b.Customer.CustomerName}, {b.Date}"
+                Text = $"{b.MMSIBillingNumber} - {b.Customer!.CustomerName}, {b.Date}"
             }).ToList();
 
             return billingsList;
@@ -320,7 +316,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
         }
 
-        public async Task<MMSIBilling> ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
+        public MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
         {
             // Splitting the address for the view
             string[]? words = null;
@@ -335,7 +331,7 @@ namespace IBS.DataAccess.Repository.MMSI
             List<string> resultStrings = new List<string>();
             string currentString = "";
 
-            foreach (string word in words)
+            foreach (string word in words!)
             {
                 if (currentString.Length + word.Length + (currentString.Length > 0 ? 1 : 0) > 40)
                 {
@@ -383,7 +379,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.Terminal)
-                .ThenInclude(t => t.Port)
+                .ThenInclude(t => t!.Port)
                 .Include(dt => dt.Service)
                 .OrderBy(dt => dt.Date)
                 .ToListAsync(cancellationToken);
@@ -391,12 +387,12 @@ namespace IBS.DataAccess.Repository.MMSI
             foreach (var dispatchTicket in dispatchTickets)
             {
                 dispatchTicket.Billing = await _dbContext.MMSIBillings
-                    .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
+                    .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId!))
                     .Include(b => b.Customer)
                     .Include(b => b.Principal)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
+                dispatchTicket.Billing!.Collection = await _dbContext.MMSICollections
                     .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
                     .FirstOrDefaultAsync(cancellationToken);
             }

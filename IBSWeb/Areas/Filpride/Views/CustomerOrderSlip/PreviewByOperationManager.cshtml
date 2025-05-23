@@ -8,7 +8,7 @@
 @{
     ViewData["Title"] = "COS - Ops Manager Approval";
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

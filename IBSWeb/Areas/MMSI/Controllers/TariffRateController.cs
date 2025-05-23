@@ -28,7 +28,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var tariffRates = await _dbContext.MMSITariffRates
                 .Include(t => t.Customer)
-                .Include(t => t.Terminal).ThenInclude(t => t.Port)
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
                 .Include(t => t.Service)
                 .ToListAsync(cancellationToken);
 
@@ -108,8 +108,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
             var model = await _dbContext.MMSITariffRates
-                .Include(t => t.Terminal).ThenInclude(t => t.Port)
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
                 .FirstOrDefaultAsync(t => t.ServiceId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             model = await GetSelectLists(model, cancellationToken);
 
             return View(model);
@@ -119,6 +125,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
             var currentModel = await _dbContext.MMSITariffRates.FindAsync(model.TariffRateId, cancellationToken);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
             currentModel.AsOfDate = model.AsOfDate;
             currentModel.CustomerId = model.CustomerId;
@@ -163,8 +174,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Where(t => t.TerminalId == model.TerminalId)
                     .Include(t => t.Port)
                     .FirstOrDefaultAsync(cancellationToken);
+
                 model.Terminal = terminal;
-                model.Terminals = await _unitOfWork.TariffTable.GetMMSITerminalsById(terminal.PortId, cancellationToken);
+                model.Terminals = await _unitOfWork.TariffTable.GetMMSITerminalsById(terminal!.PortId, cancellationToken);
             }
 
             return model;

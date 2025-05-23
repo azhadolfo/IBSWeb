@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _userAccessService = userAccessService;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+        public IActionResult Index()
         {
             return View();
         }
@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
-            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User), ProcedureEnum.CreateCollection, cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateCollection, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var model = CreateCollectionVmToCollectionModel(viewModel);
 
                 var dateNow = DateTime.Now;
-                model.CreatedBy = await GetUserNameAsync();
+                model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = dateNow;
                 model.Status = "Create";
 
@@ -98,6 +98,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Where(c => c.CreatedDate == dateNow)
                     .FirstOrDefaultAsync(cancellationToken);
 
+                if (refetchModel == null)
+                {
+                    return BadRequest();
+                }
+
                 int id = refetchModel.MMSICollectionId;
 
 
@@ -106,11 +111,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var audit = new FilprideAuditTrail
                 {
                     Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Username = await GetUserNameAsync(),
+                    Username = await GetUserNameAsync() ??  throw new InvalidOperationException(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", viewModel.ToCollectBillings)}",
+                    Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", viewModel.ToCollectBillings!)}",
                     DocumentType = "Collection",
-                    Company = await GetCompanyClaimAsync()
+                    Company = await GetCompanyClaimAsync() ??  throw new InvalidOperationException()
                 };
 
                 await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
@@ -119,11 +124,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #endregion -- Audit Trail
 
                 //
-                foreach(var collectBills in viewModel.ToCollectBillings)
+                foreach(var collectBills in viewModel.ToCollectBillings!)
                 {
                     // find the billings that was collected and mark them as collected
                     var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
-                    billingChosen.Status = "Collected";
+                    billingChosen!.Status = "Collected";
                     billingChosen.CollectionId = refetchModel.MMSICollectionId;
                     await _dbContext.SaveChangesAsync(cancellationToken);
                 }
@@ -250,6 +255,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
             var model = _dbContext.MMSICollections.Find(id);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             var viewModel = CollectionModelToCreateCollectionVm(model);
 
@@ -409,27 +419,32 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     return Json(customer.VatType == SD.VatType_Vatable);
                 }
-                else
-                {
-                    throw new NullReferenceException("Customer not found.");
-                }
+
+                throw new NullReferenceException("Customer not found.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { success = false, message = "Customer not found" });
             }
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
-            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private async Task<string> GetUserNameAsync()
+        private async Task<string?> GetUserNameAsync()
         {
             var user = await _userManager.GetUserAsync(User);
-            return user.UserName;
+            return user?.UserName;
         }
 
         public async Task<List<SelectListItem>?> GetEditBillings(int? customerId, int collectionId, CancellationToken cancellationToken = default)

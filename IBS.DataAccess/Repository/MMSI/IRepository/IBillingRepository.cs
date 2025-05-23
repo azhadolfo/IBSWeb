@@ -29,6 +29,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default);
 
-        Task<MMSIBilling> ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
+        MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
     }
 }

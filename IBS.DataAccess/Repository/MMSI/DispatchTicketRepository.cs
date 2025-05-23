@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -123,10 +122,7 @@ namespace IBS.DataAccess.Repository.MMSI
             model.Tugboats = await GetMMSITugboatsById(cancellationToken);
             model.TugMasters = await GetMMSITugMastersById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            if (model.TerminalId != null)
-            {
-                model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
-            }
+            model.Terminals = await GetMMSITerminalsById(model, cancellationToken);
 
             return model;
         }

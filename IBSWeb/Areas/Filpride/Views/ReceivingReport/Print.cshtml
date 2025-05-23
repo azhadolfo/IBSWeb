@@ -9,7 +9,7 @@
 @{
     ViewData["Title"] = "Print Receiving Report";
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

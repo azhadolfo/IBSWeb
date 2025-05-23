@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -65,20 +66,25 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSIVessels.Where(i => i.VesselId == id).FirstOrDefault();
+                var model = await _db.MMSIVessels.FirstOrDefaultAsync(i => i.VesselId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSIVessels.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -87,7 +93,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSIVessels.Where(a => a.VesselId == id).FirstOrDefault();
+            var model = await _db.MMSIVessels.FirstOrDefaultAsync(a => a.VesselId == id, cancellationToken);
 
             return View(model);
         }
@@ -97,10 +103,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var currentModel = await _db.MMSIVessels.FindAsync(model.VesselId);
 
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
+
             currentModel.VesselNumber = model.VesselNumber;
             currentModel.VesselName = model.VesselName;
             currentModel.VesselType = model.VesselType;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
             TempData["success"] = "Edited successfully";
 

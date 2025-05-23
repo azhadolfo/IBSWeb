@@ -9,7 +9,7 @@
 @{
     ViewData["Title"] = "Print Purchase Order";    
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

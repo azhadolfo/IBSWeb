@@ -49,7 +49,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default);
 
-        Task<MMSIBilling> ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
+        MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
 
         Task<List<MMSIDispatchTicket>> GetSalesReport (DateOnly DateFrom, DateOnly DateTo, CancellationToken cancellationToken = default);
     }

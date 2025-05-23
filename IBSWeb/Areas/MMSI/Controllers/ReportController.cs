@@ -526,7 +526,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // Incomes other tugs
                     writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned)
+                    if (!sales.Tugboat!.IsCompanyOwned)
                     {
                         if ((totalBillingToUse - sales.ApOtherTugs) != 0)
                         {
@@ -759,9 +759,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }

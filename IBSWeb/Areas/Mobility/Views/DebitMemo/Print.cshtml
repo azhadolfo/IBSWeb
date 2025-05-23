@@ -11,7 +11,7 @@
     decimal netOfVatAmount = Model.DebitAmount / 1.12m;
     decimal vatAmount = netOfVatAmount * 0.12m;
 
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

@@ -8,7 +8,7 @@
     ViewData["Title"] = "Print ATL";
     var purchaseOrders = ViewData["PurchaseOrders"] as List<FilprideCOSAppointedSupplier>;
         
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

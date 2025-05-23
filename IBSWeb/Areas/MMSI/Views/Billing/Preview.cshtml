@@ -111,7 +111,7 @@
                     <td class="col-4 p-0 m-0 px-2 border-bottom border-dark">@Model.AddressLine3</td>
                     <td class="col-1 p-0 m-0"></td>
                     <td class="col-2 p-0 m-0"><b>TERMS:</b></td>
-                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer.CustomerTerms</td>
+                    <td class="col-5 p-0 m-0 px-2 border-bottom border-dark">@Model.Customer!.CustomerTerms</td>
                 </tr>
                 </tbody>
             }
@@ -171,17 +171,17 @@
             </tr>
             </thead>
             <tbody>
-            @foreach (var tugboat in Model.UniqueTugboats)
+            @foreach (var tugboat in Model.UniqueTugboats!)
             {
                 <tr class="">
                     <td colspan="8" class="p-0 m-0 pt-4">NAME OF TUGBOAT: @tugboat</td>
                 </tr>
                 
-                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.Tugboat.TugboatName == tugboat))
+                @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.Tugboat!.TugboatName == tugboat))
                 {
                     <tr class="pb-2">
                         <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
-                        <td class="text-center p-0">@dt.Service.ServiceName</td>
+                        <td class="text-center p-0">@dt.Service!.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
                         <td class="text-center p-0">@dt.TotalHours.ToString("N2")</td>
@@ -190,16 +190,16 @@
                     </tr>
                 }
             }
-            @if (Model.PaidDispatchTickets.Any(dt => dt.BAFNetRevenue > 0))
+            @if (Model.PaidDispatchTickets!.Any(dt => dt.BAFNetRevenue > 0))
             {
                 <tr class="">
                     <td colspan="8" class="p-0 m-0 pt-4">BUNKER ADJUSTMENT FACTORS</td>
                 </tr>
-                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue > 0))
+                @foreach (var dt in Model.PaidDispatchTickets!.Where(dt => dt.BAFNetRevenue > 0))
                 {
                     <tr class="pb-2">
                         <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
-                        <td class="text-center p-0">@dt.Service.ServiceName</td>
+                        <td class="text-center p-0">@dt.Service!.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
                         <td class="text-center p-0">@dt.TotalHours.ToString("N2")</td>

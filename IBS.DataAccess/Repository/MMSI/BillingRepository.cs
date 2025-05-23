@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -91,7 +90,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
 
             var listOfCustomerWithBillableTickets = dispatchToBeBilled
-                .Select(t => t.Customer.CustomerId)
+                .Select(t => t.Customer!.CustomerId)
                 .Distinct()
                 .ToList();
 
@@ -130,7 +129,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer.CustomerName}, {b.Date}"
+                Text = $"{b.DispatchNumber} - {b.Customer!.CustomerName}, {b.Date}"
             }).ToList();
 
             return ticketsList;
@@ -178,7 +177,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
         }
 
-        public async Task<MMSIBilling> ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
+        public MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default)
         {
             // Splitting the address for the view
             string[]? words = null;
@@ -193,7 +192,7 @@ namespace IBS.DataAccess.Repository.MMSI
             List<string> resultStrings = new List<string>();
             string currentString = "";
 
-            foreach (string word in words)
+            foreach (string word in words!)
             {
                 if (currentString.Length + word.Length + (currentString.Length > 0 ? 1 : 0) > 40)
                 {
@@ -208,6 +207,7 @@ namespace IBS.DataAccess.Repository.MMSI
                     currentString += (currentString.Length > 0 ? " " : "") + word;
                 }
             }
+
             if (currentString.Length > 0)
             {
                 resultStrings.Add(currentString.Trim());
@@ -217,7 +217,6 @@ namespace IBS.DataAccess.Repository.MMSI
             string thirdString = resultStrings.Count > 2 ? resultStrings[2] : "";
             string fourthString = resultStrings.Count > 3 ? resultStrings[3] : "";
 
-            var results = resultStrings;
             model.AddressLine1 = firstString;
             model.AddressLine2 = secondString;
             model.AddressLine3 = thirdString;

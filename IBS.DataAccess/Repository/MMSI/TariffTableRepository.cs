@@ -73,19 +73,15 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(int portId, CancellationToken cancellationToken = default)
         {
-            if (portId != null)
-            {
-                List<SelectListItem> terminals = await _dbContext.MMSITerminals
-                    .Where(t => t.PortId == portId)
-                    .OrderBy(s => s.TerminalNumber).Select(s => new SelectListItem
-                    {
-                        Value = s.TerminalId.ToString(),
-                        Text = s.TerminalNumber + " " + s.TerminalName
-                    }).ToListAsync(cancellationToken);
+            List<SelectListItem> terminals = await _dbContext.MMSITerminals
+                .Where(t => t.PortId == portId)
+                .OrderBy(s => s.TerminalNumber).Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalNumber + " " + s.TerminalName
+                }).ToListAsync(cancellationToken);
 
-                return terminals;
-            }
-            else return null;
+            return terminals;
         }
 
         public async Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default)

@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -62,20 +63,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
         }
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSITugMasters.Where(i => i.TugMasterId == id).FirstOrDefault();
+                var model = await _db.MMSITugMasters
+                    .FirstOrDefaultAsync(i => i.TugMasterId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSITugMasters.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -84,7 +91,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSITugMasters.Where(a => a.TugMasterId == id).FirstOrDefault();
+            var model = await _db.MMSITugMasters
+                .FirstOrDefaultAsync(a => a.TugMasterId == id, cancellationToken);
 
             return View(model);
         }
@@ -93,6 +101,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSITugMaster model, CancellationToken cancellationToken)
         {
             var currentModel = await _db.MMSITugMasters.FindAsync(model.TugMasterId);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
+
             currentModel.TugMasterNumber = model.TugMasterNumber;
             currentModel.TugMasterName = model.TugMasterName;
             currentModel.IsActive = model.IsActive;

@@ -37,7 +37,7 @@
                         </tr>
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>CUSTOMER: </b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Customer.CustomerName</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Customer!.CustomerName</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VOYAGE #:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.VoyageNumber</td>
                         </tr>
@@ -45,23 +45,23 @@
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Date</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGMASTER:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster.TugMasterName</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.TugMaster!.TugMasterName</td>
                         </tr>
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE START:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateLeft @Model.TimeLeft</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>TUGBOAT:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatName</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat!.TugboatName</td>
                         </tr>
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DATE END:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DateArrived @Model.TimeArrived</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL:</b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselName</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel!.VesselName</td>
                         </tr>
                         <tr>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>PORT-TERMINAL: </b></td>
-                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal.Port.PortName - @Model.Terminal.TerminalName</td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Terminal!.Port!.PortName - @Model.Terminal.TerminalName</td>
                             <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>VESSEL TYPE:</b></td>
                             <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Vessel.VesselType</td>
                         </tr>
@@ -74,89 +74,86 @@
                 </div>
             </div>
         </div>
-
-        @if (Model.DispatchRate != null)
-        {
-            <div class="card-body">
-                <div class="row px-3 justify-content-center">
-                    <div class="col-11 border">
-                        <div class="row mt-2 justify-content-start d-flex">
-                            <div class="col-3">
-                                <h5>TARIFF DETAILS</h5>
-                            </div>
-                            <div class="col-5">
-                                @if (Model.Status == "For Approval")
-                                {
-                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                        <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
-                                        <h5 class="text-warning ms-2 mb-0">For Approval</h5>
-                                    </div>
-                                }
-
-                                @if (Model.Status == "For Billing")
-                                {
-                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                        <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
-                                        <h5 class="text-success ms-2 mb-0">Tariff Approved</h5>
-                                    </div>
-                                }
-
-                                @if (Model.Status == "Disapproved")
-                                {
-                                    <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                        <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
-                                        <h5 class="text-danger ms-2 mb-0">Tariff Disapproved</h5>
-                                    </div>
-                                }
-                            </div>
+        
+        <div class="card-body">
+            <div class="row px-3 justify-content-center">
+                <div class="col-11 border">
+                    <div class="row mt-2 justify-content-start d-flex">
+                        <div class="col-3">
+                            <h5>TARIFF DETAILS</h5>
                         </div>
-                        <table class="table table-borderless" style="font-size: 18px;">
-                            <tbody>
-                            <tr>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString("N2")</td>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
-                            </tr>
-                            <tr>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString("N2")</td>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString("N2")</td>
-                            </tr>
-                            <tr>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString("N2")</td>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
-                            </tr>
-                            <tr>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString("N2")</td>
-                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString("N2")</td>
-                            </tr>
-                            @if (!Model.Tugboat.IsCompanyOwned)
+                        <div class="col-5">
+                            @if (Model.Status == "For Approval")
                             {
-                                <tr>
-                                    <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>AP OTHER TUGS: </b></td>
-                                    <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString("N2")</td>
-                                    <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>TUGBOAT OWNER:</b></td>
-                                    <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</td>
-                                </tr>
+                                <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                    <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
+                                    <h5 class="text-warning ms-2 mb-0">For Approval</h5>
+                                </div>
                             }
-                            <tr>
-                                <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString("N2")</b></td>
-                                <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString("N2")</b></td>
-                            </tr>
-                            </tbody>
-                        </table>
+
+                            @if (Model.Status == "For Billing")
+                            {
+                                <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                    <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
+                                    <h5 class="text-success ms-2 mb-0">Tariff Approved</h5>
+                                </div>
+                            }
+
+                            @if (Model.Status == "Disapproved")
+                            {
+                                <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
+                                    <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
+                                    <h5 class="text-danger ms-2 mb-0">Tariff Disapproved</h5>
+                                </div>
+                            }
+                        </div>
                     </div>
+                    <table class="table table-borderless" style="font-size: 18px;">
+                        <tbody>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString("N2")</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString("N2")</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString("N2")</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
+                        </tr>
+                        <tr>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString("N2")</td>
+                            <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
+                            <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString("N2")</td>
+                        </tr>
+                        @if (!Model.Tugboat.IsCompanyOwned)
+                        {
+                            <tr>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>AP OTHER TUGS: </b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.ApOtherTugs.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>TUGBOAT OWNER:</b></td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.Tugboat.TugboatOwner?.TugboatOwnerName</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
+                            <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString("N2")</b></td>
+                            <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
+                            <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString("N2")</b></td>
+                        </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        }
+        </div>
     </div>
     
         <div class="row">

@@ -4,8 +4,8 @@
 @inject UserManager<IdentityUser> UserManager
 
 @{
-    string? selectedCompany = string.Empty;
-    string? selectedStation = string.Empty;
+    var selectedCompany = string.Empty;
+    var selectedStation = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

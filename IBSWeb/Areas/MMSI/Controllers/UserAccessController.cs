@@ -64,19 +64,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     throw new Exception($"Access for {tempModel.UserName} already exists.");
                 }
-                else
-                {
-                    var selectedUser = _dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
 
-                    model.UserName = selectedUser.UserName;
+                var selectedUser = _dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
 
-                    await _dbContext.MMSIUserAccesses.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "User access created successfully.";
+                model.UserName = selectedUser!.UserName;
 
-                    return RedirectToAction(nameof(Index));
-                }
+                await _dbContext.MMSIUserAccesses.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "User access created successfully.";
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -119,6 +117,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var tempModel = await _dbContext.MMSIUserAccesses
                     .FindAsync(model.Id, cancellationToken);
+
+                if (tempModel == null)
+                {
+                    return NotFound();
+                }
 
                 tempModel.CanCreateServiceRequest = model.CanCreateServiceRequest;
                 tempModel.CanPostServiceRequest = model.CanPostServiceRequest;

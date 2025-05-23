@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -74,21 +75,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
         }
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSITugboats.Where(i => i.TugboatId == id).FirstOrDefault();
+                var model = await _db.MMSITugboats.FirstOrDefaultAsync(i => i.TugboatId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSITugboats.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -97,7 +103,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSITugboats.Where(a => a.TugboatId == id).FirstOrDefault();
+            var model = await _db.MMSITugboats.FirstOrDefaultAsync(a => a.TugboatId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
 
             return View(model);
@@ -107,6 +119,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSITugboat model, CancellationToken cancellationToken)
         {
             var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
             if(model.IsCompanyOwned)
             {
@@ -121,7 +138,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             currentModel.TugboatNumber = model.TugboatNumber;
             currentModel.TugboatName = model.TugboatName;
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
 
             TempData["success"] = "Edited successfully";
 

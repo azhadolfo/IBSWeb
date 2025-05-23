@@ -24,9 +24,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _userManager = userManager;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
-            var claims = await _userManager.GetClaimsAsync(await _userManager.GetUserAsync(User));
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
@@ -45,7 +52,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             MMSIPrincipal model = new MMSIPrincipal();
-            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
             return View(model);
         }
@@ -62,7 +69,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return View(model);
                 }
 
-                var customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+                var customer = await _db.FilprideCustomers
+                    .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException();
+
                 model.CustomerId = customer.CustomerId;
 
                 await _db.MMSIPrincipals.AddAsync(model, cancellationToken);
@@ -87,9 +96,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 // model of principal to delete
-                var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
-                // id of customer where the principal is
-                var idOfCustomer = model.CustomerId;
+                var model = await _db.MMSIPrincipals
+                    .FindAsync(id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 // delete the model(principal)
                 _db.MMSIPrincipals.Remove(model);
@@ -113,7 +126,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var model = await _db.MMSIPrincipals.FindAsync(id, cancellationToken);
-            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
             return View(model);
         }
@@ -126,8 +145,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 // model of old principal
                 var currentModel = await _db.MMSIPrincipals.FindAsync(model.PrincipalId, cancellationToken);
-                // id of old principal's customer
-                var previousCustomerId = currentModel.CustomerId;
 
                 if (currentModel != null)
                 {
@@ -157,7 +174,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 TempData["error"] = "An error occurred while editing the entry. Please try again.";
                 return View(model);

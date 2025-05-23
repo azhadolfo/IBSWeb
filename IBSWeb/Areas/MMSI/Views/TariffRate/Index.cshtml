@@ -37,10 +37,10 @@
                     @Html.DisplayNameFor(m => m.Customer)
                 </th>
                 <th class="text-center">
-                    @Html.DisplayNameFor(m => m.Terminal.Port.PortName) - @Html.DisplayNameFor(m => m.Terminal.TerminalName)
+                    @Html.DisplayNameFor(m => m.Terminal!.Port!.PortName) - @Html.DisplayNameFor(m => m.Terminal!.TerminalName)
                 </th>
                 <th class="text-center">
-                    @Html.DisplayNameFor(m => m.Service.ServiceName)
+                    @Html.DisplayNameFor(m => m.Service!.ServiceName)
                 </th>
                 <th class="text-center">
                     @Html.DisplayNameFor(m => m.Dispatch)
@@ -61,13 +61,13 @@
                         @Html.DisplayFor(model => item.AsOfDate)
                     </td>
                     <td class="text-center align-middle">
-                        @Html.DisplayFor(model => item.Customer.CustomerName)
+                        @Html.DisplayFor(model => item.Customer!.CustomerName)
                     </td>
                     <td class="text-center align-middle">
-                        @Html.DisplayFor(model => item.Terminal.Port.PortName) - @Html.DisplayFor(model => item.Terminal.TerminalName)
+                        @Html.DisplayFor(model => item.Terminal!.Port!.PortName) - @Html.DisplayFor(model => item.Terminal!.TerminalName)
                     </td>
                     <td class="text-center align-middle">
-                        @Html.DisplayFor(model => item.Service.ServiceName)
+                        @Html.DisplayFor(model => item.Service!.ServiceName)
                     </td>
                     <td class="text-center align-middle">
                         @Html.DisplayFor(model => item.Dispatch)

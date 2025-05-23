@@ -1,6 +1,4 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -138,7 +136,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToListAsync(cancellationToken);
 
             var listOfCustomerWithCollectibleBillings = billingsToBeCollected
-                .Select(t => t.Customer.CustomerId)
+                .Select(t => t.Customer!.CustomerId)
                 .Distinct()
                 .ToList();
 
@@ -159,7 +157,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .OrderBy(dt => dt.MMSIBillingNumber).Select(s => new SelectListItem
                 {
                     Value = s.MMSIBillingId.ToString(),
-                    Text = $"{s.MMSIBillingNumber} - {s.Customer.CustomerName}, {s.Date}"
+                    Text = $"{s.MMSIBillingNumber} - {s.Customer!.CustomerName}, {s.Date}"
                 }).ToListAsync(cancellationToken);
 
             return billingsList;

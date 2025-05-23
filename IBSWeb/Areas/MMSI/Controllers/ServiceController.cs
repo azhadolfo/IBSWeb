@@ -65,21 +65,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSIServices.FirstOrDefault(i => i.ServiceId == id);
+                var model = await _db.MMSIServices.FirstOrDefaultAsync(i => i.ServiceId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSIServices.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -99,6 +104,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var currentModel = await _db.MMSIServices.FindAsync(model.ServiceId);
+
+                if (currentModel == null)
+                {
+                    return NotFound();
+                }
 
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;

@@ -48,7 +48,7 @@
                 <div class="row">
                         <div class="form-group col-6 my-2">
                             <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                            <select id="PortSelect" asp-items="@Model.Ports" asp-for="Terminal.Port.PortId" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <select id="PortSelect" asp-items="@Model.Ports" asp-for="Terminal!.Port!.PortId" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                                 <option value="">Select Port</option>
                             </select>
                             <span class="text-danger"></span>

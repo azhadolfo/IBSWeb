@@ -74,14 +74,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSITerminals.Where(i => i.TerminalId == id).FirstOrDefault();
+                var model = await _db.MMSITerminals.FirstOrDefaultAsync(i => i.TerminalId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSITerminals.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
@@ -102,6 +107,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(t => t.Port)
                 .FirstOrDefault();
 
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             model.Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken);
 
             return View(model);
@@ -111,6 +121,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSITerminal model, CancellationToken cancellationToken)
         {
             var currentModel = await _db.MMSITerminals.FindAsync(model.TerminalId);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
             currentModel.TerminalNumber = model.TerminalNumber;
             currentModel.TerminalName = model.TerminalName;

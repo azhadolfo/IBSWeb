@@ -63,20 +63,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
         }
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSITugboatOwners.Where(i => i.TugboatOwnerId == id).FirstOrDefault();
+                var model = await _db.MMSITugboatOwners
+                    .FirstOrDefaultAsync(i => i.TugboatOwnerId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSITugboatOwners.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return RedirectToAction(nameof(Index));
             }
@@ -95,6 +101,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSITugboatOwner model, CancellationToken cancellationToken)
         {
             var currentModel = await _db.MMSITugboatOwners.FindAsync(model.TugboatOwnerId, cancellationToken);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
+
             currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
             currentModel.TugboatOwnerName = model.TugboatOwnerName;
             currentModel.FixedRate = model.FixedRate;

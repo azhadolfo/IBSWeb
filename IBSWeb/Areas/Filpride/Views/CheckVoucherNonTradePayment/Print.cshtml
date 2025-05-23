@@ -10,7 +10,7 @@
 @{
     ViewData["Title"] = "Print Check Voucher";
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

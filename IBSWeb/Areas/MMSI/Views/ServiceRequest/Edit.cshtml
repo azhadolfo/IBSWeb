@@ -73,27 +73,13 @@
                 </div>
 
                 <div class="row">
-                    @if (Model.TerminalId != null)
-                    {
-                        <div class="form-group col-6 my-2">
-                            <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                            <select asp-for="@Model.Terminal.Port.PortId" id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                                <option value="">Select Port</option>
-                            </select>
-                            <span class="text-danger"></span>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="form-group col-6 my-2">
-                            <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                            <select id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                                <option value="">Select Port</option>
-                            </select>
-                            <span class="text-danger"></span>
-                        </div>
-                    }
-
+                    <div class="form-group col-6 my-2">
+                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                        <select asp-for="@Model.Terminal!.Port!.PortId" id="PortSelect" asp-items="@Model.Ports" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Port</option>
+                        </select>
+                        <span class="text-danger"></span>
+                    </div>
                     <div class="form-group col-6 my-2">
                         <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
                         <select asp-for="TerminalId" id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>

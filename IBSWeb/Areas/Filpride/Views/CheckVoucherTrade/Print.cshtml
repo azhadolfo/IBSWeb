@@ -12,7 +12,7 @@
     
     int supplierId = Model.Supplier?.SupplierId ?? 0;
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

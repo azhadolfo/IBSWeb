@@ -25,7 +25,7 @@ namespace IBS.Services
 
         public async Task<bool> CheckAccess(string id, ProcedureEnum procedure, CancellationToken cancellationToken = default)
         {
-            var userAccess = await _dbContext.MMSIUserAccesses?
+            var userAccess = await _dbContext.MMSIUserAccesses
                 .FirstOrDefaultAsync(a => a.UserId == id, cancellationToken);
 
             if (userAccess == null)

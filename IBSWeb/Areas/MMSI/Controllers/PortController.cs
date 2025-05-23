@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -64,14 +65,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public IActionResult Delete(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
             try
             {
-                var model = _db.MMSIPorts.Where(i => i.PortId == id).FirstOrDefault();
+                var model = await _db.MMSIPorts.FirstOrDefaultAsync(i => i.PortId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
 
                 _db.MMSIPorts.Remove(model);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 TempData["success"] = "Entry deleted successfully";
 
@@ -95,7 +101,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSIPorts.Where(a => a.PortId == id).FirstOrDefault();
+            var model = await _db.MMSIPorts.FirstOrDefaultAsync(a => a.PortId == id, cancellationToken);
 
             return View(model);
         }
@@ -104,6 +110,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(MMSIPort model, CancellationToken cancellationToken)
         {
             var currentModel = await _db.MMSIPorts.FindAsync(model.PortId);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
             currentModel.PortNumber = model.PortNumber;
             currentModel.PortName = model.PortName;

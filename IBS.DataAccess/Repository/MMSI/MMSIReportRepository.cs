@@ -33,7 +33,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(dt => dt.Vessel)
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.Terminal)
-                .ThenInclude(t => t.Port)
+                .ThenInclude(t => t!.Port)
                 .Include(dt => dt.Service)
                 .OrderBy(dt => dt.Date)
                 .ToListAsync(cancellationToken);

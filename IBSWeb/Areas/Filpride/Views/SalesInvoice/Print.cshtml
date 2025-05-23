@@ -13,7 +13,7 @@
     decimal withHoldingTaxAmount = Model.Customer.WithHoldingTax ? (netDiscount / 1.12m) * 0.01m : 0;
     decimal withHoldingVatAmount = Model.Customer.WithHoldingVat ? (netDiscount / 1.12m) * 0.05m : 0;
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

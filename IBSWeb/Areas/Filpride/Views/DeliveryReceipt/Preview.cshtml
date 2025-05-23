@@ -8,7 +8,7 @@
 @{
     ViewData["Title"] = "Preview Delivery Receipt";    
     
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {

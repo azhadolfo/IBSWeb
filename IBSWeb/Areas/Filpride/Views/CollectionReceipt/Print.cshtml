@@ -10,7 +10,7 @@
 @{
     ViewData["Title"] = "Print Collection Receipt";
    
-    string? selectedCompany = string.Empty;
+    var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
