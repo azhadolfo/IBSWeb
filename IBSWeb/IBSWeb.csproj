@@ -34,7 +34,7 @@
     <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.GoogleCloudLogging" Version="5.0.0" />
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.5.1" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.6.4" />
   </ItemGroup>
 
   <ItemGroup>
