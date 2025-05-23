@@ -85,11 +85,11 @@
                                 <h5>TARIFF DETAILS</h5>
                             </div>
                             <div class="col-5">
-                                @if (Model.Status == "Tariff Pending")
+                                @if (Model.Status == "For Approval")
                                 {
                                     <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
                                         <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
-                                        <h5 class="text-warning ms-2 mb-0">Tariff Pending</h5>
+                                        <h5 class="text-warning ms-2 mb-0">For Approval</h5>
                                     </div>
                                 }
 
@@ -114,27 +114,27 @@
                             <tbody>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchRate.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH DISCOUNT:</b></td>
                                 <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchDiscount%</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>DISPATCH BILLING:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchBillingAmount.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>DISPATCH NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.DispatchNetRevenue.ToString("N2")</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF RATE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFRate.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF DISCOUNT:</b></td>
                                 <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFDiscount%</td>
                             </tr>
                             <tr>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 150px;"><b>BAF BILLING: </b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFBillingAmount.ToString("N2")</td>
                                 <td class="m-0 p-0 pt-1 ps-4" style="width: 200px;"><b>BAF NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue?.ToString("N2")</td>
+                                <td class="m-0 p-0 pt-1 ps-3 border-bottom border-dark" style="width: 250px;">@Model.BAFNetRevenue.ToString("N2")</td>
                             </tr>
                             @if (!Model.Tugboat.IsCompanyOwned)
                             {
@@ -147,9 +147,9 @@
                             }
                             <tr>
                                 <td class="m-0 p-0 pt-3 ps-4" style="width: 150px;"><b>TOTAL BILLING: </b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling?.ToString("N2")</b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalBilling.ToString("N2")</b></td>
                                 <td class="m-0 p-0 pt-3 ps-4" style="width: 200px;"><b>TOTAL NET REVENUE:</b></td>
-                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue?.ToString("N2")</b></td>
+                                <td class="m-0 p-0 pt-3 ps-3 border-bottom border-dark" style="width: 250px;"><b>@Model.TotalNetRevenue.ToString("N2")</b></td>
                             </tr>
                             </tbody>
                         </table>
@@ -162,7 +162,7 @@
         <div class="row">
             <div class="row col-12 justify-content-end mb-4">
                 <div class="text-center" style="width: 250px;">
-                    @if ((Model.Status != "Billed" && Model.Status != "Disapproved") 
+                    @if ((Model.Status != "Billed") 
                     || !string.IsNullOrEmpty(Model.ImageName))
                     {
                         <div class="dropdown align-content-center">
@@ -171,13 +171,20 @@
                                 
                                 @if (Model.Status == "For Billing")
                                 {
-                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Revoke Approval</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "For Approval"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
                                 }
                                 
-                                @if (Model.Status == "Tariff Pending")
+                                @if (Model.Status == "For Approval")
                                 {
-                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Approve</a></li>
-                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Disapprove</a></li>
+                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="disapproveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "Disapproved"</a></li>
+                                }
+                                
+                                @if (Model.Status == "Disapproved")
+                                {
+                                    <li><a class="dropdown-item" href="#" id="approveTariff" data-id="@Model.DispatchTicketId"><i class="bi bi-check-circle-fill"></i> Mark as "Approved"</a></li>
+                                    <li><a class="dropdown-item" href="#" id="revokeApproval" data-id="@Model.DispatchTicketId"><i class="bi bi-x-circle-fill"></i> Mark as "For Approval"</a></li>
                                 }
                                 
                                 @if (!string.IsNullOrEmpty(Model.ImageName))
@@ -238,7 +245,7 @@
 
                 Swal.fire({
                     title: "Approve this Tariff?",
-                    text: "This action cannot be undone.",
+                    text: "The ticket will be available for billing.",
                     showCancelButton: true,
                     confirmButtonText: "Yes",
                 }).then((result) => {
@@ -253,7 +260,7 @@
                 var imageId = this.getAttribute('data-id');
 
                 Swal.fire({
-                    title: "Revoke tariff approval?",
+                    title: "Revoke tariff status?",
                     text: "This tariff will be editable again.",
                     showCancelButton: true,
                     confirmButtonText: "Yes",
@@ -270,7 +277,7 @@
 
                 Swal.fire({
                     title: "Disapprove this Tariff?",
-                    text: "This action cannot be undone.",
+                    text: "The ticket will not be available for billing",
                     showCancelButton: true,
                     confirmButtonText: "Yes",
                 }).then((result) => {

@@ -1,39 +1,25 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.MMSI
+namespace IBS.Models.MMSI.ViewModels
 {
-    public class MMSIBilling
+    public class CreateBillingViewModel
     {
-        [Key]
-        public int MMSIBillingId { get; set; }
+        public int? MMSIBillingId { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
-        public string MMSIBillingNumber { get; set; }
+        public string? MMSIBillingNumber { get; set; }
 
         public DateOnly Date {  get; set; }
 
-        public string Status {  get; set; }
-
         public bool IsUndocumented { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
         public string BilledTo { get; set; }
 
         public string? VoyageNumber { get; set; }
 
         public decimal Amount { get; set; }
-
-        public string CreatedBy { get; set; }
-
-        public DateTime CreatedDate { get; set; }
-
-        public string? LastEditedBy { get; set; }
-
-        public DateTime? LastEditedDate { get; set; }
 
         public bool IsPrincipal { get; set; }
 
@@ -56,25 +42,6 @@ namespace IBS.Models.MMSI
         public int TerminalId { get; set; }
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
-
-        #region ---Address Lines---
-
-        [NotMapped]
-        public string? AddressLine1 { get; set; }
-
-        [NotMapped]
-        public string? AddressLine2 { get; set; }
-
-        [NotMapped]
-        public string? AddressLine3 { get; set; }
-
-        [NotMapped]
-        public string? AddressLine4 { get; set; }
-
-        [NotMapped]
-        public List<string>? UniqueTugboats { get; set; }
-
-        #endregion
 
         #region ---Select Lists---
 

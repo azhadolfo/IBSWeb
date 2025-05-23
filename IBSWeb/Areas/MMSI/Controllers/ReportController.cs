@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var extractedBy = _userManager.GetUserName(this.User);
 
                 // get rr data from chosen date
-                var salesReport = await _unitOfWork.Msap.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
+                var salesReport = await _unitOfWork.MMSIReport.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
 
                 // check if there is no record
                 if (salesReport.Count == 0)
@@ -423,6 +423,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 var dynamicStartCol = 0;
                 var dynamicEndCol = 0;
+                var colOfSumOfAr = 0;
 
                 // contents starts here
                 var row = 7;
@@ -430,6 +431,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 foreach (var sales in salesReport)
                 {
+                    decimal totalBillingToUse = 0;
+                    if (sales.BillingId == null)
+                    {
+                        totalBillingToUse = sales.TotalNetRevenue;
+                    }
+                    else
+                    {
+                        totalBillingToUse = sales.TotalBilling;
+                    }
+
                     worksheet.Cells[row, 1].Value = sales.Date;
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MM/dd/yyyy";
 
@@ -439,40 +450,57 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     worksheet.Cells[row, 3].Value = $"{sales.Billing?.MMSIBillingNumber}";
                     worksheet.Cells[row, 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
-                    worksheet.Cells[row, 4].Value = $"{sales.Customer.CustomerName}";
-                    worksheet.Cells[row, 5].Value = $"{sales.Vessel.VesselName}";
-                    worksheet.Cells[row, 6].Value = $"{sales.Vessel.VesselType}";
-                    worksheet.Cells[row, 7].Value = $"{sales.Tugboat.TugboatName}";
+                    worksheet.Cells[row, 4].Value = $"{sales.Customer?.CustomerName}";
+                    worksheet.Cells[row, 5].Value = $"{sales.Vessel?.VesselName}";
+                    worksheet.Cells[row, 6].Value = $"{sales.Vessel?.VesselType}";
+                    worksheet.Cells[row, 7].Value = $"{sales.Tugboat?.TugboatName}";
 
-                    worksheet.Cells[row, 8].Value = $"{sales.Terminal.Port.PortName}";
-                    if (sales.Vessel.VesselType == "Foreign")
+                    worksheet.Cells[row, 8].Value = $"{sales.Terminal?.Port?.PortName}";
+                    if (sales.Vessel?.VesselType == "Foreign")
                     {
                         worksheet.Cells[row, 8].Style.Font.Color.SetColor(Color.Red);
                     }
 
-                    worksheet.Cells[row, 9].Value = $"{sales.Terminal.TerminalName}";
-                    worksheet.Cells[row, 10].Value = $"{sales.Service.ServiceName}";
+                    worksheet.Cells[row, 9].Value = $"{sales.Terminal?.TerminalName}";
+                    worksheet.Cells[row, 10].Value = $"{sales.Service?.ServiceName}";
                     worksheet.Cells[row, 11].Value = $"{sales.DateLeft:MM/dd/yyyy} {sales.TimeLeft:HH:mm}";
                     worksheet.Cells[row, 12].Value = $"{sales.DateArrived:MM/dd/yyyy} {sales.TimeArrived:HH:mm}";
 
                     worksheet.Cells[row, 13].Value = sales.TotalHours;
-                    worksheet.Cells[row, 14]. Value = sales.TotalNetRevenue;
-                    worksheet.Cells[row, 15].Value = sales.TotalBilling;
-                    using (var range = worksheet.Cells[row, 13, row, 15])
+                    if (totalBillingToUse != 0)
                     {
-                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 14].Value = totalBillingToUse;
+                        worksheet.Cells[row, 15].Value = totalBillingToUse;
+                        using (var range = worksheet.Cells[row, 13, row, 15])
+                        {
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
                     }
 
-                    worksheet.Cells[row, 27].Value = sales.TotalBilling; // BALANCE to change operation
-                    worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                    worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    // BALANCE
+                    if (totalBillingToUse != 0)
+                    {
+                        worksheet.Cells[row, 27].Value = totalBillingToUse;
+                        worksheet.Cells[row, 27].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
 
-                    //worksheet.Cells[row, 28].Value = $"{sales.TotalBilling}"; // AP OTHER TUGS
+                    // AP OTHER TUGS
+                    if (sales.ApOtherTugs != 0)
+                    {
+                        worksheet.Cells[row, 28].Value = sales.ApOtherTugs;
+                        worksheet.Cells[row, 28].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
 
-                    worksheet.Cells[row, 29].Value = sales.TotalBilling; // NET SALES to change operation
-                    worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                    worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    // NET SALES
+                    if ((totalBillingToUse - sales.ApOtherTugs) != 0)
+                    {
+                        worksheet.Cells[row, 29].Value = totalBillingToUse - sales.ApOtherTugs;
+                        worksheet.Cells[row, 29].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        worksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
 
                     var writingCol = 29;
 
@@ -484,23 +512,31 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var tugboat in mmsiTugboats)
                     {
                         writingCol++;
-                        if (sales.Tugboat.TugboatName == tugboat.TugboatName)
+                        if (sales.Tugboat?.TugboatName == tugboat.TugboatName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
+                            if (totalBillingToUse != 0)
+                            {
+                                worksheet.Cells[row, writingCol].Value = totalBillingToUse;
+                                worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                                worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Column(writingCol).Width = 10;
+                            }
+                        }
+                    }
+
+                    // Incomes other tugs
+                    writingCol++;
+                    if (!sales.Tugboat.IsCompanyOwned)
+                    {
+                        if ((totalBillingToUse - sales.ApOtherTugs) != 0)
+                        {
+                            worksheet.Cells[row, writingCol].Value = totalBillingToUse - sales.ApOtherTugs;
                             worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             worksheet.Column(writingCol).Width = 10;
                         }
                     }
-                    // Incomes other tugs
-                    writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned)
-                    {
-                        worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
-                        worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                        worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        worksheet.Column(writingCol).Width = 10;
-                    }
+
                     // Total Hours
                     foreach (var tugboat in mmsiTugboats)
                     {
@@ -518,12 +554,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var companyOwner in tugboatOwners)
                     {
                         writingCol++;
-                        if (sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner.TugboatOwnerName == companyOwner.TugboatOwnerName)
+                        if (!sales.Tugboat.IsCompanyOwned && sales.Tugboat.TugboatOwner?.TugboatOwnerName == companyOwner.TugboatOwnerName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
-                            worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 10;
+                            if (sales.ApOtherTugs != 0)
+                            {
+                                worksheet.Cells[row, writingCol].Value = sales.ApOtherTugs;
+                                worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                                worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Column(writingCol).Width = 10;
+                            }
                         }
                     }
 
@@ -534,20 +573,28 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var customer in mmsiCustomers)
                     {
                         writingCol++;
-                        if (sales.Customer.CustomerName == customer.CustomerName)
+                        if (sales.Customer?.CustomerName == customer.CustomerName)
                         {
-                            worksheet.Cells[row, writingCol].Value = sales.TotalBilling;
-                            worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            worksheet.Column(writingCol).Width = 10;
-                            sumOfAr += sales.TotalBilling;
+                            if (totalBillingToUse != 0)
+                            {
+                                worksheet.Cells[row, writingCol].Value = totalBillingToUse;
+                                worksheet.Cells[row, writingCol].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                                worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Column(writingCol).Width = 10;
+                                sumOfAr += sales.TotalBilling;
+                            }
                         }
                     }
 
                     // write sum of AR
                     writingCol++;
-                    worksheet.Cells[row, writingCol].Value = sumOfAr;
-                    worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    colOfSumOfAr = writingCol;
+
+                    if (sumOfAr != 0)
+                    {
+                        worksheet.Cells[row, writingCol].Value = sumOfAr;
+                        worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
 
                     // Number of Assists(TO INQUIRE THE VALUES)
                     foreach (string category in numberOfAssistsCategory)
@@ -556,7 +603,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.Service.ServiceName == "ASSIST")
+                                sales.Service?.ServiceName == "ASSIST")
                             {
                                 worksheet.Cells[row, writingCol].Value = 1;
                             }
@@ -571,7 +618,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         writingCol++;
                         if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                            sales.Service.ServiceName == "TENDING")
+                            sales.Service?.ServiceName == "TENDING")
                         {
                             worksheet.Cells[row, writingCol].Value = 1;
                             worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -580,9 +627,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // other tugs(not company owned)
                     writingCol++;
-                    if (!sales.Tugboat.IsCompanyOwned && sales.Service.ServiceName == "TENDING")
+                    if (!sales.Tugboat.IsCompanyOwned && sales.Service?.ServiceName == "TENDING")
                     {
-                        worksheet.Cells[row, writingCol].Value = "1";
+                        worksheet.Cells[row, writingCol].Value = 1;
+                        worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
                     // number of tending hours
@@ -593,8 +641,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         {
                             writingCol++;
                             if (tugboat.TugboatName == sales.Tugboat.TugboatName &&
-                                sales.Service.ServiceName == "TENDING" &&
-                                sales.Vessel.VesselType == category)
+                                sales.Service?.ServiceName == "TENDING" &&
+                                sales.Vessel?.VesselType == category)
                             {
                                 worksheet.Cells[row, writingCol].Value = sales.TotalHours;
                                 worksheet.Cells[row, writingCol].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -606,9 +654,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     dynamicEndCol = writingCol;
 
                     writingCol += 2;
-                    worksheet.Cells[row, writingCol].Value = sales.Billing.IsUndocumented ? "DOC" : "UNDOC";
+                    worksheet.Cells[row, writingCol].Value = sales.Billing != null ? (sales.Billing.IsUndocumented ? "UNDOC" : "DOC") : null;
                     writingCol++;
-                    worksheet.Cells[row, writingCol].Value = !string.IsNullOrEmpty(sales.Billing.PrincipalId.ToString()) ? $"{sales.Billing.Principal.PrincipalName}" : "";
+                    worksheet.Cells[row, writingCol].Value = !string.IsNullOrEmpty(sales.Billing?.PrincipalId.ToString()) ? $"{sales.Billing?.Principal?.PrincipalName}" : "";
 
                     // next record
                     row++;
@@ -664,74 +712,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 #endregion
 
-                // #region -- TAKES FROM SALES SUMMARY REPORT --
-                //
-                // row += 5;
-                //
-                // worksheet.Cells[row, 1].Value = "TAKES FROM SALES SUMMARY REPORT";
-                // worksheet.Cells[row, 5].Value = "DOCK/UND";
-                // worksheet.Cells[row, 6].Value = "TENDING";
-                // worksheet.Cells[row, 7].Value = "TOTAL MOVES";
-                // worksheet.Cells[row, 8].Value = "TOTAL TENDING HOURS";
-                // worksheet.Cells[row, 9].Value = "TOTAL TOWING HRS";
-                //
-                // using (var range = worksheet.Cells[row, 1, row, 9])
-                // {
-                //     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thick;
-                //     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                // }
-                //
-                // using (var range = worksheet.Cells[row, 5, row, 9])
-                // {
-                //     range.Style.Font.Bold = true;
-                // }
-                //
-                // var tupleVar = new List<Tuple<string, string>>
-                // {
-                //     new Tuple<string, string>("IOC", "LOCAL"),
-                //     new Tuple<string, string>("IOC", "FOREIGN"),
-                //     new Tuple<string, string>("OTHER PORT", "LOCAL"),
-                //     new Tuple<string, string>("OTHER PORT", "FOREIGN")
-                // };
-                // foreach (var tugboat in mmsiTugboats)
-                // {
-                //     row += 2;
-                //
-                //     decimal? totalTendingHours = 0;
-                //
-                //     foreach (var tupleEntry in tupleVar)
-                //     {
-                //
-                //     }
-                //
-                //     var writingCol = 1;
-                //
-                //     worksheet.Cells[row, writingCol].Value = tugboat.TugboatName;
-                //     writingCol += 2;
-                //
-                //     worksheet.Cells[row, writingCol].Value = "IOC";
-                //     writingCol++;
-                //
-                //     worksheet.Cells[row, writingCol].Value = "LOCAL";
-                //     writingCol += 4;
-                //
-                //     var salesWithTending = salesReport
-                //         .Where(dt => dt.Tugboat.TugboatName == tugboat.TugboatName &&
-                //                      dt.ActivityService.ActivityServiceName == "TENDING");
-                //     if (salesWithTending != null)
-                //     {
-                //         decimal? localTendingHours = 0;
-                //         foreach (var saleWithTending in salesWithTending)
-                //         {
-                //             localTendingHours += saleWithTending.TotalHours;
-                //         }
-                //         worksheet.Cells[row, writingCol].Value = localTendingHours;
-                //         totalTendingHours += localTendingHours;
-                //     }
-                // }
-                //
-                // #endregion
-
                 #endregion -- Contents --
 
                 // formatting of cell columns
@@ -749,7 +729,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(12).Width = 17;
                 worksheet.Column(13).Width = 7;
                 worksheet.Column(14).Width = 13;
-                worksheet.Column(15).Width = 13;
+                worksheet.Column(15).Width = 14;
                 worksheet.Column(16).Width = 12;
                 worksheet.Column(17).Width = 12;
                 worksheet.Column(18).Width = 12;
@@ -761,9 +741,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(24).Width = 12;
                 worksheet.Column(25).Width = 12;
                 worksheet.Column(26).Width = 12;
-                worksheet.Column(27).Width = 9;
+                worksheet.Column(27).Width = 14;
                 worksheet.Column(28).Width = 9;
                 worksheet.Column(29).Width = 14;
+                worksheet.Column(colOfSumOfAr).Width = 13;
 
                 var excelBytes = package.GetAsByteArray();
 

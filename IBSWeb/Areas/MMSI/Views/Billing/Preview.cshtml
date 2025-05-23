@@ -184,27 +184,27 @@
                         <td class="text-center p-0">@dt.Service.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
-                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
-                        <td class="text-end p-0">@dt.DispatchRate?.ToString("N2")</td>
-                        <td class="text-end p-0">@dt.DispatchNetRevenue?.ToString("N2")</td>
+                        <td class="text-center p-0">@dt.TotalHours.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchRate.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.DispatchNetRevenue.ToString("N2")</td>
                     </tr>
                 }
             }
-            @if (Model.PaidDispatchTickets.Any(dt => dt.BAFNetRevenue.HasValue))
+            @if (Model.PaidDispatchTickets.Any(dt => dt.BAFNetRevenue > 0))
             {
                 <tr class="">
                     <td colspan="8" class="p-0 m-0 pt-4">BUNKER ADJUSTMENT FACTORS</td>
                 </tr>
-                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue.HasValue))
+                @foreach (var dt in Model.PaidDispatchTickets.Where(dt => dt.BAFNetRevenue > 0))
                 {
                     <tr class="pb-2">
                         <td class="text-center p-0">@dt.Date.ToString("dd-MMM")</td>
                         <td class="text-center p-0">@dt.Service.ServiceName</td>
                         <td class="text-center p-0">@dt.DateLeft @dt.TimeLeft</td>
                         <td class="text-center p-0">@dt.DateArrived @dt.TimeArrived</td>
-                        <td class="text-center p-0">@dt.TotalHours?.ToString("N2")</td>
-                        <td class="text-end p-0">@dt.BAFRate?.ToString("N2")</td>
-                        <td class="text-end p-0">@dt.BAFNetRevenue?.ToString("N2")</td>
+                        <td class="text-center p-0">@dt.TotalHours.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFRate.ToString("N2")</td>
+                        <td class="text-end p-0">@dt.BAFNetRevenue.ToString("N2")</td>
                     </tr>
                 }
             }

@@ -1,4 +1,4 @@
-@model MMSIDispatchTicket
+@model ServiceRequestViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -19,7 +19,7 @@
     <div class="card-body">
         
         <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="DispatchTicketId" style="display:none">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -291,6 +291,17 @@
                 var existingVideoName = '@Model.VideoName';
                 var newImage = document.getElementById('imageUpload').files.length > 0;
                 var newVideo = document.getElementById('videoUpload').files.length > 0;
+                var form = document.getElementById('submitButton').form;
+
+                function trySubmit() {
+                    // Check if the form is valid using HTML5 validation
+                    if (form.checkValidity()) {
+                        form.submit(); // Submit if valid
+                    } else {
+                        // Trigger validation UI (show error messages)
+                        form.reportValidity();
+                    }
+                }
 
                 if ((existingImageName && existingImageName !== "" && newImage) || (existingVideoName && existingVideoName !== "" && newVideo)) {
                     Swal.fire({
@@ -301,12 +312,12 @@
                         cancelButtonText: "Cancel"
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            document.getElementById('submitButton').form.submit();
+                            trySubmit();
                         }
                     });
                 }
                 else {
-                    document.getElementById('submitButton').form.submit();
+                    trySubmit();
                 }
             });
 

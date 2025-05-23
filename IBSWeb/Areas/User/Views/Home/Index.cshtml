@@ -343,13 +343,13 @@
                     </div>
                 }
             
-                if (selectedCompany == "MMSI")
+                if (selectedCompany == "MMSI" && !User.IsInRole("PortCoordinator"))
                 {
                     <div class="mt-5">
                         <h2 class="fw-semibold text-secondary mb-4">Tasks Overview</h2>
                         <div class="row g-4">
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "ServiceRequest", new { area = "MMSI", filterType = "ForPosting" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -376,7 +376,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForTariff" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -403,15 +403,15 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
-                                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "TariffPending" })" class="text-decoration-none">
+                                    <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForApproval" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
                                             <div class="card-body text-center">
                                                 <h5 class="card-title text-dark fw-semibold">
                                                     <i class="bi bi-hand-thumbs-up-fill me-2 text-primary"></i>Dispatch Ticket Tariff for Approval
                                                 </h5>
-                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketTariffPending.ToString("N0")</p>
+                                                <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForApproval.ToString("N0")</p>
                                             </div>
                                         </div>
                                     </a>
@@ -423,14 +423,14 @@
                                             <h5 class="card-title text-dark fw-semibold">
                                                 <i class="bi bi-hand-thumbs-up-fill me-2 text-primary"></i>Dispatch Ticket Tariff for Approval
                                             </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketTariffPending.ToString("N0")</p>
+                                            <p class="card-text display-6 text-primary fw-bold">@Model.MMSIDispatchTicketForApproval.ToString("N0")</p>
                                         </div>
                                     </div>
                                 }
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "DispatchTicket", new { area = "MMSI", filterType = "ForBilling" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">
@@ -457,7 +457,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                @if (User.IsInRole("Admin"))
+                                @if (true)
                                 {
                                     <a href="@Url.Action("Index", "Billing", new { area = "MMSI", filterType = "ForCollection" })" class="text-decoration-none">
                                         <div class="card shadow-sm h-100 border-0">

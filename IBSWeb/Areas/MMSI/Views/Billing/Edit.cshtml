@@ -1,4 +1,4 @@
-@model IBS.Models.MMSI.MMSIBilling
+@model CreateBillingViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -88,56 +88,7 @@
                 <input asp-for="MMSIBillingId" id="billingId" value="@Model.MMSIBillingId" type="hidden">
                 <div class="row pt-3">
                 </div>
-                <div class="row">
-                    <div class="form-floating col-3 my-3">
-                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" readonly>
-                        <label asp-for="MMSIBillingNumber" for="billingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
-                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
-                    </div>
-                    <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
-                        <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented"></input>
-                        <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" checked="@Model.IsUndocumented" disabled>
-                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
-                            Undocumented
-                        </label>
-                    </div>
-                    <div class="col-3">
-
-                    </div>
-                    <div class="form-floating col-3 my-3">
-                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
-                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
-                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-floating col-3 my-2">
-                        <input asp-for="Date" type="date" id="Date" class="form-control border-0 shadow">
-                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
-                        <span asp-validation-for="Date" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-3 my-2">
-                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
-                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Port</option>
-                        </select>
-                        <span asp-validation-for="PortId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-3 my-2">
-                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Terminal</option>
-                        </select>
-                        <span asp-validation-for="TerminalId" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-3 my-2">
-                        <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
-                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Vessel</option>
-                        </select>
-                        <span asp-validation-for="VesselId" class="text-danger"></span>
-                    </div>
-                </div>
+                
                 <div class="row pt-2">
                     <div class="form-group col-3 my-2" title="Customer can no longer be changed" >
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
@@ -148,7 +99,7 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-6">
-                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "" : "d-none")">
+                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "d-none" : "")">
 
                             <div class="col-6" style="height: 72px;">
                                 <div class="row">
@@ -156,13 +107,15 @@
                                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
                                         @if (string.IsNullOrEmpty(Model.PrincipalId.ToString()))
                                         {
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
+                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                                                 <option value="">Select Principal</option>
                                             </select>
                                         }
                                         else
                                         {
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
+                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
                                                 <option value="">Select Principal</option>
                                             </select>
                                         }
@@ -172,7 +125,7 @@
                             </div>
 
                             <div class="form-check col-6 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
-                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
+                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "") disabled>
                                 <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox" style="font-size: 20px;">
                                     Use Principal
                                 </label>
@@ -223,6 +176,57 @@
                         <span class="text-danger"></span>
                     </div>
                 </div>
+                
+                <div class="row">
+                    <div class="form-floating col-3 my-3">
+                        <input asp-for="MMSIBillingNumber" type="text" class="form-control border-0 shadow" id="billingNumber" placeholder="" readonly>
+                        <label asp-for="MMSIBillingNumber" for="billingNumber" id="status" class="ms-2">Billing Number<span class="required text-danger">*</span></label>
+                        <span asp-validation-for="MMSIBillingNumber" class="text-danger"></span>
+                    </div>
+                    <div class="form-check col-3 ps-2 my-3 text-center d-flex align-items-center justify-content-start">
+                        <input type="hidden" asp-for="IsUndocumented" value="@Model.IsUndocumented"></input>
+                        <input class="form-check-input m-0 ms-2" type="checkbox" id="isUndocumentedCheckbox" checked="@Model.IsUndocumented" disabled>
+                        <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox" style="font-size: 20px;">
+                            Undocumented
+                        </label>
+                    </div>
+                    <div class="col-3">
+
+                    </div>
+                    <div class="form-floating col-3 my-3">
+                        <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder="">
+                        <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage Number</label>
+                        <span asp-validation-for="VoyageNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-floating col-3 my-2">
+                        <input asp-for="Date" type="date" id="Date" class="form-control border-0 shadow">
+                        <label asp-for="Date" for="Date" class="ms-2">Date Created</label>
+                        <span asp-validation-for="Date" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-3 my-2">
+                        <label class="control-label ps-1 pb-1">Port<span class="required text-danger">*</span></label>
+                        <select asp-for="PortId" asp-items="@Model.Ports" id="PortSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Port</option>
+                        </select>
+                        <span asp-validation-for="PortId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-3 my-2">
+                        <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
+                        <select asp-for="TerminalId" asp-items="@Model.Terminals" id="TerminalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Terminal</option>
+                        </select>
+                        <span asp-validation-for="TerminalId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-3 my-2">
+                        <label class="control-label ps-1 pb-1">Vessel<span class="required text-danger">*</span></label>
+                        <select asp-for="VesselId" asp-items="@Model.Vessels" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                            <option value="">Select Vessel</option>
+                        </select>
+                        <span asp-validation-for="VesselId" class="text-danger"></span>
+                    </div>
+                </div>
 
                 <div class="row pt-2 mt-4">
 
@@ -255,11 +259,14 @@
                 </table>
 
                 <div class="row py-3 justify-content-end d-flex">
-                    <div class="col-3">
-                        <label>Total Dispatch Amount: ₱<label id="DispatchAmountTotal"></label></label>
+                    <div class="col-2">
+                        <label>Total Dispatch: ₱<label id="DispatchAmountTotal"></label></label>
                     </div>
                     <div class="col-2">
-                        <label>Total BAF Amount: ₱<label id="BAFAmountTotal"></label></label>
+                        <label>Total BAF: ₱<label id="BAFAmountTotal"></label></label>
+                    </div>
+                    <div class="col-2">
+                        <label>Total Amount: ₱<label id="OverallTotal"></label></label>
                     </div>
                 </div>
 
@@ -516,7 +523,7 @@
                         <tr>
                             <td class="text-center align-middle ps-4">${value.dispatchNumber}</td>
                             <td class="text-center align-middle ps-4">${value.tugboat.tugboatName}</td>
-                            <td class="text-center align-middle ps-4">${value.activityService.activityServiceName}</td>
+                            <td class="text-center align-middle ps-4">${value.service.serviceName}</td>
                             <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
                             <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
                             <td class="text-center align-middle ps-4">${value.totalHours.toFixed(2)}</td>
@@ -529,8 +536,10 @@
                 });
 
                 // Dispatch and BAF totals: show
-                $("#DispatchAmountTotal").text(totalDispatchAmount.toFixed(2));
-                $("#BAFAmountTotal").text(totalBAFAmount.toFixed(2));
+                let overallAmount = totalDispatchAmount + totalBAFAmount;
+                $("#DispatchAmountTotal").text(formatNumber(totalDispatchAmount));
+                $("#BAFAmountTotal").text(formatNumber(totalBAFAmount));
+                $("#OverallTotal").text(formatNumber(overallAmount));
 
                 // Reinitialize new table
                 table = initializeDataTable('#dataTable');
