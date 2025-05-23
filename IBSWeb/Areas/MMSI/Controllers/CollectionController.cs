@@ -278,77 +278,84 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return View(viewModel);
         }
 
-        // [HttpPost]
-        // public async Task<IActionResult> Edit(MMSICollection viewModel, CancellationToken cancellationToken = default)
-        // {
-        //     try
-        //     {
-        //         if (ModelState.IsValid)
-        //         {
-        //
-        //             var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
-        //
-        //             #region -- Changes
-        //
-        //             var changes = new List<string>();
-        //
-        //             if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
-        //             if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
-        //             if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
-        //             if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
-        //             if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
-        //             if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
-        //             if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
-        //
-        //             #endregion -- Changes
-        //
-        //             #region -- Audit Trail
-        //
-        //             var audit = new FilprideAuditTrail
-        //             {
-        //                 Date = DateTimeHelper.GetCurrentPhilippineTime(),
-        //                 Username = await GetUserNameAsync(),
-        //                 MachineName = Environment.MachineName,
-        //                 Activity = changes.Any()
-        //                     ? $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}"
-        //                     : $"No changes detected for collection #{currentModel.MMSICollectionId}",
-        //                 DocumentType = "Collection",
-        //                 Company = await GetCompanyClaimAsync()
-        //             };
-        //
-        //             await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-        //             await _dbContext.SaveChangesAsync(cancellationToken);
-        //
-        //             #endregion -- Audit Trail
-        //
-        //             currentModel.Date = model.Date;
-        //             currentModel.CustomerId = model.CustomerId;
-        //             currentModel.CheckNumber = model.CheckNumber;
-        //             currentModel.CheckDate = model.CheckDate;
-        //             currentModel.DepositDate = model.DepositDate;
-        //             currentModel.Amount = model.Amount;
-        //             currentModel.EWT = model.EWT;
-        //
-        //             await _dbContext.SaveChangesAsync(cancellationToken);
-        //             TempData["success"] = "Collection modified successfully";
-        //
-        //             return RedirectToAction(nameof(Index));
-        //         }
-        //         else
-        //         {
-        //             TempData["error"] = "There was an error updating the collection.";
-        //
-        //             return View(model);
-        //         }
-        //
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         TempData["error"] = ex.Message;
-        //
-        //         return View(model);
-        //     }
-        // }
+        [HttpPost]
+        public async Task<IActionResult> Edit(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+
+                    var model = CreateCollectionVmToCollectionModel(viewModel);
+
+                    var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
+
+                    if (currentModel == null)
+                    {
+                        throw new NullReferenceException("The collection does not exist.");
+                    }
+
+                    #region -- Changes
+
+                    var changes = new List<string>();
+
+                    if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
+                    if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.Amount != model.Amount) { changes.Add($"Amount: {currentModel.Amount} -> {model.Amount}"); }
+                    if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
+                    if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
+                    if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
+
+                    #endregion -- Changes
+
+                    #region -- Audit Trail
+
+                    var audit = new FilprideAuditTrail
+                    {
+                        Date = DateTimeHelper.GetCurrentPhilippineTime(),
+                        Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
+                        MachineName = Environment.MachineName,
+                        Activity = changes.Any()
+                            ? $"Edit collection #{currentModel.MMSICollectionNumber} {string.Join(", ", changes)}"
+                            : $"No changes detected for collection #{currentModel.MMSICollectionId}",
+                        DocumentType = "Collection",
+                        Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
+                    };
+
+                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    #endregion -- Audit Trail
+
+                    currentModel.Date = model.Date;
+                    currentModel.CustomerId = model.CustomerId;
+                    currentModel.CheckNumber = model.CheckNumber;
+                    currentModel.CheckDate = model.CheckDate;
+                    currentModel.DepositDate = model.DepositDate;
+                    currentModel.Amount = model.Amount;
+                    currentModel.EWT = model.EWT;
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    TempData["success"] = "Collection modified successfully";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    TempData["error"] = "There was an error updating the collection.";
+
+                    return View(viewModel);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                return View(viewModel);
+            }
+        }
 
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken = default)
         {
