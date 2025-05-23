@@ -1,4 +1,4 @@
-@model MMSIDispatchTicket
+@model ServiceRequestViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -19,7 +19,7 @@
     <div class="card-body">
         
         <form method="post" class="row" enctype="multipart/form-data">
-            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="COSNumber" style="display:none">
+            <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" type="text" class="form-control border-0 shadow" id="DispatchTicketId" style="display:none">
             <div class="border-2 px-3">
                 <div asp-validation-summary="ModelOnly"></div>
 
@@ -45,15 +45,6 @@
                         <input asp-for="VoyageNumber" type="text" class="form-control border-0 shadow" id="VoyageNumber" placeholder=" " maxlength="20">
                         <label asp-for="VoyageNumber" for="VoyageNumber" class="ms-2">Voyage#(Optional)</label>
                         <span asp-validation-for="VoyageNumber" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="form-group col-12 my-2">
-                        <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <select id="CustomerId" asp-for="CustomerId" asp-items="@Model.Customers" class="port-select form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                            <option value="">Select Customer</option>
-                        </select>
-                        <span class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
@@ -148,7 +139,7 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-12 my-2">
-                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" placeholder=" ">
+                        <input asp-for="Remarks" value="@Model.Remarks" type="text" class="form-control border-0 shadow" id="Remarks" maxlength="100" placeholder=" ">
                         <label asp-for="Remarks" for="Remarks" class="ms-2">Remarks(Optional)</label>
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
@@ -304,8 +295,8 @@
 
                 if ((existingImageName && existingImageName !== "" && newImage) || (existingVideoName && existingVideoName !== "" && newVideo)) {
                     Swal.fire({
-                        title: "Do you want to replace existing file(s)?",
-                        text: "Current file(s) will be replaced with new one(s).",
+                        title: "Do you want to replace existing files?",
+                        text: "Current files will be replaced with new ones.",
                         showCancelButton: true,
                         confirmButtonText: "Confirm",
                         cancelButtonText: "Cancel"

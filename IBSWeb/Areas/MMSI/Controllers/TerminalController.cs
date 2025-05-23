@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             MMSITerminal model = new()
             {
-                Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken)
+                Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken)
             };
 
             return View(model);
@@ -102,7 +102,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(t => t.Port)
                 .FirstOrDefault();
 
-            model.Ports = await _unitOfWork.Msap.GetMMSIPortsById(cancellationToken);
+            model.Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken);
 
             return View(model);
         }

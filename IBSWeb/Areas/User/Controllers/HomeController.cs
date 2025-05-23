@@ -109,8 +109,8 @@ namespace IBSWeb.Areas.User.Controllers
                         .Where(po => po.Status == "For Tariff")
                         .CountAsync(),
 
-                    MMSIDispatchTicketTariffPending = await _dbContext.MMSIDispatchTickets
-                        .Where(po => po.Status == "Tariff Pending")
+                    MMSIDispatchTicketForApproval = await _dbContext.MMSIDispatchTickets
+                        .Where(po => po.Status == "For Approval")
                         .CountAsync(),
 
                     MMSIDispatchTicketForBilling = await _dbContext.MMSIDispatchTickets
