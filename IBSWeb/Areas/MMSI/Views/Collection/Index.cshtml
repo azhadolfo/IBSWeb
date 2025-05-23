@@ -138,13 +138,6 @@
                         "orderable": false,
                         "render": function(data, type, row) {
                             let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
-                            
-                            if (row.status !== "For Collection")
-                            {
-                                actions += `<a class="btn btn-primary col-12" href="${previewUrl}?id=${row.mmsiCollectionId}"><i class="bi bi-eye"></i> View</a>`
-                            }
-                            else
-                            {
                                 actions += `<div class="dropdown align-content-center">
                                         <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
                                         <ul class="dropdown-menu" style="position: absolute !important; left: 0 !important; right: auto !important;" aria-labelledby="actionsDropdown">
@@ -152,7 +145,6 @@
                                             <li><a class="dropdown-item" href="${editUrl}?id=${row.mmsiCollectionId}"><i class="bi bi-pencil-square"></i> Edit</a></li>
                                         </ul>
                                     </div>`
-                            }
                             actions += `</div></div>`;
                             return actions;
                         }
