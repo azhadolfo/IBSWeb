@@ -168,6 +168,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 DepositDate = viewModel.DepositDate,
             };
 
+            if (viewModel.MMSICollectionId != null)
+            {
+                model.MMSICollectionId = viewModel.MMSICollectionId ?? 0;
+            }
+
             return model;
         }
 
@@ -288,6 +293,45 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var model = CreateCollectionVmToCollectionModel(viewModel);
 
+                    //previous billings
+                    var previousCollectedBills = await _dbContext.MMSIBillings
+                        .Where(b => b.CollectionId == model.MMSICollectionId)
+                        .ToListAsync(cancellationToken);
+
+                    //previous billings
+                    var previousCollectedBillsString = await _dbContext.MMSIBillings
+                        .Where(b => b.CollectionId == model.MMSICollectionId)
+                        .Select(b => b.MMSIBillingId.ToString())
+                        .ToListAsync(cancellationToken);
+
+                    //revert old billings
+                    foreach (var previousBilling in previousCollectedBills)
+                    {
+                        var billing = await _dbContext.MMSIBillings
+                            .FindAsync(previousBilling.MMSIBillingId, cancellationToken);
+
+                        if (billing == null) throw new NullReferenceException("Billing not found.");
+
+                        billing.Status = "For Collection";
+                        billing.CollectionId = 0;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
+                    if (viewModel.ToCollectBillings == null) throw new NullReferenceException("No Billing was selected.");
+
+                    //relate new billings to collection
+                    foreach (var newBilling in viewModel.ToCollectBillings)
+                    {
+                        var billing = await _dbContext.MMSIBillings
+                            .FindAsync(int.Parse(newBilling), cancellationToken);
+
+                        if (billing == null) throw new NullReferenceException("Billing not found.");
+
+                        billing.Status = "Collected";
+                        billing.CollectionId = model.MMSICollectionId;
+                        await _dbContext.SaveChangesAsync(cancellationToken);
+                    }
+
                     var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
 
                     if (currentModel == null)
@@ -306,6 +350,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     if (currentModel.EWT != model.EWT) { changes.Add($"EWT: {currentModel.EWT} -> {model.EWT}"); }
                     if (currentModel.CheckDate != model.CheckDate) { changes.Add($"CheckDate: {currentModel.CheckDate} -> {model.CheckDate}"); }
                     if (currentModel.DepositDate != model.DepositDate) { changes.Add($"DepositDate: {currentModel.DepositDate} -> {model.DepositDate}"); }
+                    if (!previousCollectedBillsString.OrderBy(x => x).SequenceEqual(viewModel.ToCollectBillings.OrderBy(x => x)))
+                    { changes.Add($"ToBillDispatchTickets: #{string.Join(", #", previousCollectedBillsString)} -> #{string.Join(", #", viewModel.ToCollectBillings)}"); }
 
                     #endregion -- Changes
 
