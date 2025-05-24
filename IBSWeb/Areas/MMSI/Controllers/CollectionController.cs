@@ -146,6 +146,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create collection.");
                 TempData["error"] = ex.Message;
 
                 viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
@@ -265,8 +266,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get disbursements.");
+                _logger.LogError(ex, "Failed to get collections");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -412,6 +414,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit collection.");
                 TempData["error"] = ex.Message;
 
                 return View(viewModel);
@@ -467,6 +470,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get billings.");
                 return Json(new
                 {
                     success = false,
@@ -490,8 +494,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 throw new NullReferenceException("Customer not found.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Customer not found.");
+
                 return Json(new { success = false, message = "Customer not found" });
             }
         }
