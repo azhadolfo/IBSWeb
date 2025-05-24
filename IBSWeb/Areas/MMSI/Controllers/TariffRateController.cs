@@ -16,12 +16,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<TariffRateController> _logger;
 
-        public TariffRateController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public TariffRateController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
+            UserManager<IdentityUser> userManager, ILogger<TariffRateController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -93,13 +96,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create tariff rate.");
                 TempData["error"] = ex.Message;
                 model = await GetSelectLists(model, cancellationToken);
                 model.Terminal = await _dbContext.MMSITerminals
                     .Include(t => t.Port)
                     .Where(t => t.TerminalId == model.TerminalId)
                     .FirstOrDefaultAsync(cancellationToken);
-
                 return View(model);
             }
         }
