@@ -65,6 +65,8 @@ else
     builder.Host.UseSerilog();
 }
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
