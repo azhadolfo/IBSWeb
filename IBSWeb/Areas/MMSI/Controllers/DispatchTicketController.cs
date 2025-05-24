@@ -1080,17 +1080,37 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
+                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
+
                     queried = queried
                     .Where(dt =>
+                        dt.Date.Day.ToString().Contains(searchValue) == true ||
+                        dt.Date.Month.ToString().Contains(searchValue) == true ||
+                        dt.Date.Year.ToString().Contains(searchValue) == true ||
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber.ToString().Contains(searchValue) == true ||
-                        dt.Service!.ServiceName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
-                        dt.Tugboat!.TugboatName.ToString().Contains(searchValue) == true ||
-                        dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
-                        dt.Vessel!.VesselName.ToString().Contains(searchValue) == true ||
-                        dt.Status.Contains(searchValue) == true
+                        dt.DispatchNumber.ToLower().Contains(searchValue) == true ||
+
+                        dt.DateLeft.Day.ToString().Contains(searchValue) == true ||
+                        dt.DateLeft.Month.ToString().Contains(searchValue) == true ||
+                        dt.DateLeft.Year.ToString().Contains(searchValue) == true ||
+
+                        dt.TimeLeft.Hour.ToString().Contains(searchValue) == true ||
+                        dt.TimeLeft.Minute.ToString().Contains(searchValue) == true ||
+
+                        dt.DateArrived.Day.ToString().Contains(searchValue) == true ||
+                        dt.DateArrived.Month.ToString().Contains(searchValue) == true ||
+                        dt.DateArrived.Year.ToString().Contains(searchValue) == true ||
+
+                        dt.TimeArrived.Hour.ToString().Contains(searchValue) == true ||
+                        dt.TimeArrived.Minute.ToString().Contains(searchValue) == true ||
+
+                        dt.Service!.ServiceName.ToLower().Contains(searchValue) == true ||
+                        dt.Terminal!.Port!.PortName!.ToLower().Contains(searchValue) == true ||
+                        dt.Terminal!.TerminalName!.ToLower().Contains(searchValue) == true ||
+                        dt.Tugboat!.TugboatName.ToLower().Contains(searchValue) == true ||
+                        dt.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
+                        dt.Vessel!.VesselName.ToLower().Contains(searchValue) == true ||
+                        dt.Status.ToLower().Contains(searchValue) == true
                         );
                 }
 
