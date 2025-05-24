@@ -50,52 +50,58 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
+            if (model.Dispatch <= 0)
+            {
+                TempData["error"] = "Dispatch value cannot be zero.";
+
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (ModelState.IsValid)
+                var user = await _userManager.GetUserAsync(User);
+                var existingModel = await _dbContext.MMSITariffRates
+                    .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ServiceId == model.ServiceId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (existingModel != null)
                 {
-                    if (model.Dispatch <= 0)
-                    {
-                        throw new Exception("Dispatch value cannot be zero.");
-                    }
-
-                    var user = await _userManager.GetUserAsync(User);
-                    var existingModel = await _dbContext.MMSITariffRates
-                        .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ServiceId == model.ServiceId)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    if (existingModel != null)
-                    {
-                        existingModel.Dispatch = model.Dispatch;
-                        existingModel.BAF = model.BAF;
-                        existingModel.DispatchDiscount = model.DispatchDiscount;
-                        existingModel.BAFDiscount = model.BAFDiscount;
-                        existingModel.UpdateBy = user?.UserName;
-                        existingModel.UpdateDate = DateTime.Now;
-                        model = existingModel;
-                        model.Terminal = default;
-                        TempData["success"] = "Tariff rate updated successfully.";
-                    }
-                    else
-                    {
-                        model.CreatedBy = user?.UserName;
-                        model.CreatedDate = DateTime.Now;
-                        model.Terminal = default;
-                        await _dbContext.MMSITariffRates.AddAsync(model, cancellationToken);
-                        TempData["success"] = "Tariff rate created successfully.";
-                    }
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    return RedirectToAction(nameof(Index));
+                    existingModel.Dispatch = model.Dispatch;
+                    existingModel.BAF = model.BAF;
+                    existingModel.DispatchDiscount = model.DispatchDiscount;
+                    existingModel.BAFDiscount = model.BAFDiscount;
+                    existingModel.UpdateBy = user?.UserName;
+                    existingModel.UpdateDate = DateTime.Now;
+                    model = existingModel;
+                    model.Terminal = default;
+                    TempData["success"] = "Tariff rate updated successfully.";
                 }
                 else
                 {
-                    throw new Exception("There is an error with the entry, please try again.");
+                    model.CreatedBy = user?.UserName;
+                    model.CreatedDate = DateTime.Now;
+                    model.Terminal = default;
+                    await _dbContext.MMSITariffRates.AddAsync(model, cancellationToken);
+                    TempData["success"] = "Tariff rate created successfully.";
                 }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create tariff rate.");
                 TempData["error"] = ex.Message;
                 model = await GetSelectLists(model, cancellationToken);
@@ -127,6 +133,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
             var currentModel = await _dbContext.MMSITariffRates.FindAsync(model.TariffRateId, cancellationToken);
 
             if (currentModel == null)
@@ -134,18 +147,31 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return NotFound();
             }
 
-            currentModel.AsOfDate = model.AsOfDate;
-            currentModel.CustomerId = model.CustomerId;
-            currentModel.ServiceId = model.ServiceId;
-            currentModel.TerminalId = model.TerminalId;
-            currentModel.Dispatch = model.Dispatch;
-            currentModel.BAF = model.BAF;
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                currentModel.AsOfDate = model.AsOfDate;
+                currentModel.CustomerId = model.CustomerId;
+                currentModel.ServiceId = model.ServiceId;
+                currentModel.TerminalId = model.TerminalId;
+                currentModel.Dispatch = model.Dispatch;
+                currentModel.BAF = model.BAF;
 
-            TempData["success"] = "Entry edited successfully.";
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Entry edited successfully.";
 
-            return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to update tariff rate.");
+                TempData["error"] = ex.Message;
+
+                return View(model);
+            }
         }
 
         [HttpGet]
