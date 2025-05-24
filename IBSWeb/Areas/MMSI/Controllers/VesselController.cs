@@ -35,29 +35,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSIVessel model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
                 await _db.MMSIVessels.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
-                _db.MMSIVessels.Remove(model);
-
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create vessel.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
@@ -75,16 +73,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 _db.MMSIVessels.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
-
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete vessel.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -93,13 +88,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIVessels.FirstOrDefaultAsync(a => a.VesselId == id, cancellationToken);
-
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIVessel model, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
             var currentModel = await _db.MMSIVessels.FindAsync(model.VesselId);
 
             if (currentModel == null)
@@ -107,14 +107,25 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return NotFound();
             }
 
-            currentModel.VesselNumber = model.VesselNumber;
-            currentModel.VesselName = model.VesselName;
-            currentModel.VesselType = model.VesselType;
-            await _db.SaveChangesAsync(cancellationToken);
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                currentModel.VesselNumber = model.VesselNumber;
+                currentModel.VesselName = model.VesselName;
+                currentModel.VesselType = model.VesselType;
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit vessel.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
     }
 }
