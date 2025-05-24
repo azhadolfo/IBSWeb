@@ -11,10 +11,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
     public class PortController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly ILogger<PortController> _logger;
 
-        public PortController(ApplicationDbContext db)
+        public PortController(ApplicationDbContext db, ILogger<PortController> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -52,14 +54,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
+                _logger.LogError(ex, "Failed to create port.");
+                TempData["error"] = ex.Message;
 
                 return View(model);
             }
@@ -85,14 +81,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
+                _logger.LogError(ex, "Failed to delete port.");
+                TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index));
             }
