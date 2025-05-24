@@ -14,11 +14,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<UserAccessController> _logger;
 
-        public UserAccessController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork)
+        public UserAccessController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<UserAccessController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         // GET
@@ -78,8 +80,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to create user access.");
                 TempData["error"] = ex.Message;
+                await transaction.RollbackAsync(cancellationToken);
                 model.Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
 
                 return View(model);
@@ -140,8 +143,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to edit user access.");
                 TempData["error"] = ex.Message;
+                await transaction.RollbackAsync(cancellationToken);
                 model.Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
 
                 return View(model);
