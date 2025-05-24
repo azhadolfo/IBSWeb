@@ -45,26 +45,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITerminal model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
                 await _db.MMSITerminals.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create terminal.");
                 TempData["error"] = ex.Message;
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to create terminal.");
                 return View(model);
             }
         }
@@ -82,9 +83,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 _db.MMSITerminals.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
-
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -109,29 +108,46 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             model.Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken);
-
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITerminal model, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
             var currentModel = await _db.MMSITerminals.FindAsync(model.TerminalId);
 
             if (currentModel == null)
             {
-                return NotFound();
+                TempData["error"] = "Entry not found, please try again.";
+                return View(model);
             }
 
-            currentModel.TerminalNumber = model.TerminalNumber;
-            currentModel.TerminalName = model.TerminalName;
-            currentModel.PortId = model.PortId;
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
+            try
+            {
+                currentModel.TerminalNumber = model.TerminalNumber;
+                currentModel.TerminalName = model.TerminalName;
+                currentModel.PortId = model.PortId;
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to delete terminal.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
 
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
         }
     }
 }
