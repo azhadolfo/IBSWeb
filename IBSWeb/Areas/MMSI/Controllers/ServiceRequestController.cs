@@ -144,6 +144,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(viewModel);
             }
 
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             var model = ServiceRequestVmToDispatchTicketModel(viewModel);
 
             model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
@@ -232,6 +234,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #endregion --Audit Trail
 
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
 
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
@@ -240,6 +243,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -251,6 +255,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to create service request.");
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"{ex.Message}";
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -330,6 +335,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 TempData["error"] = "Can't apply edit, please review your input.";
                 return RedirectToAction("Edit", new { id = vm.DispatchTicketId });
             }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
             var user = await _userManager.GetUserAsync(User);
 
@@ -481,23 +488,23 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #endregion --Audit Trail
 
+                    await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Entry edited successfully!";
 
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
                 }
                 else
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
                     model = await _db.MMSIDispatchTickets
-                    .Include(dt => dt.Terminal)
-                    .ThenInclude(t => t!.Port)
-                    .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
+                        .Include(dt => dt.Terminal)
+                        .ThenInclude(t => t!.Port)
+                        .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                     var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
-
                     ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
 
                     return View(viewModel);
@@ -507,6 +514,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit service request.");
                 TempData["error"] = ex.Message;
 
@@ -516,10 +524,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(cancellationToken);
 
                 var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
                 return View(viewModel);
