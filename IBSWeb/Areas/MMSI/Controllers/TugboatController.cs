@@ -4,6 +4,7 @@ using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -41,15 +42,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITugboat model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
                 if (model.IsCompanyOwned)
                 {
                     model.TugboatOwnerId = null;
@@ -58,6 +61,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await _db.MMSITugboats.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
 
                 return RedirectToAction(nameof(Index));
@@ -66,6 +70,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create tugboat.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
@@ -117,31 +122,40 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITugboat model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId);
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId, cancellationToken);
 
             if (currentModel == null)
             {
-                return NotFound();
+                TempData["error"] = "Entry not found, please try again.";
+                return View(model);
             }
 
-            if(model.IsCompanyOwned)
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                currentModel.TugboatOwnerId = null;
+                currentModel.TugboatOwnerId = model.IsCompanyOwned ? null : model.TugboatOwnerId;
+                currentModel.IsCompanyOwned = model.IsCompanyOwned;
+                currentModel.TugboatNumber = model.TugboatNumber;
+                currentModel.TugboatName = model.TugboatName;
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
             }
-            else
+            catch (Exception ex)
             {
-                currentModel.TugboatOwnerId = model.TugboatOwnerId;
+                _logger.LogError(ex, "Failed to edit tugboat.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
             }
-
-            currentModel.IsCompanyOwned = model.IsCompanyOwned;
-            currentModel.TugboatNumber = model.TugboatNumber;
-            currentModel.TugboatName = model.TugboatName;
-
-            await _db.SaveChangesAsync(cancellationToken);
-
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
         }
     }
 }
