@@ -99,22 +99,31 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIPort model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSIPorts.FindAsync(model.PortId);
+            var currentModel = await _db.MMSIPorts.FindAsync(model.PortId, cancellationToken);
 
             if (currentModel == null)
             {
                 return NotFound();
             }
 
-            currentModel.PortNumber = model.PortNumber;
-            currentModel.PortName = model.PortName;
-            currentModel.HasSBMA = model.HasSBMA;
+            try
+            {
+                currentModel.PortNumber = model.PortNumber;
+                currentModel.PortName = model.PortName;
+                currentModel.HasSBMA = model.HasSBMA;
+                await _db.SaveChangesAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
+                TempData["success"] = "Edited successfully";
 
-            TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit port.");
+                TempData["error"] = ex.Message;
 
-            return RedirectToAction(nameof(Index));
+                return View(model);
+            }
         }
     }
 }
