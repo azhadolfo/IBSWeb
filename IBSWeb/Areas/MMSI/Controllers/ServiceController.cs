@@ -35,18 +35,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSIService model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
 
                 await _db.MMSIServices.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
 
                 return RedirectToAction(nameof(Index));
@@ -55,6 +59,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create service.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
@@ -100,20 +105,30 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIService model, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
+            var currentModel = await _db.MMSIServices.FindAsync(model.ServiceId);
+
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                var currentModel = await _db.MMSIServices.FindAsync(model.ServiceId);
-
-                if (currentModel == null)
-                {
-                    return NotFound();
-                }
-
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;
 
                 await _db.SaveChangesAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -121,6 +136,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit service.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
