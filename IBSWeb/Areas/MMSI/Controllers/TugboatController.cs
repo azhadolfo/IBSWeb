@@ -13,11 +13,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<TugboatController> _logger;
 
-        public TugboatController(ApplicationDbContext db, IUnitOfWork unitOfWork)
+        public TugboatController(ApplicationDbContext db, IUnitOfWork unitOfWork, ILogger<TugboatController> logger)
         {
             _db = db;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -63,14 +65,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
+                _logger.LogError(ex, "Failed to create tugboat.");
+                TempData["error"] = ex.Message;
 
                 return View(model);
             }
@@ -94,8 +90,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete tugboat.");
+                TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index));
             }
         }
