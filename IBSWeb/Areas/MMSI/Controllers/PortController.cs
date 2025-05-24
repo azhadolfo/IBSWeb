@@ -63,18 +63,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
+            var model = await _db.MMSIPorts.FirstOrDefaultAsync(i => i.PortId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                var model = await _db.MMSIPorts.FirstOrDefaultAsync(i => i.PortId == id, cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
                 _db.MMSIPorts.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
 
                 return RedirectToAction(nameof(Index));
@@ -82,6 +85,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete port.");
+
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index));
@@ -106,13 +111,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return NotFound();
             }
 
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 currentModel.PortNumber = model.PortNumber;
                 currentModel.PortName = model.PortName;
                 currentModel.HasSBMA = model.HasSBMA;
-                await _db.SaveChangesAsync(cancellationToken);
 
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
 
                 return RedirectToAction(nameof(Index));
@@ -120,6 +128,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit port.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
