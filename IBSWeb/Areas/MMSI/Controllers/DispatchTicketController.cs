@@ -1087,6 +1087,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         dt.Date.Day.ToString().Contains(searchValue) == true ||
                         dt.Date.Month.ToString().Contains(searchValue) == true ||
                         dt.Date.Year.ToString().Contains(searchValue) == true ||
+
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
                         dt.DispatchNumber.ToLower().Contains(searchValue) == true ||
 
