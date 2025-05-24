@@ -182,7 +182,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit principal.");
-                TempData["error"] = "An error occurred while editing the entry. Please try again.";
+                TempData["error"] = ex.Message;
 
                 return View(model);
             }
