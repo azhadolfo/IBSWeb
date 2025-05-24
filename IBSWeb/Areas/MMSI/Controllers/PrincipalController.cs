@@ -62,15 +62,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSIPrincipal model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
                 var customer = await _db.FilprideCustomers
                     .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException();
 
@@ -79,6 +81,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await _db.MMSIPrincipals.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
 
                 return RedirectToAction(nameof(Index));
@@ -87,6 +90,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create principal.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
@@ -145,36 +149,41 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIPrincipal model, CancellationToken cancellationToken = default)
         {
-            // model of new principal
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 // model of old principal
                 var currentModel = await _db.MMSIPrincipals.FindAsync(model.PrincipalId, cancellationToken);
 
-                if (currentModel != null)
-                {
-                    currentModel.Address = model.Address;
-                    currentModel.PrincipalName = model.PrincipalName;
-                    currentModel.TIN = model.TIN;
-                    currentModel.BusinessType = model.BusinessType;
-                    currentModel.PrincipalName = model.PrincipalName;
-                    currentModel.Terms = model.Terms;
-                    currentModel.Mobile1 = model.Mobile1;
-                    currentModel.Mobile2 = model.Mobile2;
-                    currentModel.Landline1 = model.Landline1;
-                    currentModel.Landline2 = model.Landline2;
-                    currentModel.IsVatable = model.IsVatable;
-                    currentModel.IsActive = model.IsActive;
-                    currentModel.CustomerId = model.CustomerId;
-                }
-                else
+                if (currentModel == null)
                 {
                     TempData["error"] = "Principal not found.";
                     return View(model);
                 }
 
-                await _db.SaveChangesAsync(cancellationToken);
+                currentModel.Address = model.Address;
+                currentModel.PrincipalName = model.PrincipalName;
+                currentModel.TIN = model.TIN;
+                currentModel.BusinessType = model.BusinessType;
+                currentModel.PrincipalName = model.PrincipalName;
+                currentModel.Terms = model.Terms;
+                currentModel.Mobile1 = model.Mobile1;
+                currentModel.Mobile2 = model.Mobile2;
+                currentModel.Landline1 = model.Landline1;
+                currentModel.Landline2 = model.Landline2;
+                currentModel.IsVatable = model.IsVatable;
+                currentModel.IsActive = model.IsActive;
+                currentModel.CustomerId = model.CustomerId;
 
+                await _db.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -182,6 +191,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit principal.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
 
                 return View(model);
