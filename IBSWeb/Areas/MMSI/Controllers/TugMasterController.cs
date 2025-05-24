@@ -11,10 +11,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
     public class TugMasterController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly ILogger<TugMasterController> _logger;
 
-        public TugMasterController(ApplicationDbContext db)
+        public TugMasterController(ApplicationDbContext db, ILogger<TugMasterController> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -51,14 +53,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
+                _logger.LogError(ex, "Failed to create tug master.");
+                TempData["error"] = ex.Message;
 
                 return View(model);
             }
@@ -82,8 +78,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete tug master.");
+                TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index));
             }
         }
