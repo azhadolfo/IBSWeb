@@ -190,6 +190,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create billing.");
                 TempData["error"] = ex.Message;
 
                 viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
@@ -272,6 +273,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get dispatch tickets.");
+
                 return Json(new
                 {
                     success = false,
@@ -402,8 +405,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get disbursements.");
+                _logger.LogError(ex, "Failed to get billings.");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -576,6 +580,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit billing.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -607,14 +612,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                if (string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.Message;
-                }
-                else
-                {
-                    TempData["error"] = $"{ex.InnerException.Message}";
-                }
+                _logger.LogError(ex, "Failed to delete billing.");
+                TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
@@ -771,6 +770,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to print billing.");
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Error generating sales report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
                 ex.Message, ex.StackTrace, _userManager.GetUserAsync(User));
@@ -898,7 +898,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             return Json(principalsList);
         }
-
 
         [HttpPost]
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
