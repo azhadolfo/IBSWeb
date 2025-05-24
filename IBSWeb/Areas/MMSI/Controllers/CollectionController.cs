@@ -212,9 +212,24 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(dt =>
-                        dt.Customer?.CustomerName.ToString().Contains(searchValue) == true ||
-                        dt.Status.Contains(searchValue) == true
+                    .Where(c =>
+
+                        c.Date.Day.ToString().Contains(searchValue) == true ||
+                        c.Date.Month.ToString().Contains(searchValue) == true ||
+                        c.Date.Year.ToString().Contains(searchValue) == true ||
+
+                        c.CheckDate.Day.ToString().Contains(searchValue) == true ||
+                        c.CheckDate.Month.ToString().Contains(searchValue) == true ||
+                        c.CheckDate.Year.ToString().Contains(searchValue) == true ||
+
+                        c.DepositDate.Day.ToString().Contains(searchValue) == true ||
+                        c.DepositDate.Month.ToString().Contains(searchValue) == true ||
+                        c.DepositDate.Year.ToString().Contains(searchValue) == true ||
+
+                        c.Amount.ToString().Contains(searchValue) == true ||
+                        c.MMSICollectionNumber.ToLower().Contains(searchValue) == true ||
+                        c.Customer?.CustomerName.ToLower().Contains(searchValue) == true ||
+                        c.Status.ToLower().Contains(searchValue) == true
                         )
                     .ToList();
                 }
