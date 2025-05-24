@@ -331,11 +331,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     queried = queried
                         .Where(dt =>
-                            dt.Customer!.CustomerName.ToString().Contains(searchValue) == true ||
-                            dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
-                            dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
-                            dt.Vessel!.VesselName.ToString().Contains(searchValue) == true ||
-                            dt.Status.Contains(searchValue) == true
+
+                            dt.Date.Day.ToString().Contains(searchValue) == true ||
+                            dt.Date.Month.ToString().Contains(searchValue) == true ||
+                            dt.Date.Year.ToString().Contains(searchValue) == true ||
+
+                            dt.MMSIBillingNumber.ToLower().Contains(searchValue) == true ||
+                            dt.Amount.ToString().Contains(searchValue) == true ||
+                            dt.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
+                            dt.Terminal!.TerminalName!.ToLower().Contains(searchValue) == true ||
+                            dt.Terminal.Port!.PortName!.ToLower().Contains(searchValue) == true ||
+                            dt.Vessel!.VesselName.ToLower().Contains(searchValue) == true ||
+                            dt.Status.ToLower().Contains(searchValue) == true
                         );
                 }
 
