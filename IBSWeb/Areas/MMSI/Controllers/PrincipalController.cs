@@ -15,13 +15,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ILogger<PrincipalController> _logger;
 
         public PrincipalController(ApplicationDbContext db, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager)
+            UserManager<IdentityUser> userManager, ILogger<PrincipalController> logger)
         {
             _db = db;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _logger = logger;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -84,6 +86,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create principal.");
                 TempData["error"] = ex.Message;
 
                 return View(model);
@@ -115,7 +118,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete principal.");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -174,9 +179,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit principal.");
                 TempData["error"] = "An error occurred while editing the entry. Please try again.";
+
                 return View(model);
             }
         }
