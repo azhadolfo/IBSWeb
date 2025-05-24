@@ -132,7 +132,12 @@
                 "columns": [
                     {"data": "date"},
                     {"data": "mmsiBillingNumber"},
-                    {"data": "amount"},
+                    {
+                        "data": "amount",
+                        "render": function(data, type, row) {
+                            return `${formatNumber(row.amount)}`;
+                        }
+                    },
                     {"data": "customer.customerName"},
                     {
                         "data": "terminal.port.portName",
