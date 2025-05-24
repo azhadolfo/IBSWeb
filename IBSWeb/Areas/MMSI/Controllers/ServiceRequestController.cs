@@ -551,36 +551,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken = default)
-        {
-            var item = new List<MMSIDispatchTicket>();
-            if (status == "All" || status == null)
-            {
-                item = await _db.MMSIDispatchTickets
-                    .Where(dt => dt.Status == "Cancelled" || dt.Status == "For Posting")
-                    .Include(a => a.Service)
-                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                    .Include(a => a.Tugboat)
-                    .Include(a => a.TugMaster)
-                    .Include(a => a.Vessel)
-                    .ToListAsync(cancellationToken);
-            }
-            else
-            {
-                item = await _db.MMSIDispatchTickets
-                    .Where(dt => dt.Status == status)
-                    .Include(a => a.ServiceId)
-                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                    .Include(a => a.Tugboat)
-                    .Include(a => a.TugMaster)
-                    .Include(a => a.Vessel)
-                    .ToListAsync(cancellationToken);
-            }
-
-            return Json(item);
-        }
-
-        [HttpPost]
         public async Task<IActionResult> GetDispatchTicketLists([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             var currentUser = await _userManager.GetUserAsync(User);
