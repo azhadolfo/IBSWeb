@@ -22,7 +22,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public IActionResult Index()
         {
             var tugMaster = _db.MMSITugMasters.ToList();
-
             return View(tugMaster);
         }
 
@@ -35,27 +34,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITugMaster model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
                 await _db.MMSITugMasters.AddAsync(model, cancellationToken);
                 await _db.SaveChangesAsync(cancellationToken);
-
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create tug master.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
@@ -73,16 +72,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 _db.MMSITugMasters.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
-
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete tug master.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -99,22 +95,38 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITugMaster model, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
             var currentModel = await _db.MMSITugMasters.FindAsync(model.TugMasterId);
 
             if (currentModel == null)
             {
-                return NotFound();
+                TempData["error"] = "Entry not found, please try again.";
+                return View(model);
             }
 
-            currentModel.TugMasterNumber = model.TugMasterNumber;
-            currentModel.TugMasterName = model.TugMasterName;
-            currentModel.IsActive = model.IsActive;
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
-
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                currentModel.TugMasterNumber = model.TugMasterNumber;
+                currentModel.TugMasterName = model.TugMasterName;
+                currentModel.IsActive = model.IsActive;
+                await _db.SaveChangesAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit tug master.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
     }
 }
