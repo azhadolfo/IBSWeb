@@ -142,8 +142,18 @@
                     {"data": "date"},
                     {"data": "cosNumber"},
                     {"data": "dispatchNumber"},
-                    {"data": "dateLeft"},
-                    {"data": "dateArrived"},
+                    {
+                        "data": "dateLeft",
+                        "render": function(data, type, row) {
+                            return `${row.dateLeft} ${row.timeLeft}`;
+                        }
+                    },
+                    {
+                        "data": "dateArrived",
+                        "render": function(data, type, row) {
+                            return `${row.dateArrived} ${row.timeArrived}`;
+                        }
+                    },
                     {"data": "service.serviceName"},
                     {
                         "data": "terminal.port.portName",
