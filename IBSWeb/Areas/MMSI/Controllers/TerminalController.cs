@@ -13,11 +13,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<TerminalController> _logger;
 
-        public TerminalController(ApplicationDbContext db, IUnitOfWork unitOfWork)
+        public TerminalController(ApplicationDbContext db, IUnitOfWork unitOfWork, ILogger<TerminalController> logger)
         {
             _db = db;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -61,15 +63,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
-
+                _logger.LogError(ex, "Failed to create terminal.");
+                TempData["error"] = ex.Message;
                 return View(model);
             }
         }
@@ -94,6 +89,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete terminal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
