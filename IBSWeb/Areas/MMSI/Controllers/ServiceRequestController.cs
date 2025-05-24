@@ -248,6 +248,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create service request.");
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                 TempData["error"] = $"{ex.Message}";
@@ -506,6 +507,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
+                _logger.LogError(ex, "Failed to edit service request.");
                 TempData["error"] = ex.Message;
 
                 model = await _db.MMSIDispatchTickets
@@ -710,8 +712,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get disbursements.");
+                _logger.LogError(ex, "Failed to dispatch tickets.");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -746,6 +749,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete image.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Edit), new { id = id });
@@ -775,6 +779,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete video.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Edit), new { id = id });
@@ -800,6 +805,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to post service request.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { id = id });
@@ -825,6 +831,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to cancel service request.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { id = id });
@@ -890,8 +897,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to post selected requests.");
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
+
                     return RedirectToAction(nameof(Index));
                 }
             }
