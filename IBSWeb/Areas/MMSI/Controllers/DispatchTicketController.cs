@@ -194,6 +194,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create dispatch ticket.");
+
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["error"] = $"{ex.Message}";
@@ -422,7 +424,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to set tariff.");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
             }
         }
@@ -546,7 +550,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit tariff.");
                 TempData["error"] = ex.Message;
+
                 return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
             }
         }
@@ -789,6 +795,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit ticket.");
                 TempData["error"] = ex.Message;
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
@@ -838,6 +845,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to approve tariff.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -886,6 +894,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to revoke tariff approval.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -934,6 +943,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to disapprove tariff.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -974,6 +984,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to cancel dispatch ticket.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -1192,7 +1203,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get disbursements.");
+                _logger.LogError(ex, "Failed to get dispatch tickets.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
@@ -1224,6 +1235,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete image.");
                 TempData["error"] = ex.Message;
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
