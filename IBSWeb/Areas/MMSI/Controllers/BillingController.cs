@@ -107,6 +107,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
                 viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
                 TempData["error"] = "Can't create entry, please review your input.";
                 return View(viewModel);
@@ -192,6 +193,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
                 viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
                 return View(viewModel);
             }
@@ -429,6 +431,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
             viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
             viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
             viewModel.Terminals = await _unitOfWork.Billing.GetMMSITerminalsByPortId(viewModel.PortId, cancellationToken);
 
