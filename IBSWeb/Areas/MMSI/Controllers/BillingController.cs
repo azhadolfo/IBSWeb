@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken),
                 Vessels = await _unitOfWork.Billing.GetMMSIVesselsSelectList(cancellationToken),
-                Ports = await _unitOfWork.Billing.GetMMSIPortsById(cancellationToken)
+                Ports = await _unitOfWork.Billing.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(viewModel);
