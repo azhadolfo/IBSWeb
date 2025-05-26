@@ -399,5 +399,23 @@ namespace IBS.DataAccess.Repository.MMSI
 
             return dispatchTickets;
         }
+
+        public async Task<List<SelectListItem>> GetMMSITerminalsSelectList(int portId, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSITerminal> query = dbSet;
+
+            if (portId != 0)
+            {
+                query = query.Where(t => t.PortId == portId);
+            }
+
+            return await query
+                .OrderBy(s => s.TerminalNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.TerminalId.ToString(),
+                    Text = s.TerminalNumber + " " + s.TerminalName,
+                }).ToListAsync(cancellationToken);
+        }
     }
 }

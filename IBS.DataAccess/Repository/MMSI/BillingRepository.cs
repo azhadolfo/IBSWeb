@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.MasterFile;
 using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -28,19 +29,6 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
 
             return ports;
-        }
-
-        public async Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default)
-        {
-            List<SelectListItem> terminals = await _dbContext.MMSITerminals
-                .OrderBy(s => s.TerminalNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.TerminalId.ToString(),
-                    Text = s.TerminalNumber + " " + s.TerminalName,
-                }).ToListAsync(cancellationToken);
-
-            return terminals;
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken)
@@ -152,7 +140,6 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
         {
             model.Ports = await GetMMSIPortsSelectList(cancellationToken);
-            model.Terminals = await GetMMSIAllTerminalsById(cancellationToken);
             model.Vessels = await GetMMSIVesselsSelectList(cancellationToken);
             model.Customers = await GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
