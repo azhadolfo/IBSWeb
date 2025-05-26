@@ -149,6 +149,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IPortRepository Port { get; }
         ITerminalRepository Terminal { get; }
         ITugboatRepository Tugboat { get; }
+        IVesselRepository Vessel { get; }
 
         #endregion
 

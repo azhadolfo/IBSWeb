@@ -159,6 +159,7 @@ namespace IBS.DataAccess.Repository
         public IPortRepository Port { get; private set; }
         public ITerminalRepository Terminal { get; private set; }
         public ITugboatRepository Tugboat { get; private set; }
+        public IVesselRepository Vessel { get; private set; }
 
         #endregion
 
