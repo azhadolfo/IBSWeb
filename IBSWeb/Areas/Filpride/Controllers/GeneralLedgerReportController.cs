@@ -34,9 +34,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _logger = logger;
         }
 
-        private async Task<string> GetCompanyClaimAsync()
+        private async Task<string?> GetCompanyClaimAsync()
         {
             var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
@@ -58,7 +64,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var generalLedgerBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+                var generalLedgerBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims!);
 
                 if (!generalLedgerBooks.Any())
                 {
@@ -100,7 +106,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 });
                             });
 
-                            row.ConstantItem(100).Height(50).Image(imgFilprideLogoPath, ImageScaling.FitWidth);
+                            row.ConstantItem(size: 100)
+                                .Height(50)
+                                .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
                         });
 
                         page.Content().PaddingTop(10).Table(table =>
