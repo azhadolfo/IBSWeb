@@ -703,7 +703,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 // Create the Excel package
                 using var package = new ExcelPackage();
 
-                var worksheet = package.Workbook.Worksheets.Add($"Billing# {billing.MMSIBillingNumber}");
+                var worksheet = package.Workbook.Worksheets.Add($"Billing # {billing.MMSIBillingNumber}");
+                worksheet.Cells.Style.Font.Name = "Calibri";
 
                 worksheet.Cells["B2"].Value = $"{billing.Customer?.CustomerName}";
                 worksheet.Cells["E2"].Value = $"{billing.Date}";
@@ -758,11 +759,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
                 }
 
-                worksheet.Column(1).Width = 8.5;
-                worksheet.Column(2).Width = 60;
-                worksheet.Column(3).Width = 8.7;
-                worksheet.Column(4).Width = 9.2;
-                worksheet.Column(5).Width = 18;
+                worksheet.Cells[1, 1, row, 7].Style.Font.Name = "Calibri";
+
+                worksheet.Column(1).Width = 8;
+                worksheet.Column(2).Width = 53;
+                worksheet.Column(3).Width = 9;
+                worksheet.Column(4).Width = 8.5;
+                worksheet.Column(5).Width = 16;
 
                 var excelBytes = package.GetAsByteArray();
 
