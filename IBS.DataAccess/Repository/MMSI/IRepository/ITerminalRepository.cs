@@ -52,5 +52,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
         MMSIBilling ProcessAddress(MMSIBilling model, CancellationToken cancellationToken = default);
 
         Task<List<MMSIDispatchTicket>> GetSalesReport (DateOnly DateFrom, DateOnly DateTo, CancellationToken cancellationToken = default);
+
+        Task<List<SelectListItem>>
+            GetMMSITerminalsSelectList(int portId, CancellationToken cancellationToken = default);
     }
 }
