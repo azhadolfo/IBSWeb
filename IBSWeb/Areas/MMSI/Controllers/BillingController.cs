@@ -93,7 +93,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken),
                 Vessels = await _unitOfWork.Billing.GetMMSIVesselsSelectList(cancellationToken),
-                Ports = await _unitOfWork.Billing.GetMMSIPortsSelectList(cancellationToken)
+                Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(viewModel);
@@ -106,6 +106,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
+                viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
 
                 TempData["error"] = "Can't create entry, please review your input.";
                 return View(viewModel);
@@ -190,6 +191,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
+                viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
 
                 return View(viewModel);
             }
@@ -426,6 +428,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             // get select lists
             viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
             viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
+            viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
 
             viewModel.Terminals = await _unitOfWork.Billing.GetMMSITerminalsByPortId(viewModel.PortId, cancellationToken);
 
