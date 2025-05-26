@@ -9,8 +9,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
     {
         Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetMMSIVesselsSelectList(CancellationToken cancellationToken = default);
-
         Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(CancellationToken cancellationToken = default);
@@ -20,8 +18,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
         Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer (int? customerId, CancellationToken cancellationToken);
 
         Task<List<SelectListItem>> GetMMSIBilledTicketsById(int id, CancellationToken cancellationToken = default);
-
-        Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default);
 
         Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default);
 

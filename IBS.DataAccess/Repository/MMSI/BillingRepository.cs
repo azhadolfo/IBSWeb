@@ -35,17 +35,6 @@ namespace IBS.DataAccess.Repository.MMSI
             return terminalsList;
         }
 
-        public async Task<List<SelectListItem>> GetMMSIVesselsSelectList(CancellationToken cancellationToken = default)
-        {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
-            {
-                Value = s.VesselId.ToString(),
-                Text = s.VesselName
-            }).ToListAsync(cancellationToken);
-
-            return vessels;
-        }
-
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
             return await _dbContext.FilprideCustomers
@@ -122,13 +111,6 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
 
             return dispatchTicketList;
-        }
-
-        public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
-        {
-            model.Vessels = await GetMMSIVesselsSelectList(cancellationToken);
-
-            return model;
         }
 
         public override async Task<IEnumerable<MMSIBilling>> GetAllAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)

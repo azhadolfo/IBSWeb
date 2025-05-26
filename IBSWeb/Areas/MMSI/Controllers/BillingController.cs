@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             CreateBillingViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken),
-                Vessels = await _unitOfWork.Billing.GetMMSIVesselsSelectList(cancellationToken),
+                Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken),
                 Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
+                viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
                 viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
                 viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
@@ -190,7 +190,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to create billing.");
                 TempData["error"] = ex.Message;
 
-                viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
+                viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
                 viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
                 viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
@@ -428,7 +428,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var viewModel = BillingModelToCreateBillingVm(model);
 
             // get select lists
-            viewModel = await _unitOfWork.Billing.GetBillingLists(viewModel, cancellationToken);
+            viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
             viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
             viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
