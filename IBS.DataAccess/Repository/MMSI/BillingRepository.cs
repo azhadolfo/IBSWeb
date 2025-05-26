@@ -82,7 +82,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _dbContext.MMSIDispatchTickets
                 .Where(t => t.Status == "For Billing")
@@ -153,7 +153,7 @@ namespace IBS.DataAccess.Repository.MMSI
             model.Ports = await GetMMSIPortsById(cancellationToken);
             model.Terminals = await GetMMSIAllTerminalsById(cancellationToken);
             model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Customers = await GetMMSICustomersWithBillablesById(cancellationToken);
+            model.Customers = await GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
             return model;
         }

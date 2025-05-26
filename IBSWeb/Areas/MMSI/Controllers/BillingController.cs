@@ -88,7 +88,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
@@ -97,7 +96,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             CreateBillingViewModel viewModel = new()
             {
-                Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesById(cancellationToken),
+                Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken),
                 Vessels = await _unitOfWork.Billing.GetMMSIVesselsById(cancellationToken),
                 Ports = await _unitOfWork.Billing.GetMMSIPortsById(cancellationToken)
             };
