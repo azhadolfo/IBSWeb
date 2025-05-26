@@ -2,10 +2,12 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -73,18 +75,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         page.Size(PageSizes.Legal.Landscape());
                         page.Margin(20);
-                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Segoe UI"));
+                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
 
-                        page.Content().Padding(10).Table(table =>
+                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                        page.Header().Height(50).Row(row =>
+                        {
+                            row.RelativeItem().Column(column =>
+                            {
+                                column.Item()
+                                    .Text($"GENERAL LEDGER BY TRANSACTION")
+                                    .FontSize(20).SemiBold();
+
+                                column.Item().Text(text =>
+                                {
+                                    text.Span("Date From: ").SemiBold();
+                                    text.Span($"{model.DateFrom}");
+                                });
+
+                                column.Item().Text(text =>
+                                {
+                                    text.Span("Date To: ").SemiBold();
+                                    text.Span($"{model.DateTo}");
+                                });
+                            });
+
+                            row.ConstantItem(100).Height(50).Image(imgFilprideLogoPath, ImageScaling.FitWidth);
+                        });
+
+                        page.Content().PaddingTop(10).Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
+                                columns.ConstantColumn(80);
                                 columns.ConstantColumn(90);
-                                columns.ConstantColumn(110);
                                 columns.RelativeColumn(2);
                                 columns.RelativeColumn(2);
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(100);
+                                columns.ConstantColumn(80);
+                                columns.ConstantColumn(80);
                             });
 
                             table.Header(header =>
@@ -99,24 +127,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             foreach (var record in generalLedgerBooks)
                             {
-                                table.Cell().Text(record.Date.ToString("MM/dd/yyyy"));
+                                table.Cell().Text(record.Date.ToString(SD.Date_Format));
                                 table.Cell().Text(record.Reference);
                                 table.Cell().Text(record.Description);
                                 table.Cell().Text($"{record.AccountNo} {record.AccountTitle}");
-                                table.Cell().AlignRight().Text($"{record.Debit:N2}");
-                                table.Cell().AlignRight().Text($"{record.Credit:N2}");
+                                table.Cell().AlignRight().Text($"{record.Debit.ToString(SD.Two_Decimal_Format)}");
+                                table.Cell().AlignRight().Text($"{record.Credit.ToString(SD.Two_Decimal_Format)}");
+
                             }
 
                             table.Cell().ColumnSpan(4).AlignRight().Text("TOTAL:").SemiBold();
-                            table.Cell().AlignRight().Text($"{totalDebit:N2}").SemiBold();
-                            table.Cell().AlignRight().Text($"{totalCredit:N2}").SemiBold();
+                            table.Cell().AlignRight().Text($"{totalDebit.ToString(SD.Two_Decimal_Format)}").SemiBold();
+                            table.Cell().AlignRight().Text($"{totalCredit.ToString(SD.Two_Decimal_Format)}").SemiBold();
+                        });
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
                         });
                     });
                 });
 
                 var pdfBytes = document.GeneratePdf();
-
-                Response.Headers.Add("Content-Disposition", "inline; filename=AuditTrailReport.pdf");
                 return File(pdfBytes, "application/pdf");
             }
             catch (Exception ex)
