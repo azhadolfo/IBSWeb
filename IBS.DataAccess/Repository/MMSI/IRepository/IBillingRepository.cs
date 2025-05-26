@@ -7,7 +7,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IBillingRepository : IRepository<MMSIBilling>
     {
-        Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMMSIPortsSelectList(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default);
 

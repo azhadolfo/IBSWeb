@@ -16,7 +16,7 @@ namespace IBS.DataAccess.Repository.MMSI
             _dbContext = dbContext;
         }
 
-        public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSIPortsSelectList(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> ports = await _dbContext.MMSIPorts
                 .OrderBy(s => s.PortName)
@@ -150,7 +150,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
         {
-            model.Ports = await GetMMSIPortsById(cancellationToken);
+            model.Ports = await GetMMSIPortsSelectList(cancellationToken);
             model.Terminals = await GetMMSIAllTerminalsById(cancellationToken);
             model.Vessels = await GetMMSIVesselsSelectList(cancellationToken);
             model.Customers = await GetMMSICustomersWithBillablesSelectList(cancellationToken);
