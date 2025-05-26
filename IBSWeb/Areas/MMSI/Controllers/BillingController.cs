@@ -42,12 +42,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(string filterType, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIBillings
-                .Include(a => a.Terminal)
-                .Include(a => a.Vessel)
-                .Include (a => a.Customer)
-                .Include (a => a.Port)
-                .ToListAsync();
+            var model = await _unitOfWork.Billing.GetAllAsync(null, cancellationToken);
 
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
