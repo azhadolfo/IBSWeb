@@ -127,7 +127,6 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
         {
             model.Vessels = await GetMMSIVesselsSelectList(cancellationToken);
-            model.Customers = await GetMMSICustomersWithBillablesSelectList(cancellationToken);
 
             return model;
         }
