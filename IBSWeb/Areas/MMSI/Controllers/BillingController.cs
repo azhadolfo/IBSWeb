@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -89,12 +90,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            CreateBillingViewModel viewModel = new()
-            {
-                Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken),
-                Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken),
-                Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
-            };
+            var viewModel = await GetBillingSelectLists(new CreateBillingViewModel(), cancellationToken);
 
             return View(viewModel);
         }
@@ -104,10 +100,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
-                viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
-                viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
+                viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
 
                 TempData["error"] = "Can't create entry, please review your input.";
                 return View(viewModel);
@@ -190,10 +183,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to create billing.");
                 TempData["error"] = ex.Message;
 
-                viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
-                viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
-                viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
+                viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
 
                 return View(viewModel);
             }
@@ -428,10 +418,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var viewModel = BillingModelToCreateBillingVm(model);
 
             // get select lists
-            viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
-            viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
-            viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
+            viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
 
             viewModel.Terminals = await _unitOfWork.Billing.GetMMSITerminalsByPortId(viewModel.PortId, cancellationToken);
 
@@ -921,6 +908,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             return list;
+        }
+
+        public async Task<CreateBillingViewModel> GetBillingSelectLists (CreateBillingViewModel viewModel, CancellationToken cancellationToken = default)
+        {
+            viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
+            viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
+
+            if (viewModel.PortId != 0)
+            {
+                viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
+                return viewModel;
+            }
+
+            return viewModel;
         }
     }
 }
