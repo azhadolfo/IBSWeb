@@ -145,6 +145,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             }
 
+                            table.Cell().ColumnSpan(6).Element(cell =>
+                            {
+                                cell.Column(column =>
+                                {
+                                    column.Item().Height(2); // Top spacing or content
+                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
+                                    column.Item().Height(3); // Bottom spacing or content
+                                });
+                            });
+
+                            //table.Cell().ColumnSpan(6).BorderTop(1);
                             table.Cell().ColumnSpan(4).AlignRight().Text("TOTAL:").SemiBold();
                             table.Cell().AlignRight().Text($"{totalDebit.ToString(SD.Two_Decimal_Format)}").SemiBold();
                             table.Cell().AlignRight().Text($"{totalCredit.ToString(SD.Two_Decimal_Format)}").SemiBold();
