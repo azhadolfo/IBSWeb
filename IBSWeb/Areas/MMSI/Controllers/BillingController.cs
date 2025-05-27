@@ -412,23 +412,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
             viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
 
-            // get billed by current billing select list
-            var unbilledDT = await _unitOfWork.Billing.GetMMSIUnbilledTicketsById(cancellationToken);
-
-            // get not yet billed tickets select list
-            viewModel.UnbilledDispatchTickets = await _unitOfWork.Billing.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
-
-            // add the both select list above
-            viewModel.UnbilledDispatchTickets.AddRange(unbilledDT);
-
-            // get billed DTs
-            var listOfDtBilled = await _unitOfWork.DispatchTicket
-                .GetAllAsync(d => d.BillingId == id.ToString(), cancellationToken);
+            // get tickets to choose from
+            viewModel.UnbilledDispatchTickets = await GetEditTickets(viewModel.CustomerId, viewModel.MMSIBillingId ?? 0, cancellationToken);
 
             // put the already billed DT to string list so it appears on the select2 of view
-            viewModel.ToBillDispatchTickets = listOfDtBilled.Select(d => d.DispatchTicketId.ToString()).ToList();
+            viewModel.ToBillDispatchTickets = await _db.MMSIDispatchTickets.Where(t => t.BillingId == model.MMSIBillingId.ToString())
+                .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
+
             viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
-            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
 
             if (model.CustomerPrincipal == null)
             {
@@ -506,14 +498,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.BilledTo = model.BilledTo;
                     currentModel.Status = "For Collection";
 
-                    // get billed by current billing select list
-                    var unbilledDT = await _unitOfWork.Billing.GetMMSIUnbilledTicketsById(cancellationToken);
-
                     // get not yet billed tickets select list
                     model.UnbilledDispatchTickets = await _unitOfWork.Billing.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
-
-                    // add the both select list above
-                    model.UnbilledDispatchTickets.AddRange(unbilledDT);
 
                     // reset status of all the dispatch ticket affected by editing select
                     foreach (var dispatchTicket in model.UnbilledDispatchTickets)
@@ -848,25 +834,32 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<List<SelectListItem>?> GetEditTickets(int? customerId, int billingId, CancellationToken cancellationToken = default)
         {
-            // bills uncollected but with the same customers
-            var list = await _unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
+            // get tickets that are ready for billing
+            var listToReturn = await _unitOfWork.Billing.GetMMSIUnbilledTicketsByCustomer(customerId, cancellationToken);
 
-            var model = await _unitOfWork.DispatchTicket
-                .GetAllAsync(dt => dt.BillingId == billingId.ToString(), cancellationToken);
+            IEnumerable<MMSIDispatchTicket>? billedTickets = null;
 
-            if (model?.FirstOrDefault()?.CustomerId == customerId)
+            if (billingId != 0)
             {
-                list?.AddRange(await _unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
+                // see if there are tickets currently billed by this billing
+                billedTickets = await _unitOfWork.DispatchTicket
+                    .GetAllAsync(dt => dt.BillingId == billingId.ToString(), cancellationToken);
             }
 
-            return list;
+            // if this billing has already billed tickets, include it to choices
+            if (billedTickets != null && billedTickets?.FirstOrDefault()?.CustomerId == customerId)
+            {
+                listToReturn?.AddRange(await _unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
+            }
+
+            return listToReturn;
         }
 
         public async Task<CreateBillingViewModel> GetBillingSelectLists (CreateBillingViewModel viewModel, CancellationToken cancellationToken = default)
         {
             viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
             viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
-            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(0, string.Empty, cancellationToken);
 
             if (viewModel.PortId != 0)
             {

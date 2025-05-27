@@ -48,10 +48,10 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(int currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _dbContext.MMSIDispatchTickets
-                .Where(t => t.Status == "For Billing")
+                .Where(t => t.Status == "For Billing" || (currentCustomerId != 0 && t.CustomerId == currentCustomerId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -61,7 +61,8 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToList();
 
             return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true && listOfCustomerWithBillableTickets.Contains(c.CustomerId))
+                .Where(c => c.IsMMSI == true && listOfCustomerWithBillableTickets.Contains(c.CustomerId) &&
+                            (string.IsNullOrEmpty(type) || c.Type == type))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
             {
@@ -70,7 +71,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(string type, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> dispatchTicketList = await _dbContext.MMSIDispatchTickets
                 .Where(dt => dt.Status == "For Billing")
@@ -95,7 +96,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer!.CustomerName}, {b.Date}"
+                Text = b.DispatchNumber
             }).ToList();
 
             return ticketsList;
