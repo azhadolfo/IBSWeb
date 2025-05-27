@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
     {
         Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesById(CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSIUncollectedBillingsById(CancellationToken cancellationToken = default);
 

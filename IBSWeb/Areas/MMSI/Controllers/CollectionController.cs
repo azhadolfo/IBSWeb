@@ -54,7 +54,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var model = new CreateCollectionViewModel
             {
-                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken)
+                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken)
             };
 
             return View(model);
@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "There was an error creating the collection.";
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken);
                 return View(viewModel);
             }
 
@@ -143,7 +143,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to create collection.");
                 TempData["error"] = ex.Message;
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken);
                 return View(viewModel);
             }
         }
@@ -277,7 +277,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .ToListAsync(cancellationToken);
 
             // selection of customers
-            viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(id, cancellationToken);
 
             // get bills with same customer
             viewModel.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
@@ -384,6 +384,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     TempData["error"] = "There was an error updating the collection.";
+                    viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, cancellationToken);
                     return View(viewModel);
                 }
 
@@ -392,6 +393,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to edit collection.");
                 TempData["error"] = ex.Message;
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, cancellationToken);
                 return View(viewModel);
             }
         }
