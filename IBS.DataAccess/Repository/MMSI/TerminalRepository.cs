@@ -414,7 +414,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Select(s => new SelectListItem
                 {
                     Value = s.TerminalId.ToString(),
-                    Text = s.TerminalNumber + " " + s.TerminalName,
+                    Text = s.TerminalName,
                 }).ToListAsync(cancellationToken);
         }
     }
