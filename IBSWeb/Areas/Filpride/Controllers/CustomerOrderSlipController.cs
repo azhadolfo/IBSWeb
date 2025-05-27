@@ -373,11 +373,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
                     .GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
 
-                if (getPurchaseOrder == null)
-                {
-                    return NotFound();
-                }
-
                 CustomerOrderSlipViewModel viewModel = new()
                 {
                     CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
@@ -406,7 +401,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
                     SelectedBranch = exisitingRecord.Branch,
                     CustomerType = exisitingRecord.CustomerType,
-                    StationCode = getPurchaseOrder.StationCode,
+                    StationCode = getPurchaseOrder?.StationCode,
                 };
 
                 return View(viewModel);
