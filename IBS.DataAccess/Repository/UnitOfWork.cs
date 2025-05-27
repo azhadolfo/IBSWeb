@@ -253,15 +253,18 @@ namespace IBS.DataAccess.Repository
 
             #region --MMSI
 
-            Msap = new MsapRepository(_db);
-            ServiceRequest = new ServiceRequestRepository(_db);
-            DispatchTicket = new DispatchTicketRepository(_db);
             Billing = new BillingRepository(_db);
             Collection = new CollectionRepository(_db);
+            DispatchTicket = new DispatchTicketRepository(_db);
             MMSIReport = new MMSIReportRepository(_db);
+            Msap = new MsapRepository(_db);
+            Port = new PortRepository(_db);
+            Principal = new PrincipalRepository(_db);
+            ServiceRequest = new ServiceRequestRepository(_db);
             TariffTable = new TariffTableRepository(_db);
             Terminal = new TerminalRepository(_db);
             Tugboat = new TugboatRepository(_db);
+            Vessel = new VesselRepository(_db);
 
             #endregion
 
