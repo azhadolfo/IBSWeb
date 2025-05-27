@@ -147,6 +147,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IMMSIReportRepository MMSIReport { get; }
         ITariffTableRepository TariffTable { get; }
         IPortRepository Port { get; }
+        IPrincipalRepository Principal { get; }
         ITerminalRepository Terminal { get; }
         ITugboatRepository Tugboat { get; }
         IVesselRepository Vessel { get; }
