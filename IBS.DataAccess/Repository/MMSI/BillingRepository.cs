@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
@@ -127,6 +128,23 @@ namespace IBS.DataAccess.Repository.MMSI
             }
 
             return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIBilling> query = dbSet
+                .Include(b => b.Terminal)
+                .ThenInclude(t => t!.Port)
+                .Include(b => b.Vessel)
+                .Include(b => b.Customer)
+                .Include(b => b.Principal);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<string> GenerateBillingNumber (CancellationToken cancellationToken = default)
