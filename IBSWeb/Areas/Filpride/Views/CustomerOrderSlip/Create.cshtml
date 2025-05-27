@@ -306,12 +306,17 @@
                 var hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
                 if (hasCommission) {
                     $('#commissionInfo').show();
-                    $('input[name="CommissionerName"]').prop('required', true);
+                    $('input[name="CommissioneeId"]').prop('required', true);
                     $('input[name="CommissionRate"]').prop('required', true);
                 } else {
                     $('#commissionInfo').hide();
-                    $('input[name="CommissionerName"]').prop('required', false);
-                    $('input[name="CommissionRate"]').prop('required', false);
+                    $('select[name="CommissioneeId"]')
+                        .val('')
+                        .trigger('change')
+                        .prop('required', false);
+                    $('input[name="CommissionRate"]')
+                        .val('0.00')
+                        .prop('required', false);
                 }
             }
 
