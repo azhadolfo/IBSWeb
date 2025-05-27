@@ -66,16 +66,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "There was an error creating the collection.";
-
                 viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
-
                 return View(viewModel);
             }
 
             try
             {
                 var model = CreateCollectionVmToCollectionModel(viewModel);
-
                 var dateNow = DateTime.Now;
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = dateNow;
@@ -105,7 +102,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 int id = refetchModel.MMSICollectionId;
 
-
                 #region -- Audit Trail
 
                 var audit = new FilprideAuditTrail
@@ -123,7 +119,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 #endregion -- Audit Trail
 
-                //
                 foreach(var collectBills in viewModel.ToCollectBillings!)
                 {
                     // find the billings that was collected and mark them as collected
@@ -148,9 +143,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to create collection.");
                 TempData["error"] = ex.Message;
-
                 viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesById(cancellationToken);
-
                 return View(viewModel);
             }
         }
@@ -202,7 +195,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
-
                 var queried = await _dbContext.MMSICollections
                     .Include(b => b.Customer)
                     .ToListAsync(cancellationToken);
@@ -211,10 +203,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
-
                     queried = queried
                     .Where(c =>
-
                         c.Date.Day.ToString().Contains(searchValue) == true ||
                         c.Date.Month.ToString().Contains(searchValue) == true ||
                         c.Date.Year.ToString().Contains(searchValue) == true ||
@@ -241,7 +231,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-
                     queried = queried
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}")
@@ -249,12 +238,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 var totalRecords = queried.Count();
-
                 var pagedData = queried
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
-
                 return Json(new
                 {
                     draw = parameters.Draw,
@@ -262,13 +249,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     recordsFiltered = totalRecords,
                     data = pagedData
                 });
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get collections");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -296,7 +281,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             // get bills with same customer
             viewModel.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
-
             return View(viewModel);
         }
 
@@ -307,7 +291,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 if (ModelState.IsValid)
                 {
-
                     var model = CreateCollectionVmToCollectionModel(viewModel);
 
                     //previous billings
@@ -326,9 +309,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         var billing = await _dbContext.MMSIBillings
                             .FindAsync(previousBilling.MMSIBillingId, cancellationToken);
-
                         if (billing == null) throw new NullReferenceException("Billing not found.");
-
                         billing.Status = "For Collection";
                         billing.CollectionId = 0;
                         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -341,9 +322,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         var billing = await _dbContext.MMSIBillings
                             .FindAsync(int.Parse(newBilling), cancellationToken);
-
                         if (billing == null) throw new NullReferenceException("Billing not found.");
-
                         billing.Status = "Collected";
                         billing.CollectionId = model.MMSICollectionId;
                         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -359,7 +338,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #region -- Changes
 
                     var changes = new List<string>();
-
                     if (currentModel.CheckNumber != model.CheckNumber) { changes.Add($"CheckNumber: {currentModel.CheckNumber} -> {model.CheckNumber}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
@@ -401,13 +379,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     TempData["success"] = "Collection modified successfully";
-
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
                     TempData["error"] = "There was an error updating the collection.";
-
                     return View(viewModel);
                 }
 
@@ -416,7 +392,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to edit collection.");
                 TempData["error"] = ex.Message;
-
                 return View(viewModel);
             }
         }
@@ -432,13 +407,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Where(b => b.CollectionId == collection.MMSICollectionId)
                     .Include(b => b.Customer)
                     .ToListAsync (cancellationToken);
-
                 return View(collection);
             }
             else
             {
                 TempData["Error"] = "Error: collection record not found.";
-
                 return RedirectToAction("Index");
             }
         }
@@ -448,7 +421,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var collections = await _dbContext.MMSICollections
                 .Include(c => c.Customer)
                 .ToListAsync(cancellationToken);
-
             return Json(collections);
         }
 
@@ -461,7 +433,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var billings = await _dbContext.MMSIBillings
                     .Where(t => intBillingIds.Contains(t.MMSIBillingId)) // Assuming Id is the primary key
                     .ToListAsync(cancellationToken);
-
                 return Json(new
                 {
                     success = true,
@@ -497,7 +468,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Customer not found.");
-
                 return Json(new { success = false, message = "Customer not found" });
             }
         }
