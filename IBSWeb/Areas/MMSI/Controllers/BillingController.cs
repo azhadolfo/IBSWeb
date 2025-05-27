@@ -420,9 +420,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
 
             viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
-            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
+                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
 
-            if (model.CustomerPrincipal == null)
+            if (model.CustomerPrincipal?.Count == 0)
             {
                 ViewData["HasPrincipal"] = false;
             }
