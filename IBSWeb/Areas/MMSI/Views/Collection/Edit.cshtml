@@ -44,7 +44,7 @@
                                     <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
                                     <input id="customerIsVatable" type="hidden">
                                     <input name="CustomerId" value="@Model.CustomerId" type="hidden">
-                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                                         <option value="">Select Customer</option>
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
