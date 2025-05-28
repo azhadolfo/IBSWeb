@@ -1,4 +1,4 @@
-@model IEnumerable<IBS.Models.LogMessage>?
+@model IEnumerable<IBS.Models.LogMessage>
 
 @{
     ViewData["Title"] = "Cashier Report";
@@ -81,7 +81,7 @@
                         </tr>
                     </thead>
 
-                    @foreach (var obj in Model!.OrderBy(x => x.TimeStamp))
+                    @foreach (var obj in Model.OrderBy(x => x.TimeStamp))
                     {
                         <tr class="
                                     @{ switch (obj.LogLevel)
