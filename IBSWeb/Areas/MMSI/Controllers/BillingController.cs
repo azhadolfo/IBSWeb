@@ -498,7 +498,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.BilledTo = model.BilledTo;
                     currentModel.Status = "For Collection";
 
-                    // get not yet billed tickets select list
+                    // get billed tickets select list
                     model.UnbilledDispatchTickets = await _unitOfWork.Billing.GetMMSIBilledTicketsById(model.MMSIBillingId, cancellationToken);
 
                     // reset status of all the dispatch ticket affected by editing select
@@ -508,8 +508,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var dtModel = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
                         dtModel!.Status = "For Billing";
                         dtModel.BillingId = "0";
-                        await _db.SaveChangesAsync(cancellationToken);
                     }
+                    await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                     decimal totalAmount = 0;
 
