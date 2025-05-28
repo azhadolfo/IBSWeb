@@ -59,6 +59,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        #region -- Generated General Ledger by Transaction as Quest PDF
+
         public async Task<IActionResult> GeneralLedgerBookReport(ViewModelBook model)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -86,9 +88,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     container.Page(page =>
                     {
+                        #region -- Page Setup
+
                         page.Size(PageSizes.Legal.Landscape());
                         page.Margin(20);
                         page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
 
                         var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
 
@@ -118,6 +126,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
 
                         });
+
+                        #endregion
+
+                        #region -- Content
 
                         page.Content().PaddingTop(10).Table(table =>
                         {
@@ -179,6 +191,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         });
 
+                        #endregion
+
+                        #region -- Footer
+
                         page.Footer().AlignRight().Text(x =>
                         {
                             x.Span("Page ");
@@ -186,6 +202,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             x.Span(" of ");
                             x.TotalPages();
                         });
+
+                        #endregion
                     });
                 });
 
@@ -200,6 +218,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction(nameof(GeneralLedgerBook));
             }
         }
+
+        #endregion
 
         public async Task<IActionResult> GeneralLedgerReportByAccountNumber()
         {
@@ -219,6 +239,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return View(viewModel);
         }
+
+        #region -- Generated Ganeral Ledger by Account number as Quest PDF
 
         public async Task<IActionResult> GenerateGeneralLedgerReportByAccountNumber(GeneralLedgerReportViewModel model, CancellationToken cancellationToken)
         {
@@ -251,9 +273,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     container.Page(page =>
                     {
+                        #region -- Page Setup
+
                         page.Size(PageSizes.Legal.Landscape());
                         page.Margin(20);
                         page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
 
                         var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
 
@@ -283,6 +311,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
 
                         });
+
+                        #endregion
+
+                        #region -- Content
 
                         page.Content().PaddingTop(10).Table(table =>
                         {
@@ -413,6 +445,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             });
                         });
 
+                        #endregion
+
+                        #region -- Footer
+
                         page.Footer().AlignRight().Text(x =>
                         {
                             x.Span("Page ");
@@ -420,6 +456,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             x.Span(" of ");
                             x.TotalPages();
                         });
+
+                        #endregion
                     });
                 });
 
@@ -435,6 +473,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        #endregion
 
         #region -- Generate General Ledger by Account Number as Excel File
 
