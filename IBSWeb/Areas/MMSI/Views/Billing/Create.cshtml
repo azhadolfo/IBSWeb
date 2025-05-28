@@ -124,7 +124,7 @@
                     <div class="col-3 ps-2 my-2 d-none hiddenDiv">
                         <div class="row">
                             <div class="col">
-                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio">
+                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio" checked>
                                 <label style="font-size: 20px;">
                                     Billed To Local
                                 </label>
@@ -404,7 +404,7 @@
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
                             $vatableRadioButton.prop("checked", data.vatType === "@SD.VatType_Vatable");
-                            $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_Exempt");
+                            $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_ZeroRated");
                             if (data.isUndoc === "Undocumented"){
                                 $isUndocCheckbox.prop("checked", true);
                                 handleCheckboxChange();
