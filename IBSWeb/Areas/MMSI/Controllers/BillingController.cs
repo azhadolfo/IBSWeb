@@ -461,6 +461,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #region -- Changes
 
                     var changes = new List<string>();
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.TerminalId != model.TerminalId) { changes.Add($"TerminalId: {currentModel.TerminalId} -> {model.TerminalId}"); }
@@ -490,6 +491,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     #endregion -- Audit Trail
 
+                    currentModel.CustomerId = model.CustomerId;
                     currentModel.VoyageNumber = model.VoyageNumber;
                     currentModel.Date = model.Date;
                     currentModel.PortId = model.PortId;
