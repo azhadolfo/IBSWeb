@@ -3,6 +3,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
@@ -54,7 +55,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var model = new CreateCollectionViewModel
             {
-                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken)
+                Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, String.Empty, cancellationToken)
             };
 
             return View(model);
@@ -66,13 +67,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "There was an error creating the collection.";
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, String.Empty, cancellationToken);
                 return View(viewModel);
             }
 
             try
             {
-                var model = CreateCollectionVmToCollectionModel(viewModel);
+                var model = await CreateCollectionVmToCollectionModel(viewModel);
                 var dateNow = DateTime.Now;
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = dateNow;
@@ -140,12 +141,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to create collection.");
                 TempData["error"] = ex.Message;
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, String.Empty, cancellationToken);
                 return View(viewModel);
             }
         }
 
-        public MMSICollection CreateCollectionVmToCollectionModel(CreateCollectionViewModel viewModel)
+        public async Task<MMSICollection> CreateCollectionVmToCollectionModel(CreateCollectionViewModel viewModel, CancellationToken cancellationToken = default)
         {
             var model = new MMSICollection
             {
@@ -156,8 +157,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 EWT = viewModel.EWT,
                 CheckNumber = viewModel.CheckNumber,
                 CheckDate = viewModel.CheckDate,
-                DepositDate = viewModel.DepositDate,
+                DepositDate = viewModel.DepositDate
             };
+
+            model.Customer = await _unitOfWork.FilprideCustomer
+                .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
             if (viewModel.MMSICollectionId != null)
             {
@@ -274,7 +278,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .ToListAsync(cancellationToken);
 
             // selection of customers
-            viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(id, cancellationToken);
+            viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(id, model.Customer!.Type, cancellationToken);
 
             // get bills with same customer
             viewModel.Billings = await GetEditBillings(model.CustomerId, model.MMSICollectionId, cancellationToken);
@@ -288,7 +292,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var model = CreateCollectionVmToCollectionModel(viewModel);
+                    var model = await CreateCollectionVmToCollectionModel(viewModel);
 
                     //previous billings
                     var previousCollectedBills = await _unitOfWork.Billing
@@ -378,17 +382,22 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
                     TempData["error"] = "There was an error updating the collection.";
-                    viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, cancellationToken);
+                    viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer!.Type, cancellationToken);
                     return View(viewModel);
                 }
-
             }
             catch (Exception ex)
             {
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
                 _logger.LogError(ex, "Failed to edit collection.");
                 TempData["error"] = ex.Message;
-                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, cancellationToken);
+                viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer!.Type, cancellationToken);
                 return View(viewModel);
             }
         }
