@@ -1,3 +1,4 @@
+@using IBS.Utility.Constants
 @model MMSICollection
 
 @{
@@ -78,7 +79,7 @@
                             </td>
                             <td class="text-center p-1">@billing.Date</td>
                             <td class="text-center p-1">@billing.Customer?.CustomerName</td>
-                            <td class="text-center p-1">₱ @billing.Amount.ToString("N2")</td>
+                            <td class="text-center p-1">₱ @billing.Amount.ToString(SD.Two_Decimal_Format)</td>
                         </tr>
                     }
                     </tbody>
@@ -89,11 +90,11 @@
                     <div class="col-12 text-center flex-column d-flex justify-content-end small-text py-2 ps-2">
                         <div class="row">
                             <div class="col-6 text-end"><b>Collection Amount:</b></div>
-                            <div class="col-6 text-start">₱ @Model.Amount.ToString("N2")</div>
+                            <div class="col-6 text-start">₱ @Model.Amount.ToString(SD.Two_Decimal_Format)</div>
                         </div>
                         <div class="row">
                             <div class="col-6 text-end"><b>EWT:</b></div>
-                            <div class="col-6 text-start">₱ @Model.EWT.ToString("N2")</div>
+                            <div class="col-6 text-start">₱ @Model.EWT.ToString(SD.Two_Decimal_Format)</div>
                         </div>
                     </div>
                 </div>

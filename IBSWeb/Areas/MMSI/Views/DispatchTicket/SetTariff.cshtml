@@ -1,3 +1,4 @@
+@using IBS.Utility.Constants
 @model TariffViewModel
 
 @{
@@ -91,7 +92,7 @@
                         <div class="row mt-2">
                             <div class="col-3 d-flex justify-content-start align-items-center">
                                 <b>Total Hours:</b>
-                                <span class="ms-2">@Model.TotalHours?.ToString("N2")</span>
+                                <span class="ms-2">@Model.TotalHours?.ToString(SD.Two_Decimal_Format)</span>
                             </div>
                         </div>
                     </div>
