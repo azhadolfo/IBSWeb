@@ -148,7 +148,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, CancellationToken cancellationToken = default)
         {
             var billingsToBeCollected = await _dbContext.MMSIBillings
-                .Where(t => t.Status == "For Collection" || (collectionId == 0 || t.CollectionId == collectionId))
+                .Where(t => t.Status == "For Collection" || (collectionId != 0 && t.CollectionId == collectionId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
