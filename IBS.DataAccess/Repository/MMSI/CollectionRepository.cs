@@ -21,6 +21,13 @@ namespace IBS.DataAccess.Repository.MMSI
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public override async Task<MMSICollection?> GetAsync(Expression<Func<MMSICollection, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(c => c.Customer)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
         public override async Task<IEnumerable<MMSICollection>> GetAllAsync(Expression<Func<MMSICollection, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSICollection> query = dbSet.Include(c => c.Customer);
@@ -145,7 +152,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, string type, CancellationToken cancellationToken = default)
         {
             var billingsToBeCollected = await _dbContext.MMSIBillings
                 .Where(t => t.Status == "For Collection" || (collectionId != 0 && t.CollectionId == collectionId))
@@ -158,7 +165,8 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToList();
 
             return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true && listOfCustomerWithCollectibleBillings.Contains(c.CustomerId))
+                .Where(c => c.IsMMSI == true && listOfCustomerWithCollectibleBillings.Contains(c.CustomerId) &&
+                            (string.IsNullOrEmpty(type) || c.Type == type))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
                 {
