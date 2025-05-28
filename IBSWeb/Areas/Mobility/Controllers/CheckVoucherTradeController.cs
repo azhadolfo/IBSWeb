@@ -247,186 +247,186 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Check if duplicate record
 
-                    if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
+                if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
+                {
+                    var cv = await _unitOfWork
+                    .MobilityCheckVoucher
+                    .GetAllAsync(cv => cv.StationCode == stationCodeClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+                    if (cv.Count() > 0)
                     {
-                        var cv = await _unitOfWork
-                        .MobilityCheckVoucher
-                        .GetAllAsync(cv => cv.StationCode == stationCodeClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
-                        if (cv.Count() > 0)
-                        {
-                            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
-                                .Select(s => new SelectListItem
-                                {
-                                    Value = s.AccountNumber,
-                                    Text = s.AccountNumber + " " + s.AccountName
-                                })
-                                .ToListAsync(cancellationToken);
+                        viewModel.COA = await _dbContext.FilprideChartOfAccounts
+                            .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
+                            .Select(s => new SelectListItem
+                            {
+                                Value = s.AccountNumber,
+                                Text = s.AccountNumber + " " + s.AccountName
+                            })
+                            .ToListAsync(cancellationToken);
 
-                            viewModel.Suppliers = await _dbContext.MobilitySuppliers
-                                .Where(supp => supp.Category == "Trade" && supp.StationCode == stationCodeClaims)
-                                .Select(sup => new SelectListItem
-                                {
-                                    Value = sup.SupplierId.ToString(),
-                                    Text = sup.SupplierName
-                                })
-                                .ToListAsync();
+                        viewModel.Suppliers = await _dbContext.MobilitySuppliers
+                            .Where(supp => supp.Category == "Trade" && supp.StationCode == stationCodeClaims)
+                            .Select(sup => new SelectListItem
+                            {
+                                Value = sup.SupplierId.ToString(),
+                                Text = sup.SupplierName
+                            })
+                            .ToListAsync();
 
-                            viewModel.PONo = await _dbContext.MobilityPurchaseOrders
-                                .Where(po => po.StationCode == stationCodeClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
-                                .Select(po => new SelectListItem
-                                {
-                                    Value = po.PurchaseOrderNo.ToString(),
-                                    Text = po.PurchaseOrderNo
-                                })
-                                .ToListAsync(cancellationToken);
+                        viewModel.PONo = await _dbContext.MobilityPurchaseOrders
+                            .Where(po => po.StationCode == stationCodeClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
+                            .Select(po => new SelectListItem
+                            {
+                                Value = po.PurchaseOrderNo.ToString(),
+                                Text = po.PurchaseOrderNo
+                            })
+                            .ToListAsync(cancellationToken);
 
-                            viewModel.BankAccounts = await _dbContext.MobilityBankAccounts
-                                .Where(b => b.StationCode == stationCodeClaims)
-                                .Select(ba => new SelectListItem
-                                {
-                                    Value = ba.BankAccountId.ToString(),
-                                    Text = ba.AccountNo + " " + ba.AccountName
-                                })
-                                .ToListAsync();
+                        viewModel.BankAccounts = await _dbContext.MobilityBankAccounts
+                            .Where(b => b.StationCode == stationCodeClaims)
+                            .Select(ba => new SelectListItem
+                            {
+                                Value = ba.BankAccountId.ToString(),
+                                Text = ba.AccountNo + " " + ba.AccountName
+                            })
+                            .ToListAsync();
 
-                            TempData["error"] = "Check No. Is already exist";
-                            return View(viewModel);
-                        }
+                        TempData["error"] = "Check No. Is already exist";
+                        return View(viewModel);
                     }
+                }
 
                 #endregion --Check if duplicate record
 
                 #region --Retrieve Supplier
 
-                    var supplier = await _unitOfWork
-                                .MobilitySupplier
-                                .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                var supplier = await _unitOfWork
+                            .MobilitySupplier
+                            .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
 
                 #endregion --Retrieve Supplier
 
                 #region -- Get PO --
 
-                    var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
-                                                    .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
+                var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
+                                                .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
 
-                    if (getPurchaseOrder == null)
-                    {
-                        return NotFound();
-                    }
+                if (getPurchaseOrder == null)
+                {
+                    return NotFound();
+                }
 
                 #endregion -- Get PO --
 
                 #region --Saving the default entries
 
-                    var generateCVNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeAsync(stationCodeClaims, getPurchaseOrder.Type, cancellationToken);
-                    var cashInBank = viewModel.Credit[1];
-                    var cvh = new MobilityCheckVoucherHeader
-                    {
-                        CheckVoucherHeaderNo = generateCVNo,
-                        Date = viewModel.TransactionDate,
-                        PONo = viewModel.POSeries,
-                        SupplierId = viewModel.SupplierId,
-                        Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
-                        Reference = viewModel.AdvancesCVNo,
-                        BankId = viewModel.BankId,
-                        CheckNo = viewModel.CheckNo,
-                        Category = "Trade",
-                        Payee = viewModel.Payee,
-                        CheckDate = viewModel.CheckDate,
-                        Total = cashInBank,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        StationCode = stationCodeClaims,
-                        Type = getPurchaseOrder.Type,
-                        CvType = "Supplier",
-                        Address = supplier.SupplierAddress,
-                        Tin = supplier.SupplierTin,
-                    };
+                var generateCVNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeAsync(stationCodeClaims, getPurchaseOrder.Type, cancellationToken);
+                var cashInBank = viewModel.Credit[1];
+                var cvh = new MobilityCheckVoucherHeader
+                {
+                    CheckVoucherHeaderNo = generateCVNo,
+                    Date = viewModel.TransactionDate,
+                    PONo = viewModel.POSeries,
+                    SupplierId = viewModel.SupplierId,
+                    Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
+                    Reference = viewModel.AdvancesCVNo,
+                    BankId = viewModel.BankId,
+                    CheckNo = viewModel.CheckNo,
+                    Category = "Trade",
+                    Payee = viewModel.Payee,
+                    CheckDate = viewModel.CheckDate,
+                    Total = cashInBank,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    StationCode = stationCodeClaims,
+                    Type = getPurchaseOrder.Type,
+                    CvType = "Supplier",
+                    Address = supplier.SupplierAddress,
+                    Tin = supplier.SupplierTin,
+                };
 
-                    await _dbContext.MobilityCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                await _dbContext.MobilityCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion --Saving the default entries
 
                 #region --CV Details Entry
 
-                    var cvDetails = new List<MobilityCheckVoucherDetail>();
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                var cvDetails = new List<MobilityCheckVoucherDetail>();
+                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                     {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                        cvDetails.Add(
+                        new MobilityCheckVoucherDetail
                         {
-                            cvDetails.Add(
-                            new MobilityCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = cvh.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
-                                SupplierId = i == 0 ? viewModel.SupplierId : null,
-                                BankId = i == 2 ? viewModel.BankId : null,
-                            });
-                        }
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = cvh.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = cvh.CheckVoucherHeaderId,
+                            SupplierId = i == 0 ? viewModel.SupplierId : null,
+                            BankId = i == 2 ? viewModel.BankId : null,
+                        });
                     }
+                }
 
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
 
                 #endregion --CV Details Entry
 
                 #region -- Partial payment of RR's
 
-                    var cvTradePaymentModel = new List<MobilityCVTradePayment>();
-                    foreach (var item in viewModel.RRs)
+                var cvTradePaymentModel = new List<MobilityCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
+
+                    if (getReceivingReport == null)
                     {
-                        var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
-
-                        if (getReceivingReport == null)
-                        {
-                            return NotFound();
-                        }
-
-                        getReceivingReport.AmountPaid += item.Amount;
-
-                        cvTradePaymentModel.Add(
-                            new MobilityCVTradePayment
-                            {
-                                DocumentId = getReceivingReport.ReceivingReportId,
-                                DocumentType = "RR",
-                                CheckVoucherId = cvh.CheckVoucherHeaderId,
-                                AmountPaid = item.Amount
-                            });
+                        return NotFound();
                     }
 
-                    await _dbContext.AddRangeAsync(cvTradePaymentModel);
+                    getReceivingReport.AmountPaid += item.Amount;
+
+                    cvTradePaymentModel.Add(
+                        new MobilityCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = cvh.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel);
 
                 #endregion -- Partial payment of RR's
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
+                }
 
 
-                    #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                    TempData["success"] = $"Check voucher trade created successfully. Series Number: {cvh.CheckVoucherHeaderNo}.";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
+                TempData["success"] = $"Check voucher trade created successfully. Series Number: {cvh.CheckVoucherHeaderNo}.";
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
 
                 #endregion -- Uploading file --
             }
@@ -524,7 +524,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             if (receivingReports.Any())
             {
                 var rrList = receivingReports
-                    .Select(rr => {
+                    .Select(rr =>
+                    {
                         var netOfVatAmount = _unitOfWork.MobilityReceivingReport.ComputeNetOfVat(rr.Amount);
 
                         var ewtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
@@ -535,7 +536,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             ? _unitOfWork.MobilityReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
                             : netOfVatAmount;
 
-                        return new {
+                        return new
+                        {
                             Id = rr.ReceivingReportId,
                             ReceivingReportNo = rr.ReceivingReportNo,
                             AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
@@ -737,123 +739,123 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --CV Details Entry
 
-                    var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
-                        .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                        .ToListAsync(cancellationToken);
+                var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
 
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    var details = new List<MobilityCheckVoucherDetail>();
+                var details = new List<MobilityCheckVoucherDetail>();
 
-                    var cashInBank = 0m;
-                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                var cashInBank = 0m;
+                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                {
+                    cashInBank = viewModel.Credit[1];
+
+                    details.Add(new MobilityCheckVoucherDetail
                     {
-                        cashInBank = viewModel.Credit[1];
+                        AccountNo = viewModel.AccountNumber[i],
+                        AccountName = viewModel.AccountTitle[i],
+                        Debit = viewModel.Debit[i],
+                        Credit = viewModel.Credit[i],
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = viewModel.CVId,
+                        SupplierId = i == 0 ? viewModel.SupplierId : null,
+                        BankId = i == 2 ? viewModel.BankId : null,
+                    });
+                }
 
-                        details.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = viewModel.CVId,
-                            SupplierId = i == 0 ? viewModel.SupplierId : null,
-                            BankId = i == 2 ? viewModel.BankId : null,
-                        });
-                    }
-
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
 
                 #endregion --CV Details Entry
 
                 #region --Saving the default entries
 
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.PONo = viewModel.POSeries;
-                    existingHeaderModel.SupplierId = viewModel.SupplierId;
-                    existingHeaderModel.Address = viewModel.SupplierAddress;
-                    existingHeaderModel.Tin = viewModel.SupplierTinNo;
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.BankId = viewModel.BankId;
-                    existingHeaderModel.CheckNo = viewModel.CheckNo;
-                    existingHeaderModel.Payee = viewModel.Payee;
-                    existingHeaderModel.CheckDate = viewModel.CheckDate;
-                    existingHeaderModel.Total = cashInBank;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Reference = viewModel.AdvancesCVNo;
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.PONo = viewModel.POSeries;
+                existingHeaderModel.SupplierId = viewModel.SupplierId;
+                existingHeaderModel.Address = viewModel.SupplierAddress;
+                existingHeaderModel.Tin = viewModel.SupplierTinNo;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.BankId = viewModel.BankId;
+                existingHeaderModel.CheckNo = viewModel.CheckNo;
+                existingHeaderModel.Payee = viewModel.Payee;
+                existingHeaderModel.CheckDate = viewModel.CheckDate;
+                existingHeaderModel.Total = cashInBank;
+                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Reference = viewModel.AdvancesCVNo;
 
                 #endregion --Saving the default entries
 
                 #region -- Partial payment of RR's
 
-                    var getCheckVoucherTradePayment = await _dbContext.MobilityCVTradePayments
-                        .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "RR")
-                        .ToListAsync(cancellationToken);
+                var getCheckVoucherTradePayment = await _dbContext.MobilityCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "RR")
+                    .ToListAsync(cancellationToken);
 
-                    foreach (var item in getCheckVoucherTradePayment)
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    var recevingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                    if (recevingReport == null)
                     {
-                        var recevingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.DocumentId, cancellationToken);
-
-                        if (recevingReport == null)
-                        {
-                            return NotFound();
-                        }
-
-                        recevingReport.AmountPaid -= item.AmountPaid;
+                        return NotFound();
                     }
 
-                    _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    recevingReport.AmountPaid -= item.AmountPaid;
+                }
 
-                    var cvTradePaymentModel = new List<MobilityCVTradePayment>();
-                    foreach (var item in viewModel.RRs)
+                _dbContext.RemoveRange(getCheckVoucherTradePayment);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                var cvTradePaymentModel = new List<MobilityCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
+
+                    if (getReceivingReport == null)
                     {
-                        var getReceivingReport = await _dbContext.MobilityReceivingReports.FindAsync(item.Id, cancellationToken);
-
-                        if (getReceivingReport == null)
-                        {
-                            return NotFound();
-                        }
-
-                        getReceivingReport.AmountPaid += item.Amount;
-
-                        cvTradePaymentModel.Add(
-                            new MobilityCVTradePayment
-                            {
-                                DocumentId = getReceivingReport.ReceivingReportId,
-                                DocumentType = "RR",
-                                CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
-                                AmountPaid = item.Amount
-                            });
+                        return NotFound();
                     }
 
-                    await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    getReceivingReport.AmountPaid += item.Amount;
+
+                    cvTradePaymentModel.Add(
+                        new MobilityCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion -- Partial payment of RR's
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
+                }
 
-                    #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Trade edited successfully";
-                    return RedirectToAction(nameof(Index));
+                await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Trade edited successfully";
+                return RedirectToAction(nameof(Index));
 
                 #endregion -- Uploading file --
             }
@@ -1158,7 +1160,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     return RedirectToAction(nameof(Index));
                 }
-}
+            }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
@@ -1311,7 +1313,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (advancesVoucher == null)
             {
-                return (string.Empty, 0 );
+                return (string.Empty, 0);
             }
 
             return (advancesVoucher.CheckVoucherHeader!.CheckVoucherHeaderNo!, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);

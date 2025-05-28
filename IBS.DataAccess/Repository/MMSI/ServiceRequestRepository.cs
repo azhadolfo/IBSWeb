@@ -12,7 +12,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public ServiceRequestRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public ServiceRequestRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
@@ -77,10 +77,10 @@ namespace IBS.DataAccess.Repository.MMSI
             List<SelectListItem> tugBoats = await _dbContext.MMSITugboats
                 .OrderBy(s => s.TugboatName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.TugboatId.ToString(),
-                Text = s.TugboatName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.TugboatId.ToString(),
+                    Text = s.TugboatName
+                }).ToListAsync(cancellationToken);
 
             return tugBoats;
         }
@@ -90,10 +90,10 @@ namespace IBS.DataAccess.Repository.MMSI
             List<SelectListItem> tugMasters = await _dbContext.MMSITugMasters
                 .OrderBy(s => s.TugMasterName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.TugMasterId.ToString(),
-                Text = s.TugMasterName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.TugMasterId.ToString(),
+                    Text = s.TugMasterName
+                }).ToListAsync(cancellationToken);
 
             return tugMasters;
         }
@@ -103,10 +103,10 @@ namespace IBS.DataAccess.Repository.MMSI
             List<SelectListItem> vessels = await _dbContext.MMSIVessels
                 .OrderBy(s => s.VesselName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.VesselId.ToString(),
-                Text = $"{s.VesselName} ({s.VesselType})"
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.VesselId.ToString(),
+                    Text = $"{s.VesselName} ({s.VesselType})"
+                }).ToListAsync(cancellationToken);
 
             return vessels;
         }

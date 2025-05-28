@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -139,7 +139,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             drList = drList.Where(dr =>
                                 !dr.HasReceivingReport && dr.CanceledBy == null);
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 

@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility;

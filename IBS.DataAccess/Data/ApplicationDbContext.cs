@@ -1,4 +1,4 @@
-﻿using IBS.Models;
+using IBS.Models;
 using IBS.Models.Bienes;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;

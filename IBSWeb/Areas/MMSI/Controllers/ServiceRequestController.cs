@@ -109,7 +109,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpGet]
-        public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateServiceRequest, cancellationToken))
             {
@@ -237,7 +237,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = $"Service Request #{tempModel.DispatchNumber} was successfully created.";
 
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
@@ -418,9 +418,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (currentModel.Date != model.Date) { changes.Add($"CreateDate: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
-                    if (currentModel.VoyageNumber  != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                    if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
                     if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                     if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
@@ -491,7 +491,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Entry edited successfully!";
 
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
@@ -594,7 +594,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             queried = queried.Where(dt =>
                                 dt.Status == "For Collection");
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -638,7 +638,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 {
                                     queried = queried.Where(s => !string.IsNullOrEmpty(s.Status));
                                 }
-                            break;
+                                break;
                         }
                     }
                 }

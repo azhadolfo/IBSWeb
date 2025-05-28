@@ -10,7 +10,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey(nameof(CheckVoucherHeaderPaymentId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeaderPayment { get; set; } = null;
-        public int CheckVoucherHeaderPaymentId{ get; set; }
+        public int CheckVoucherHeaderPaymentId { get; set; }
 
         [ForeignKey(nameof(CheckVoucherHeaderInvoiceId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeaderInvoice { get; set; } = null;

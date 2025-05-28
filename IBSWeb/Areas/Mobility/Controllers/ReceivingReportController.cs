@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -68,7 +68,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var receivingReports = await _unitOfWork.MobilityReceivingReport
                 .GetAllAsync(null, cancellationToken);
 
-                receivingReports = receivingReports.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
+            receivingReports = receivingReports.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
 
             ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 

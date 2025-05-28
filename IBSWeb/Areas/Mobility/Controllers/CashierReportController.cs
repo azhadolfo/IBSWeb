@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Mobility;
@@ -293,7 +293,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var model = new CustomerInvoicingViewModel
             {
                 DsrList = await _unitOfWork.MobilitySalesHeader
-                    .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(),cancellationToken),
+                    .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken),
                 Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };

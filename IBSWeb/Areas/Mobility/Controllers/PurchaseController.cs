@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Dtos;
 using IBS.Models.Mobility;

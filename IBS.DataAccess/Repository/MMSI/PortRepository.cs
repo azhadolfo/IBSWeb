@@ -13,7 +13,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public PortRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public PortRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }

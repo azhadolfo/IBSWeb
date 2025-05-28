@@ -1,4 +1,4 @@
-﻿namespace IBS.Dtos
+namespace IBS.Dtos
 {
     public class CustomerDto
     {

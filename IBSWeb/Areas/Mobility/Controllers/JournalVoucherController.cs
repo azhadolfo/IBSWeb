@@ -182,33 +182,33 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Saving the default entries
 
-                    var totalDebit = 0m;
-                    var totalCredit = 0m;
-                    if (totalDebit != totalCredit)
-                    {
-                        TempData["error"] = "The debit and credit should be equal!";
-                        return View(viewModel);
-                    }
+                var totalDebit = 0m;
+                var totalCredit = 0m;
+                if (totalDebit != totalCredit)
+                {
+                    TempData["error"] = "The debit and credit should be equal!";
+                    return View(viewModel);
+                }
 
-                    var generateJVNo = await _unitOfWork.MobilityJournalVoucher.GenerateCodeAsync(stationCodeClaims, viewModel!.Type, cancellationToken);
+                var generateJVNo = await _unitOfWork.MobilityJournalVoucher.GenerateCodeAsync(stationCodeClaims, viewModel!.Type, cancellationToken);
 
-                    var model = new MobilityJournalVoucherHeader
-                    {
-                        JournalVoucherHeaderNo = generateJVNo,
-                        Date = viewModel.TransactionDate,
-                        References = viewModel.References,
-                        CVId = viewModel.CheckVoucherHeaderId,
-                        Particulars = viewModel.Particulars,
-                        CRNo = viewModel.CRNo,
-                        JVReason = viewModel.JVReason,
-                        CreatedBy = User.Identity!.Name,
-                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                        Type = viewModel.Type,
-                        StationCode = stationCodeClaims,
-                    };
+                var model = new MobilityJournalVoucherHeader
+                {
+                    JournalVoucherHeaderNo = generateJVNo,
+                    Date = viewModel.TransactionDate,
+                    References = viewModel.References,
+                    CVId = viewModel.CheckVoucherHeaderId,
+                    Particulars = viewModel.Particulars,
+                    CRNo = viewModel.CRNo,
+                    JVReason = viewModel.JVReason,
+                    CreatedBy = User.Identity!.Name,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Type = viewModel.Type,
+                    StationCode = stationCodeClaims,
+                };
 
-                    await _dbContext.MobilityJournalVoucherHeaders.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                await _dbContext.MobilityJournalVoucherHeaders.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion --Saving the default entries
 
@@ -249,8 +249,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new journal voucher# {viewModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -677,15 +677,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Saving the default entries
 
-                    existingHeaderModel.JournalVoucherHeaderNo = viewModel.JournalVoucherHeaderNo;
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.References = viewModel.References;
-                    existingHeaderModel.CVId = viewModel.CheckVoucherHeaderId;
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.CRNo = viewModel.CRNo;
-                    existingHeaderModel.JVReason = viewModel.JVReason;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.JournalVoucherHeaderNo = viewModel.JournalVoucherHeaderNo;
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.References = viewModel.References;
+                existingHeaderModel.CVId = viewModel.CheckVoucherHeaderId;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.CRNo = viewModel.CRNo;
+                existingHeaderModel.JVReason = viewModel.JVReason;
+                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #endregion --Saving the default entries
 
@@ -715,8 +715,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 

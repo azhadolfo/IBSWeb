@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
@@ -19,7 +19,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<CustomerController> _logger;
 
-        public CustomerController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork,  ILogger<CustomerController> logger)
+        public CustomerController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<CustomerController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

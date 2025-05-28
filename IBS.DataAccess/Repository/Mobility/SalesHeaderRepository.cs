@@ -1,4 +1,4 @@
-﻿using CsvHelper.Configuration;
+using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
@@ -972,14 +972,14 @@ namespace IBS.DataAccess.Repository.Mobility
                 .OrderBy(dsr => dsr.SalesHeaderId)
                 .ToListAsync(cancellationToken);
 
-                return query
-                    .Where(dsr => dsr.StationCode == stationCode)
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.SalesHeaderId.ToString(),
-                        Text = c.SalesNo
-                    })
-                    .ToList();
+            return query
+                .Where(dsr => dsr.StationCode == stationCode)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.SalesHeaderId.ToString(),
+                    Text = c.SalesNo
+                })
+                .ToList();
         }
 
         public async Task ProcessCustomerInvoicing(CustomerInvoicingViewModel viewModel, CancellationToken cancellationToken)

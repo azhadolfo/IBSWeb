@@ -71,8 +71,8 @@ namespace IBS.DataAccess.Repository.Bienes
 
             if (existingRecord.PlacementType == PlacementType.LongTerm)
             {
-               existingRecord.NumberOfYears = viewModel.NumberOfYears;
-               existingRecord.FrequencyOfPayment = viewModel.FrequencyOfPayment;
+                existingRecord.NumberOfYears = viewModel.NumberOfYears;
+                existingRecord.FrequencyOfPayment = viewModel.FrequencyOfPayment;
             }
 
             if (_db.ChangeTracker.HasChanges())

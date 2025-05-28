@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -477,7 +477,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (receivingReports.Any())
             {
                 var rrList = receivingReports
-                    .Select(rr => {
+                    .Select(rr =>
+                    {
                         var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount);
 
                         var ewtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
@@ -488,7 +489,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
                             : netOfVatAmount;
 
-                        return new {
+                        return new
+                        {
                             Id = rr.ReceivingReportId,
                             ReceivingReportNo = rr.ReceivingReportNo,
                             AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
@@ -1098,7 +1100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     return RedirectToAction(nameof(Index));
                 }
-}
+            }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
@@ -2195,7 +2197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 query = query.Union(_dbContext.FilprideDeliveryReceipts
-                    .Where(dr => commissioneeId ==dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
+                    .Where(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
@@ -2206,7 +2208,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (query.Any())
             {
                 var drList = deliverReceipt
-                    .Select(dr => {
+                    .Select(dr =>
+                    {
                         var ewtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
                             ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(dr.CommissionAmount, 0.05m)
                             : 0m;
@@ -2215,7 +2218,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
                             : dr.CommissionAmount;
 
-                        return new {
+                        return new
+                        {
                             Id = dr.DeliveryReceiptId,
                             DeliveryReceiptNo = dr.DeliveryReceiptNo,
                             AmountPaid = dr.CommissionAmountPaid.ToString(SD.Two_Decimal_Format),
@@ -2258,7 +2262,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (query.Any())
             {
                 var drList = deliverReceipt
-                    .Select(dr => {
+                    .Select(dr =>
+                    {
                         var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount);
 
                         var ewtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
@@ -2269,7 +2274,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
                             : netOfVatAmount;
 
-                        return new {
+                        return new
+                        {
                             Id = dr.DeliveryReceiptId,
                             DeliveryReceiptNo = dr.DeliveryReceiptNo,
                             AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
@@ -2783,7 +2789,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (advancesVoucher == null)
             {
-                return (string.Empty, 0 );
+                return (string.Empty, 0);
             }
 
             return (advancesVoucher.CheckVoucherHeader!.CheckVoucherHeaderNo!, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);

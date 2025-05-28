@@ -362,7 +362,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
-                    range.Value =  "As of " + monthDate.ToString("dd MMMM yyyy");
+                    range.Value = "As of " + monthDate.ToString("dd MMMM yyyy");
                 }
                 row++;
                 using (var range = worksheet.Cells[1, 1, row, 4])

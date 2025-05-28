@@ -14,7 +14,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public BillingRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public BillingRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
@@ -47,10 +47,10 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(int currentCustomerId, string type, CancellationToken cancellationToken = default)
@@ -70,10 +70,10 @@ namespace IBS.DataAccess.Repository.MMSI
                             (string.IsNullOrEmpty(type) || c.Type == type))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(string type, CancellationToken cancellationToken = default)
@@ -89,7 +89,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
-        public async Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer (int? customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer(int? customerId, CancellationToken cancellationToken)
         {
             var tickets = await _dbContext
                 .MMSIDispatchTickets
@@ -153,14 +153,14 @@ namespace IBS.DataAccess.Repository.MMSI
             return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<string> GenerateBillingNumber (CancellationToken cancellationToken = default)
+        public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSIBillings
                 .Where(b => b.IsUndocumented == true && b.MMSIBillingNumber != null)
                 .OrderByDescending(b => b.MMSIBillingNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if(lastRecord == null)
+            if (lastRecord == null)
             {
                 return "BL00000001";
             }

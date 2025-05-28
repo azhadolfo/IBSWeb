@@ -49,49 +49,49 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 #region -- Filpride and Mobility Station
 
-                    SupplierAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
+                SupplierAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
                             (cos.Status == nameof(CosStatus.HaulerAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    HaulerAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
+                HaulerAppointmentCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos =>
                             (cos.Status == nameof(CosStatus.SupplierAppointed) || cos.Status == nameof(CosStatus.Created)) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    ATLBookingCount = await _dbContext.FilprideCustomerOrderSlips
+                ATLBookingCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForAtlBooking) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    OMApprovalCOSCount = await _dbContext.FilprideCustomerOrderSlips
+                OMApprovalCOSCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfOM) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    OMApprovalDRCount = await _dbContext.FilprideDeliveryReceipts
+                OMApprovalDRCount = await _dbContext.FilprideDeliveryReceipts
                         .Where(dr => dr.Status == nameof(CosStatus.ForApprovalOfOM) && dr.Company == companyClaims)
                         .CountAsync(),
 
-                    OMApprovalPOCount = await _dbContext.FilpridePurchaseOrders
+                OMApprovalPOCount = await _dbContext.FilpridePurchaseOrders
                         .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM) && po.Company == companyClaims)
                         .CountAsync(),
 
-                    FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
+                FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    DRCount = await _dbContext.FilprideCustomerOrderSlips
+                DRCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForDR) && cos.Company == companyClaims)
                         .CountAsync(),
 
-                    InTransitCount = await _dbContext.FilprideDeliveryReceipts
+                InTransitCount = await _dbContext.FilprideDeliveryReceipts
                         .Where(dr => dr.Status == nameof(DRStatus.PendingDelivery) && dr.Company == companyClaims)
                         .CountAsync(),
 
-                    ForInvoiceCount = await _dbContext.FilprideDeliveryReceipts
+                ForInvoiceCount = await _dbContext.FilprideDeliveryReceipts
                         .Where(dr => dr.Status == nameof(DRStatus.ForInvoicing) && dr.Company == companyClaims)
                         .CountAsync(),
 
-                    RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
+                RecordLiftingDateCount = await _dbContext.FilprideDeliveryReceipts
                         .Where(dr => !dr.HasReceivingReport && dr.CanceledBy == null && dr.VoidedBy == null && dr.Company == companyClaims)
                         .CountAsync(),
 
@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- Mobility Station
 
-                    MobilityStationUnservePO = await _dbContext.MobilityPurchaseOrders
+                MobilityStationUnservePO = await _dbContext.MobilityPurchaseOrders
                         .Where(po => po.Status == "Posted" && !po.IsReceived)
                         .CountAsync(),
 
@@ -107,23 +107,23 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #region -- MMSI
 
-                    MMSIServiceRequestForPosting = await _dbContext.MMSIDispatchTickets
+                MMSIServiceRequestForPosting = await _dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Posting")
                         .CountAsync(),
 
-                    MMSIDispatchTicketForTariff = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForTariff = await _dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Tariff")
                         .CountAsync(),
 
-                    MMSIDispatchTicketForApproval = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForApproval = await _dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Approval")
                         .CountAsync(),
 
-                    MMSIDispatchTicketForBilling = await _dbContext.MMSIDispatchTickets
+                MMSIDispatchTicketForBilling = await _dbContext.MMSIDispatchTickets
                         .Where(po => po.Status == "For Billing")
                         .CountAsync(),
 
-                    MMSIBillingForCollection = await _dbContext.MMSIBillings
+                MMSIBillingForCollection = await _dbContext.MMSIBillings
                         .Where(po => po.Status == "For Collection")
                         .CountAsync(),
 

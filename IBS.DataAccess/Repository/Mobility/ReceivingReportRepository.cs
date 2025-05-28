@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -98,7 +98,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public override async Task<MobilityReceivingReport?> GetAsync(Expression<Func<MobilityReceivingReport, bool>> filter, CancellationToken cancellationToken = default)
         {
-            return  await dbSet.Where(filter)
+            return await dbSet.Where(filter)
                 .Include(po => po.PurchaseOrder)
                 .ThenInclude(po => po!.Product)
                 .Include(po => po.PurchaseOrder)

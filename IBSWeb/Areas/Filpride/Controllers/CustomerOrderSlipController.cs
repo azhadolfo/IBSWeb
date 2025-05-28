@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -153,7 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForDR));
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -194,7 +194,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var pagedData = await query
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
-                    .Select(cos => new {
+                    .Select(cos => new
+                    {
                         cos.CustomerOrderSlipId,
                         cos.CustomerOrderSlipNo,
                         cos.OldCosNo,

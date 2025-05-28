@@ -181,43 +181,43 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region -- checking for unposted DM or CM
 
-                    var existingSVDMs = _dbContext.MobilityDebitMemos
+                var existingSVDMs = _dbContext.MobilityDebitMemos
+                              .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
+                              .OrderBy(s => s.DebitMemoId)
+                              .ToList();
+                if (existingSVDMs.Count > 0)
+                {
+                    viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                        .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                        .Select(sv => new SelectListItem
+                        {
+                            Value = sv.ServiceInvoiceId.ToString(),
+                            Text = sv.ServiceInvoiceNo
+                        })
+                        .ToListAsync(cancellationToken);
+
+                    ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
+                    return View(viewModel);
+                }
+
+                var existingSVCMs = _dbContext.MobilityCreditMemos
                                   .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
-                                  .OrderBy(s => s.DebitMemoId)
+                                  .OrderBy(s => s.CreditMemoId)
                                   .ToList();
-                    if (existingSVDMs.Count > 0)
-                    {
-                        viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
-                            .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
-                            .Select(sv => new SelectListItem
-                            {
-                                Value = sv.ServiceInvoiceId.ToString(),
-                                Text = sv.ServiceInvoiceNo
-                            })
-                            .ToListAsync(cancellationToken);
+                if (existingSVCMs.Count > 0)
+                {
+                    viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
+                        .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
+                        .Select(sv => new SelectListItem
+                        {
+                            Value = sv.ServiceInvoiceId.ToString(),
+                            Text = sv.ServiceInvoiceNo
+                        })
+                        .ToListAsync(cancellationToken);
 
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
-                        return View(viewModel);
-                    }
-
-                    var existingSVCMs = _dbContext.MobilityCreditMemos
-                                      .Where(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId && si.Status == "Pending")
-                                      .OrderBy(s => s.CreditMemoId)
-                                      .ToList();
-                    if (existingSVCMs.Count > 0)
-                    {
-                        viewModel.ServiceInvoices = await _dbContext.MobilityServiceInvoices
-                            .Where(sv => sv.StationCode == stationCodeClaims && sv.PostedBy != null)
-                            .Select(sv => new SelectListItem
-                            {
-                                Value = sv.ServiceInvoiceId.ToString(),
-                                Text = sv.ServiceInvoiceNo
-                            })
-                            .ToListAsync(cancellationToken);
-
-                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
-                        return View(viewModel);
-                    }
+                    ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
+                    return View(viewModel);
+                }
 
                 #endregion -- checking for unposted DM or CM
 
@@ -311,199 +311,199 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                             #region --SV Computation--
 
-                                viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
+                            viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                                if (existingSv.Customer!.VatType == "Vatable")
+                            if (existingSv.Customer!.VatType == "Vatable")
+                            {
+                                viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
+                                viewModelDMCM.NetAmount = _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
+                                viewModelDMCM.VatAmount = _unitOfWork.MobilityServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
+                                if (existingSv.Customer.WithHoldingVat)
                                 {
-                                    viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
-                                    viewModelDMCM.NetAmount = _unitOfWork.MobilityServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
-                                    viewModelDMCM.VatAmount = _unitOfWork.MobilityServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
-                                    if (existingSv.Customer.WithHoldingVat)
-                                    {
-                                        viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
-                                    }
+                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
                                 }
-                                else
+                            }
+                            else
+                            {
+                                viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
+                                if (existingSv.Customer.WithHoldingVat)
                                 {
-                                    viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                    viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
-                                    if (existingSv.Customer.WithHoldingVat)
-                                    {
-                                        viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
-                                    }
+                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
                                 }
+                            }
 
                             #endregion --SV Computation--
 
                             ///TODO: waiting for ma'am LSA journal entries
                             #region --Sales Book Recording(SV)--
 
-                                // var sales = new FilprideSalesBook();
-                                //
-                                // if (model.ServiceInvoice.Customer.VatType == "Vatable")
-                                // {
-                                //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.DebitMemoNo;
-                                //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                //     sales.Description = model.ServiceInvoice.Service.Name;
-                                //     sales.Amount = viewModelDMCM.Total;
-                                //     sales.VatAmount = viewModelDMCM.VatAmount;
-                                //     sales.VatableSales = viewModelDMCM.Total / 1.12m;
-                                //     //sales.Discount = model.Discount;
-                                //     sales.NetSales = viewModelDMCM.NetAmount;
-                                //     sales.CreatedBy = model.CreatedBy;
-                                //     sales.CreatedDate = model.CreatedDate;
-                                //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
-                                //     sales.Company = model.Company;
-                                // }
-                                // else if (model.ServiceInvoice.Customer.VatType == "Exempt")
-                                // {
-                                //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.DebitMemoNo;
-                                //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                //     sales.Description = model.ServiceInvoice.Service.Name;
-                                //     sales.Amount = viewModelDMCM.Total;
-                                //     sales.VatExemptSales = viewModelDMCM.Total;
-                                //     //sales.Discount = model.Discount;
-                                //     sales.NetSales = viewModelDMCM.NetAmount;
-                                //     sales.CreatedBy = model.CreatedBy;
-                                //     sales.CreatedDate = model.CreatedDate;
-                                //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
-                                //     sales.Company = model.Company;
-                                // }
-                                // else
-                                // {
-                                //     sales.TransactionDate = viewModelDMCM.Period;
-                                //     sales.SerialNo = model.DebitMemoNo;
-                                //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                //     sales.Description = model.ServiceInvoice.Service.Name;
-                                //     sales.Amount = viewModelDMCM.Total;
-                                //     sales.ZeroRated = viewModelDMCM.Total;
-                                //     //sales.Discount = model.Discount;
-                                //     sales.NetSales = viewModelDMCM.NetAmount;
-                                //     sales.CreatedBy = model.CreatedBy;
-                                //     sales.CreatedDate = model.CreatedDate;
-                                //     sales.DueDate = existingSv.DueDate;
-                                //     sales.DocumentId = existingSv.ServiceInvoiceId;
-                                //     sales.Company = model.Company;
-                                // }
-                                // await _dbContext.AddAsync(sales, cancellationToken);
+                            // var sales = new FilprideSalesBook();
+                            //
+                            // if (model.ServiceInvoice.Customer.VatType == "Vatable")
+                            // {
+                            //     sales.TransactionDate = viewModelDMCM.Period;
+                            //     sales.SerialNo = model.DebitMemoNo;
+                            //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
+                            //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
+                            //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
+                            //     sales.Description = model.ServiceInvoice.Service.Name;
+                            //     sales.Amount = viewModelDMCM.Total;
+                            //     sales.VatAmount = viewModelDMCM.VatAmount;
+                            //     sales.VatableSales = viewModelDMCM.Total / 1.12m;
+                            //     //sales.Discount = model.Discount;
+                            //     sales.NetSales = viewModelDMCM.NetAmount;
+                            //     sales.CreatedBy = model.CreatedBy;
+                            //     sales.CreatedDate = model.CreatedDate;
+                            //     sales.DueDate = existingSv.DueDate;
+                            //     sales.DocumentId = existingSv.ServiceInvoiceId;
+                            //     sales.Company = model.Company;
+                            // }
+                            // else if (model.ServiceInvoice.Customer.VatType == "Exempt")
+                            // {
+                            //     sales.TransactionDate = viewModelDMCM.Period;
+                            //     sales.SerialNo = model.DebitMemoNo;
+                            //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
+                            //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
+                            //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
+                            //     sales.Description = model.ServiceInvoice.Service.Name;
+                            //     sales.Amount = viewModelDMCM.Total;
+                            //     sales.VatExemptSales = viewModelDMCM.Total;
+                            //     //sales.Discount = model.Discount;
+                            //     sales.NetSales = viewModelDMCM.NetAmount;
+                            //     sales.CreatedBy = model.CreatedBy;
+                            //     sales.CreatedDate = model.CreatedDate;
+                            //     sales.DueDate = existingSv.DueDate;
+                            //     sales.DocumentId = existingSv.ServiceInvoiceId;
+                            //     sales.Company = model.Company;
+                            // }
+                            // else
+                            // {
+                            //     sales.TransactionDate = viewModelDMCM.Period;
+                            //     sales.SerialNo = model.DebitMemoNo;
+                            //     sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
+                            //     sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
+                            //     sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
+                            //     sales.Description = model.ServiceInvoice.Service.Name;
+                            //     sales.Amount = viewModelDMCM.Total;
+                            //     sales.ZeroRated = viewModelDMCM.Total;
+                            //     //sales.Discount = model.Discount;
+                            //     sales.NetSales = viewModelDMCM.NetAmount;
+                            //     sales.CreatedBy = model.CreatedBy;
+                            //     sales.CreatedDate = model.CreatedDate;
+                            //     sales.DueDate = existingSv.DueDate;
+                            //     sales.DocumentId = existingSv.ServiceInvoiceId;
+                            //     sales.Company = model.Company;
+                            // }
+                            // await _dbContext.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SV)--
 
                             ///TODO: waiting for ma'am LSA journal entries
                             #region --General Ledger Book Recording(SV)--
 
-                                // var ledgers = new List<FilprideGeneralLedgerBook>();
-                                //
-                                // ledgers.Add(
-                                //         new FilprideGeneralLedgerBook
-                                //         {
-                                //             Date = model.TransactionDate,
-                                //             Reference = model.DebitMemoNo,
-                                //             Description = model.ServiceInvoice.Service.Name,
-                                //             AccountId = arNonTradeTitle.AccountId,
-                                //             AccountNo = arNonTradeTitle.AccountNumber,
-                                //             AccountTitle = arNonTradeTitle.AccountName,
-                                //             Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
-                                //             Credit = 0,
-                                //             Company = model.Company,
-                                //             CreatedBy = model.CreatedBy,
-                                //             CreatedDate = model.CreatedDate,
-                                //             CustomerId = model.ServiceInvoice.CustomerId
-                                //         }
-                                //     );
-                                // if (viewModelDMCM.WithholdingTaxAmount > 0)
-                                // {
-                                //     ledgers.Add(
-                                //         new FilprideGeneralLedgerBook
-                                //         {
-                                //             Date = model.TransactionDate,
-                                //             Reference = model.DebitMemoNo,
-                                //             Description = model.ServiceInvoice.Service.Name,
-                                //             AccountId = arTradeCwt.AccountId,
-                                //             AccountNo = arTradeCwt.AccountNumber,
-                                //             AccountTitle = arTradeCwt.AccountName,
-                                //             Debit = viewModelDMCM.WithholdingTaxAmount,
-                                //             Credit = 0,
-                                //             Company = model.Company,
-                                //             CreatedBy = model.CreatedBy,
-                                //             CreatedDate = model.CreatedDate
-                                //         }
-                                //     );
-                                // }
-                                // if (viewModelDMCM.WithholdingVatAmount > 0)
-                                // {
-                                //     ledgers.Add(
-                                //         new FilprideGeneralLedgerBook
-                                //         {
-                                //             Date = model.TransactionDate,
-                                //             Reference = model.DebitMemoNo,
-                                //             Description = model.ServiceInvoice.Service.Name,
-                                //             AccountId = arTradeCwv.AccountId,
-                                //             AccountNo = arTradeCwv.AccountNumber,
-                                //             AccountTitle = arTradeCwv.AccountName,
-                                //             Debit = viewModelDMCM.WithholdingVatAmount,
-                                //             Credit = 0,
-                                //             Company = model.Company,
-                                //             CreatedBy = model.CreatedBy,
-                                //             CreatedDate = model.CreatedDate
-                                //         }
-                                //     );
-                                // }
-                                //
-                                // if (viewModelDMCM.Total > 0)
-                                // {
-                                //     ledgers.Add(new FilprideGeneralLedgerBook
-                                //     {
-                                //         Date = model.TransactionDate,
-                                //         Reference = model.DebitMemoNo,
-                                //         Description = model.ServiceInvoice.Service.Name,
-                                //         AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
-                                //         AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
-                                //         Debit = 0,
-                                //         Credit = viewModelDMCM.NetAmount,
-                                //         Company = model.Company,
-                                //         CreatedBy = model.CreatedBy,
-                                //         CreatedDate = model.CreatedDate
-                                //     });
-                                // }
-                                //
-                                // if (viewModelDMCM.VatAmount > 0)
-                                // {
-                                //     ledgers.Add(
-                                //         new FilprideGeneralLedgerBook
-                                //         {
-                                //             Date = model.TransactionDate,
-                                //             Reference = model.DebitMemoNo,
-                                //             Description = model.ServiceInvoice.Service.Name,
-                                //             AccountId = vatOutputTitle.AccountId,
-                                //             AccountNo = vatOutputTitle.AccountNumber,
-                                //             AccountTitle = vatOutputTitle.AccountName,
-                                //             Debit = 0,
-                                //             Credit = viewModelDMCM.VatAmount,
-                                //             Company = model.Company,
-                                //             CreatedBy = model.CreatedBy,
-                                //             CreatedDate = model.CreatedDate
-                                //         }
-                                //     );
-                                // }
-                                //
-                                // if (!_unitOfWork.FilprideDebitMemo.IsJournalEntriesBalanced(ledgers))
-                                // {
-                                //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                                // }
-                                //
-                                // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                            // var ledgers = new List<FilprideGeneralLedgerBook>();
+                            //
+                            // ledgers.Add(
+                            //         new FilprideGeneralLedgerBook
+                            //         {
+                            //             Date = model.TransactionDate,
+                            //             Reference = model.DebitMemoNo,
+                            //             Description = model.ServiceInvoice.Service.Name,
+                            //             AccountId = arNonTradeTitle.AccountId,
+                            //             AccountNo = arNonTradeTitle.AccountNumber,
+                            //             AccountTitle = arNonTradeTitle.AccountName,
+                            //             Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
+                            //             Credit = 0,
+                            //             Company = model.Company,
+                            //             CreatedBy = model.CreatedBy,
+                            //             CreatedDate = model.CreatedDate,
+                            //             CustomerId = model.ServiceInvoice.CustomerId
+                            //         }
+                            //     );
+                            // if (viewModelDMCM.WithholdingTaxAmount > 0)
+                            // {
+                            //     ledgers.Add(
+                            //         new FilprideGeneralLedgerBook
+                            //         {
+                            //             Date = model.TransactionDate,
+                            //             Reference = model.DebitMemoNo,
+                            //             Description = model.ServiceInvoice.Service.Name,
+                            //             AccountId = arTradeCwt.AccountId,
+                            //             AccountNo = arTradeCwt.AccountNumber,
+                            //             AccountTitle = arTradeCwt.AccountName,
+                            //             Debit = viewModelDMCM.WithholdingTaxAmount,
+                            //             Credit = 0,
+                            //             Company = model.Company,
+                            //             CreatedBy = model.CreatedBy,
+                            //             CreatedDate = model.CreatedDate
+                            //         }
+                            //     );
+                            // }
+                            // if (viewModelDMCM.WithholdingVatAmount > 0)
+                            // {
+                            //     ledgers.Add(
+                            //         new FilprideGeneralLedgerBook
+                            //         {
+                            //             Date = model.TransactionDate,
+                            //             Reference = model.DebitMemoNo,
+                            //             Description = model.ServiceInvoice.Service.Name,
+                            //             AccountId = arTradeCwv.AccountId,
+                            //             AccountNo = arTradeCwv.AccountNumber,
+                            //             AccountTitle = arTradeCwv.AccountName,
+                            //             Debit = viewModelDMCM.WithholdingVatAmount,
+                            //             Credit = 0,
+                            //             Company = model.Company,
+                            //             CreatedBy = model.CreatedBy,
+                            //             CreatedDate = model.CreatedDate
+                            //         }
+                            //     );
+                            // }
+                            //
+                            // if (viewModelDMCM.Total > 0)
+                            // {
+                            //     ledgers.Add(new FilprideGeneralLedgerBook
+                            //     {
+                            //         Date = model.TransactionDate,
+                            //         Reference = model.DebitMemoNo,
+                            //         Description = model.ServiceInvoice.Service.Name,
+                            //         AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo,
+                            //         AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle,
+                            //         Debit = 0,
+                            //         Credit = viewModelDMCM.NetAmount,
+                            //         Company = model.Company,
+                            //         CreatedBy = model.CreatedBy,
+                            //         CreatedDate = model.CreatedDate
+                            //     });
+                            // }
+                            //
+                            // if (viewModelDMCM.VatAmount > 0)
+                            // {
+                            //     ledgers.Add(
+                            //         new FilprideGeneralLedgerBook
+                            //         {
+                            //             Date = model.TransactionDate,
+                            //             Reference = model.DebitMemoNo,
+                            //             Description = model.ServiceInvoice.Service.Name,
+                            //             AccountId = vatOutputTitle.AccountId,
+                            //             AccountNo = vatOutputTitle.AccountNumber,
+                            //             AccountTitle = vatOutputTitle.AccountName,
+                            //             Debit = 0,
+                            //             Credit = viewModelDMCM.VatAmount,
+                            //             Company = model.Company,
+                            //             CreatedBy = model.CreatedBy,
+                            //             CreatedDate = model.CreatedDate
+                            //         }
+                            //     );
+                            // }
+                            //
+                            // if (!_unitOfWork.FilprideDebitMemo.IsJournalEntriesBalanced(ledgers))
+                            // {
+                            //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                            // }
+                            //
+                            // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
                             #endregion --General Ledger Book Recording(SV)--
                         }

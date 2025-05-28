@@ -9,7 +9,7 @@ namespace IBS.Models.MMSI
     public class MMSIDispatchTicket
     {
         [Key]
-        public int DispatchTicketId {  get; set; }
+        public int DispatchTicketId { get; set; }
 
         [Display(Name = "Date")]
         public DateOnly Date { get; set; }
@@ -18,7 +18,7 @@ namespace IBS.Models.MMSI
         public string DispatchNumber { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string? COSNumber {  get; set; }
+        public string? COSNumber { get; set; }
 
         [Display(Name = "Date Left")]
         public DateOnly DateLeft { get; set; }

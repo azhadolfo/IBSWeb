@@ -1,4 +1,4 @@
-﻿namespace IBS.Utility.Constants
+namespace IBS.Utility.Constants
 {
     public static class CS
     {

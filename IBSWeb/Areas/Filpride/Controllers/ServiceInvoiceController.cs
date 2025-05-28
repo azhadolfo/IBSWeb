@@ -161,7 +161,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
             if (ModelState.IsValid)
             {
@@ -609,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             existingModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
             return View(existingModel);

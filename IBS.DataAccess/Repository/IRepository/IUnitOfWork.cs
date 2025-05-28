@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.Bienes.IRepository;
+using IBS.DataAccess.Repository.Bienes.IRepository;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;

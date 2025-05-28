@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using IBS.Models.Filpride.AccountsPayable;
 using Microsoft.AspNetCore.Mvc.Rendering;
 

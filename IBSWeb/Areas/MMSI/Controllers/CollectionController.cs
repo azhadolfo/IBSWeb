@@ -106,18 +106,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var audit = new FilprideAuditTrail
                 {
                     Date = DateTimeHelper.GetCurrentPhilippineTime(),
-                    Username = await GetUserNameAsync() ??  throw new InvalidOperationException(),
+                    Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
                     MachineName = Environment.MachineName,
                     Activity = $"Create collection #{model.MMSICollectionNumber} for billings #{string.Join(", #", viewModel.ToCollectBillings!)}",
                     DocumentType = "Collection",
-                    Company = await GetCompanyClaimAsync() ??  throw new InvalidOperationException()
+                    Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion -- Audit Trail
 
-                foreach(var collectBills in viewModel.ToCollectBillings!)
+                foreach (var collectBills in viewModel.ToCollectBillings!)
                 {
                     // find the billings that was collected and mark them as collected
                     var billingChosen = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == int.Parse(collectBills), cancellationToken);

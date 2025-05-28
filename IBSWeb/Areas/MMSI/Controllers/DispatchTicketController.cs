@@ -61,7 +61,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpGet]
-        public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateDispatchTicket, cancellationToken))
             {
@@ -224,7 +224,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
             var model = await _db.MMSIDispatchTickets.Where(dt => dt.DispatchTicketId == id)
                 .Include(t => t.Service)
@@ -287,7 +287,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
             }
 
             var model = TariffVmToDispatchTicket(vm);
@@ -345,7 +345,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to set tariff.");
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
             }
         }
 
@@ -390,7 +390,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
             }
 
             var model = TariffVmToDispatchTicket(viewModel);
@@ -471,7 +471,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to edit tariff.");
                 TempData["error"] = ex.Message;
 
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
             }
         }
 
@@ -605,9 +605,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                    if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
                     if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                     if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
@@ -701,7 +701,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     TempData["success"] = "Entry edited successfully!";
 
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
@@ -759,7 +759,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 TempData["success"] = "Entry Approved!";
 
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -1000,7 +1000,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             queried = queried.Where(dt =>
                                 dt.Status == "For Collection");
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -1160,7 +1160,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public async Task<IActionResult> CheckForTariffRate (int customerId, int dispatchTicketId, CancellationToken cancellationToken)
+        public async Task<IActionResult> CheckForTariffRate(int customerId, int dispatchTicketId, CancellationToken cancellationToken)
         {
             var dispatchModel = await _db.MMSIDispatchTickets
                 .FindAsync(dispatchTicketId, cancellationToken);

@@ -1,4 +1,4 @@
-﻿using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.Integrated;
 using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels

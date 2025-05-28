@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -55,7 +55,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var purchaseOrders = await _unitOfWork.MobilityPurchaseOrder
                 .GetAllAsync(null, cancellationToken);
 
-                purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
+            purchaseOrders = purchaseOrders.Where(po => po.StationCode == GetStationCodeClaimAsync().Result);
 
             ViewData["StationCode"] = GetStationCodeClaimAsync().Result;
 
@@ -405,7 +405,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
-                return Json(new { success = true});
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {

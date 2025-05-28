@@ -11,12 +11,12 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public MMSIReportRepository (ApplicationDbContext dbContext)
+        public MMSIReportRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<List<MMSIDispatchTicket>> GetSalesReport (DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
+        public async Task<List<MMSIDispatchTicket>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {

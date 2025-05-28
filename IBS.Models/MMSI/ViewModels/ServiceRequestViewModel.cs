@@ -13,7 +13,7 @@ namespace IBS.Models.MMSI.ViewModels
         public DateOnly Date { get; set; }
 
         [StringLength(10, ErrorMessage = "Dispatch Number can only contain 10 characters")]
-        public string? COSNumber {  get; set; }
+        public string? COSNumber { get; set; }
 
         [StringLength(20, ErrorMessage = "Dispatch Number should not exceed 20 characters")]
         public string DispatchNumber { get; set; }

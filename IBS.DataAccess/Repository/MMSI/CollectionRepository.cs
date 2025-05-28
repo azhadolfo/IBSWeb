@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public CollectionRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public CollectionRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
@@ -59,7 +59,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortNumber + " " + s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -146,10 +146,10 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, string type, CancellationToken cancellationToken = default)
@@ -201,7 +201,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return billingsList;
         }
 
-        public async Task<List<SelectListItem>?> GetMMSIUncollectedBillingsByCustomer (int? customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>?> GetMMSIUncollectedBillingsByCustomer(int? customerId, CancellationToken cancellationToken)
         {
             var billings = await _dbContext
                 .MMSIBillings
@@ -219,14 +219,14 @@ namespace IBS.DataAccess.Repository.MMSI
             return billingsList;
         }
 
-        public async Task<string> GenerateCollectionNumber (CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSICollections
                 .Where(b => b.IsUndocumented == true && b.MMSICollectionNumber != null)
                 .OrderByDescending(b => b.MMSICollectionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if(lastRecord == null)
+            if (lastRecord == null)
             {
                 return "CL00000001";
             }

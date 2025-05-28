@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.AccountsPayable;
@@ -42,18 +42,18 @@ namespace IBS.Models.Mobility.ViewModels
         [Column(TypeName = "varchar(100)")]
         public string? SupplierSalesOrderNo { get; set; }
 
-         #region--Select List Item
+        #region--Select List Item
 
-         [NotMapped]
-         public List<MobilityReceivingReport>? RrList { get; set; }
+        [NotMapped]
+        public List<MobilityReceivingReport>? RrList { get; set; }
 
-         [NotMapped]
-         public List<SelectListItem>? Suppliers { get; set; }
+        [NotMapped]
+        public List<SelectListItem>? Suppliers { get; set; }
 
-         [NotMapped]
-         public List<SelectListItem>? Products { get; set; }
+        [NotMapped]
+        public List<SelectListItem>? Products { get; set; }
 
-         #endregion
+        #endregion
 
         public string Type { get; set; } = string.Empty;
 

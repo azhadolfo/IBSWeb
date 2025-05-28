@@ -1,4 +1,4 @@
-﻿using CsvHelper.Configuration;
+using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Dtos;
@@ -29,7 +29,7 @@ namespace IBS.DataAccess.Repository.Mobility
                    join supplier in _db.FilprideSuppliers on lube.SupplierCode equals supplier.SupplierCode
                    select new
                    {
-                       lubePurchaseHeaderId =  lube.LubePurchaseHeaderId,
+                       lubePurchaseHeaderId = lube.LubePurchaseHeaderId,
                        stationCode = lube.StationCode,
                        lubePurchaseHeaderNo = lube.LubePurchaseHeaderNo,
                        shiftDate = lube.ShiftDate,

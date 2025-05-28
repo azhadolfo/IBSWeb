@@ -194,113 +194,113 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             try
             {
-                    #region --Saving default value
+                #region --Saving default value
 
-                        if (bir2306 != null && bir2306.Length > 0)
+                if (bir2306 != null && bir2306.Length > 0)
+                {
+                    viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                    viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
+                    viewModel.IsCertificateUpload = true;
+                }
+
+                if (bir2307 != null && bir2307.Length > 0)
+                {
+                    viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                    viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
+                    viewModel.IsCertificateUpload = true;
+                }
+
+                var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
+                if (computeTotalInModelIfZero == 0)
+                {
+                    TempData["error"] = "Please input atleast one type form of payment";
+                    return View(viewModel);
+                }
+                var existingServiceInvoice = await _unitOfWork.MobilityServiceInvoice
+                    .GetAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
+
+                if (existingServiceInvoice == null)
+                {
+                    return NotFound();
+                }
+
+                var generateCRNo = await _unitOfWork.MobilityCollectionReceipt.GenerateCodeAsync(stationCodeClaims, existingServiceInvoice.Type, cancellationToken);
+
+                decimal offsetAmount = 0;
+
+                MobilityCollectionReceipt model = new()
+                {
+                    F2307FileName = viewModel.F2307FileName,
+                    F2307FilePath = viewModel.F2307FilePath,
+                    F2306FileName = viewModel.F2306FileName,
+                    F2306FilePath = viewModel.F2306FilePath,
+                    IsCertificateUpload = viewModel.IsCertificateUpload,
+                    SVNo = existingServiceInvoice.ServiceInvoiceNo,
+                    CollectionReceiptNo = generateCRNo,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    Total = computeTotalInModelIfZero,
+                    StationCode = stationCodeClaims,
+                    Type = existingServiceInvoice.Type,
+                    CustomerId = viewModel.CustomerId,
+                    TransactionDate = viewModel.TransactionDate,
+                    ReferenceNo = viewModel.ReferenceNo,
+                    Remarks = viewModel.Remarks,
+                    CashAmount = viewModel.CashAmount,
+                    CheckDate = viewModel.CheckDate,
+                    CheckNo = viewModel.CheckNo,
+                    CheckBank = viewModel.CheckBank,
+                    CheckBranch = viewModel.CheckBranch,
+                    CheckAmount = viewModel.CheckAmount,
+                    EWT = viewModel.EWT,
+                    WVAT = viewModel.WVAT,
+                    ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                };
+                await _dbContext.AddAsync(model, cancellationToken);
+
+                #endregion --Saving default value
+
+                #region --Offsetting function
+
+                var offsettings = new List<MobilityOffsettings>();
+
+                for (int i = 0; i < accountTitle.Length; i++)
+                {
+                    var currentAccountTitle = accountTitleText[i];
+                    var currentAccountAmount = accountAmount[i];
+                    offsetAmount += accountAmount[i];
+
+                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+
+                    offsettings.Add(
+                        new MobilityOffsettings
                         {
-                            viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                            viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
-                            viewModel.IsCertificateUpload = true;
+                            AccountNo = accountTitle[i],
+                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                            Source = model.CollectionReceiptNo,
+                            Reference = model.SVNo,
+                            Amount = currentAccountAmount,
+                            StationCode = model.StationCode,
+                            CreatedBy = model.CreatedBy,
+                            CreatedDate = model.CreatedDate
                         }
+                    );
+                }
 
-                        if (bir2307 != null && bir2307.Length > 0)
-                        {
-                            viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                            viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
-                            viewModel.IsCertificateUpload = true;
-                        }
+                await _dbContext.AddRangeAsync(offsettings, cancellationToken);
 
-                        var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
-                        if (computeTotalInModelIfZero == 0)
-                        {
-                            TempData["error"] = "Please input atleast one type form of payment";
-                            return View(viewModel);
-                        }
-                        var existingServiceInvoice = await _unitOfWork.MobilityServiceInvoice
-                            .GetAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
+                #endregion --Offsetting function
 
-                        if (existingServiceInvoice == null)
-                        {
-                            return NotFound();
-                        }
+                #region --Audit Trail Recording
 
-                        var generateCRNo = await _unitOfWork.MobilityCollectionReceipt.GenerateCodeAsync(stationCodeClaims, existingServiceInvoice.Type, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                        decimal offsetAmount = 0;
+                #endregion --Audit Trail Recording
 
-                        MobilityCollectionReceipt model = new()
-                        {
-                            F2307FileName = viewModel.F2307FileName,
-                            F2307FilePath = viewModel.F2307FilePath,
-                            F2306FileName = viewModel.F2306FileName,
-                            F2306FilePath = viewModel.F2306FilePath,
-                            IsCertificateUpload = viewModel.IsCertificateUpload,
-                            SVNo = existingServiceInvoice.ServiceInvoiceNo,
-                            CollectionReceiptNo = generateCRNo,
-                            CreatedBy = _userManager.GetUserName(this.User),
-                            Total = computeTotalInModelIfZero,
-                            StationCode = stationCodeClaims,
-                            Type = existingServiceInvoice.Type,
-                            CustomerId = viewModel.CustomerId,
-                            TransactionDate = viewModel.TransactionDate,
-                            ReferenceNo = viewModel.ReferenceNo,
-                            Remarks = viewModel.Remarks,
-                            CashAmount = viewModel.CashAmount,
-                            CheckDate = viewModel.CheckDate,
-                            CheckNo = viewModel.CheckNo,
-                            CheckBank = viewModel.CheckBank,
-                            CheckBranch = viewModel.CheckBranch,
-                            CheckAmount = viewModel.CheckAmount,
-                            EWT = viewModel.EWT,
-                            WVAT = viewModel.WVAT,
-                            ServiceInvoiceId = viewModel.ServiceInvoiceId,
-                        };
-                        await _dbContext.AddAsync(model, cancellationToken);
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var offsettings = new List<MobilityOffsettings>();
-
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        offsettings.Add(
-                            new MobilityOffsettings
-                            {
-                                AccountNo = accountTitle[i],
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = model.CollectionReceiptNo,
-                                Reference = model.SVNo,
-                                Amount = currentAccountAmount,
-                                StationCode = model.StationCode,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
-                            }
-                        );
-                    }
-
-                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                    #endregion --Offsetting function
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {viewModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Collection receipt created successfully. Series Number: {model.CollectionReceiptNo}";
-                    return RedirectToAction(nameof(Index));
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Collection receipt created successfully. Series Number: {model.CollectionReceiptNo}";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -484,150 +484,150 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Saving default value
 
-                    var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["error"] = "Please input atleast one type form of payment";
-                        return View(viewModel);
-                    }
+                var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
+                if (computeTotalInModelIfZero == 0)
+                {
+                    TempData["error"] = "Please input atleast one type form of payment";
+                    return View(viewModel);
+                }
 
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
-                        viewModel.IsCertificateUpload = true;
-                    }
+                if (bir2306 != null && bir2306.Length > 0)
+                {
+                    viewModel.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
+                    viewModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, viewModel.F2306FileName!);
+                    viewModel.IsCertificateUpload = true;
+                }
 
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
-                        viewModel.IsCertificateUpload = true;
-                    }
+                if (bir2307 != null && bir2307.Length > 0)
+                {
+                    viewModel.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
+                    viewModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, viewModel.F2307FileName!);
+                    viewModel.IsCertificateUpload = true;
+                }
 
-                    existingModel.Total = computeTotalInModelIfZero;
-                    existingModel.CustomerId = viewModel.CustomerId;
-                    existingModel.TransactionDate = viewModel.TransactionDate;
-                    existingModel.ReferenceNo = viewModel.ReferenceNo;
-                    existingModel.Remarks = viewModel.Remarks;
-                    existingModel.CashAmount = viewModel.CashAmount;
-                    existingModel.CheckDate = viewModel.CheckDate;
-                    existingModel.CheckNo = viewModel.CheckNo;
-                    existingModel.CheckBank = viewModel.CheckBank;
-                    existingModel.CheckBranch = viewModel.CheckBranch;
-                    existingModel.CheckAmount = viewModel.CheckAmount;
-                    existingModel.EWT = viewModel.EWT;
-                    existingModel.WVAT = viewModel.WVAT;
-                    if (bir2307 != null)
-                    {
-                        existingModel.F2307FileName = viewModel.F2307FileName;
-                        existingModel.F2307FilePath = viewModel.F2307FilePath;
-                        existingModel.IsCertificateUpload = viewModel.IsCertificateUpload;
-                    }
-                    if (bir2306 != null)
-                    {
-                        existingModel.F2306FileName = viewModel.F2306FileName;
-                        existingModel.F2306FilePath = viewModel.F2306FilePath;
-                        existingModel.IsCertificateUpload = viewModel.IsCertificateUpload;
-                    }
-                    existingModel.ServiceInvoiceId = viewModel.ServiceInvoiceId;
-                    existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingModel.Total = computeTotalInModelIfZero;
+                existingModel.CustomerId = viewModel.CustomerId;
+                existingModel.TransactionDate = viewModel.TransactionDate;
+                existingModel.ReferenceNo = viewModel.ReferenceNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.CashAmount = viewModel.CashAmount;
+                existingModel.CheckDate = viewModel.CheckDate;
+                existingModel.CheckNo = viewModel.CheckNo;
+                existingModel.CheckBank = viewModel.CheckBank;
+                existingModel.CheckBranch = viewModel.CheckBranch;
+                existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.EWT = viewModel.EWT;
+                existingModel.WVAT = viewModel.WVAT;
+                if (bir2307 != null)
+                {
+                    existingModel.F2307FileName = viewModel.F2307FileName;
+                    existingModel.F2307FilePath = viewModel.F2307FilePath;
+                    existingModel.IsCertificateUpload = viewModel.IsCertificateUpload;
+                }
+                if (bir2306 != null)
+                {
+                    existingModel.F2306FileName = viewModel.F2306FileName;
+                    existingModel.F2306FilePath = viewModel.F2306FilePath;
+                    existingModel.IsCertificateUpload = viewModel.IsCertificateUpload;
+                }
+                existingModel.ServiceInvoiceId = viewModel.ServiceInvoiceId;
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                    decimal offsetAmount = 0;
+                decimal offsetAmount = 0;
 
                 #endregion --Saving default value
 
                 #region --Offsetting function
 
-                    var findOffsettings = await _dbContext.MobilityOffsettings
-                    .Where(offset => offset.StationCode == stationCodeClaims && offset.Source == existingModel.CollectionReceiptNo)
-                    .ToListAsync(cancellationToken);
+                var findOffsettings = await _dbContext.MobilityOffsettings
+                .Where(offset => offset.StationCode == stationCodeClaims && offset.Source == existingModel.CollectionReceiptNo)
+                .ToListAsync(cancellationToken);
 
-                    var accountTitleSet = new HashSet<string>(accountTitle);
+                var accountTitleSet = new HashSet<string>(accountTitle);
 
-                    // Remove records not in accountTitle
-                    foreach (var offsetting in findOffsettings)
+                // Remove records not in accountTitle
+                foreach (var offsetting in findOffsettings)
+                {
+                    if (!accountTitleSet.Contains(offsetting.AccountNo))
                     {
-                        if (!accountTitleSet.Contains(offsetting.AccountNo))
+                        _dbContext.MobilityOffsettings.Remove(offsetting);
+                    }
+                }
+
+                // Dictionary to keep track of AccountNo and their ids for comparison
+                var accountTitleDict = new Dictionary<string, List<int>>();
+                foreach (var offsetting in findOffsettings)
+                {
+                    if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                    {
+                        accountTitleDict[offsetting.AccountNo] = new List<int>();
+                    }
+                    accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                }
+
+                // Add or update records
+                for (int i = 0; i < accountTitle.Length; i++)
+                {
+                    var accountNo = accountTitle[i];
+                    var currentAccountTitle = accountTitleText[i];
+                    var currentAccountAmount = accountAmount[i];
+                    offsetAmount += accountAmount[i];
+
+                    var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+
+                    if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                    {
+                        // Update the first matching record and remove it from the list
+                        var offsettingId = ids.First();
+                        ids.RemoveAt(0);
+                        var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+
+                        offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                        offsetting.Amount = currentAccountAmount;
+                        offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                        offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                        offsetting.StationCode = stationCodeClaims;
+
+                        if (ids.Count == 0)
                         {
-                            _dbContext.MobilityOffsettings.Remove(offsetting);
+                            accountTitleDict.Remove(accountNo);
                         }
                     }
-
-                    // Dictionary to keep track of AccountNo and their ids for comparison
-                    var accountTitleDict = new Dictionary<string, List<int>>();
-                    foreach (var offsetting in findOffsettings)
+                    else
                     {
-                        if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                        // Add new record
+                        var newOffsetting = new MobilityOffsettings
                         {
-                            accountTitleDict[offsetting.AccountNo] = new List<int>();
-                        }
-                        accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                            AccountNo = accountNo,
+                            AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                            Source = existingModel.CollectionReceiptNo!,
+                            Reference = existingModel.SVNo,
+                            Amount = currentAccountAmount,
+                            CreatedBy = _userManager.GetUserName(this.User),
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            StationCode = existingModel.StationCode
+                        };
+                        _dbContext.MobilityOffsettings.Add(newOffsetting);
                     }
+                }
 
-                    // Add or update records
-                    for (int i = 0; i < accountTitle.Length; i++)
+                // Remove remaining records that were duplicates
+                foreach (var ids in accountTitleDict.Values)
+                {
+                    foreach (var id in ids)
                     {
-                        var accountNo = accountTitle[i];
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                        {
-                            // Update the first matching record and remove it from the list
-                            var offsettingId = ids.First();
-                            ids.RemoveAt(0);
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-
-                            offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                            offsetting.Amount = currentAccountAmount;
-                            offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                            offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            offsetting.StationCode = stationCodeClaims;
-
-                            if (ids.Count == 0)
-                            {
-                                accountTitleDict.Remove(accountNo);
-                            }
-                        }
-                        else
-                        {
-                            // Add new record
-                            var newOffsetting = new MobilityOffsettings
-                            {
-                                AccountNo = accountNo,
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo!,
-                                Reference = existingModel.SVNo,
-                                Amount = currentAccountAmount,
-                                CreatedBy = _userManager.GetUserName(this.User),
-                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                                StationCode = existingModel.StationCode
-                            };
-                            _dbContext.MobilityOffsettings.Add(newOffsetting);
-                        }
+                        var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                        _dbContext.MobilityOffsettings.Remove(offsetting);
                     }
-
-                    // Remove remaining records that were duplicates
-                    foreach (var ids in accountTitleDict.Values)
-                    {
-                        foreach (var id in ids)
-                        {
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                            _dbContext.MobilityOffsettings.Remove(offsetting);
-                        }
-                    }
+                }
 
                 #endregion --Offsetting function
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 

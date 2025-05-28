@@ -13,7 +13,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public PrincipalRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public PrincipalRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }

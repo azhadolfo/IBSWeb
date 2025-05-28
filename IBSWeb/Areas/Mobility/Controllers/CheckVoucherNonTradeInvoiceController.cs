@@ -258,211 +258,211 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region -- Saving the default entries --
 
-                    MobilityCheckVoucherHeader checkVoucherHeader = new()
-                    {
-                        CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultipleInvoiceAsync(stationCodeClaims, viewModel.Type!, cancellationToken),
-                        Date = viewModel.TransactionDate,
-                        Payee = viewModel.SupplierName,
-                        Address = viewModel.SupplierAddress!,
-                        Tin = viewModel.SupplierTinNo!,
-                        PONo = [viewModel.PoNo ?? string.Empty],
-                        SINo = [viewModel.SiNo ?? string.Empty],
-                        SupplierId = viewModel.SupplierId,
-                        Particulars = viewModel.Particulars,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Category = "Non-Trade",
-                        CvType = nameof(CVType.Invoicing),
-                        StationCode = stationCodeClaims,
-                        Type = viewModel.Type,
-                        Total = viewModel.Total
-                    };
+                MobilityCheckVoucherHeader checkVoucherHeader = new()
+                {
+                    CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultipleInvoiceAsync(stationCodeClaims, viewModel.Type!, cancellationToken),
+                    Date = viewModel.TransactionDate,
+                    Payee = viewModel.SupplierName,
+                    Address = viewModel.SupplierAddress!,
+                    Tin = viewModel.SupplierTinNo!,
+                    PONo = [viewModel.PoNo ?? string.Empty],
+                    SINo = [viewModel.SiNo ?? string.Empty],
+                    SupplierId = viewModel.SupplierId,
+                    Particulars = viewModel.Particulars,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    Category = "Non-Trade",
+                    CvType = nameof(CVType.Invoicing),
+                    StationCode = stationCodeClaims,
+                    Type = viewModel.Type,
+                    Total = viewModel.Total
+                };
 
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion -- Saving the default entries --
 
                 #region -- cv invoiving details entry --
 
-                    List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
+                List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
 
-                    decimal apNontradeAmount = 0;
-                    decimal vatAmount = 0;
-                    decimal ewtOnePercentAmount = 0;
-                    decimal ewtTwoPercentAmount = 0;
-                    decimal ewtFivePercentAmount = 0;
-                    decimal ewtTenPercentAmount = 0;
+                decimal apNontradeAmount = 0;
+                decimal vatAmount = 0;
+                decimal ewtOnePercentAmount = 0;
+                decimal ewtTwoPercentAmount = 0;
+                decimal ewtFivePercentAmount = 0;
+                decimal ewtTenPercentAmount = 0;
 
-                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
-                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
 
-                    foreach (var accountEntry in viewModel.AccountingEntries!)
+                foreach (var accountEntry in viewModel.AccountingEntries!)
+                {
+                    var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
+                    var accountNo = parts[0];
+                    var accountName = parts[1];
+
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
-                        var accountNo = parts[0];
-                        var accountName = parts[1];
+                        AccountNo = accountNo,
+                        AccountName = accountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = accountEntry.NetOfVatAmount,
+                        Credit = 0,
+                        IsVatable = accountEntry.VatAmount > 0,
+                        EwtPercent = accountEntry.TaxPercentage,
+                        IsUserSelected = true,
+                        BankId = accountEntry.BankMasterFileId,
+                        CompanyId = accountEntry.CompanyMasterFileId,
+                        EmployeeId = accountEntry.EmployeeMasterFileId,
+                        CustomerId = accountEntry.CustomerMasterFileId,
+                        SupplierId = accountEntry.SupplierMasterFileId,
+                    });
 
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = accountNo,
-                            AccountName = accountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = accountEntry.NetOfVatAmount,
-                            Credit = 0,
-                            IsVatable = accountEntry.VatAmount > 0,
-                            EwtPercent = accountEntry.TaxPercentage,
-                            IsUserSelected = true,
-                            BankId = accountEntry.BankMasterFileId,
-                            CompanyId = accountEntry.CompanyMasterFileId,
-                            EmployeeId = accountEntry.EmployeeMasterFileId,
-                            CustomerId = accountEntry.CustomerMasterFileId,
-                            SupplierId = accountEntry.SupplierMasterFileId,
-                        });
-
-                        if (accountEntry.VatAmount > 0)
-                        {
-                            vatAmount += accountEntry.VatAmount;
-                        }
-
-                        // Check EWT percentage
-                        switch (accountEntry.TaxPercentage)
-                        {
-                            case 0.01m:
-                                ewtOnePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.02m:
-                                ewtTwoPercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.05m:
-                                ewtFivePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.10m:
-                                ewtTenPercentAmount += accountEntry.TaxAmount;
-                                break;
-                        }
-
-                        apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
-
+                    if (accountEntry.VatAmount > 0)
+                    {
+                        vatAmount += accountEntry.VatAmount;
                     }
 
-                    checkVoucherHeader.InvoiceAmount = apNontradeAmount;
-
-                    if (vatAmount > 0)
+                    // Check EWT percentage
+                    switch (accountEntry.TaxPercentage)
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = vatInputTitle.AccountNumber,
-                            AccountName = vatInputTitle.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = vatAmount,
-                            Credit = 0,
-                        });
+                        case 0.01m:
+                            ewtOnePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.02m:
+                            ewtTwoPercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.05m:
+                            ewtFivePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.10m:
+                            ewtTenPercentAmount += accountEntry.TaxAmount;
+                            break;
                     }
 
-                    if (apNontradeAmount > 0)
+                    apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
+
+                }
+
+                checkVoucherHeader.InvoiceAmount = apNontradeAmount;
+
+                if (vatAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = apNonTradeTitle.AccountNumber,
-                            AccountName = apNonTradeTitle.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = apNontradeAmount,
-                            SupplierId = checkVoucherHeader.SupplierId
-                        });
-                    }
+                        AccountNo = vatInputTitle.AccountNumber,
+                        AccountName = vatInputTitle.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = vatAmount,
+                        Credit = 0,
+                    });
+                }
 
-                    var supplierBIR = await _dbContext.MobilitySuppliers
-                        .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
-                        .Select(s => s.SupplierId)
-                        .FirstOrDefaultAsync();
-
-                    if (ewtOnePercentAmount > 0)
+                if (apNontradeAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtOnePercent.AccountNumber,
-                            AccountName = ewtOnePercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtOnePercentAmount,
-                            Amount = ewtOnePercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = apNonTradeTitle.AccountNumber,
+                        AccountName = apNonTradeTitle.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = apNontradeAmount,
+                        SupplierId = checkVoucherHeader.SupplierId
+                    });
+                }
 
-                    if (ewtTwoPercentAmount > 0)
+                var supplierBIR = await _dbContext.MobilitySuppliers
+                    .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
+                    .Select(s => s.SupplierId)
+                    .FirstOrDefaultAsync();
+
+                if (ewtOnePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtTwoPercent.AccountNumber,
-                            AccountName = ewtTwoPercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTwoPercentAmount,
-                            Amount = ewtTwoPercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtOnePercent.AccountNumber,
+                        AccountName = ewtOnePercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtOnePercentAmount,
+                        Amount = ewtOnePercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    if (ewtFivePercentAmount > 0)
+                if (ewtTwoPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtFivePercent.AccountNumber,
-                            AccountName = ewtFivePercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtFivePercentAmount,
-                            Amount = ewtFivePercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtTwoPercent.AccountNumber,
+                        AccountName = ewtTwoPercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTwoPercentAmount,
+                        Amount = ewtTwoPercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    if (ewtTenPercentAmount > 0)
+                if (ewtFivePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtTenPercent.AccountNumber,
-                            AccountName = ewtTenPercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTenPercentAmount,
-                            Amount = ewtTenPercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtFivePercent.AccountNumber,
+                        AccountName = ewtFivePercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtFivePercentAmount,
+                        Amount = ewtFivePercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+                if (ewtTenPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
+                    {
+                        AccountNo = ewtTenPercent.AccountNumber,
+                        AccountName = ewtTenPercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTenPercentAmount,
+                        Amount = ewtTenPercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
+
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
                 #endregion -- cv invoiving details entry --
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
+                }
 
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -568,72 +568,72 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region -- Saving the default entries --
 
-                    MobilityCheckVoucherHeader checkVoucherHeader = new()
-                    {
-                        CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultipleInvoiceAsync(stationCodeClaims, viewModel.Type!, cancellationToken),
-                        Date = viewModel.TransactionDate,
-                        Payee = null,
-                        Address = "",
-                        Tin = "",
-                        PONo = [viewModel.PoNo ?? string.Empty],
-                        SINo = [viewModel.SiNo ?? string.Empty],
-                        SupplierId = null,
-                        Particulars = viewModel.Particulars,
-                        Total = viewModel.Total,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Category = "Non-Trade",
-                        CvType = nameof(CVType.Invoicing),
-                        StationCode = stationCodeClaims,
-                        Type = viewModel.Type,
-                        InvoiceAmount = viewModel.Total
-                    };
+                MobilityCheckVoucherHeader checkVoucherHeader = new()
+                {
+                    CheckVoucherHeaderNo = await _unitOfWork.MobilityCheckVoucher.GenerateCodeMultipleInvoiceAsync(stationCodeClaims, viewModel.Type!, cancellationToken),
+                    Date = viewModel.TransactionDate,
+                    Payee = null,
+                    Address = "",
+                    Tin = "",
+                    PONo = [viewModel.PoNo ?? string.Empty],
+                    SINo = [viewModel.SiNo ?? string.Empty],
+                    SupplierId = null,
+                    Particulars = viewModel.Particulars,
+                    Total = viewModel.Total,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    Category = "Non-Trade",
+                    CvType = nameof(CVType.Invoicing),
+                    StationCode = stationCodeClaims,
+                    Type = viewModel.Type,
+                    InvoiceAmount = viewModel.Total
+                };
 
-                    await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion -- Saving the default entries -
 
                 #region -- cv invoiving details entry --
 
-                    List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
+                List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
 
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                     {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                                CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                Amount = viewModel.Credit[i],
-                                SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
-                                IsUserSelected = true
-                            });
-                        }
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            Amount = viewModel.Credit[i],
+                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null,
+                            IsUserSelected = true
+                        });
                     }
+                }
 
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
                 #endregion -- cv invoiving details entry --
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
+                }
 
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
-                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId )
+                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
             existingModel.Suppliers = await _dbContext.MobilitySuppliers
@@ -778,255 +778,255 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region --Saving the default entries
 
-                    var existingModel = await _dbContext.MobilityCheckVoucherHeaders
-                        .Include(cv => cv.Supplier)
-                        .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+                var existingModel = await _dbContext.MobilityCheckVoucherHeaders
+                    .Include(cv => cv.Supplier)
+                    .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
 
-                    if (existingModel == null)
+                if (existingModel == null)
+                {
+                    return NotFound();
+                }
+
+                var supplier = await _unitOfWork.MobilitySupplier
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                existingModel.EditedBy = User.Identity!.Name;
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingModel.Date = viewModel.TransactionDate;
+                existingModel.SupplierId = supplier.SupplierId;
+                existingModel.Payee = supplier.SupplierName;
+                existingModel.Address = supplier.SupplierAddress;
+                existingModel.Tin = supplier.SupplierTin;
+                existingModel.PONo = [viewModel.PoNo ?? string.Empty];
+                existingModel.SINo = [viewModel.SiNo ?? string.Empty];
+                existingModel.Particulars = viewModel.Particulars;
+                existingModel.Total = viewModel.Total;
+
+                //For automation purposes
+                if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
+                {
+                    existingModel.StartDate = viewModel.StartDate;
+                    existingModel.EndDate = existingModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
+                    existingModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
+
+                    // Identify the account with a number that starts with '10201'
+                    decimal? amount = null;
+                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
                     {
-                        return NotFound();
-                    }
-
-                    var supplier = await _unitOfWork.MobilitySupplier
-                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    existingModel.EditedBy = User.Identity!.Name;
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingModel.Date = viewModel.TransactionDate;
-                    existingModel.SupplierId = supplier.SupplierId;
-                    existingModel.Payee = supplier.SupplierName;
-                    existingModel.Address = supplier.SupplierAddress;
-                    existingModel.Tin = supplier.SupplierTin;
-                    existingModel.PONo = [viewModel.PoNo ?? string.Empty];
-                    existingModel.SINo = [viewModel.SiNo ?? string.Empty];
-                    existingModel.Particulars = viewModel.Particulars;
-                    existingModel.Total = viewModel.Total;
-
-                    //For automation purposes
-                    if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                    {
-                        existingModel.StartDate = viewModel.StartDate;
-                        existingModel.EndDate = existingModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                        existingModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                        // Identify the account with a number that starts with '10201'
-                        decimal? amount = null;
-                        for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                        if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
                         {
-                            if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                            {
-                                amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                                break;
-                            }
-                        }
-
-                        if (amount.HasValue)
-                        {
-                            existingModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
+                            amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
+                            break;
                         }
                     }
-                    else
+
+                    if (amount.HasValue)
                     {
-                        existingModel.StartDate = null;
-                        existingModel.EndDate = null;
-                        existingModel.NumberOfMonths = 0;
-                        existingModel.AmountPerMonth = 0;
+                        existingModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
                     }
+                }
+                else
+                {
+                    existingModel.StartDate = null;
+                    existingModel.EndDate = null;
+                    existingModel.NumberOfMonths = 0;
+                    existingModel.AmountPerMonth = 0;
+                }
 
                 #endregion --Saving the default entries
 
                 #region --CV Details Entry
 
-                    var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
-                        .Where(d => d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId).
-                        ToListAsync(cancellationToken);
+                var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId).
+                    ToListAsync(cancellationToken);
 
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    var checkVoucherDetails = new List<MobilityCheckVoucherDetail>();
+                var checkVoucherDetails = new List<MobilityCheckVoucherDetail>();
 
-                    decimal apNontradeAmount = 0;
-                    decimal vatAmount = 0;
-                    decimal ewtOnePercentAmount = 0;
-                    decimal ewtTwoPercentAmount = 0;
-                    decimal ewtFivePercentAmount = 0;
-                    decimal ewtTenPercentAmount = 0;
+                decimal apNontradeAmount = 0;
+                decimal vatAmount = 0;
+                decimal ewtOnePercentAmount = 0;
+                decimal ewtTwoPercentAmount = 0;
+                decimal ewtFivePercentAmount = 0;
+                decimal ewtTenPercentAmount = 0;
 
-                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
-                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
 
-                    foreach (var accountEntry in viewModel.AccountingEntries!)
+                foreach (var accountEntry in viewModel.AccountingEntries!)
+                {
+                    var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
+                    var accountNo = parts[0];
+                    var accountName = parts[1];
+
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
-                        var accountNo = parts[0];
-                        var accountName = parts[1];
+                        AccountNo = accountNo,
+                        AccountName = accountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = accountEntry.NetOfVatAmount,
+                        Credit = 0,
+                        IsVatable = accountEntry.Vatable,
+                        EwtPercent = accountEntry.TaxPercentage,
+                        IsUserSelected = true,
+                        BankId = accountEntry.BankMasterFileId,
+                        CompanyId = accountEntry.CompanyMasterFileId,
+                        EmployeeId = accountEntry.EmployeeMasterFileId,
+                        CustomerId = accountEntry.CustomerMasterFileId,
+                    });
 
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = accountNo,
-                            AccountName = accountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = accountEntry.NetOfVatAmount,
-                            Credit = 0,
-                            IsVatable = accountEntry.Vatable,
-                            EwtPercent = accountEntry.TaxPercentage,
-                            IsUserSelected = true,
-                            BankId = accountEntry.BankMasterFileId,
-                            CompanyId = accountEntry.CompanyMasterFileId,
-                            EmployeeId = accountEntry.EmployeeMasterFileId,
-                            CustomerId = accountEntry.CustomerMasterFileId,
-                        });
-
-                        if (accountEntry.Vatable)
-                        {
-                            vatAmount += accountEntry.VatAmount;
-                        }
-
-                        // Check EWT percentage
-                        switch (accountEntry.TaxPercentage)
-                        {
-                            case 0.01m:
-                                ewtOnePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.02m:
-                                ewtTwoPercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.05m:
-                                ewtFivePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.10m:
-                                ewtTenPercentAmount += accountEntry.TaxAmount;
-                                break;
-                        }
-
-                        apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
-
+                    if (accountEntry.Vatable)
+                    {
+                        vatAmount += accountEntry.VatAmount;
                     }
 
-                    existingModel.InvoiceAmount = apNontradeAmount;
-
-                    if (vatAmount > 0)
+                    // Check EWT percentage
+                    switch (accountEntry.TaxPercentage)
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = vatInputTitle.AccountNumber,
-                            AccountName = vatInputTitle.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = vatAmount,
-                            Credit = 0,
-                        });
+                        case 0.01m:
+                            ewtOnePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.02m:
+                            ewtTwoPercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.05m:
+                            ewtFivePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.10m:
+                            ewtTenPercentAmount += accountEntry.TaxAmount;
+                            break;
                     }
 
-                    if (apNontradeAmount > 0)
+                    apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
+
+                }
+
+                existingModel.InvoiceAmount = apNontradeAmount;
+
+                if (vatAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = apNonTradeTitle.AccountNumber,
-                            AccountName = apNonTradeTitle.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = apNontradeAmount,
-                            SupplierId = existingModel.SupplierId
-                        });
-                    }
+                        AccountNo = vatInputTitle.AccountNumber,
+                        AccountName = vatInputTitle.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = vatAmount,
+                        Credit = 0,
+                    });
+                }
 
-                    var supplierBIR = await _dbContext.MobilitySuppliers
-                        .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
-                        .Select(s => s.SupplierId)
-                        .FirstOrDefaultAsync();
-
-                    if (ewtOnePercentAmount > 0)
+                if (apNontradeAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtOnePercent.AccountNumber,
-                            AccountName = ewtOnePercent.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtOnePercentAmount,
-                            Amount = ewtOnePercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = apNonTradeTitle.AccountNumber,
+                        AccountName = apNonTradeTitle.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = apNontradeAmount,
+                        SupplierId = existingModel.SupplierId
+                    });
+                }
 
-                    if (ewtTwoPercentAmount > 0)
+                var supplierBIR = await _dbContext.MobilitySuppliers
+                    .Where(s => s.SupplierName.Contains("BUREAU OF INTERNAL REVENUE"))
+                    .Select(s => s.SupplierId)
+                    .FirstOrDefaultAsync();
+
+                if (ewtOnePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtTwoPercent.AccountNumber,
-                            AccountName = ewtTwoPercent.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTwoPercentAmount,
-                            Amount = ewtTwoPercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtOnePercent.AccountNumber,
+                        AccountName = ewtOnePercent.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtOnePercentAmount,
+                        Amount = ewtOnePercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    if (ewtFivePercentAmount > 0)
+                if (ewtTwoPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtFivePercent.AccountNumber,
-                            AccountName = ewtFivePercent.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtFivePercentAmount,
-                            Amount = ewtFivePercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtTwoPercent.AccountNumber,
+                        AccountName = ewtTwoPercent.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTwoPercentAmount,
+                        Amount = ewtTwoPercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    if (ewtTenPercentAmount > 0)
+                if (ewtFivePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                     {
-                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                        {
-                            AccountNo = ewtTenPercent.AccountNumber,
-                            AccountName = ewtTenPercent.AccountName,
-                            TransactionNo = existingModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTenPercentAmount,
-                            Amount = ewtTenPercentAmount,
-                            SupplierId = supplierBIR
-                        });
-                    }
+                        AccountNo = ewtFivePercent.AccountNumber,
+                        AccountName = ewtFivePercent.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtFivePercentAmount,
+                        Amount = ewtFivePercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
 
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+                if (ewtTenPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new MobilityCheckVoucherDetail
+                    {
+                        AccountNo = ewtTenPercent.AccountNumber,
+                        AccountName = ewtTenPercent.AccountName,
+                        TransactionNo = existingModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTenPercentAmount,
+                        Amount = ewtTenPercentAmount,
+                        SupplierId = supplierBIR
+                    });
+                }
+
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
                 #endregion --CV Details Entry
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        existingModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingModel.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    existingModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    existingModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingModel.SupportingFileSavedFileName!);
+                }
 
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited check voucher# {existingModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited check voucher# {existingModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -1130,71 +1130,71 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         ///TODO: wiaitng for ma'am LSA journal entries
                         #region --General Ledger Book Recording(CV)--
 
-                            // var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                            // var ledgers = new List<FilprideGeneralLedgerBook>();
-                            // foreach (var details in modelDetails)
-                            // {
-                            //     var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                            //     ledgers.Add(
-                            //             new FilprideGeneralLedgerBook
-                            //             {
-                            //                 Date = modelHeader.Date,
-                            //                 Reference = modelHeader.CheckVoucherHeaderNo,
-                            //                 Description = modelHeader.Particulars,
-                            //                 AccountId = account.AccountId,
-                            //                 AccountNo = account.AccountNumber,
-                            //                 AccountTitle = account.AccountName,
-                            //                 Debit = details.Debit,
-                            //                 Credit = details.Credit,
-                            //                 Company = modelHeader.Company,
-                            //                 CreatedBy = modelHeader.CreatedBy,
-                            //                 CreatedDate = modelHeader.CreatedDate,
-                            //                 BankAccountId = details.BankId,
-                            //                 SupplierId = details.SupplierId,
-                            //                 CustomerId = details.CustomerId,
-                            //                 CompanyId = details.CompanyId,
-                            //                 EmployeeId = details.EmployeeId,
-                            //             }
-                            //         );
-                            // }
-                            //
-                            // if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
-                            // {
-                            //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                            // }
-                            //
-                            // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                        // var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                        // var ledgers = new List<FilprideGeneralLedgerBook>();
+                        // foreach (var details in modelDetails)
+                        // {
+                        //     var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+                        //     ledgers.Add(
+                        //             new FilprideGeneralLedgerBook
+                        //             {
+                        //                 Date = modelHeader.Date,
+                        //                 Reference = modelHeader.CheckVoucherHeaderNo,
+                        //                 Description = modelHeader.Particulars,
+                        //                 AccountId = account.AccountId,
+                        //                 AccountNo = account.AccountNumber,
+                        //                 AccountTitle = account.AccountName,
+                        //                 Debit = details.Debit,
+                        //                 Credit = details.Credit,
+                        //                 Company = modelHeader.Company,
+                        //                 CreatedBy = modelHeader.CreatedBy,
+                        //                 CreatedDate = modelHeader.CreatedDate,
+                        //                 BankAccountId = details.BankId,
+                        //                 SupplierId = details.SupplierId,
+                        //                 CustomerId = details.CustomerId,
+                        //                 CompanyId = details.CompanyId,
+                        //                 EmployeeId = details.EmployeeId,
+                        //             }
+                        //         );
+                        // }
+                        //
+                        // if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
+                        // {
+                        //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                        // }
+                        //
+                        // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
                         #endregion --General Ledger Book Recording(CV)--
 
                         #region --Disbursement Book Recording(CV)--
 
-                            // var disbursement = new List<FilprideDisbursementBook>();
-                            // foreach (var details in modelDetails)
-                            // {
-                            //     var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
-                            //     disbursement.Add(
-                            //             new FilprideDisbursementBook
-                            //             {
-                            //                 Date = modelHeader.Date,
-                            //                 CVNo = modelHeader.CheckVoucherHeaderNo,
-                            //                 Payee = modelHeader.Payee != null ? modelHeader.Payee : supplierName,
-                            //                 Amount = modelHeader.Total,
-                            //                 Particulars = modelHeader.Particulars,
-                            //                 Bank = bank != null ? bank.Branch : "N/A",
-                            //                 CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
-                            //                 CheckDate = modelHeader.CheckDate != null ? modelHeader.CheckDate?.ToString("MM/dd/yyyy") : "N/A",
-                            //                 ChartOfAccount = details.AccountNo + " " + details.AccountName,
-                            //                 Debit = details.Debit,
-                            //                 Credit = details.Credit,
-                            //                 Company = modelHeader.Company,
-                            //                 CreatedBy = modelHeader.CreatedBy,
-                            //                 CreatedDate = modelHeader.CreatedDate
-                            //             }
-                            //         );
-                            // }
-                            //
-                            // await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
+                        // var disbursement = new List<FilprideDisbursementBook>();
+                        // foreach (var details in modelDetails)
+                        // {
+                        //     var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
+                        //     disbursement.Add(
+                        //             new FilprideDisbursementBook
+                        //             {
+                        //                 Date = modelHeader.Date,
+                        //                 CVNo = modelHeader.CheckVoucherHeaderNo,
+                        //                 Payee = modelHeader.Payee != null ? modelHeader.Payee : supplierName,
+                        //                 Amount = modelHeader.Total,
+                        //                 Particulars = modelHeader.Particulars,
+                        //                 Bank = bank != null ? bank.Branch : "N/A",
+                        //                 CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
+                        //                 CheckDate = modelHeader.CheckDate != null ? modelHeader.CheckDate?.ToString("MM/dd/yyyy") : "N/A",
+                        //                 ChartOfAccount = details.AccountNo + " " + details.AccountName,
+                        //                 Debit = details.Debit,
+                        //                 Credit = details.Credit,
+                        //                 Company = modelHeader.Company,
+                        //                 CreatedBy = modelHeader.CreatedBy,
+                        //                 CreatedDate = modelHeader.CreatedDate
+                        //             }
+                        //         );
+                        // }
+                        //
+                        // await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
 
                         #endregion --Disbursement Book Recording(CV)--
 
@@ -1244,8 +1244,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         #region --Audit Trail Recording
 
-                            FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                            await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
@@ -1470,116 +1470,116 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 #region -- Saving the default entries --
 
-                    var existingHeaderModel = await _dbContext.MobilityCheckVoucherHeaders
-                        .Include(cv => cv.Supplier)
-                        .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+                var existingHeaderModel = await _dbContext.MobilityCheckVoucherHeaders
+                    .Include(cv => cv.Supplier)
+                    .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
 
-                    if (existingHeaderModel == null)
-                    {
-                        return NotFound();
-                    }
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
 
-                    existingHeaderModel.EditedBy = User.Identity!.Name;
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.PONo = [viewModel.PoNo ?? string.Empty];
-                    existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.Total = viewModel.Total;
+                existingHeaderModel.EditedBy = User.Identity!.Name;
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.PONo = [viewModel.PoNo ?? string.Empty];
+                existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.Total = viewModel.Total;
 
                 #endregion -- Saving the default entries --
 
                 #region -- Get Supplier --
 
-                    var supplier = await _dbContext.MobilitySuppliers
-                        .Where(s => s.SupplierId == viewModel.SupplierId)
-                        .FirstOrDefaultAsync(cancellationToken);
+                var supplier = await _dbContext.MobilitySuppliers
+                    .Where(s => s.SupplierId == viewModel.SupplierId)
+                    .FirstOrDefaultAsync(cancellationToken);
 
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
 
                 #endregion -- Get Supplier --
 
                 #region -- Automatic entry --
 
-                    if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
+                if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
+                {
+                    existingHeaderModel.StartDate = viewModel.StartDate;
+                    existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
+                    existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
+
+                    // Identify the account with a number that starts with '10201'
+                    decimal? amount = null;
+                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
                     {
-                        existingHeaderModel.StartDate = viewModel.StartDate;
-                        existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                        existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                        // Identify the account with a number that starts with '10201'
-                        decimal? amount = null;
-                        for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                        if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
                         {
-                            if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
-                            {
-                                continue;
-                            }
-
-                            if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                            {
-                                amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                            }
+                            continue;
                         }
 
-                        if (amount.HasValue)
+                        if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
                         {
-                            existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
+                            amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
                         }
                     }
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    if (amount.HasValue)
+                    {
+                        existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
+                    }
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 #endregion -- Automatic entry --
 
                 #region -- cv invoiving details entry --
 
-                    var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
+                var existingDetailsModel = await _dbContext.MobilityCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
 
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
+                List<MobilityCheckVoucherDetail> checkVoucherDetails = new();
 
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                     {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                        checkVoucherDetails.Add(new MobilityCheckVoucherDetail
                         {
-                            checkVoucherDetails.Add(new MobilityCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                                CheckVoucherHeaderId = viewModel.CVId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                Amount = viewModel.Credit[i],
-                                SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
-                            });
-                        }
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                            CheckVoucherHeaderId = viewModel.CVId,
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            Amount = viewModel.Credit[i],
+                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
+                        });
                     }
+                }
 
-                    await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+                await _dbContext.MobilityCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
 
                 #endregion -- cv invoiving details entry --
 
                 #region -- Uploading file --
 
-                    if (file != null && file.Length > 0)
-                    {
-                        existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
-                    }
+                if (file != null && file.Length > 0)
+                {
+                    existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
+                }
 
                 #endregion -- Uploading file --
 
                 #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CreatedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CreatedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -1652,7 +1652,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             // Replace this with your actual repository/service call
             var bankAccounts = await _unitOfWork.MobilityBankAccount.GetAllAsync(b => b.StationCode == stationCodeClaims);
 
-            return Json(bankAccounts.Select(b => new {
+            return Json(bankAccounts.Select(b => new
+            {
                 id = b.BankAccountId,
                 accountName = b.AccountName,
                 accountNumber = b.AccountNo
@@ -1684,7 +1685,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var companies = await _unitOfWork.Company.GetAllAsync();
 
-            return Json(companies.OrderBy(c => c.CompanyCode).Select(c => new {
+            return Json(companies.OrderBy(c => c.CompanyCode).Select(c => new
+            {
                 id = c.CompanyId,
                 accountName = c.CompanyName,
                 accountNumber = c.CompanyCode
@@ -1715,7 +1717,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var employees = await _unitOfWork.MobilityEmployee.GetAllAsync(e => e.StationCode == stationCodeClaims);
 
-            return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new {
+            return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new
+            {
                 id = e.EmployeeId,
                 accountName = $"{e.FirstName} {e.LastName}",
                 accountNumber = e.EmployeeNumber
@@ -1748,7 +1751,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var employees = await _unitOfWork.MobilityCustomer.GetAllAsync(c => c.StationCode == stationCodeClaims);
 
-            return Json(employees.OrderBy(c => c.CustomerCode).Select(c => new {
+            return Json(employees.OrderBy(c => c.CustomerCode).Select(c => new
+            {
                 id = c.CustomerId,
                 accountName = c.CustomerName,
                 accountNumber = c.CustomerCode
@@ -1781,7 +1785,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             var suppliers = await _unitOfWork.MobilitySupplier.GetAllAsync(s => s.StationCode == stationCodeClaims);
 
-            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new {
+            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new
+            {
                 id = c.SupplierId,
                 accountName = c.SupplierName,
                 accountNumber = c.SupplierCode

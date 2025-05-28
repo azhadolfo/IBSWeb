@@ -1,4 +1,4 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.MasterFile;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

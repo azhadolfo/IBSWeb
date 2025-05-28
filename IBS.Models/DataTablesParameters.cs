@@ -1,4 +1,4 @@
-﻿namespace IBS.Models
+namespace IBS.Models
 {
     public class DataTablesParameters
     {

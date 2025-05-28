@@ -1,4 +1,4 @@
-﻿namespace IBS.Utility.Enums
+namespace IBS.Utility.Enums
 {
     public enum CustomerType
     {

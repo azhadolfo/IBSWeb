@@ -149,7 +149,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 decimal totalAmount = 0;
 
-                foreach(var billDispatchTicket in model.ToBillDispatchTickets!)
+                foreach (var billDispatchTicket in model.ToBillDispatchTickets!)
                 {
                     var dtEntry = await _unitOfWork.DispatchTicket
                         .GetAsync(dt => dt.DispatchTicketId == int.Parse(billDispatchTicket));
@@ -306,7 +306,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             queried = queried.Where(dt =>
                                 dt.Status == "For Collection");
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -396,7 +396,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            if (!await _userAccessService.CheckAccess( _userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
+            if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateBilling, cancellationToken))
             {
                 TempData["error"] = "Access denied.";
                 return RedirectToAction(nameof(Index));
@@ -420,7 +420,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
 
             viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
-                viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
+            viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
 
             if (model.CustomerPrincipal?.Count == 0 || model.CustomerPrincipal == null)
             {
@@ -516,7 +516,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     decimal totalAmount = 0;
 
                     // re-bill the new selected tickets
-                    foreach(var billDispatchTicket in model.ToBillDispatchTickets!)
+                    foreach (var billDispatchTicket in model.ToBillDispatchTickets!)
                     {
                         var dtEntry = await _unitOfWork.DispatchTicket
                             .GetAsync(dt => dt.DispatchTicketId == int.Parse(billDispatchTicket), cancellationToken);
@@ -572,7 +572,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
 
@@ -593,7 +593,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .Include(dt => dt.Tugboat)
                 .Include(dt => dt.Service)
                 .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
-                .ToListAsync (cancellationToken);
+                .ToListAsync(cancellationToken);
 
             model.UniqueTugboats = await _db.MMSIDispatchTickets
                 .Where(dt => dt.BillingId == model.MMSIBillingId.ToString())
@@ -631,7 +631,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .Include(dt => dt.Tugboat)
                     .Include(dt => dt.Service)
                     .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
-                    .ToListAsync (cancellationToken);
+                    .ToListAsync(cancellationToken);
 
                 billing.UniqueTugboats = await _db.MMSIDispatchTickets
                     .Where(dt => dt.BillingId == billing.MMSIBillingId.ToString())
@@ -676,7 +676,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (ticketsWithBAF != null)
                 {
-                    foreach(var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
+                    foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
                     {
                         worksheet.Cells[row, 2].Value = $"NAME OF TUGBOAT: BUNKER ADJUSTMENT FACTOR";
                         row++;
@@ -816,7 +816,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDispatchTicketsByCustomer (string customerId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetDispatchTicketsByCustomer(string customerId, CancellationToken cancellationToken)
         {
             var dispatchTickets = await _db
                 .MMSIDispatchTickets
@@ -857,7 +857,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return listToReturn;
         }
 
-        public async Task<CreateBillingViewModel> GetBillingSelectLists (CreateBillingViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task<CreateBillingViewModel> GetBillingSelectLists(CreateBillingViewModel viewModel, CancellationToken cancellationToken = default)
         {
             viewModel.Vessels = await _unitOfWork.Vessel.GetMMSIVesselsSelectList(cancellationToken);
             viewModel.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);

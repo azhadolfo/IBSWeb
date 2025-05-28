@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
