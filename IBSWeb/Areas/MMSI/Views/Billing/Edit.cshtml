@@ -99,7 +99,7 @@
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-6">
-                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "" : "d-none")">
+                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? == true ? "" : "d-none")">
 
                             <div class="col-6" style="height: 72px;">
                                 <div class="row">

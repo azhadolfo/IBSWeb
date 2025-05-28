@@ -422,7 +422,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             viewModel.CustomerPrincipal = await GetPrincipals(model.CustomerId.ToString(), cancellationToken);
                 viewModel.Customers = await _unitOfWork.Billing.GetMMSICustomersWithBillablesSelectList(viewModel.CustomerId, model.Customer!.Type, cancellationToken);
 
-            if (model.CustomerPrincipal?.Count == 0)
+            if (model.CustomerPrincipal?.Count == 0 || model.CustomerPrincipal == null)
             {
                 ViewData["HasPrincipal"] = false;
             }
