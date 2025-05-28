@@ -34,18 +34,30 @@ namespace IBS.Services
 
         public async Task Execute(IJobExecutionContext context)
         {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
-                var previousMonth = today.AddMonths(-1);
-                await InTransit(previousMonth);
-                await AutoReversalForCvWithoutDcrDate(previousMonth);
-                await ComputeNibit(previousMonth);
+                var dataMap = context.MergedJobDataMap.GetDateTime("monthDate");
+
+                var isMonthAlreadyLocked = await _dbContext.
+                    FilprideMonthlyNibits.AnyAsync(m => m.Month == dataMap.Month && m.Year == dataMap.Year);
+
+                if (isMonthAlreadyLocked)
+                {
+                    throw new InvalidOperationException($"{dataMap:MMM yyyy} is already locked.");
+                }
+
+                await InTransit(dataMap);
+                await AutoReversalForCvWithoutDcrDate(dataMap);
+                await ComputeNibit(dataMap);
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 
@@ -61,8 +73,6 @@ namespace IBS.Services
             {
                 return;
             }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {
@@ -100,28 +110,19 @@ namespace IBS.Services
                 }
 
                 await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while processing in-transit notifications.");
-                await transaction.RollbackAsync();
+                throw;
             }
         }
 
         private async Task AutoReversalForCvWithoutDcrDate(DateTime previousMonth)
         {
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
-
-                // Start of the current month
-                var startOfMonth = new DateTime(today.Year, today.AddMonths(-1).Month, 1);
-
-                var endOfPreviousMonth = startOfMonth.AddDays(-1);
+                var endOfPreviousMonth = previousMonth.AddDays(-1);
 
                 var disbursementsWithoutDcrDate = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cv =>
@@ -165,7 +166,7 @@ namespace IBS.Services
 
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
-                            Date = DateOnly.FromDateTime(startOfMonth),
+                            Date = DateOnly.FromDateTime(previousMonth),
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
                             AccountNo = cvDetails.AccountNo,
@@ -215,20 +216,16 @@ namespace IBS.Services
                     await _dbContext.SaveChangesAsync();
                 }
 
-                await transaction.CommitAsync();
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while processing the auto reversal for CV.");
-                await transaction.RollbackAsync();
+                throw;
             }
         }
 
         private async Task ComputeNibit(DateTime previousMonth)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 var generalLedgers = _dbContext.FilprideGeneralLedgerBooks
@@ -241,12 +238,6 @@ namespace IBS.Services
                         gl.Date.Year == previousMonth.Year &&
                         gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
                         gl.Company == "Filpride") // TODO Make this dynamic later on
-                    .ToList();
-
-                var chartOfAccounts = _dbContext.FilprideChartOfAccounts
-                    .Include(coa => coa.Children)
-                    .OrderBy(coa => coa.AccountNumber)
-                    .Where(coa => coa.FinancialStatementType == nameof(FinancialStatementType.PnL))
                     .ToList();
 
                 if (!generalLedgers.Any())
@@ -312,12 +303,11 @@ namespace IBS.Services
                 await _dbContext.FilprideMonthlyNibits.AddAsync(nibitForThePeriod);
                 await _dbContext.SaveChangesAsync();
 
-                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while computing the nibit for the month.");
-                await transaction.RollbackAsync();
+                throw;
             }
         }
     }

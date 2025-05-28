@@ -44,7 +44,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         var model = await _dbContext.LogMessages
                             .Where(l => l.TimeStamp <= lastImportEnd.TimeStamp &&
                                         l.TimeStamp >= lastImport.TimeStamp
-                                        // && l.LoggerName == "GoogleDriveImportService"
                                         )
                             .OrderByDescending(l => l.TimeStamp)
                             .ToListAsync(cancellationToken);
@@ -53,18 +52,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         return View(model);
                     }
 
-                    else
-                    {
-                        ViewData["LastManualImport"] = lastImport.LoggerName;
-                        TempData["error"] = "The import is not finished per logging";
-                        return View();
-                    }
-                }
-                else
-                {
-                    TempData["error"] = "No manual import found";
+                    ViewData["LastManualImport"] = lastImport.LoggerName;
+                    TempData["error"] = "The import is not finished per logging";
                     return View();
                 }
+
+                TempData["error"] = "No manual import found";
+                return View();
             }
             catch (Exception ex)
             {

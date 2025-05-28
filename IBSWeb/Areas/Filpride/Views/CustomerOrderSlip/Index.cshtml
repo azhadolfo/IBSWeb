@@ -122,10 +122,17 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "customerOrderSlipNo" },
-                    { "data": "oldCosNo" },
+                    { 
+                        "data": "customerOrderSlipNo",
+                        "name": "CustomerOrderSlipNo",
+                    },
+                    { 
+                        "data": "oldCosNo",
+                        "name": "OldCosNo",
+                    },
                     {
                         "data": "purchaseOrderId",
+                        "name": "PurchaseOrderId",
                         "render": function(data, type, row) {
 
                             if (!row.appointedSupplierPOs || row.appointedSupplierPOs.length === 0) {
@@ -144,12 +151,14 @@
                     },
                     { 
                         "data": "pickUpPointId",
+                        "name": "PickUpPointId",
                         "render": function (data, type, row){
                             return row.depot
                         },
                     },
                     {
                         "data": "date",
+                        "name": "Date",
                         "render": function (data) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', {
@@ -159,10 +168,17 @@
                             });
                         }
                     },
-                    { "data": "customerName" },
-                    { "data": "productName" },
+                    { 
+                        "data": "customerName",
+                        "name": "Customer.CustomerName",
+                    },
+                    { 
+                        "data": "productName",
+                        "name": "Product.ProductName",
+                    },
                     {
                         "data": "quantity",
+                        "name": "Quantity",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -170,6 +186,7 @@
                     },
                     {
                         "data": "balanceQuantity",
+                        "name": "BalanceQuantity",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -177,6 +194,7 @@
                     },
                     {
                         "data": "totalAmount",
+                        "name": "TotalAmount",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -184,6 +202,7 @@
                     },
                     {
                         "data": "status",
+                        "name": "Status",
                         "render": function (data) {
                             var badgeClass = "";
                             switch (data) {

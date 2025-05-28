@@ -65,6 +65,8 @@ else
     builder.Host.UseSerilog();
 }
 
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -99,18 +101,22 @@ builder.Services.AddQuartz(q =>
 
     ///TODO Register the job for COS Expiration
 
-    q.AddJob<MonthlyClosureService>(options => options.WithIdentity(monthlyClosureKey));
-    q.AddJob<LockPlacementService>(options => options.WithIdentity(dailyPlacementLockKey));
+    q.AddJob<MonthlyClosureService>(options =>
+        options.WithIdentity(monthlyClosureKey)
+            .StoreDurably());
+
+    q.AddJob<LockPlacementService>(options =>
+        options.WithIdentity(dailyPlacementLockKey));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
-    q.AddTrigger(opts => opts
-        .ForJob(monthlyClosureKey)
-        .WithIdentity("MonthlyTrigger") // Trigger 1
-        .WithCronSchedule("0 0 0 1 * ?",
-            x => x.InTimeZone(
-                TimeZoneInfo
-                    .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
+    // q.AddTrigger(opts => opts
+    //     .ForJob(monthlyClosureKey)
+    //     .WithIdentity("MonthlyTrigger") // Trigger 1
+    //     .WithCronSchedule("0 0 0 1 * ?",
+    //         x => x.InTimeZone(
+    //             TimeZoneInfo
+    //                 .FindSystemTimeZoneById("Asia/Manila")))); // Run at midnight on the first day of every month
 
     q.AddTrigger(opts => opts
         .ForJob(dailyPlacementLockKey)
