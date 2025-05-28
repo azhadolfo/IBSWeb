@@ -1,4 +1,5 @@
-﻿@model MobilitySalesHeader
+﻿@using IBS.Utility.Constants
+@model MobilitySalesHeader
 
 @{
     ViewData["Title"] = "Edit Cashier Report";
@@ -53,28 +54,28 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-floating">
-                                <input name="SalesDetails[@i].Closing" value="@detail.Closing.ToString("N4")" class="form-control border-0 shadow" placeholder="" />
+                                <input name="SalesDetails[@i].Closing" value="@detail.Closing.ToString(SD.Four_Decimal_Format)" class="form-control border-0 shadow" placeholder="" />
                                 <label asp-for="SalesDetails[i].Closing">Closing</label>
                                 <span asp-validation-for="SalesDetails[i].Closing" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-floating">
-                                <input name="SalesDetails[@i].Opening" value="@detail.Opening.ToString("N4")" class="form-control border-0 shadow" placeholder="" />
+                                <input name="SalesDetails[@i].Opening" value="@detail.Opening.ToString(SD.Four_Decimal_Format)" class="form-control border-0 shadow" placeholder="" />
                                 <label asp-for="SalesDetails[i].Opening">Opening</label>
                                 <span asp-validation-for="SalesDetails[i].Opening" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-floating">
-                                <input name="SalesDetails[@i].Calibration" value="@detail.Calibration.ToString("N4")" class="form-control border-0 shadow" placeholder="" />
+                                <input name="SalesDetails[@i].Calibration" value="@detail.Calibration.ToString(SD.Four_Decimal_Format)" class="form-control border-0 shadow" placeholder="" />
                                 <label asp-for="SalesDetails[i].Calibration">Calibration</label>
                                 <span asp-validation-for="SalesDetails[i].Calibration" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="form-floating">
-                                <input name="SalesDetails[@i].Price" value="@detail.Price.ToString("N4")" class="form-control border-0 shadow" placeholder="" />
+                                <input name="SalesDetails[@i].Price" value="@detail.Price.ToString(SD.Four_Decimal_Format)" class="form-control border-0 shadow" placeholder="" />
                                 <label asp-for="SalesDetails[i].Price">Price</label>
                                 <span asp-validation-for="SalesDetails[i].Price" class="text-danger"></span>
                             </div>

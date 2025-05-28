@@ -257,7 +257,7 @@
                             <div class="col-12"><hr class="my-3"></div>
 
                             <div class="col-4 mb-1"><span class="detail-label">Earned (Gross):</span> <span class="detail-value">₱@interest.ToString(SD.Two_Decimal_Format)</span></div>
-                            <div class="col-4 mb-1"><span class="detail-label">EWT Rate:</span> <span class="detail-value">@(Model.HasEWT ? $"{ewtRate.ToString("N4")}%" : "N/A")</span></div>
+                            <div class="col-4 mb-1"><span class="detail-label">EWT Rate:</span> <span class="detail-value">@(Model.HasEWT ? $"{ewtRate.ToString(SD.Four_Decimal_Format)}%" : "N/A")</span></div>
                             <div class="col-4 mb-1"><span class="detail-label">EWT Amount:</span> <span class="detail-value">₱@ewt.ToString(SD.Two_Decimal_Format)</span></div>
 
                             <div class="col-4 mb-1"><span class="detail-label">Trust Fee Rate:</span> <span class="detail-value">@(Model.HasTrustFee ? $"{trustFeeRate.ToString("N8")}%" : "N/A")</span></div>

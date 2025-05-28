@@ -68,7 +68,7 @@
                             {
                                 <span class="text-danger">
                                     @item.Price.ToString(SD.Four_Decimal_Format)
-                                    <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Price corrected from @item.PreviousPrice.Value.ToString("N4")"></i>
+                                    <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="Price corrected from @item.PreviousPrice.Value.ToString(SD.Four_Decimal_Format)"></i>
                                 </span>
                             }
                             else

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
 using CsvHelper;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -563,25 +564,25 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (existingDetail.Closing != updatedDetail.Closing)
                 {
-                    changes["Closing"] = (existingDetail.Closing.ToString("N4"), updatedDetail.Closing.ToString("N4"));
+                    changes["Closing"] = (existingDetail.Closing.ToString(SD.Four_Decimal_Format), updatedDetail.Closing.ToString(SD.Four_Decimal_Format));
                     existingDetail.Closing = updatedDetail.Closing;
                 }
 
                 if (existingDetail.Opening != updatedDetail.Opening)
                 {
-                    changes["Opening"] = (existingDetail.Opening.ToString("N4"), updatedDetail.Opening.ToString("N4"));
+                    changes["Opening"] = (existingDetail.Opening.ToString(SD.Four_Decimal_Format), updatedDetail.Opening.ToString(SD.Four_Decimal_Format));
                     existingDetail.Opening = updatedDetail.Opening;
                 }
 
                 if (existingDetail.Calibration != updatedDetail.Calibration)
                 {
-                    changes["Calibration"] = (existingDetail.Calibration.ToString("N4"), updatedDetail.Calibration.ToString("N4"));
+                    changes["Calibration"] = (existingDetail.Calibration.ToString(SD.Four_Decimal_Format), updatedDetail.Calibration.ToString(SD.Four_Decimal_Format));
                     existingDetail.Calibration = updatedDetail.Calibration;
                 }
 
                 if (existingDetail.Price != updatedDetail.Price)
                 {
-                    changes["Price"] = (existingDetail.Price.ToString("N4"), updatedDetail.Price.ToString("N4"));
+                    changes["Price"] = (existingDetail.Price.ToString(SD.Four_Decimal_Format), updatedDetail.Price.ToString(SD.Four_Decimal_Format));
                     existingDetail.PreviousPrice = existingDetail.Price;
                     existingDetail.Price = updatedDetail.Price;
                 }
@@ -608,7 +609,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
             if (existingSalesHeader.ActualCashOnHand != model.ActualCashOnHand)
             {
-                headerChanges["ActualCashOnHand"] = (existingSalesHeader.ActualCashOnHand.ToString("N4"), model.ActualCashOnHand.ToString("N4"));
+                headerChanges["ActualCashOnHand"] = (existingSalesHeader.ActualCashOnHand.ToString(SD.Four_Decimal_Format), model.ActualCashOnHand.ToString(SD.Four_Decimal_Format));
                 existingSalesHeader.ActualCashOnHand = model.ActualCashOnHand;
                 existingSalesHeader.GainOrLoss = model.ActualCashOnHand - existingSalesHeader.TotalSales;
             }
@@ -1041,7 +1042,7 @@ namespace IBS.DataAccess.Repository.Mobility
                         await _db.AddAsync(salesDetail, cancellationToken);
                     }
 
-                    changes[$"LubesTotalAmount"] = (existingSalesHeader.LubesTotalAmount.ToString("N4"), totalLubeSales.ToString("N4"));
+                    changes[$"LubesTotalAmount"] = (existingSalesHeader.LubesTotalAmount.ToString(SD.Four_Decimal_Format), totalLubeSales.ToString(SD.Four_Decimal_Format));
                     existingSalesHeader.LubesTotalAmount = totalLubeSales;
                 }
 

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -277,8 +278,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 FirstDsrClosingBefore = offline.FirstDsrClosing,
                 SecondDsrOpeningBefore = offline.SecondDsrOpening,
                 SecondDsrClosingBefore = offline.SecondDsrClosing,
-                Liters = offline.Liters.ToString("N4"),
-                Balance = offline.Balance.ToString("N4"),
+                Liters = offline.Liters.ToString(SD.Four_Decimal_Format),
+                Balance = offline.Balance.ToString(SD.Four_Decimal_Format),
                 offline.FirstDsrNo,
                 offline.SecondDsrNo
             };
