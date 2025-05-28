@@ -87,13 +87,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     model.MMSICollectionNumber = viewModel.MMSICollectionNumber ?? string.Empty;
                 }
 
-                await _dbContext.MMSICollections.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Collection.AddAsync(model, cancellationToken);
 
                 // save first then refetch again so it has auto generates id
-                var refetchModel = await _dbContext.MMSICollections
-                    .Where(c => c.CreatedDate == dateNow)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var refetchModel = await _unitOfWork.Collection
+                    .GetAsync(c => c.CreatedDate == dateNow, cancellationToken);
 
                 if (refetchModel == null)
                 {
@@ -114,19 +112,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ??  throw new InvalidOperationException()
                 };
 
-                await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
 
                 #endregion -- Audit Trail
 
                 foreach(var collectBills in viewModel.ToCollectBillings!)
                 {
                     // find the billings that was collected and mark them as collected
-                    var billingChosen = await _dbContext.MMSIBillings.FindAsync(int.Parse(collectBills));
+                    var billingChosen = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == int.Parse(collectBills), cancellationToken);
                     billingChosen!.Status = "Collected";
                     billingChosen.CollectionId = refetchModel.MMSICollectionId;
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
+                await _unitOfWork.Billing.SaveAsync(cancellationToken);
 
                 if (model.IsUndocumented)
                 {
@@ -195,9 +192,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var companyClaims = await GetCompanyClaimAsync();
-                var queried = await _dbContext.MMSICollections
-                    .Include(b => b.Customer)
-                    .ToListAsync(cancellationToken);
+                var queried = await _unitOfWork.Collection
+                    .GetAllAsync(null, cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -261,7 +257,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = _dbContext.MMSICollections.Find(id);
+            var model = await _unitOfWork.Collection
+                .GetAsync(c => c.MMSICollectionId == id, cancellationToken);
 
             if (model == null)
             {
@@ -270,7 +267,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var viewModel = CollectionModelToCreateCollectionVm(model);
 
-            // default contents of billing field from previous create
+            // list of billing strings from previous create
             viewModel.ToCollectBillings = await _dbContext.MMSIBillings
                 .Where(b => b.CollectionId == model.MMSICollectionId)
                 .Select(b => b.MMSIBillingId.ToString())
@@ -294,9 +291,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var model = CreateCollectionVmToCollectionModel(viewModel);
 
                     //previous billings
-                    var previousCollectedBills = await _dbContext.MMSIBillings
-                        .Where(b => b.CollectionId == model.MMSICollectionId)
-                        .ToListAsync(cancellationToken);
+                    var previousCollectedBills = await _unitOfWork.Billing
+                        .GetAllAsync(b => b.CollectionId == model.MMSICollectionId, cancellationToken);
 
                     //previous billings
                     var previousCollectedBillsString = await _dbContext.MMSIBillings
@@ -307,28 +303,28 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     //revert old billings
                     foreach (var previousBilling in previousCollectedBills)
                     {
-                        var billing = await _dbContext.MMSIBillings
-                            .FindAsync(previousBilling.MMSIBillingId, cancellationToken);
+                        var billing = await _unitOfWork.Billing
+                            .GetAsync(b => b.MMSIBillingId == previousBilling.MMSIBillingId);
                         if (billing == null) throw new NullReferenceException("Billing not found.");
                         billing.Status = "For Collection";
                         billing.CollectionId = 0;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                     }
+                    await _unitOfWork.Billing.SaveAsync(cancellationToken);
 
                     if (viewModel.ToCollectBillings == null) throw new NullReferenceException("No Billing was selected.");
 
                     //relate new billings to collection
                     foreach (var newBilling in viewModel.ToCollectBillings)
                     {
-                        var billing = await _dbContext.MMSIBillings
-                            .FindAsync(int.Parse(newBilling), cancellationToken);
+                        var billing = await _unitOfWork.Billing
+                            .GetAsync(b => b.MMSIBillingId == int.Parse(newBilling), cancellationToken);
                         if (billing == null) throw new NullReferenceException("Billing not found.");
                         billing.Status = "Collected";
                         billing.CollectionId = model.MMSICollectionId;
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                     }
+                    await _unitOfWork.Billing.SaveAsync(cancellationToken);
 
-                    var currentModel = await _dbContext.MMSICollections.FindAsync(model.MMSICollectionId, cancellationToken);
+                    var currentModel = await _unitOfWork.Collection.GetAsync(c => c.MMSICollectionId == model.MMSICollectionId, cancellationToken);
 
                     if (currentModel == null)
                     {
@@ -364,8 +360,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                     };
 
-                    await _dbContext.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
 
                     #endregion -- Audit Trail
 
@@ -377,7 +372,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     currentModel.Amount = model.Amount;
                     currentModel.EWT = model.EWT;
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.Collection.SaveAsync(cancellationToken);
                     TempData["success"] = "Collection modified successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -400,15 +395,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken = default)
         {
-            var collection = await _dbContext.MMSICollections.FindAsync(id, cancellationToken);
+            var collection = await _unitOfWork.Collection
+                .GetAsync(c => c.MMSICollectionId == id, cancellationToken);
 
             if (collection != null)
             {
                 // list of dispatch tickets
-                collection.PaidBills = await _dbContext.MMSIBillings
-                    .Where(b => b.CollectionId == collection.MMSICollectionId)
-                    .Include(b => b.Customer)
-                    .ToListAsync (cancellationToken);
+                collection.PaidBills = (await _unitOfWork.Billing
+                    .GetAllAsync(b => b.CollectionId == collection.MMSICollectionId, cancellationToken)).ToList();
                 return View(collection);
             }
             else
@@ -420,9 +414,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> GetCollections(CancellationToken cancellationToken = default)
         {
-            var collections = await _dbContext.MMSICollections
-                .Include(c => c.Customer)
-                .ToListAsync(cancellationToken);
+            var collections = await _unitOfWork.Collection.GetAllAsync(null, cancellationToken);
             return Json(collections);
         }
 
@@ -432,9 +424,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var intBillingIds = billingIds.Select(int.Parse).ToList();
-                var billings = await _dbContext.MMSIBillings
-                    .Where(t => intBillingIds.Contains(t.MMSIBillingId)) // Assuming Id is the primary key
-                    .ToListAsync(cancellationToken);
+                var billings = await _unitOfWork.Billing
+                    .GetAllAsync(b => intBillingIds.Contains(b.MMSIBillingId), cancellationToken);
                 return Json(new
                 {
                     success = true,
@@ -457,8 +448,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var customer = await _dbContext.FilprideCustomers
-                    .FindAsync(customerId, cancellationToken);
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == customerId, cancellationToken);
 
                 if (customer != null)
                 {
@@ -499,7 +490,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var list = await _unitOfWork.Collection.GetMMSIUncollectedBillingsByCustomer(customerId, cancellationToken);
 
             // get the current model
-            var model = await _dbContext.MMSICollections.FindAsync(collectionId, cancellationToken);
+            var model = await _unitOfWork.Collection
+                .GetAsync(c => c.MMSICollectionId == collectionId, cancellationToken);
 
             // if the model WAS having previous customer, fetch it previous bills as well
             if (model?.CustomerId == customerId)
