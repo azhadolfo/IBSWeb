@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -13,6 +14,22 @@ namespace IBS.DataAccess.Repository.MMSI
         public CollectionRepository (ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MMSICollection>> GetAllAsync(Expression<Func<MMSICollection, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSICollection> query = dbSet.Include(c => c.Customer);
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
