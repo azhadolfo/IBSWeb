@@ -23,6 +23,16 @@ namespace IBS.DataAccess.Repository.MMSI
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public override async Task<IEnumerable<MMSIPrincipal>> GetAllAsync(Expression<Func<MMSIPrincipal, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIPrincipal> query = dbSet.Include(p => p.Customer);
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            return await query.ToListAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMMSIPortsSelectList(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> ports = await _dbContext.MMSIPorts
