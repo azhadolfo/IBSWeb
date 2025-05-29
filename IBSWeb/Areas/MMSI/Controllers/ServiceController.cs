@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -12,17 +13,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly ILogger<ServiceController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ServiceController(ApplicationDbContext db, ILogger<ServiceController> logger)
+        public ServiceController(ApplicationDbContext db, ILogger<ServiceController> logger, IUnitOfWork unitOfWork)
         {
             _db = db;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
         {
             var activitiesServices = _db.MMSIServices.ToList();
-
             return View(activitiesServices);
         }
 
@@ -38,7 +40,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
-
                 return View(model);
             }
 
@@ -46,13 +47,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-
-                await _db.MMSIServices.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Service.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
 
@@ -61,7 +58,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to create service.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
@@ -70,18 +66,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIServices.FirstOrDefaultAsync(i => i.ServiceId == id, cancellationToken);
+                var model = await _unitOfWork.Service.GetAsync( i => i.ServiceId == id, cancellationToken);
 
-                if (model == null)
-                {
-                    return NotFound();
-                }
+                if (model == null) return NotFound();
 
                 _db.MMSIServices.Remove(model);
                 await _db.SaveChangesAsync(cancellationToken);
-
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
 
@@ -89,7 +80,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to delete service.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -97,8 +87,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIServices.FirstOrDefaultAsync(a => a.ServiceId == id, cancellationToken);
-
+            var model = await _unitOfWork.Service.GetAsync(a => a.ServiceId == id, cancellationToken);
             return View(model);
         }
 
@@ -108,16 +97,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
-
                 return View(model);
             }
 
-            var currentModel = await _db.MMSIServices.FindAsync(model.ServiceId);
+            var currentModel = await _unitOfWork.Service.GetAsync(s => s.ServiceId == model.ServiceId, cancellationToken);
 
-            if (currentModel == null)
-            {
-                return NotFound();
-            }
+            if (currentModel == null) return NotFound();
 
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -125,10 +110,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;
-
-                await _db.SaveChangesAsync(cancellationToken);
-
-                await transaction.CommitAsync(cancellationToken);
+                await _unitOfWork.Service.SaveAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -138,7 +120,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to edit service.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }

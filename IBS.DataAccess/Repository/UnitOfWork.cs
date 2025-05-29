@@ -158,6 +158,7 @@ namespace IBS.DataAccess.Repository
         public ITariffTableRepository TariffTable { get; private set; }
         public IPortRepository Port { get; private set; }
         public IPrincipalRepository Principal { get; private set; }
+        public MMSI.IRepository.IServiceRepository Service { get; private set; }
         public ITerminalRepository Terminal { get; private set; }
         public ITugboatRepository Tugboat { get; private set; }
         public IVesselRepository Vessel { get; private set; }
@@ -260,6 +261,7 @@ namespace IBS.DataAccess.Repository
             Msap = new MsapRepository(_db);
             Port = new PortRepository(_db);
             Principal = new PrincipalRepository(_db);
+            Service = new MMSI.ServiceRepository(_db);
             ServiceRequest = new ServiceRequestRepository(_db);
             TariffTable = new TariffTableRepository(_db);
             Terminal = new TerminalRepository(_db);
