@@ -1127,7 +1127,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
 
-                        ///TODO: wiaitng for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         #region --General Ledger Book Recording(CV)--
 
                         // var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
