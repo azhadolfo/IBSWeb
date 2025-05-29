@@ -293,6 +293,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.TariffTable.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -405,6 +406,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion -- Audit Trail
 
@@ -632,6 +634,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     };
 
                     await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                    await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                     #endregion --Audit Trail
 
@@ -686,6 +689,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -732,6 +736,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
@@ -778,6 +783,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 };
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
