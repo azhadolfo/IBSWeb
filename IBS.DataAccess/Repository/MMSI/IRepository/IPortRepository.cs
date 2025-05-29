@@ -8,6 +8,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IPortRepository : IRepository<MMSIPort>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
+
         Task<List<SelectListItem>> GetMMSIPortsSelectList(CancellationToken cancellationToken = default);
     }
 }

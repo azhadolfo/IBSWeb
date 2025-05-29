@@ -7,6 +7,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface ITerminalRepository : IRepository<MMSITerminal>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
+
         Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default);

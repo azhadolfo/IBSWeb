@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             MMSITerminal model = new()
             {
-                Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken)
+                Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(model);
@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return NotFound();
             }
 
-            model.Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken);
+            model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             return View(model);
         }
 
