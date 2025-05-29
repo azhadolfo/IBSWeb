@@ -18,6 +18,11 @@ namespace IBS.DataAccess.Repository.MMSI
             _dbContext = dbContext;
         }
 
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMMSIPortsSelectList(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> ports = await _dbContext.MMSIPorts

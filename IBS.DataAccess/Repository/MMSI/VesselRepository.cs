@@ -18,6 +18,11 @@ namespace IBS.DataAccess.Repository.MMSI
             _dbContext = dbContext;
         }
 
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMMSIVesselsSelectList(CancellationToken cancellationToken = default)
         {
             List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem

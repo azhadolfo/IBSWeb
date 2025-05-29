@@ -18,6 +18,11 @@ namespace IBS.DataAccess.Repository.MMSI
             _dbContext = dbContext;
         }
 
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public override async Task<IEnumerable<MMSITerminal>> GetAllAsync(Expression<Func<MMSITerminal, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSITerminal> query = dbSet;

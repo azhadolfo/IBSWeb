@@ -8,6 +8,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IVesselRepository : IRepository<MMSIVessel>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
+
         Task<List<SelectListItem>> GetMMSIVesselsSelectList(CancellationToken cancellationToken = default);
     }
 }

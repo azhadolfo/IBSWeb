@@ -8,6 +8,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IPrincipalRepository : IRepository<MMSIPrincipal>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
 
     }
 }
