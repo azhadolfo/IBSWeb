@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -14,6 +15,15 @@ namespace IBS.DataAccess.Repository.MMSI
         public TariffTableRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public override async Task<MMSITariffRate?> GetAsync(Expression<Func<MMSITariffRate, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            MMSITariffRate? model =  await dbSet.Where(filter)
+                .OrderByDescending(t => t.AsOfDate)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return model;
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)

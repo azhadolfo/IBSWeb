@@ -40,13 +40,20 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public override async Task<MMSIDispatchTicket?> GetAsync(Expression<Func<MMSIDispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
         {
-            return await dbSet.Where(filter)
+            MMSIDispatchTicket? model =  await dbSet.Where(filter)
                 .Include(a => a.Service)
                 .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat)
+                .Include(a => a.Tugboat).ThenInclude(t => t!.TugboatOwner)
                 .Include(a => a.TugMaster)
                 .Include(a => a.Vessel)
                 .FirstOrDefaultAsync(cancellationToken);
+
+            if (model!.CustomerId != 0 && model!.CustomerId != null)
+            {
+                model.Customer = await _dbContext.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+            }
+
+            return model;
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)

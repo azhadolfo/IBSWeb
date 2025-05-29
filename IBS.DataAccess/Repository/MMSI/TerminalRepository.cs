@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -15,6 +16,19 @@ namespace IBS.DataAccess.Repository.MMSI
         public TerminalRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public override async Task<IEnumerable<MMSITerminal>> GetAllAsync(Expression<Func<MMSITerminal, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSITerminal> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter)
+                    .Include(a => a.Port)
+                    .OrderBy(t => t.TerminalName);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
