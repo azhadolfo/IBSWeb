@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default);
 
-        Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default);
+        Task<ServiceRequestViewModel> GetDispatchTicketSelectLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default);
 
     }
 }
