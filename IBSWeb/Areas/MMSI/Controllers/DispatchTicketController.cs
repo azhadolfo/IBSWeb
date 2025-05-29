@@ -46,14 +46,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(string filterType)
         {
-            var dispatchTickets = await _db.MMSIDispatchTickets
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled")
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .ToListAsync();
+            var dispatchTickets = await _unitOfWork.DispatchTicket
+                .GetAllAsync(dt => dt.Status != "For Posting" && dt.Status != "Cancelled");
 
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();

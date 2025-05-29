@@ -1,3 +1,5 @@
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -18,6 +20,33 @@ namespace IBS.DataAccess.Repository.MMSI
         public async Task SaveAsync(CancellationToken cancellationToken)
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MMSIDispatchTicket>> GetAllAsync(Expression<Func<MMSIDispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIDispatchTicket> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter)
+                    .Include(a => a.Service)
+                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                    .Include(a => a.Tugboat)
+                    .Include(a => a.TugMaster)
+                    .Include(a => a.Vessel);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<MMSIDispatchTicket?> GetAsync(Expression<Func<MMSIDispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
