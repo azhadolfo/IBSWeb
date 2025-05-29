@@ -6,6 +6,7 @@ using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using IBankAccountRepository = IBS.DataAccess.Repository.Filpride.IRepository.IBankAccountRepository;
+using IServiceRepository = IBS.DataAccess.Repository.MMSI.IRepository.IServiceRepository;
 
 namespace IBS.DataAccess.Repository.IRepository
 {
@@ -145,6 +146,7 @@ namespace IBS.DataAccess.Repository.IRepository
         IBillingRepository Billing { get; }
         ICollectionRepository Collection { get; }
         IMMSIReportRepository MMSIReport { get; }
+        IServiceRepository Service { get; }
         ITariffTableRepository TariffTable { get; }
         IPortRepository Port { get; }
         IPrincipalRepository Principal { get; }
