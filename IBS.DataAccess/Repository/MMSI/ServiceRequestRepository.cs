@@ -111,7 +111,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return vessels;
         }
 
-        public async Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
+        public async Task<ServiceRequestViewModel> GetDispatchTicketSelectLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default)
         {
             model.Services = await GetMMSIActivitiesServicesById(cancellationToken);
             model.Ports = await GetMMSIPortsById(cancellationToken);
