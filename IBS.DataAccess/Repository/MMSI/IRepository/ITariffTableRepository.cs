@@ -6,6 +6,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface ITariffTableRepository : IRepository<MMSITariffRate>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
+
         Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default);
