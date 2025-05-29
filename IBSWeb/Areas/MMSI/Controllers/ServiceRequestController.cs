@@ -120,7 +120,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var viewModel = new ServiceRequestViewModel();
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
             ViewData["PortId"] = 0;
@@ -135,7 +135,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
                 TempData["error"] = "Can't create entry, please review your input.";
@@ -241,7 +241,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
-                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
@@ -253,7 +253,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create service request.");
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"{ex.Message}";
@@ -309,7 +309,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             var viewModel = DispatchTicketModelToServiceRequestVm(model);
 
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
             if (!string.IsNullOrEmpty(viewModel.ImageName))
@@ -504,7 +504,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                     var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                    viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                     ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
 
                     return View(viewModel);
@@ -524,7 +524,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 .FirstOrDefaultAsync(cancellationToken);
 
                 var viewModel = DispatchTicketModelToServiceRequestVm(model!);
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
 
