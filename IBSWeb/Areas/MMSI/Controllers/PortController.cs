@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -12,17 +13,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly ILogger<PortController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PortController(ApplicationDbContext db, ILogger<PortController> logger)
+        public PortController(ApplicationDbContext db, ILogger<PortController> logger, IUnitOfWork unitOfWork)
         {
             _db = db;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var ports = _db.MMSIPorts.ToList();
-
+            var ports = await _unitOfWork.Port.GetAllAsync(null, cancellationToken);
             return View(ports);
         }
 
@@ -40,15 +42,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (!ModelState.IsValid)
                 {
                     TempData["error"] = "Invalid entry, please try again.";
-
                     return View(model);
                 }
 
-                await _db.MMSIPorts.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Port.AddAsync(model, cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
 
@@ -56,39 +54,29 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to create port.");
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
 
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIPorts.FirstOrDefaultAsync(i => i.PortId == id, cancellationToken);
-
-            if (model == null)
-            {
-                return NotFound();
-            }
-
+            var model = await _unitOfWork.Port.GetAsync(i => i.PortId == id, cancellationToken);
+            if (model == null) return NotFound();
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                _db.MMSIPorts.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Port.RemoveAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete port.");
-
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -96,20 +84,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIPorts.FirstOrDefaultAsync(a => a.PortId == id, cancellationToken);
-
+            var model = await _unitOfWork.Port.GetAsync(a => a.PortId == id, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIPort model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSIPorts.FindAsync(model.PortId, cancellationToken);
+            var currentModel = await _unitOfWork.Port.GetAsync(p => p.PortId == model.PortId, cancellationToken);
 
-            if (currentModel == null)
-            {
-                return NotFound();
-            }
+            if (currentModel == null) return NotFound();
 
             await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -118,11 +102,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.PortNumber = model.PortNumber;
                 currentModel.PortName = model.PortName;
                 currentModel.HasSBMA = model.HasSBMA;
-
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -130,7 +112,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to edit port.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
