@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(viewModel);
             }
 
-            var model = ServiceRequestToDispatchTicket(viewModel);
+            var model = ServiceRequestVmToDispatchTicket(viewModel);
 
             try
             {
@@ -493,7 +493,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
 
-            var model = ServiceRequestToDispatchTicket(viewModel);
+            var model = ServiceRequestVmToDispatchTicket(viewModel);
             var user = await _userManager.GetUserAsync(User);
 
             try
@@ -1231,7 +1231,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return $"{fileName}-{type}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
 
-        public MMSIDispatchTicket ServiceRequestToDispatchTicket(ServiceRequestViewModel vm)
+        public MMSIDispatchTicket ServiceRequestVmToDispatchTicket(ServiceRequestViewModel vm)
         {
             var model = new MMSIDispatchTicket
             {
