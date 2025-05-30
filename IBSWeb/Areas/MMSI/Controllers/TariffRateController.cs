@@ -27,6 +27,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
+        private async Task<string?> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
             var tariffRates = await _unitOfWork.TariffTable.GetAllAsync(null, cancellationToken);
@@ -171,7 +184,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
-            model.Customers = await _unitOfWork.TariffTable.GetMMSICustomersById(cancellationToken);
+            var companyCLaims = await GetCompanyClaimAsync();
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyCLaims!, cancellationToken);
             model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             model.Services = await _unitOfWork.Service.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId == 0) return model;
