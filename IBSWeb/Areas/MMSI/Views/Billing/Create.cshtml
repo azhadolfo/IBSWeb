@@ -404,7 +404,7 @@
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
                             $vatableRadioButton.prop("checked", data.vatType === "@SD.VatType_Vatable");
-                            $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_ZeroRated");
+                            $exemptRadioButton.prop("checked", data.vatType === "@SD.VatType_Exempt");
                             if (data.isUndoc === "Undocumented"){
                                 $isUndocCheckbox.prop("checked", true);
                                 handleCheckboxChange();
