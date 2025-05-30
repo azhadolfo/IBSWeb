@@ -146,17 +146,5 @@ namespace IBS.DataAccess.Repository.MMSI
 
             return vessels;
         }
-
-        public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true)
-                .OrderBy(s => s.CustomerName)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.CustomerId.ToString(),
-                    Text = s.CustomerName
-                }).ToListAsync(cancellationToken);
-        }
     }
 }
