@@ -30,6 +30,7 @@
 
                         <div class="mb-3" id="company-div">
                             <label asp-for="Input.Company" class="form-label">Select Company</label>
+                            <input type="hidden" id="companyHidden" name="Input.Company">
                             <select asp-for="Input.Company" asp-items="@Model.Companies" class="form-select js-select2" id="company-select" style="width: 100%" required>
                                 <option value="">Select company</option>
                             </select>
@@ -38,6 +39,7 @@
 
                         <div class="mb-3" id="station-div" style="display: none;">
                             <label for="station" class="form-label">Select Station</label>
+                            <input type="hidden" id="stationHidden" name="Input.StationCode">
                             <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" id="station-select" style="width: 100%">
                                 <option value="">Select station</option>
                             </select>
@@ -68,6 +70,8 @@
             var accessArray = @Html.Raw(Json.Serialize(accessList));
             var companySelect = $('#company-select');
             var stationSelect = $('#station-select');
+            var companyHidden = $('#companyHidden');
+            var stationHidden = $('#stationHidden');
 
             function toggleCashierAccess() {
                 var currentUsername = $('#username').val().toLowerCase();
@@ -78,19 +82,18 @@
                 for (var i = 0; i < usersArray.length; i++) {
                     if (currentUsername === usersArray[i].toLowerCase()) {
                         isCashier = true;
-                        companySelect.val('Mobility');
-                        stationSelect.val(accessArray[i]);
+                        companySelect.val('Mobility').trigger("change").prop("disabled", true);
+                        stationSelect.val(accessArray[i]).trigger("change").prop("disabled", true);
+                        companyHidden.val("Mobility").prop("disabled", false);
+                        stationHidden.val(accessArray[i]).prop("disabled", false);
                         break;
                     }
-                }
-
-                if (isCashier) {
-                    companyDiv.hide();
-                    stationDiv.hide();
-                } else {
-                    companyDiv.show();
-                    companySelect.val(null);
-                    stationSelect.val(null);
+                    else {
+                        companySelect.trigger("change").prop("disabled", false);
+                        stationSelect.trigger("change").prop("disabled", false);
+                        companyHidden.prop("disabled", true);
+                        stationHidden.prop("disabled", true);
+                    } 
                 }
             }
 
@@ -104,7 +107,7 @@
 
                 if (selectedCompany === 'Mobility') {
                     stationDiv.show();
-                    stationSelect.val(null);
+                    stationSelect.val(null).trigger("change");
                 } else {
                     stationDiv.hide();
                 }
