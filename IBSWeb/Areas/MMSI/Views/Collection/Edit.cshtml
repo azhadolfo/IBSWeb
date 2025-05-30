@@ -259,7 +259,7 @@
                 table.draw();
 
                 $.ajax({
-                    url: '/MMSI/Collection/GetEditBillings',
+                    url: '@Url.Action("GetEditBillings", "Collection", new { area = "MMSI" })',
                     type: 'GET',
                     data: {
                         customerId: customerId,
@@ -293,7 +293,7 @@
                 const selectedBills = $('.js-example-basic-multiple').val() || [];
 
                 $.ajax({
-                    url: '/MMSI/Collection/GetSelectedBillings',
+                    url: '@Url.Action("GetSelectedBillings", "Collection", new { area = "MMSI" })',
                     type: 'POST',
                     data: { billingIds: selectedBills },
                     success: function (result) {
@@ -346,7 +346,7 @@
 
                 // is customer vatable?
                 $.ajax({
-                    url: '/MMSI/Collection/IsCustomerVatable',
+                    url: '@Url.Action("IsCustomerVatable", "Collection", new { area = "MMSI" })',
                     type: 'GET',
                     data: { customerId: customerId },
                     success: function (result) {
