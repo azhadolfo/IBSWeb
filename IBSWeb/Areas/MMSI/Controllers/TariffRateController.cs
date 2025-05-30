@@ -50,7 +50,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            if (model is { Dispatch: <= 0, BAF: <= 0 })
+            if (model.Dispatch <= 0 && model.BAF <= 0)
             {
                 TempData["error"] = "Dispatch and BAF value cannot be both zero.";
                 return View(model);
