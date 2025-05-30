@@ -168,6 +168,7 @@
         $(document).ready(function () {
             // State to prevent recursive loops
             let isProcessing = false;
+            let isStartup = true;
 
             // Initialize Select2
             $('.js-example-basic-multiple').select2();
@@ -310,26 +311,41 @@
                         // show bills table
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
-                                
+                                let tempAmount = value.amount;
+                                let tempEwt = 0;
+
+                                if (value.billedTo === "LOCAL"){
+                                    tempEwt = ((value.amount/1.12) * 0.02);
+                                    tempAmount = (value.amount - tempEwt);
+                                }
+
                                 table.row.add([
                                     value.mmsiBillingNumber,
                                     `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 ]);
                                 undeductedTotalAmount += value.amount;
+                                totalAmount += tempAmount;
+                                totalEwt += tempEwt;
                             });
                         }
                         table.draw();
 
                         // show totals
                         $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
-                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        if (!isStartup){
+                            $('#undeductedAmount').val(undeductedTotalAmount);
+                            $('#amount').val(totalAmount.toFixed(2));
+                            $('#ewt').val(totalEwt.toFixed(2));
+                            $('#amountShow').val(totalAmount.toFixed(2));
+                            $('#ewtShow').val(totalEwt.toFixed(2));
+                        }
+                        isStartup = false;
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching selected billings:', error);
                     },
                     complete: function () {
                         isProcessing = false;
-                        console.log(tempData);
 
                         // calculateEWTDeduction();
                     }
@@ -352,8 +368,8 @@
                     success: function (result) {
                         // if vatable
                         if (result) {
-                            const ewt = ((originalAmount / 1.12) * 0.02); // calculate ewt
-                            const deductedAmount = originalAmount - ewt; // calculate deducted amount
+                            const deductedAmount = originalAmount / 1.12;
+                            const ewt = originalAmount - deductedAmount;
 
                             $('#amountShow').val(deductedAmount.toFixed(2)); // show amount
                             $('#amount').val(deductedAmount.toFixed(2)); // store amount
