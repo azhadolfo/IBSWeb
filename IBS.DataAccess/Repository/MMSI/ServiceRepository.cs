@@ -22,5 +22,18 @@ namespace IBS.DataAccess.Repository.MMSI
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
+        {
+            List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
+                .OrderBy(s => s.ServiceNumber)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.ServiceId.ToString(),
+                    Text = s.ServiceNumber + " " + s.ServiceName
+                }).ToListAsync(cancellationToken);
+
+            return activitiesServices;
+        }
     }
 }

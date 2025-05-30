@@ -19,29 +19,31 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public override async Task<MMSITariffRate?> GetAsync(Expression<Func<MMSITariffRate, bool>> filter, CancellationToken cancellationToken = default)
         {
-            MMSITariffRate? model =  await dbSet.Where(filter)
+            MMSITariffRate? model =  await dbSet
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Where(filter)
                 .OrderByDescending(t => t.AsOfDate)
                 .FirstOrDefaultAsync(cancellationToken);
 
             return model;
         }
 
+        public override async Task<IEnumerable<MMSITariffRate>> GetAllAsync(Expression<Func<MMSITariffRate, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSITariffRate> query = dbSet
+                .Include(t => t.Customer)
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Include(t => t.Service);
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            return await query.ToListAsync(cancellationToken);
+        }
+
         public async Task SaveAsync(CancellationToken cancellationToken)
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
-        {
-            List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
-                .OrderBy(s => s.ServiceNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.ServiceNumber + " " + s.ServiceName
-                }).ToListAsync(cancellationToken);
-
-            return activitiesServices;
         }
 
         public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)

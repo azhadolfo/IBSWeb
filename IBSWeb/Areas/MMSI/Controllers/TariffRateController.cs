@@ -29,21 +29,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var tariffRates = await _dbContext.MMSITariffRates
-                .Include(t => t.Customer)
-                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
-                .Include(t => t.Service)
-                .ToListAsync(cancellationToken);
-
+            var tariffRates = await _unitOfWork.TariffTable.GetAllAsync(null, cancellationToken);
             return View(tariffRates);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            MMSITariffRate model = new MMSITariffRate();
+            var model = new MMSITariffRate();
             model = await GetSelectLists(model, cancellationToken);
-
             return View(model);
         }
 
@@ -53,14 +47,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
-
                 return View(model);
             }
 
-            if (model.Dispatch <= 0)
+            if (model is { Dispatch: <= 0, BAF: <= 0 })
             {
-                TempData["error"] = "Dispatch value cannot be zero.";
-
+                TempData["error"] = "Dispatch and BAF value cannot be both zero.";
                 return View(model);
             }
 
@@ -69,9 +61,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var user = await _userManager.GetUserAsync(User);
-                var existingModel = await _dbContext.MMSITariffRates
-                    .Where(t => t.AsOfDate == model.AsOfDate && t.CustomerId == model.CustomerId && t.TerminalId == model.TerminalId && t.ServiceId == model.ServiceId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var existingModel = await _unitOfWork.TariffTable
+                    .GetAsync(t => t.AsOfDate == model.AsOfDate &&
+                                   t.CustomerId == model.CustomerId &&
+                                   t.TerminalId == model.TerminalId &&
+                                   t.ServiceId == model.ServiceId, cancellationToken);
 
                 if (existingModel != null)
                 {
@@ -82,21 +76,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     existingModel.UpdateBy = user?.UserName;
                     existingModel.UpdateDate = DateTime.Now;
                     model = existingModel;
-                    model.Terminal = default;
+                    await _unitOfWork.TariffTable.SaveAsync(cancellationToken);
                     TempData["success"] = "Tariff rate updated successfully.";
                 }
                 else
                 {
                     model.CreatedBy = user?.UserName;
                     model.CreatedDate = DateTime.Now;
-                    model.Terminal = default;
-                    await _dbContext.MMSITariffRates.AddAsync(model, cancellationToken);
+                    await _unitOfWork.TariffTable.AddAsync(model, cancellationToken);
                     TempData["success"] = "Tariff rate created successfully.";
                 }
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -105,10 +96,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 _logger.LogError(ex, "Failed to create tariff rate.");
                 TempData["error"] = ex.Message;
                 model = await GetSelectLists(model, cancellationToken);
-                model.Terminal = await _dbContext.MMSITerminals
-                    .Include(t => t.Port)
-                    .Where(t => t.TerminalId == model.TerminalId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
                 return View(model);
             }
         }
@@ -116,9 +104,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await _dbContext.MMSITariffRates
-                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
-                .FirstOrDefaultAsync(t => t.ServiceId == id, cancellationToken);
+            var model = await _unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == id, cancellationToken);
 
             if (model == null)
             {
@@ -126,7 +112,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             model = await GetSelectLists(model, cancellationToken);
-
             return View(model);
         }
 
@@ -136,11 +121,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
-
                 return View(model);
             }
 
-            var currentModel = await _dbContext.MMSITariffRates.FindAsync(model.TariffRateId, cancellationToken);
+            var currentModel = await _unitOfWork.TariffTable.GetAsync(t => t.TariffRateId == model.TariffRateId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -157,11 +141,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TerminalId = model.TerminalId;
                 currentModel.Dispatch = model.Dispatch;
                 currentModel.BAF = model.BAF;
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.TariffTable.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Entry edited successfully.";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -169,7 +151,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to update tariff rate.");
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
@@ -177,16 +158,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken = default)
         {
-            var terminals = await _dbContext
-                .MMSITerminals
-                .Where(t => t.PortId == portId)
-                .OrderBy(t => t.TerminalId)
-                .ToListAsync(cancellationToken);
+            var terminals = await _unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
 
             var terminalsList = terminals.Select(t => new SelectListItem
             {
                 Value = t.TerminalId.ToString(),
-                Text = t.TerminalNumber + " " + t.TerminalName
+                Text = t.TerminalName
             }).ToList();
 
             return Json(terminalsList);
@@ -195,28 +172,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
             model.Customers = await _unitOfWork.TariffTable.GetMMSICustomersById(cancellationToken);
-            model.Ports = await _unitOfWork.TariffTable.GetMMSIPortsById(cancellationToken);
-            model.Services = await _unitOfWork.TariffTable.GetMMSIActivitiesServicesById(cancellationToken);
-            if (model.TerminalId != default)
-            {
-                var terminal = await _dbContext.MMSITerminals
-                    .Where(t => t.TerminalId == model.TerminalId)
-                    .Include(t => t.Port)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                model.Terminal = terminal;
-                model.Terminals = await _unitOfWork.TariffTable.GetMMSITerminalsById(terminal!.PortId, cancellationToken);
-            }
-
+            model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
+            model.Services = await _unitOfWork.Service.GetMMSIActivitiesServicesById(cancellationToken);
+            if (model.TerminalId == 0) return model;
+            model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
+            model.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(model.Terminal!.PortId, cancellationToken);
             return model;
         }
 
         [HttpPost]
         public async Task<bool> CheckIfExisting(DateOnly date, int customerId, int terminalId, int activityServiceId, decimal dispatch, decimal baf, CancellationToken cancellationToken = default)
         {
-            var model = await _dbContext.MMSITariffRates
-                .Where(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ServiceId == activityServiceId)
-                .FirstOrDefaultAsync(cancellationToken);
+            var model = await _unitOfWork.TariffTable
+                .GetAsync(t => t.AsOfDate == date && t.CustomerId == customerId && t.TerminalId == terminalId && t.ServiceId == activityServiceId, cancellationToken);
             return (model != null);
         }
     }

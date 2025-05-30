@@ -8,8 +8,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
     {
         Task SaveAsync(CancellationToken cancellationToken);
 
-        Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default);
-
         Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default);

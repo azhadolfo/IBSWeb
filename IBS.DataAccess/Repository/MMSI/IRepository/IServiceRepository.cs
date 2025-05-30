@@ -9,5 +9,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
     public interface IServiceRepository : IRepository<MMSIService>
     {
         Task SaveAsync(CancellationToken cancellationToken);
+
+        Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default);
     }
 }
