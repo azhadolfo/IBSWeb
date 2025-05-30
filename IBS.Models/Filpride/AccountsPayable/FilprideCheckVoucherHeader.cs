@@ -149,5 +149,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Address { get; set; }
 
         public string Tin { get; set; }
+
+        public ICollection<FilprideCheckVoucherDetail>? Details { get; set; }
     }
 }
