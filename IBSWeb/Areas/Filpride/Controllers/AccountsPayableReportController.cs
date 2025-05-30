@@ -111,13 +111,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date From: ").SemiBold();
-                                    text.Span(model.DateFrom.ToString());
+                                    text.Span(model.DateFrom.ToString(SD.Date_Format));
                                 });
 
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date To: ").SemiBold();
-                                    text.Span(model.DateTo.ToString());
+                                    text.Span(model.DateTo.ToString(SD.Date_Format));
                                 });
                             });
 
@@ -133,71 +133,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         page.Content().PaddingTop(10).Table(table =>
                         {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(80);
-                                columns.ConstantColumn(80);
-                                columns.ConstantColumn(125);
-                                columns.ConstantColumn(70);
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(125);
-                                columns.ConstantColumn(80);
-                                columns.RelativeColumn(2);
-                                columns.ConstantColumn(100);
-                            });
+                            #region -- Columns Definition
 
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Category").SemiBold();
-                                header.Cell().Text("Subcategory").SemiBold();
-                                header.Cell().Text("Payee").SemiBold();
-                                header.Cell().Text("Date").SemiBold();
-                                header.Cell().Text("Voucher#").SemiBold();
-                                header.Cell().Text("Bank Name").SemiBold();
-                                header.Cell().Text("Check").SemiBold();
-                                header.Cell().Text("Particulars").SemiBold();
-                                header.Cell().AlignRight().Text("Total").SemiBold();
-                            });
-
-                            var totalAmt = 0m;
-                            foreach (var record in checkVoucherHeader)
-                            {
-                                table.Cell().Text("Empty");
-                                table.Cell().Text("Empty");
-                                table.Cell().Text(record.Payee);
-                                table.Cell().Text(record.Date.ToString(SD.Date_Format));
-                                table.Cell().Text(record.CheckVoucherHeaderNo);
-                                table.Cell().Text(record.BankAccount!.AccountName);
-                                table.Cell().Text(record.CheckNo);
-                                table.Cell().Text(record.Particulars);
-                                table.Cell().AlignRight().Text(record.Total.ToString(SD.Two_Decimal_Format));
-                                totalAmt += record.Total;
-                            }
-
-                            table.Cell().ColumnSpan(9).Element(cell =>
-                            {
-                                cell.Column(column =>
+                                table.ColumnsDefinition(columns =>
                                 {
-                                    column.Item().Height(2); // Top spacing or content
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(3); // Bottom spacing or content
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
-                            });
 
-                            table.Cell().ColumnSpan(8).AlignRight().Text("TOTAL:").SemiBold();
-                            table.Cell().AlignRight().Text(totalAmt.ToString(SD.Two_Decimal_Format)).SemiBold();
+                            #endregion
 
-                            table.Cell().ColumnSpan(9).Element(cell =>
-                            {
-                                cell.Column(column =>
+                            #region -- Table Header
+
+                                table.Header(header =>
                                 {
-                                    column.Item().Height(2); // Top spacing or content
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(2); // Horizontal line
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(3); // Bottom spacing or content
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Category").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Subcategory").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Payee").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Voucher#").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Bank Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Check").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Particulars").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total").SemiBold();
                                 });
-                            });
+
+                            #endregion
+
+                            #region -- Loop to Show Records
+
+                                var totalAmt = 0m;
+                                foreach (var record in checkVoucherHeader)
+                                {
+                                    table.Cell().Border(0.5f).Padding(3).Text("Empty");
+                                    table.Cell().Border(0.5f).Padding(3).Text("Empty");
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Payee);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckVoucherHeaderNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount!.AccountName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Particulars);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Total.ToString(SD.Two_Decimal_Format));
+                                    totalAmt += record.Total;
+                                }
+
+                            #endregion
+
+                            #region Create Table Cell for Totals
+
+                                table.Cell().ColumnSpan(8).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmt.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
                         });
 
                         #endregion
@@ -427,13 +421,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date From: ").SemiBold();
-                                    text.Span(model.DateFrom.ToString());
+                                    text.Span(model.DateFrom.ToString(SD.Date_Format));
                                 });
 
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date To: ").SemiBold();
-                                    text.Span(model.DateTo.ToString());
+                                    text.Span(model.DateTo.ToString(SD.Date_Format));
                                 });
                             });
 
@@ -449,48 +443,60 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         page.Content().PaddingTop(10).Table(table =>
                         {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(90);
-                                columns.ConstantColumn(90);
-                                columns.ConstantColumn(90);
-                                columns.ConstantColumn(125);
-                                columns.ConstantColumn(70);
-                                columns.ConstantColumn(100);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(50);
-                                columns.ConstantColumn(100);
-                                columns.RelativeColumn(2);
-                            });
+                            #region -- Columns Definition
 
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("PO#").SemiBold();
-                                header.Cell().Text("IS PO#").SemiBold();
-                                header.Cell().Text("Transaction Date").SemiBold();
-                                header.Cell().Text("Supplier").SemiBold();
-                                header.Cell().Text("Product").SemiBold();
-                                header.Cell().AlignRight().Text("Quantity").SemiBold();
-                                header.Cell().AlignCenter().Text("Unit").SemiBold();
-                                header.Cell().AlignRight().Text("Price").SemiBold();
-                                header.Cell().AlignRight().Text("Amount").SemiBold();
-                                header.Cell().PaddingLeft(10).Text("Remarks").SemiBold();
-                            });
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO#").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("IS PO#").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Transaction Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Product").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Quantity").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Unit").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Price").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Remarks").SemiBold();
+                                });
+
+                            #endregion
+
+                            #region -- Loop to Show Records
 
                             foreach (var record in purchaseOrder)
                             {
-                                table.Cell().Text(record.PurchaseOrderNo);
-                                table.Cell().Text(record.OldPoNo);
-                                table.Cell().Text(record.Date.ToString(SD.Date_Format));
-                                table.Cell().Text(record.Supplier?.SupplierName);
-                                table.Cell().Text(record.Product?.ProductName);
-                                table.Cell().AlignRight().Text(record.Quantity.ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignCenter().Text(record.Product?.ProductUnit);
-                                table.Cell().AlignRight().Text(record.Price.ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text(record.Amount.ToString(SD.Two_Decimal_Format));
-                                table.Cell().PaddingLeft(10).Text(record.Remarks);
+                                table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrderNo);
+                                table.Cell().Border(0.5f).Padding(3).Text(record.OldPoNo);
+                                table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                table.Cell().Border(0.5f).Padding(3).Text(record.Supplier?.SupplierName);
+                                table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity.ToString(SD.Two_Decimal_Format));
+                                table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Price.ToString(SD.Four_Decimal_Format));
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Amount.ToString(SD.Two_Decimal_Format));
+                                table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
 
                             }
+
+                            #endregion
                         });
 
                         #endregion
@@ -676,7 +682,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         page.Size(PageSizes.Legal.Landscape());
                         page.Margin(20);
-                        page.DefaultTextStyle(x => x.FontSize(8).FontFamily("Times New Roman"));
+                        page.DefaultTextStyle(x => x.FontSize(7).FontFamily("Times New Roman"));
 
                         #endregion
 
@@ -695,13 +701,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date From: ").SemiBold();
-                                    text.Span(model.DateFrom.ToString());
+                                    text.Span(model.DateFrom.ToString(SD.Date_Format));
                                 });
 
                                 column.Item().Text(text =>
                                 {
                                     text.Span("Date To: ").SemiBold();
-                                    text.Span(model.DateTo.ToString());
+                                    text.Span(model.DateTo.ToString(SD.Date_Format));
                                 });
                             });
 
@@ -717,144 +723,143 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         page.Content().PaddingTop(10).Table(table =>
                         {
-                            table.ColumnsDefinition(columns =>
-                            {
-                                columns.ConstantColumn(30);
-                                columns.RelativeColumn(2);
-                                columns.ConstantColumn(35);
-                                columns.RelativeColumn(2);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(25);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(30);
-                                columns.RelativeColumn(2);
-                                columns.ConstantColumn(50);
-                                columns.ConstantColumn(50);
-                                columns.ConstantColumn(30);
-                                columns.ConstantColumn(60);
-                                columns.ConstantColumn(60);
-                                columns.ConstantColumn(60);
-                                columns.ConstantColumn(60);
-                                columns.RelativeColumn(2);
-                            });
+                            #region -- Columns Definition
 
-                            table.Header(header =>
-                            {
-                                header.Cell().Text("Date").SemiBold();
-                                header.Cell().Text("Supplier Name").SemiBold();
-                                header.Cell().Text("Supplier Tin").SemiBold();
-                                header.Cell().Text("Supplier Address").SemiBold();
-                                header.Cell().Text("PO No.").SemiBold();
-                                header.Cell().Text("Filpride RR").SemiBold();
-                                header.Cell().Text("Filpride DR").SemiBold();
-                                header.Cell().Text("ATL No.").SemiBold();
-                                header.Cell().Text("Supplier SI").SemiBold();
-                                header.Cell().Text("SI/Lifting Date").SemiBold();
-                                header.Cell().Text("Supplier DR").SemiBold();
-                                header.Cell().Text("Supplier WC").SemiBold();
-                                header.Cell().Text("Customer Name").SemiBold();
-                                header.Cell().Text("Product").SemiBold();
-                                header.Cell().AlignRight().Text("Volume").SemiBold();
-                                header.Cell().AlignRight().Text("Cost Per Liter").SemiBold();
-                                header.Cell().AlignRight().Text("Cost Amount").SemiBold();
-                                header.Cell().AlignRight().Text("Vat Amount").SemiBold();
-                                header.Cell().AlignRight().Text("WHT Amount").SemiBold();
-                                header.Cell().AlignRight().Text("Net Purchases").SemiBold();
-                                header.Cell().PaddingLeft(10).Text("Hauler Name").SemiBold();
-                            });
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
 
-                            var totalVolume = 0m;
-                            decimal totalCostAmount = 0m;
-                            decimal totalVatAmount = 0m;
-                            decimal totalWHTAmount = 0m;
-                            decimal totalNetPurchases = 0m;
-                            decimal totalCOSAmount = 0m;
-                            decimal totalGMAmount = 0m;
-                            decimal totalFCAmount = 0m;
-                            decimal totalCommissionAmount = 0m;
-                            decimal totalNetMarginAmount = 0m;
+                            #endregion
 
-                            foreach (var record in purchaseReport)
-                            {
-                                var volume = record.QuantityReceived;
-                                var costAmountGross = record.Amount;
-                                var costPerLiter = costAmountGross / volume;
-                                var cosPricePerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
-                                var freightChargePerLiter = (record.DeliveryReceipt?.Freight ?? 0m);
-                                var commissionPerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
-                                var costAmountNet = costAmountGross / 1.12m;
-                                var cosAmountGross = volume * cosPricePerLiter;
-                                var gmPerLiter = (cosPricePerLiter - costPerLiter);
+                            #region -- Table Header
 
-                                table.Cell().Text(record.Date.ToString(SD.Date_Format));
-                                table.Cell().Text(record.PurchaseOrder?.Supplier?.SupplierName);
-                                table.Cell().Text(record.PurchaseOrder?.Supplier?.SupplierTin);
-                                table.Cell().Text(record.PurchaseOrder?.Supplier?.SupplierAddress);
-                                table.Cell().Text(record.PurchaseOrder?.PurchaseOrderNo);
-                                table.Cell().Text(record.ReceivingReportNo);
-                                table.Cell().Text(record.DeliveryReceipt?.DeliveryReceiptNo);
-                                table.Cell().Text(record.AuthorityToLoadNo);
-                                table.Cell().Text(record.SupplierInvoiceNumber);
-                                table.Cell().Text(record.SupplierInvoiceDate?.ToString(SD.Date_Format));
-                                table.Cell().Text(record.SupplierDrNo);
-                                table.Cell().Text(record.WithdrawalCertificate);
-                                table.Cell().Text(record.DeliveryReceipt?.Customer?.CustomerName);
-                                table.Cell().Text(record.PurchaseOrder?.Product?.ProductName);
-                                table.Cell().AlignRight().Text(volume.ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text(costPerLiter.ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text(costAmountGross.ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text((costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text((costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format));
-                                table.Cell().AlignRight().Text(costAmountNet.ToString(SD.Two_Decimal_Format));
-                                table.Cell().PaddingLeft(10).Text(record.DeliveryReceipt?.Hauler?.SupplierName);
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Tin").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Address").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride RR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride DR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ATL No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier SI").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SI/Lifting Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier DR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier WC").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Product").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Cost Per Liter").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Cost Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Vat Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("WHT Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Net Purchases").SemiBold();
+                                });
 
-                                totalVolume += volume;
-                                totalCostAmount += costAmountGross;
-                                totalVatAmount += costAmountNet * 0.12m;
-                                totalWHTAmount += costAmountNet * 0.01m;
-                                totalNetPurchases += costAmountNet;
-                                totalCOSAmount += cosPricePerLiter * volume;
-                                totalGMAmount += cosAmountGross - costAmountGross;
-                                totalFCAmount += freightChargePerLiter * volume;
-                                totalCommissionAmount += volume * commissionPerLiter;
-                                totalNetMarginAmount += (gmPerLiter - freightChargePerLiter) * volume;
-                            }
+                            #endregion
+
+                            #region -- Initialize Variable for Computation
+
+                                var totalVolume = 0m;
+                                decimal totalCostAmount = 0m;
+                                decimal totalVatAmount = 0m;
+                                decimal totalWHTAmount = 0m;
+                                decimal totalNetPurchases = 0m;
+                                decimal totalCOSAmount = 0m;
+                                decimal totalGMAmount = 0m;
+                                decimal totalFCAmount = 0m;
+                                decimal totalCommissionAmount = 0m;
+                                decimal totalNetMarginAmount = 0m;
+
+                            #endregion
+
+                            #region -- Loop to Show Records
+
+                                foreach (var record in purchaseReport)
+                                {
+                                    var volume = record.QuantityReceived;
+                                    var costAmountGross = record.Amount;
+                                    var costPerLiter = costAmountGross / volume;
+                                    var cosPricePerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
+                                    var freightChargePerLiter = (record.DeliveryReceipt?.Freight ?? 0m);
+                                    var commissionPerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
+                                    var costAmountNet = costAmountGross / 1.12m;
+                                    var cosAmountGross = volume * cosPricePerLiter;
+                                    var gmPerLiter = (cosPricePerLiter - costPerLiter);
+
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierTin);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierAddress);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.ReceivingReportNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceNumber);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceDate?.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.Customer?.CustomerName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountNet.ToString(SD.Two_Decimal_Format));
+
+                                    totalVolume += volume;
+                                    totalCostAmount += costAmountGross;
+                                    totalVatAmount += costAmountNet * 0.12m;
+                                    totalWHTAmount += costAmountNet * 0.01m;
+                                    totalNetPurchases += costAmountNet;
+                                    totalCOSAmount += cosPricePerLiter * volume;
+                                    totalGMAmount += cosAmountGross - costAmountGross;
+                                    totalFCAmount += freightChargePerLiter * volume;
+                                    totalCommissionAmount += volume * commissionPerLiter;
+                                    totalNetMarginAmount += (gmPerLiter - freightChargePerLiter) * volume;
+                                }
+
+                            #endregion
+
+                            #region -- Initialize Variable for Computation of Totals
 
                             var totalCostPerLiter = totalCostAmount / totalVolume;
 
-                            table.Cell().ColumnSpan(21).Element(cell =>
-                            {
-                                cell.Column(column =>
-                                {
-                                    column.Item().Height(2); // Top spacing or content
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(3); // Bottom spacing or content
-                                });
-                            });
+                            #endregion
 
-                            table.Cell().ColumnSpan(14).AlignRight().Text("TOTAL:").SemiBold();
-                            table.Cell().AlignRight().Text(totalVolume.ToString(SD.Two_Decimal_Format)).SemiBold();
-                            table.Cell().AlignRight().Text(totalCostPerLiter.ToString(SD.Two_Decimal_Format)).SemiBold();
-                            table.Cell().AlignRight().Text(totalCostAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
-                            table.Cell().AlignRight().Text(totalVatAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
-                            table.Cell().AlignRight().Text(totalWHTAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
-                            table.Cell().AlignRight().Text(totalNetPurchases.ToString(SD.Two_Decimal_Format)).SemiBold();
+                            #region -- Create Table Cell for Totals
 
-                            table.Cell().ColumnSpan(21).Element(cell =>
-                            {
-                                cell.Column(column =>
-                                {
-                                    column.Item().Height(2); // Top spacing or content
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(2); // Horizontal line
-                                    column.Item().Height(1).Background(Colors.Black); // Horizontal line
-                                    column.Item().Height(3); // Bottom spacing or content
-                                });
-                            });
+                                table.Cell().ColumnSpan(14).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVolume.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostPerLiter.ToString(SD.Four_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVatAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalWHTAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalNetPurchases.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
                         });
 
                         #endregion
