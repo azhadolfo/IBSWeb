@@ -306,7 +306,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion --SV Date Computation--
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     #region --General Ledger Book Recording
 
                     // var ledgers = new List<FilprideGeneralLedgerBook>();
@@ -316,7 +316,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     // var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
                     // var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
                     //
-                    // //TODO waiting for Ma'am LSA journal entries
                     // ledgers.Add(
                     //         new FilprideGeneralLedgerBook
                     //         {
@@ -525,7 +524,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        ///TODO: waiting for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
                         //await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
 

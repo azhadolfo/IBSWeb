@@ -973,7 +973,7 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilprideCheckVoucherDetail>(cv =>
             {
                 cv.HasOne(cv => cv.CheckVoucherHeader)
-                    .WithMany()
+                    .WithMany(cv => cv.Details)
                     .HasForeignKey(cv => cv.CheckVoucherHeaderId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
@@ -1000,6 +1000,18 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(jv => jv.CVId)
                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            #endregion -- Check Voucher --
+
+            #region -- Journal Voucher Details --
+
+            builder.Entity<FilprideJournalVoucherDetail>(jv =>
+            {
+                jv.HasOne(jv => jv.JournalVoucherHeader)
+                    .WithMany(jv => jv.Details)
+                    .HasForeignKey(jv => jv.JournalVoucherHeaderId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion -- Check Voucher --

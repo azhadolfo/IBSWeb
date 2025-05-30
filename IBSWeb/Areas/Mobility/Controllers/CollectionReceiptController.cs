@@ -675,7 +675,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         offset = await _unitOfWork.MobilityCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, stationCodeClaims, cancellationToken);
                         offsetAmount = offset.Sum(o => o.Amount);
 
-                        ///TODO: waiting for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
 
                         await _unitOfWork.MobilityCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
@@ -731,7 +731,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                         var findOffsetting = await _dbContext.MobilityOffsettings.Where(offset => offset.StationCode == stationCodeClaims && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
 
-                        ///TODO: waiting for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
                         // _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
 

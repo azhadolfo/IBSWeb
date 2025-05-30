@@ -116,7 +116,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCheckVoucherHeader> query = dbSet
                 .Include(x => x.Employee)
-               .Include(c => c.Supplier);
+                .Include(c => c.Supplier);
 
             if (filter != null)
             {

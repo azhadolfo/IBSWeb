@@ -1,6 +1,5 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Dtos;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MasterFile;
@@ -8,6 +7,7 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.DTOs;
 
 namespace IBS.DataAccess.Repository
 {

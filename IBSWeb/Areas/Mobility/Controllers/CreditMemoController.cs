@@ -452,7 +452,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                             #endregion --SV Computation--
 
-                            /////TODO: waiting for ma'am LSA journal entries
+                            ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                             #region --Sales Book Recording(SV)--
 
                             // var sales = new FilprideSalesBook();
@@ -516,7 +516,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                             #endregion --Sales Book Recording(SV)--
 
-                            ///TODO: waiting for ma'am LSA journal entries
+                            ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                             #region --General Ledger Book Recording(SV)--
 
                             // decimal withHoldingTaxAmount = 0;
@@ -694,7 +694,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        //TODO: uncomment this if the journal entries are provided
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
                         //await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo, cancellationToken);
 

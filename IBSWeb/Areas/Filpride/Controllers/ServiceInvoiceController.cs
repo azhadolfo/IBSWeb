@@ -357,7 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
                     var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
-                    //TODO waiting for Ma'am LSA journal entries
+                    ///TODO waiting for Ma'am LSA journal entries
                     ledgers.Add(
                             new FilprideGeneralLedgerBook
                             {

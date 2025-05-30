@@ -7,44 +7,52 @@
     var accessList = Model.StationAccess.Select(u => u.Value).ToList();
 }
 
-<div class="container">
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h1 class="card-title text-center mb-4">Log in</h1>
-                    <form id="account" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input asp-for="Input.Username" class="form-control" id="username" autocomplete="off" aria-required="true" placeholder="Enter your username" />
-                            <span asp-validation-for="Input.Username" class="text-danger"></span>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4">Welcome Back</h2>
+                    <form id="account" method="post" autocomplete="off">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Username" class="form-control" id="username" placeholder="Username" />
+                            <label for="username">Username</label>
+                            <span asp-validation-for="Input.Username" class="text-danger small"></span>
                         </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Enter your password" />
-                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Password" class="form-control" placeholder="Password" type="password" />
+                            <label for="Input_Password">Password</label>
+                            <span asp-validation-for="Input.Password" class="text-danger small"></span>
                         </div>
+
                         <div class="mb-3" id="company-div">
-                            <label for="company" class="form-label">Select Company</label>
-                            <select asp-for="Input.Company" asp-items="@Model.Companies" class="form-select js-select2" style="width:100%" id="company-select">
+                            <label asp-for="Input.Company" class="form-label">Select Company</label>
+                            <select asp-for="Input.Company" asp-items="@Model.Companies" class="form-select js-select2" id="company-select" style="width: 100%" required>
                                 <option value="">Select company</option>
                             </select>
                             <span asp-validation-for="Input.Company" class="text-danger"></span>
                         </div>
-                        <div class="mb-3" id="station-div" style="display: none">
-                            <label for="station" class="form-label">What Station?</label>
-                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" style="width:100%;" id="station-select" required>
+
+                        <div class="mb-3" id="station-div" style="display: none;">
+                            <label for="station" class="form-label">Select Station</label>
+                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" id="station-select" style="width: 100%">
                                 <option value="">Select station</option>
                             </select>
-                            <span asp-validation-for="Input.StationCode" class="text-danger"></span>
+                            <span asp-validation-for="Input.StationCode" class="text-danger small"></span>
                         </div>
-                        <div class="text-center">
-                            <button id="login-submit" type="submit" class="btn btn-primary">Log in</button>
+
+                        <div class="d-grid mt-4">
+                            <button id="login-submit" type="submit" class="btn btn-primary btn-lg">Log in</button>
                         </div>
-                        @*<div class="mt-3 text-center">
-                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Click To Sign Up</a>
-                            </div>*@
+
+                        @* Optional sign up link
+                        <div class="text-center mt-3">
+                            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none">Create an account</a>
+                        </div>
+                        *@
                     </form>
                 </div>
             </div>
@@ -56,62 +64,42 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function () {
-            // Gets the names of Cashiers and their respective stations
             var usersArray = @Html.Raw(Json.Serialize(usersList));
             var accessArray = @Html.Raw(Json.Serialize(accessList));
             var companySelect = $('#company-select');
             var stationSelect = $('#station-select');
 
             function toggleCashierAccess() {
-                var currentUsername = $('#username').val();
+                var currentUsername = $('#username').val().toLowerCase();
                 var companyDiv = $('#company-div');
                 var stationDiv = $('#station-div');
                 var isCashier = false;
-                //console.log(currentUsername);
 
                 for (var i = 0; i < usersArray.length; i++) {
-                    // Checks if the typed value is equal to any cashier
-                    if (currentUsername.toLowerCase() == usersArray[i].toLowerCase())
-                    {
-                        // Tags as cashier, sets corresponding company and station
+                    if (currentUsername === usersArray[i].toLowerCase()) {
                         isCashier = true;
                         companySelect.val('Mobility');
                         stationSelect.val(accessArray[i]);
-                        // console.log(accessArray[i]);
-                        // console.log("--Is Cashier--");
                         break;
-                    }
-                    else{
-                        isCashier = false;
-                        companySelect.val(null);
-                        stationSelect.val(null);
                     }
                 }
 
-                // if cashier, hides other fields
                 if (isCashier) {
                     companyDiv.hide();
                     stationDiv.hide();
                 } else {
                     companyDiv.show();
-                        companySelect.val(null);
-                        stationSelect.val(null);
+                    companySelect.val(null);
+                    stationSelect.val(null);
                 }
             }
-            // addresses bug about station field not disappearing when password of cashier is wrong
-            setTimeout(function() {
-                toggleCashierAccess();
-            }, 50);
 
-            // Checks if typed username is cashier
+            setTimeout(toggleCashierAccess, 50);
             $('#username').on('input', toggleCashierAccess);
-
-            // Initial checking if cashier
             toggleCashierAccess();
 
-            // Checks if station field should show
             function toggleStationDiv() {
-                var selectedCompany = $('select[name="Input.Company"]').val();
+                var selectedCompany = companySelect.val();
                 var stationDiv = $('#station-div');
 
                 if (selectedCompany === 'Mobility') {
@@ -122,12 +110,8 @@
                 }
             }
 
-            // Attach the change event listener
-            $('select[name="Input.Company"]').on('change', toggleStationDiv);
-
-            // Initial check on page load
+            companySelect.on('change', toggleStationDiv);
             toggleStationDiv();
         });
     </script>
-
 }

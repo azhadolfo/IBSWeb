@@ -1009,7 +1009,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     #region --General Ledger Book Recording(CV)--
 
                     // var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
@@ -1045,7 +1045,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion --General Ledger Book Recording(CV)--
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     #region --Disbursement Book Recording(CV)--
 
                     // var disbursement = new List<FilprideDisbursementBook>();
@@ -1195,7 +1195,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        ///TODO: waiting for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
                         //await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
 

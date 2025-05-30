@@ -203,7 +203,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     modelHeader.Status = nameof(CheckVoucherPaymentStatus.Posted);
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     #region --General Ledger Book Recording(CV)--
 
                     // var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
@@ -439,7 +439,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     //await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo);
                     //await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo);
 
