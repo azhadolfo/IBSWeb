@@ -1,9 +1,8 @@
-using IBS.Models.Filpride.AccountsReceivable;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.Filpride
+namespace IBS.Models.Filpride.AccountsReceivable
 {
     public class FilprideDebitMemo : BaseEntity
     {

@@ -1,5 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Dtos;
+using IBS.DTOs;
 using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 

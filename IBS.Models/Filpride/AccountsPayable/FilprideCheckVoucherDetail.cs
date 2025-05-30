@@ -1,10 +1,9 @@
-using IBS.Models.Filpride.AccountsPayable;
-using IBS.Models.Filpride.MasterFile;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.MasterFile;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
-namespace IBS.Models.Filpride
+namespace IBS.Models.Filpride.AccountsPayable
 {
     public class FilprideCheckVoucherDetail
     {
