@@ -34,10 +34,12 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(t => t.Customer)
                 .Include(t => t.Terminal).ThenInclude(t => t!.Port)
                 .Include(t => t.Service);
+
             if (filter != null)
             {
                 query = query.Where(filter);
             }
+
             return await query.ToListAsync(cancellationToken);
         }
 
