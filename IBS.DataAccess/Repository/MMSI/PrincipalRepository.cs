@@ -26,10 +26,12 @@ namespace IBS.DataAccess.Repository.MMSI
         public override async Task<IEnumerable<MMSIPrincipal>> GetAllAsync(Expression<Func<MMSIPrincipal, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSIPrincipal> query = dbSet.Include(p => p.Customer);
+
             if (filter != null)
             {
                 query = query.Where(filter);
             }
+
             return await query.ToListAsync(cancellationToken);
         }
 

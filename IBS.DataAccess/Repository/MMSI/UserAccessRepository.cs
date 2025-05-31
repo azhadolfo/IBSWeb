@@ -25,11 +25,12 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public override async Task<IEnumerable<MMSIUserAccess>> GetAllAsync(Expression<Func<MMSIUserAccess, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIUserAccess> query = dbSet;
+            IQueryable<MMSIUserAccess> query = dbSet
+                .OrderBy(ua => ua.UserName);
+
             if (filter != null)
             {
-                query = query.Where(filter)
-                    .OrderBy(ua => ua.UserName);
+                query = query.Where(filter);
             }
 
             return await query.ToListAsync(cancellationToken);
