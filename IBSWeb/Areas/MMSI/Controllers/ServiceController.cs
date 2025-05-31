@@ -111,6 +111,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;
                 await _unitOfWork.Service.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
