@@ -1,3 +1,4 @@
+using System.Globalization;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
@@ -2870,5 +2871,841 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate GM Report Excel File --
+
+        [HttpGet]
+        public IActionResult TradePayableReport()
+        {
+            return View();
+        }
+
+        #region -- Generated Gross Margin Report as Quest PDF
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateTradePayableReport(ViewModelBook model)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(TradePayableReport));
+            }
+
+            try
+            {
+                var receivingReports = await _dbContext.FilprideReceivingReports
+                    .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                    .Where(rr => rr.Company == companyClaims && rr.Date <= model.DateTo)
+                    .OrderBy(rr => rr.Date.Year)
+                    .ThenBy(rr => rr.Date.Month)
+                    .ThenBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
+                    .GroupBy(x => new { x.Date.Year, x.Date.Month })
+                    .ToListAsync();
+
+                if (!receivingReports.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(TradePayableReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page setup
+
+                            page.Size(PageSizes.Legal.Landscape());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(8).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(50).Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item()
+                                        .Text("TRADE PAYABLE REPORT")
+                                        .FontSize(20).SemiBold();
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date From: ").SemiBold();
+                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
+                                    });
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date To: ").SemiBold();
+                                        text.Span(model.DateTo.ToString(SD.Date_Format));
+                                    });
+                                });
+
+                                row.ConstantItem(size: 100)
+                                    .Height(50)
+                                    .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
+                            });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Column(col =>
+                        {
+                            col.Item().Table(table =>
+                            {
+                                #region -- Columns Definition
+
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                    });
+
+                                #endregion
+
+                                #region -- Table Header
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("AP TRADE").SemiBold();
+                                        header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("BEGINNING").SemiBold();
+                                        header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PURCHASES").SemiBold();
+                                        header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PAYMENTS").SemiBold();
+                                        header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ENDING").SemiBold();
+
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Month").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier").SemiBold();
+
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Gross").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Net Amount").SemiBold();
+
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Gross").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Net Amount").SemiBold();
+
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Gross").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Net Amount").SemiBold();
+
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Gross").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Net Amount").SemiBold();
+                                    });
+
+                                #endregion
+
+                                #region -- Initialize Variable for Computation
+
+                                var grandTotalBeginningVolume = 0m;
+                                var grandTotalBeginningGross = 0m;
+                                var grandTotalBeginningEWT = 0m;
+                                var grandTotalBeginningNetAmount = 0m;
+                                var grandTotalPurchaseVolume = 0m;
+                                var grandTotalPurchaseGross = 0m;
+                                var grandTotalPurchaseEWT = 0m;
+                                var grandTotalPurchaseNetAmount = 0m;
+                                var grandTotalPaymentVolume = 0m;
+                                var grandTotalPaymentGross = 0m;
+                                var grandTotalPaymentEWT = 0m;
+                                var grandTotalPaymentNetAmount = 0m;
+                                var grandTotalEndingVolume = 0m;
+                                var grandTotalEndingGross = 0m;
+                                var grandTotalEndingEWT = 0m;
+                                var grandTotalEndingNetAmount = 0m;
+
+                                #endregion
+
+                                #region -- Loop to Show Records
+
+                                foreach (var rr in receivingReports)
+                                {
+                                    bool isStart = true;
+
+                                    //BEGINNING
+                                    var subTotalBeginningVolume = rr.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.QuantityReceived);
+                                    var subTotalBeginningGross = rr.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.Amount);
+                                    var subTotalBeginningEWT = (subTotalBeginningGross / 1.12m) * 0.01m;
+                                    var subTotalBeginningNetAmount = subTotalBeginningGross - subTotalBeginningEWT;
+                                    //PURCHASES
+                                    var subTotalPurchaseVolume = rr.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.QuantityReceived);
+                                    var subTotalPurchaseGross = rr.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.Amount);
+                                    var subTotalPurchaseEWT = (subTotalPurchaseGross / 1.12m) * 0.01m;
+                                    var subTotalPurchaseNetAmount = subTotalPurchaseGross - subTotalPurchaseEWT;
+                                    //PAYMENT
+                                    var subTotalPaymentVolume = rr.Where(x => x.IsPaid).Sum(x => x.QuantityReceived);
+                                    var subTotalPaymentGross = rr.Where(x => x.IsPaid).Sum(x => x.Amount);
+                                    var subTotalPaymentEWT = (subTotalPaymentGross / 1.12m) * 0.01m;
+                                    var subTotalPaymentNetAmount = subTotalPaymentGross - subTotalPaymentEWT;
+                                    //ENDING BALANCE
+                                    var subTotalEndingVolume = (subTotalBeginningVolume + subTotalPurchaseVolume) - subTotalPaymentVolume;
+                                    var subTotalEndingGross = (subTotalBeginningGross + subTotalPurchaseGross) - subTotalPaymentGross;
+                                    var subTotalEndingEWT = (subTotalBeginningEWT + subTotalPurchaseEWT) - subTotalPaymentEWT;
+                                    var subTotalEndingNetAmount = (subTotalBeginningNetAmount + subTotalPurchaseNetAmount) - subTotalPaymentNetAmount;
+
+                                    var groupBySupplier = rr.GroupBy(x => new { x.PurchaseOrder?.Supplier?.SupplierName });
+
+                                    foreach (var item in groupBySupplier)
+                                    {
+                                        //BEGINNING
+                                        var beginningVolume = item.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.QuantityReceived);
+                                        var beginningGross = item.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.Amount);
+                                        var beginningEWT = (beginningGross / 1.12m) * 0.01m;
+                                        var beginningNetAmount = beginningGross - beginningEWT;
+                                        //PURCHASES
+                                        var purchaseVolume = item.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.QuantityReceived);
+                                        var purchaseGross = item.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.Amount);
+                                        var purchaseEWT = (purchaseGross / 1.12m) * 0.01m;
+                                        var purchaseNetAmount = purchaseGross - purchaseEWT;
+                                        //PAYMENT
+                                        var paymentVolume = item.Where(x => x.IsPaid).Sum(x => x.QuantityReceived);
+                                        var paymentGross = item.Where(x => x.IsPaid).Sum(x => x.Amount);
+                                        var paymentEWT = (paymentGross / 1.12m) * 0.01m;
+                                        var paymentNetAmount = paymentGross - paymentEWT;
+                                        //ENDING BALANCE
+                                        var endingVolume = (beginningVolume + purchaseVolume) - paymentVolume;
+                                        var endingGross = (beginningGross + purchaseGross) - paymentGross;
+                                        var endingEWT = (beginningEWT + purchaseEWT) - paymentEWT;
+                                        var endingNetAmount = (beginningNetAmount + purchaseNetAmount) - paymentNetAmount;
+
+                                        if (isStart)
+                                        {
+                                           table.Cell().RowSpan((uint)groupBySupplier.Count()).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text($"{new DateTime(rr.Key.Year, rr.Key.Month, 1):MMM yyyy}");
+                                        }
+                                        table.Cell().Border(0.5f).Padding(3).Text(item.Key.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningVolume != 0 ? beginningVolume.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningGross != 0 ? beginningGross.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningEWT != 0 ? beginningEWT.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningNetAmount != 0 ? beginningNetAmount.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(purchaseVolume != 0 ? purchaseVolume.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(purchaseGross != 0 ? purchaseGross.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(purchaseEWT != 0 ? purchaseEWT.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(purchaseNetAmount != 0 ? purchaseNetAmount.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(paymentVolume != 0 ? paymentVolume.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(paymentGross != 0 ? paymentGross.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(paymentEWT != 0 ? paymentEWT.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(paymentNetAmount != 0 ? paymentNetAmount.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingVolume != 0 ? endingVolume.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingGross != 0 ? endingGross.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingEWT != 0 ? endingEWT.ToString(SD.Two_Decimal_Format) : "");
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingNetAmount != 0 ? endingNetAmount.ToString(SD.Two_Decimal_Format) : "");
+
+                                        isStart = false;
+                                    }
+
+                                    //Compute sub total
+                                    table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("Sub Total:").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalBeginningVolume != 0 ? subTotalBeginningVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalBeginningGross != 0 ? subTotalBeginningGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalBeginningEWT != 0 ? subTotalBeginningEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalBeginningNetAmount != 0 ? subTotalBeginningNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPurchaseVolume != 0 ? subTotalPurchaseVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPurchaseGross != 0 ? subTotalPurchaseGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPurchaseEWT != 0 ? subTotalPurchaseEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPurchaseNetAmount != 0 ? subTotalPurchaseNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPaymentVolume != 0 ? subTotalPaymentVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPaymentGross != 0 ? subTotalPaymentGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPaymentEWT != 0 ? subTotalPaymentEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalPaymentNetAmount != 0 ? subTotalPaymentNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEndingVolume != 0 ? subTotalEndingVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEndingGross != 0 ? subTotalEndingGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEndingEWT != 0 ? subTotalEndingEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEndingNetAmount != 0 ? subTotalEndingNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+
+                                    grandTotalBeginningVolume += subTotalBeginningVolume;
+                                    grandTotalBeginningGross += subTotalBeginningGross;
+                                    grandTotalBeginningEWT += subTotalBeginningEWT;
+                                    grandTotalBeginningNetAmount += subTotalBeginningNetAmount;
+                                    grandTotalPurchaseVolume += subTotalPurchaseVolume;
+                                    grandTotalPurchaseGross += subTotalPurchaseGross;
+                                    grandTotalPurchaseEWT += subTotalPurchaseEWT;
+                                    grandTotalPurchaseNetAmount += subTotalPurchaseNetAmount;
+                                    grandTotalPaymentVolume += subTotalPaymentVolume;
+                                    grandTotalPaymentGross += subTotalPaymentGross;
+                                    grandTotalPaymentEWT += subTotalPaymentEWT;
+                                    grandTotalPaymentNetAmount += subTotalPaymentNetAmount;
+                                    grandTotalEndingVolume += subTotalEndingVolume;
+                                    grandTotalEndingGross += subTotalEndingGross;
+                                    grandTotalEndingEWT += subTotalEndingEWT;
+                                    grandTotalEndingNetAmount += subTotalEndingNetAmount;
+                                }
+
+                                #endregion
+
+                                #region -- Create Table Cell for Totals
+
+                                    table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTALS:").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalBeginningVolume != 0 ? grandTotalBeginningVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalBeginningGross != 0 ? grandTotalBeginningGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalBeginningEWT != 0 ? grandTotalBeginningEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalBeginningNetAmount != 0 ? grandTotalBeginningNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPurchaseVolume != 0 ? grandTotalPurchaseVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPurchaseGross != 0 ? grandTotalPurchaseGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPurchaseEWT != 0 ? grandTotalPurchaseEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPurchaseNetAmount != 0 ? grandTotalPurchaseNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPaymentVolume != 0 ? grandTotalPaymentVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPaymentGross != 0 ? grandTotalPaymentGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPaymentEWT != 0 ? grandTotalPaymentEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalPaymentNetAmount != 0 ? grandTotalPaymentNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalEndingVolume != 0 ? grandTotalEndingVolume.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalEndingGross != 0 ? grandTotalEndingGross.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalEndingEWT != 0 ? grandTotalEndingEWT.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(grandTotalEndingNetAmount != 0 ? grandTotalEndingNetAmount.ToString(SD.Two_Decimal_Format) : "").SemiBold();
+
+                                #endregion
+                            });
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate trade payable report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(TradePayableReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate AP Trade Report Excel File --
+
+        public async Task<IActionResult> GenerateTradePayableReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(TradePayableReport));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(User)!;
+                var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                string currencyFormat = "#,##0.00";
+
+                var tradePayableReport = await _unitOfWork.FilprideReport
+                    .GetTradePayableReport(model.DateFrom, model.DateTo, companyClaims);
+
+                var allReportMonthYear = tradePayableReport.GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
+
+                var beginning = tradePayableReport
+                    .Where(rr => rr.Date < dateFrom)
+                    .Where(rr => rr.IsPaid == false)
+                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
+
+                var beginningPaid = tradePayableReport
+                    .Where(rr => rr.Date < dateFrom)
+                    .Where(rr => rr.IsPaid == true)
+                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
+
+                var purchases = tradePayableReport
+                    .Where(rr => rr.Date >= dateFrom && rr.Date <= dateTo)
+                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
+
+                var purchasesPaid = tradePayableReport
+                    .Where(rr => rr.Date >= dateFrom && rr.Date <= dateTo)
+                    .Where(rr => rr.IsPaid == true)
+                    .GroupBy(rr => new { rr.Date.Year, rr.Date.Month });
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Trade Payable");
+
+                #region == Title ==
+                var titleCells = worksheet.Cells["A1:B1"];
+                titleCells.Merge = true;
+                titleCells.Value = "TRADE PAYABLE REPORT";
+                titleCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+                #endregion
+
+                #region == Header Row ==
+                titleCells = worksheet.Cells["A7:B7"];
+                titleCells.Style.Font.Size = 13;
+                titleCells.Style.Font.Bold = true;
+                titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                worksheet.Cells["A7"].Value = "MONTH";
+                worksheet.Cells["A7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                worksheet.Cells["B7"].Value = "SUPPLIER";
+                worksheet.Cells["B7"].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+
+                titleCells = worksheet.Cells["A6:B6"];
+                titleCells.Merge = true;
+                titleCells.Value = "APTRADE";
+                titleCells.Style.Font.Size = 13;
+                titleCells.Style.Font.Bold = true;
+                titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+
+                string[] headers = { "BEGINNING", "PURCHASES", "PAYMENTS", "ENDING" };
+                string[] subHeaders = { "VOLUME", "GROSS", "EWT", "NET AMOUNT" };
+                int col = 4;
+
+                foreach (var header in headers)
+                {
+                    foreach (var subheader in subHeaders)
+                    {
+                        worksheet.Cells[7, col].Value = subheader;
+                        worksheet.Cells[7, col].Style.Font.Bold = true;
+                        worksheet.Cells[7, col].Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                        worksheet.Cells[7, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                        col = col + 1;
+                    }
+
+                    titleCells = worksheet.Cells[6, col-4, 6, col-1];
+                    titleCells.Merge = true;
+                    titleCells.Value = header;
+                    titleCells.Style.Font.Size = 13;
+                    titleCells.Style.Font.Bold = true;
+                    titleCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    titleCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Salmon);
+                    titleCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    titleCells.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+
+                    col = col + 1;
+                }
+                #endregion
+
+                int row = 8;
+                IEnumerable<IGrouping<object, FilprideReceivingReport>> categorized = null!;
+
+                #region == Initialize Variables ==
+
+                // initialize subtotals for month/year
+                decimal subtotalVolumeBeginning = 0m;
+                decimal subtotalGrossBeginning = 0m;
+                decimal subtotalEwtBeginning = 0m;
+                decimal subtotalNetBeginning = 0m;
+                decimal subtotalVolumePurchases = 0m;
+                decimal subtotalGrossPurchases = 0m;
+                decimal subtotalEwtPurchases = 0m;
+                decimal subtotalNetPurchases = 0m;
+                decimal subtotalVolumePayments = 0m;
+                decimal subtotalGrossPayments = 0m;
+                decimal subtotalEwtPayments = 0m;
+                decimal subtotalNetPayments = 0m;
+                decimal currentVolumeEnding = 0m;
+                decimal currentGrossEnding = 0m;
+                decimal currentEwtEnding = 0m;
+                decimal currentNetEnding = 0m;
+                decimal subtotalVolumeEnding = 0m;
+                decimal subtotalGrossEnding = 0m;
+                decimal subtotalEwtEnding = 0m;
+                decimal subtotalNetEnding = 0m;
+
+                decimal grandTotalVolumeBeginning = 0m;
+                decimal grandTotalGrossBeginning = 0m;
+                decimal grandTotalEwtBeginning = 0m;
+                decimal grandTotalNetBeginning = 0m;
+
+                decimal grandTotalVolumePurchases = 0m;
+                decimal grandTotalGrossPurchases = 0m;
+                decimal grandTotalEwtPurchases = 0m;
+                decimal grandTotalNetPurchases = 0m;
+
+                decimal grandTotalVolumePayments = 0m;
+                decimal grandTotalGrossPayments = 0m;
+                decimal grandTotalEwtPayments = 0m;
+                decimal grandTotalNetPayments = 0m;
+
+                decimal grandTotalVolumeEnding = 0m;
+                decimal grandTotalGrossEnding = 0m;
+                decimal grandTotalEwtEnding = 0m;
+                decimal grandTotalNetEnding = 0m;
+
+                #endregion
+
+                // loop for each month
+                foreach (var monthYear in allReportMonthYear)
+                {
+                    // reset placing per category
+                    int i = 0;
+
+                    // get the month-year then group by supplier
+                    var allSupplier = monthYear.GroupBy(rr => rr.PurchaseOrder?.Supplier?.SupplierName);
+
+                    // enter the month-year to the excel
+                    worksheet.Cells[row, 1].Value = (CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(allSupplier?.FirstOrDefault()?.FirstOrDefault()?.Date.Month ?? 0) ?? " ")
+                                                    + " " +
+                                                    (allSupplier?.FirstOrDefault()?.FirstOrDefault()?.Date.Year.ToString() ?? " ");
+                    worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    row++;
+
+                    // get the int of the current month-year to be used in condition
+                    var monthInt = allSupplier?.FirstOrDefault()?.FirstOrDefault()?.Date.Month ?? 0;
+                    var yearInt = allSupplier?.FirstOrDefault()?.FirstOrDefault()?.Date.Year ?? 0;
+
+
+                    // in the month-year loop by supplier
+                    foreach (var supplier in allSupplier!)
+                    {
+                        // when starting in new supplier, go to beginning
+                        i = 1;
+
+                        // write the name of supplier
+                        var supplierName = supplier.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
+                        worksheet.Cells[row, 2].Value = supplierName;
+                        string whichPayment = string.Empty;
+                        bool forPayment = false;
+                        bool forEnding = false;
+
+                        // make loop for the two categories
+                        for (i = 1; i != 5; i++)
+                        {
+                            // decide category to use either beginning or purchase
+                            switch (i)
+                            {
+                                case 1:
+                                    categorized = beginning;
+                                    whichPayment = "beginning";
+                                    break;
+                                case 2:
+                                    categorized = purchases;
+                                    whichPayment = "purchases";
+                                    break;
+                                case 3:
+                                    forPayment = true;
+                                    break;
+                                case 4:
+                                    forEnding = true;
+                                    break;
+                            }
+
+                            if (forPayment)
+                            {
+                                switch (whichPayment)
+                                {
+                                    case "beginning":
+                                        categorized = beginningPaid;
+                                        break;
+                                    case "purchases":
+                                        categorized = purchasesPaid;
+                                        break;
+                                }
+                            }
+
+                            if (categorized != null)
+                            {
+                                // iterate through the date range, find which month-year
+                                foreach (var monthYearChoice in categorized)
+                                {
+                                    // if the month-year was found in iteration, write
+                                    if (monthYearChoice.FirstOrDefault()?.Date.Month == monthYear.FirstOrDefault()?.Date.Month &&
+                                        monthYearChoice.FirstOrDefault()?.Date.Year == monthYear.FirstOrDefault()?.Date.Year)
+                                    {
+                                        // write the data per category
+                                        decimal gross = monthYearChoice
+                                            .Where(rr => rr.Date.Month == monthInt && rr.Date.Year == yearInt)
+                                            .Where(rr => rr.PurchaseOrder?.Supplier?.SupplierName == supplier
+                                                .FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName)
+                                            .Sum(rr => rr.Amount);
+                                        decimal volume = monthYearChoice
+                                            .Where(rr => rr.Date.Month == monthInt && rr.Date.Year == yearInt)
+                                            .Where(rr => rr.PurchaseOrder?.Supplier?.SupplierName == supplier
+                                                .FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName)
+                                            .Sum(rr => rr.QuantityReceived);
+                                        decimal ewt = (gross / 1.12m) * 0.01m;
+                                        decimal net = gross - ewt;
+
+                                        worksheet.Cells[row, (i * 5)-1].Value = volume;
+                                        worksheet.Cells[row, (i*5)].Value = gross;
+                                        worksheet.Cells[row, (i*5)+1].Value = ewt;
+                                        worksheet.Cells[row, (i*5)+2].Value = net;
+                                        worksheet.Cells[row, (i*5)-1].Style.Numberformat.Format = currencyFormat;
+                                        worksheet.Cells[row, (i*5)].Style.Numberformat.Format = currencyFormat;
+                                        worksheet.Cells[row, (i*5)+1].Style.Numberformat.Format = currencyFormat;
+                                        worksheet.Cells[row, (i*5)+2].Style.Numberformat.Format = currencyFormat;
+
+                                        // add to subtotals
+                                        if (i == 1)
+                                        {
+                                            subtotalVolumeBeginning = subtotalVolumeBeginning + volume;
+                                            subtotalGrossBeginning = subtotalGrossBeginning + gross;
+                                            subtotalEwtBeginning = subtotalEwtBeginning + ewt;
+                                            subtotalNetBeginning = subtotalNetBeginning + net;
+                                            currentVolumeEnding = currentVolumeEnding + volume;
+                                            currentGrossEnding = currentGrossEnding + gross;
+                                            currentEwtEnding = currentEwtEnding + ewt;
+                                            currentNetEnding = currentNetEnding + net;
+                                        }
+                                        if (i == 2)
+                                        {
+                                            subtotalVolumePurchases = subtotalVolumePurchases + volume;
+                                            subtotalGrossPurchases = subtotalGrossPurchases + gross;
+                                            subtotalEwtPurchases = subtotalEwtPurchases + ewt;
+                                            subtotalNetPurchases = subtotalNetPurchases + net;
+                                            currentVolumeEnding = currentVolumeEnding + volume;
+                                            currentGrossEnding = currentGrossEnding + gross;
+                                            currentEwtEnding = currentEwtEnding + ewt;
+                                            currentNetEnding = currentNetEnding + net;
+                                        }
+                                        if (i == 3)
+                                        {
+                                            subtotalVolumePayments = subtotalVolumePayments + volume;
+                                            subtotalGrossPayments = subtotalGrossPayments + gross;
+                                            subtotalEwtPayments = subtotalEwtPayments + ewt;
+                                            subtotalNetPayments = subtotalNetPayments + net;
+                                            currentVolumeEnding = currentVolumeEnding - volume;
+                                            currentGrossEnding = currentGrossEnding - gross;
+                                            currentEwtEnding = currentEwtEnding - ewt;
+                                            currentNetEnding = currentNetEnding - net;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (forEnding)
+                            {
+                                worksheet.Cells[row, 19].Value = currentVolumeEnding;
+                                worksheet.Cells[row, 20].Value = currentGrossEnding;
+                                worksheet.Cells[row, 21].Value = currentEwtEnding;
+                                worksheet.Cells[row, 22].Value = currentNetEnding;
+                                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat;
+                                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat;
+                                currentVolumeEnding = 0m;
+                                currentGrossEnding = 0m;
+                                currentEwtEnding = 0m;
+                                currentNetEnding = 0m;
+                            }
+
+                            forPayment = false;
+                        }
+                        // after the four categories, next supplier
+                        row++;
+                    }
+
+                    #region == Subtotal Inputting ==
+                    // after all supplier, input subtotals if not zero
+                    if (subtotalGrossBeginning != 0m)
+                    {
+                        worksheet.Cells[row, 4].Value = subtotalVolumeBeginning;
+                        worksheet.Cells[row, 5].Value = subtotalGrossBeginning;
+                        worksheet.Cells[row, 6].Value = subtotalEwtBeginning;
+                        worksheet.Cells[row, 7].Value = subtotalNetBeginning;
+
+                        using (var range = worksheet.Cells[row, 4, row, 7])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Numberformat.Format = currencyFormat;
+                        }
+                    }
+                    if (subtotalGrossPurchases != 0m)
+                    {
+                        worksheet.Cells[row, 9].Value = subtotalVolumePurchases;
+                        worksheet.Cells[row, 10].Value = subtotalGrossPurchases;
+                        worksheet.Cells[row, 11].Value = subtotalEwtPurchases;
+                        worksheet.Cells[row, 12].Value = subtotalNetPurchases;
+
+                        using (var range = worksheet.Cells[row, 9, row, 12])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Numberformat.Format = currencyFormat;
+                        }
+                    }
+                    if (subtotalGrossPayments != 0m)
+                    {
+                        worksheet.Cells[row, 14].Value = subtotalVolumePayments;
+                        worksheet.Cells[row, 15].Value = subtotalGrossPayments;
+                        worksheet.Cells[row, 16].Value = subtotalEwtPayments;
+                        worksheet.Cells[row, 17].Value = subtotalNetPayments;
+
+                        using (var range = worksheet.Cells[row, 14, row, 17])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Numberformat.Format = currencyFormat;
+                        }
+                    }
+                    #endregion
+
+                    #region == Ending Subtotal and Grand Total Processes ==
+                    // input subtotal of ending
+                    subtotalVolumeEnding = subtotalVolumeBeginning + subtotalVolumePurchases - subtotalVolumePayments;
+                    subtotalGrossEnding = subtotalGrossBeginning + subtotalGrossPurchases - subtotalGrossPayments;
+                    subtotalEwtEnding = subtotalEwtBeginning + subtotalEwtPurchases - subtotalEwtPayments;
+                    subtotalNetEnding = subtotalNetBeginning + subtotalNetPurchases - subtotalNetPayments;
+
+                    worksheet.Cells[row, 19].Value = subtotalVolumeEnding;
+                    worksheet.Cells[row, 20].Value = subtotalGrossEnding;
+                    worksheet.Cells[row, 21].Value = subtotalEwtEnding;
+                    worksheet.Cells[row, 22].Value = subtotalNetEnding;
+                    using (var range = worksheet.Cells[row, 19, row, 22])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Numberformat.Format = currencyFormat;
+                    }
+
+                    // after inputting all subtotals, next row
+                    row++;
+
+                    // after inputting all subtotals, add subtotals to grandtotal
+                    grandTotalVolumeBeginning = grandTotalVolumeBeginning + subtotalVolumeBeginning;
+                    grandTotalGrossBeginning = grandTotalGrossBeginning + subtotalGrossBeginning;
+                    grandTotalEwtBeginning = grandTotalEwtBeginning + subtotalEwtBeginning;
+                    grandTotalNetBeginning = grandTotalNetBeginning + subtotalNetBeginning;
+
+                    grandTotalVolumePurchases = grandTotalVolumePurchases + subtotalVolumePurchases;
+                    grandTotalGrossPurchases = grandTotalGrossPurchases + subtotalGrossPurchases;
+                    grandTotalEwtPurchases = grandTotalEwtPurchases + subtotalEwtPurchases;
+                    grandTotalNetPurchases = grandTotalNetPurchases + subtotalNetPurchases;
+
+                    grandTotalVolumePayments = grandTotalVolumePayments + subtotalVolumePayments;
+                    grandTotalGrossPayments = grandTotalGrossPayments + subtotalGrossPayments;
+                    grandTotalEwtPayments = grandTotalEwtPayments + subtotalEwtPayments;
+                    grandTotalNetPayments = grandTotalNetPayments + subtotalNetPayments;
+
+                    grandTotalVolumeEnding = grandTotalVolumeEnding + subtotalVolumeEnding;
+                    grandTotalGrossEnding = grandTotalGrossEnding + subtotalGrossEnding;
+                    grandTotalEwtEnding = grandTotalEwtEnding + subtotalEwtEnding;
+                    grandTotalNetEnding = grandTotalNetEnding + subtotalNetEnding;
+
+                    // reset subtotals
+                    subtotalVolumePurchases = 0m;
+                    subtotalGrossPurchases = 0m;
+                    subtotalEwtPurchases = 0m;
+                    subtotalNetPurchases = 0m;
+                    subtotalVolumeBeginning = 0m;
+                    subtotalGrossBeginning = 0m;
+                    subtotalEwtBeginning = 0m;
+                    subtotalNetBeginning = 0m;
+                    currentVolumeEnding = 0m;
+                    currentGrossEnding = 0m;
+                    currentEwtEnding = 0m;
+                    currentNetEnding = 0m;
+                    subtotalVolumePayments = 0m;
+                    subtotalGrossPayments = 0m;
+                    subtotalEwtPayments = 0m;
+                    subtotalNetPayments = 0m;
+
+                    #endregion
+
+                }
+
+                row++;
+
+                #region == Grand Total Inputting ==
+                worksheet.Cells[row, 2].Value = "GRAND TOTALS:";
+                worksheet.Cells[row, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                worksheet.Cells[row, 4].Value = grandTotalVolumeBeginning;
+                worksheet.Cells[row, 5].Value = grandTotalGrossBeginning;
+                worksheet.Cells[row, 6].Value = grandTotalEwtBeginning;
+                worksheet.Cells[row, 7].Value = grandTotalNetBeginning;
+                worksheet.Cells[row, 9].Value = grandTotalVolumePurchases;
+                worksheet.Cells[row, 10].Value = grandTotalGrossPurchases;
+                worksheet.Cells[row, 11].Value = grandTotalEwtPurchases;
+                worksheet.Cells[row, 12].Value = grandTotalNetPurchases;
+                worksheet.Cells[row, 14].Value = grandTotalVolumePayments;
+                worksheet.Cells[row, 15].Value = grandTotalGrossPayments;
+                worksheet.Cells[row, 16].Value = grandTotalEwtPayments;
+                worksheet.Cells[row, 17].Value = grandTotalNetPayments;
+                worksheet.Cells[row, 19].Value = grandTotalVolumeEnding;
+                worksheet.Cells[row, 20].Value = grandTotalGrossEnding;
+                worksheet.Cells[row, 21].Value = grandTotalEwtEnding;
+                worksheet.Cells[row, 22].Value = grandTotalNetEnding;
+                using (var range = worksheet.Cells[row, 4, row, 22])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Numberformat.Format = currencyFormat;
+                }
+                using (var range = worksheet.Cells[row, 1, row, 22])
+                {
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                }
+                #endregion
+
+                worksheet.Cells.AutoFitColumns();
+
+                worksheet.Column(3).Width = 1;
+                worksheet.Column(8).Width = 1;
+                worksheet.Column(13).Width = 1;
+                worksheet.Column(18).Width = 1;
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Trade Payable Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+
+                return RedirectToAction(nameof(TradePayableReport));
+            }
+
+        }
+
+        #endregion -- Generate AP Trade Report --
     }
 }
