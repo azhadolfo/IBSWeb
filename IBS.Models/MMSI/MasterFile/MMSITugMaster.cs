@@ -8,7 +8,7 @@ namespace IBS.Models.MMSI.MasterFile
         [Key]
         public int TugMasterId { get; set; }
 
-        [StringLength(5, MinimumLength = 5, ErrorMessage = "Tugboat master number must be 5 characters long.")]
+        [StringLength(5, ErrorMessage = "Tugboat master number must be 5 characters long.")]
         [Column(TypeName = "varchar(5)")]
         public string TugMasterNumber { get; set; }
 

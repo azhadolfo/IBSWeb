@@ -150,6 +150,9 @@ namespace IBS.DataAccess.Repository.IRepository
         IPrincipalRepository Principal { get; }
         ITerminalRepository Terminal { get; }
         ITugboatRepository Tugboat { get; }
+        ITugMasterRepository TugMaster { get; }
+        ITugboatOwnerRepository TugboatOwner { get; }
+        IUserAccessRepository UserAccess { get; }
         IVesselRepository Vessel { get; }
 
         #endregion

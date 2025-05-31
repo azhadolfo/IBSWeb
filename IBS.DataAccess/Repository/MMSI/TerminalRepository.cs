@@ -33,12 +33,13 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public override async Task<IEnumerable<MMSITerminal>> GetAllAsync(Expression<Func<MMSITerminal, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSITerminal> query = dbSet;
+            IQueryable<MMSITerminal> query = dbSet
+                .Include(a => a.Port)
+                .OrderBy(t => t.TerminalName);
+
             if (filter != null)
             {
-                query = query.Where(filter)
-                    .Include(a => a.Port)
-                    .OrderBy(t => t.TerminalName);
+                query = query.Where(filter);
             }
 
             return await query.ToListAsync(cancellationToken);

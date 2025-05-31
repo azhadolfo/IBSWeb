@@ -24,15 +24,16 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public override async Task<IEnumerable<MMSIDispatchTicket>> GetAllAsync(Expression<Func<MMSIDispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            IQueryable<MMSIDispatchTicket> query = dbSet;
+            IQueryable<MMSIDispatchTicket> query = dbSet
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel);
+
             if (filter != null)
             {
-                query = query.Where(filter)
-                    .Include(a => a.Service)
-                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                    .Include(a => a.Tugboat)
-                    .Include(a => a.TugMaster)
-                    .Include(a => a.Vessel);
+                query = query.Where(filter);
             }
 
             return await query.ToListAsync(cancellationToken);

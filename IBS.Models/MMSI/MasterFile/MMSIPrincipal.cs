@@ -10,7 +10,7 @@ namespace IBS.Models.MMSI.MasterFile
         [Key]
         public int PrincipalId { get; set; }
 
-        [StringLength(4, MinimumLength = 4, ErrorMessage = "Principal number must be 4 characters long.")]
+        [StringLength(4, ErrorMessage = "Principal number must be 4 characters long.")]
         [Column(TypeName = "varchar(4)")]
         public string PrincipalNumber { get; set; }
 

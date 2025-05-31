@@ -34,10 +34,12 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Include(t => t.Customer)
                 .Include(t => t.Terminal).ThenInclude(t => t!.Port)
                 .Include(t => t.Service);
+
             if (filter != null)
             {
                 query = query.Where(filter);
             }
+
             return await query.ToListAsync(cancellationToken);
         }
 
@@ -145,18 +147,6 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
 
             return vessels;
-        }
-
-        public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true)
-                .OrderBy(s => s.CustomerName)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.CustomerId.ToString(),
-                    Text = s.CustomerName
-                }).ToListAsync(cancellationToken);
         }
     }
 }

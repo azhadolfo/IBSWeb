@@ -31,6 +31,7 @@ namespace IBS.DataAccess.Repository.MMSI
         public override async Task<IEnumerable<MMSICollection>> GetAllAsync(Expression<Func<MMSICollection, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<MMSICollection> query = dbSet.Include(c => c.Customer);
+
             if (filter != null)
             {
                 query = query.Where(filter);

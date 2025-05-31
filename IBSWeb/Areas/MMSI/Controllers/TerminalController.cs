@@ -22,12 +22,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var terminals = _db.MMSITerminals
-                .Include(t => t.Port)
-                .ToList();
-
+            var terminals = await _unitOfWork.Terminal.GetAllAsync(null, cancellationToken);
             return View(terminals);
         }
 
@@ -55,8 +52,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                await _db.MMSITerminals.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Terminal.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
@@ -74,15 +70,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSITerminals.FirstOrDefaultAsync(i => i.TerminalId == id, cancellationToken);
+                var model = await _unitOfWork.Terminal.GetAsync(i => i.TerminalId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSITerminals.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Terminal.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -97,10 +92,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSITerminals
-                .Where(a => a.TerminalId == id)
-                .Include(t => t.Port)
-                .FirstOrDefault();
+            var model = await _unitOfWork.Terminal.GetAsync(a => a.TerminalId == id, cancellationToken);
 
             if (model == null)
             {
@@ -120,7 +112,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            var currentModel = await _db.MMSITerminals.FindAsync(model.TerminalId);
+            var currentModel = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -135,7 +127,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TerminalNumber = model.TerminalNumber;
                 currentModel.TerminalName = model.TerminalName;
                 currentModel.PortId = model.PortId;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));

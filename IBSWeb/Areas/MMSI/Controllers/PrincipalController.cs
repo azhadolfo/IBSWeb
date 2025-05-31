@@ -136,6 +136,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 currentModel.Address = model.Address;
                 currentModel.PrincipalName = model.PrincipalName;
+                currentModel.PrincipalNumber = model.PrincipalNumber;
                 currentModel.TIN = model.TIN;
                 currentModel.BusinessType = model.BusinessType;
                 currentModel.PrincipalName = model.PrincipalName;
