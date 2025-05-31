@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -12,16 +13,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly ILogger<TugMasterController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TugMasterController(ApplicationDbContext db, ILogger<TugMasterController> logger)
+        public TugMasterController(ApplicationDbContext db, ILogger<TugMasterController> logger, IUnitOfWork unitOfWork)
         {
             _db = db;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancallationToken)
         {
-            var tugMaster = _db.MMSITugMasters.ToList();
+            var tugMaster = await _unitOfWork.TugMaster.GetAllAsync(null, cancallationToken);
             return View(tugMaster);
         }
 
@@ -44,8 +47,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                await _db.MMSITugMasters.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.TugMaster.AddAsync(model, cancellationToken);
+                await _unitOfWork.TugMaster.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
@@ -62,16 +65,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSITugMasters
-                    .FirstOrDefaultAsync(i => i.TugMasterId == id, cancellationToken);
+                var model = await _unitOfWork.TugMaster.GetAsync(i => i.TugMasterId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSITugMasters.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.TugMaster.RemoveAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -86,9 +88,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSITugMasters
-                .FirstOrDefaultAsync(a => a.TugMasterId == id, cancellationToken);
-
+            var model = await _unitOfWork.TugMaster.GetAsync(a => a.TugMasterId == id, cancellationToken);
             return View(model);
         }
 
@@ -101,7 +101,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            var currentModel = await _db.MMSITugMasters.FindAsync(model.TugMasterId);
+            var currentModel = await _unitOfWork.TugMaster.GetAsync(t => t.TugMasterId == model.TugMasterId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -116,7 +116,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TugMasterNumber = model.TugMasterNumber;
                 currentModel.TugMasterName = model.TugMasterName;
                 currentModel.IsActive = model.IsActive;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.TugMaster.SaveAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
