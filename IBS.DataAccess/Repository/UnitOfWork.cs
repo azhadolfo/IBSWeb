@@ -163,6 +163,7 @@ namespace IBS.DataAccess.Repository
         public ITugboatRepository Tugboat { get; private set; }
         public ITugMasterRepository TugMaster { get; private set; }
         public ITugboatOwnerRepository TugboatOwner { get; private set; }
+        public IUserAccessRepository UserAccess { get; private set; }
         public IVesselRepository Vessel { get; private set; }
 
         #endregion
@@ -270,6 +271,7 @@ namespace IBS.DataAccess.Repository
             Tugboat = new TugboatRepository(_db);
             TugMaster = new TugMasterRepository(_db);
             TugboatOwner = new TugboatOwnerRepository(_db);
+            UserAccess = new UserAccessRepository(_db);
             Vessel = new VesselRepository(_db);
 
             #endregion

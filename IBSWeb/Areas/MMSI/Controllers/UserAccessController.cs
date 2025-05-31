@@ -26,10 +26,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         // GET
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var model = await _dbContext.MMSIUserAccesses
-                .OrderBy(ua => ua.UserName)
-                .ToListAsync(cancellationToken);
-
+            var model = await _unitOfWork.UserAccess.GetAllAsync(null, cancellationToken);
             return View(model);
         }
 
@@ -50,7 +47,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid input please try again.";
-
                 return RedirectToAction(nameof(Index));
             }
 
@@ -58,9 +54,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var tempModel = await _dbContext.MMSIUserAccesses
-                    .Where(ua => ua.UserId == model.UserId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var tempModel = await _unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId, cancellationToken);
 
                 if (tempModel != null)
                 {
@@ -68,14 +62,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 var selectedUser = _dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
-
                 model.UserName = selectedUser!.UserName;
-
-                await _dbContext.MMSIUserAccesses.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.UserAccess.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "User access created successfully.";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -84,7 +74,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
                 model.Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
-
                 return View(model);
             }
         }
@@ -92,16 +81,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
         {
-            var model = await _dbContext.MMSIUserAccesses.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.UserAccess.GetAsync(ua => ua.Id == id, cancellationToken);
 
-            if (model == null)
+            if (model != null)
             {
-                TempData["error"] = "User access not found.";
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            return View(model);
+            TempData["error"] = "User access not found.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -110,16 +98,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid input please try again.";
-
                 return RedirectToAction(nameof(Index));
             }
 
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var tempModel = await _dbContext.MMSIUserAccesses
-                    .FindAsync(model.Id, cancellationToken);
+                var tempModel = await _unitOfWork.UserAccess.GetAsync(ua => ua.Id == model.Id, cancellationToken);
 
                 if (tempModel == null)
                 {
@@ -133,12 +119,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 tempModel.CanApproveTariff = model.CanApproveTariff;
                 tempModel.CanCreateBilling = model.CanCreateBilling;
                 tempModel.CanCreateCollection = model.CanCreateCollection;
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-
                 TempData["success"] = "User access edited successfully.";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -147,7 +130,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
                 model.Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
-
                 return View(model);
             }
         }
