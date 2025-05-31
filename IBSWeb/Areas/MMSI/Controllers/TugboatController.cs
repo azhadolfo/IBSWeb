@@ -23,18 +23,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var tugboat = _db.MMSITugboats.ToList();
-
+            var tugboat = await _unitOfWork.Tugboat.GetAllAsync(null, cancellationToken);
             return View(tugboat);
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            MMSITugboat tugboat = new MMSITugboat();
-            tugboat.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
+            var tugboat = new MMSITugboat
+            {
+                CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken)
+            };
 
             return View(tugboat);
         }
@@ -45,7 +46,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
-
                 return View(model);
             }
 
@@ -58,21 +58,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     model.TugboatOwnerId = null;
                 }
 
-                await _db.MMSITugboats.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Tugboat.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create tugboat.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
@@ -80,26 +75,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSITugboats.FirstOrDefaultAsync(i => i.TugboatId == id, cancellationToken);
+                var model = await _unitOfWork.Tugboat.GetAsync(i => i.TugboatId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSITugboats.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Tugboat.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete tugboat.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -107,7 +97,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSITugboats.FirstOrDefaultAsync(a => a.TugboatId == id, cancellationToken);
+            var model = await _unitOfWork.Tugboat.GetAsync(a => a.TugboatId == id, cancellationToken);
 
             if (model == null)
             {
@@ -115,7 +105,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
-
             return View(model);
         }
 
@@ -128,7 +117,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            var currentModel = await _db.MMSITugboats.FindAsync(model.TugboatId, cancellationToken);
+            var currentModel = await _unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugboatId, cancellationToken);
 
             if (currentModel == null)
             {
@@ -144,7 +133,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.IsCompanyOwned = model.IsCompanyOwned;
                 currentModel.TugboatNumber = model.TugboatNumber;
                 currentModel.TugboatName = model.TugboatName;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Tugboat.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
