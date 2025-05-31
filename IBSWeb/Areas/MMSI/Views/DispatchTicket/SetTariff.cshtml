@@ -79,7 +79,8 @@
             <div class="border-2 px-3 mt-2">
                 <div asp-validation-summary="ModelOnly"></div>
 
-                <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" id="DispatchTicketId" type="hidden">
+                <input asp-for="DispatchTicketId" value="@Model.DispatchTicketId" id="DispatchTicketId" type="hidden" />
+                <input value="@Model.CustomerId" id="CustomerId" type="hidden" />
 
                 <div class="row d-flex justify-content-start px-3">
                     <div class="col">
@@ -300,13 +301,6 @@
     <script>
 
         $(document).ready(function () {
-            
-            $('#CustomerId').select2({
-                placeholder: "Select Customer", // Custom placeholder
-                allowClear: true, // Optional: adds an "x" to clear selection
-                width: '100%', // Ensures it respects your width:100% style
-                theme: 'classic'
-            });
 
             function ValueChange()
             {
@@ -520,6 +514,7 @@
             });
 
             ValueChange();
+            CustomerChange();
         });
 
     </script>
