@@ -111,6 +111,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITugboat model, CancellationToken cancellationToken)
         {
+            model.CompanyList = await _unitOfWork.Tugboat.GetMMSICompanyOwnerSelectListById(cancellationToken);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
