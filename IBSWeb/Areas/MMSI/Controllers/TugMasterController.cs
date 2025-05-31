@@ -117,6 +117,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TugMasterName = model.TugMasterName;
                 currentModel.IsActive = model.IsActive;
                 await _unitOfWork.TugMaster.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
