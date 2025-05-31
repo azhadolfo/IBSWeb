@@ -57,6 +57,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
+            model = await GetSelectLists(model, cancellationToken);
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "Invalid entry, please try again.";
