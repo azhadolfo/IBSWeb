@@ -83,13 +83,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = await _unitOfWork.UserAccess.GetAsync(ua => ua.Id == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                return View(model);
+                TempData["error"] = "User access not found.";
+                return RedirectToAction(nameof(Index));
             }
 
-            TempData["error"] = "User access not found.";
-            return RedirectToAction(nameof(Index));
+            return View(model);
         }
 
         [HttpPost]
