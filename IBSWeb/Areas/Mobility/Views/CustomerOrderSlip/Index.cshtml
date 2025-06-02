@@ -328,19 +328,25 @@
                     type: "POST",
                     data: { jsonModel: JSON.stringify(data) },
                     xhrFields: { responseType: 'blob' },
-                    success: function (blob, textStatus, xhr) {
-                        const disposition = xhr.getResponseHeader('Content-Disposition');
-                        const fileName = disposition && disposition.indexOf('filename=') !== -1
-                            ? disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1].replace(/['"]/g, '')
-                            : "download.xlsx";
-
-                        const link = document.createElement('a');
-                        link.href = window.URL.createObjectURL(blob);
-                        link.download = fileName;
-                        link.click();
+                    success: function (response, textStatus, xhr) {
+                        const contentType = xhr.getResponseHeader('Content-Type');
+                        if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+                            const disposition = xhr.getResponseHeader('Content-Disposition');
+                            const fileName = disposition && disposition.indexOf('filename=') !== -1
+                                ? disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1].replace(/['"]/g, '')
+                                : "download.xlsx";
+                            const link = document.createElement('a');
+                            link.href = window.URL.createObjectURL(response);
+                            link.download = fileName;
+                            link.click();
+                            window.URL.revokeObjectURL(link.href);
+                        } else {
+                            window.location.href = '@Url.Action("Index", "CustomerOrderSlip", new { area = "Mobility" })';
+                        }
                     },
                     error: function (xhr, status, error) {
-                        console.error("AJAX error:", error);
+                        console.error("AJAX error:", status, error);
+                        window.location.href = '@Url.Action("Index", "CustomerOrderSlip", new { area = "Mobility" })';
                     }
                 });
             }
