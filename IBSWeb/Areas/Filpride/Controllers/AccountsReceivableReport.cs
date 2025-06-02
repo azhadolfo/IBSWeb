@@ -2209,5 +2209,313 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        ///TODO: Pending implementation of the OTC Fuel Sales Report
+
+        [HttpGet]
+        public IActionResult PostedCollection()
+        {
+            return View();
+        }
+
+        #region -- Generated Posted Collection Report as Quest PDF
+
+        public async Task<IActionResult> GeneratePostedCollection(ViewModelBook model)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(PostedCollection));
+            }
+
+            try
+            {
+                var collectionReceiptReport = await _unitOfWork.FilprideReport
+                    .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims!);
+
+                if (!collectionReceiptReport.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(PostedCollection));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Legal.Landscape());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(50).Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item()
+                                        .Text("COLLECTION")
+                                        .FontSize(20).SemiBold();
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date From: ").SemiBold();
+                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
+                                    });
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date To: ").SemiBold();
+                                        text.Span(model.DateTo.ToString(SD.Date_Format));
+                                    });
+                                });
+
+                                row.ConstantItem(size: 100)
+                                    .Height(50)
+                                    .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
+                            });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date(INV)").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Check").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Bank").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Check No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                });
+
+                            #endregion
+
+                            #region -- Loop to Show Records
+
+                                decimal currentAmount = 0;
+                                decimal totalAmount = 0;
+
+                                foreach (var record in collectionReceiptReport)
+                                {
+                                    currentAmount = (record.CashAmount + record.CheckAmount + record.ManagerCheckAmount);
+
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckBank);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount.ToString(SD.Two_Decimal_Format));
+
+                                    totalAmount += currentAmount;
+                                }
+
+                            #endregion
+
+                            #region -- Create Table Cell for Totals
+
+                                table.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate posted collection report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(PostedCollection));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate Posted Collection Excel File --
+
+            public async Task<IActionResult> GeneratePostedCollectionExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+            {
+
+                if (!ModelState.IsValid)
+                {
+                    TempData["error"] = "Please input date range";
+                    return RedirectToAction(nameof(PostedCollection));
+                }
+
+                try
+                {
+                    var dateFrom = model.DateFrom;
+                    var dateTo = model.DateTo;
+                    var extractedBy = _userManager.GetUserName(User)!;
+                    var companyClaims = await GetCompanyClaimAsync();
+                    if (companyClaims == null)
+                    {
+                        return BadRequest();
+                    }
+
+                    var collectionReceiptReport = await _unitOfWork.FilprideReport
+                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims);
+
+                    using var package = new ExcelPackage();
+                    var worksheet = package.Workbook.Worksheets.Add("COLLECTION");
+
+                    var mergedCells = worksheet.Cells["A1:C1"];
+                    mergedCells.Merge = true;
+                    mergedCells.Value = "COLLECTION";
+                    mergedCells.Style.Font.Size = 16;
+
+                    worksheet.Cells["A2"].Value = "Date Range:";
+                    worksheet.Cells["A3"].Value = "Extracted By:";
+                    worksheet.Cells["A4"].Value = "Company:";
+
+                    worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                    worksheet.Cells["B3"].Value = $"{extractedBy}";
+                    worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                    worksheet.Cells["A7"].Value = "CUSTOMER No.";
+                    worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+                    worksheet.Cells["C7"].Value = "ACCT. TYPE";
+                    worksheet.Cells["D7"].Value = "TRAN. DATE (INV)";
+                    worksheet.Cells["E7"].Value = "INVOICE No.";
+                    worksheet.Cells["F7"].Value = "DUE DATE";
+                    worksheet.Cells["G7"].Value = "DATE OF CHECK";
+                    worksheet.Cells["H7"].Value = "BANK";
+                    worksheet.Cells["I7"].Value = "CHECK No.";
+                    worksheet.Cells["J7"].Value = "AMOUNT";
+
+                    var headerCells = worksheet.Cells["A7:J7"];
+                    headerCells.Style.Font.Size = 11;
+                    headerCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    headerCells.Style.Fill.BackgroundColor.SetColor(Color.DarkGray);
+                    headerCells.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    headerCells.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                    headerCells.Style.Font.Bold = true;
+
+                    // initializing records entry
+                    int row = 8;
+                    int startingRow = row - 1;
+                    string currencyFormat = "#,##0.00";
+                    decimal currentAmount = 0;
+                    decimal totalAmount = 0;
+
+                    foreach (var cr in collectionReceiptReport)
+                    {
+                        currentAmount = (cr.CashAmount + cr.CheckAmount + cr.ManagerCheckAmount);
+                        worksheet.Cells[row, 1].Value = cr.Customer?.CustomerCode ?? "";
+                        worksheet.Cells[row, 2].Value = cr.Customer?.CustomerName ?? "";
+                        worksheet.Cells[row, 3].Value = cr.Customer?.CustomerType ?? "";
+                        worksheet.Cells[row, 4].Value = cr.SalesInvoice?.TransactionDate ?? default;
+                        worksheet.Cells[row, 5].Value = cr.SalesInvoice?.SalesInvoiceNo ?? "";
+                        worksheet.Cells[row, 6].Value = cr.SalesInvoice?.DueDate ?? default;
+                        worksheet.Cells[row, 7].Value = cr.CheckDate;
+                        worksheet.Cells[row, 8].Value = cr.CheckBank;
+                        worksheet.Cells[row, 9].Value = cr.CheckNo;
+                        worksheet.Cells[row, 10].Value = currentAmount;
+
+                        worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+
+                        totalAmount += currentAmount;
+                        row++;
+                    }
+
+                    worksheet.Cells[row, 9].Value = "Total:";
+                    worksheet.Cells[row, 10].Value = totalAmount;
+                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    using (var range = worksheet.Cells[row, 1, row, 10])
+                    {
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+                        range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
+                    }
+                    using (var range = worksheet.Cells[row, 9, row, 10])
+                    {
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Font.Bold = true;
+                    }
+
+                    int lastRow = row-1;
+
+                    using (var range = worksheet.Cells[startingRow-1, 10, lastRow, 10])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                    }
+
+                    worksheet.Cells.AutoFitColumns();
+
+                    var excelBytes = package.GetAsByteArray();
+
+                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Collection Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                }
+                catch (Exception ex)
+                {
+                    ViewData["error"] = ex.Message;
+
+                    return RedirectToAction(nameof(PostedCollection));
+                }
+            }
+
+        #endregion -- Generate Posted Collection Excel File --
     }
 }
