@@ -70,7 +70,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             ViewBag.userDepartment = findUser?.Department;
 
@@ -633,19 +633,19 @@ namespace IBSWeb.Areas.Mobility.Controllers
         }
 
         [HttpPost]
+        [Area("Mobility")]
         public async Task<IActionResult> GenerateIndexExcel(string jsonModel, CancellationToken cancellationToken)
         {
-
             var findUser = await _dbContext.ApplicationUsers
                 .Where(user => user.Id == _userManager.GetUserId(this.User))
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             try
             {
-                if (string.IsNullOrWhiteSpace(jsonModel))
+                if (string.IsNullOrWhiteSpace(jsonModel) || jsonModel == "[]")
                 {
-                    TempData["error"] = "The input JSON model is empty or invalid.";
-                    return RedirectToAction(nameof(Index));
+                    TempData["error"] = "The data is empty or invalid.";
+                    return Json(new { success = false, error = "The data is empty or invalid." });
                 }
 
                 List<MobilityCustomerOrderSlip> model;
@@ -656,16 +656,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (JsonSerializationException)
                 {
-                    TempData["error"] = "Failed to deserialize the input JSON model.";
-                    return RedirectToAction(nameof(Index));
+                    return Json(new { success = false, error = "Failed to deserialize the input JSON model." });
                 }
 
-                if (jsonModel != null)
+                if (model != null && model.Count > 0)
                 {
                     using var package = new ExcelPackage();
                     string currencyFormat = "#,##0.00";
                     var worksheet = package.Workbook.Worksheets.Add("Customer Order Slip List");
 
+                    // [Existing Excel generation code remains unchanged]
                     var mergedCells = worksheet.Cells["A1:C1"];
                     mergedCells.Merge = true;
                     mergedCells.Value = "Mobility Customer Order Slip";
@@ -745,27 +745,21 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     var excelBytes = package.GetAsByteArray();
                     var fileName = $"Mobility_Customer_Order_Slip_{DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyyMMddhhmm")}.xlsx";
 
-                    var contentDisposition = new System.Net.Mime.ContentDisposition
+                    Response.Headers.Append("Content-Disposition", new System.Net.Mime.ContentDisposition
                     {
                         FileName = fileName,
-                        Inline = false  // This forces a download
-                    };
-
-                    Response.Headers.Append("Content-Disposition", contentDisposition.ToString());
+                        Inline = false
+                    }.ToString());
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
                 }
-                else
-                {
-                    TempData["error"] = "No Data!";
 
-                    return RedirectToAction(nameof(Index));
-                }
+                TempData["error"] = "The data is empty or invalid.";
+                return Json(new { success = false, error = "The data is empty or invalid." });
             }
             catch (Exception ex)
             {
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return Json(new { success = false, error = ex.Message });
             }
         }
 
