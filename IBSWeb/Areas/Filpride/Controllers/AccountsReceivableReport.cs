@@ -236,7 +236,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        #region -- Generate COS Unserved Volume Excel File --
+        #region -- Generate COS Unserved Volume as Excel File --
 
         public async Task<IActionResult> GenerateCOSUnservedVolumeToExcel(ViewModelBook model)
         {
@@ -341,6 +341,461 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             TempData["error"] = "Please input date from";
             return RedirectToAction(nameof(COSUnservedVolume));
+        }
+
+        #endregion
+
+        [HttpGet]
+        public IActionResult DispatchReport()
+        {
+            return View();
+        }
+
+        #region -- Generated Dispatch Report as Quest PDF
+
+        [HttpPost]
+        public async Task<IActionResult> GeneratedDispatchReport(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(DispatchReport));
+            }
+
+            try
+            {
+                if (string.IsNullOrEmpty(viewModel.ReportType))
+                {
+                    return BadRequest();
+                }
+
+                var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(i => i.Company == companyClaims
+                                      && i.AuthorityToLoadNo != null
+                                      && i.Date >= firstDayOfMonth
+                                      && i.Date <= lastDayOfMonth
+                                      && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
+
+                if (!deliveryReceipts.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(DispatchReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page setup
+
+                        page.Size(PageSizes.Legal.Landscape());
+                        page.Margin(20);
+                        page.DefaultTextStyle(x => x.FontSize(7).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                        var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                        page.Header().Height(50).Row(row =>
+                        {
+                            row.RelativeItem().Column(column =>
+                            {
+                                column.Item()
+                                    .Text("DISPATCH REPORT")
+                                    .FontSize(20).SemiBold();
+
+                                column.Item().Text(text =>
+                                {
+                                    text.Span("Date From: ").SemiBold();
+                                    text.Span(firstDayOfMonth.ToString(SD.Date_Format));
+                                });
+
+                                column.Item().Text(text =>
+                                {
+                                    text.Span("Date To: ").SemiBold();
+                                    text.Span(lastDayOfMonth.ToString(SD.Date_Format));
+                                });
+                            });
+
+                            row.ConstantItem(size: 100)
+                                .Height(50)
+                                .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
+                        });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Column(col =>
+                        {
+                            col.Item().Table(table =>
+                            {
+                                #region -- Columns Definition
+
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                    });
+
+                                #endregion
+
+                                #region -- Table Header
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR Date").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Type").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR#").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Products").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Quantity").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Pick-up Point").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO#").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ATL#").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("COS#").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Hauler Name").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Freight Charge").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ECC").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Freight").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Delivery Date").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Status").SemiBold();
+                                    });
+
+                                #endregion
+
+                                #region -- Initialize Variable for Computation
+
+                                    decimal totalQuantity = 0m;
+                                    decimal totalFreightCharge = 0m;
+                                    decimal totalECC = 0m;
+                                    decimal totalFreightAmount = 0m;
+
+                                #endregion
+
+                                #region -- Loop to Show Records
+
+                                    foreach (var record in deliveryReceipts)
+                                    {
+                                        var quantity = record.Quantity;
+                                        var freightCharge = record.Freight;
+                                        var ecc = record.ECC;
+                                        var totalFreight = quantity * (freightCharge + ecc);
+
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceiptNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity.ToString(SD.Two_Decimal_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.PickUpPoint?.Depot);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Hauler?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freightCharge.ToString(SD.Four_Decimal_Format));
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ecc.ToString(SD.Four_Decimal_Format));
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalFreight.ToString(SD.Two_Decimal_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveredDate?.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Status);
+
+                                        totalQuantity += quantity;
+                                        totalFreightCharge += freightCharge;
+                                        totalECC += ecc;
+                                        totalFreightAmount += totalFreight;
+                                    }
+
+                                #endregion
+
+                                #region -- Create Table Cell for Totals
+
+                                    table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantity.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                    table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightCharge.ToString(SD.Four_Decimal_Format)).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalECC.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightAmount.ToString(SD.Four_Decimal_Format)).SemiBold();
+                                    table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                #endregion
+                            });
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate dispatch report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(DispatchReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate Dispatch Report Excel File --
+        public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(viewModel.ReportType))
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+                var currentUser = _userManager.GetUserName(User)!;
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(i => i.Company == companyClaims
+                        && i.AuthorityToLoadNo != null
+                        && i.Date >= firstDayOfMonth
+                        && i.Date <= lastDayOfMonth
+                        && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
+
+                using (var package = new ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
+
+                    // Insert image from root directory
+                    var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
+                    var picture = worksheet.Drawings.AddPicture("CompanyLogo", new FileInfo(imagePath));
+                    picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
+                    picture.SetSize(200, 60); // Adjust size as needed
+
+                    var mergedCellsA5 = worksheet.Cells["A5:B5"];
+                    mergedCellsA5.Merge = true;
+                    mergedCellsA5.Value = "OPERATION - LOGISTICS";
+
+                    var mergedCellsA6 = worksheet.Cells["A6:B6"];
+                    mergedCellsA6.Merge = true;
+                    mergedCellsA6.Value = $"DISPATCH REPORT AS OF {lastDayOfMonth:dd MMM, yyyy}";
+
+                    var mergedCellsA7 = worksheet.Cells["A7:B7"];
+                    mergedCellsA7.Merge = true;
+                    mergedCellsA7.Value = viewModel.ReportType == "AllDeliveries" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
+
+                    // Table headers
+                    worksheet.Cells["A9"].Value = "DR DATE";
+                    worksheet.Cells["B9"].Value = "CUSTOMER NAME";
+                    worksheet.Cells["C9"].Value = "TYPE";
+                    worksheet.Cells["D9"].Value = "DR NO.";
+                    worksheet.Cells["E9"].Value = "PRODUCTS";
+                    worksheet.Cells["F9"].Value = "QTY.";
+                    worksheet.Cells["G9"].Value = "PICK-UP POINT";
+                    worksheet.Cells["H9"].Value = "PO #";
+                    worksheet.Cells["I9"].Value = "ATL#";
+                    worksheet.Cells["J9"].Value = "COS NO.";
+                    worksheet.Cells["K9"].Value = "HAULER NAME";
+                    worksheet.Cells["L9"].Value = "SUPPLIER";
+                    worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
+                    worksheet.Cells["N9"].Value = "ECC";
+                    worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
+
+                    //TODO Remove this in the future
+                    worksheet.Cells["P9"].Value = "OTC COS No.";
+                    worksheet.Cells["Q9"].Value = "OTC DR No.";
+
+                    if (viewModel.ReportType == "AllDeliveries")
+                    {
+                        worksheet.Cells["R9"].Value = "DELIVERY DATE";
+                        worksheet.Cells["S9"].Value = "STATUS";
+                    }
+
+
+                    int currentRow = 10;
+                    string headerColumn = viewModel.ReportType == "AllDeliveries" ? "S9" : "Q9";
+
+                    var groupedReceipts = deliveryReceipts
+                        .OrderBy(d => d.CustomerOrderSlip!.ProductId)
+                        .ThenBy(d => d.Date)
+                        .GroupBy(d => d.CustomerOrderSlip!.ProductId);
+
+                    decimal grandSumOfFreight = 0;
+                    decimal grandSumOfECC = 0;
+                    decimal grandSumOfTotalFreightAmount = 0;
+                    decimal grandTotalQuantity = 0;
+
+                    foreach (var group in groupedReceipts)
+                    {
+                        string productName = group.First().CustomerOrderSlip!.Product!.ProductName;
+                        decimal sumOfFreight = 0;
+                        decimal sumOfECC = 0;
+                        decimal sumOfTotalFreight = 0;
+                        decimal totalQuantity = 0;
+
+                        foreach (var dr in group)
+                        {
+
+                            var quantity = dr.Quantity;
+                            var freightCharge = dr.Freight;
+                            var ecc = dr.ECC;
+                            var totalFreightAmount = quantity * (freightCharge + ecc);
+
+                            worksheet.Cells[currentRow, 1].Value = dr.Date;
+                            worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
+                            worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
+                            worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                            worksheet.Cells[currentRow, 5].Value = productName;
+                            worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                            worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
+                            worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
+                            worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
+                            worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
+                            worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
+                            worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
+                            worksheet.Cells[currentRow, 13].Value = freightCharge;
+                            worksheet.Cells[currentRow, 14].Value = ecc;
+                            worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
+                            worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
+                            worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
+
+                            if (viewModel.ReportType == "AllDeliveries")
+                            {
+                                worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                                worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            }
+
+                            currentRow++;
+                            totalQuantity += quantity;
+                            sumOfFreight += freightCharge;
+                            sumOfECC += ecc;
+                            sumOfTotalFreight += totalFreightAmount;
+                        }
+
+                        // Subtotal row for each product
+                        worksheet.Cells[currentRow, 5].Value = "SUB TOTAL";
+                        worksheet.Cells[currentRow, 6].Value = totalQuantity;
+                        worksheet.Cells[currentRow, 13].Value = sumOfFreight;
+                        worksheet.Cells[currentRow, 14].Value = sumOfECC;
+                        worksheet.Cells[currentRow, 15].Value = sumOfTotalFreight;
+
+                        using (var subtotalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Adjust range as needed
+                        {
+                            subtotalRowRange.Style.Font.Bold = true; // Make text bold
+                            subtotalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            subtotalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        }
+
+                        grandSumOfFreight += sumOfFreight;
+                        grandSumOfECC += sumOfECC;
+                        grandSumOfTotalFreightAmount += sumOfTotalFreight;
+                        grandTotalQuantity += totalQuantity;
+
+                        currentRow += 2;
+                    }
+
+                    // Grand Total row
+                    worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
+                    worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                    worksheet.Cells[currentRow, 13].Value = grandSumOfFreight;
+                    worksheet.Cells[currentRow, 14].Value = grandSumOfECC;
+                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+
+                    // Adding borders and bold styling to the total row
+                    using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, 19]) // Whole row
+                    {
+                        totalRowRange.Style.Font.Bold = true; // Make text bold
+                        totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+
+                    // Generated by, checked by, received by footer
+                    worksheet.Cells[currentRow + 3, 1, currentRow + 3, 2].Merge = true;
+                    worksheet.Cells[currentRow + 3, 1].Value = "Generated by:";
+                    worksheet.Cells[currentRow + 3, 4].Value = "Noted & Checked by:";
+                    worksheet.Cells[currentRow + 3, 8].Value = "Received by:";
+
+                    worksheet.Cells[currentRow + 4, 1, currentRow + 4, 2].Merge = true;
+                    worksheet.Cells[currentRow + 4, 1].Value = currentUser.ToUpper();
+                    worksheet.Cells[currentRow + 4, 4].Value = "JOEYLITO M. CAILAN";
+                    worksheet.Cells[currentRow + 4, 8].Value = "IVY PAGKATIPUNAN";
+
+                    worksheet.Cells[currentRow + 5, 1, currentRow + 5, 2].Merge = true;
+                    worksheet.Cells[currentRow + 5, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
+                    worksheet.Cells[currentRow + 5, 4].Value = "LOGISTICS SUPERVISOR";
+                    worksheet.Cells[currentRow + 5, 8].Value = "CNC SUPERVISOR";
+
+                    // Styling and formatting (optional)
+                    worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
+                    worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
+
+                    using (var range = worksheet.Cells[$"A9:{headerColumn}"])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(0, 102, 204));
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    }
+
+                    worksheet.Cells.AutoFitColumns();
+                    worksheet.View.FreezePanes(10, 1);
+                    // Return Excel file as response
+                    var stream = new MemoryStream();
+                    package.SaveAs(stream);
+                    stream.Position = 0;
+                    var fileName = $"DispatchReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx";
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(DispatchReport));
+            }
         }
 
         #endregion
