@@ -862,7 +862,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private static string? GenerateFileNameToSave(string incomingFileName, string type)
+        private string? GenerateFileNameToSave(string incomingFileName, string type)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
