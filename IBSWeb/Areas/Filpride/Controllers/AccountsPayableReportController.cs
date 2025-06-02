@@ -2085,7 +2085,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        #region -- Generate GM Report Excel File --
+        #region -- Generate Gross Margin Report as Excel File --
 
         public async Task<IActionResult> GenerateGmReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -2878,7 +2878,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generated Gross Margin Report as Quest PDF
+        #region -- Generated Trade Payable Report as Quest PDF
 
         [HttpPost]
         public async Task<IActionResult> GenerateTradePayableReport(ViewModelBook model)
@@ -3212,7 +3212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        #region -- Generate AP Trade Report Excel File --
+        #region -- Generate Trade Payable Report as Excel File --
 
         public async Task<IActionResult> GenerateTradePayableReportExcelFile(ViewModelBook model, CancellationToken cancellationToken)
         {
