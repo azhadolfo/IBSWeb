@@ -92,6 +92,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .Include(s => s.MobilityStation)
                 .Where(record => record.StationCode == stationCodeClaims);
 
+            if (User.IsInRole("Cashier"))
+            {
+                customerOrderSlip = customerOrderSlip.Where(cos => cos.Status == "Approved" || cos.Status == "Lifted");
+            }
+
             // Apply sorting and execute the query
             var sortedCustomerOrderSlip = await customerOrderSlip
                 .OrderBy(cos => cos.CustomerOrderSlipNo)
@@ -100,7 +105,6 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .ToListAsync(cancellationToken);
 
             return View(sortedCustomerOrderSlip);
-
         }
 
         [HttpGet]
@@ -615,6 +619,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             query = query.Where(cos => cos.StationCode == currentStationCode);
+
+            if (User.IsInRole("Cashier"))
+            {
+                query = query.Where(cos => cos.Status == "Approved" || cos.Status == "Lifted");
+            }
 
             item = await query.OrderBy(cos => cos.Date)
                 .ThenBy(cos => cos.CustomerOrderSlipNo)
