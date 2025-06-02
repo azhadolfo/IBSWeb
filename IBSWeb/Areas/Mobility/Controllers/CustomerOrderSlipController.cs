@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using Quartz.Util;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -768,19 +769,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             try
             {
-                List<MobilityCustomerOrderSlip> model;
+                if (jsonModel.IsNullOrWhiteSpace() || jsonModel == "[]")
+                {
+                    TempData["error"] = "The data is empty or invalid.";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 try
                 {
-                    model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel)!;
+                    var model = JsonConvert.DeserializeObject<List<MobilityCustomerOrderSlip>>(jsonModel)!;
+                    return View(model);
                 }
                 catch (JsonSerializationException)
                 {
                     TempData["error"] = "Failed to deserialize the input JSON model.";
-                    return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));
                 }
 
-                return View(model);
             }
             catch (Exception ex)
             {
