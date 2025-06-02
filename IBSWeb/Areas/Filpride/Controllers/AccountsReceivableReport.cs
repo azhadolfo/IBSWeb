@@ -2517,5 +2517,274 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
         #endregion -- Generate Posted Collection Excel File --
+
+        [HttpGet]
+        public IActionResult AgingReport()
+        {
+            return View();
+        }
+
+        #region -- Generated Aging Report as Quest PDF
+
+        public async Task<IActionResult> GeneratedAgingReport(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(AgingReport));
+            }
+
+            try
+            {
+                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims, cancellationToken);
+
+                if (!salesInvoice.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(AgingReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Legal.Landscape());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(7).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(50).Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item()
+                                        .Text("AGING REPORT")
+                                        .FontSize(20).SemiBold();
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date From: ").SemiBold();
+                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
+                                    });
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date To: ").SemiBold();
+                                        text.Span(model.DateTo.ToString(SD.Date_Format));
+                                    });
+                                });
+
+                                row.ConstantItem(size: 100)
+                                    .Height(50)
+                                    .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
+                            });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date(INV)").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Check").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Bank").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Check No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date(INV)").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Check").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Bank").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Check No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amount").SemiBold();
+                                });
+
+                            #endregion
+
+                            #region -- Loop to Show Records
+
+                                var totalGrossAmount = 0m;
+                                var totalAmountPaid = 0m;
+                                var totalAdjustedGross = 0m;
+                                var totalWithHoldingTaxAmount = 0m;
+                                var totalNetOfVatAmount = 0m;
+                                var totalVcfAmount = 0m;
+                                var totalRetentionAmount = 0m;
+                                var totalAdjustedNet = 0m;
+                                var totalCurrent = 0m;
+                                var totalOneToThirtyDays = 0m;
+                                var totalThirtyOneToSixtyDays = 0m;
+                                var totalSixtyOneToNinetyDays = 0m;
+                                var totalOverNinetyDays = 0m;
+
+                                foreach (var record in salesInvoice)
+                                {
+
+                                    var gross = record.Amount;
+                                    decimal netDiscount = record.Amount - record.Discount;
+                                    decimal netOfVatAmount = record.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+                                    decimal withHoldingTaxAmount = (record.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
+                                    decimal retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                                    decimal vcfAmount = 0.0000m;
+                                    decimal adjustedGross = gross - vcfAmount;
+                                    decimal adjustedNet = gross - vcfAmount - retentionAmount;
+
+                                    DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+                                    int daysDue = (today > record.DueDate) ? (today.DayNumber - record.DueDate.DayNumber) : 0;
+                                    var current = (record.DueDate >= today) ? gross : 0.0000m;
+                                    var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
+                                    var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
+                                    var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
+                                    var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
+
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerTerms);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer!.WithHoldingTax ? 1.ToString() : 0.ToString());
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(gross.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AmountPaid.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(adjustedGross.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(withHoldingTaxAmount.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(netOfVatAmount.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vcfAmount.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(retentionAmount.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(adjustedNet.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(daysDue.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(current.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(oneToThirtyDays.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalThirtyOneToSixtyDays.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(sixtyOneToNinetyDays.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(overNinetyDays.ToString(SD.Two_Decimal_Format));
+
+                                    totalGrossAmount += record.Amount;
+                                    totalAmountPaid += record.AmountPaid;
+                                    totalAdjustedGross += adjustedGross;
+                                    totalWithHoldingTaxAmount += withHoldingTaxAmount;
+                                    totalNetOfVatAmount += netOfVatAmount;
+                                    totalVcfAmount += vcfAmount;
+                                    totalRetentionAmount += retentionAmount;
+                                    totalAdjustedNet += adjustedNet;
+                                    totalCurrent += current;
+                                    totalOneToThirtyDays += oneToThirtyDays;
+                                    totalThirtyOneToSixtyDays += thirtyOneToSixtyDays;
+                                    totalSixtyOneToNinetyDays += sixtyOneToNinetyDays;
+                                    totalOverNinetyDays += overNinetyDays;
+                                }
+
+                            #endregion
+
+                            #region -- Create Table Cell for Totals
+
+                                table.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalGrossAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountPaid.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAdjustedGross.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalWithHoldingTaxAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalNetOfVatAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVcfAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalRetentionAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAdjustedNet.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCurrent.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalOneToThirtyDays.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalThirtyOneToSixtyDays.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalSixtyOneToNinetyDays.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalOverNinetyDays.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate aging report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(AgingReport));
+            }
+        }
+
+        #endregion
     }
 }
