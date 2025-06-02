@@ -176,14 +176,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         var wholeHours = Math.Truncate(totalHours);
                         var fractionalPart = totalHours - wholeHours;
 
-                        if (fractionalPart >= 0.75m) totalHours = wholeHours + 1.0m;
-                        else if (fractionalPart >= 0.25m) totalHours = wholeHours + 0.5m;
-                        else totalHours = wholeHours;
-                    }
-
-                    if (totalHours == 0)
-                    {
-                        totalHours = 0.5m;
+                        if (fractionalPart >= 0.75m)
+                        {
+                            totalHours = wholeHours + 1.0m; // round up to next hour
+                        }
+                        else if (fractionalPart >= 0.25m)
+                        {
+                            totalHours = wholeHours + 0.5m; // round to half hour
+                        }
+                        else
+                        {
+                            totalHours = wholeHours; // keep as is
+                        }
                     }
 
                     model.TotalHours = totalHours;
