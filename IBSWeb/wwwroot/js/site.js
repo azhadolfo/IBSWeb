@@ -142,9 +142,55 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 document.addEventListener("keydown", function (event) {
-    if (event.ctrlKey && event.key === "p") {
+    // Disable Ctrl+P (Print)
+    if (event.ctrlKey && event.key.toLowerCase() === "p") {
         event.preventDefault();
-        alert("Printing is disabled!");
+        alert("Ikaw ah Alam mo ah.");
+    }
+
+    // Disable F12
+    if (event.key === "F12" || event.keyCode === 123) {
+        event.preventDefault();
+        alert("Ikaw ah Alam mo ah.");
+    }
+
+    // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (event.ctrlKey && event.shiftKey) {
+        const key = event.key.toUpperCase();
+        if (["I", "J", "C"].includes(key)) {
+            event.preventDefault();
+            alert("Ikaw ah Alam mo ah.");
+        }
+    }
+
+    // Disable Ctrl+U (View Source)
+    if (event.ctrlKey && event.key.toLowerCase() === "u") {
+        event.preventDefault();
+        alert("Ikaw ah Alam mo ah.");
     }
 });
 
+document.addEventListener("contextmenu", function (e) {
+    // Allow context menu on form elements
+    const tag = e.target.tagName.toLowerCase();
+    const isEditable = ["input", "textarea"].includes(tag) || e.target.isContentEditable;
+
+    if (!isEditable) {
+        e.preventDefault();
+        alert("Right-click is disabled!");
+    }
+});
+
+// Attempt to detect devtools via window dimension differences
+(function () {
+    const threshold = 160;
+    setInterval(() => {
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+
+        if (widthDiff > threshold || heightDiff > threshold) {
+            document.body.innerHTML = '';
+            alert("Ikaw ah Alam mo ah.");
+        }
+    }, 250);
+})(); 
