@@ -282,7 +282,7 @@
                                     </li>
                                 }
                                 
-                                if (selectedCompany == "Mobility" && selectedStation != "S00")
+                                if (selectedCompany == "Mobility" && selectedStation != "S00" && !User.IsInRole("Cashier"))
                                 {
                                     <li class="nav-item dropdown">
                                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">POS</a>
@@ -579,6 +579,12 @@
                                             <a class="nav-link" asp-area="Mobility" asp-controller="ImportPOS" asp-action="Index">Import POS</a>
                                         </li>
                                     }
+                                }
+                                else if (User.IsInRole("Cashier"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="Mobility" asp-controller="CustomerOrderSlip" asp-action="Index">Customer Order Slip</a>
+                                    </li>
                                 }
                                     
                                 if (selectedCompany == "Bienes")
