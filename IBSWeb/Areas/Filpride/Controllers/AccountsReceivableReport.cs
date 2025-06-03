@@ -3027,5 +3027,513 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        [HttpGet]
+        public IActionResult ArPerCustomer()
+        {
+            return View();
+        }
+
+        #region -- Generated Aging Report as Quest PDF
+
+        public async Task<IActionResult> GeneratedArPerCustomer(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(ArPerCustomer));
+            }
+
+            try
+            {
+                var salesInvoice = await _dbContext.FilprideSalesInvoices
+                    .Where(si => si.PostedBy != null && si.Company == companyClaims)
+                    .Include(si => si.Product)
+                    .Include(si => si.Customer)
+                    .Include(si => si.DeliveryReceipt)
+                    .Include(si => si.CustomerOrderSlip)
+                    .ToListAsync(cancellationToken);
+
+                if (!salesInvoice.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(ArPerCustomer));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Legal.Landscape());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(7).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(50).Row(row =>
+                            {
+                                row.RelativeItem().Column(column =>
+                                {
+                                    column.Item()
+                                        .Text("AR PER CUSTOMER REPORT")
+                                        .FontSize(20).SemiBold();
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date From: ").SemiBold();
+                                        text.Span(model.DateFrom.ToString(SD.Date_Format));
+                                    });
+
+                                    column.Item().Text(text =>
+                                    {
+                                        text.Span("Date To: ").SemiBold();
+                                        text.Span(model.DateTo.ToString(SD.Date_Format));
+                                    });
+                                });
+
+                                row.ConstantItem(size: 100)
+                                    .Height(50)
+                                    .Image(Image.FromFile(imgFilprideLogoPath)).FitWidth();
+
+                            });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Terms").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("COS No.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Remarks").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Product").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Quantity").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Unit").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Unit Price").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Freight").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Freight/Ltr").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("VAT/Ltr").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("VAT Amt.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Amt.").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Amt. Paid").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SI Balance").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT Amt").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("EWT Paid").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CWT Balance").SemiBold();
+                                });
+
+                            #endregion
+
+                            #region -- Loop to Show Records
+
+                                decimal totalQuantity = 0m;
+                                decimal totalFreight = 0m;
+                                decimal totalFreightPerLiter = 0m;
+                                decimal totalVatPerLiter = 0m;
+                                decimal totalVatAmount = 0m;
+                                decimal totalGrossAmount = 0m;
+                                decimal totalAmountPaid = 0m;
+                                decimal totalBalance = 0m;
+                                decimal totalEwtAmount = 0m;
+                                decimal totalEwtAmountPaid = 0m;
+                                decimal totalewtBalance = 0m;
+
+                                foreach (var record in salesInvoice)
+                                {
+
+                                    var freight = record.DeliveryReceipt?.Freight * record.DeliveryReceipt?.Quantity;
+                                    var grossAmount = record.Amount;
+                                    var vatableAmount = grossAmount / 1.12m;
+                                    var vatAmount = vatableAmount * .12m;
+                                    var vatPerLiter = vatAmount * record.Quantity;
+                                    var ewtAmount = vatableAmount * .01m;
+                                    var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
+                                    var ewtBalance = ewtAmount - isEwtAmountPaid;
+
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerTerms);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.UnitPrice.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freight?.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatPerLiter.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatAmount.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(grossAmount.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AmountPaid.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Balance.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtAmount.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(isEwtAmountPaid.ToString(SD.Two_Decimal_Format));
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtBalance.ToString(SD.Two_Decimal_Format));
+
+                                    totalQuantity += record.Quantity;
+                                    totalFreight += freight ?? 0m;
+                                    totalFreightPerLiter += record.DeliveryReceipt?.Freight ?? 0m;
+                                    totalVatPerLiter += vatPerLiter;
+                                    totalVatAmount += vatAmount;
+                                    totalGrossAmount += grossAmount;
+                                    totalAmountPaid += record.AmountPaid;
+                                    totalBalance += record.Balance;
+                                    totalEwtAmount += ewtAmount;
+                                    totalEwtAmountPaid += isEwtAmountPaid;
+                                    totalewtBalance += ewtBalance;
+                                }
+
+                            #endregion
+
+                            #region -- Create Table Cell for Totals
+
+                                var unitPrice = totalGrossAmount / totalQuantity;
+
+                                table.Cell().ColumnSpan(12).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantity.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(unitPrice.ToString(SD.Four_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreight.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightPerLiter.ToString(SD.Four_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVatPerLiter.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVatAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalGrossAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountPaid.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalBalance.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEwtAmount.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEwtAmountPaid.ToString(SD.Two_Decimal_Format)).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalewtBalance.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate AR per customer report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(ArPerCustomer));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate AR Per Customer Excel File --
+
+        public async Task<IActionResult> GenerateArPerCustomerExcelFile(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Please input date range";
+                return RedirectToAction(nameof(ArPerCustomer));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(User)!;
+                var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var salesInvoice = await _dbContext.FilprideSalesInvoices
+                    .Where(si => si.PostedBy != null && si.Company == companyClaims)
+                    .Include(si => si.Product)
+                    .Include(si => si.Customer)
+                    .Include(si => si.DeliveryReceipt)
+                    .Include(si => si.CustomerOrderSlip)
+                    .ToListAsync(cancellationToken);
+
+                if (!salesInvoice.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(ArPerCustomer));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("ARPerCustomer");
+
+                // Set the column headers
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "AR PER CUSTOMER";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom} - {dateTo}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                worksheet.Cells["A7"].Value = "CUSTOMER No.";
+                worksheet.Cells["B7"].Value = "CUSTOMER NAME";
+                worksheet.Cells["C7"].Value = "ACCT. TYPE";
+                worksheet.Cells["D7"].Value = "TERMS";
+                worksheet.Cells["E7"].Value = "TRAN. DATE";
+                worksheet.Cells["F7"].Value = "DUE DATE";
+                worksheet.Cells["G7"].Value = "INVOICE No.";
+                worksheet.Cells["H7"].Value = "DR No.";
+                worksheet.Cells["I7"].Value = "PO No.";
+                worksheet.Cells["J7"].Value = "COS No.";
+                worksheet.Cells["K7"].Value = "REMARKS";
+                worksheet.Cells["L7"].Value = "PRODUCT";
+                worksheet.Cells["M7"].Value = "QTY";
+                worksheet.Cells["N7"].Value = "UNIT";
+                worksheet.Cells["O7"].Value = "UNIT PRICE";
+                worksheet.Cells["P7"].Value = "FREIGHT";
+                worksheet.Cells["Q7"].Value = "FREIGHT/LTR";
+                worksheet.Cells["R7"].Value = "VAT/LTR";
+                worksheet.Cells["S7"].Value = "VAT AMT.";
+                worksheet.Cells["T7"].Value = "TOTAL AMT. (G. VAT)";
+                worksheet.Cells["U7"].Value = "AMT. PAID";
+                worksheet.Cells["V7"].Value = "SI BALANCE";
+                worksheet.Cells["W7"].Value = "EWT AMT.";
+                worksheet.Cells["X7"].Value = "EWT PAID";
+                worksheet.Cells["Y7"].Value = "CWT BALANCE";
+
+                // Apply styling to the header row
+                using (var range = worksheet.Cells["A7:Y7"])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                // Populate the data rows
+                int row = 8;
+                string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var totalQuantity = 0m;
+                var totalFreight = 0m;
+                var totalFreightPerLiter = 0m;
+                var totalVatPerLiter = 0m;
+                var totalVatAmount = 0m;
+                var totalGrossAmount = 0m;
+                var totalAmountPaid = 0m;
+                var totalBalance = 0m;
+                var totalEwtAmount = 0m;
+                var totalEwtAmountPaid = 0m;
+                var totalewtBalance = 0m;
+
+                foreach (var si in salesInvoice)
+                {
+                    var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                    var grossAmount = si.Amount;
+                    var vatableAmount = grossAmount / 1.12m;
+                    var vatAmount = vatableAmount * .12m;
+                    var vatPerLiter = vatAmount * si.Quantity;
+                    var ewtAmount = vatableAmount * .01m;
+                    var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
+                    var ewtBalance = ewtAmount - isEwtAmountPaid;
+
+                    worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
+                    worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                    worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                    worksheet.Cells[row, 4].Value = si.Terms;
+                    worksheet.Cells[row, 5].Value = si.TransactionDate;
+                    worksheet.Cells[row, 6].Value = si.DueDate;
+                    worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
+                    worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                    worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo;
+                    worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 11].Value = si.Remarks;
+                    worksheet.Cells[row, 12].Value = si.Product?.ProductName;
+                    worksheet.Cells[row, 13].Value = si.Quantity;
+                    worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
+                    worksheet.Cells[row, 15].Value = si.UnitPrice;
+                    worksheet.Cells[row, 16].Value = freight;
+                    worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
+                    worksheet.Cells[row, 18].Value = vatPerLiter;
+                    worksheet.Cells[row, 19].Value = vatAmount;
+                    worksheet.Cells[row, 20].Value = grossAmount;
+                    worksheet.Cells[row, 21].Value = si.AmountPaid;
+                    worksheet.Cells[row, 22].Value = si.Balance;
+                    worksheet.Cells[row, 23].Value = ewtAmount;
+                    worksheet.Cells[row, 24].Value = isEwtAmountPaid;
+                    worksheet.Cells[row, 25].Value = ewtBalance;
+
+                    worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    row++;
+
+                    totalQuantity += si.Quantity;
+                    totalFreight += freight ?? 0m;
+                    totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
+                    totalVatPerLiter += vatPerLiter;
+                    totalVatAmount += vatAmount;
+                    totalGrossAmount += grossAmount;
+                    totalAmountPaid += si.AmountPaid;
+                    totalBalance += si.Balance;
+                    totalEwtAmount += ewtAmount;
+                    totalEwtAmountPaid += isEwtAmountPaid;
+                    totalewtBalance += ewtBalance;
+                }
+
+                worksheet.Cells[row, 12].Value = "Total ";
+
+                worksheet.Cells[row, 13].Value = totalQuantity;
+                worksheet.Cells[row, 15].Value = totalGrossAmount / totalQuantity;
+                worksheet.Cells[row, 16].Value = totalFreight;
+                worksheet.Cells[row, 17].Value = totalFreightPerLiter;
+                worksheet.Cells[row, 18].Value = totalVatPerLiter;
+                worksheet.Cells[row, 19].Value = totalVatAmount;
+                worksheet.Cells[row, 20].Value = totalGrossAmount;
+                worksheet.Cells[row, 21].Value = totalAmountPaid;
+                worksheet.Cells[row, 22].Value = totalBalance;
+                worksheet.Cells[row, 23].Value = totalEwtAmount;
+                worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
+                worksheet.Cells[row, 25].Value = totalewtBalance;
+
+                worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                // Apply style to subtotal row
+                using (var range = worksheet.Cells[row, 1, row, 25])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                }
+
+                using (var range = worksheet.Cells[row, 12, row, 25])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
+                }
+
+                // Auto-fit columns for better readability
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(8, 1);
+
+                // Convert the Excel package to a byte array
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ArPerCustomerReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ArPerCustomer));
+            }
+        }
+
+        #endregion
     }
 }
