@@ -27,15 +27,24 @@ document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 });
 
-// Attempt to detect devtools via window dimension differences
-(function () {
+$(document).ready(function () {
     const threshold = 160;
-    setInterval(() => {
+    let devtoolsOpen = false;
+    const originalContent = document.body.innerHTML;
+
+    function checkDevTools() {
         const widthDiff = window.outerWidth - window.innerWidth;
         const heightDiff = window.outerHeight - window.innerHeight;
+        const isOpen = widthDiff > threshold || heightDiff > threshold;
 
-        if (widthDiff > threshold || heightDiff > threshold) {
+        if (isOpen && !devtoolsOpen) {
+            devtoolsOpen = true;
             document.body.innerHTML = '';
+        } else if (!isOpen && devtoolsOpen) {
+            devtoolsOpen = false;
+            document.body.innerHTML = originalContent;
         }
-    }, 250);
-})(); 
+    }
+
+    setInterval(checkDevTools, 250);
+});
