@@ -28,23 +28,32 @@ document.addEventListener("contextmenu", function (e) {
 });
 
 $(document).ready(function () {
-    const threshold = 160;
     let devtoolsOpen = false;
     const originalContent = document.body.innerHTML;
 
-    function checkDevTools() {
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        const isOpen = widthDiff > threshold || heightDiff > threshold;
+    function detectDevTools() {
+        const before = new Date();
+        debugger;
+        const after = new Date();
+        if (after - before > 100) {
+            return true;
+        }
+        return false;
+    }
 
-        if (isOpen && !devtoolsOpen) {
-            devtoolsOpen = true;
-            document.body.innerHTML = '';
-        } else if (!isOpen && devtoolsOpen) {
-            devtoolsOpen = false;
-            document.body.innerHTML = originalContent;
+    function checkDevTools() {
+        if (detectDevTools()) {
+            if (!devtoolsOpen) {
+                devtoolsOpen = true;
+                document.body.innerHTML = '';
+            }
+        } else {
+            if (devtoolsOpen) {
+                devtoolsOpen = false;
+                document.body.innerHTML = originalContent;
+            }
         }
     }
 
-    setInterval(checkDevTools, 250);
+    setInterval(checkDevTools, 500);
 });
