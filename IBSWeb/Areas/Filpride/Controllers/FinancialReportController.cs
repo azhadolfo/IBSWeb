@@ -3,12 +3,15 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using QuestPDF.Helpers;
+using QuestPDF.Fluent;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -283,8 +286,196 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        #region -- Generated Service Invoice Report as Quest PDF
 
-        #region -- Generate L1 Report --
+        public async Task<IActionResult> GenerateLevelOneReport(DateOnly monthDate, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(LevelOneReport));
+            }
+
+            try
+            {
+                var firstDayOfMonth = new DateOnly(monthDate.Year, monthDate.Month, 1);
+                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+
+                var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date >= firstDayOfMonth &&
+                        gl.Date <= lastDayOfMonth &&
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
+                        gl.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                if (!generalLedgers.Any())
+                {
+                    TempData["error"] = "No records found!";
+                    return RedirectToAction(nameof(LevelOneReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Letter.Portrait());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(140).Column(column =>
+                            {
+                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+
+                                column.Item().AlignCenter().Row(row =>
+                                {
+                                    row.Spacing(10);
+                                    row.ConstantItem(150).Height(45)
+                                        .Image(QuestPDF.Infrastructure.Image.FromFile(imgFilprideLogoPath)).FitHeight().FitWidth();
+                                    row.Spacing(10);
+                                });
+
+                                column.Item().Text("Level 1").FontSize(14).SemiBold().AlignCenter();
+                                column.Item().Text($"As Of: {monthDate:dd MMM yyyy}").SemiBold().AlignCenter();
+                            });
+
+
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Number").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Debit").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Credit").SemiBold();
+                                });
+
+                            #endregion
+
+                             #region -- Loop to Show Records
+
+
+                                 var groupByLevelOne = generalLedgers
+                                     .OrderBy(gl => gl.Account.AccountNumber)
+                                     .GroupBy(gl =>
+                                     {
+                                         // Traverse the account hierarchy to find the top-level parent account
+                                         var currentAccount = gl.Account;
+                                         while (currentAccount.ParentAccount != null)
+                                         {
+                                             currentAccount = currentAccount.ParentAccount;
+                                         }
+                                         // Return the top-level parent account (mother account)
+                                         return new { currentAccount.AccountNumber, currentAccount.AccountName };
+                                     });
+
+                                 decimal nibit = 0;
+
+                                foreach (var record in groupByLevelOne)
+                                {
+                                    var creditPosition = record
+                                        .Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit)
+                                            ? g.Debit - g.Credit
+                                            : g.Credit - g.Debit);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Key.AccountNumber);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Key.AccountName);
+                                    if (record.First().Account.FinancialStatementType == nameof(FinancialStatementType.BalanceSheet))
+                                    {
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Sum(g => g.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                            g.Debit - g.Credit :
+                                            g.Credit - g.Debit).ToString(SD.Two_Decimal_Format));
+                                        table.Cell().Border(0.5f);
+                                    }
+                                    else
+                                    {
+                                        table.Cell().Border(0.5f);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(creditPosition.ToString(SD.Two_Decimal_Format));
+
+                                        if (nibit == 0)
+                                        {
+                                            nibit += creditPosition;
+                                            continue;
+                                        }
+
+                                        nibit -= creditPosition;
+                                    }
+                                }
+
+                            #endregion
+
+                            #region -- Create Table Cell for Totals
+
+                                table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("NIBIT").SemiBold();
+                               table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(nibit.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate level one report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(LevelOneReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate L1 Report as Excel File --
 
         [HttpPost]
         public async Task<IActionResult> LevelOneReport(DateOnly monthDate, CancellationToken cancellationToken)
@@ -563,7 +754,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
