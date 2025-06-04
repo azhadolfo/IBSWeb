@@ -1,0 +1,41 @@
+document.addEventListener("keydown", function (event) {
+    // Disable Ctrl+P (Print)
+    if (event.ctrlKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+    }
+
+    // Disable F12
+    if (event.key === "F12" || event.keyCode === 123) {
+        event.preventDefault();
+    }
+
+    // Disable Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+    if (event.ctrlKey && event.shiftKey) {
+        const key = event.key.toUpperCase();
+        if (["I", "J", "C"].includes(key)) {
+            event.preventDefault();
+        }
+    }
+
+    // Disable Ctrl+U (View Source)
+    if (event.ctrlKey && event.key.toLowerCase() === "u") {
+        event.preventDefault();
+    }
+});
+
+document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+});
+
+// Attempt to detect devtools via window dimension differences
+(function () {
+    const threshold = 160;
+    setInterval(() => {
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+
+        if (widthDiff > threshold || heightDiff > threshold) {
+            document.body.innerHTML = '';
+        }
+    }, 250);
+})(); 
