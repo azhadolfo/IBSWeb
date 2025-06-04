@@ -286,7 +286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        #region -- Generated Service Invoice Report as Quest PDF
+        #region -- Generated Level One Report as Quest PDF
 
         public async Task<IActionResult> GenerateLevelOneReport(DateOnly monthDate, CancellationToken cancellationToken)
         {
@@ -648,6 +648,223 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             return View();
         }
+
+        #region -- Generated Level One Report as Quest PDF
+
+        public async Task<IActionResult> GenerateTrialBalanceReport(ViewModelBook model, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(TrialBalanceReport));
+            }
+
+            try
+            {
+                var currentLedgers = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date >= model.DateFrom &&
+                        gl.Date <= model.DateTo &&
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
+                        gl.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var priorLedgers = await _dbContext.FilprideGeneralLedgerBooks
+                    .Include(gl => gl.Account) // Level 4
+                    .ThenInclude(ac => ac.ParentAccount) // Level 3
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 2
+                    .ThenInclude(ac => ac!.ParentAccount) // Level 1
+                    .Where(gl =>
+                        gl.Date < model.DateFrom &&
+                        gl.AccountId != null && //Uncomment this if the GL is fixed
+                        gl.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
+
+                var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
+                    .OrderBy(coa => coa.AccountNumber)
+                    .ToListAsync(cancellationToken);
+
+                if (!currentLedgers.Any() || !priorLedgers.Any())
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(TrialBalanceReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Letter.Portrait());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(8).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(140).Column(column =>
+                            {
+                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+
+                                column.Item().AlignCenter().Row(row =>
+                                {
+                                    row.Spacing(10);
+                                    row.ConstantItem(150).Height(45)
+                                        .Image(QuestPDF.Infrastructure.Image.FromFile(imgFilprideLogoPath)).FitHeight().FitWidth();
+                                    row.Spacing(10);
+                                });
+
+                                column.Item().Text("TRIAL BALANCE").FontSize(14).SemiBold().AlignCenter();
+                                column.Item().Text($"For the Perdiod {model.DateFrom.ToString("MMM dd")} to {model.DateTo.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
+                            });
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    header.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("BEG BALANCES").SemiBold();
+                                    header.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("TRANSACTIONS FOR THE PERIOD").SemiBold();
+                                    header.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ENDING BALANCES").SemiBold();
+
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Number").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Account Name").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Normal Balance").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Level").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("DR").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CR").SemiBold();
+                                });
+
+                            #endregion
+
+                             #region -- Loop to Show Records
+
+                                 decimal totalBeginningDr = 0;
+                                 decimal totalBeginningCr = 0;
+                                 decimal totalcurrentDr = 0;
+                                 decimal totalcurrentCr = 0;
+                                 decimal totalEndingDr = 0;
+                                 decimal totalEndingCr = 0;
+
+                                foreach (var record in chartOfAccounts)
+                                {
+                                    decimal beginningDr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
+                                    decimal beginningCr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
+                                    decimal currentDr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
+                                    decimal currentCr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
+
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountNumber);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.AccountName);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.NormalBalance);
+                                    table.Cell().Border(0.5f).Padding(3).AlignCenter().Text(record.Level.ToString());
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningDr != 0 ? beginningDr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalBeginningDr += beginningDr;
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(beginningCr != 0 ? beginningCr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalBeginningCr += beginningCr;
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentDr != 0 ? currentDr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalcurrentDr += currentDr;
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentCr != 0 ? currentCr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalcurrentCr += currentCr;
+
+                                    decimal endingDr = beginningDr + currentDr - beginningCr - currentCr;
+                                    decimal endingCr = beginningCr + currentCr - beginningDr - currentDr;
+
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingDr != 0 ? endingDr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalEndingDr += endingDr;
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingCr != 0 ? endingCr.ToString(SD.Two_Decimal_Format) : null);
+                                    totalEndingCr += endingCr;
+                                }
+
+                            #endregion
+
+                            #region -- Create Table Cell for Totals
+
+                               table.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTALS").SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalBeginningDr.ToString(SD.Two_Decimal_Format)).SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalBeginningCr.ToString(SD.Two_Decimal_Format)).SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalcurrentDr.ToString(SD.Two_Decimal_Format)).SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalcurrentCr.ToString(SD.Two_Decimal_Format)).SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEndingDr.ToString(SD.Two_Decimal_Format)).SemiBold();
+                               table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEndingCr.ToString(SD.Two_Decimal_Format)).SemiBold();
+
+                               decimal beginningGrandTotal = totalBeginningDr - totalBeginningCr;
+                               table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(beginningGrandTotal != 0 ? beginningGrandTotal.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                               decimal currentGrandTotal = totalcurrentDr - totalcurrentCr;
+                               table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(currentGrandTotal != 0 ? currentGrandTotal.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                               decimal endingGrandTotal = totalEndingDr - totalEndingCr;
+                               table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(endingGrandTotal != 0 ? endingGrandTotal.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate trial balance report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(TrialBalanceReport));
+            }
+        }
+
+        #endregion
 
         #region -- Trial Balance Report Excel File --
 
