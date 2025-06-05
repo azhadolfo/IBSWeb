@@ -1,8 +1,8 @@
-﻿@model FilprideDebitMemo
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
+@model FilprideDebitMemo
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -468,4 +468,5 @@ else if (Model.Source == "Service Invoice")
             })
         }
     </script>
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }
