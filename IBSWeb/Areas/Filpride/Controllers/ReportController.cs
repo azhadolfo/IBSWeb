@@ -611,6 +611,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
+        public IActionResult ApReport()
+        {
+            return View();
+        }
+
+        [HttpGet]
         public IActionResult SalesReport()
         {
             return View();
@@ -2866,6 +2872,391 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate SalesBook Excel File --
+
+        #region -- Generate Ap Report Excel File --
+
+        public async Task<IActionResult> ApReportExcelFile(DateOnly monthYear, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (monthYear == default)
+                {
+                    TempData["error"] = "Please enter a valid month";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                // string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                // fetch for this month and back
+                var apReport = await _unitOfWork.FilprideReport.GetApReport(monthYear, companyClaims, cancellationToken);
+
+                if (apReport.Count == 0)
+                {
+                    TempData["error"] = "Please enter a valid month";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                // this variable will be used for the query of this month
+                var forCurrentMonth = new List<FilpridePurchaseOrder>();
+
+                foreach (var po in apReport)
+                {
+                    var poTotal = po.Quantity;
+                    var rrTotal = po.ReceivingReports?.Sum(rr => rr.QuantityReceived);
+                    var balance = poTotal - rrTotal;
+
+                    //if po has remaining balance
+                    if (balance != 0m)
+                    {
+                        forCurrentMonth.Add(po);
+                        continue;
+                    }
+
+                    // if there's rr
+                    if (po.ReceivingReports != null)
+                    {
+                        foreach (var rr in po.ReceivingReports)
+                        {
+                            // if the rr's date is current date/ lifting date is current date
+                            if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                            {
+                                forCurrentMonth.Add(po);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // check if there is no record
+                if (apReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                #region == TOPSHEET ==
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                var worksheet = package.Workbook.Worksheets.Add("TOPSHEET");
+                worksheet.Cells.Style.Font.Name = "Calibri";
+
+                worksheet.Cells[1, 2].Value = "Summary of Purchases";
+                worksheet.Cells[1, 2].Style.Font.Bold = true;
+                worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.Month} {monthYear.Year}";
+                worksheet.Cells[3, 2].Value = "Filpride Resources, Inc.";
+                worksheet.Cells[1, 2, 3, 2].Style.Font.Size = 14;
+
+                worksheet.Cells[5, 2].Value = "SUPPLIER";
+                worksheet.Cells[5, 3].Value = "BUYER";
+                worksheet.Cells[5, 4].Value = "PRODUCT";
+                worksheet.Cells[5, 5].Value = "PAYMENT TERMS";
+                worksheet.Cells[5, 6].Value = "ORIGINAL PO VOLUME";
+                worksheet.Cells[5, 7].Value = "UNLIFTED LAST MONTH";
+                worksheet.Cells[5, 8].Value = "LIFTED THIS MONTH";
+                worksheet.Cells[5, 9].Value = "UNLIFTED THIS MONTH";
+                worksheet.Cells[5, 10].Value = "PRICE(VAT-EX)";
+                worksheet.Cells[5, 11].Value = "PRICE (VAT-INC)";
+                worksheet.Cells[5, 12].Value = "GROSS AMOUNT";
+                worksheet.Cells[5, 13].Value = "EWT";
+                worksheet.Cells[5, 14].Value = "NEW OF EWT";
+
+                using (var range = worksheet.Cells[5, 2, 5, 14])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+
+                worksheet.Row(5).Height = 36;
+
+                var groupBySupplier = apReport
+                    .OrderBy(po => po.Date)
+                    .ThenBy(po => po.PurchaseOrderNo)
+                    .GroupBy(po => po.Supplier);
+
+                int row = 5;
+                decimal originalPoGrandTotalBiodiesel = 0m;
+                decimal originalPoGrandTotalEconogas = 0m;
+                decimal originalPoGrandTotalEnvirogas = 0m;
+
+                string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
+
+                foreach (var sameSupplierGroup in groupBySupplier)
+                {
+                    row += 2;
+                    worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
+                    worksheet.Cells[row, 2].Style.Font.Bold = true;
+                    worksheet.Cells[row, 3].Value = sameSupplierGroup.First().Company;
+                    var groupByProduct = sameSupplierGroup.GroupBy(po => po.Product).OrderBy(po => po.Key?.ProductName);
+                    decimal poSubtotal = 0m;
+
+                    foreach (var product in productList)
+                    {
+                        var aGroupByProduct = groupByProduct.FirstOrDefault(g => g.Key?.ProductName == product);
+                        worksheet.Cells[row, 4].Value = product;
+                        worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Supplier?.SupplierTerms;
+
+                        if (aGroupByProduct != null)
+                        {
+                            if (aGroupByProduct.Sum(po => po?.Quantity) != 0m)
+                            {
+                                // original po volume
+                                var firstEntry = aGroupByProduct.FirstOrDefault();
+                                decimal allPoTotal = 0m;
+                                decimal unliftedLastMonth = 0m;
+                                decimal liftedThisMonth = 0m;
+                                decimal unliftedThisMonth = 0m;
+
+                                foreach (var po in aGroupByProduct)
+                                {
+                                    decimal rrQtyForUnliftedLastMonth = 0m;
+                                    decimal rrQtyForLiftedThisMonth = 0m;
+                                    decimal currentPoQuantity = po.Quantity;
+                                    allPoTotal += currentPoQuantity;
+
+                                    if (po!.ReceivingReports!.Count != 0)
+                                    {
+                                        foreach (var rr in po!.ReceivingReports)
+                                        {
+                                            if (rr.Date < monthYear)
+                                            {
+                                                rrQtyForUnliftedLastMonth += rr.QuantityReceived;
+                                            }
+                                            if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                            {
+                                                rrQtyForLiftedThisMonth += rr.QuantityReceived;
+                                            }
+                                        }
+                                    }
+
+                                    unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
+                                    liftedThisMonth += rrQtyForLiftedThisMonth;
+                                    unliftedThisMonth += currentPoQuantity - rrQtyForLiftedThisMonth -
+                                                        rrQtyForUnliftedLastMonth;
+                                }
+
+                                if (allPoTotal != 0m)
+                                {
+                                    poSubtotal += allPoTotal;
+                                }
+
+                                var grossOfLiftedThisMonth = firstEntry!.Price * liftedThisMonth;
+                                var ewt = grossOfLiftedThisMonth / 1.12m * 0.01m;
+
+                                // ORIGINAL PO VOLUME
+                                worksheet.Cells[row, 6].Value = allPoTotal;
+                                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                                // UNLIFTED LAST MONTH
+                                if (unliftedLastMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 7].Value = unliftedLastMonth;
+                                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // LIFTED THIS MONTH
+                                if (liftedThisMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 8].Value = liftedThisMonth;
+                                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // UNLIFTED THIS MONTH
+                                if (unliftedThisMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                worksheet.Cells[row, 10].Value = firstEntry!.Price / 1.12m;
+                                worksheet.Cells[row, 11].Value = firstEntry!.Price;
+                                worksheet.Cells[row, 12].Value = grossOfLiftedThisMonth;
+                                worksheet.Cells[row, 13].Value = ewt;
+                                worksheet.Cells[row, 14].Value = grossOfLiftedThisMonth - ewt;
+                                using ( var range = worksheet.Cells[row, 10, row, 14] )
+                                {
+                                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                            }
+                        }
+
+                        switch (product)
+                        {
+                            case "BIODIESEL":
+                                originalPoGrandTotalBiodiesel += poSubtotal;
+                                poSubtotal = 0m;
+
+                                break;
+                            case "ECONOGAS":
+                                originalPoGrandTotalEconogas += poSubtotal;
+                                poSubtotal = 0m;
+
+                                break;
+                            case "ENVIROGAS":
+                                originalPoGrandTotalEnvirogas += poSubtotal;
+                                poSubtotal = 0m;
+
+                                break;
+
+                        }
+
+                        row++;
+                    }
+
+                    worksheet.Cells[row, 3].Value = "SUB-TOTAL";
+                    worksheet.Cells[row, 4].Value = "ALL PRODUCTS";
+                    worksheet.Cells[row, 6].Value = poSubtotal;
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    using (var range = worksheet.Cells[row, 3, row, 14])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Font.Bold = true;
+                    }
+                }
+
+                row += 2;
+                worksheet.Cells[row, 2].Value = "ALL SUPPLIERS";
+                worksheet.Cells[row, 2].Style.Font.Bold = true;
+                worksheet.Cells[row, 3].Value = "FILPRIDE";
+
+                foreach (var product in productList)
+                {
+                    worksheet.Cells[row, 4].Value = product;
+                    worksheet.Cells[row, 5].Value = "ALL TERMS";
+
+                    switch (product)
+                    {
+                        case "BIODIESEL":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalBiodiesel;
+
+                            break;
+                        case "ECONOGAS":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEconogas;
+
+                            break;
+                        case "ENVIROGAS":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEnvirogas;
+
+                            break;
+                    }
+
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    row++;
+                }
+
+                worksheet.Columns.AutoFit();
+                worksheet.Column(2).Width = 30;
+
+                #endregion == TOPSHEET ==
+
+                #region == PO & RR ==
+
+                worksheet = package.Workbook.Worksheets.Add("PO & RR");
+
+                worksheet.Cells[1, 1].Value = "Date";
+                worksheet.Cells[1, 2].Value = "Number";
+                worksheet.Cells[1, 3].Value = "Quantity";
+                worksheet.Cells[1, 4].Value = "Supplier";
+                using (var range = worksheet.Cells[1, 1, 1, 4])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                }
+
+                row = 2;
+
+                foreach (var po in apReport)
+                {
+                    worksheet.Cells[row, 1].Value = po.Date.ToString("MM/dd/yyyy");
+                    worksheet.Cells[row, 2].Value = po.PurchaseOrderNo;
+                    worksheet.Cells[row, 3].Value = po.Quantity;
+                    worksheet.Cells[row, 4].Value = po.Supplier!.SupplierName;
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    if (po.ReceivingReports!.Count == 0)
+                    {
+                        worksheet.Cells[row, 5].Value = po.Quantity;
+                        worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 5].Style.Font.Bold = true;
+                    }
+
+                    row++;
+
+                    if (po.ReceivingReports!.Count != 0)
+                    {
+                        decimal rrSubtotal = 0m;
+
+                        foreach (var rr in po.ReceivingReports)
+                        {
+                            worksheet.Cells[row, 1].Value = rr.Date.ToString("MM/dd/yyyy");
+                            worksheet.Cells[row, 2].Value = rr.ReceivingReportNo;
+                            worksheet.Cells[row, 4].Value = rr.QuantityReceived;
+                            worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            rrSubtotal += rr.QuantityReceived;
+
+                            row++;
+                        }
+
+                        worksheet.Cells[row, 2].Value = "Subtotal:";
+                        worksheet.Cells[row, 3].Value = po.Quantity;
+                        worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 4].Value = rrSubtotal;
+                        worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                        if (rrSubtotal != 0)
+                        {
+                            worksheet.Cells[row, 5].Value = rrSubtotal - po.Quantity;
+                            worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+
+                        using (var range = worksheet.Cells[row, 1, row, 5])
+                        {
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Font.Bold = true;
+                        }
+                        row++;
+                    }
+
+                    row++;
+                }
+
+                worksheet.Columns.AutoFit();
+
+                #endregion == PO & RR ==
+
+                var excelBytes = package.GetAsByteArray();
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"ApReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ApReport));
+            }
+        }
+
+        #endregion
 
         //Reports
 
