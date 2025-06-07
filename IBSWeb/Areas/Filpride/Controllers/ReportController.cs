@@ -2968,7 +2968,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[5, 11].Value = "PRICE (VAT-INC)";
                 worksheet.Cells[5, 12].Value = "GROSS AMOUNT";
                 worksheet.Cells[5, 13].Value = "EWT";
-                worksheet.Cells[5, 14].Value = "NEW OF EWT";
+                worksheet.Cells[5, 14].Value = "NET OF EWT";
 
                 using (var range = worksheet.Cells[5, 2, 5, 14])
                 {
@@ -2993,6 +2993,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal originalPoGrandTotalEconogas = 0m;
                 decimal originalPoGrandTotalEnvirogas = 0m;
 
+                decimal unliftedLastMonthGrandTotalBiodiesel = 0m;
+                decimal unliftedLastMonthGrandTotalEconogas = 0m;
+                decimal unliftedLastMonthGrandTotalEnvirogas = 0m;
+
+                decimal liftedThisMonthGrandTotalBiodiesel = 0m;
+                decimal liftedThisMonthGrandTotalEconogas = 0m;
+                decimal liftedThisMonthGrandTotalEnvirogas = 0m;
+
+                decimal unliftedThisMonthGrandTotalBiodiesel = 0m;
+                decimal unliftedThisMonthGrandTotalEconogas = 0m;
+                decimal unliftedThisMonthGrandTotalEnvirogas = 0m;
+
+                decimal grossAmountGrandTotalBiodiesel = 0m;
+                decimal grossAmountGrandTotalEconogas = 0m;
+                decimal grossAmountGrandTotalEnvirogas = 0m;
+
+                decimal ewtGrandTotalBiodiesel = 0m;
+                decimal ewtGrandTotalEconogas = 0m;
+                decimal ewtGrandTotalEnvirogas = 0m;
+
                 string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
 
                 foreach (var sameSupplierGroup in groupBySupplier)
@@ -3003,10 +3023,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 3].Value = sameSupplierGroup.First().Company;
                     var groupByProduct = sameSupplierGroup.GroupBy(po => po.Product).OrderBy(po => po.Key?.ProductName);
                     decimal poSubtotal = 0m;
+                    decimal tempForGrandTotal = 0m;
 
                     foreach (var product in productList)
                     {
                         var aGroupByProduct = groupByProduct.FirstOrDefault(g => g.Key?.ProductName == product);
+                        decimal grossOfLiftedThisMonth = 0m;
                         worksheet.Cells[row, 4].Value = product;
                         worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Supplier?.SupplierTerms;
 
@@ -3052,9 +3074,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (allPoTotal != 0m)
                                 {
                                     poSubtotal += allPoTotal;
+                                    tempForGrandTotal += allPoTotal;
                                 }
 
-                                var grossOfLiftedThisMonth = firstEntry!.Price * liftedThisMonth;
+                                grossOfLiftedThisMonth = firstEntry!.Price * liftedThisMonth;
                                 var ewt = grossOfLiftedThisMonth / 1.12m * 0.01m;
 
                                 // ORIGINAL PO VOLUME
@@ -3082,6 +3105,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
 
+                                switch (product)
+                                {
+                                    case "BIODIESEL":
+                                        unliftedLastMonthGrandTotalBiodiesel += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalBiodiesel += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalBiodiesel += unliftedThisMonth;
+                                        grossAmountGrandTotalBiodiesel += grossOfLiftedThisMonth;
+                                        ewtGrandTotalBiodiesel += ewt;
+                                        break;
+                                    case "ECONOGAS":
+                                        unliftedLastMonthGrandTotalEconogas += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalEconogas += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalEconogas += unliftedThisMonth;
+                                        grossAmountGrandTotalEconogas += grossOfLiftedThisMonth;
+                                        ewtGrandTotalEconogas += ewt;
+                                        break;
+                                    case "ENVIROGAS":
+                                        unliftedLastMonthGrandTotalEnvirogas += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalEnvirogas += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalEnvirogas += unliftedThisMonth;
+                                        grossAmountGrandTotalEnvirogas += grossOfLiftedThisMonth;
+                                        ewtGrandTotalEnvirogas += ewt;
+                                        break;
+                                }
+
                                 worksheet.Cells[row, 10].Value = firstEntry!.Price / 1.12m;
                                 worksheet.Cells[row, 11].Value = firstEntry!.Price;
                                 worksheet.Cells[row, 12].Value = grossOfLiftedThisMonth;
@@ -3097,19 +3145,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         switch (product)
                         {
                             case "BIODIESEL":
-                                originalPoGrandTotalBiodiesel += poSubtotal;
-                                poSubtotal = 0m;
-
+                                originalPoGrandTotalBiodiesel += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
                                 break;
                             case "ECONOGAS":
-                                originalPoGrandTotalEconogas += poSubtotal;
-                                poSubtotal = 0m;
-
+                                originalPoGrandTotalEconogas += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
                                 break;
                             case "ENVIROGAS":
-                                originalPoGrandTotalEnvirogas += poSubtotal;
-                                poSubtotal = 0m;
-
+                                originalPoGrandTotalEnvirogas += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
                                 break;
 
                         }
@@ -3144,19 +3189,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         case "BIODIESEL":
                             worksheet.Cells[row, 6].Value = originalPoGrandTotalBiodiesel;
-
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel) / 1.12m;
+                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalBiodiesel;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalBiodiesel;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel;
                             break;
                         case "ECONOGAS":
                             worksheet.Cells[row, 6].Value = originalPoGrandTotalEconogas;
-
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas) / 1.12m;
+                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEconogas;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalEconogas;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEconogas - ewtGrandTotalEconogas;
                             break;
                         case "ENVIROGAS":
                             worksheet.Cells[row, 6].Value = originalPoGrandTotalEnvirogas;
-
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas) / 1.12m;
+                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEnvirogas;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalEnvirogas;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas;
                             break;
                     }
 
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
                     row++;
                 }
 
