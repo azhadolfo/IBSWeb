@@ -70,6 +70,7 @@
                         <th class="text-start">@Html.DisplayNameFor(m => m.Date)</th>
                         <th class="text-start">Customer</th>
                         <th class="text-start">Product</th>
+                        <th class="text-start">Price</th>
                         <th class="text-start">Quantity</th>
                         <th class="text-start">Balance</th>
                         <th class="text-start">Total Amount</th>
@@ -175,6 +176,14 @@
                     { 
                         "data": "productName",
                         "name": "Product.ProductName",
+                    },
+                    {
+                        "data": "deliveredPrice",
+                        "name": "DeliveredPrice",
+                        "render": function (data, type, row) {
+                            var price = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="d-block fw-medium">${price}</span>`;
+                        }
                     },
                     {
                         "data": "quantity",

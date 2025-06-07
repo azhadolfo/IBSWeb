@@ -207,6 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.Customer!.CustomerName,
                         cos.Product!.ProductName,
                         cos.Quantity,
+                        cos.DeliveredPrice,
                         cos.TotalAmount,
                         cos.Status,
                         cos.SupplierId,
