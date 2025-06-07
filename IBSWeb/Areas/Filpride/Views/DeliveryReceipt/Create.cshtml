@@ -7,6 +7,9 @@
     DateTime today = DateTimeHelper.GetCurrentPhilippineTime();
     DateTime maxDate = Model.IsTheCreationLockForTheMonth ? new DateTime(today.Year, today.Month, 1).AddDays(-1) : DateTime.MaxValue;
 }
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
 <div class="loader-container">
     <div class="loader"></div>
     <div class="loader-text">Loading...</div>
