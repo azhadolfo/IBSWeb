@@ -322,7 +322,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Customer order slip created successfully.";
+                    TempData["success"] = $"Customer order slip created successfully. Series#: {model.CustomerOrderSlipNo}";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)

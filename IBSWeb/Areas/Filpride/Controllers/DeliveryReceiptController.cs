@@ -892,8 +892,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                await _unitOfWork.MobilityReceivingReport
-                    .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
+                /// TODO Delete this feature once the mobility company is on live
+                // if (existingRecord.Customer!.CustomerType == nameof(CustomerType.Retail))
+                // {
+                //     await _unitOfWork.MobilityReceivingReport
+                //         .AutoGenerateReceivingReport(existingRecord, deliveredDate, cancellationToken);
+                // }
 
                 existingRecord.DeliveredDate = deliveredDate;
                 existingRecord.Status = nameof(DRStatus.ForInvoicing);
