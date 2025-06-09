@@ -697,17 +697,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
-        public async Task<IActionResult> ApproveByOperationManager(int? id, decimal grossMargin, bool isGrossMarginChanged, string reason, CancellationToken cancellationToken)
+        public async Task<IActionResult> ApproveByOperationManager(int? id, string reason, CancellationToken cancellationToken)
         {
             if (id == null)
             {
                 return NotFound();
-            }
-
-            if (grossMargin <= 0 && string.IsNullOrWhiteSpace(reason))
-            {
-                TempData["error"] = "Reason is required for negative or zero gross margin.";
-                return RedirectToAction(nameof(Preview), new { id });
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -720,13 +714,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord == null)
                 {
                     return NotFound();
-                }
-
-                var oldPrice = existingRecord.DeliveredPrice;
-
-                if (existingRecord == null)
-                {
-                    return BadRequest();
                 }
 
                 string message = string.Empty;
@@ -801,32 +788,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
                     }
 
-                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, grossMargin, isGrossMarginChanged, cancellationToken);
-
-                    if (isGrossMarginChanged)
-                    {
-                        var userCreated = await _dbContext.ApplicationUsers
-                            .FirstOrDefaultAsync(a => a.UserName == existingRecord.CreatedBy, cancellationToken);
-
-                        var notification = $"The gross margin was manually adjusted by {existingRecord.FirstApprovedBy!.ToUpper()} (OM). " +
-                                           $"The price was adjusted from {oldPrice:N4} to {existingRecord.DeliveredPrice:N4}.";
-
-                        await _unitOfWork.Notifications.AddNotificationAsync(userCreated!.Id, notification);
-
-                        var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == userCreated.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var hubConnection in hubConnections)
-                        {
-                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                        }
-                    }
+                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, cancellationToken);
                 }
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Customer Order Slip has been successfully approved by the Operations Manager. \n\n {message}";

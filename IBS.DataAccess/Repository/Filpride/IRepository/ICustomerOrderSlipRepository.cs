@@ -17,7 +17,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<List<SelectListItem>> GetCosListPerCustomerAsync(int customerId, CancellationToken cancellationToken = default);
 
-        Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, bool isGrossMarginChanged, CancellationToken cancellationToken = default);
+        Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default);
 
         Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default);
 
