@@ -7143,15 +7143,107 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var firstRecord = aGroupBySupplier.FirstOrDefault();
                     DateOnly monthYearTemp = new DateOnly(monthYear.Year, (monthYear.Month + 1), 1);
+                    DateOnly lastDayOfMonth = monthYearTemp.AddDays(-1);
                     worksheet = package.Workbook.Worksheets.Add(firstRecord!.Supplier!.SupplierName);
                     worksheet.Cells.Style.Font.Name = "Calibri";
 
                     worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord!.Supplier!.SupplierName}";
-                    worksheet.Cells[2, 1].Value = $"AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
-                    worksheet.Cells[3, 1].Value = $"REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
-                    worksheet.Cells[3, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
+                    worksheet.Cells[2, 1].Value = "AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
+                    worksheet.Cells[3, 1].Value = "REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
+                    worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
+                    worksheet.Cells[5, 1].Value = $"DUE DATE: {lastDayOfMonth.ToString("MMMM dd, yyyy")}";
+                    worksheet.Cells[1, 1, 5, 1].Style.Font.Bold = true;
+                    worksheet.Cells[8, 1].Value = "PO#";
+                    worksheet.Cells[8, 2].Value = "DATE";
+                    worksheet.Cells[8, 3].Value = "PRODUCT";
+                    worksheet.Cells[8, 4].Value = "PORT";
+                    worksheet.Cells[8, 5].Value = "REFERENCE MOPS";
+                    worksheet.Cells[8, 6].Value = "ORIGINAL PO VOLUME";
+                    worksheet.Cells[8, 7].Value = "UNLIFTED LAST MONTH";
+                    worksheet.Cells[8, 8].Value = "LIFTED THIS MONTH";
+                    worksheet.Cells[8, 9].Value = "UNLIFTED THIS MONTH";
+                    worksheet.Cells[8, 10].Value = "PRICE(VAT-EX)";
+                    worksheet.Cells[8, 11].Value = "PRICE(VAT-INC)";
+                    worksheet.Cells[8, 12].Value = "GROSS AMOUNT(VAT-INC)";
+                    worksheet.Cells[8, 13].Value = "EWT";
+                    worksheet.Cells[8, 14].Value = "NET OF EWT";
+                    using (var range = worksheet.Cells[8, 1, 8, 14])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
+                    }
+                    worksheet.Row(8).Height = 36;
 
-                    worksheet.Cells[1, 2].Style.Font.Bold = true;
+                    row = 9;
+                    var groupByProduct = aGroupBySupplier.GroupBy(po => po.Product!.ProductName).ToList();
+
+                    foreach (string product in productList)
+                    {
+                        var aGroupByProduct = groupByProduct.FirstOrDefault(g => g.FirstOrDefault()!.Product!.ProductName == product);
+
+                        if (aGroupByProduct != null)
+                        {
+                            foreach(var po in aGroupByProduct)
+                            {
+                                var poTotal = po.Quantity;
+                                decimal grossAmount = (po.Price * po.Quantity);
+                                decimal ewt = (grossAmount / 1.12m * 0.01m);
+                                decimal unliftedLastMonth = 0m;
+                                decimal liftedLastMonthRrQty = 0m;
+                                decimal liftedThisMonthRrQty = 0m;
+                                decimal unliftedThisMonth = 0m;
+
+                                if (po.ReceivingReports!.Count != 0)
+                                {
+                                    liftedLastMonthRrQty = po.ReceivingReports
+                                        .Where(rr => rr.Date < monthYear)
+                                        .Sum(rr => rr.QuantityReceived);
+
+                                    unliftedLastMonth = poTotal - liftedLastMonthRrQty;
+
+                                    liftedThisMonthRrQty = po.ReceivingReports
+                                        .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                        .Sum(rr => rr.QuantityReceived);
+
+                                    unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
+                                }
+
+                                worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                                worksheet.Cells[row, 2].Value = po.Date.ToString("MM/dd/yyyy");
+                                worksheet.Cells[row, 3].Value = po.Product!.ProductName;
+                                worksheet.Cells[row, 4].Value = po.PickUpPoint!.Depot;
+                                worksheet.Cells[row, 5].Value = po.TriggerDate != default ? $"TRIGGER {po.TriggerDate.ToString("MM.dd.yyyy")}" : "UNDETERMINED";
+                                worksheet.Cells[row, 6].Value = poTotal;
+                                worksheet.Cells[row, 7].Value = unliftedLastMonth;
+                                worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
+                                worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                                worksheet.Cells[row, 10].Value = (po.Price / 1.12m);
+                                worksheet.Cells[row, 11].Value = po.Price;
+                                worksheet.Cells[row, 12].Value = grossAmount;
+                                worksheet.Cells[row, 13].Value = ewt;
+                                worksheet.Cells[row, 14].Value = (grossAmount - ewt);
+
+                                using (var range = worksheet.Cells[row, 6, row, 14])
+                                {
+                                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                row++;
+                            }
+
+                            row++;
+                        }
+
+                        // subtotals
+                    }
+
+                    worksheet.Columns.AutoFit();
+                    worksheet.Column(1).Width = 14;
                 }
 
                 #endregion == BY SUPPLIER ==
