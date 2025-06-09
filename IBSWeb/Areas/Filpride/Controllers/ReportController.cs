@@ -6728,7 +6728,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells[1, 2].Value = "Summary of Purchases";
                 worksheet.Cells[1, 2].Style.Font.Bold = true;
-                worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.Month} {monthYear.Year}";
+                worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.ToString("MMMM")} {monthYear.Year}";
                 worksheet.Cells[3, 2].Value = "Filpride Resources, Inc.";
                 worksheet.Cells[1, 2, 3, 2].Style.Font.Size = 14;
 
@@ -7035,8 +7035,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalBiodiesel;
                             worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalBiodiesel;
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalBiodiesel;
-                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel) / 1.12m;
-                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
+                            if (liftedThisMonthGrandTotalBiodiesel != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel) / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
                             worksheet.Cells[row, 12].Value = grossAmountGrandTotalBiodiesel;
                             worksheet.Cells[row, 13].Value = ewtGrandTotalBiodiesel;
                             worksheet.Cells[row, 14].Value = grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel;
@@ -7046,8 +7054,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEconogas;
                             worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEconogas;
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEconogas;
-                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas) / 1.12m;
-                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
+                            if (liftedThisMonthGrandTotalEconogas != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas) / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
                             worksheet.Cells[row, 12].Value = grossAmountGrandTotalEconogas;
                             worksheet.Cells[row, 13].Value = ewtGrandTotalEconogas;
                             worksheet.Cells[row, 14].Value = grossAmountGrandTotalEconogas - ewtGrandTotalEconogas;
@@ -7057,8 +7073,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEnvirogas;
                             worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEnvirogas;
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEnvirogas;
-                            worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas) / 1.12m;
-                            worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
+                            if (liftedThisMonthGrandTotalEnvirogas != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas) / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
                             worksheet.Cells[row, 12].Value = grossAmountGrandTotalEnvirogas;
                             worksheet.Cells[row, 13].Value = ewtGrandTotalEnvirogas;
                             worksheet.Cells[row, 14].Value = grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas;
@@ -7125,12 +7149,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord!.Supplier!.SupplierName}";
                     worksheet.Cells[2, 1].Value = $"AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
                     worksheet.Cells[3, 1].Value = $"REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
-                    worksheet.Cells[3, 1].Value = $"FOR THE MONTH OF {monthYear.Month.ToString()} {monthYear.Year.ToString()}";
+                    worksheet.Cells[3, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
 
                     worksheet.Cells[1, 2].Style.Font.Bold = true;
-                    worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.Month} {monthYear.Year}";
-                    worksheet.Cells[3, 2].Value = "Filpride Resources, Inc.";
-                    worksheet.Cells[1, 2, 3, 2].Style.Font.Size = 14;
                 }
 
                 #endregion == BY SUPPLIER ==
