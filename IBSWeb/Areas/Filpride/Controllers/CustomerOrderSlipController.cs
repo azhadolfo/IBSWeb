@@ -724,7 +724,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FirstApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.OperationManagerReason = reason;
 
-                    if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery)
+                    if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                     {
                         var multiplePO = await _dbContext.FilprideCOSAppointedSuppliers
                             .Include(a => a.PurchaseOrder)
