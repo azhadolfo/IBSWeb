@@ -1848,8 +1848,169 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        #region -- Generated Balance Sheet Report as Quest PDF
 
-        #region -- Generate SRE Report --
+        public async Task<IActionResult> GenerateStatementOfRetainedEarningsReport(DateOnly monthDate, CancellationToken cancellationToken)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "The submitted information is invalid.";
+                return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
+            }
+
+            try
+            {
+                if (monthDate == default)
+                {
+                    return BadRequest();
+                }
+
+                var nibitForThePeriod = await _dbContext.FilprideMonthlyNibits
+                    .FirstOrDefaultAsync(m => m.Year == monthDate.Year &&
+                                              m.Month == monthDate.Month &&
+                                              m.Company == companyClaims, cancellationToken);
+
+                if (nibitForThePeriod == null)
+                {
+                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
+                }
+
+                var document = Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        #region -- Page Setup
+
+                            page.Size(PageSizes.Letter.Portrait());
+                            page.Margin(20);
+                            page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Times New Roman"));
+
+                        #endregion
+
+                        #region -- Header
+
+                            var imgFilprideLogoPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride-logo.png");
+
+                            page.Header().Height(140).Column(column =>
+                            {
+                                column.Item().Text("FILPRIDE RESOURCES INC.").FontSize(16).SemiBold().AlignCenter();
+
+                                column.Item().AlignCenter().Row(row =>
+                                {
+                                    row.Spacing(10);
+                                    row.ConstantItem(150).Height(45)
+                                        .Image(QuestPDF.Infrastructure.Image.FromFile(imgFilprideLogoPath)).FitHeight().FitWidth();
+                                    row.Spacing(10);
+                                });
+
+                                column.Item().Text("STATEMENT OF RETAINED EARNINGS").FontSize(14).SemiBold().AlignCenter();
+                                column.Item().Text($"As Of {monthDate.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
+                            });
+
+
+
+                        #endregion
+
+                        #region -- Content
+
+                        page.Content().PaddingTop(10).Table(table =>
+                        {
+                            #region -- Columns Definition
+
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.ConstantColumn(20);
+                                    columns.ConstantColumn(20);
+                                    columns.ConstantColumn(20);
+                                    columns.ConstantColumn(20);
+                                    columns.RelativeColumn();
+                                    columns.ConstantColumn(100);
+                                });
+
+                            #endregion
+
+                            #region -- Table Header
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("L1").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("L2").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("L3").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("L4").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).BorderTop(0.5f).BorderLeft(0.5f).BorderBottom(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("L5").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).BorderTop(0.5f).BorderRight(0.5f);
+                                });
+
+                            #endregion
+
+                             #region -- Show Records
+
+                                 table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(5).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Retained Earnings").SemiBold();
+
+                                 table.Cell().ColumnSpan(2).BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Retained Earnings");
+
+                                 table.Cell().ColumnSpan(3).BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(2).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Retained Earnings Beg");
+                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.BeginningBalance != 0 ? nibitForThePeriod.BeginningBalance < 0 ? $"({Math.Abs(nibitForThePeriod.BeginningBalance).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.BeginningBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.BeginningBalance < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                 table.Cell().ColumnSpan(3).BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(2).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Net Income for the Period");
+                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome < 0 ? $"({Math.Abs(nibitForThePeriod.NetIncome).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.NetIncome.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.NetIncome < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                 table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(5).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Prior Period Adjustment").SemiBold();
+
+                                 table.Cell().ColumnSpan(2).BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Prior Period Adjustment");
+
+                                 table.Cell().ColumnSpan(3).BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(2).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Prior Period Adjustment");
+                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.PriorPeriodAdjustment != 0 ? nibitForThePeriod.PriorPeriodAdjustment < 0 ? $"({Math.Abs(nibitForThePeriod.PriorPeriodAdjustment).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.PriorPeriodAdjustment.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.PriorPeriodAdjustment < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                 table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
+                                 table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text("Retained Earnings End").SemiBold();
+                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.EndingBalance != 0 ? nibitForThePeriod.EndingBalance < 0 ? $"({Math.Abs(nibitForThePeriod.EndingBalance).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.EndingBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.EndingBalance < 0 ? Colors.Red.Medium : Colors.Black);
+
+                            #endregion
+
+                        });
+
+                        #endregion
+
+                        #region -- Footer
+
+                        page.Footer().AlignRight().Text(x =>
+                        {
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+
+                        #endregion
+                    });
+                });
+
+                var pdfBytes = document.GeneratePdf();
+                return File(pdfBytes, "application/pdf");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate statement of retained earnings report. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate SRE Report as Excel File --
 
         public async Task<IActionResult> StatementOfRetainedEarningsReport(DateOnly monthDate, CancellationToken cancellationToken)
         {
