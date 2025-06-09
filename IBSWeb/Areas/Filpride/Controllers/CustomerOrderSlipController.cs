@@ -218,6 +218,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
                             .ToList(),
+                        cos.OldPrice
                     })
                     .ToListAsync(cancellationToken);
 
@@ -634,7 +635,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     : (decimal)customerOrderSlip.Freight,
                 VatAmount = vatCalculator.ComputeVatAmount(
                     vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount)),
-                Status = customerOrderSlip.Status
+                Status = customerOrderSlip.Status,
+                PriceReference = customerOrderSlip.PriceReference
             };
         }
 
@@ -1644,6 +1646,89 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 purchaseOrder.Quantity,
                 purchaseOrder.UnitPrice,
             });
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ChangePrice(int? id, decimal newPrice, string referenceNo, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                existingRecord.OldPrice = existingRecord.DeliveredPrice;
+                existingRecord.DeliveredPrice = newPrice;
+                existingRecord.TotalAmount = existingRecord.Quantity * existingRecord.DeliveredPrice;
+                existingRecord.PriceReference = referenceNo;
+
+                await _unitOfWork.FilprideDeliveryReceipt.RecalculateDeliveryReceipts(existingRecord.CustomerOrderSlipId,
+                    existingRecord.DeliveredPrice, cancellationToken);
+
+                #region Notification
+
+                var users = await _dbContext.ApplicationUsers
+                    .Where(a => a.Position == SD.Position_OperationManager
+                                || a.Department == SD.Department_CreditAndCollection)
+                    .Select(u => u.Id)
+                    .ToListAsync(cancellationToken);
+
+                var message = $"The price for customer order slip# {existingRecord.CustomerOrderSlipNo} has been updated by {_userManager.GetUserName(User)!}, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).";
+
+                await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+
+                var usernames = await _dbContext.ApplicationUsers
+                    .Where(a => users.Contains(a.Id))
+                    .Select(u => u.UserName)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var username in usernames)
+                {
+                    var hubConnections = await _dbContext.HubConnections
+                        .Where(h => h.UserName == username)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var hubConnection in hubConnections)
+                    {
+                        await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                            .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                    }
+                }
+
+                #endregion
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Update actual price for customer order slip# {existingRecord.CustomerOrderSlipNo}, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).",
+                    "Customer Order Slip",
+                    existingRecord.Company);
+
+                TempData["success"] = $"The price for {existingRecord.CustomerOrderSlipNo} has been updated, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).";
+
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to change the price the customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Changed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Preview), new { id });
+            }
         }
     }
 }
