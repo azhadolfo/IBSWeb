@@ -813,7 +813,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
 
-                    var gl = await _db.FilprideGeneralLedgerBooks
+                    await _db.FilprideGeneralLedgerBooks
                         .Where(x => x.Company == deliveryReceipt.Company
                                     && x.Reference == deliveryReceipt.DeliveryReceiptNo)
                         .ExecuteDeleteAsync(cancellationToken);
