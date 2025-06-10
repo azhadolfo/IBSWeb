@@ -7095,27 +7095,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 row += 6;
-                worksheet.Cells[row, 1].Value = "Note:   Volume paid is the volume recorded in the Purchase Journal Report.";
-                row += 3;
-                worksheet.Cells[row, 1].Value = "Prepared by:";
+                worksheet.Cells[row, 2].Value = "Prepared by:";
                 worksheet.Cells[row, 5].Value = "Approved by:";
                 worksheet.Cells[row, 8].Value = "Acknowledged by:";
-                row += 2;
-                worksheet.Cells[row, 1].Value = "Gerecho B. Tayco";
+                worksheet.Cells[row, 11].Value = "Received by:";
+                row += 3;
+                worksheet.Cells[row, 2].Value = "Gerecho B. Tayco";
                 worksheet.Cells[row, 5].Value = "Clifford M. Aranda";
                 worksheet.Cells[row, 8].Value = "Aniebeth S. Dionzon";
-                using (var range = worksheet.Cells[row, 1, row, 8])
+                worksheet.Cells[row, 11].Value = "Jerrylyn B. Gatoc";
+                using (var range = worksheet.Cells[row, 1, row, 11])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Font.UnderLine = true;
                 }
                 row++;
-                worksheet.Cells[row, 1].Value = "Pricing Specialist";
+                worksheet.Cells[row, 2].Value = "Pricing Specialist";
                 worksheet.Cells[row, 5].Value = "Operations Manager";
                 worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+                worksheet.Cells[row, 11].Value = "Finance Manager";
 
                 worksheet.Columns.AutoFit();
-                worksheet.Column(1).Width = 14;
+                worksheet.Column(1).Width = 8;
                 worksheet.Column(2).Width = 30;
 
                 #endregion == TOPSHEET ==
