@@ -143,5 +143,34 @@ namespace IBSWeb.Areas.User.Controllers
         }
 
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellation)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+
+            await _unitOfWork.Notifications.MarkAllAsReadAsync(userId, cancellation);
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ArchiveAll(CancellationToken cancellation)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return BadRequest();
+            }
+
+            await _unitOfWork.Notifications.ArchiveAllAsync(userId, cancellation);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
