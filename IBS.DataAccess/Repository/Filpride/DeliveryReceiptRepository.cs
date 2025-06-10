@@ -798,5 +798,30 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(dr => dr.CanceledBy == null && dr.VoidedBy == null)
                 .AnyAsync(dr => dr.ManualDrNo == manualDrNo);
         }
+
+        public async Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, CancellationToken cancellationToken = default)
+        {
+            var deliveryReceipts = await _db.FilprideDeliveryReceipts
+                .Where(x => x.CustomerOrderSlipId == customerOrderSlipId
+                            && x.VoidedBy == null
+                            && x.CanceledBy == null)
+                .ToListAsync(cancellationToken);
+
+            if (deliveryReceipts.Any())
+            {
+                foreach (var deliveryReceipt in deliveryReceipts)
+                {
+                    deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
+
+                    await _db.FilprideGeneralLedgerBooks
+                        .Where(x => x.Company == deliveryReceipt.Company
+                                    && x.Reference == deliveryReceipt.DeliveryReceiptNo)
+                        .ExecuteDeleteAsync(cancellationToken);
+
+                    await PostAsync(deliveryReceipt, cancellationToken);
+
+                }
+            }
+        }
     }
 }
