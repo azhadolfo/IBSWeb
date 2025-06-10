@@ -6676,44 +6676,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (apReport.Count == 0)
                 {
-                    TempData["error"] = "Please enter a valid month";
-                    return RedirectToAction(nameof(ApReport));
-                }
-
-                // this variable will be used for the query of this month
-                var forCurrentMonth = new List<FilpridePurchaseOrder>();
-
-                foreach (var po in apReport)
-                {
-                    var poTotal = po.Quantity;
-                    var rrTotal = po.ReceivingReports?.Sum(rr => rr.QuantityReceived);
-                    var balance = poTotal - rrTotal;
-
-                    //if po has remaining balance
-                    if (balance != 0m)
-                    {
-                        forCurrentMonth.Add(po);
-                        continue;
-                    }
-
-                    // if there's rr
-                    if (po.ReceivingReports != null)
-                    {
-                        foreach (var rr in po.ReceivingReports)
-                        {
-                            // if the rr's date is current date/ lifting date is current date
-                            if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
-                            {
-                                forCurrentMonth.Add(po);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                // check if there is no record
-                if (apReport.Count == 0)
-                {
                     TempData["error"] = "No Record Found";
                     return RedirectToAction(nameof(ApReport));
                 }
