@@ -7132,7 +7132,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Font.Bold = true;
                 }
 
+                row += 6;
+                worksheet.Cells[row, 1].Value = "Note:   Volume paid is the volume recorded in the Purchase Journal Report.";
+                row += 3;
+                worksheet.Cells[row, 1].Value = "Prepared by:";
+                worksheet.Cells[row, 5].Value = "Approved by:";
+                worksheet.Cells[row, 8].Value = "Acknowledged by:";
+                row += 2;
+                worksheet.Cells[row, 1].Value = "Gerecho B. Tayco";
+                worksheet.Cells[row, 5].Value = "Clifford M. Aranda";
+                worksheet.Cells[row, 8].Value = "Aniebeth S. Dionzon";
+                using (var range = worksheet.Cells[row, 1, row, 8])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.UnderLine = true;
+                }
+                row++;
+                worksheet.Cells[row, 1].Value = "Pricing Specialist";
+                worksheet.Cells[row, 5].Value = "Operations Manager";
+                worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+
                 worksheet.Columns.AutoFit();
+                worksheet.Column(1).Width = 14;
                 worksheet.Column(2).Width = 30;
 
                 #endregion == TOPSHEET ==
@@ -7142,44 +7163,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var aGroupBySupplier in groupBySupplier)
                 {
                     var firstRecord = aGroupBySupplier.FirstOrDefault();
-                    DateOnly monthYearTemp = new DateOnly(monthYear.Year, (monthYear.Month + 1), 1);
+                    DateOnly monthYearTemp = new DateOnly(monthYear.Year, (monthYear.Month), 1);
                     DateOnly lastDayOfMonth = monthYearTemp.AddDays(-1);
+                    var poGrandTotal = 0m;
+                    var unliftedLastMonthGrandTotal = 0m;
+                    var liftedThisMonthGrandTotal = 0m;
+                    var unliftedThisMonthGrandTotal = 0m;
+                    var grossAmountGrandTotal = 0m;
+                    var ewtGrandTotal = 0m;
+                    var netOfEwtGrandTotal = 0m;
+
                     worksheet = package.Workbook.Worksheets.Add(firstRecord!.Supplier!.SupplierName);
                     worksheet.Cells.Style.Font.Name = "Calibri";
-
                     worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord!.Supplier!.SupplierName}";
                     worksheet.Cells[2, 1].Value = "AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
                     worksheet.Cells[3, 1].Value = "REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
                     worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
                     worksheet.Cells[5, 1].Value = $"DUE DATE: {lastDayOfMonth.ToString("MMMM dd, yyyy")}";
                     worksheet.Cells[1, 1, 5, 1].Style.Font.Bold = true;
-                    worksheet.Cells[8, 1].Value = "PO#";
-                    worksheet.Cells[8, 2].Value = "DATE";
-                    worksheet.Cells[8, 3].Value = "PRODUCT";
-                    worksheet.Cells[8, 4].Value = "PORT";
-                    worksheet.Cells[8, 5].Value = "REFERENCE MOPS";
-                    worksheet.Cells[8, 6].Value = "ORIGINAL PO VOLUME";
-                    worksheet.Cells[8, 7].Value = "UNLIFTED LAST MONTH";
-                    worksheet.Cells[8, 8].Value = "LIFTED THIS MONTH";
-                    worksheet.Cells[8, 9].Value = "UNLIFTED THIS MONTH";
-                    worksheet.Cells[8, 10].Value = "PRICE(VAT-EX)";
-                    worksheet.Cells[8, 11].Value = "PRICE(VAT-INC)";
-                    worksheet.Cells[8, 12].Value = "GROSS AMOUNT(VAT-INC)";
-                    worksheet.Cells[8, 13].Value = "EWT";
-                    worksheet.Cells[8, 14].Value = "NET OF EWT";
-                    using (var range = worksheet.Cells[8, 1, 8, 14])
-                    {
-                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
-                    }
-                    worksheet.Row(8).Height = 36;
-
-                    row = 9;
+                    row = 8;
                     var groupByProduct = aGroupBySupplier.GroupBy(po => po.Product!.ProductName).ToList();
 
                     foreach (string product in productList)
@@ -7188,8 +7190,46 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (aGroupByProduct != null)
                         {
+                            var poSubtotal = 0m;
+                            var unliftedLastMonthSubtotal = 0m;
+                            var liftedThisMonthSubtotal = 0m;
+                            var unliftedThisMonthSubtotal = 0m;
+                            var grossAmountSubtotal = 0m;
+                            var ewtSubtotal = 0m;
+                            var netOfEwtSubtotal = 0m;
+
+                            worksheet.Cells[row, 1].Value = "PO#";
+                            worksheet.Cells[row, 2].Value = "DATE";
+                            worksheet.Cells[row, 3].Value = "PRODUCT";
+                            worksheet.Cells[row, 4].Value = "PORT";
+                            worksheet.Cells[row, 5].Value = "REFERENCE MOPS";
+                            worksheet.Cells[row, 6].Value = "ORIGINAL PO VOLUME";
+                            worksheet.Cells[row, 7].Value = "UNLIFTED LAST MONTH";
+                            worksheet.Cells[row, 8].Value = "LIFTED THIS MONTH";
+                            worksheet.Cells[row, 9].Value = "UNLIFTED THIS MONTH";
+                            worksheet.Cells[row, 10].Value = "PRICE(VAT-EX)";
+                            worksheet.Cells[row, 11].Value = "PRICE(VAT-INC)";
+                            worksheet.Cells[row, 12].Value = "GROSS AMOUNT(VAT-INC)";
+                            worksheet.Cells[row, 13].Value = "EWT";
+                            worksheet.Cells[row, 14].Value = "NET OF EWT";
+
+                            using (var range = worksheet.Cells[row, 1, row, 14])
+                            {
+                                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                                range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
+                                range.Style.Font.Bold = true;
+                            }
+
+                            worksheet.Row(row).Height = 36;
+                            row++;
+
                             foreach(var po in aGroupByProduct)
                             {
+                                // computing the cells variables
                                 var poTotal = po.Quantity;
                                 decimal grossAmount = (po.Price * po.Quantity);
                                 decimal ewt = (grossAmount / 1.12m * 0.01m);
@@ -7213,6 +7253,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
                                 }
 
+                                // incrementing subtotals
+                                poSubtotal += poTotal;
+                                unliftedLastMonthSubtotal += unliftedLastMonth;
+                                liftedThisMonthSubtotal += liftedThisMonthRrQty;
+                                unliftedThisMonthSubtotal += unliftedThisMonth;
+                                grossAmountSubtotal += grossAmount;
+                                ewtSubtotal += ewt;
+                                netOfEwtSubtotal += (grossAmountSubtotal - ewt);
+
+                                // writing the values to cells
                                 worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
                                 worksheet.Cells[row, 2].Value = po.Date.ToString("MM/dd/yyyy");
                                 worksheet.Cells[row, 3].Value = po.Product!.ProductName;
@@ -7236,10 +7286,105 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 row++;
                             }
 
-                            row++;
-                        }
+                            // incrementing grandtotals
+                            poGrandTotal += poSubtotal;
+                            unliftedLastMonthGrandTotal += unliftedLastMonthSubtotal;
+                            liftedThisMonthGrandTotal += liftedThisMonthSubtotal;
+                            unliftedThisMonthGrandTotal += unliftedThisMonthSubtotal;
+                            grossAmountGrandTotal += grossAmountSubtotal;
+                            ewtGrandTotal += ewtSubtotal;
+                            netOfEwtGrandTotal += netOfEwtSubtotal;
 
-                        // subtotals
+                            worksheet.Cells[row, 2].Value = "SUB-TOTAL";
+                            worksheet.Cells[row, 6].Value = poSubtotal;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                            if (liftedThisMonthSubtotal != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = ((grossAmountSubtotal / liftedThisMonthSubtotal) / 1.12m);
+                                worksheet.Cells[row, 11].Value = (grossAmountSubtotal / liftedThisMonthSubtotal);
+                            }
+                            worksheet.Cells[row, 12].Value = grossAmountSubtotal;
+                            worksheet.Cells[row, 13].Value = ewtSubtotal;
+                            worksheet.Cells[row, 14].Value = (grossAmountSubtotal - ewtSubtotal);
+
+                            using (var range = worksheet.Cells[row, 3, row, 5])
+                            {
+                                range.Merge = true;
+                                range.Value = product;
+                                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            }
+                            using (var range = worksheet.Cells[row, 6, row, 14])
+                            {
+                                range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            }
+                            using (var range = worksheet.Cells[row, 1, row, 14])
+                            {
+                                range.Style.Font.Bold = true;
+                                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            }
+
+                            row += 2;
+                        }
+                    }
+
+                    worksheet.Cells[row, 2].Value = "GRAND-TOTAL";
+                    worksheet.Cells[row, 6].Value = poGrandTotal;
+                    worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotal;
+                    worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotal;
+                    worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotal;
+                    if (liftedThisMonthGrandTotal != 0)
+                    {
+                        worksheet.Cells[row, 10].Value = ((grossAmountGrandTotal / liftedThisMonthGrandTotal) / 1.12m);
+                        worksheet.Cells[row, 11].Value = (grossAmountGrandTotal / liftedThisMonthGrandTotal);
+                    }
+                    worksheet.Cells[row, 12].Value = grossAmountGrandTotal;
+                    worksheet.Cells[row, 13].Value = ewtGrandTotal;
+                    worksheet.Cells[row, 14].Value = (grossAmountGrandTotal - ewtGrandTotal);
+
+                    using (var range = worksheet.Cells[row, 3, row, 5])
+                    {
+                        range.Merge = true;
+                        range.Value = "ALL PRODUCTS";
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 1, row, 14])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+
+
+                    row += 6;
+                    worksheet.Cells[row, 1].Value = "Note:   Volume paid is the volume recorded in the Purchase Journal Report.";
+                    row += 3;
+                    worksheet.Cells[row, 1].Value = "Prepared by:";
+                    worksheet.Cells[row, 5].Value = "Approved by:";
+                    worksheet.Cells[row, 8].Value = "Acknowledged by:";
+                    row += 2;
+                    worksheet.Cells[row, 1].Value = "Gerecho B. Tayco";
+                    worksheet.Cells[row, 5].Value = "Clifford M. Aranda";
+                    worksheet.Cells[row, 8].Value = "Aniebeth S. Dionzon";
+                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.UnderLine = true;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    row++;
+                    worksheet.Cells[row, 1].Value = "Pricing Specialist";
+                    worksheet.Cells[row, 5].Value = "Operations Manager";
+                    worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     }
 
                     worksheet.Columns.AutoFit();
@@ -7307,7 +7452,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (rrSubtotal != 0)
                         {
-                            worksheet.Cells[row, 5].Value = rrSubtotal - po.Quantity;
+                            worksheet.Cells[row, 5].Value = po.Quantity - rrSubtotal;
                             worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
                         }
 
@@ -7316,6 +7461,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                             range.Style.Font.Bold = true;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
                         }
                         row++;
                     }
@@ -7330,7 +7477,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = package.GetAsByteArray();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"ApReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                    $"ApReport_{monthYear.ToString("MMMMyyyy")}_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
