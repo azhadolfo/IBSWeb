@@ -24,7 +24,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class DispatchTicketController : Controller
     {
-        public readonly ApplicationDbContext _db;
+        public readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
@@ -32,11 +32,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ILogger<DispatchTicketController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
-        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork,
+        public DispatchTicketController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService,
             ILogger<DispatchTicketController> logger, IUserAccessService userAccessService)
         {
-            _db = db;
+            _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = clousStorageService;
@@ -874,7 +874,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
-                var queried = _db.MMSIDispatchTickets
+                var queried = _dbContext.MMSIDispatchTickets
                         .Include(dt => dt.Service)
                         .Include(dt => dt.Terminal)
                         .ThenInclude(dt => dt!.Port)
@@ -1053,7 +1053,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 model.ImageName = null;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
