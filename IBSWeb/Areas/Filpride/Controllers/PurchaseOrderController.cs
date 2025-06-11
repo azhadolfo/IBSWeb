@@ -908,7 +908,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update sales order number of purchase order.", "Purchase Order", purchaseOrder.Company);
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update sales order number of purchase order {purchaseOrder.PurchaseOrderNo}.", "Purchase Order", purchaseOrder.Company);
                 await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
