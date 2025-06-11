@@ -63,7 +63,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public string? PortName { get; set; }
 
-        public bool? IsTugboatCompanyOwned  { get; set; }
+        public bool? IsTugboatCompanyOwned { get; set; }
 
         public string? TugboatOwnerName { get; set; }
 

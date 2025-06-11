@@ -1,5 +1,5 @@
-﻿@model MobilityCustomerOrderSlip
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
+@model MobilityCustomerOrderSlip
 
 @{
     ViewData["Title"] = "Preview Customer Order Slip";
@@ -305,4 +305,5 @@
             image2.src = objectURL2;
         };
     </script>
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }

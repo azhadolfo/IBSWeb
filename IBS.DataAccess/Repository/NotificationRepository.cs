@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Utility.Helpers;
@@ -94,6 +94,22 @@ namespace IBS.DataAccess.Repository
                 userNotification.IsRead = true;
                 await _db.SaveChangesAsync();
             }
+        }
+
+        public async Task MarkAllAsReadAsync(string userId, CancellationToken cancellation = default)
+        {
+            await _db.UserNotifications
+                .Where(n => n.UserId == userId && !n.IsRead)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(n => n.IsRead, true), cancellation);
+        }
+
+        public async Task ArchiveAllAsync(string userId, CancellationToken cancellation = default)
+        {
+            await _db.UserNotifications
+                .Where(n => n.UserId == userId && !n.IsArchived)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(n => n.IsArchived, true), cancellation);
         }
     }
 }

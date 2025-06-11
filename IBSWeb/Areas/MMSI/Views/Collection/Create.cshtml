@@ -38,7 +38,15 @@
                             <div class="row py-2">
                                 <div class="col-2"><h3 class="m-0 p-0">Collection</h3></div>
                             </div>
-                            <div class="row mb-3">
+                            <div class="row my-3">
+                                <div class="form-group col-4">
+                                    <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
+                                    <input id="customerIsVatable" type="hidden">
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                                        <option value="">Select Customer</option>
+                                    </select>
+                                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                                </div>
                                 <div class="form-floating col-4">
                                     <input asp-for="MMSICollectionNumber" type="text" class="form-control border-0 shadow" id="MMSICollectionNumber" placeholder="#" readonly>
                                     <label asp-for="MMSICollectionNumber" for="MMSICollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
@@ -51,20 +59,12 @@
                                         Undocumented
                                     </label>
                                 </div>
+                            </div>
+                            <div class="row mb-3">
                                 <div class="form-floating col-4">
                                     <input asp-for="Date" type="date" id="Date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
                                     <label asp-for="Date" for="Date" class="ms-2">Date</label>
                                     <span asp-validation-for="Date" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="row my-3">
-                                <div class="form-group col-4">
-                                    <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                                    <input id="customerIsVatable" type="hidden">
-                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
-                                        <option value="">Select Customer</option>
-                                    </select>
-                                    <span asp-validation-for="CustomerId" class="text-danger"></span>
                                 </div>
                                 <input type="hidden" id="undeductedAmount">
                                 <input type="hidden" asp-for="Amount" value="@Model.Amount" id="amount">
@@ -145,7 +145,7 @@
                     </div>
                 </div>
                 
-                <div class="row justify-content-end mt-4">
+                <div class="row justify-content-end mt-4 mb-3">
                     <div class="text-center" style="width: 250px;">
                         <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                     </div>

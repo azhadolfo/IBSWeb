@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public MsapRepository (ApplicationDbContext dbContext)
+        public MsapRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }

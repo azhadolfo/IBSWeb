@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class TugboatOwnerController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly ILogger<TugboatOwnerController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TugboatOwnerController(ApplicationDbContext db)
+        public TugboatOwnerController(ApplicationDbContext dbContext, ILogger<TugboatOwnerController> logger, IUnitOfWork unitOfWork)
         {
-            _db = db;
+            _dbContext = dbContext;
+            _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var companyOwners = _db.MMSITugboatOwners.ToList();
-
+            var companyOwners = await _unitOfWork.TugboatOwner.GetAllAsync(null, cancellationToken);
             return View(companyOwners);
         }
 
@@ -33,33 +37,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITugboatOwner model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
-                await _db.MMSITugboatOwners.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.TugboatOwner.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
-
+                _logger.LogError(ex, "Failed to create tugboat owner.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
                 return View(model);
             }
         }
@@ -67,19 +64,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSITugboatOwners
-                    .FirstOrDefaultAsync(i => i.TugboatOwnerId == id, cancellationToken);
+                var model = await _unitOfWork.TugboatOwner.GetAsync(i => i.TugboatOwnerId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSITugboatOwners.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.TugboatOwner.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception)
@@ -91,31 +84,40 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSITugboatOwners.Where(a => a.TugboatOwnerId == id).
-                FirstOrDefaultAsync(cancellationToken);
-
+            var model = await _unitOfWork.TugboatOwner.GetAsync(a => a.TugboatOwnerId == id, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITugboatOwner model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSITugboatOwners.FindAsync(model.TugboatOwnerId, cancellationToken);
+            var currentModel = await _unitOfWork.TugboatOwner.GetAsync(t => t.TugboatOwnerId == model.TugboatOwnerId, cancellationToken);
 
             if (currentModel == null)
             {
-                return NotFound();
+                TempData["error"] = "Entry not found, please try again.";
+                return View(model);
             }
 
-            currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
-            currentModel.TugboatOwnerName = model.TugboatOwnerName;
-            currentModel.FixedRate = model.FixedRate;
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            await _db.SaveChangesAsync(cancellationToken);
-
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
+                currentModel.TugboatOwnerName = model.TugboatOwnerName;
+                currentModel.FixedRate = model.FixedRate;
+                await _unitOfWork.TugboatOwner.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit tugboat owner.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
     }
 }

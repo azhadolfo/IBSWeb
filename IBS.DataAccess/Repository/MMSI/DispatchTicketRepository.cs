@@ -1,3 +1,5 @@
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -10,9 +12,49 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public DispatchTicketRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public DispatchTicketRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MMSIDispatchTicket>> GetAllAsync(Expression<Func<MMSIDispatchTicket, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIDispatchTicket> query = dbSet
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<MMSIDispatchTicket?> GetAsync(Expression<Func<MMSIDispatchTicket, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            MMSIDispatchTicket? model =  await dbSet.Where(filter)
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Tugboat).ThenInclude(t => t!.TugboatOwner)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (model!.CustomerId != 0 && model!.CustomerId != null)
+            {
+                model.Customer = await _dbContext.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+            }
+
+            return model;
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
@@ -35,7 +77,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortNumber + " " + s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -109,10 +151,10 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
         public async Task<MMSIDispatchTicket> GetDispatchTicketLists(MMSIDispatchTicket model, CancellationToken cancellationToken = default)

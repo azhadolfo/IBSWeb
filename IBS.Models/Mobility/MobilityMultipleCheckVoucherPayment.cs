@@ -8,7 +8,7 @@ namespace IBS.Models.Mobility
 
         [ForeignKey(nameof(CheckVoucherHeaderPaymentId))]
         public MobilityCheckVoucherHeader? CheckVoucherHeaderPayment { get; set; } = null;
-        public int CheckVoucherHeaderPaymentId{ get; set; }
+        public int CheckVoucherHeaderPaymentId { get; set; }
 
         [ForeignKey(nameof(CheckVoucherHeaderInvoiceId))]
         public MobilityCheckVoucherHeader? CheckVoucherHeaderInvoice { get; set; } = null;

@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
@@ -175,47 +175,15 @@ namespace IBS.DataAccess.Repository.Filpride
             return test;
         }
 
-        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, decimal grossMargin, bool isGrossMarginChanged, CancellationToken cancellationToken = default)
+        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
         {
             customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
-
-            if (isGrossMarginChanged)
-            {
-                customerOrderSlip.DeliveredPrice = UpdateCosPrice(grossMargin, customerOrderSlip);
-            }
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
             customerOrderSlip.Status = nameof(CosStatus.ForApprovalOfFM);
 
             await _db.SaveChangesAsync(cancellationToken);
-        }
-
-        private decimal UpdateCosPrice(decimal grossMargin, FilprideCustomerOrderSlip existingRecord)
-        {
-            decimal netOfVatProductCost = 0;
-
-            var appointedSupplier = _db.FilprideCOSAppointedSuppliers
-                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
-                .ToList();
-
-            decimal totalPoAmount = 0;
-
-            foreach (var item in appointedSupplier)
-            {
-                var po = _db.FilpridePurchaseOrders.Find(item.PurchaseOrderId);
-                totalPoAmount += item.Quantity * ComputeNetOfVat(po!.Price);
-            }
-
-            netOfVatProductCost = totalPoAmount / appointedSupplier.Sum(a => a.Quantity);
-
-            var netOfVatCosPrice = existingRecord.DeliveredPrice / 1.12m;
-            var netOfVatFreightCharge = existingRecord.Freight / 1.12m;
-            var existingGrossMargin = netOfVatCosPrice - netOfVatProductCost - netOfVatFreightCharge - existingRecord.CommissionRate;
-
-            // Calculate new net cost price using the provided gross margin
-            decimal newNetOfVatCosPrice = grossMargin + (decimal)(existingRecord.CommissionRate + netOfVatFreightCharge + netOfVatProductCost)!;
-            return Math.Round(newNetOfVatCosPrice * 1.12m, 4);
         }
 
         public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)

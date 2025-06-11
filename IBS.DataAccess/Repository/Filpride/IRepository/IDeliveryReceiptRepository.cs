@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -26,5 +26,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task AutoReversalEntryForInTransit(CancellationToken cancellationToken = default);
 
         Task<bool> CheckIfManualDrNoExists(string manualDrNo);
+
+        Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, CancellationToken cancellationToken = default);
     }
 }

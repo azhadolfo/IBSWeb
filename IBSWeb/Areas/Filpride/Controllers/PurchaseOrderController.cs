@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             purchaseOrders = purchaseOrders
                                 .Where(rr => rr.Status == nameof(DRStatus.ForApprovalOfOM));
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -875,7 +875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
-                return Json(new { success = true});
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {

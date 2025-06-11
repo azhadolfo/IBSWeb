@@ -1,11 +1,12 @@
-﻿@model CheckVoucherVM
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+﻿@using System.Globalization
 @using Humanizer
 @using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Identity
+@model CheckVoucherVM
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 
 @{
     ViewData["Title"] = "Print Check Voucher";
@@ -171,12 +172,12 @@
 
                     // Convert integer part to words
                     string integerWords = integerPart.ToWords();
-                    integerWords = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(integerWords.ToLower());
+                    integerWords = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(integerWords.ToLower());
 
                     // Convert and format cents value
                     int cents = Convert.ToInt32(decimalPart * 100) % 100;
                     string centsWords = cents.ToWords(); // Use ToWords instead of string formatting
-                    centsWords = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(centsWords.ToLower());
+                    centsWords = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(centsWords.ToLower());
 
                     string upperCaseOne = integerWords;
                     string upperCaseTwo = centsWords;
@@ -444,5 +445,5 @@
             })
         }
     </script>
-
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }

@@ -384,7 +384,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(col).Width = 50;
                 worksheet.Cells[headerRow, col].Value = "PRINCIPAL";
                 // formatting of subcategories
-                using (var range = worksheet.Cells[headerRow, col-1, headerRow, col])
+                using (var range = worksheet.Cells[headerRow, col - 1, headerRow, col])
                 {
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(153, 204, 255));
@@ -393,7 +393,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #endregion
 
                 worksheet.Row(6).Height = 64;
-                using (var range = worksheet.Cells[6, 1, 6, col-3])
+                using (var range = worksheet.Cells[6, 1, 6, col - 3])
                 {
                     range.Style.Font.Size = 8;
                     range.Style.WrapText = true;
@@ -405,7 +405,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
                 }
 
-                using (var range = worksheet.Cells[6, col-1, 6, col])
+                using (var range = worksheet.Cells[6, col - 1, 6, col])
                 {
                     range.Style.Font.Size = 8;
                     range.Style.WrapText = true;

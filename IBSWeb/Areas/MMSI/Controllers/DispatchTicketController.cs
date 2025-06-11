@@ -24,7 +24,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class DispatchTicketController : Controller
     {
-        public readonly ApplicationDbContext _db;
+        public readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
@@ -32,11 +32,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ILogger<DispatchTicketController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
-        public DispatchTicketController(ApplicationDbContext db, IUnitOfWork unitOfWork,
+        public DispatchTicketController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService,
             ILogger<DispatchTicketController> logger, IUserAccessService userAccessService)
         {
-            _db = db;
+            _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = clousStorageService;
@@ -46,22 +46,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<IActionResult> Index(string filterType)
         {
-            var dispatchTickets = await _db.MMSIDispatchTickets
-                .Where(dt => dt.Status != "For Posting" && dt.Status != "Cancelled")
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .ToListAsync();
-
+            var dispatchTickets = await _unitOfWork.DispatchTicket
+                .GetAllAsync(dt => dt.Status != "For Posting" && dt.Status != "Cancelled");
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(dispatchTickets);
         }
 
         [HttpGet]
-        public async Task <IActionResult> Create(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
         {
             if (!await _userAccessService.CheckAccess(_userManager.GetUserId(User)!, ProcedureEnum.CreateDispatchTicket, cancellationToken))
             {
@@ -70,13 +63,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             var companyClaims = await GetCompanyClaimAsync();
-
             var viewModel = new ServiceRequestViewModel();
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-
             ViewData["PortId"] = 0;
-
             return View(viewModel);
         }
 
@@ -87,30 +77,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-
                 TempData["error"] = "Can't create entry, please review your input.";
                 ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
-
                 return View(viewModel);
             }
 
-            var model = ServiceRequestToDispatchTicket(viewModel);
+            var model = ServiceRequestVmToDispatchTicket(viewModel);
 
             try
             {
-                model.Terminal = await _db.MMSITerminals.FindAsync(model.TerminalId, cancellationToken);
-                model.Terminal!.Port = await _db.MMSIPorts.FindAsync(model.Terminal.PortId, cancellationToken);
-                DateTime timeStamp = DateTime.Now;
-
+                model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
+                model.Terminal!.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
+                DateTime timeStamp = default;
                 model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
-                model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
+                model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
                     model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                    timeStamp = DateTime.Now;
+                    timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CreatedDate = timeStamp;
 
                     // upload file if something is submitted
@@ -118,14 +105,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         model.ImageName = GenerateFileNameToSave(imageFile.FileName, "img");
                         model.ImageSavedUrl = await _cloudStorageService.UploadFileAsync(imageFile, model.ImageName!);
-
                         ViewBag.Message = "Image uploaded successfully!";
                     }
+
                     if (videoFile != null && videoFile.Length > 0)
                     {
                         model.VideoName = GenerateFileNameToSave(videoFile.FileName, "vid");
                         model.VideoSavedUrl = await _cloudStorageService.UploadFileAsync(videoFile, model.VideoName!);
-
                         ViewBag.Message = "Video uploaded successfully!";
                     }
 
@@ -156,11 +142,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
 
                     model.TotalHours = totalHours;
-                    await _db.MMSIDispatchTickets.AddAsync(model, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
-
-                    var tempModel =
-                        await _db.MMSIDispatchTickets.FirstOrDefaultAsync(dt => dt.CreatedDate == timeStamp);
+                    await _unitOfWork.DispatchTicket.AddAsync(model, cancellationToken);
+                    var tempModel = await _unitOfWork.DispatchTicket
+                        .GetAsync(dt => dt.CreatedDate == timeStamp, cancellationToken);
 
                     #region -- Audit Trail
 
@@ -174,31 +158,27 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                     };
 
-                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
 
                     #endregion --Audit Trail
 
                     TempData["success"] = $"Dispatch Ticket #{tempModel.DispatchNumber} was successfully created.";
-
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
                 return View(viewModel);
-
             }
             catch (Exception ex)
             {
-                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+                _logger.LogError(ex, "Failed to create dispatch ticket.");
+                viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["error"] = $"{ex.Message}";
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
                 return View(viewModel);
             }
         }
@@ -206,6 +186,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public void ReadXLS(string FilePath)
         {
             FileInfo existingFile = new FileInfo(FilePath);
+
             using (ExcelPackage package = new ExcelPackage(existingFile))
             {
                 ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
@@ -222,99 +203,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult UploadExcel()
+        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
         {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task <IActionResult> UploadExcel(IFormFile excelFile, CancellationToken cancellationToken)
-        {
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "tempFiles");
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            var fullPath = Path.Combine(uploadsFolder, excelFile.FileName);
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await excelFile.CopyToAsync(stream);
-            }
-
-            string name = excelFile.FileName;
-            FileInfo existingFile = new FileInfo(fullPath);
-            using var package = new ExcelPackage(existingFile);
-            var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-
-            if (worksheet == null || worksheet.Dimension == null)
-            {
-                return BadRequest("The uploaded Excel file is null.");
-            }
-
-            int colCount = worksheet.Dimension.End.Column;
-            int rowCount = worksheet.Dimension.End.Row;
-
-            #region == Excel Reading ==
-
-            string dateFormat = "MM/dd/yyyy";
-
-            for (int row = 9; row <= rowCount; row++)
-            {
-                string dateFromExcel = worksheet.Cells[row, 1].Value.ToString()!.Trim();
-                DateTime datePart = DateTime.ParseExact(dateFromExcel, dateFormat, CultureInfo.InvariantCulture);
-                var dispatchNumber = worksheet.Cells[row, 2].Value?.ToString()?.Trim();
-                var cosNumber = worksheet.Cells[row, 3].Value?.ToString()?.Trim();
-                var dateTimeLeft = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
-                var dataTimeTimeArrived = worksheet.Cells[row, 5].Value?.ToString()?.Trim();
-                var tugboat = worksheet.Cells[row, 6].Value?.ToString()?.Trim();
-                var tugboatName = worksheet.Cells[row, 7].Value?.ToString()?.Trim();
-                var tugMaster = worksheet.Cells[row, 8].Value?.ToString()?.Trim();
-                var tugMasterName = worksheet.Cells[row, 9].Value?.ToString()?.Trim();
-                var vessel = worksheet.Cells[row, 10].Value?.ToString()?.Trim();
-                var vesselName = worksheet.Cells[row, 11].Value?.ToString()?.Trim();
-                var port = worksheet.Cells[row, 12].Value?.ToString()?.Trim();
-                var portName = worksheet.Cells[row, 13].Value?.ToString()?.Trim();
-                var berminal = worksheet.Cells[row, 14].Value?.ToString()?.Trim();
-                var berminalName = worksheet.Cells[row, 15].Value?.ToString()?.Trim();
-                var baseOrStation = worksheet.Cells[row, 16].Value?.ToString()?.Trim();
-                var bctivityService = worksheet.Cells[row, 17].Value?.ToString()?.Trim();
-                var remarks = worksheet.Cells[row, 18].Value?.ToString()?.Trim();
-                var voyageNumber = worksheet.Cells[row, 19].Value?.ToString()?.Trim();
-
-                if (string.IsNullOrEmpty(dispatchNumber) && string.IsNullOrEmpty(dateTimeLeft) && string.IsNullOrEmpty(dataTimeTimeArrived))
-                {
-                    continue; // Skip empty rows
-                }
-
-                // var model = new ExcelTestModel
-                // {
-                //     // equate the values gathered to the model instance here
-                // };
-                //
-                // await _db.ExcelTestModels.AddAsync(model, cancellationToken);
-            }
-
-            #endregion
-
-            await _db.SaveChangesAsync(cancellationToken);
-
-            return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-        }
-
-        public async Task<IActionResult> Preview (int id, CancellationToken cancellationToken)
-        {
-            var model = await _db.MMSIDispatchTickets.Where(dt => dt.DispatchTicketId == id)
-                .Include(t => t.Service)
-                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
-                .Include(t => t.Tugboat)
-                .ThenInclude(t => t!.TugboatOwner)
-                .Include(t => t.TugMaster)
-                .Include(t => t.Vessel)
-                .Include((t => t.Customer))
-                .FirstOrDefaultAsync(cancellationToken);
+            var model = await _unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
             if (model == null)
             {
@@ -323,7 +215,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             await GenerateSignedUrl(model);
             ViewBag.FilterType = await GetCurrentFilterType();
-
             return View(model);
         }
 
@@ -336,15 +227,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == id)
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat).ThenInclude(t => t!.TugboatOwner)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .Include(a => a.Customer)
-                .FirstOrDefaultAsync(cancellationToken);
+            var model = await _unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
             if (model == null)
             {
@@ -352,10 +236,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             var viewModel = DispatchTicketModelToTariffVm(model);
-
             viewModel.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
             ViewBag.FilterType = await GetCurrentFilterType();
-
             return View(viewModel);
         }
 
@@ -367,15 +249,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
             }
 
             var model = TariffVmToDispatchTicket(vm);
 
             try
             {
-                var currentModel = await _db.MMSIDispatchTickets
-                    .FindAsync(model.DispatchTicketId, cancellationToken);
+                var currentModel = await _unitOfWork.DispatchTicket
+                    .GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                 if (currentModel == null)
                 {
@@ -383,7 +265,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 currentModel.Status = "For Approval";
-
                 currentModel.TariffBy = user!.UserName!;
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.DispatchRate = model.DispatchRate;
@@ -411,19 +292,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 };
 
-                await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.TariffTable.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
                 TempData["success"] = "Tariff entered successfully!";
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to set tariff.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId } );
+                return RedirectToAction(nameof(SetTariff), new { id = vm.DispatchTicketId });
             }
         }
 
@@ -436,16 +317,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == id)
-                .Include(a => a.Service)
-                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                .Include(a => a.Tugboat)
-                .ThenInclude(t => t!.TugboatOwner)
-                .Include(a => a.TugMaster)
-                .Include(a => a.Vessel)
-                .Include(a => a.Customer)
-                .FirstOrDefaultAsync(cancellationToken);
+            var model = await _unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
             if (model == null)
             {
@@ -453,10 +326,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             var viewModel = DispatchTicketModelToTariffVm(model);
-
             viewModel.Customers = await _unitOfWork.DispatchTicket.GetMMSICustomersById(cancellationToken);
             ViewBag.FilterType = await GetCurrentFilterType();
-
             return View(viewModel);
         }
 
@@ -468,15 +339,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["error"] = "The submitted information is invalid.";
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
             }
 
             var model = TariffVmToDispatchTicket(viewModel);
 
             try
             {
-                var currentModel = await _db.MMSIDispatchTickets
-                    .FindAsync(model.DispatchTicketId, cancellationToken);
+                var currentModel = await _unitOfWork.DispatchTicket
+                    .GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                 if (currentModel == null)
                 {
@@ -486,7 +357,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #region -- Changes
 
                 var changes = new List<string>();
-
                 if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                 if (currentModel.DispatchChargeType != chargeType) { changes.Add($"DispatchChargeType: {currentModel.DispatchChargeType} -> {chargeType}"); }
                 if (currentModel.BAFChargeType != chargeType2) { changes.Add($"BAFChargeType: {currentModel.BAFChargeType} -> {chargeType2}"); }
@@ -535,19 +405,19 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 };
 
-                await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion -- Audit Trail
 
                 TempData["success"] = "Tariff edited successfully!";
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit tariff.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId } );
+                return RedirectToAction(nameof(EditTariff), new { id = viewModel.DispatchTicketId });
             }
         }
 
@@ -562,10 +432,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var model = await _db.MMSIDispatchTickets
-                .Where(dt => dt.DispatchTicketId == id)
-                .Include(dt => dt.Terminal).ThenInclude(t => t!.Port)
-                .FirstOrDefaultAsync(cancellationToken);
+            var model = await _unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
             if (model == null)
             {
@@ -573,8 +441,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
 
             var viewModel = DispatchTicketModelToServiceRequestVm(model);
-
-            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketLists(viewModel, cancellationToken);
+            viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
 
             if (!string.IsNullOrEmpty(model.ImageName))
@@ -588,7 +455,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             ViewData["PortId"] = model?.Terminal?.Port?.PortId;
             ViewBag.FilterType = await GetCurrentFilterType();
-
             return View(viewModel);
         }
 
@@ -601,25 +467,23 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
 
-            var model = ServiceRequestToDispatchTicket(viewModel);
-
+            var model = ServiceRequestVmToDispatchTicket(viewModel);
             var user = await _userManager.GetUserAsync(User);
 
             try
             {
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
-                    var currentModel = await _db.MMSIDispatchTickets
-                        .FindAsync(model.DispatchTicketId, cancellationToken);
+                    var currentModel = await _unitOfWork.DispatchTicket
+                        .GetAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
 
                     if (currentModel == null)
                     {
                         return NotFound();
                     }
 
-                    model.Tugboat = await _db.MMSITugboats.FindAsync(model.TugBoatId, cancellationToken);
-                    model.Customer = await _db.FilprideCustomers.FindAsync(model.CustomerId, cancellationToken);
-
+                    model.Tugboat = await _unitOfWork.Tugboat.GetAsync(t => t.TugboatId == model.TugBoatId, cancellationToken);
+                    model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(t => t.CustomerId == model.CustomerId, cancellationToken);
                     DateTime dateTimeLeft = model.DateLeft.ToDateTime(model.TimeLeft);
                     DateTime dateTimeArrived = model.DateArrived.ToDateTime(model.TimeArrived);
                     TimeSpan timeDifference = dateTimeArrived - dateTimeLeft;
@@ -678,12 +542,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #region -- Changes
 
                     var changes = new List<string>();
-
                     if (currentModel.Date != model.Date) { changes.Add($"Date: {currentModel.Date} -> {model.Date}"); }
                     if (currentModel.DispatchNumber != model.DispatchNumber) { changes.Add($"DispatchNumber: {currentModel.DispatchNumber} -> {model.DispatchNumber}"); }
-                    if (currentModel.COSNumber  != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
+                    if (currentModel.COSNumber != model.COSNumber) { changes.Add($"COSNumber: {currentModel.COSNumber} -> {model.COSNumber}"); }
                     if (currentModel.VoyageNumber != model.VoyageNumber) { changes.Add($"VoyageNumber: {currentModel.VoyageNumber} -> {model.VoyageNumber}"); }
-                    if (currentModel.CustomerId  != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
+                    if (currentModel.CustomerId != model.CustomerId) { changes.Add($"CustomerId: {currentModel.CustomerId} -> {model.CustomerId}"); }
                     if (currentModel.DateLeft != model.DateLeft) { changes.Add($"DateLeft: {currentModel.DateLeft} -> {model.DateLeft}"); }
                     if (currentModel.TimeLeft != model.TimeLeft) { changes.Add($"TimeLeft: {currentModel.TimeLeft} -> {model.TimeLeft}"); }
                     if (currentModel.DateArrived != model.DateArrived) { changes.Add($"DateArrived: {currentModel.DateArrived} -> {model.DateArrived}"); }
@@ -727,17 +590,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     // reset the state of tariff
                     currentModel.Status = "For Tariff";
-                    currentModel.DispatchRate = default;
-                    currentModel.DispatchBillingAmount = default;
-                    currentModel.DispatchDiscount = default;
-                    currentModel.DispatchNetRevenue = default;
-                    currentModel.BAFRate = default;
-                    currentModel.BAFBillingAmount = default;
-                    currentModel.BAFDiscount = default;
-                    currentModel.BAFNetRevenue = default;
-                    currentModel.TotalBilling = default;
-                    currentModel.TotalNetRevenue = default;
-                    currentModel.ApOtherTugs = default;
+                    currentModel.DispatchRate = 0;
+                    currentModel.DispatchBillingAmount = 0;
+                    currentModel.DispatchDiscount = 0;
+                    currentModel.DispatchNetRevenue = 0;
+                    currentModel.BAFRate = 0;
+                    currentModel.BAFBillingAmount = 0;
+                    currentModel.BAFDiscount = 0;
+                    currentModel.BAFNetRevenue = 0;
+                    currentModel.TotalBilling = 0;
+                    currentModel.TotalNetRevenue = 0;
+                    currentModel.ApOtherTugs = 0;
                     currentModel.TariffBy = string.Empty;
                     currentModel.TariffDate = default;
                     currentModel.TariffEditedBy = string.Empty;
@@ -770,28 +633,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
                         Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException(),
                     };
 
-                    await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                    await _db.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                    await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                     #endregion --Audit Trail
 
                     TempData["success"] = "Entry edited successfully!";
-
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 else
                 {
                     TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
                     return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit ticket.");
                 TempData["error"] = ex.Message;
                 ViewData["PortId"] = model?.Terminal?.Port?.PortId;
-
                 return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
         }
@@ -806,7 +667,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
@@ -827,19 +688,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException(),
                 };
 
-                await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
                 TempData["success"] = "Entry Approved!";
-
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType()});
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to approve tariff.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -854,7 +714,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
@@ -875,19 +735,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException(),
                 };
 
-                await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
                 TempData["success"] = "Approval revoked successfully!";
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to revoke tariff approval.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -902,7 +761,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
@@ -923,19 +782,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException(),
                 };
 
-                await _db.FilprideAuditTrails.AddAsync(audit, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(audit, cancellationToken);
+                await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
 
                 #endregion --Audit Trail
 
                 TempData["success"] = "Entry Disapproved!";
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to disapprove tariff.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -944,7 +802,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model != null)
                 {
@@ -959,23 +817,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     //}
 
                     model.Status = "Cancelled";
-                    _db.SaveChanges();
+                    await _unitOfWork.DispatchTicket.SaveAsync(cancellationToken);
                     TempData["success"] = "Service Request cancelled.";
-
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 
                 else
                 {
                     TempData["error"] = "Can't find entry, please try again.";
-
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to cancel dispatch ticket.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
@@ -983,18 +839,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> ChangeTerminal(int portId, CancellationToken cancellationToken)
         {
-            var terminals = await _db
-                .MMSITerminals
-                .Where(t => t.PortId == portId)
-                .OrderBy(t => t.TerminalName)
-                .ToListAsync(cancellationToken);
-
+            var terminals = await _unitOfWork.Terminal.GetAllAsync(t => t.PortId == portId, cancellationToken);
             var terminalsList = terminals.Select(t => new SelectListItem
             {
                 Value = t.TerminalId.ToString(),
                 Text = t.TerminalName
             }).ToList();
-
             return Json(terminalsList);
         }
 
@@ -1002,27 +852,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken)
         {
             var item = new List<MMSIDispatchTicket>();
+
             if (status == "All" || status == null)
             {
-                item = await _db.MMSIDispatchTickets
-                    .Where(dt => dt.Status != "Cancelled" && dt.Status != "For Posting")
-                    .Include(a => a.Service)
-                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                    .Include(a => a.Tugboat)
-                    .Include(a => a.TugMaster)
-                    .Include(a => a.Vessel)
-                    .ToListAsync();
+                item = (await _unitOfWork.DispatchTicket
+                    .GetAllAsync(dt => dt.Status != "Cancelled" && dt.Status != "For Posting", cancellationToken)).ToList();
             }
             else
             {
-                item = await _db.MMSIDispatchTickets
-                    .Where(dt => dt.Status == status)
-                    .Include(a => a.Service)
-                    .Include(a => a.Terminal).ThenInclude(t => t!.Port)
-                    .Include(a => a.Tugboat)
-                    .Include(a => a.TugMaster)
-                    .Include(a => a.Vessel)
-                    .ToListAsync(cancellationToken);
+                item = (await _unitOfWork.DispatchTicket
+                    .GetAllAsync(dt => dt.Status == status, cancellationToken)).ToList();
             }
 
             return Json(item);
@@ -1035,8 +874,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
-
-                var queried = _db.MMSIDispatchTickets
+                var queried = _dbContext.MMSIDispatchTickets
                         .Include(dt => dt.Service)
                         .Include(dt => dt.Terminal)
                         .ThenInclude(dt => dt!.Port)
@@ -1071,7 +909,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                             queried = queried.Where(dt =>
                                 dt.Status == "For Collection");
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 
@@ -1079,18 +917,38 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
+                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
 
                     queried = queried
                     .Where(dt =>
+                        dt.Date.Day.ToString().Contains(searchValue) == true ||
+                        dt.Date.Month.ToString().Contains(searchValue) == true ||
+                        dt.Date.Year.ToString().Contains(searchValue) == true ||
+
                         dt.COSNumber!.ToLower().Contains(searchValue) == true ||
-                        dt.DispatchNumber.ToString().Contains(searchValue) == true ||
-                        dt.Service!.ServiceName.ToString().Contains(searchValue) == true ||
-                        dt.Terminal!.TerminalName!.ToString().Contains(searchValue) == true ||
-                        dt.Terminal.Port!.PortName!.ToString().Contains(searchValue) == true ||
-                        dt.Tugboat!.TugboatName.ToString().Contains(searchValue) == true ||
-                        dt.TugMaster!.TugMasterName.ToString().Contains(searchValue) == true ||
-                        dt.Vessel!.VesselName.ToString().Contains(searchValue) == true ||
-                        dt.Status.Contains(searchValue) == true
+                        dt.DispatchNumber.ToLower().Contains(searchValue) == true ||
+
+                        dt.DateLeft.Day.ToString().Contains(searchValue) == true ||
+                        dt.DateLeft.Month.ToString().Contains(searchValue) == true ||
+                        dt.DateLeft.Year.ToString().Contains(searchValue) == true ||
+
+                        dt.TimeLeft.Hour.ToString().Contains(searchValue) == true ||
+                        dt.TimeLeft.Minute.ToString().Contains(searchValue) == true ||
+
+                        dt.DateArrived.Day.ToString().Contains(searchValue) == true ||
+                        dt.DateArrived.Month.ToString().Contains(searchValue) == true ||
+                        dt.DateArrived.Year.ToString().Contains(searchValue) == true ||
+
+                        dt.TimeArrived.Hour.ToString().Contains(searchValue) == true ||
+                        dt.TimeArrived.Minute.ToString().Contains(searchValue) == true ||
+
+                        dt.Service!.ServiceName.ToLower().Contains(searchValue) == true ||
+                        dt.Terminal!.Port!.PortName!.ToLower().Contains(searchValue) == true ||
+                        dt.Terminal!.TerminalName!.ToLower().Contains(searchValue) == true ||
+                        dt.Tugboat!.TugboatName.ToLower().Contains(searchValue) == true ||
+                        dt.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
+                        dt.Vessel!.VesselName.ToLower().Contains(searchValue) == true ||
+                        dt.Status.ToLower().Contains(searchValue) == true
                         );
                 }
 
@@ -1138,14 +996,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-
                     queried = queried
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
                 var totalRecords = queried.Count();
-
                 var pagedData = queried
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
@@ -1171,7 +1027,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get disbursements.");
+                _logger.LogError(ex, "Failed to get dispatch tickets.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
@@ -1181,7 +1037,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIDispatchTickets.FindAsync(id, cancellationToken);
+                var model = await _unitOfWork.DispatchTicket
+                    .GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
 
                 if (model == null)
                 {
@@ -1196,36 +1053,33 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 model.ImageName = null;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Image Deleted Successfully!";
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete image.");
                 TempData["error"] = ex.Message;
-
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
 
-        public async Task<IActionResult> CheckForTariffRate (int customerId, int dispatchTicketId, CancellationToken cancellationToken)
+        public async Task<IActionResult> CheckForTariffRate(int customerId, int dispatchTicketId, CancellationToken cancellationToken)
         {
-            var dispatchModel = await _db.MMSIDispatchTickets
-                .FindAsync(dispatchTicketId, cancellationToken);
+            var dispatchModel = await _unitOfWork.DispatchTicket
+                .GetAsync(dt => dt.DispatchTicketId == dispatchTicketId, cancellationToken);
 
             if (dispatchModel == null)
             {
                 return NotFound();
             }
 
-            var tariffRate = await _db.MMSITariffRates
-                .Where(t => t.CustomerId == customerId &&
-                            t.TerminalId == dispatchModel.TerminalId &&
-                            t.ServiceId == dispatchModel.ServiceId &&
-                            t.AsOfDate <= dispatchModel.DateLeft)
-                .OrderByDescending(t => t.AsOfDate)
-                .FirstOrDefaultAsync(cancellationToken);
+            var tariffRate = await _unitOfWork.TariffTable
+                .GetAsync(t => t.CustomerId == customerId &&
+                               t.TerminalId == dispatchModel.TerminalId &&
+                               t.ServiceId == dispatchModel.ServiceId &&
+                               t.AsOfDate <= dispatchModel.DateLeft, cancellationToken);
 
             if (tariffRate != null)
             {
@@ -1258,6 +1112,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 model.ImageSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.ImageName);
             }
+
             if (!string.IsNullOrWhiteSpace(model.VideoName))
             {
                 model.VideoSignedUrl = await _cloudStorageService.GetSignedUrlAsync(model.VideoName);
@@ -1271,10 +1126,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 return await _cloudStorageService.GetSignedUrlAsync(uploadName);
             }
-            else
-            {
-                throw new Exception("Upload name invalid.");
-            }
+            throw new Exception("Upload name invalid.");
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -1293,6 +1145,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private async Task UpdateFilterTypeClaim(string filterType)
         {
             var user = await _userManager.GetUserAsync(User);
+
             if (user != null)
             {
                 var existingClaim = (await _userManager.GetClaimsAsync(user))
@@ -1313,12 +1166,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private async Task<string?> GetCurrentFilterType()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user != null)
+
+            if (user == null)
             {
-                var claims = await _userManager.GetClaimsAsync(user);
-                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+                return null;
             }
-            return null;
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+
         }
 
         private async Task<string?> GetUserNameAsync()
@@ -1327,14 +1183,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return user?.UserName;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName, string type)
+        private static string? GenerateFileNameToSave(string incomingFileName, string type)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
             return $"{fileName}-{type}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
 
-        public MMSIDispatchTicket ServiceRequestToDispatchTicket(ServiceRequestViewModel vm)
+        public MMSIDispatchTicket ServiceRequestVmToDispatchTicket(ServiceRequestViewModel vm)
         {
             var model = new MMSIDispatchTicket
             {

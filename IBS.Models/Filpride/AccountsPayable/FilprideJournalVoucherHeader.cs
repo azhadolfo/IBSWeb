@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -46,5 +46,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         public string? Type { get; set; }
+
+        public ICollection<FilprideJournalVoucherDetail>? Details { get; set; }
     }
 }

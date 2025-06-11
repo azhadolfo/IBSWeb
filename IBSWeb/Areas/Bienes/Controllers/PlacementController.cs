@@ -68,20 +68,20 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 var query = await _unitOfWork.BienesPlacement
                     .GetAllAsync(cancellationToken: cancellationToken);
 
-                    if (!string.IsNullOrEmpty(parameters.Search?.Value))
-                    {
-                        var searchValue = parameters.Search.Value.ToLower();
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
 
-                        query = query
-                            .Where(s =>
-                                s.ControlNumber.ToLower().Contains(searchValue) ||
-                                s.CreatedDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                                s.Company.CompanyName.ToLower().Contains(searchValue) ||
-                                s.BankAccount?.Bank.ToLower().Contains(searchValue) == true ||
-                                s.TDAccountNumber.ToLower().Contains(searchValue) ||
-                                s.PrincipalAmount.ToString().Contains(searchValue)
-                        )
-                        .ToList();
+                    query = query
+                        .Where(s =>
+                            s.ControlNumber.ToLower().Contains(searchValue) ||
+                            s.CreatedDate.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.Company.CompanyName.ToLower().Contains(searchValue) ||
+                            s.BankAccount?.Bank.ToLower().Contains(searchValue) == true ||
+                            s.TDAccountNumber.ToLower().Contains(searchValue) ||
+                            s.PrincipalAmount.ToString().Contains(searchValue)
+                    )
+                    .ToList();
                 }
 
 

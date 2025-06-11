@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Mobility;
@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.Services.Attributes;
+using IBS.Utility.Constants;
 
 namespace IBSWeb.Areas.Mobility.Controllers
 {
@@ -277,8 +278,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 FirstDsrClosingBefore = offline.FirstDsrClosing,
                 SecondDsrOpeningBefore = offline.SecondDsrOpening,
                 SecondDsrClosingBefore = offline.SecondDsrClosing,
-                Liters = offline.Liters.ToString("N4"),
-                Balance = offline.Balance.ToString("N4"),
+                Liters = offline.Liters.ToString(SD.Four_Decimal_Format),
+                Balance = offline.Balance.ToString(SD.Four_Decimal_Format),
                 offline.FirstDsrNo,
                 offline.SecondDsrNo
             };
@@ -292,7 +293,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var model = new CustomerInvoicingViewModel
             {
                 DsrList = await _unitOfWork.MobilitySalesHeader
-                    .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(),cancellationToken),
+                    .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken),
                 Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken),
                 Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken),
             };

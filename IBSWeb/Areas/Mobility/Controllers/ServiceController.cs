@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
 
-            if (user ==  null)
+            if (user == null)
             {
                 return null;
             }

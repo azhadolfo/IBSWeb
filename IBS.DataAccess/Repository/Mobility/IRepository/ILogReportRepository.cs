@@ -1,4 +1,4 @@
-﻿namespace IBS.DataAccess.Repository.Mobility.IRepository
+namespace IBS.DataAccess.Repository.Mobility.IRepository
 {
     public interface ILogReportRepository
     {

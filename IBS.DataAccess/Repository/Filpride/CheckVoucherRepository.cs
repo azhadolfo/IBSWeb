@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Utility;
@@ -116,7 +116,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             IQueryable<FilprideCheckVoucherHeader> query = dbSet
                 .Include(x => x.Employee)
-               .Include(c => c.Supplier);
+                .Include(c => c.Supplier);
 
             if (filter != null)
             {

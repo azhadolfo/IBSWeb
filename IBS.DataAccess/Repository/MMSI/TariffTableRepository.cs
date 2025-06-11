@@ -1,4 +1,5 @@
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -11,22 +12,40 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public TariffTableRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public TariffTableRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
+        public override async Task<MMSITariffRate?> GetAsync(Expression<Func<MMSITariffRate, bool>> filter, CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
-                .OrderBy(s => s.ServiceNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceId.ToString(),
-                    Text = s.ServiceNumber + " " + s.ServiceName
-                }).ToListAsync(cancellationToken);
+            MMSITariffRate? model =  await dbSet
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Where(filter)
+                .OrderByDescending(t => t.AsOfDate)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            return activitiesServices;
+            return model;
+        }
+
+        public override async Task<IEnumerable<MMSITariffRate>> GetAllAsync(Expression<Func<MMSITariffRate, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSITariffRate> query = dbSet
+                .Include(t => t.Customer)
+                .Include(t => t.Terminal).ThenInclude(t => t!.Port)
+                .Include(t => t.Service);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
@@ -36,7 +55,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortNumber + " " + s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -128,18 +147,6 @@ namespace IBS.DataAccess.Repository.MMSI
             }).ToListAsync(cancellationToken);
 
             return vessels;
-        }
-
-        public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true)
-                .OrderBy(s => s.CustomerName)
-                .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
         }
     }
 }

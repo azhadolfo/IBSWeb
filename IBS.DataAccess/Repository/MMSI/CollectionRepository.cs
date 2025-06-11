@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -10,9 +11,33 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public CollectionRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public CollectionRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task SaveAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<MMSICollection?> GetAsync(Expression<Func<MMSICollection, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(c => c.Customer)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<MMSICollection>> GetAllAsync(Expression<Func<MMSICollection, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSICollection> query = dbSet.Include(c => c.Customer);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
@@ -35,7 +60,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Select(s => new SelectListItem
                 {
                     Value = s.PortId.ToString(),
-                    Text = s.PortNumber+ " " + s.PortName
+                    Text = s.PortNumber + " " + s.PortName
                 }).ToListAsync(cancellationToken);
 
             return ports;
@@ -122,16 +147,16 @@ namespace IBS.DataAccess.Repository.MMSI
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSICustomersWithCollectiblesSelectList(int collectionId, string type, CancellationToken cancellationToken = default)
         {
             var billingsToBeCollected = await _dbContext.MMSIBillings
-                .Where(t => t.Status == "For Collection")
+                .Where(t => t.Status == "For Collection" || (collectionId != 0 && t.CollectionId == collectionId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -141,7 +166,8 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToList();
 
             return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true && listOfCustomerWithCollectibleBillings.Contains(c.CustomerId))
+                .Where(c => c.IsMMSI == true && listOfCustomerWithCollectibleBillings.Contains(c.CustomerId) &&
+                            (string.IsNullOrEmpty(type) || c.Type == type))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
                 {
@@ -176,7 +202,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return billingsList;
         }
 
-        public async Task<List<SelectListItem>?> GetMMSIUncollectedBillingsByCustomer (int? customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>?> GetMMSIUncollectedBillingsByCustomer(int? customerId, CancellationToken cancellationToken)
         {
             var billings = await _dbContext
                 .MMSIBillings
@@ -194,14 +220,14 @@ namespace IBS.DataAccess.Repository.MMSI
             return billingsList;
         }
 
-        public async Task<string> GenerateCollectionNumber (CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCollectionNumber(CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSICollections
                 .Where(b => b.IsUndocumented == true && b.MMSICollectionNumber != null)
                 .OrderByDescending(b => b.MMSICollectionNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if(lastRecord == null)
+            if (lastRecord == null)
             {
                 return "CL00000001";
             }

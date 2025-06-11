@@ -1,4 +1,4 @@
-﻿using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes;
@@ -156,8 +156,15 @@ namespace IBS.DataAccess.Repository
         public ICollectionRepository Collection { get; private set; }
         public IMMSIReportRepository MMSIReport { get; private set; }
         public ITariffTableRepository TariffTable { get; private set; }
+        public IPortRepository Port { get; private set; }
+        public IPrincipalRepository Principal { get; private set; }
+        public MMSI.IRepository.IServiceRepository Service { get; private set; }
         public ITerminalRepository Terminal { get; private set; }
         public ITugboatRepository Tugboat { get; private set; }
+        public ITugMasterRepository TugMaster { get; private set; }
+        public ITugboatOwnerRepository TugboatOwner { get; private set; }
+        public IUserAccessRepository UserAccess { get; private set; }
+        public IVesselRepository Vessel { get; private set; }
 
         #endregion
 
@@ -250,15 +257,22 @@ namespace IBS.DataAccess.Repository
 
             #region --MMSI
 
-            Msap = new MsapRepository(_db);
-            ServiceRequest = new ServiceRequestRepository(_db);
-            DispatchTicket = new DispatchTicketRepository(_db);
             Billing = new BillingRepository(_db);
             Collection = new CollectionRepository(_db);
+            DispatchTicket = new DispatchTicketRepository(_db);
             MMSIReport = new MMSIReportRepository(_db);
+            Msap = new MsapRepository(_db);
+            Port = new PortRepository(_db);
+            Principal = new PrincipalRepository(_db);
+            Service = new MMSI.ServiceRepository(_db);
+            ServiceRequest = new ServiceRequestRepository(_db);
             TariffTable = new TariffTableRepository(_db);
             Terminal = new TerminalRepository(_db);
             Tugboat = new TugboatRepository(_db);
+            TugMaster = new TugMasterRepository(_db);
+            TugboatOwner = new TugboatOwnerRepository(_db);
+            UserAccess = new UserAccessRepository(_db);
+            Vessel = new VesselRepository(_db);
 
             #endregion
 

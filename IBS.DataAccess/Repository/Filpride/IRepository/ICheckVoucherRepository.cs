@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 
 namespace IBS.DataAccess.Repository.Filpride.IRepository

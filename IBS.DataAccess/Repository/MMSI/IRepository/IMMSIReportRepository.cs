@@ -5,6 +5,6 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IMMSIReportRepository
     {
-        Task<List<MMSIDispatchTicket>> GetSalesReport (DateOnly DateFrom, DateOnly DateTo, CancellationToken cancellationToken = default);
+        Task<List<MMSIDispatchTicket>> GetSalesReport(DateOnly DateFrom, DateOnly DateTo, CancellationToken cancellationToken = default);
     }
 }

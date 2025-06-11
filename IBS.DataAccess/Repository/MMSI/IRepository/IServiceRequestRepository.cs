@@ -7,6 +7,8 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface IServiceRequestRepository : IRepository<MMSIDispatchTicket>
     {
+        Task SaveAsync(CancellationToken cancellationToken);
+
         Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default);
@@ -17,7 +19,7 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 
         Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default);
 
-        Task<ServiceRequestViewModel> GetDispatchTicketLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default);
+        Task<ServiceRequestViewModel> GetDispatchTicketSelectLists(ServiceRequestViewModel model, CancellationToken cancellationToken = default);
 
     }
 }

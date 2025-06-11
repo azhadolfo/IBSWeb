@@ -39,34 +39,34 @@
                             <div class="row py-2">
                                 <div class="col-12"><h3 class="m-0 p-0">Collection</h3></div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="form-floating col-4">
-                                    <input asp-for="MMSICollectionNumber" type="text" class="form-control border-0 shadow" id="MMSICollectionNumber" placeholder="#" title="Collection number can no longer be changed." readonly>
-                                    <label asp-for="MMSICollectionNumber" for="MMSICollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
-                                    <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
-                                </div>
-                                <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
-                                    <input asp-for="IsUndocumented" type="hidden">
-                                    <input class="form-check-input m-0 ms-2" type="checkbox" value="@Model.IsUndocumented" id="isUndocumentedCheckbox" disabled>
-                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
-                                        Undocumented
-                                    </label>
-                                </div>
-                                <div class="form-floating col-4">
-                                    <input asp-for="Date" id="Date" type="date" class="form-control border-0 shadow">
-                                    <label asp-for="Date" for="Date" class="ms-2">Date</label>
-                                    <span asp-validation-for="Date" class="text-danger"></span>
-                                </div>
-                            </div>
                             <div class="row my-3">
                                 <div class="form-group col-4">
                                     <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
                                     <input id="customerIsVatable" type="hidden">
                                     <input name="CustomerId" value="@Model.CustomerId" type="hidden">
-                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
+                                    <select asp-for="CustomerId" id="customerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                                         <option value="">Select Customer</option>
                                     </select>
                                     <span asp-validation-for="CustomerId" class="text-danger"></span>
+                                </div>
+                                <div class="form-floating col-4">
+                                    <input asp-for="MMSICollectionNumber" type="text" class="form-control border-0 shadow" id="MMSICollectionNumber" placeholder="#" readonly>
+                                    <label asp-for="MMSICollectionNumber" for="MMSICollectionNumber" class="ms-2" id="status">Collection Receipt #<span class="required text-danger">*</span></label>
+                                    <span asp-validation-for="MMSICollectionNumber" class="text-danger"></span>
+                                </div>
+                                <div class="form-check col-4 ps-2 text-start d-flex align-items-center justify-content-start">
+                                    <input asp-for="IsUndocumented" value="@Model.IsUndocumented" type="hidden">
+                                    <input class="form-check-input m-0 ms-2" type="checkbox" checked="@Model.IsUndocumented" id="isUndocumentedCheckbox" disabled>
+                                    <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="isUndocumentedCheckbox">
+                                        Undocumented
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="form-floating col-4">
+                                    <input asp-for="Date" id="Date" type="date" class="form-control border-0 shadow">
+                                    <label asp-for="Date" for="Date" class="ms-2">Date</label>
+                                    <span asp-validation-for="Date" class="text-danger"></span>
                                 </div>
                                 <input type="hidden" id="undeductedAmount" value="@Model.Amount">
                                 <input type="hidden" value="@Model.Amount" id="amount">
@@ -117,8 +117,7 @@
                             <div class="row my-2">
                                 <div class="form-group col-12">
                                     <label class="control-label mb-2">Bills Paid</label>
-                                    <input value="@Model.ToCollectBillings" multiple="multiple" name="ToCollectBillings" type="hidden">
-                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" id="BillingsSelect" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple" disabled>
+                                    <select asp-for="ToCollectBillings" asp-items="@Model.Billings" id="BillingsSelect" class="form-control js-example-basic-multiple col-12" name="ToCollectBillings" multiple="multiple">
                                     </select>
                                 </div>
                             </div>
@@ -148,7 +147,7 @@
                     </div>
                 </div>
                 
-                <div class="row justify-content-end mt-4">
+                <div class="row justify-content-end mt-4 mb-3    ">
                     <div class="text-center" style="width: 250px;">
                         <button class="btn btn-primary custom-btn col-12" type="submit" id="submitButton"><i class="bi bi-pencil-square"></i> Submit</button>
                     </div>
@@ -169,6 +168,7 @@
         $(document).ready(function () {
             // State to prevent recursive loops
             let isProcessing = false;
+            let isStartup = true;
 
             // Initialize Select2
             $('.js-example-basic-multiple').select2();
@@ -260,7 +260,7 @@
                 table.draw();
 
                 $.ajax({
-                    url: '/MMSI/Collection/GetEditBillings',
+                    url: '@Url.Action("GetEditBillings", "Collection", new { area = "MMSI" })',
                     type: 'GET',
                     data: {
                         customerId: customerId,
@@ -294,7 +294,7 @@
                 const selectedBills = $('.js-example-basic-multiple').val() || [];
 
                 $.ajax({
-                    url: '/MMSI/Collection/GetSelectedBillings',
+                    url: '@Url.Action("GetSelectedBillings", "Collection", new { area = "MMSI" })',
                     type: 'POST',
                     data: { billingIds: selectedBills },
                     success: function (result) {
@@ -311,26 +311,41 @@
                         // show bills table
                         if (result.data && Array.isArray(result.data)) {
                             $.each(result.data, function (index, value) {
-                                
+                                let tempAmount = value.amount;
+                                let tempEwt = 0;
+
+                                if (value.billedTo === "LOCAL"){
+                                    tempEwt = ((value.amount/1.12) * 0.02);
+                                    tempAmount = (value.amount - tempEwt);
+                                }
+
                                 table.row.add([
                                     value.mmsiBillingNumber,
                                     `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 ]);
                                 undeductedTotalAmount += value.amount;
+                                totalAmount += tempAmount;
+                                totalEwt += tempEwt;
                             });
                         }
                         table.draw();
 
                         // show totals
                         $('#billingsTotal').html(`<u>Total: ₱ ${undeductedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</u>`);
-                        $('#undeductedAmount').val(undeductedTotalAmount.toFixed(2));
+                        if (!isStartup){
+                            $('#undeductedAmount').val(undeductedTotalAmount);
+                            $('#amount').val(totalAmount.toFixed(2));
+                            $('#ewt').val(totalEwt.toFixed(2));
+                            $('#amountShow').val(totalAmount.toFixed(2));
+                            $('#ewtShow').val(totalEwt.toFixed(2));
+                        }
+                        isStartup = false;
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching selected billings:', error);
                     },
                     complete: function () {
                         isProcessing = false;
-                        console.log(tempData);
 
                         // calculateEWTDeduction();
                     }
@@ -347,14 +362,14 @@
 
                 // is customer vatable?
                 $.ajax({
-                    url: '/MMSI/Collection/IsCustomerVatable',
+                    url: '@Url.Action("IsCustomerVatable", "Collection", new { area = "MMSI" })',
                     type: 'GET',
                     data: { customerId: customerId },
                     success: function (result) {
                         // if vatable
                         if (result) {
-                            const ewt = ((originalAmount / 1.12) * 0.02); // calculate ewt
-                            const deductedAmount = originalAmount - ewt; // calculate deducted amount
+                            const deductedAmount = originalAmount / 1.12;
+                            const ewt = originalAmount - deductedAmount;
 
                             $('#amountShow').val(deductedAmount.toFixed(2)); // show amount
                             $('#amount').val(deductedAmount.toFixed(2)); // store amount

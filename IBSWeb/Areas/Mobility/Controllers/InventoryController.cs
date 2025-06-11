@@ -1,6 +1,5 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Dtos;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -86,7 +85,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 inventories = await _dbContext.MobilityInventories
                     .OrderBy(e => e.Date)
                     .ThenBy(e => e.InventoryId)
-                    .Where( i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo || i.InventoryId == endingBalance.InventoryId)
+                    .Where(i => i.ProductCode == model.ProductCode && i.StationCode == model.StationCode && i.Date >= dateFrom && i.Date <= dateTo || i.InventoryId == endingBalance.InventoryId)
                     .ToListAsync(cancellationToken);
             }
             else

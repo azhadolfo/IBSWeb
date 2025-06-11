@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             receivingReports = receivingReports
                                 .Where(rr => rr.SupplierInvoiceDate == null);
                             break;
-                        // Add other cases as needed
+                            // Add other cases as needed
                     }
                 }
 

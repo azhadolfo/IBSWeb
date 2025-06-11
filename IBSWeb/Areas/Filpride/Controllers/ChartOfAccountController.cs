@@ -81,10 +81,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 switch (levelToCreate)
                 {
                     case 4:
-                        newAccount.AccountNumber = (lastSeries+100).ToString();
+                        newAccount.AccountNumber = (lastSeries + 100).ToString();
                         break;
                     case 5:
-                        newAccount.AccountNumber = (lastSeries+1).ToString();
+                        newAccount.AccountNumber = (lastSeries + 1).ToString();
                         break;
                 }
 
@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
-		    {
+            {
                 var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
                 // Retrieve the selected invoices from the database
@@ -207,7 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = await package.GetAsByteArrayAsync();
                 await transaction.CommitAsync(cancellationToken);
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
-		    }
+            }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);

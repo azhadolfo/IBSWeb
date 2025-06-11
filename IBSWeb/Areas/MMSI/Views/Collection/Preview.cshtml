@@ -1,3 +1,4 @@
+@using IBS.Utility.Constants
 @model MMSICollection
 
 @{
@@ -26,115 +27,74 @@
             </div>
         </div>
 
-        <div class="row px-2">
-            <div class="col-12 d-flex flex-column justify-content-end">
-                <div class="row d-flex align-content-center text-center mb-2">
-                    <div class="col-3 text-start small-text">
-                        <span><b>Create Date:</b> @Model.Date</span>
-                    </div>
-                    <div class="col-4 text-start small-text">
-                        <span><b>Collection No.</b> @Model.MMSICollectionNumber @(Model.IsUndocumented ? "(auto-generated)" : "") </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row border mx-2">
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Bank::</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">MBTC</div>
-                </div>
-            </div>
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Account Number:</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">167-7-16753668-5</div>
-                </div>
-            </div>
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Account Name:</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">MALAYAN MARITIME SERVICES INC.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row border mx-2">
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Check Number:</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">@Model.CheckNumber</div>
-                </div>
-            </div>
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Check Date:</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">@Model.CheckDate</div>
-                </div>
-            </div>
-            <div class="col-4 text-start p-2 small-text border">
-                <div class="row">
-                    <div class="col-12"><b>Date Deposited:</b></div>
-                </div>
-                <div class="row">
-                    <div class="col-12 ms-2">@Model.DepositDate</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mx-2 py-2">
-            <div class="col-8 text-start p-2 small-text">
-                <table class="dataTable">
-                    <thead>
+        <div class="row px-3">
+            <div class="col-6 d-flex flex-column justify-content-end">
+                <table class="table table-borderless table-sm align-middle m-0">
+                    <tbody>
                     <tr>
-                        <th class="col-3 text-center p-2 small-text border-1">Billing Number</th>
-                        <th class="col-3 text-center p-2 small-text border-1">Date</th>
-                        <th class="col-3 text-center p-2 small-text border-1">Customer</th>
-                        <th class="col-3 text-center p-2 small-text border-1">Amount</th>
+                        <td class="text-start"><b>Create Date: </b> @Model.Date</td>
+                        <td class="text-start"><b>Collection No. </b> @Model.MMSICollectionNumber</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="row px-2">
+            <div class="col">
+                <table class="table table-bordered table-sm align-middle">
+                    <tbody>
+                        <tr>
+                            <td class="text-start p-2"><b>Bank: </b> MBTC</td>
+                            <td class="text-start p-2"><b>Account Number: </b> 167-7-16753668-5</td>
+                            <td class="text-start p-2"><b>Account Name: </b> MALAYAN MARITIME SERVICES INC.</td>
+                        </tr>
+                        <tr>
+                            <td class="text-start p-2"><b>Check Number: </b> @Model.CheckNumber</td>
+                            <td class="text-start p-2"><b>Check Date: </b> @Model.CheckDate</td>
+                            <td class="text-start p-2"><b>Date Deposited: </b> @Model.DepositDate</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row mx-2">
+            <div class="col-8 text-start p-2 small-text">
+                <table class="table table-striped table-hover table-bordered table-sm align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th scope="col" class="text-center p-2">Billing Number</th>
+                        <th scope="col" class="text-center p-2">Date</th>
+                        <th scope="col" class="text-center p-2">Customer</th>
+                        <th scope="col" class="text-center p-2">Amount</th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach (var billing in Model.PaidBills)
                     {
                         <tr>
-                            <td class="border text-center">
-                                <a href="@Url.Action("Preview", "Billing", new { id = billing.MMSIBillingId })">@billing.MMSIBillingNumber</a>
+                            <td class="text-center p-1">
+                                <a href="@Url.Action("Preview", "Billing", new { id = billing.MMSIBillingId })" class="text-decoration-none">@billing.MMSIBillingNumber</a>
                             </td>
-                            <td class="border text-center">@billing.Date</td>
-                            <td class="border text-center">@billing.Customer?.CustomerName</td>
-                            <td class="border text-center">₱ @billing.Amount.ToString("N2")</td>
+                            <td class="text-center p-1">@billing.Date</td>
+                            <td class="text-center p-1">@billing.Customer?.CustomerName</td>
+                            <td class="text-center p-1">₱ @billing.Amount.ToString(SD.Two_Decimal_Format)</td>
                         </tr>
                     }
                     </tbody>
                 </table>
             </div>
             <div class="col-4 text-start small-text">
-                <div class="row h-100">
-                    <div class="col-6 text-center flex-column d-flex justify-content-end small-text py-2 ps-2"> 
+                <div class="row h-75">
+                    <div class="col-12 text-center flex-column d-flex justify-content-end small-text py-2 ps-2">
                         <div class="row">
-                            <div class="col-12"><b>Collection Amount:</b></div>
+                            <div class="col-6 text-end"><b>Collection Amount:</b></div>
+                            <div class="col-6 text-start">₱ @Model.Amount.ToString(SD.Two_Decimal_Format)</div>
                         </div>
                         <div class="row">
-                            <div class="col-12 ms-2">₱ @Model.Amount.ToString("N2")</div>
-                        </div>
-                    </div>
-                    <div class="col-6 text-center flex-column d-flex justify-content-end small-text py-2 ps-2">
-                        <div class="row">
-                            <div class="col-12"><b>EWT:</b></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12 ms-2">₱ @Model.EWT.ToString("N2")</div>
+                            <div class="col-6 text-end"><b>EWT:</b></div>
+                            <div class="col-6 text-start">₱ @Model.EWT.ToString(SD.Two_Decimal_Format)</div>
                         </div>
                     </div>
                 </div>

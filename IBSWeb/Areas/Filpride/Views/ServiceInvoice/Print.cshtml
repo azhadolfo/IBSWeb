@@ -1,9 +1,8 @@
-﻿@model FilprideServiceInvoice
-@using IBS.Utility.Constants
+﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model FilprideServiceInvoice
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -361,4 +360,5 @@
             })
         }
     </script>
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }

@@ -161,7 +161,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
             if (ModelState.IsValid)
             {
@@ -357,7 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
                     var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
-                    //TODO waiting for Ma'am LSA journal entries
+                    ///TODO waiting for Ma'am LSA journal entries
                     ledgers.Add(
                             new FilprideGeneralLedgerBook
                             {
@@ -609,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);;
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             existingModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
             return View(existingModel);

@@ -1,4 +1,4 @@
-﻿using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.Integrated;
 using System.ComponentModel.DataAnnotations;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -37,5 +37,7 @@ namespace IBS.Models.Filpride.ViewModels
         #endregion
 
         public string Status { get; set; }
+
+        public string PriceReference { get; set; }
     }
 }

@@ -14,9 +14,9 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "varchar(10)")]
         public string MMSIBillingNumber { get; set; }
 
-        public DateOnly Date {  get; set; }
+        public DateOnly Date { get; set; }
 
-        public string Status {  get; set; }
+        public string Status { get; set; }
 
         public bool IsUndocumented { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -20,7 +20,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string DeliveryOption { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal Freight { get; set; } = 0;
+        public decimal Freight { get; set; }
 
         public string? SubPoRemarks { get; set; }
 

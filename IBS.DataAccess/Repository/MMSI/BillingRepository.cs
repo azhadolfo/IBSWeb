@@ -1,6 +1,9 @@
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
+using IBS.Models.MMSI.MasterFile;
 using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,35 +14,14 @@ namespace IBS.DataAccess.Repository.MMSI
     {
         public readonly ApplicationDbContext _dbContext;
 
-        public BillingRepository (ApplicationDbContext dbContext) : base(dbContext)
+        public BillingRepository(ApplicationDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
+        public async Task SaveAsync(CancellationToken cancellationToken)
         {
-            List<SelectListItem> ports = await _dbContext.MMSIPorts
-                .OrderBy(s => s.PortName)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.PortId.ToString(),
-                    Text = s.PortName
-                }).ToListAsync(cancellationToken);
-
-            return ports;
-        }
-
-        public async Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default)
-        {
-            List<SelectListItem> terminals = await _dbContext.MMSITerminals
-                .OrderBy(s => s.TerminalNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.TerminalId.ToString(),
-                    Text = s.TerminalNumber + " " + s.TerminalName,
-                }).ToListAsync(cancellationToken);
-
-            return terminals;
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken)
@@ -59,33 +41,22 @@ namespace IBS.DataAccess.Repository.MMSI
             return terminalsList;
         }
 
-        public async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
-        {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
-            {
-                Value = s.VesselId.ToString(),
-                Text = s.VesselName
-            }).ToListAsync(cancellationToken);
-
-            return vessels;
-        }
-
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
             return await _dbContext.FilprideCustomers
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSICustomersWithBillablesSelectList(int currentCustomerId, string type, CancellationToken cancellationToken = default)
         {
             var dispatchToBeBilled = await _dbContext.MMSIDispatchTickets
-                .Where(t => t.Status == "For Billing")
+                .Where(t => t.Status == "For Billing" || (currentCustomerId != 0 && t.CustomerId == currentCustomerId))
                 .Include(t => t.Customer)
                 .ToListAsync(cancellationToken);
 
@@ -95,16 +66,17 @@ namespace IBS.DataAccess.Repository.MMSI
                 .ToList();
 
             return await _dbContext.FilprideCustomers
-                .Where(c => c.IsMMSI == true && listOfCustomerWithBillableTickets.Contains(c.CustomerId))
+                .Where(c => c.IsMMSI == true && listOfCustomerWithBillableTickets.Contains(c.CustomerId) &&
+                            (string.IsNullOrEmpty(type) || c.Type == type))
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
-            {
-                Value = s.CustomerId.ToString(),
-                Text = s.CustomerName
-            }).ToListAsync(cancellationToken);
+                {
+                    Value = s.CustomerId.ToString(),
+                    Text = s.CustomerName
+                }).ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetMMSIUnbilledTicketsById(string type, CancellationToken cancellationToken = default)
         {
             List<SelectListItem> dispatchTicketList = await _dbContext.MMSIDispatchTickets
                 .Where(dt => dt.Status == "For Billing")
@@ -117,7 +89,7 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
-        public async Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer (int? customerId, CancellationToken cancellationToken)
+        public async Task<List<SelectListItem>?> GetMMSIUnbilledTicketsByCustomer(int? customerId, CancellationToken cancellationToken)
         {
             var tickets = await _dbContext
                 .MMSIDispatchTickets
@@ -129,7 +101,7 @@ namespace IBS.DataAccess.Repository.MMSI
             var ticketsList = tickets.Select(b => new SelectListItem
             {
                 Value = b.DispatchTicketId.ToString(),
-                Text = $"{b.DispatchNumber} - {b.Customer!.CustomerName}, {b.Date}"
+                Text = b.DispatchNumber
             }).ToList();
 
             return ticketsList;
@@ -148,24 +120,47 @@ namespace IBS.DataAccess.Repository.MMSI
             return dispatchTicketList;
         }
 
-        public async Task<CreateBillingViewModel> GetBillingLists(CreateBillingViewModel model, CancellationToken cancellationToken = default)
+        public override async Task<IEnumerable<MMSIBilling>> GetAllAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
         {
-            model.Ports = await GetMMSIPortsById(cancellationToken);
-            model.Terminals = await GetMMSIAllTerminalsById(cancellationToken);
-            model.Vessels = await GetMMSIVesselsById(cancellationToken);
-            model.Customers = await GetMMSICustomersWithBillablesById(cancellationToken);
+            IQueryable<MMSIBilling> query = dbSet
+                .Include(a => a.Terminal)
+                .Include(a => a.Vessel)
+                .Include(a => a.Customer)
+                .Include(a => a.Port);
 
-            return model;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<string> GenerateBillingNumber (CancellationToken cancellationToken = default)
+        public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIBilling> query = dbSet
+                .Include(b => b.Terminal)
+                .ThenInclude(t => t!.Port)
+                .Include(b => b.Vessel)
+                .Include(b => b.Customer)
+                .Include(b => b.Principal);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)
         {
             var lastRecord = await _dbContext.MMSIBillings
                 .Where(b => b.IsUndocumented == true && b.MMSIBillingNumber != null)
                 .OrderByDescending(b => b.MMSIBillingNumber)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if(lastRecord == null)
+            if (lastRecord == null)
             {
                 return "BL00000001";
             }

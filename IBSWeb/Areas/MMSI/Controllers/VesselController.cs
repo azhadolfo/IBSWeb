@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class VesselController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly ILogger<VesselController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public VesselController(ApplicationDbContext db)
+        public VesselController(ApplicationDbContext dbContext, ILogger<VesselController> logger, IUnitOfWork unitOfWork)
         {
-            _db = db;
+            _dbContext = dbContext;
+            _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var vessels = _db.MMSIVessels.ToList();
-
+            var vessels = await _unitOfWork.Vessel.GetAllAsync(null, cancellationToken);
             return View(vessels);
         }
 
@@ -33,35 +37,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSIVessel model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
-                await _db.MMSIVessels.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
-                _db.MMSIVessels.Remove(model);
-
+                await _unitOfWork.Vessel.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
-
+                _logger.LogError(ex, "Failed to create vessel.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
                 return View(model);
             }
         }
@@ -70,22 +65,21 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSIVessels.FirstOrDefaultAsync(i => i.VesselId == id, cancellationToken);
+                var model = await _unitOfWork.Vessel.GetAsync(i => i.VesselId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSIVessels.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Vessel.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete vessel.");
+                TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -93,29 +87,45 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = await _db.MMSIVessels.FirstOrDefaultAsync(a => a.VesselId == id, cancellationToken);
-
+            var model = await _unitOfWork.Vessel.GetAsync(a => a.VesselId == id, cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSIVessel model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSIVessels.FindAsync(model.VesselId);
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            var currentModel = await _unitOfWork.Vessel.GetAsync(v => v.VesselId == model.VesselId, cancellationToken);
 
             if (currentModel == null)
             {
                 return NotFound();
             }
 
-            currentModel.VesselNumber = model.VesselNumber;
-            currentModel.VesselName = model.VesselName;
-            currentModel.VesselType = model.VesselType;
-            await _db.SaveChangesAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                currentModel.VesselNumber = model.VesselNumber;
+                currentModel.VesselName = model.VesselName;
+                currentModel.VesselType = model.VesselType;
+                await _unitOfWork.Vessel.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit vessel.");
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
     }
 }

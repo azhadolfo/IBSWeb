@@ -1,11 +1,13 @@
 ﻿@using IBS.Utility.Constants
 @using IBS.Utility.Enums
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model CustomerOrderSlipViewModel
 
 @{
     ViewData["Title"] = "Edit Customer Order Slip";
 }
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
 <div class="loader-container">
     <div class="loader"></div>
     <div class="loader-text">Loading...</div>
@@ -47,7 +49,6 @@
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="CustomerType"/>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="CustomerAddress"></label>
@@ -201,6 +202,7 @@
     }
     <script>
         $(document).ready(function () {
+            var isInitialize = true;
             function loadCustomerData() {
                 var customerId = $('select[name="CustomerId"]').val();
                 if (customerId) {
@@ -230,22 +232,37 @@
                             }
                             var poSelect = $(".customerPoNo");
                             var products = $(".products");
-                            if (data.customerType === 'Retail') {
-                                $(".customerPOContainer").hide();
-                                $(".substituteCustomerPOContainer").show();
-                                poSelect.prop("disabled", false);
-                                $("input[name='CustomerPoNo']").prop("disabled", true);
-                                $('input[name="Quantity"]').attr('readonly', true);
-                                $('input[name="DeliveredPrice"]').attr('readonly', true);
-                            } else {
-                                $(".customerPOContainer").show();
-                                $(".substituteCustomerPOContainer").hide();
-                                $("input[name='CustomerPoNo']").prop("disabled", false);
-                                poSelect.prop("disabled", true);
+
+                            if (!isInitialize) {
                                 products.val(null).trigger("change");
-                                $('input[name="Quantity"]').val('').removeAttr('readonly');
-                                $('input[name="DeliveredPrice"]').val('').removeAttr('readonly');
                             }
+
+                            @*TODO Uncomment this feature once the mobility company is live*@
+                            // if (data.customerType === 'Retail' && @Model.CustomerOrderSlipId > 2107) { @*TODO change the actual latest cos id**@
+                            //     $(".customerPOContainer").hide();
+                            //     $(".substituteCustomerPOContainer").show();
+                            //     poSelect.prop("disabled", false);
+                            //     $("input[name='CustomerPoNo']").prop("disabled", true);
+                            //     $('input[name="Quantity"]').attr('readonly', true);
+                            //     $('input[name="DeliveredPrice"]').attr('readonly', true);
+                            // } else {
+                            //     $(".customerPOContainer").show();
+                            //     $(".substituteCustomerPOContainer").hide();
+                            //     $("input[name='CustomerPoNo']").prop("disabled", false);
+                            //     poSelect.prop("disabled", true);
+                            //     $('input[name="Quantity"]').removeAttr('readonly');
+                            //     $('input[name="DeliveredPrice"]').removeAttr('readonly');
+                            // }
+
+                            @*TODO Delete this feature once the mobility company is live*@
+                            $(".customerPOContainer").show();
+                            $(".substituteCustomerPOContainer").hide();
+                            $("input[name='CustomerPoNo']").prop("disabled", false);
+                            poSelect.prop("disabled", true);
+                            $('input[name="Quantity"]').removeAttr('readonly');
+                            $('input[name="DeliveredPrice"]').removeAttr('readonly');
+
+                            isInitialize = false;
                         },
                         error: function (xhr, status, error) {
                             console.log("Error: " + error);
@@ -313,12 +330,17 @@
                 var hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
                 if (hasCommission) {
                     $('#commissionInfo').show();
-                    $('input[name="CommissionerName"]').prop('required', true);
+                    $('input[name="CommissioneeId"]').prop('required', true);
                     $('input[name="CommissionRate"]').prop('required', true);
                 } else {
                     $('#commissionInfo').hide();
-                    $('input[name="CommissionerName"]').prop('required', false);
-                    $('input[name="CommissionRate"]').prop('required', false);
+                    $('select[name="CommissioneeId"]')
+                        .val('') 
+                        .trigger('change') 
+                        .prop('required', false);
+                    $('input[name="CommissionRate"]')
+                        .val('0.00')
+                        .prop('required', false);
                 }
             }
 
@@ -334,9 +356,9 @@
     <script>
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
-                var selectedCustomer = $('select[name="CustomerId"] option:selected').text();
+                var customerType = $('input[name="CustomerType"]').val();
 
-                if (selectedCustomer.includes("MOBILITY")) {
+                if (customerType === 'Retail') {
                     $('#accountSpecialistDiv').hide();
                     $('select[name="AccountSpecialist"]').val(''); // Clear selection if hidden
                 } else {
@@ -345,89 +367,101 @@
             });
         });
     </script>
-    <script>
-        $(document).ready(function () {
-            var customerType = $('select[name="CustomerType"]').val();
-            if (customerType !== 'Retail'){
-                function loadPurchaseOrderList() {
-                    var productId = $('select[name="ProductId"]').val();
-                    var poSelect = $(".customerPoNo");
-                    var stationCode = $('input[name="StationCode"]').val();
-                    console.log(stationCode);
-                    if (productId) {
-                        $.ajax({
-                            url: '@Url.Action("GetPurchaseOrderList", "CustomerOrderSlip", new { area = "Filpride" })',
-                            type: "GET",
-                            data: { productId: productId, stationCode: stationCode },
-                            success: function (data) {
-                                if (data) {
-                                    // Populate DR dropdown
-                                    poSelect.empty();
-                                    $.each(data, function (index, po) {
-                                        poSelect.append($('<option>', {
-                                            value: po.text,
-                                            text: po.text
-                                        }));
-                                    });
-
-                                    poSelect.trigger("change");
-                                } else {
-                                    $('input[name="Quantity"]').val('');
-                                    $('input[name="DeliveredPrice"]').val('');
-                                    $('input[name="Vat"]').val('');
-                                    $('input[name="TotalAmount"]').val('');
-                                }
-                            },
-                            error: function (xhr, status, error) {
-                                console.log("Error: " + error);
-                            }
-                        });
-                    } else {
-                        $('input[name="Quantity"]').val('');
-                        $('input[name="DeliveredPrice"]').val('');
-                        $('input[name="Vat"]').val('');
-                        $('input[name="TotalAmount"]').val('');
-                    }
-                    poSelect.val(null).empty().trigger("change");
-                }
-                $('select[name="ProductId"]').on('change', loadPurchaseOrderList);
-                loadPurchaseOrderList();
-
-                function getPurchaseOrder() {
-                    var customerPoNo = $('.customerPoNo').val();
-                    if (customerPoNo) {
-                        $.ajax({
-                            url: '@Url.Action("GetPurchaseOrder", "CustomerOrderSlip", new { area = "Filpride" })',
-                            type: "GET",
-                            data: { customerPoNo: customerPoNo },
-                            success: function (data) {
-                                if (data) {
-                                    $('input[name="Quantity"]').val(data.quantity);
-                                    $('input[name="DeliveredPrice"]').val(data.unitPrice);
-                                } else {
-                                    $('input[name="Quantity"]').val('');
-                                    $('input[name="DeliveredPrice"]').val('');
-                                    $('input[name="Vat"]').val('');
-                                    $('input[name="TotalAmount"]').val('');
-                                }
-                                calculateAmountAndVat();
-                            },
-                            error: function (xhr, status, error) {
-                                console.log("Error: " + error);
-                            }
-                        });
-                    } else {
-                        $('input[name="Quantity"]').val('');
-                        $('input[name="DeliveredPrice"]').val('');
-                        $('input[name="Vat"]').val('');
-                        $('input[name="TotalAmount"]').val('');
-                    }
-                }
-                $('.customerPoNo').on('change', getPurchaseOrder);
-                getPurchaseOrder();
-            }
-        });
-    </script>
+    @*TODO Uncomment this feature once the mobility company is live*@
+    @* <script> *@
+    @*     $(document).ready(function () { *@
+    @*         function loadPurchaseOrderList() { *@
+    @*             var customerType = $('input[name="CustomerType"]').val(); *@
+    @*             *@
+    @*             if (customerType !== 'Retail' && @Model.CustomerOrderSlipId > 2107) { $1$TODO change the actual latest cos id*#1# *@
+    @*                 return; *@
+    @*             } *@
+    @*              *@
+    @*             var productId = $('select[name="ProductId"]').val(); *@
+    @*             var poSelect = $(".customerPoNo"); *@
+    @*             var stationCode = $('input[name="StationCode"]').val(); *@
+    @*             if (productId) { *@
+    @*                 $.ajax({ *@
+    @*                     url: '@Url.Action("GetPurchaseOrderList", "CustomerOrderSlip", new { area = "Filpride" })', *@
+    @*                     type: "GET", *@
+    @*                     data: { productId: productId, stationCode: stationCode }, *@
+    @*                     success: function (data) { *@
+    @*                         if (data) { *@
+    @*                             // Populate DR dropdown *@
+    @*                             poSelect.empty(); *@
+    @*                             $.each(data, function (index, po) { *@
+    @*                                 poSelect.append($('<option>', { *@
+    @*                                     value: po.text, *@
+    @*                                     text: po.text *@
+    @*                                 })); *@
+    @*                             }); *@
+    @* *@
+    @*                             poSelect.trigger("change"); *@
+    @*                         } else { *@
+    @*                             $('input[name="Quantity"]').val(''); *@
+    @*                             $('input[name="DeliveredPrice"]').val(''); *@
+    @*                             $('input[name="Vat"]').val(''); *@
+    @*                             $('input[name="TotalAmount"]').val(''); *@
+    @*                         } *@
+    @*                     }, *@
+    @*                     error: function (xhr, status, error) { *@
+    @*                         console.log("Error: " + error); *@
+    @*                     } *@
+    @*                 }); *@
+    @*             } else { *@
+    @*                 $('input[name="Quantity"]').val(''); *@
+    @*                 $('input[name="DeliveredPrice"]').val(''); *@
+    @*                 $('input[name="Vat"]').val(''); *@
+    @*                 $('input[name="TotalAmount"]').val(''); *@
+    @*             } *@
+    @*             poSelect.val(null).empty().trigger("change"); *@
+    @*         } *@
+    @* *@
+    @*         $('select[name="ProductId"]').on('change', loadPurchaseOrderList); *@
+    @*         loadPurchaseOrderList(); *@
+    @* *@
+    @*         function getPurchaseOrder() { *@
+    @* *@
+    @*             var customerType = $('input[name="CustomerType"]').val(); *@
+    @*              *@
+    @*             if (customerType !== 'Retail') { *@
+    @*                 return; *@
+    @*             } *@
+    @*              *@
+    @*             var customerPoNo = $('.customerPoNo').val(); *@
+    @*             if (customerPoNo) { *@
+    @*                 $.ajax({ *@
+    @*                     url: '@Url.Action("GetPurchaseOrder", "CustomerOrderSlip", new { area = "Filpride" })', *@
+    @*                     type: "GET", *@
+    @*                     data: { customerPoNo: customerPoNo }, *@
+    @*                     success: function (data) { *@
+    @*                         if (data) { *@
+    @*                             $('input[name="Quantity"]').val(data.quantity); *@
+    @*                             $('input[name="DeliveredPrice"]').val(data.unitPrice); *@
+    @*                         } else { *@
+    @*                             $('input[name="Quantity"]').val(''); *@
+    @*                             $('input[name="DeliveredPrice"]').val(''); *@
+    @*                             $('input[name="Vat"]').val(''); *@
+    @*                             $('input[name="TotalAmount"]').val(''); *@
+    @*                         } *@
+    @*                         calculateAmountAndVat(); *@
+    @*                     }, *@
+    @*                     error: function (xhr, status, error) { *@
+    @*                         console.log("Error: " + error); *@
+    @*                     } *@
+    @*                 }); *@
+    @*             } else { *@
+    @*                 $('input[name="Quantity"]').val(''); *@
+    @*                 $('input[name="DeliveredPrice"]').val(''); *@
+    @*                 $('input[name="Vat"]').val(''); *@
+    @*                 $('input[name="TotalAmount"]').val(''); *@
+    @*             } *@
+    @*         } *@
+    @* *@
+    @*         $('.customerPoNo').on('change', getPurchaseOrder); *@
+    @*         getPurchaseOrder(); *@
+    @*     }); *@
+    @* </script> *@
     <script>
         function calculateAmountAndVat() {
             var quantity = parseNumber($('input[name="Quantity"]').val());
@@ -445,7 +479,7 @@
         }
 
         $(document).ready(function () {
-            $('input[name="Quantity"], input[name="DeliveredPrice"]').on('input', calculateAmountAndVat);
+            $('input[name="Quantity"], input[name="DeliveredPrice"]').on('blur', calculateAmountAndVat);
         });
     </script>
     <script>

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Utility.Enums;
@@ -133,7 +133,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public string? SupportingFileSavedFileName { get; set; }
 
-        public string?  SupportingFileSavedUrl { get; set; }
+        public string? SupportingFileSavedUrl { get; set; }
 
         public DateOnly? DcpDate { get; set; }
 
@@ -149,5 +149,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Address { get; set; }
 
         public string Tin { get; set; }
+
+        public ICollection<FilprideCheckVoucherDetail>? Details { get; set; }
     }
 }

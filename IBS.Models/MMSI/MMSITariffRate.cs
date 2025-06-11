@@ -23,12 +23,12 @@ namespace IBS.Models.MMSI
         [ForeignKey(nameof(TerminalId))]
         public MMSITerminal? Terminal { get; set; }
 
-        public int ServiceId {  get; set; }
+        public int ServiceId { get; set; }
 
         [ForeignKey(nameof(ServiceId))]
         public MMSIService? Service { get; set; }
 
-        public decimal Dispatch {  get; set; }
+        public decimal Dispatch { get; set; }
 
         public decimal BAF { get; set; }
 

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
@@ -130,5 +130,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [NotMapped]
         public List<SelectListItem>? PickUpPoints { get; set; }
+
+        public ICollection<FilprideReceivingReport>? ReceivingReports { get; set; }
     }
 }

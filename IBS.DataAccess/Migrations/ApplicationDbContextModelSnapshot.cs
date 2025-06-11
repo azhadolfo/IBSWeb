@@ -312,6 +312,94 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_cv_trade_payments", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherDetail", b =>
+                {
+                    b.Property<int>("CheckVoucherDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_detail_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherDetailId"));
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_name");
+
+                    b.Property<string>("AccountNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("account_no");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<decimal>("AmountPaid")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount_paid");
+
+                    b.Property<int?>("BankId")
+                        .HasColumnType("integer")
+                        .HasColumnName("bank_id");
+
+                    b.Property<int>("CheckVoucherHeaderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("check_voucher_header_id");
+
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("integer")
+                        .HasColumnName("company_id");
+
+                    b.Property<decimal>("Credit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("Debit")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal>("EwtPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("ewt_percent");
+
+                    b.Property<bool>("IsUserSelected")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_user_selected");
+
+                    b.Property<bool>("IsVatable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_vatable");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("integer")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("TransactionNo")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("transaction_no");
+
+                    b.HasKey("CheckVoucherDetailId")
+                        .HasName("pk_filpride_check_voucher_details");
+
+                    b.HasIndex("CheckVoucherHeaderId")
+                        .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
+
+                    b.ToTable("filpride_check_voucher_details", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
                 {
                     b.Property<int>("CheckVoucherHeaderId")
@@ -1462,6 +1550,148 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_credit_memos", (string)null);
                 });
 
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideDebitMemo", b =>
+                {
+                    b.Property<int>("DebitMemoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("debit_memo_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebitMemoId"));
+
+                    b.Property<decimal?>("AdjustedPrice")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("adjusted_price");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("CanceledBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("canceled_by");
+
+                    b.Property<DateTime?>("CanceledDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("canceled_date");
+
+                    b.Property<string>("CancellationRemarks")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("cancellation_remarks");
+
+                    b.Property<string>("Company")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("company");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<decimal>("CurrentAndPreviousAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("current_and_previous_amount");
+
+                    b.Property<decimal>("DebitAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("debit_amount");
+
+                    b.Property<string>("DebitMemoNo")
+                        .HasColumnType("varchar(12)")
+                        .HasColumnName("debit_memo_no");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EditedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("edited_by");
+
+                    b.Property<DateTime?>("EditedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_date");
+
+                    b.Property<bool>("IsPrinted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_printed");
+
+                    b.Property<DateOnly>("Period")
+                        .HasColumnType("date")
+                        .HasColumnName("period");
+
+                    b.Property<string>("PostedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("posted_by");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("posted_date");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("remarks");
+
+                    b.Property<int?>("SalesInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("sales_invoice_id");
+
+                    b.Property<int?>("ServiceInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_invoice_id");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly>("TransactionDate")
+                        .HasColumnType("date")
+                        .HasColumnName("transaction_date");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<decimal>("UnearnedAmount")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("unearned_amount");
+
+                    b.Property<string>("VoidedBy")
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("voided_by");
+
+                    b.Property<DateTime?>("VoidedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_date");
+
+                    b.HasKey("DebitMemoId")
+                        .HasName("pk_filpride_debit_memos");
+
+                    b.HasIndex("SalesInvoiceId")
+                        .HasDatabaseName("ix_filpride_debit_memos_sales_invoice_id");
+
+                    b.HasIndex("ServiceInvoiceId")
+                        .HasDatabaseName("ix_filpride_debit_memos_service_invoice_id");
+
+                    b.ToTable("filpride_debit_memos", (string)null);
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", b =>
                 {
                     b.Property<int>("SalesInvoiceId")
@@ -2426,236 +2656,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_sales_books", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideCheckVoucherDetail", b =>
-                {
-                    b.Property<int>("CheckVoucherDetailId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_detail_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherDetailId"));
-
-                    b.Property<string>("AccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_name");
-
-                    b.Property<string>("AccountNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("account_no");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<decimal>("AmountPaid")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount_paid");
-
-                    b.Property<int?>("BankId")
-                        .HasColumnType("integer")
-                        .HasColumnName("bank_id");
-
-                    b.Property<int>("CheckVoucherHeaderId")
-                        .HasColumnType("integer")
-                        .HasColumnName("check_voucher_header_id");
-
-                    b.Property<int?>("CompanyId")
-                        .HasColumnType("integer")
-                        .HasColumnName("company_id");
-
-                    b.Property<decimal>("Credit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit");
-
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("customer_id");
-
-                    b.Property<decimal>("Debit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("integer")
-                        .HasColumnName("employee_id");
-
-                    b.Property<decimal>("EwtPercent")
-                        .HasColumnType("numeric")
-                        .HasColumnName("ewt_percent");
-
-                    b.Property<bool>("IsUserSelected")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_user_selected");
-
-                    b.Property<bool>("IsVatable")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_vatable");
-
-                    b.Property<int?>("SupplierId")
-                        .HasColumnType("integer")
-                        .HasColumnName("supplier_id");
-
-                    b.Property<string>("TransactionNo")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("transaction_no");
-
-                    b.HasKey("CheckVoucherDetailId")
-                        .HasName("pk_filpride_check_voucher_details");
-
-                    b.HasIndex("CheckVoucherHeaderId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
-
-                    b.HasIndex("SupplierId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
-
-                    b.ToTable("filpride_check_voucher_details", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideDebitMemo", b =>
-                {
-                    b.Property<int>("DebitMemoId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("debit_memo_id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DebitMemoId"));
-
-                    b.Property<decimal?>("AdjustedPrice")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("adjusted_price");
-
-                    b.Property<decimal?>("Amount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("CanceledBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("canceled_by");
-
-                    b.Property<DateTime?>("CanceledDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("canceled_date");
-
-                    b.Property<string>("CancellationRemarks")
-                        .HasColumnType("varchar(255)")
-                        .HasColumnName("cancellation_remarks");
-
-                    b.Property<string>("Company")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<decimal>("CurrentAndPreviousAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("current_and_previous_amount");
-
-                    b.Property<decimal>("DebitAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("debit_amount");
-
-                    b.Property<string>("DebitMemoNo")
-                        .HasColumnType("varchar(12)")
-                        .HasColumnName("debit_memo_no");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("edited_by");
-
-                    b.Property<DateTime?>("EditedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("edited_date");
-
-                    b.Property<bool>("IsPrinted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_printed");
-
-                    b.Property<DateOnly>("Period")
-                        .HasColumnType("date")
-                        .HasColumnName("period");
-
-                    b.Property<string>("PostedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("posted_by");
-
-                    b.Property<DateTime?>("PostedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("posted_date");
-
-                    b.Property<decimal?>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("remarks");
-
-                    b.Property<int?>("SalesInvoiceId")
-                        .HasColumnType("integer")
-                        .HasColumnName("sales_invoice_id");
-
-                    b.Property<int?>("ServiceInvoiceId")
-                        .HasColumnType("integer")
-                        .HasColumnName("service_invoice_id");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.Property<DateOnly>("TransactionDate")
-                        .HasColumnType("date")
-                        .HasColumnName("transaction_date");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("text")
-                        .HasColumnName("type");
-
-                    b.Property<decimal>("UnearnedAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("unearned_amount");
-
-                    b.Property<string>("VoidedBy")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("voided_by");
-
-                    b.Property<DateTime?>("VoidedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("voided_date");
-
-                    b.HasKey("DebitMemoId")
-                        .HasName("pk_filpride_debit_memos");
-
-                    b.HasIndex("SalesInvoiceId")
-                        .HasDatabaseName("ix_filpride_debit_memos_sales_invoice_id");
-
-                    b.HasIndex("ServiceInvoiceId")
-                        .HasDatabaseName("ix_filpride_debit_memos_service_invoice_id");
-
-                    b.ToTable("filpride_debit_memos", (string)null);
-                });
-
             modelBuilder.Entity("IBS.Models.Filpride.FilprideFreight", b =>
                 {
                     b.Property<int>("FreightId")
@@ -2972,7 +2972,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -3090,8 +3090,12 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("OldCosNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("old_cos_no");
+
+                    b.Property<decimal>("OldPrice")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("old_price");
 
                     b.Property<string>("OperationManagerReason")
                         .HasColumnType("text")
@@ -3104,6 +3108,11 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("PlateNo")
                         .HasColumnType("text")
                         .HasColumnName("plate_no");
+
+                    b.Property<string>("PriceReference")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("price_reference");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
@@ -3132,7 +3141,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasColumnType("varchar(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("SubPORemarks")
@@ -10657,6 +10666,25 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("CV");
                 });
 
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherDetail", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
+                        .WithMany("Details")
+                        .HasForeignKey("CheckVoucherHeaderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
+
+                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
+
+                    b.Navigation("CheckVoucherHeader");
+
+                    b.Navigation("Supplier");
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
@@ -10686,9 +10714,9 @@ namespace IBS.DataAccess.Migrations
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherDetail", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", "JournalVoucherHeader")
-                        .WithMany()
+                        .WithMany("Details")
                         .HasForeignKey("JournalVoucherHeaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_journal_voucher_details_filpride_journal_voucher_h");
 
@@ -10832,6 +10860,25 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("ServiceInvoice");
                 });
 
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideDebitMemo", b =>
+                {
+                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", "SalesInvoice")
+                        .WithMany()
+                        .HasForeignKey("SalesInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_filpride_debit_memos_filpride_sales_invoices_sales_invoice_");
+
+                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", "ServiceInvoice")
+                        .WithMany()
+                        .HasForeignKey("ServiceInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_filpride_debit_memos_filpride_service_invoices_service_invo");
+
+                    b.Navigation("SalesInvoice");
+
+                    b.Navigation("ServiceInvoice");
+                });
+
             modelBuilder.Entity("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", b =>
                 {
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
@@ -10965,44 +11012,6 @@ namespace IBS.DataAccess.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseOrder");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideCheckVoucherDetail", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
-                        .WithMany()
-                        .HasForeignKey("CheckVoucherHeaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
-                        .WithMany()
-                        .HasForeignKey("SupplierId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
-
-                    b.Navigation("CheckVoucherHeader");
-
-                    b.Navigation("Supplier");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideDebitMemo", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideSalesInvoice", "SalesInvoice")
-                        .WithMany()
-                        .HasForeignKey("SalesInvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_debit_memos_filpride_sales_invoices_sales_invoice_");
-
-                    b.HasOne("IBS.Models.Filpride.AccountsReceivable.FilprideServiceInvoice", "ServiceInvoice")
-                        .WithMany()
-                        .HasForeignKey("ServiceInvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_debit_memos_filpride_service_invoices_service_invo");
-
-                    b.Navigation("SalesInvoice");
-
-                    b.Navigation("ServiceInvoice");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.FilprideFreight", b =>
@@ -11813,6 +11822,16 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_asp_net_user_tokens_asp_net_users_user_id");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", b =>
+                {
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideJournalVoucherHeader", b =>
+                {
+                    b.Navigation("Details");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilpridePurchaseOrder", b =>

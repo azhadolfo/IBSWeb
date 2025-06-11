@@ -103,7 +103,15 @@
                 <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                 <td>@Model.VatAmount.ToString(decimalFormat)</td>
-                <td>@Html.DisplayFor(model => model.CustomerOrderSlip!.DeliveredPrice)</td>
+                <td>
+                    @Html.DisplayFor(model => model.CustomerOrderSlip!.DeliveredPrice)
+                    @if (!string.IsNullOrEmpty(Model.PriceReference))
+                    {
+                        <span data-bs-toggle="tooltip" title="Updated based on price reference: @Model.PriceReference" class="text-muted ms-1">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </span>
+                    }
+                </td>
                 <td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td>
             </tr>
             </tbody>
@@ -122,7 +130,12 @@
         <table class="table table-bordered">
             <thead>
             <tr>
-                <th class="text-center table-primary" colspan="2">Net Delivered Price <i class="bi bi-info-circle" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="top" data-bs-content="All figures are exclusive of VAT."></i></th>
+                <th class="text-center table-primary" colspan="2">
+                    Net Delivered Price 
+                    <span data-bs-toggle="tooltip" title="All figures are exclusive of VAT." class="text-muted ms-1">
+                        <i class="bi bi-info-circle"></i>
+                    </span>
+                </th>
             </tr>
             </thead>
             <tbody>
@@ -238,4 +251,5 @@
             });
         });
     </script>
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }

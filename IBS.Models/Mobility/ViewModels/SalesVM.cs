@@ -1,4 +1,4 @@
-﻿using IBS.Models.Mobility;
+using IBS.Models.Mobility;
 
 namespace IBS.Models.Mobility.ViewModels
 {

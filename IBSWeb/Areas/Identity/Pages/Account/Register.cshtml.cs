@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -84,7 +84,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             [Required]
             public string Department { get; set; }
-            public string StationAccess {  get; set; }
+            public string StationAccess { get; set; }
 
             [Required]
             public string Role { get; set; }
@@ -137,7 +137,7 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     Value = s.StationCode,
                     Text = s.StationCode + " " + s.StationName
                 }),
-        };
+            };
         }
 
         public async Task OnGetAsync(string returnUrl = null)

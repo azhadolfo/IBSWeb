@@ -1,4 +1,4 @@
-﻿using IBS.Models.MasterFile;
+using IBS.Models.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -20,7 +20,7 @@ namespace IBS.Models.Mobility
         [Display(Name = "PO No.")]
         public string CustomerPurchaseOrderNo { get; set; } = string.Empty;
         [Display(Name = "Date")]
-        public DateOnly Date {  get; set; }
+        public DateOnly Date { get; set; }
         [Display(Name = "Quantity")]
         public decimal Quantity { get; set; }
         [Display(Name = "Price")]

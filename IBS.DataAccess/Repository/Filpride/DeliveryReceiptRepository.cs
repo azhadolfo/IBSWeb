@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
@@ -25,7 +25,7 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             FilprideDeliveryReceipt? lastDr = await _db
                 .FilprideDeliveryReceipts
-                .Where(c => c.Company  == companyClaims)
+                .Where(c => c.Company == companyClaims)
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -130,7 +130,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt",  existingRecord.Company);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
                 await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _db.SaveChangesAsync(cancellationToken);
@@ -506,7 +506,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        private async Task  UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
+        private async Task UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
         {
             var cos = await _db.FilprideCustomerOrderSlips
                 .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
@@ -797,6 +797,31 @@ namespace IBS.DataAccess.Repository.Filpride
             return await _db.FilprideDeliveryReceipts
                 .Where(dr => dr.CanceledBy == null && dr.VoidedBy == null)
                 .AnyAsync(dr => dr.ManualDrNo == manualDrNo);
+        }
+
+        public async Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, CancellationToken cancellationToken = default)
+        {
+            var deliveryReceipts = await _db.FilprideDeliveryReceipts
+                .Where(x => x.CustomerOrderSlipId == customerOrderSlipId
+                            && x.VoidedBy == null
+                            && x.CanceledBy == null)
+                .ToListAsync(cancellationToken);
+
+            if (deliveryReceipts.Any())
+            {
+                foreach (var deliveryReceipt in deliveryReceipts)
+                {
+                    deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
+
+                    await _db.FilprideGeneralLedgerBooks
+                        .Where(x => x.Company == deliveryReceipt.Company
+                                    && x.Reference == deliveryReceipt.DeliveryReceiptNo)
+                        .ExecuteDeleteAsync(cancellationToken);
+
+                    await PostAsync(deliveryReceipt, cancellationToken);
+
+                }
+            }
         }
     }
 }

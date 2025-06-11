@@ -70,6 +70,7 @@
                         <th class="text-start">@Html.DisplayNameFor(m => m.Date)</th>
                         <th class="text-start">Customer</th>
                         <th class="text-start">Product</th>
+                        <th class="text-start">Price</th>
                         <th class="text-start">Quantity</th>
                         <th class="text-start">Balance</th>
                         <th class="text-start">Total Amount</th>
@@ -122,10 +123,17 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "customerOrderSlipNo" },
-                    { "data": "oldCosNo" },
+                    { 
+                        "data": "customerOrderSlipNo",
+                        "name": "CustomerOrderSlipNo",
+                    },
+                    { 
+                        "data": "oldCosNo",
+                        "name": "OldCosNo",
+                    },
                     {
                         "data": "purchaseOrderId",
+                        "name": "PurchaseOrderId",
                         "render": function(data, type, row) {
 
                             if (!row.appointedSupplierPOs || row.appointedSupplierPOs.length === 0) {
@@ -144,12 +152,14 @@
                     },
                     { 
                         "data": "pickUpPointId",
+                        "name": "PickUpPointId",
                         "render": function (data, type, row){
                             return row.depot
                         },
                     },
                     {
                         "data": "date",
+                        "name": "Date",
                         "render": function (data) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', {
@@ -159,10 +169,25 @@
                             });
                         }
                     },
-                    { "data": "customerName" },
-                    { "data": "productName" },
+                    { 
+                        "data": "customerName",
+                        "name": "Customer.CustomerName",
+                    },
+                    { 
+                        "data": "productName",
+                        "name": "Product.ProductName",
+                    },
+                    {
+                        "data": "deliveredPrice",
+                        "name": "DeliveredPrice",
+                        "render": function (data, type, row) {
+                            var price = $.fn.dataTable.render.number(',', '.', 4).display(data);
+                            return `<span class="d-block fw-medium">${price}</span>`;
+                        }
+                    },
                     {
                         "data": "quantity",
+                        "name": "Quantity",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -170,6 +195,7 @@
                     },
                     {
                         "data": "balanceQuantity",
+                        "name": "BalanceQuantity",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -177,6 +203,7 @@
                     },
                     {
                         "data": "totalAmount",
+                        "name": "TotalAmount",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
@@ -184,6 +211,7 @@
                     },
                     {
                         "data": "status",
+                        "name": "Status",
                         "render": function (data) {
                             var badgeClass = "";
                             switch (data) {
@@ -219,6 +247,7 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                             var status = row.status;
+                            const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
                             var customerOrderSlipId = row.customerOrderSlipId;
                             var actions = `
                                 <div class="dropdown actions-dropdown">
@@ -278,10 +307,15 @@
                                     break;
                             }
 
-                            if (status != '@CosStatus.Expired' && status != '@CosStatus.Completed' && status != '@CosStatus.Closed')
+                            if (status !== '@CosStatus.Expired' && status !== '@CosStatus.Completed' && status !== '@CosStatus.Closed')
                             {
                                 actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                             }
+                            
+                            if (isAdmin && row.oldPrice === 0){
+                                actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                            }
+                            
                             actions += `</ul></div>`;
                             return actions;
                         }
@@ -309,8 +343,38 @@
                 }
             });
         }
-    
-    
+
+        function changePrice(customerOrderSlipId) {
+            Swal.fire({
+                title: 'Change Price (One Time Only)',
+                html:
+                    '<input id="swal-input1" class="swal2-input" placeholder="Enter New Price">' +
+                    '<input id="swal-input2" class="swal2-input" placeholder="Enter Ref#">',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Submit',
+                preConfirm: () => {
+                    const price = document.getElementById('swal-input1').value;
+                    const ref = document.getElementById('swal-input2').value;
+                    if (!price || !ref) {
+                        Swal.showValidationMessage('Both Price and Ref# are required');
+                        return false;
+                    }
+                    return { price: price, ref: ref };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const price = result.value.price;
+                    const ref = result.value.ref;
+                    window.location.href = `@Url.Action("ChangePrice", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}?newPrice=${encodeURIComponent(price)}&referenceNo=${encodeURIComponent(ref)}`;
+                }
+            });
+        }
+
+
+
     </script>
 
 }

@@ -11,21 +11,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class TerminalController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<TerminalController> _logger;
 
-        public TerminalController(ApplicationDbContext db, IUnitOfWork unitOfWork)
+        public TerminalController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TerminalController> logger)
         {
-            _db = db;
+            _dbContext = dbContext;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
         {
-            var terminals = _db.MMSITerminals
-                .Include(t => t.Port)
-                .ToList();
-
+            var terminals = await _unitOfWork.Terminal.GetAllAsync(null, cancellationToken);
             return View(terminals);
         }
 
@@ -34,7 +33,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             MMSITerminal model = new()
             {
-                Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken)
+                Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken)
             };
 
             return View(model);
@@ -43,33 +42,26 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSITerminal model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-
-                    return View(model);
-                }
-
-                await _db.MMSITerminals.AddAsync(model, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Terminal.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                if (!string.IsNullOrEmpty(ex.InnerException?.Message))
-                {
-                    TempData["error"] = ex.InnerException.Message;
-                }
-                else
-                {
-                    TempData["error"] = ex.Message;
-                }
-
+                TempData["error"] = ex.Message;
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to create terminal.");
                 return View(model);
             }
         }
@@ -78,22 +70,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var model = await _db.MMSITerminals.FirstOrDefaultAsync(i => i.TerminalId == id, cancellationToken);
+                var model = await _unitOfWork.Terminal.GetAsync(i => i.TerminalId == id, cancellationToken);
 
                 if (model == null)
                 {
                     return NotFound();
                 }
 
-                _db.MMSITerminals.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.Terminal.RemoveAsync(model, cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
-
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to delete terminal.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -102,40 +92,54 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var model = _db.MMSITerminals
-                .Where(a => a.TerminalId == id)
-                .Include(t => t.Port)
-                .FirstOrDefault();
+            var model = await _unitOfWork.Terminal.GetAsync(a => a.TerminalId == id, cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
             }
 
-            model.Ports = await _unitOfWork.Terminal.GetMMSIPortsById(cancellationToken);
-
+            model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(MMSITerminal model, CancellationToken cancellationToken)
         {
-            var currentModel = await _db.MMSITerminals.FindAsync(model.TerminalId);
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            var currentModel = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
 
             if (currentModel == null)
             {
-                return NotFound();
+                TempData["error"] = "Entry not found, please try again.";
+                return View(model);
             }
 
-            currentModel.TerminalNumber = model.TerminalNumber;
-            currentModel.TerminalName = model.TerminalName;
-            currentModel.PortId = model.PortId;
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            await _db.SaveChangesAsync();
+            try
+            {
+                currentModel.TerminalNumber = model.TerminalNumber;
+                currentModel.TerminalName = model.TerminalName;
+                currentModel.PortId = model.PortId;
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to delete terminal.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
 
-            TempData["success"] = "Edited successfully";
-
-            return RedirectToAction(nameof(Index));
         }
     }
 }

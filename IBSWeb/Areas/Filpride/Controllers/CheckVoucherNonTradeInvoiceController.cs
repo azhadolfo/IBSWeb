@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Data;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride;
@@ -609,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId )
+                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
             existingModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
@@ -1496,7 +1496,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Replace this with your actual repository/service call
             var bankAccounts = await _unitOfWork.FilprideBankAccount.GetAllAsync(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility));
 
-            return Json(bankAccounts.Select(b => new {
+            return Json(bankAccounts.Select(b => new
+            {
                 id = b.BankAccountId,
                 accountName = b.AccountName,
                 accountNumber = b.AccountNo
@@ -1527,7 +1528,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companies = await _unitOfWork.Company.GetAllAsync();
 
-            return Json(companies.OrderBy(c => c.CompanyCode).Select(c => new {
+            return Json(companies.OrderBy(c => c.CompanyCode).Select(c => new
+            {
                 id = c.CompanyId,
                 accountName = c.CompanyName,
                 accountNumber = c.CompanyCode
@@ -1558,7 +1560,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var employees = await _unitOfWork.FilprideEmployee.GetAllAsync(e => e.Company == companyClaims);
 
-            return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new {
+            return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new
+            {
                 id = e.EmployeeId,
                 accountName = $"{e.FirstName} {e.LastName}",
                 accountNumber = e.EmployeeNumber
@@ -1590,7 +1593,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var employees = await _unitOfWork.FilprideCustomer.GetAllAsync(c => (companyClaims == nameof(Filpride) ? c.IsFilpride : c.IsMobility));
 
-            return Json(employees.OrderBy(c => c.CustomerCode).Select(c => new {
+            return Json(employees.OrderBy(c => c.CustomerCode).Select(c => new
+            {
                 id = c.CustomerId,
                 accountName = c.CustomerName,
                 accountNumber = c.CustomerCode
@@ -1622,7 +1626,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var suppliers = await _unitOfWork.FilprideSupplier.GetAllAsync(s => (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
 
-            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new {
+            return Json(suppliers.OrderBy(c => c.SupplierCode).Select(c => new
+            {
                 id = c.SupplierId,
                 accountName = c.SupplierName,
                 accountNumber = c.SupplierCode

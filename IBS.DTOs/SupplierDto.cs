@@ -1,4 +1,4 @@
-﻿namespace IBS.Dtos
+namespace IBS.DTOs
 {
     public class SupplierDto
     {

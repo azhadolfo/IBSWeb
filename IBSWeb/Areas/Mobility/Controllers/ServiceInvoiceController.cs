@@ -302,119 +302,118 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #region --SV Date Computation--
 
-                        var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
+                    var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
                     #endregion --SV Date Computation--
 
-                    ///TODO: waiting for ma'am LSA journal entries
+                    ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                     #region --General Ledger Book Recording
 
-                        // var ledgers = new List<FilprideGeneralLedgerBook>();
-                        // var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
-                        // var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
-                        // var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
-                        // var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
-                        // var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
-                        //
-                        // //TODO waiting for Ma'am LSA journal entries
-                        // ledgers.Add(
-                        //         new FilprideGeneralLedgerBook
-                        //         {
-                        //             Date = postedDate,
-                        //             Reference = model.ServiceInvoiceNo,
-                        //             Description = model.Service.Name,
-                        //             AccountId = arNonTradeTitle.AccountId,
-                        //             AccountNo = arNonTradeTitle.AccountNumber,
-                        //             AccountTitle = arNonTradeTitle.AccountName,
-                        //             Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
-                        //             Credit = 0,
-                        //             Company = model.Company,
-                        //             CreatedBy = model.CreatedBy,
-                        //             CreatedDate = model.CreatedDate,
-                        //             CustomerId = model.CustomerId
-                        //         }
-                        //     );
-                        // if (withHoldingTaxAmount > 0)
-                        // {
-                        //     ledgers.Add(
-                        //         new FilprideGeneralLedgerBook
-                        //         {
-                        //             Date = postedDate,
-                        //             Reference = model.ServiceInvoiceNo,
-                        //             Description = model.Service.Name,
-                        //             AccountId = arTradeCwt.AccountId,
-                        //             AccountNo = arTradeCwt.AccountNumber,
-                        //             AccountTitle = arTradeCwt.AccountName,
-                        //             Debit = withHoldingTaxAmount,
-                        //             Credit = 0,
-                        //             Company = model.Company,
-                        //             CreatedBy = model.CreatedBy,
-                        //             CreatedDate = model.CreatedDate
-                        //         }
-                        //     );
-                        // }
-                        // if (withHoldingVatAmount > 0)
-                        // {
-                        //     ledgers.Add(
-                        //         new FilprideGeneralLedgerBook
-                        //         {
-                        //             Date = postedDate,
-                        //             Reference = model.ServiceInvoiceNo,
-                        //             Description = model.Service.Name,
-                        //             AccountId = arTradeCwv.AccountId,
-                        //             AccountNo = arTradeCwv.AccountNumber,
-                        //             AccountTitle = arTradeCwv.AccountName,
-                        //             Debit = withHoldingVatAmount,
-                        //             Credit = 0,
-                        //             Company = model.Company,
-                        //             CreatedBy = model.CreatedBy,
-                        //             CreatedDate = model.CreatedDate
-                        //         }
-                        //     );
-                        // }
-                        //
-                        // ledgers.Add(
-                        //        new FilprideGeneralLedgerBook
-                        //        {
-                        //            Date = postedDate,
-                        //            Reference = model.ServiceInvoiceNo,
-                        //            Description = model.Service.Name,
-                        //            AccountNo = model.Service.CurrentAndPreviousNo,
-                        //            AccountTitle = model.Service.CurrentAndPreviousTitle,
-                        //            Debit = 0,
-                        //            Credit = Math.Round((netOfVatAmount), 4),
-                        //            Company = model.Company,
-                        //            CreatedBy = model.CreatedBy,
-                        //            CreatedDate = model.CreatedDate
-                        //        }
-                        //    );
-                        //
-                        // if (vatAmount > 0)
-                        // {
-                        //     ledgers.Add(
-                        //         new FilprideGeneralLedgerBook
-                        //         {
-                        //             Date = postedDate,
-                        //             Reference = model.ServiceInvoiceNo,
-                        //             Description = model.Service.Name,
-                        //             AccountId = vatOutputTitle.AccountId,
-                        //             AccountNo = vatOutputTitle.AccountNumber,
-                        //             AccountTitle = vatOutputTitle.AccountName,
-                        //             Debit = 0,
-                        //             Credit = Math.Round((vatAmount), 4),
-                        //             Company = model.Company,
-                        //             CreatedBy = model.CreatedBy,
-                        //             CreatedDate = model.CreatedDate
-                        //         }
-                        //     );
-                        // }
-                        //
-                        // if (!_unitOfWork.FilprideServiceInvoice.IsJournalEntriesBalanced(ledgers))
-                        // {
-                        //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                        // }
-                        //
-                        // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                    // var ledgers = new List<FilprideGeneralLedgerBook>();
+                    // var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
+                    // var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
+                    // var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                    // var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+                    // var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+                    //
+                    // ledgers.Add(
+                    //         new FilprideGeneralLedgerBook
+                    //         {
+                    //             Date = postedDate,
+                    //             Reference = model.ServiceInvoiceNo,
+                    //             Description = model.Service.Name,
+                    //             AccountId = arNonTradeTitle.AccountId,
+                    //             AccountNo = arNonTradeTitle.AccountNumber,
+                    //             AccountTitle = arNonTradeTitle.AccountName,
+                    //             Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
+                    //             Credit = 0,
+                    //             Company = model.Company,
+                    //             CreatedBy = model.CreatedBy,
+                    //             CreatedDate = model.CreatedDate,
+                    //             CustomerId = model.CustomerId
+                    //         }
+                    //     );
+                    // if (withHoldingTaxAmount > 0)
+                    // {
+                    //     ledgers.Add(
+                    //         new FilprideGeneralLedgerBook
+                    //         {
+                    //             Date = postedDate,
+                    //             Reference = model.ServiceInvoiceNo,
+                    //             Description = model.Service.Name,
+                    //             AccountId = arTradeCwt.AccountId,
+                    //             AccountNo = arTradeCwt.AccountNumber,
+                    //             AccountTitle = arTradeCwt.AccountName,
+                    //             Debit = withHoldingTaxAmount,
+                    //             Credit = 0,
+                    //             Company = model.Company,
+                    //             CreatedBy = model.CreatedBy,
+                    //             CreatedDate = model.CreatedDate
+                    //         }
+                    //     );
+                    // }
+                    // if (withHoldingVatAmount > 0)
+                    // {
+                    //     ledgers.Add(
+                    //         new FilprideGeneralLedgerBook
+                    //         {
+                    //             Date = postedDate,
+                    //             Reference = model.ServiceInvoiceNo,
+                    //             Description = model.Service.Name,
+                    //             AccountId = arTradeCwv.AccountId,
+                    //             AccountNo = arTradeCwv.AccountNumber,
+                    //             AccountTitle = arTradeCwv.AccountName,
+                    //             Debit = withHoldingVatAmount,
+                    //             Credit = 0,
+                    //             Company = model.Company,
+                    //             CreatedBy = model.CreatedBy,
+                    //             CreatedDate = model.CreatedDate
+                    //         }
+                    //     );
+                    // }
+                    //
+                    // ledgers.Add(
+                    //        new FilprideGeneralLedgerBook
+                    //        {
+                    //            Date = postedDate,
+                    //            Reference = model.ServiceInvoiceNo,
+                    //            Description = model.Service.Name,
+                    //            AccountNo = model.Service.CurrentAndPreviousNo,
+                    //            AccountTitle = model.Service.CurrentAndPreviousTitle,
+                    //            Debit = 0,
+                    //            Credit = Math.Round((netOfVatAmount), 4),
+                    //            Company = model.Company,
+                    //            CreatedBy = model.CreatedBy,
+                    //            CreatedDate = model.CreatedDate
+                    //        }
+                    //    );
+                    //
+                    // if (vatAmount > 0)
+                    // {
+                    //     ledgers.Add(
+                    //         new FilprideGeneralLedgerBook
+                    //         {
+                    //             Date = postedDate,
+                    //             Reference = model.ServiceInvoiceNo,
+                    //             Description = model.Service.Name,
+                    //             AccountId = vatOutputTitle.AccountId,
+                    //             AccountNo = vatOutputTitle.AccountNumber,
+                    //             AccountTitle = vatOutputTitle.AccountName,
+                    //             Debit = 0,
+                    //             Credit = Math.Round((vatAmount), 4),
+                    //             Company = model.Company,
+                    //             CreatedBy = model.CreatedBy,
+                    //             CreatedDate = model.CreatedDate
+                    //         }
+                    //     );
+                    // }
+                    //
+                    // if (!_unitOfWork.FilprideServiceInvoice.IsJournalEntriesBalanced(ledgers))
+                    // {
+                    //     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                    // }
+                    //
+                    // await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
 
                     #endregion --General Ledger Book Recording
 
@@ -500,14 +499,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 ///TODO: uncomment this if the other modules are implemented
                 //var hasAlreadyBeenUsed =
-                    //await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
-                    //await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
-                    //await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
+                //await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
+                //await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
+                //await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
 
                 //if (hasAlreadyBeenUsed)
                 //{
-                    //TempData["error"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
-                    //return RedirectToAction(nameof(Index));
+                //TempData["error"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
+                //return RedirectToAction(nameof(Index));
                 //}
 
                 if (model.VoidedBy == null)
@@ -525,7 +524,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        ///TODO: waiting for ma'am LSA journal entries
+                        ///TODO: waiting for ma'am LSA decision if the mobility station is separated GL
                         //await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
                         //await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
 
@@ -638,35 +637,35 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #region --Saving the default properties
 
-                    existingRecord.Discount = viewModel.Discount;
-                    existingRecord.Amount = viewModel.Amount;
-                    existingRecord.Period = viewModel.Period;
-                    existingRecord.DueDate = viewModel.DueDate;
-                    existingRecord.Instructions = viewModel.Instructions;
-                    existingRecord.EditedBy = _userManager.GetUserName(User);
-                    existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Total = viewModel.Amount;
-                    existingRecord.CustomerId = viewModel.CustomerId;
-                    existingRecord.ServiceId = viewModel.ServiceId;
-                    existingRecord.CustomerAddress = customer.CustomerAddress;
-                    existingRecord.CustomerTin = customer.CustomerTin;
+                existingRecord.Discount = viewModel.Discount;
+                existingRecord.Amount = viewModel.Amount;
+                existingRecord.Period = viewModel.Period;
+                existingRecord.DueDate = viewModel.DueDate;
+                existingRecord.Instructions = viewModel.Instructions;
+                existingRecord.EditedBy = _userManager.GetUserName(User);
+                existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Total = viewModel.Amount;
+                existingRecord.CustomerId = viewModel.CustomerId;
+                existingRecord.ServiceId = viewModel.ServiceId;
+                existingRecord.CustomerAddress = customer.CustomerAddress;
+                existingRecord.CustomerTin = customer.CustomerTin;
 
-                    if (DateOnly.FromDateTime(existingRecord.CreatedDate) < viewModel.Period)
-                    {
-                        existingRecord.UnearnedAmount += viewModel.Amount;
-                    }
-                    else
-                    {
-                        existingRecord.CurrentAndPreviousAmount += viewModel.Amount;
-                    }
+                if (DateOnly.FromDateTime(existingRecord.CreatedDate) < viewModel.Period)
+                {
+                    existingRecord.UnearnedAmount += viewModel.Amount;
+                }
+                else
+                {
+                    existingRecord.CurrentAndPreviousAmount += viewModel.Amount;
+                }
 
                 #endregion --Saving the default properties
 
                 #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited service invoice# {existingRecord.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited service invoice# {existingRecord.ServiceInvoiceNo}", "Service Invoice", nameof(Mobility));
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 

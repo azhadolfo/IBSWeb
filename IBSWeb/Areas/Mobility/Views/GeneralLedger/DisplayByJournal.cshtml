@@ -1,4 +1,5 @@
-﻿@model IEnumerable<GeneralLedgerView>
+﻿@using IBS.Utility.Constants
+@model IEnumerable<GeneralLedgerView>
 
 @{
     ViewData["Title"] = "GL By Journal";
@@ -85,8 +86,8 @@
                 }
                 <tr class="table-primary">
                     <td colspan="4" class="text-center">TOTAL</td>
-                    <td class="text-end">@Model.Sum(j => j.Debit).ToString("N4")</td>
-                    <td class="text-end">@Model.Sum(j => j.Credit).ToString("N4")</td>
+                    <td class="text-end">@Model.Sum(j => j.Debit).ToString(SD.Four_Decimal_Format)</td>
+                    <td class="text-end">@Model.Sum(j => j.Credit).ToString(SD.Four_Decimal_Format)</td>
                 </tr>
             </tbody>
         </table>

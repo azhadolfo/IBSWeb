@@ -92,40 +92,28 @@
                 <div class="row pt-2">
                     <div class="form-group col-3 my-2" title="Customer can no longer be changed" >
                         <label class="control-label ps-1 pb-1">Customer<span class="required text-danger">*</span></label>
-                        <input value="@Model.CustomerId" name="CustomerId" type="hidden">
-                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
+                        <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
                             <option value="">Select Customer</option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="col-6">
-                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? ?? false ? "d-none" : "")">
+                        <div id="PrincipalDiv" class="row @(ViewData["HasPrincipal"] as bool? == true ? "" : "d-none")">
 
                             <div class="col-6" style="height: 72px;">
                                 <div class="row">
                                     <div id="SelectDiv" class="form-group col-12 my-2 @(Model.PrincipalId.HasValue ? "" : "d-none")">
                                         <label for="PrincipalSelect" class="control-label ps-1 pb-1">Principal<span class="required text-danger">*</span></label>
-                                        @if (string.IsNullOrEmpty(Model.PrincipalId.ToString()))
-                                        {
-                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
-                                                <option value="">Select Principal</option>
-                                            </select>
-                                        }
-                                        else
-                                        {
-                                            <input value="@Model.PrincipalId" name="PrincipalId" type="hidden">
-                                            <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" disabled>
-                                                <option value="">Select Principal</option>
-                                            </select>
-                                        }
+                                        <select asp-items="@Model.CustomerPrincipal" asp-for="PrincipalId" value="@Model.PrincipalId" id="PrincipalSelect" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%">
+                                            <option value="">Select Principal</option>
+                                        </select>
                                         <span asp-validation-for="PrincipalId" class="text-danger"></span>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-check col-6 ps-2 my-2 text-center d-flex align-items-center justify-content-start">
-                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "") disabled>
+                                <input class="form-check-input m-0 ms-2" type="checkbox" id="UsePrincipalCheckbox" @(Model.PrincipalId.HasValue ? "checked" : "")>
                                 <label class="text-decoration-underline form-check-label ps-1 h4 m-0" for="UsePrincipalCheckbox" style="font-size: 20px;">
                                     Use Principal
                                 </label>
@@ -527,10 +515,10 @@
                             <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
                             <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
                             <td class="text-center align-middle ps-4">${value.totalHours.toFixed(2)}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.dispatchRate)} ${value.dispatchChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.dispatchNetRevenue)} </td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.bafRate)} ${value.bafChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.bafNetRevenue)}</td>
                         </tr>
                     `);
                 });

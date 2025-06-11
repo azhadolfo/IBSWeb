@@ -1,6 +1,5 @@
 ﻿@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model FilprideAuthorityToLoad
 @inject SignInManager<IdentityUser> SignInManager
 
@@ -185,4 +184,5 @@
             <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index" class="btn btn-outline-primary border form-control buttons">Back to List</a>
         </div>
     </div>
+    <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 </div>

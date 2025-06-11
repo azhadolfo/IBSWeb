@@ -133,7 +133,7 @@ namespace IBS.Models.Mobility
 
         public string? SupportingFileSavedFileName { get; set; }
 
-        public string?  SupportingFileSavedUrl { get; set; }
+        public string? SupportingFileSavedUrl { get; set; }
 
         public DateOnly? DcpDate { get; set; }
 

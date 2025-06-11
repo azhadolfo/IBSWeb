@@ -11,7 +11,7 @@ namespace IBS.Models.MMSI.ViewModels
 
         public string? MMSIBillingNumber { get; set; }
 
-        public DateOnly Date {  get; set; }
+        public DateOnly Date { get; set; }
 
         public bool IsUndocumented { get; set; }
 

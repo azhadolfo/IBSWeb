@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Rendering;

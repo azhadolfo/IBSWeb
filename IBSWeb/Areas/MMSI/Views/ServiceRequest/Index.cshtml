@@ -406,16 +406,6 @@
                 });
             });
 
-            $('#statusDropdown').click(function (e) {
-                e.stopPropagation();
-            });
-
-            // Status filter change
-            $(document).on("change", "#statusDropdown", function () {
-                const selectedValue = $(this).val();
-                handleStatusChange(selectedValue);
-            });
-
             // Individual checkbox change
             $(document).on("change", ".selectCheckbox", toggleSelect);
 

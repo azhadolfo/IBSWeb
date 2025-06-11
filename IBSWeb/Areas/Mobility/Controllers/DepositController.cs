@@ -57,7 +57,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             try
             {
                 var query = await _unitOfWork.MobilityDeposit
-                    .GetAllAsync(cancellationToken:cancellationToken);
+                    .GetAllAsync(cancellationToken: cancellationToken);
 
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {

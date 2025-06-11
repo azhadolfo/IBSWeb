@@ -1,5 +1,4 @@
 @using IBS.Utility.Constants
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model CreateBillingViewModel
 
 @{
@@ -125,7 +124,7 @@
                     <div class="col-3 ps-2 my-2 d-none hiddenDiv">
                         <div class="row">
                             <div class="col">
-                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio">
+                                <input asp-for="BilledTo" class="isVatable" value="LOCAL" type="radio" checked>
                                 <label style="font-size: 20px;">
                                     Billed To Local
                                 </label>
@@ -508,10 +507,10 @@
                             <td class="text-center align-middle ps-4">${value.dateLeft} - ${value.timeLeft}</td>
                             <td class="text-center align-middle ps-4">${value.dateArrived} - ${value.timeArrived}</td>
                             <td class="text-center align-middle ps-4">${value.totalHours.toFixed(2)}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.dispatchRate} ${value.dispatchChargeType}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.dispatchNetRevenue}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.bafRate} ${value.bafChargeType}</td>
-                            <td class="text-center align-middle ps-4">₱ ${value.bafNetRevenue}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.dispatchRate)} ${value.dispatchChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.dispatchNetRevenue)}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.bafRate)} ${value.bafChargeType}</td>
+                            <td class="text-center align-middle ps-4">₱ ${formatNumber(value.bafNetRevenue)}</td>
                         </tr>
                     `);
                 });

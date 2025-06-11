@@ -1,4 +1,4 @@
-﻿using IBS.DataAccess.Repository.IRepository;
+using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;

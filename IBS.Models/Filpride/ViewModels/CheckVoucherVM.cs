@@ -1,4 +1,4 @@
-﻿using IBS.Models.Filpride.AccountsPayable;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.MasterFile;
 
 namespace IBS.Models.Filpride.ViewModels
