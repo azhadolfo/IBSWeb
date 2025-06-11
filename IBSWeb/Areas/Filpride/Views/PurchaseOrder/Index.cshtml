@@ -297,6 +297,7 @@
                     "orderable": false,
                     "render": function (data, type, row) {
                         var dropdownContent = '';
+                        const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
 
                         if (row.status === "@nameof(DRStatus.ForApprovalOfOM)") {
                             // Show only the "Preview" option when status is "ForApprovalOfOM"
@@ -336,6 +337,10 @@
                                  `;
                                 
                                 if (row.quantityReceived === 0 && !row.isSubPo) {
+                                    dropdownContent = `<li><a class="dropdown-item" href="javascript:void(0);" onclick="updateSupplierSalesOrderNo(${data})">Update Sales Order#</a></li>`;
+                                }
+                                
+                                if (row.quantityReceived === 0 && !row.isSubPo && isAdmin) {
                                     dropdownContent += `
                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                     `;
@@ -537,6 +542,65 @@
                 transferModal.hide();
             });
         });
+
+        function updateSupplierSalesOrderNo(purchaseOrderId) {
+            Swal.fire({
+                title: 'Update Supplier Sales Order #',
+                input: 'text',
+                inputLabel: 'Sales Order Number',
+                inputValue: '', // You can pre-fill this if you have the current value
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                showLoaderOnConfirm: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Please enter a supplier sales order number!';
+                    }
+                },
+                preConfirm: (supplierSalesOrderNo) => {
+                    return $.ajax({
+                        url: '@Url.Action("UpdateSupplierSalesOrderNo", "PurchaseOrder", new { area = "Filpride" })',
+                        type: 'POST',
+                        data: {
+                            purchaseOrderId: purchaseOrderId,
+                            supplierSalesOrderNo: supplierSalesOrderNo,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        }
+                    }).then(response => {
+                        if (response.success) {
+                            return response; // Pass the success response
+                        } else {
+                            throw new Error(response.message || 'Failed to update supplier sales order number.');
+                        }
+                    }).catch(error => {
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value.success) { // Check if the AJAX call was successful based on the returned data
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: result.value.message,
+                            timer: 3000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.value.message || 'An unexpected error occurred.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                }
+            });
+        }
 
     </script>
 }

@@ -887,5 +887,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSupplierSalesOrderNo(int purchaseOrderId, string supplierSalesOrderNo, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                if (purchaseOrder == null)
+                {
+                    return Json(new { success = false, message = "Purchase Order not found." });
+                }
+
+                purchaseOrder.SupplierSalesOrderNo = supplierSalesOrderNo;
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update sales order number of purchase order.", "Purchase Order", purchaseOrder.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Json(new { success = true, message = "Supplier Order # updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update sales order number of purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Transfer by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
+        }
     }
 }
