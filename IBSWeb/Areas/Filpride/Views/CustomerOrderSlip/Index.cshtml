@@ -247,6 +247,7 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                             var status = row.status;
+                            const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
                             var customerOrderSlipId = row.customerOrderSlipId;
                             var actions = `
                                 <div class="dropdown actions-dropdown">
@@ -306,10 +307,15 @@
                                     break;
                             }
 
-                            if (status != '@CosStatus.Expired' && status != '@CosStatus.Completed' && status != '@CosStatus.Closed')
+                            if (status !== '@CosStatus.Expired' && status !== '@CosStatus.Completed' && status !== '@CosStatus.Closed')
                             {
                                 actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                             }
+                            
+                            if (isAdmin && row.oldPrice === 0){
+                                actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                            }
+                            
                             actions += `</ul></div>`;
                             return actions;
                         }
@@ -337,8 +343,38 @@
                 }
             });
         }
-    
-    
+
+        function changePrice(customerOrderSlipId) {
+            Swal.fire({
+                title: 'Change Price (One Time Only)',
+                html:
+                    '<input id="swal-input1" class="swal2-input" placeholder="Enter New Price">' +
+                    '<input id="swal-input2" class="swal2-input" placeholder="Enter Ref#">',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Submit',
+                preConfirm: () => {
+                    const price = document.getElementById('swal-input1').value;
+                    const ref = document.getElementById('swal-input2').value;
+                    if (!price || !ref) {
+                        Swal.showValidationMessage('Both Price and Ref# are required');
+                        return false;
+                    }
+                    return { price: price, ref: ref };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const price = result.value.price;
+                    const ref = result.value.ref;
+                    window.location.href = `@Url.Action("ChangePrice", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}?newPrice=${encodeURIComponent(price)}&referenceNo=${encodeURIComponent(ref)}`;
+                }
+            });
+        }
+
+
+
     </script>
 
 }

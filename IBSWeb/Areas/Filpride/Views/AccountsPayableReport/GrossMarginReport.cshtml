@@ -1,15 +1,16 @@
 @using IBS.Utility.Helpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ViewModelBook
 
 @{
-    ViewData["Title"] = "Trial Balance Report";
+    ViewData["Title"] = "GM Report";
 }
 
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">TRIAL BALANCE REPORT</h2>
+                <h2 class="text-white py-2">GROSS MARGIN REPORT</h2>
             </div>
         </div>
     </div>
@@ -26,12 +27,24 @@
                     <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
-                <div class="form-group row align-content-center justify-content-center mt-4">
+                <div class="mb-3">
+                    <label asp-for="Customers" class="control-label">
+                        Customer List <small class="text-muted">(optional)</small>
+                    </label>
+                    <select asp-for="Customers" asp-items="@Model.CustomerList" class="form-select js-multiple" multiple="multiple" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="Customers" class="text-danger"></span>
+                    <div class="form-text text-muted">
+                        Leave empty to include all customers by default. You can select more than one customer to filter results.
+                    </div>
+                </div>
+                <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateTrialBalanceReport')"><i class="bi bi-printer"></i> Generate</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedGmReport')"><i class="bi bi-printer"></i> Generate</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('TrialBalanceReport')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateGmReportExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                     </div>
                 </div>
             </div>
@@ -51,4 +64,3 @@
         }
     </script>
 }
-

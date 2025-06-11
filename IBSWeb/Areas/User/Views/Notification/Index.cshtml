@@ -2,6 +2,27 @@
 
 <h2 class="text-center mt-3">Notifications</h2>
 
+@if (Model.Any())
+{
+    <div class="text-end container mt-4">
+        <button id="markAllAsReadBtn" class="btn btn-outline-success me-2">Mark All as Read</button>
+        <button id="archiveAllBtn" class="btn btn-outline-danger">Archive All</button>
+
+        <form id="markAllAsReadForm" asp-action="MarkAllAsRead" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+        </form>
+        <form id="archiveAllForm" asp-action="ArchiveAll" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+        </form>
+    </div>
+}
+else
+{
+    <div class="text-center text-muted mt-5">
+        <h5>No notifications available.</h5>
+    </div>
+}
+
 <div id="notificationList" class="notification-list container mt-4">
     @foreach (var item in Model)
     {
@@ -250,5 +271,37 @@
                 closeModal();
             }
         };
+
+        document.getElementById('markAllAsReadBtn').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Mark all as read?',
+                text: 'This will mark all unread notifications as read.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#1c3833',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, mark all'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('markAllAsReadForm').submit();
+                }
+            });
+        });
+
+        document.getElementById('archiveAllBtn').addEventListener('click', function () {
+            Swal.fire({
+                title: 'Archive all notifications?',
+                text: 'This will archive all read notifications.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#aaa',
+                confirmButtonText: 'Yes, archive all'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('archiveAllForm').submit();
+                }
+            });
+        });
     });
 </script>

@@ -130,5 +130,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [NotMapped]
         public List<SelectListItem>? PickUpPoints { get; set; }
+
+        public ICollection<FilprideReceivingReport>? ReceivingReports { get; set; }
     }
 }

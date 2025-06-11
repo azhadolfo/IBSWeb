@@ -25,7 +25,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class ServiceRequestController : Controller
     {
-        public readonly ApplicationDbContext _db;
+        public readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
@@ -33,10 +33,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ILogger<ServiceRequestController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
-        public ServiceRequestController(ApplicationDbContext db, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService,
+        public ServiceRequestController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ICloudStorageService cloudStorageService,
             ILogger<ServiceRequestController> logger, IUserAccessService userAccessService)
         {
-            _db = db;
+            _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _cloudStorageService = cloudStorageService;
@@ -133,7 +133,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(viewModel);
             }
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var model = ServiceRequestVmToDispatchTicketModel(viewModel);
             model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
             model.Terminal!.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
@@ -296,7 +296,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction("Edit", new { id = vm.DispatchTicketId });
             }
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var user = await _userManager.GetUserAsync(User);
             var model = ServiceRequestVmToDispatchTicketModel(vm);
 
@@ -453,7 +453,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
-                    model = await _db.MMSIDispatchTickets
+                    model = await _dbContext.MMSIDispatchTickets
                         .Include(dt => dt.Terminal)
                         .ThenInclude(t => t!.Port)
                         .FirstOrDefaultAsync(dt => dt.DispatchTicketId == model.DispatchTicketId, cancellationToken);
@@ -503,7 +503,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var queried = _db.MMSIDispatchTickets
+                var queried = _dbContext.MMSIDispatchTickets
                     .Include(dt => dt.Service)
                     .Include(dt => dt.Terminal)
                     .ThenInclude(dt => dt!.Port)
@@ -751,7 +751,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (!string.IsNullOrEmpty(records))
             {
-                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {

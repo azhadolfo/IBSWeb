@@ -37,5 +37,7 @@ namespace IBS.Models.Filpride.ViewModels
         #endregion
 
         public string Status { get; set; }
+
+        public string PriceReference { get; set; }
     }
 }

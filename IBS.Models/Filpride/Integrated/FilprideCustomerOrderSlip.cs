@@ -188,14 +188,23 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool IsPrinted { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
         public string Company { get; set; } = string.Empty;
 
+        [Column(TypeName = "varchar(50)")]
         public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Approved
 
+        [Column(TypeName = "varchar(50)")]
         public string OldCosNo { get; set; }
 
         public bool HasMultiplePO { get; set; }
 
         public ICollection<FilprideCOSAppointedSupplier>? AppointedSuppliers { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal OldPrice { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string PriceReference { get; set; } =  string.Empty;
     }
 }

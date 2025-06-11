@@ -939,7 +939,7 @@ namespace IBS.DataAccess.Data
             builder.Entity<FilprideReceivingReport>(rr =>
             {
                 rr.HasOne(rr => rr.PurchaseOrder)
-                .WithMany()
+                .WithMany(po => po.ReceivingReports)
                 .HasForeignKey(rr => rr.POId)
                 .OnDelete(DeleteBehavior.Restrict);
 

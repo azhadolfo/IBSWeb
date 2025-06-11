@@ -11,13 +11,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class PortController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<PortController> _logger;
         private readonly IUnitOfWork _unitOfWork;
 
-        public PortController(ApplicationDbContext db, ILogger<PortController> logger, IUnitOfWork unitOfWork)
+        public PortController(ApplicationDbContext dbContext, ILogger<PortController> logger, IUnitOfWork unitOfWork)
         {
-            _db = db;
+            _dbContext = dbContext;
             _logger = logger;
             _unitOfWork = unitOfWork;
         }
@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var model = await _unitOfWork.Port.GetAsync(i => i.PortId == id, cancellationToken);
             if (model == null) return NotFound();
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -95,7 +95,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (currentModel == null) return NotFound();
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
