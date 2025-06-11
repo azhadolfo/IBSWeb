@@ -12,13 +12,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class TugboatController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<TugboatController> _logger;
 
-        public TugboatController(ApplicationDbContext db, IUnitOfWork unitOfWork, ILogger<TugboatController> logger)
+        public TugboatController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TugboatController> logger)
         {
-            _db = db;
+            _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -126,7 +126,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {

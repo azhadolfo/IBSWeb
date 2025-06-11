@@ -11,20 +11,20 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class ServiceController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<ServiceController> _logger;
         private readonly IUnitOfWork _unitOfWork;
 
-        public ServiceController(ApplicationDbContext db, ILogger<ServiceController> logger, IUnitOfWork unitOfWork)
+        public ServiceController(ApplicationDbContext dbContext, ILogger<ServiceController> logger, IUnitOfWork unitOfWork)
         {
-            _db = db;
+            _dbContext = dbContext;
             _logger = logger;
             _unitOfWork = unitOfWork;
         }
 
         public IActionResult Index()
         {
-            var activitiesServices = _db.MMSIServices.ToList();
+            var activitiesServices = _dbContext.MMSIServices.ToList();
             return View(activitiesServices);
         }
 
@@ -43,7 +43,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -70,8 +70,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 if (model == null) return NotFound();
 
-                _db.MMSIServices.Remove(model);
-                await _db.SaveChangesAsync(cancellationToken);
+                _dbContext.MMSIServices.Remove(model);
+                await _dbContext.SaveChangesAsync(cancellationToken);
                 TempData["success"] = "Entry deleted successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (currentModel == null) return NotFound();
 
-            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
