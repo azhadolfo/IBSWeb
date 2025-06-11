@@ -1036,7 +1036,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var costAmount = pr.Amount; // purchase total gross
                         var netPurchases = costAmount / 1.12m; // purchase total net
                         var netFreight = pr.DeliveryReceipt?.Freight / 1.12m ?? 0m; // purchase total net
-                        var vatAmount = costAmount * 0.12m; // vat total
+                        var vatAmount = netPurchases * 0.12m; // vat total
                         var whtAmount = netPurchases * 0.01m; // wht total
                         var cosAmount = (pr.QuantityReceived * (pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m)); // sale total gross
                         var costPerLiter = costAmount / volume; // sale price per liter
