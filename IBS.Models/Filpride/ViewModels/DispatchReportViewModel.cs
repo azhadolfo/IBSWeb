@@ -4,6 +4,8 @@ namespace IBS.Models.Filpride.ViewModels
     {
         public string ReportType { get; set; }
 
-        public DateOnly AsOf { get; set; }
+        public DateOnly DateFrom { get; set; }
+
+        public DateOnly? DateTo { get; set; }
     }
 }

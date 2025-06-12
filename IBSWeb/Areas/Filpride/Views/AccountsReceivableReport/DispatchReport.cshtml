@@ -20,17 +20,24 @@
             <div class="form-group row">
                 <label asp-for="ReportType" class="col-sm-4 col-form-label text-right">Select Report Type</label>
                 <div class="col-sm-6">
-                    <select class="form-control js-select2" asp-for="ReportType" required style="width: 100%;">
-                        <option value="AllDeliveries" selected>All Deliveries</option>
+                    <select id="reportType" class="form-control js-select2" asp-for="ReportType" required style="width: 100%;">
+                        <option value="Delivered" selected>Delivered</option>
                         <option value="InTransit">In-Transit Deliveries</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group row mt-4">
-                <label asp-for="AsOf" class="col-sm-4 col-form-label text-right">As Of (Month and Year)</label>
+                <label asp-for="DateFrom" class="col-sm-4 col-form-label text-right">Date From</label>
                 <div class="col-sm-6">
-                    <input type="month" class="form-control" asp-for="AsOf" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required>
+                    <input type="date" id="dateFrom" class="form-control" asp-for="DateFrom" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" required>
+                </div>
+                <span asp-validation-for="DateFrom" class="text-danger m-0 p-0 col">*</span>
+            </div>
+            <div class="form-group row mt-4">
+                <label asp-for="DateTo" class="col-sm-4 col-form-label text-right">Date To</label>
+                <div class="col-sm-6">
+                    <input type="date" id="dateTo" class="form-control" asp-for="DateTo" required>
                 </div>
             </div>
 
@@ -51,6 +58,17 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        $(document).ready(function() {
+            $('#reportType').on('change.select2', function() {
+                if ($(this).val() === 'InTransit') {
+                    $('#dateFrom').prop('disabled', true);
+                    $('#dateTo').prop('disabled', true);
+                } else {
+                    $('#dateFrom').prop('disabled', false);
+                    $('#dateTo').prop('disabled', false);
+                }
+            });
+        });
         function submitForm(action) {
             var form = document.getElementById('dynamicForm');
             form.action = action;

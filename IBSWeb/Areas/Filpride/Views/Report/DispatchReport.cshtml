@@ -27,9 +27,9 @@
             </div>
 
             <div class="form-group row mt-4">
-                <label asp-for="AsOf" class="col-sm-4 col-form-label text-right">As Of (Month and Year)</label>
+                <label asp-for="DateFrom" class="col-sm-4 col-form-label text-right">As Of (Month and Year)</label>
                 <div class="col-sm-6">
-                    <input type="month" class="form-control" asp-for="AsOf" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required>
+                    <input type="month" class="form-control" asp-for="DateFrom" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required>
                 </div>
             </div>
 
