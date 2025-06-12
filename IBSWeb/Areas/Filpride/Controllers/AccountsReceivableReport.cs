@@ -582,9 +582,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #region -- Generate Dispatch Report Excel File --
         public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(viewModel.ReportType) || viewModel.DateFrom == default)
+            if (viewModel.DateFrom == default && viewModel.ReportType != "InTransit")
             {
-                return BadRequest();
+                throw new NullReferenceException("Please enter a valid Date From");
             }
 
             try
