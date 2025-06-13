@@ -262,7 +262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IFormFile? imageFile, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
