@@ -722,145 +722,308 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- Content
 
-                        page.Content().PaddingTop(10).Table(table =>
+                        page.Content().PaddingTop(10).Column(col =>
                         {
-                            #region -- Columns Definition
+                            col.Item().Table(table =>
+                            {
+                                #region -- Columns Definition
 
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                });
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                        columns.RelativeColumn();
+                                    });
 
-                            #endregion
+                                #endregion
 
-                            #region -- Table Header
+                                #region -- Table Header
 
-                                table.Header(header =>
-                                {
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Name").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Tin").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Address").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO No.").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride RR").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride DR").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ATL No.").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier SI").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SI/Lifting Date").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier DR").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier WC").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Product").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CPL G. VAT").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Purchases G. VAT").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Vat Amount").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("WHT Amount").SemiBold();
-                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Purchases N. VAT").SemiBold();
-                                });
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Name").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Tin").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Address").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("PO No.").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride RR").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Filpride DR").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ATL No.").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier SI").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("SI/Lifting Date").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier DR").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier WC").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Product").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Volume").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CPL G. VAT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Purchases G. VAT").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Vat Amount").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("WHT Amount").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Purchases N. VAT").SemiBold();
+                                    });
 
-                            #endregion
+                                #endregion
 
-                            #region -- Initialize Variable for Computation
+                                #region -- Initialize Variable for Computation
 
-                                var totalVolume = 0m;
-                                decimal totalCostAmount = 0m;
-                                decimal totalVatAmount = 0m;
-                                decimal totalWHTAmount = 0m;
-                                decimal totalNetPurchases = 0m;
-                                decimal totalCOSAmount = 0m;
-                                decimal totalGMAmount = 0m;
-                                decimal totalFCAmount = 0m;
-                                decimal totalCommissionAmount = 0m;
-                                decimal totalNetMarginAmount = 0m;
+                                    var totalVolume = 0m;
+                                    decimal totalCostAmount = 0m;
+                                    decimal totalVatAmount = 0m;
+                                    decimal totalWHTAmount = 0m;
+                                    decimal totalNetPurchases = 0m;
+                                    decimal totalCOSAmount = 0m;
+                                    decimal totalGMAmount = 0m;
+                                    decimal totalFCAmount = 0m;
+                                    decimal totalCommissionAmount = 0m;
+                                    decimal totalNetMarginAmount = 0m;
 
-                            #endregion
+                                #endregion
 
-                            #region -- Loop to Show Records
+                                #region -- Loop to Show Records
 
-                                foreach (var record in purchaseReport)
-                                {
-                                    var volume = record.QuantityReceived;
-                                    var costAmountGross = record.Amount;
-                                    var costPerLiter = costAmountGross / volume;
-                                    var cosPricePerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
-                                    var freightChargePerLiter = (record.DeliveryReceipt?.Freight ?? 0m);
-                                    var commissionPerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
-                                    var costAmountNet = costAmountGross / 1.12m;
-                                    var cosAmountGross = volume * cosPricePerLiter;
-                                    var gmPerLiter = (cosPricePerLiter - costPerLiter);
+                                    foreach (var record in purchaseReport)
+                                    {
+                                        var volume = record.QuantityReceived;
+                                        var costAmountGross = record.Amount;
+                                        var costPerLiter = costAmountGross / volume;
+                                        var cosPricePerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
+                                        var freightChargePerLiter = (record.DeliveryReceipt?.Freight ?? 0m);
+                                        var commissionPerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
+                                        var costAmountNet = costAmountGross / 1.12m;
+                                        var cosAmountGross = volume * cosPricePerLiter;
+                                        var gmPerLiter = (cosPricePerLiter - costPerLiter);
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierTin);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierAddress);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.ReceivingReportNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceNumber);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceDate?.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.Customer?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.12m) != 0 ? (costAmountNet * 0.12m) < 0 ? $"({Math.Abs((costAmountNet * 0.12m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.12m) < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.01m) != 0 ? (costAmountNet * 0.01m) < 0 ? $"({Math.Abs((costAmountNet * 0.01m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.01m) < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountNet != 0 ? costAmountNet < 0 ? $"({Math.Abs(costAmountNet).ToString(SD.Two_Decimal_Format)})" : costAmountNet.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountNet < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierTin);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierAddress);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.ReceivingReportNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceNumber);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceDate?.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.Customer?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.12m) != 0 ? (costAmountNet * 0.12m) < 0 ? $"({Math.Abs((costAmountNet * 0.12m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.12m) < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.01m) != 0 ? (costAmountNet * 0.01m) < 0 ? $"({Math.Abs((costAmountNet * 0.01m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.01m) < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountNet != 0 ? costAmountNet < 0 ? $"({Math.Abs(costAmountNet).ToString(SD.Two_Decimal_Format)})" : costAmountNet.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountNet < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    totalVolume += volume;
-                                    totalCostAmount += costAmountGross;
-                                    totalVatAmount += costAmountNet * 0.12m;
-                                    totalWHTAmount += costAmountNet * 0.01m;
-                                    totalNetPurchases += costAmountNet;
-                                    totalCOSAmount += cosPricePerLiter * volume;
-                                    totalGMAmount += cosAmountGross - costAmountGross;
-                                    totalFCAmount += freightChargePerLiter * volume;
-                                    totalCommissionAmount += volume * commissionPerLiter;
-                                    totalNetMarginAmount += (gmPerLiter - freightChargePerLiter) * volume;
-                                }
+                                        totalVolume += volume;
+                                        totalCostAmount += costAmountGross;
+                                        totalVatAmount += costAmountNet * 0.12m;
+                                        totalWHTAmount += costAmountNet * 0.01m;
+                                        totalNetPurchases += costAmountNet;
+                                        totalCOSAmount += cosPricePerLiter * volume;
+                                        totalGMAmount += cosAmountGross - costAmountGross;
+                                        totalFCAmount += freightChargePerLiter * volume;
+                                        totalCommissionAmount += volume * commissionPerLiter;
+                                        totalNetMarginAmount += (gmPerLiter - freightChargePerLiter) * volume;
+                                    }
 
-                            #endregion
+                                #endregion
 
-                            #region -- Initialize Variable for Computation of Totals
+                                #region -- Initialize Variable for Computation of Totals
 
-                            var totalCostPerLiter = totalCostAmount / totalVolume;
+                                var totalCostPerLiter = totalCostAmount / totalVolume;
 
-                            #endregion
+                                #endregion
 
-                            #region -- Create Table Cell for Totals
+                                #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(14).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVolume != 0 ? totalVolume < 0 ? $"({Math.Abs(totalVolume).ToString(SD.Two_Decimal_Format)})" : totalVolume.ToString(SD.Two_Decimal_Format) : null).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostPerLiter != 0 ? totalCostPerLiter < 0 ? $"({Math.Abs(totalCostPerLiter).ToString(SD.Four_Decimal_Format)})" : totalCostPerLiter.ToString(SD.Four_Decimal_Format) : null).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostAmount != 0 ? totalCostAmount < 0 ? $"({Math.Abs(totalCostAmount).ToString(SD.Two_Decimal_Format)})" : totalCostAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVatAmount != 0 ? totalVatAmount < 0 ? $"({Math.Abs(totalVatAmount).ToString(SD.Two_Decimal_Format)})" : totalVatAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalWHTAmount != 0 ? totalWHTAmount < 0 ? $"({Math.Abs(totalWHTAmount).ToString(SD.Two_Decimal_Format)})" : totalWHTAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalNetPurchases != 0 ? totalNetPurchases < 0 ? $"({Math.Abs(totalNetPurchases).ToString(SD.Two_Decimal_Format)})" : totalNetPurchases.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                                    table.Cell().ColumnSpan(14).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVolume != 0 ? totalVolume < 0 ? $"({Math.Abs(totalVolume).ToString(SD.Two_Decimal_Format)})" : totalVolume.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostPerLiter != 0 ? totalCostPerLiter < 0 ? $"({Math.Abs(totalCostPerLiter).ToString(SD.Four_Decimal_Format)})" : totalCostPerLiter.ToString(SD.Four_Decimal_Format) : null).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalCostAmount != 0 ? totalCostAmount < 0 ? $"({Math.Abs(totalCostAmount).ToString(SD.Two_Decimal_Format)})" : totalCostAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalVatAmount != 0 ? totalVatAmount < 0 ? $"({Math.Abs(totalVatAmount).ToString(SD.Two_Decimal_Format)})" : totalVatAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalWHTAmount != 0 ? totalWHTAmount < 0 ? $"({Math.Abs(totalWHTAmount).ToString(SD.Two_Decimal_Format)})" : totalWHTAmount.ToString(SD.Two_Decimal_Format) : null).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalNetPurchases != 0 ? totalNetPurchases < 0 ? $"({Math.Abs(totalNetPurchases).ToString(SD.Two_Decimal_Format)})" : totalNetPurchases.ToString(SD.Two_Decimal_Format) : null).SemiBold();
 
-                            #endregion
+                                #endregion
+
+                                //Summary Table
+                                col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
+
+                                #region -- Overall Summary
+
+                                    col.Item().PaddingTop(10).Table(table =>
+                                    {
+                                        #region -- Columns Definition
+
+                                            table.ColumnsDefinition(columns =>
+                                            {
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.ConstantColumn(5);
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.ConstantColumn(5);
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                                columns.RelativeColumn();
+                                            });
+
+                                        #endregion
+
+                                        #region -- Table Header
+
+                                            table.Header(header =>
+                                            {
+                                                header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Biodiesel").AlignCenter().SemiBold();
+                                                header.Cell();
+                                                header.Cell().ColumnSpan(3).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Econogas").AlignCenter().SemiBold();
+                                                header.Cell();
+                                                header.Cell().ColumnSpan(3).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Envirogas").AlignCenter().SemiBold();
+
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Suppliers").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
+                                                header.Cell();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
+                                                header.Cell();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Volume").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Purchases N. VAT").SemiBold();
+                                                header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("Ave. CPL").SemiBold();
+
+                                            });
+
+                                        #endregion
+
+                                        #region -- Initialize Variable for Computation
+
+                                        var totalQuantityForBiodiesel = 0m;
+                                        var totalPurchaseAndVatForBiodiesel = 0m;
+
+                                        var totalQuantityForEconogas = 0m;
+                                        var totalPurchaseAndVatForEconogas = 0m;
+
+                                        var totalQuantityForEnvirogas = 0m;
+                                        var totalPurchaseAndVatForEnvirogas  = 0m;
+
+                                        #endregion
+
+                                        #region -- Loop to Show Records
+
+                                            var groupBySupplier = purchaseReport
+                                                    .OrderBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
+                                                    .GroupBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName);
+
+                                            // for each supplier
+                                            foreach (var record in groupBySupplier)
+                                            {
+                                                #region Computation for Biodiesel
+
+                                                var list = purchaseReport.Where(s => s.PurchaseOrder!.Supplier!.SupplierName == record.Key).ToList();
+
+                                                var listForBiodiesel = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "BIODIESEL").ToList();
+
+                                                var biodieselQuantitySum = listForBiodiesel.Sum(s => s.QuantityReceived);
+                                                var biodieselPurchaseAndVatSum = listForBiodiesel.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var biodieselAverageSellingPrice = biodieselPurchaseAndVatSum != 0m || biodieselQuantitySum != 0m ? biodieselPurchaseAndVatSum / biodieselQuantitySum : 0m;
+
+                                                #endregion
+
+                                                #region Computation for Econogas
+
+                                                var listForEconogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
+
+                                                var econogasQuantitySum = listForEconogas.Sum(s => s.QuantityReceived);
+                                                var econogasPurchaseAndVatSum = listForEconogas.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var econogasAverageSellingPrice = econogasPurchaseAndVatSum != 0m && econogasQuantitySum != 0m ? econogasPurchaseAndVatSum / econogasQuantitySum : 0m;
+
+                                                #endregion
+
+                                                #region Computation for Envirogas
+
+                                                var listForEnvirogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
+
+                                                var envirogasQuantitySum = listForEnvirogas.Sum(s => s.QuantityReceived);
+                                                var envirogasPurchaseAndVatSum = listForEnvirogas.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var envirogasAverageSellingPrice = envirogasPurchaseAndVatSum != 0m && envirogasQuantitySum != 0m ? envirogasPurchaseAndVatSum / envirogasQuantitySum : 0m;
+
+                                                #endregion
+
+
+
+                                                table.Cell().Border(0.5f).Padding(3).Text(record.Key);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselPurchaseAndVatSum != 0 ? biodieselPurchaseAndVatSum < 0 ? $"({Math.Abs(biodieselPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : biodieselPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselAverageSellingPrice != 0 ? biodieselAverageSellingPrice < 0 ? $"({Math.Abs(biodieselAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : biodieselAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell();
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasPurchaseAndVatSum != 0 ? econogasPurchaseAndVatSum < 0 ? $"({Math.Abs(econogasPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : econogasPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasAverageSellingPrice != 0 ? econogasAverageSellingPrice < 0 ? $"({Math.Abs(econogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell();
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasPurchaseAndVatSum != 0 ? envirogasPurchaseAndVatSum < 0 ? $"({Math.Abs(envirogasPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : envirogasPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasAverageSellingPrice != 0 ? envirogasAverageSellingPrice < 0 ? $"({Math.Abs(envirogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                                totalQuantityForBiodiesel += biodieselQuantitySum;
+                                                totalPurchaseAndVatForBiodiesel += biodieselPurchaseAndVatSum;
+
+                                                totalQuantityForEconogas += econogasQuantitySum;
+                                                totalPurchaseAndVatForEconogas += econogasPurchaseAndVatSum;
+
+                                                totalQuantityForEnvirogas += envirogasQuantitySum;
+                                                totalPurchaseAndVatForEnvirogas += envirogasPurchaseAndVatSum;
+                                            }
+
+                                        #endregion
+
+                                        #region -- Create Table Cell for Totals
+
+                                            var averageSellingPriceForBiodiesel = totalPurchaseAndVatForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? totalPurchaseAndVatForBiodiesel / totalQuantityForBiodiesel : 0m;
+                                            var averageSellingPriceForEconogas = totalPurchaseAndVatForEconogas != 0 && totalQuantityForEconogas != 0 ? totalPurchaseAndVatForEconogas / totalQuantityForEconogas : 0m;
+                                            var averageSellingPriceForEnvirogas = totalPurchaseAndVatForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? totalPurchaseAndVatForEnvirogas / totalQuantityForEnvirogas : 0m;
+
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForBiodiesel != 0 ? totalQuantityForBiodiesel < 0 ? $"({Math.Abs(totalQuantityForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForBiodiesel != 0 ? totalPurchaseAndVatForBiodiesel < 0 ? $"({Math.Abs(totalPurchaseAndVatForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForBiodiesel != 0 ? averageSellingPriceForBiodiesel < 0 ? $"({Math.Abs(averageSellingPriceForBiodiesel).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForBiodiesel.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEconogas != 0 ? totalQuantityForEconogas < 0 ? $"({Math.Abs(totalQuantityForEconogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForEconogas != 0 ? totalPurchaseAndVatForEconogas < 0 ? $"({Math.Abs(totalPurchaseAndVatForEconogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEconogas != 0 ? averageSellingPriceForEconogas < 0 ? $"({Math.Abs(averageSellingPriceForEconogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEconogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEnvirogas != 0 ? totalQuantityForEnvirogas < 0 ? $"({Math.Abs(totalQuantityForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForEnvirogas != 0 ? totalPurchaseAndVatForEnvirogas < 0 ? $"({Math.Abs(totalPurchaseAndVatForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEnvirogas != 0 ? averageSellingPriceForEnvirogas < 0 ? $"({Math.Abs(averageSellingPriceForEnvirogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEnvirogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+
+                                        #endregion
+                                    });
+
+                                #endregion
+                            });
+
                         });
 
                         #endregion
