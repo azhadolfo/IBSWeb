@@ -693,7 +693,7 @@ namespace IBS.DataAccess.Data
                 dr.HasIndex(dr => dr.Date);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)
-                    .WithMany()
+                    .WithMany(cos => cos.DeliveryReceipts)
                     .HasForeignKey(dr => dr.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
 
