@@ -729,8 +729,10 @@
                         displayFileName(file);
                         $fileUploadArea.data('file', file.name);
                     });
-
+                    
+                    //
                     $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
+                    $fileInput.val(uploadedFiles.map(file => file.name));
                     console.log('all files:', $fileUploadArea.data('allFiles'));
                 }
 
