@@ -116,5 +116,8 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsMobility { get; set; }
 
         public bool IsBienes { get; set; }
+
+        [Display(Name = "Requires Price Adjustment")]
+        public bool RequiresPriceAdjustment { get; set; }
     }
 }

@@ -86,6 +86,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingCustomer.IsMMSI = model.IsMMSI;
             existingCustomer.VatType = model.VatType;
             existingCustomer.Type = model.Type;
+            existingCustomer.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
 
             if (_db.ChangeTracker.HasChanges())
             {
