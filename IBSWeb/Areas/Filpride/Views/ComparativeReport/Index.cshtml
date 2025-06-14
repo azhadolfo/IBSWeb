@@ -1,0 +1,52 @@
+@using IBS.Utility.Helpers
+
+@{
+    ViewBag.Title = "Comparative Report";
+}
+
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2 text-uppercase">@ViewData["Title"]</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body px-4 py-4">
+        <form method="post" target="_blank">
+            <div class="mb-4 row align-items-center">
+                <label for="monthDate" class="col-sm-4 col-form-label text-end fw-semibold">As Of (Month and Year)</label>
+                <div class="col-sm-6">
+                    <input type="month" id="monthDate" name="monthDate" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required />
+                </div>
+            </div>
+
+            <div class="text-center mb-2">
+                <small class="text-muted fst-italic">Select the report type: Sales or Purchases</small>
+            </div>
+
+            <div class="mb-4 row justify-content-center">
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="category" id="sales" value="Sales" checked />
+                        <label class="form-check-label" for="sales">Sales</label>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="category" id="purchases" value="Purchases" />
+                        <label class="form-check-label" for="purchases">Purchases</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-printer me-1"></i>Generate
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

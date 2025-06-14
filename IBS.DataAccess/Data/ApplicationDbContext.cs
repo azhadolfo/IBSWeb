@@ -146,6 +146,10 @@ namespace IBS.DataAccess.Data
 
         public DbSet<FilprideMonthlyNibit> FilprideMonthlyNibits { get; set; }
 
+        public DbSet<FilprideSalesLockedRecordsQueue>  FilprideSalesLockedRecordsQueues { get; set; }
+
+        public DbSet<FilpridePurchaseLockedRecordsQueue> FilpridePurchaseLockedRecordsQueues { get; set; }
+
         #region--Master File
 
         public DbSet<FilprideCustomer> FilprideCustomers { get; set; }
@@ -689,7 +693,7 @@ namespace IBS.DataAccess.Data
                 dr.HasIndex(dr => dr.Date);
 
                 dr.HasOne(dr => dr.CustomerOrderSlip)
-                    .WithMany()
+                    .WithMany(cos => cos.DeliveryReceipts)
                     .HasForeignKey(dr => dr.CustomerOrderSlipId)
                     .OnDelete(DeleteBehavior.Restrict);
 
@@ -769,6 +773,24 @@ namespace IBS.DataAccess.Data
                 n.HasIndex(n => n.Company);
                 n.HasIndex(n => n.Month);
                 n.HasIndex(n => n.Year);
+            });
+
+            builder.Entity<FilprideSalesLockedRecordsQueue>(x =>
+            {
+                x.HasOne(s => s.DeliveryReceipt)
+                    .WithMany()
+                    .HasForeignKey(s => s.DeliveryReceiptId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                x.HasIndex(s => s.LockedDate);
+            });
+
+            builder.Entity<FilpridePurchaseLockedRecordsQueue>(x =>
+            {
+                x.HasOne(s => s.ReceivingReport)
+                    .WithMany()
+                    .HasForeignKey(s => s.ReceivingReportId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                x.HasIndex(s => s.LockedDate);
             });
 
             #region-- Master File
