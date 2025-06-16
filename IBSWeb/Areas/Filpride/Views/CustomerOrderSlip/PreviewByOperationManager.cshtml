@@ -138,6 +138,23 @@
         </table>
     </div>
 
+    @if (Model.UploadedFiles != null)
+    {
+        @foreach (var imageInstance in Model.UploadedFiles)
+        {
+            <div class="row">
+                <div class="col-3">
+                    <a class="dropdown-item viewUpload" 
+                       href="#" 
+                       data-image-url="@imageInstance.SignedUrl" 
+                       data-file-name="@imageInstance.FileName">
+                        <i class="bi bi-eye-fill"></i> @imageInstance.FileName
+                    </a>
+                </div>
+            </div>
+        }
+    }
+
     <div class="row pt-2">
 
         @if (Model.Status != nameof(CosStatus.Disapproved))
@@ -207,6 +224,77 @@
                     }
                 });
             }
+        });
+
+        document.querySelectorAll('.viewUpload').forEach(element => {
+            element.addEventListener('click', function (event) {
+                event.preventDefault(); // Prevent <a> tag from navigating
+
+                var maxHeight = window.innerHeight * 0.8;
+                var imageUrl = this.dataset.imageUrl; // Get data-image-url from the clicked element
+                var fileName = this.dataset.fileName; // Get data-file-name for alt text or display
+
+                if (!imageUrl) {
+                    console.error('No image URL found for this element');
+                    return;
+                }
+
+                console.log('Image URL:', imageUrl);
+                console.log('File Name:', fileName);
+
+                Swal.fire({
+                    imageUrl: imageUrl,
+                    imageAlt: fileName || 'Custom image', // Use fileName as alt text
+                    showConfirmButton: false,
+                    background: 'transparent',
+                    customClass: {
+                        popup: 'custom-image-popup'
+                    },
+                    padding: 0,
+                    width: '90vw',
+                    heightAuto: true,
+                    didOpen: () => {
+                        // Style the image
+                        $('.swal2-image').css({
+                            'max-height': '80vh',
+                            'max-width': '90vw',
+                            'height': 'auto',
+                            'width': 'auto'
+                        });
+
+                        // Remove existing close button to prevent duplicates
+                        $('#custom-swal-close').remove();
+
+                        // Create and append custom close button
+                        const closeButton = $('<button>×</button>')
+                            .css({
+                                position: 'fixed',
+                                top: '10px',
+                                right: '10px',
+                                zIndex: '9999',
+                                background: 'rgba(202, 25, 41, 1)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '20%',
+                                width: '40px',
+                                height: '40px',
+                                fontSize: '30px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            })
+                            .attr('id', 'custom-swal-close')
+                            .on('click', () => Swal.close());
+
+                        $('body').append(closeButton);
+                    },
+                    willClose: () => {
+                        // Clean up close button
+                        $('#custom-swal-close').remove();
+                    }
+                });
+            });
         });
     </script>
     @* <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script> *@
