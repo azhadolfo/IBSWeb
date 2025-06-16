@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -262,7 +263,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IFormFile? imageFile, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IEnumerable<IFormFile> files, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
