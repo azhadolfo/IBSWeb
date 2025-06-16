@@ -318,10 +318,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         foreach (var file in files)
                         {
-                            uploadUrls.Add(await _cloudStorageService.UploadFileAsync(file, GenerateFileNameToSave(file.FileName)!));
+                            string fileName = GenerateFileNameToSave(file.FileName)!;
+                            await _cloudStorageService.UploadFileAsync(file, fileName);
+                            uploadUrls.Add(fileName);
                         }
 
-                        model.UploadedFilesUrl = uploadUrls.ToArray();
+                        model.UploadedFiles = uploadUrls.ToArray();
                     }
 
                     if (model.Branch != null)
@@ -617,6 +619,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Create the view model with basic information
                 var model = CreateBaseViewModel(customerOrderSlip);
+
+                // Get signed url of uploads
+                if (customerOrderSlip.UploadedFiles != null)
+                {
+                    var listOfSignedUrls = new List<(string FileName, string SignedUrl)>();
+
+                    foreach (var fileUrl in customerOrderSlip.UploadedFiles)
+                    {
+                        listOfSignedUrls.Add((System.IO.Path.GetFileName(fileUrl), await _cloudStorageService.GetSignedUrlAsync(fileUrl)));
+                    }
+
+                    model.UploadedFiles = listOfSignedUrls;
+                }
 
                 // Calculate product costs based on appointed suppliers
                 await CalculateProductCosts(customerOrderSlip.CustomerOrderSlipId, model, cancellationToken);

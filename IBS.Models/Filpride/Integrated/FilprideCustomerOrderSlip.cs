@@ -202,7 +202,7 @@ namespace IBS.Models.Filpride.Integrated
         public ICollection<FilprideCOSAppointedSupplier>? AppointedSuppliers { get; set; }
 
         [Column(TypeName = "varchar[]")]
-        public string[]? UploadedFilesUrl { get; set; }
+        public string[]? UploadedFiles { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal OldPrice { get; set; }
