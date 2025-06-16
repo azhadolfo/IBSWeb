@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "Check Voucher Non Trade Invoice";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var department = ViewData["Department"]!.ToString();
 }
 
 <style>
@@ -185,10 +184,13 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "transactionNo" },
+                    { 
+                        "data": "transactionNo",
+                        "name": "transactionNo"
+                    },
                     {
-                        "data": "checkVoucherHeader.date",
-                        "name": "date",
+                        "data": "date",
+                        "name": "checkVoucherHeader.date",
                         "render": function (data, type, row) {
                             // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
                             var date = new Date(data);
@@ -199,68 +201,75 @@
                             });
                         }
                     },
-                    { "data": data => data.supplier ? data.supplier.supplierName : data.checkVoucherHeader.supplier.supplierName },
+                    { 
+                        "data": data => data.supplierName ?? data.supplier.supplierName,
+                        "name": "checkVoucherHeader.supplier.supplierName",
+                    },
                     {
                         "data": "invoiceAmount",
+                        "name": "checkVoucherHeader.invoiceAmount",
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
                                 var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.invoiceAmount);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.invoiceAmount);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }
                     },
                     {
                         "data": "amountPaid",
+                        "name": "checkVoucherHeader.amountPaid",
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amountPaid);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.dAmountPaid);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.amountPaid);
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.hAmountPaid);
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }
                     },
                     {
-                        "data": null,
+                        "orderable": false,
                         "render": function (data, type, row) {
                             if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.amount - row.amountPaid));
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.amount - row.dAmountPaid));
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                             else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.checkVoucherHeader.invoiceAmount - row.checkVoucherHeader.amountPaid));
+                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.invoiceAmount - row.hAmountPaid));
                                 return `<span class="d-block fw-medium">${amount}</span>`;
                             }
                         }
                     },
                     {
-                        "data": "checkVoucherHeader.status",
+                        "data": "status",
+                        "name": "checkVoucherHeader.status",
                         "render": function (data, type, row) {
-                            var statusClass = row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
-                                row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
-                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
-                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
+                            var statusClass = data === "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
+                                data === "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
+                                    data === "@nameof(CheckVoucherInvoiceStatus.Paid)" ? "bg-success" :
+                                        data === "@nameof(CheckVoucherInvoiceStatus.Canceled)" ? "bg-warning" : "";
                             
-                            if (row.checkVoucherHeader.postedBy != null &&
+                            if (row.postedBy != null &&
                                 row.supplierId == 133 && (row.amountPaid < row.amount)) { //BIR Supplier Id
                                 statusClass = "bg-info";
-                                row.checkVoucherHeader.status = "@nameof(CheckVoucherInvoiceStatus.ForPayment)";
+                                row.status = "@nameof(CheckVoucherInvoiceStatus.ForPayment)";
                             }
 
-                            return `<span class="badge rounded-pill ${statusClass}">${row.checkVoucherHeader.status}</span>`;
+                            return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
                     },
                     {
                         "data": "checkVoucherHeaderId",
+                        "name": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            return `<div class="dropdown actions-dropdown" style="${row.checkVoucherHeader.voidedBy != null || row.checkVoucherHeader.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                     <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -268,17 +277,17 @@
                                                     <i class="bi bi-three-dots"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        ${row.checkVoucherHeader.postedBy == null ? `
-                                            ${row.checkVoucherHeader?.supplier?.supplierId != null ? `
+                                        ${row.postedBy == null ? `
+                                            ${row.supplier?.supplierId != null ? `
                                                 <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                             ` : `
                                             <li><a class="dropdown-item" href="@Url.Action("EditPayrollInvoice", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
                                             `}
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Preview</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                         ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplier?.supplierId != null ? row.supplier?.supplierId : row.checkVoucherHeader?.supplier?.supplierId}">Print</a></li>
-                                            ${!row.checkVoucherHeader.isPaid ? `
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Print</a></li>
+                                            ${!row.isPaid ? `
                                                 <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
                                             ` : `
                                                 <li><button class="dropdown-item" disabled readonly>Void</button></li>
@@ -297,14 +306,21 @@
                     var totalAmountPaid = 0;
                     var totalBalance = 0;
 
+                    console.log("start");
                     // Sum up columns
                     data.forEach(function (row) {
-                        var amount = row.amount + row.checkVoucherHeader.invoiceAmount;
-                        var amountPaid = row.amountPaid + row.checkVoucherHeader.amountPaid;
+                        var amount = row.amount > 0 ? row.amount : row.invoiceAmount;
+                        var amountPaid = row.dAmountPaid > 0 ? row.dAmountPaid : row.hAmountPaid;
                         totalAmount += amount;
                         totalAmountPaid += amountPaid;
                         totalBalance += amount - amountPaid;
+                        
+                        console.log(totalAmount);
+                        console.log(totalAmountPaid);
+                        console.log(totalBalance);
+                        console.log(row.transactionNo);
                     });
+                    console.log("end");
 
                     // Update footer with totals
                     $(this.api().column(3).footer()).html(formatNumber(totalAmount));

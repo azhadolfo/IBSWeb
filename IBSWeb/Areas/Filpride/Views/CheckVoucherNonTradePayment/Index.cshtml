@@ -182,9 +182,9 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "checkVoucherHeader.checkVoucherHeaderNo" },
+                    { "data": "checkVoucherHeaderNo" },
                     {
-                        "data": "checkVoucherHeader.date",
+                        "data": "date",
                         "name": "date",
                         "render": function (data, type, row) {
                             // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
@@ -196,38 +196,36 @@
                             });
                         }
                     },
-                    { "data": "checkVoucherHeader.payee" },
-                    { "data": data => data.checkVoucherHeader ? data.checkVoucherHeader.reference : "" },
-                    {
-                        "data": "amount",
+                    { "data": "payee" },
+                    { 
+                        "data": "reference",
+                        "name": "reference",
                         "render": function (data, type, row) {
-                            if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
-                            else {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.checkVoucherHeader.total);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
-                            
-                            
+                            return data ?? ""; 
                         }
                     },
                     {
-                        "data": "checkVoucherHeader.status",
+                        "data": "amount",
                         "render": function (data, type, row) {
-                            var statusClass = row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Posted)" ? "bg-info" :
-                                row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Voided)" ? "bg-danger" :
-                                    row.checkVoucherHeader.status == "@nameof(CheckVoucherPaymentStatus.Canceled)" ? "bg-warning" : "";
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.total);
+                            return `<span class="d-block fw-medium">${amount}</span>`;
+                        }
+                    },
+                    {
+                        "data": "status",
+                        "render": function (data, type, row) {
+                            var statusClass = row.status === "@nameof(CheckVoucherPaymentStatus.Posted)" ? "bg-info" :
+                                row.status === "@nameof(CheckVoucherPaymentStatus.Voided)" ? "bg-danger" :
+                                    row.status === "@nameof(CheckVoucherPaymentStatus.Canceled)" ? "bg-warning" : "";
 
-                            return `<span class="badge rounded-pill ${statusClass}">${row.checkVoucherHeader.status}</span>`;
+                            return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
                     },
                     {
                         "data": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            return `<div class="dropdown actions-dropdown" style="${row.checkVoucherHeader.voidedBy != null || row.checkVoucherHeader.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                             <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -235,11 +233,11 @@
                                                     <i class="bi bi-three-dots"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                              ${row.checkVoucherHeader.postedBy == null ?
+                                              ${row.postedBy == null ?
                                                                             `<li>
                                                    <a class="dropdown-item" href="${
-                                                                                row.checkVoucherHeader.isAdvances
-                                                                                    ? (row.checkVoucherHeader.employeeId
+                                                                                row.isAdvances
+                                                                                    ? (row.employeeId
                                                                                         ? '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
                                                                                         : '@Url.Action("EditAdvancesToSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })/')
                                                                                     : '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
@@ -268,11 +266,10 @@
                 "footerCallback": function (row, data, start, end, display) {
                     // Initialize totals
                     var totalAmount = 0;
-                    var totalAmountPaid = 0;
 
                     // Sum up columns
                     data.forEach(function (row) {
-                        totalAmount += row.amount + row.checkVoucherHeader.total;
+                        totalAmount += row.total;
                     });
 
                     // Update footer with totals

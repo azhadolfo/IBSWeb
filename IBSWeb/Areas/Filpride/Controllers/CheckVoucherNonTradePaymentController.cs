@@ -94,28 +94,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var companyClaims = await GetCompanyClaimAsync();
 
-                var checkVoucherDetails = await _dbContext.FilprideCheckVoucherDetails
-                                                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims && cvd.CheckVoucherHeader.CvType == nameof(CVType.Payment) && cvd.AccountName.StartsWith("Cash in Bank"))
-                                                        .Include(cvd => cvd.CheckVoucherHeader)
-                                                        .ThenInclude(cvh => cvh!.Supplier)
-                                                        .Include(cvd => cvd.Supplier)
-                                                        .ToListAsync(cancellationToken);
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(x => x.Company == companyClaims
+                                      && x.CvType == nameof(CVType.Payment), cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    checkVoucherDetails = checkVoucherDetails
+                    checkVoucherHeaders = checkVoucherHeaders
                     .Where(s =>
-                        s.CheckVoucherHeader?.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Total.ToString().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Payee?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Date.ToString(SD.Date_Format).Contains(searchValue) == true ||
-                        s.Amount.ToString().Contains(searchValue) ||
-                        s.AmountPaid.ToString().Contains(searchValue) ||
-                        s.CheckVoucherHeader?.Reference?.ToLower().Contains(searchValue) == true ||
-                        s.CheckVoucherHeader?.Status.ToLower().Contains(searchValue) == true
+                        s.CheckVoucherHeaderNo?.ToLower().Contains(searchValue) == true ||
+                        s.Total.ToString().Contains(searchValue) ||
+                        s.Payee?.ToLower().Contains(searchValue) == true ||
+                        s.Date.ToString(SD.Date_Format).Contains(searchValue) ||
+                        s.Reference?.ToLower().Contains(searchValue) == true ||
+                        s.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
@@ -127,15 +122,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
-                    checkVoucherDetails = checkVoucherDetails
+                    checkVoucherHeaders = checkVoucherHeaders
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}")
                         .ToList();
                 }
 
-                var totalRecords = checkVoucherDetails.Count();
+                var totalRecords = checkVoucherHeaders.Count();
 
-                var pagedData = checkVoucherDetails
+                var pagedData = checkVoucherHeaders
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
