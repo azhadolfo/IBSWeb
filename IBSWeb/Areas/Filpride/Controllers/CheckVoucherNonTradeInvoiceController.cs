@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     checkVoucherDetails = checkVoucherDetails
@@ -142,6 +142,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalRecords = checkVoucherDetails.Count();
 
                 var pagedData = checkVoucherDetails
+                    .Select(x => new
+                    {
+                        x.TransactionNo,
+                        x.CheckVoucherHeader!.Date,
+                        x.Supplier?.SupplierName,
+                        x.Supplier?.SupplierId,
+                        x.CheckVoucherHeader!.Supplier,
+                        x.Amount,
+                        x.CheckVoucherHeader!.InvoiceAmount,
+                        dAmountPaid = x.AmountPaid,
+                        hAmountPaid = x.CheckVoucherHeader!.AmountPaid,
+                        x.CheckVoucherHeader!.Status,
+                        x.CheckVoucherHeader!.VoidedBy,
+                        x.CheckVoucherHeader!.CanceledBy,
+                        x.CheckVoucherHeader!.PostedBy,
+                        x.CheckVoucherHeader!.IsPaid,
+                        x.CheckVoucherHeaderId
+                    })
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
