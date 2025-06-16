@@ -91,6 +91,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.IsFilpride = model.IsFilpride;
             existingSupplier.IsMobility = model.IsMobility;
             existingSupplier.IsBienes = model.IsBienes;
+            existingSupplier.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
