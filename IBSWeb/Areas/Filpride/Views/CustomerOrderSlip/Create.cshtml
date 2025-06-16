@@ -72,7 +72,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
+        <form method="post" enctype="multipart/form-data" class="row">
             @Html.AntiForgeryToken()
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
@@ -237,7 +237,7 @@
                                 <h5>Browse or drop image</h5>
                             </a>
                         </div>
-                        <input type="file" id="fileInput" multiple style="display: none;" />
+                        <input name="files" type="file" id="fileInput" multiple style="display: none;" />
                     </div>
                 </div>
                 <div id="previewContainer" class="pt-2"></div>
@@ -595,8 +595,6 @@
                     if (files.length > 0) {
                         handleFiles(files);
                     }
-                    // Clear the input to allow re-selection of the same file
-                    $fileInput.val('');
                 }
 
                 function clearText(event) {
@@ -716,26 +714,45 @@
 
                 function handleFiles(files) {
                     console.log('Handling files:', files);
+
+                    // Convert FileList to array
                     const fileArray = Array.from(files);
+
+                    // Filter out duplicates based on name and size
                     const newFiles = fileArray.filter(file =>
                         !uploadedFiles.some(existing =>
                             existing.name === file.name && existing.size === file.size
                         )
                     );
 
+                    // Add new files to uploadedFiles
                     uploadedFiles = uploadedFiles.concat(newFiles);
 
-                    newFiles.forEach((file) => {
-                        displayFileName(file);
-                        $fileUploadArea.data('file', file.name);
+                    // Initialize DataTransfer
+                    const dataTransfer = new DataTransfer();
+
+                    // Assign all files to dataTransfer
+                    uploadedFiles.forEach(file => {
+                        if (file instanceof File) { // Validate File object
+                            dataTransfer.items.add(file);
+                        }
                     });
 
+                    // Assign FileList to file input
+                    $fileInput[0].files = dataTransfer.files;
+
+                    // Store file names in $fileUploadArea (fix overwriting issue)
+                    const fileNames = newFiles.map(file => file.name);
+                    fileNames.forEach(fileName => displayFileName({ name: fileName })); // Assuming displayFileName accepts an object
+                    $fileUploadArea.data('file', fileNames); // Store array of names instead of single name
                     $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
-                    console.log('all files:', $fileUploadArea.data('allFiles'));
+
+                    // Debug: Log the assigned files
+                    console.log('Assigned files to uploadedFiles:', uploadedFiles);
                 }
 
                 function displayFileName(file) {
-                    console.log('Displaying file name for:', file);
+                    console.log('New file:', file);
 
                     const container = document.createElement('div');
                     container.className = 'file-item d-inline-flex align-items-center me-2 mb-3';
@@ -745,9 +762,9 @@
                     fileElement.className = 'file-link btn btn-outline-primary border me-1 shadow';
                     fileElement.setAttribute('data-name', file.name);
 
-                    const removeBtn = document.createElement('button');
+                    const removeBtn = document.createElement('a');
                     removeBtn.textContent = '×';
-                    removeBtn.className = 'remove-file btn btn-outline-danger btn-sm me-2';
+                    removeBtn.className = 'remove-file btn btn-outline-danger btn-sm me-2 shadow';
                     removeBtn.setAttribute('data-name', file.name);
 
                     container.appendChild(fileElement);
@@ -770,6 +787,19 @@
                     console.log('Removed file:', fileName);
 
                     $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
+
+                    // Initialize DataTransfer
+                    const dataTransfer = new DataTransfer();
+
+                    // Assign all files to dataTransfer
+                    uploadedFiles.forEach(file => {
+                        if (file instanceof File) { // Validate File object
+                            dataTransfer.items.add(file);
+                        }
+                    });
+
+                    // Assign FileList to file input
+                    $fileInput[0].files = dataTransfer.files;
                 }
 
                 function clearUploads() {
