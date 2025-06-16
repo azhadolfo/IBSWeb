@@ -8,6 +8,7 @@ using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -39,17 +40,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<CustomerOrderSlipController> _logger;
 
+        private readonly ICloudStorageService _cloudStorageService;
+
         public CustomerOrderSlipController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
             IHubContext<NotificationHub> hubContext,
-            ILogger<CustomerOrderSlipController> logger)
+            ILogger<CustomerOrderSlipController> logger,
+            ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _hubContext = hubContext;
             _logger = logger;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -263,8 +268,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IEnumerable<IFormFile> files, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IEnumerable<IFormFile>? files, CancellationToken cancellationToken)
         {
+            if (files == null)
+            {
+                throw new ArgumentNullException(nameof(files));
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -301,6 +311,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Branch = viewModel.SelectedBranch,
                         CustomerType = viewModel.CustomerType!,
                     };
+
+                    if (files != null)
+                    {
+                        var uploadUrls = new List<string>();
+
+                        foreach (var file in files)
+                        {
+                            uploadUrls.Add(await _cloudStorageService.UploadFileAsync(file, GenerateFileNameToSave(file.FileName)!));
+                        }
+
+                        model.UploadedFilesUrl = uploadUrls.ToArray();
+                    }
 
                     if (model.Branch != null)
                     {
@@ -1697,6 +1719,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
     }
 }
