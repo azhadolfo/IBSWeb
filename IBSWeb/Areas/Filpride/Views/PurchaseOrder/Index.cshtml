@@ -319,6 +319,10 @@
                                 // Show Update Price, Preview, and Void options if posted
                                 dropdownContent = '';
 
+                                dropdownContent += `
+                                <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
+                                 `;
+
                                 // Validate unTriggeredQuantity before showing Update Price
                                 if (row.unTriggeredQuantity > 0) {
                                     dropdownContent += `
@@ -332,12 +336,8 @@
                                     `;
                                 }
                                 
-                                dropdownContent += `
-                                <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
-                                 `;
-                                
                                 if (row.quantityReceived === 0 && !row.isSubPo) {
-                                    dropdownContent = `<li><a class="dropdown-item" href="javascript:void(0);" onclick="updateSupplierSalesOrderNo(${data})">Update Sales Order#</a></li>`;
+                                    dropdownContent += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="updateSupplierSalesOrderNo(${data})">Update Sales Order#</a></li>`;
                                 }
                                 
                                 if (row.quantityReceived === 0 && !row.isSubPo && isAdmin) {
