@@ -577,10 +577,8 @@
                         .on('dragover', onDragOver)
                         .on('dragleave', onDragLeave)
                         .on('drop', onDrop);
-                    $fileUploadArea
-                        .on('paste', onPaste);
-                    $fileChoosingArea
-                        .on('click', triggerFileInput);
+                    $fileUploadArea.on('paste', onPaste);
+                    $fileChoosingArea.on('click', triggerFileInput);
                     $fileInput.on('change', onFileInputChange);
                     $(document).on('click', '.file-link', showUpload);
                     $(document).on('click', '.remove-file', removeFile);
