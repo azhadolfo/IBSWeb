@@ -186,7 +186,10 @@
                         "data": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function(data, type, row) {
-                            let actions = `<div class="dropdown actions-dropdown" style="${row.dcpDate != null && row.dcrDate != null ? 'display:none;' : ''}">
+                            let actions = `<div class="dropdown actions-dropdown" 
+                                            @*TODO ask what is the hint for the system to make this action hidden*@
+                                            @** style="${row.dcpDate != null && row.dcrDate != null ? 'display:none;' : ''}"**@
+                                            >
                                             <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -198,7 +201,13 @@
                             if (row.dcpDate === null) {
                                 actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Add DCP Date</a></li>`;
                             } else  {
-                                actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Add DCR Date</a></li>`;
+                                actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCPDate('${data}')"> Update DCP Date</a></li>`;
+                                
+                                if (row.dcrDate === null) {
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Add DCR Date</a></li>`;
+                                } else  {
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="showAddDCRDate('${data}', '${row.dcpDate}')"> Update DCR Date</a></li>`;
+                                }
                             }
 
                             actions += `</ul></div>`;
