@@ -60,7 +60,7 @@
     <div id="dropZone">
         <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'/></svg>" alt="Drop icon">
         <h3>Drop your files here</h3>
-        <p>Drop your files here to add them to your conversation</p>
+        <p>Drop your files here to upload</p>
     </div>
 </div>
 <div class="card shadow border-0 mt-4">
@@ -237,7 +237,7 @@
                                 <h5>Browse or drop image</h5>
                             </a>
                         </div>
-                        <input name="files" type="file" id="fileInput" multiple style="display: none;" />
+                        <input asp-for="UploadedFiles" type="file" multiple style="display: none;" />
                     </div>
                 </div>
                 <div id="previewContainer" class="pt-2"></div>
@@ -562,7 +562,7 @@
                 const $overlay = $('#dragOverlay');
                 const $fileUploadArea = $('#fileUploadArea');
                 const $fileChoosingArea = $('#fileChoosingArea');
-                const $fileInput = $('#fileInput');
+                const $fileInput = $('#UploadedFiles');
                 const $previewContainer = $('#previewContainer');
                 const $fileLink = $('.file-link');
                 let uploadedFiles = []; // Array to store all uploaded files
@@ -668,10 +668,6 @@
                         console.log('Nothing in clipboard');
                         return;
                     }
-
-                    console.log('clipboardData.types:', clipboardData.types);
-                    console.log('clipboardData.items:', clipboardData.items);
-                    console.log('clipboardData.files:', clipboardData.files);
 
                     if (clipboardData.files && clipboardData.files.length > 0) {
                         handleFiles(clipboardData.files);

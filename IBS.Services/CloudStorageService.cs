@@ -16,6 +16,10 @@ namespace IBS.Services
         Task<string> UploadFileAsync(IFormFile fileToUpload, string fileNameToSave);
 
         Task DeleteFileAsync(string fileNameToDelete);
+
+        Task<Stream> DownloadFileAsync(string fileNameToDownload);
+
+        Task<IFormFile?> GetFileAsFormFile(string fileName);
     }
 
     public class CloudStorageService : ICloudStorageService
@@ -145,6 +149,37 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError($"Error occurred while downloading file {fileNameToDownload}: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<IFormFile?> GetFileAsFormFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentNullException("File name is required.");
+            }
+
+            try
+            {
+                var fileStream = await DownloadFileAsync(fileName);
+
+                if (fileStream == null || fileStream.Length == 0)
+                {
+                    throw new FileNotFoundException("File not found.", fileName);
+                }
+
+                var formFile = new FormFile(fileStream, 0, fileStream.Length, "file", fileName)
+                {
+                    Headers = new HeaderDictionary(),
+                    ContentType = "application/octet-stream",
+                };
+
+                return formFile;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error processing file {fileName}: {ex.Message}");
                 throw;
             }
         }
