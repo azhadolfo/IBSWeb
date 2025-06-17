@@ -8,9 +8,68 @@
 
 <link rel="stylesheet" href="~/css/form-style.css">
 
+<style>
+    #dragOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        color: #333;
+        font-family: Arial, sans-serif;
+    }
+    #dropZone {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
+    #dropZone img {
+        margin-bottom: 10px;
+    }
+    #fileUploadArea:empty:before {
+        content: attr(placeholder);
+        color: #6c757d; /* Bootstrap placeholder color */
+        display: block;
+    }
+    #fileUploadArea {
+        border: 1px solid #ced4da; /* Bootstrap form-control border */
+        border-radius: 0.25rem; /* Bootstrap form-control border-radius */
+        padding: 0.375rem 0.75rem; /* Bootstrap form-control padding */
+        background-color: #fff;
+        overflow: auto;
+    }
+    #fileUploadArea:focus {
+        outline: none;
+        border-color: #80bdff; /* Bootstrap focus border */
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Bootstrap focus shadow */
+    }
+    .text-truncate {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+</style>
+
 <div class="loader-container">
     <div class="loader"></div>
     <div class="loader-text">Loading...</div>
+</div>
+<div id="dragOverlay">
+    <div id="dropZone">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z'/></svg>" alt="Drop icon">
+        <h3>Drop your files here</h3>
+        <p>Drop your files here to upload</p>
+    </div>
 </div>
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
@@ -21,7 +80,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form method="post" class="row">
+        <form method="post" enctype="multipart/form-data" class="row">
             @Html.AntiForgeryToken()
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
@@ -183,6 +242,51 @@
                     <label asp-for="Remarks" class="control-label">Remarks<span class="required">*</span></label>
                     <span asp-validation-for="Remarks" class="text-danger"></span>
                 </div>
+                @if (Model.FileInfos?.Count != 0 && Model.FileInfos != null)
+                {
+                    <div class="px-1 row d-flex justify-content-start">
+                        <label class="mt-3">Attachments: </label>
+                    </div>
+                    <div class="pt-2     px-1 row">
+                        @foreach (var file in Model.FileInfos)
+                        {
+                            <div class="file-item d-inline-flex align-items-center mb-3 col-3">
+                                <a class="existingFile-link btn btn-outline-primary border shadow text-truncate" data-name="@file.FileName" data-url="@file.SignedUrl" title="@file.FileName">
+                                    @file.FileName
+                                </a>
+                            </div>
+                        }
+                        <div class="file-item d-inline-flex align-items-center mb-3 col-3">
+                            <a class="newAttachmentButton btn btn-outline-danger border shadow text-truncate">
+                                New attachments
+                            </a>
+                        </div>
+                    </div>
+                }
+                <div id="newAttachmentGroup" class="row py-2 px-2 justify-content-start text-start d-none">
+                    <div class="form-group col-12">
+                        
+                        <div class="row">
+                            <div class="col">
+                                <label for="fileUploadArea">New attachments</label>
+                            </div>
+                        </div>
+
+                        <div id="fileUploadArea" class="row justify-content-center text-center shadow pt-2" style="min-height: 100px;">
+                            <a id="fileChoosingArea" class="col-6 d-flex flex-column justify-content-center align-items-center" style="height: 100px; cursor: pointer;">
+                                <h5><i class="bi bi-card-image"></i></h5>
+                                <h5>Browse or drop image</h5>
+                            </a>
+                        </div>
+
+                        <div class="row">
+                            <div class="col">
+                                <input asp-for="UploadedFiles" type="file" multiple style="display: none;"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="previewContainer" class="pt-2"></div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="submit" class="btn btn-primary form-control">Update</button>
@@ -508,5 +612,380 @@
                 });
             }
         }
+    </script>
+    <script>
+        $(document).ready(function () {
+            const DragOverlayHandler = (function () {
+                const $overlay = $('#dragOverlay');
+                const $fileUploadArea = $('#fileUploadArea');
+                const $fileChoosingArea = $('#fileChoosingArea');
+                const $fileInput = $('#UploadedFiles');
+                const $previewContainer = $('#previewContainer');
+                const $fileLink = $('.file-link');
+                const $newAttachmentGroup = $('#newAttachmentGroup');
+                let uploadedFiles = []; // Array to store all uploaded files
+                let enableUploadNewAttachment = false; // Used in condition to enable uploading
+
+                function init() {
+                    bindEvents();
+                }
+
+                function bindEvents() {
+                    $(document)
+                        .on('dragenter', onDragEnter)
+                        .on('dragover', onDragOver)
+                        .on('dragleave', onDragLeave)
+                        .on('drop', onDrop);
+                    $fileUploadArea.on('paste', onPaste);
+                    $fileChoosingArea.on('click', triggerFileInput);
+                    $fileInput.on('change', onFileInputChange);
+                    $(document).on('click', '.file-link', showUpload);
+                    $(document).on('click', '.existingFile-link', showExistingUpload);
+                    $(document).on('click', '.remove-file', removeFile);
+                    $(document).on('click', '.newAttachmentButton', showReplaceUploadDisclaimer);
+                }
+
+                // Trigger file input on clicking the contenteditable div
+                function triggerFileInput() {
+                    $fileInput.click(); 
+                }
+
+                // Warning for replacing old attachments
+                function showReplaceUploadDisclaimer() {
+                    Swal.fire({
+                        title: 'Warning',
+                        text: "Uploading new attachments will overwrite existing attachments, continue?",
+                        icon: 'question',
+                        showDenyButton: true,
+                        confirmButtonText: 'Yes, replace old attachments',
+                        denyButtonText: 'No, keep old attachments'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            enableUploadNewAttachment = true;
+                            $newAttachmentGroup.removeClass("d-none");
+                        }
+                    });
+                }
+
+                function onFileInputChange(event) {
+                    const files = event.target.files;
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                }
+
+                function clearText(event) {
+                    // Clear any text pasted into the contenteditable div to keep it clean
+                    if ($fileUploadArea.text().trim() !== '') {
+                        $fileUploadArea.text('');
+                    }
+                }
+
+                // Displaying new files
+                function showUpload(event) {
+                    const fileName = $(event.currentTarget).data('name');
+                    const file = uploadedFiles.find(f => f.name === fileName);
+
+                    if (!file) {
+                        console.warn('File not found:', fileName);
+                        return;
+                    }
+
+                    const imageUrl = URL.createObjectURL(file);
+
+                    Swal.fire({
+                        imageUrl: imageUrl,
+                        imageAlt: fileName,
+                        showConfirmButton: false,
+                        background: 'transparent',
+                        customClass: {
+                            popup: 'custom-image-popup'
+                        },
+                        padding: '1rem',
+                        width: '90vw',
+                        heightAuto: true,
+                        didOpen: () => {
+                            $('.swal2-image').css({
+                                'max-height': '80vh',
+                                'max-width': '100%',
+                                'height': 'auto',
+                                'width': 'auto'
+                            });
+
+                            $('#custom-swal-close').remove();
+
+                            const closeButton = $('<button>×</button>').css({
+                                position: 'fixed',
+                                top: '10px',
+                                right: '10px',
+                                zIndex: '9999',
+                                background: 'rgba(202, 25, 41, 1)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '20%',
+                                width: '40px',
+                                height: '40px',
+                                fontSize: '30px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }).attr('id', 'custom-swal-close').on('click', () => Swal.close());
+
+                            $('body').append(closeButton);
+                        },
+                        willClose: () => {
+                            $('#custom-swal-close').remove();
+                            URL.revokeObjectURL(imageUrl);
+                        }
+                    });
+                }
+
+                // Displaying old files
+                function showExistingUpload(event) {
+                    const fileName = $(event.currentTarget).data('name');
+                    const fileUrl = $(event.currentTarget).data('url');
+                    
+                    Swal.fire({
+                        imageUrl: fileUrl,
+                        imageAlt: fileName,
+                        showConfirmButton: false,
+                        background: 'transparent',
+                        customClass: {
+                            popup: 'custom-image-popup'
+                        },
+                        padding: '1rem',
+                        width: '90vw',
+                        heightAuto: true,
+                        didOpen: () => {
+                            $('.swal2-image').css({
+                                'max-height': '80vh',
+                                'max-width': '100%',
+                                'height': 'auto',
+                                'width': 'auto'
+                            });
+
+                            $('#custom-swal-close').remove();
+
+                            const closeButton = $('<button>×</button>').css({
+                                position: 'fixed',
+                                top: '10px',
+                                right: '10px',
+                                zIndex: '9999',
+                                background: 'rgba(202, 25, 41, 1)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '20%',
+                                width: '40px',
+                                height: '40px',
+                                fontSize: '30px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }).attr('id', 'custom-swal-close').on('click', () => Swal.close());
+
+                            $('body').append(closeButton);
+                        },
+                        willClose: () => {
+                            $('#custom-swal-close').remove();
+                            URL.revokeObjectURL(fileUrl);
+                        }
+                    });
+                }
+
+                function onPaste(event) {
+                    console.log('onPaste triggered');
+                    const clipboardData = event.originalEvent ? event.originalEvent.clipboardData : event.clipboardData;
+                    if (!clipboardData) {
+                        console.log('Nothing in clipboard');
+                        return;
+                    }
+
+                    if (clipboardData.files && clipboardData.files.length > 0) {
+                        handleFiles(clipboardData.files);
+                        event.preventDefault();
+                        return;
+                    }
+
+                    const items = clipboardData.items;
+                    if (!items || items.length === 0) {
+                        console.log('Nothing in clipboard');
+                        return;
+                    }
+
+                    const files = [];
+                    for (const item of items) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            files.push(file);
+                        }
+                    }
+
+                    if (files.length > 0) {
+                        handleFiles(files);
+                        event.preventDefault();
+                    } else {
+                        console.log('No files found in items');
+                    }
+                }
+
+                function onDrop(event) {
+                    event.preventDefault();
+                    $overlay.css('display', 'none');
+                    const files = event.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                }
+
+                // General for what to do with uploaded files
+                function handleFiles(files) {
+                    
+                    if(!enableUploadNewAttachment){
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: "top-end",
+                            showConfirmButton: false,
+                            timer: 2000,
+                            didOpen: (toast) => {
+                                toast.onmouseenter = Swal.stopTimer;
+                                toast.onmouseleave = Swal.resumeTimer;
+                            }
+                        });
+                        Toast.fire({
+                            icon: "error",
+                            title: "Uploading is disabled"
+                        });
+                        
+                        console.log("uploading is disabled");
+                        return;
+                    }
+                    
+                    console.log("uploading is enabled!");
+
+                    // Convert FileList to array
+                    const fileArray = Array.from(files);
+
+                    // Filter out duplicates based on name and size
+                    const newFiles = fileArray.filter(file =>
+                        !uploadedFiles.some(existing =>
+                            existing.name === file.name && existing.size === file.size
+                        )
+                    );
+
+                    // Add new files to uploadedFiles
+                    uploadedFiles = uploadedFiles.concat(newFiles);
+
+                    // Initialize DataTransfer
+                    const dataTransfer = new DataTransfer();
+
+                    // Assign all files to dataTransfer object
+                    uploadedFiles.forEach(file => {
+                        if (file instanceof File) { // Validate File object
+                            dataTransfer.items.add(file);
+                        }
+                    });
+
+                    // Assign all file objects to file input
+                    $fileInput[0].files = dataTransfer.files;
+
+                    // Store file names in $fileUploadArea (fix overwriting issue)
+                    const fileNames = newFiles.map(file => file.name);
+                    fileNames.forEach(fileName => displayFileName({ name: fileName })); // Assuming displayFileName accepts an object
+                    $fileUploadArea.data('file', fileNames); // Store array of names instead of single name
+                    $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
+
+                    // Debug: Log the assigned files
+                    console.log('Assigned files to uploadedFiles:', $('#UploadedFiles')[0].files);
+                }
+
+                // Create element for new file
+                function displayFileName(file) {
+                    console.log('New file:', file);
+
+                    const container = document.createElement('div');
+                    container.className = 'file-item d-inline-flex align-items-center me-2 mb-3';
+
+                    const fileElement = document.createElement('a');
+                    fileElement.textContent = file.name;
+                    fileElement.className = 'file-link btn btn-outline-primary border me-1 shadow';
+                    fileElement.setAttribute('data-name', file.name);
+
+                    const removeBtn = document.createElement('a');
+                    removeBtn.textContent = '×';
+                    removeBtn.className = 'remove-file btn btn-outline-danger btn-sm me-2 shadow';
+                    removeBtn.setAttribute('data-name', file.name);
+
+                    container.appendChild(fileElement);
+                    container.appendChild(removeBtn);
+
+                    $previewContainer.append(container);
+
+                    console.log('File name element and remove button appended');
+                }
+
+                // Remove the file from array: the elements will be removed when fileInput is changed
+                function removeFile(event) {
+                    event.preventDefault();
+
+                    const fileName = $(this).data('name');
+
+                    uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
+
+                    $(this).closest('.file-item').remove();
+
+                    console.log('Removed file:', fileName);
+
+                    $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
+
+                    // Initialize DataTransfer
+                    const dataTransfer = new DataTransfer();
+
+                    // Assign all files to dataTransfer
+                    uploadedFiles.forEach(file => {
+                        if (file instanceof File) { // Validate File object
+                            dataTransfer.items.add(file);
+                        }
+                    });
+
+                    // Assign FileList to file input
+                    $fileInput[0].files = dataTransfer.files;
+
+                    // Debug: Log the assigned files
+                    console.log('Assigned files to uploadedFiles:', $('#UploadedFiles')[0].files);
+                }
+
+                function clearUploads() {
+                    uploadedFiles = [];
+                    $previewContainer.html('');
+                    $fileUploadArea.data('file', null);
+                    $fileUploadArea.data('allFiles', []);
+                    console.log('Uploads cleared');
+                }
+
+                function onDragEnter(event) {
+                    event.preventDefault();
+                    $overlay.css('display', 'flex');
+                }
+
+                function onDragOver(event) {
+                    event.preventDefault();
+                }
+
+                function onDragLeave(event) {
+                    if (!event.relatedTarget || $(event.relatedTarget).is('html')) {
+                        $overlay.css('display', 'none');
+                    }
+                }
+
+                return {
+                    init,
+                    getUploadedFiles: () => uploadedFiles // Expose for debugging
+                };
+            })();
+
+            DragOverlayHandler.init();
+        });
     </script>
 }

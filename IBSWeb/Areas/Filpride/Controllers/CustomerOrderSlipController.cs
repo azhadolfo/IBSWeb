@@ -268,13 +268,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, IEnumerable<IFormFile>? files, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (files == null)
-            {
-                throw new ArgumentNullException(nameof(files));
-            }
-
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -321,11 +316,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
                     };
 
-                    if (files != null)
+                    // Upload files if there is existing
+                    if (viewModel.UploadedFiles != null)
                     {
                         var uploadUrls = new List<string>();
 
-                        foreach (var file in files)
+                        foreach (var file in viewModel.UploadedFiles)
                         {
                             string fileName = GenerateFileNameToSave(file.FileName)!;
                             await _cloudStorageService.UploadFileAsync(file, fileName);
@@ -442,6 +438,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     StationCode = getPurchaseOrder?.StationCode,
                 };
 
+                // If there is uploaded, get signed URL
+                if (exisitingRecord.UploadedFiles != null)
+                {
+                    var fileInfos = new List<COSFileInfo>();
+
+                    foreach (var file in exisitingRecord.UploadedFiles)
+                    {
+                        var fileInfo = new COSFileInfo();
+                        fileInfo.FileName = file;
+                        fileInfo.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file);
+                        fileInfos.Add(fileInfo);
+                    }
+
+                    viewModel.FileInfos = fileInfos;
+                }
+
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -476,6 +488,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord == null)
                     {
                         return NotFound();
+                    }
+
+                    // If there is new upload...
+                    if (viewModel.UploadedFiles != null)
+                    {
+                        // Delete old files
+                        if (existingRecord.UploadedFiles != null)
+                        {
+                            foreach (var oldFiles in existingRecord.UploadedFiles)
+                            {
+                                await _cloudStorageService.DeleteFileAsync(oldFiles);
+                            }
+                        }
+
+                        // And upload new files
+                        var uploadUrls = new List<string>();
+
+                        foreach (var file in viewModel.UploadedFiles)
+                        {
+                            var fileName = GenerateFileNameToSave(file.FileName)!;
+                            await _cloudStorageService.UploadFileAsync(file, fileName);
+                            uploadUrls.Add(fileName);
+                        }
+
+                        // Replace the old array with new array
+                        existingRecord.UploadedFiles = uploadUrls.ToArray();
                     }
 
                     viewModel.CurrentUser = _userManager.GetUserName(User);
