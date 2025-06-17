@@ -15,10 +15,10 @@
     </div>
     <div class="card-body p-4">
         <form id="dynamicForm" method="post" target="_blank">
-            <div class="form-group row mt-4">
-                <label class="col-sm-4 col-form-label text-right">As Of (Month and Year)</label>
+            <div class="mb-4 row align-items-center">
+                <label for="monthDate" class="col-sm-4 col-form-label text-end fw-semibold">As Of (Month and Year)</label>
                 <div class="col-sm-6">
-                    <input type="month" class="form-control" name="monthDate" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required>
+                    <input type="month" id="monthDate" name="monthDate" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" required />
                 </div>
             </div>
 

@@ -130,7 +130,10 @@
                 <tr><td class="text-center">Product Cost</td><td>@Html.DisplayFor(model => model.NetOfVatProductCost)</td></tr>
                 <tr><td class="text-center">Freight Charge</td><td>@Html.DisplayFor(model => model.NetOfVatFreightCharge)</td></tr>
                 <tr><td class="text-center">Commission</td><td>@Html.DisplayFor(model => model.CustomerOrderSlip!.CommissionRate)</td></tr>
-                <tr><td type="text" class="text-center" id="grossMarginInput">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td></tr>
+                <tr>
+                    <td type="text" class="text-center">Gross Margin</td><td>@Html.DisplayFor(model => model.GrossMargin)</td>
+                    <input type="hidden" asp-for="GrossMargin" id="grossMarginInput"/>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -173,7 +176,7 @@
 @section Scripts {
     <script>
         document.getElementById('approveButton').addEventListener('click', function () {
-            let grossMarginValue = document.getElementById('grossMarginInput').innerText;
+            let grossMarginValue = document.getElementById('grossMarginInput').value;
 
             // Replace parentheses with a negative sign for backend processing
             if (grossMarginValue.includes('(') && grossMarginValue.includes(')')) {

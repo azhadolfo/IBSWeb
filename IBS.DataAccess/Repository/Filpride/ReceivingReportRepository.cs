@@ -282,9 +282,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (model.QuantityDelivered > deliveryReceipt.PurchaseOrder.Quantity - deliveryReceipt.PurchaseOrder.QuantityReceived)
             {
-                throw new ArgumentException($"The inputted quantity exceeds the remaining delivered quantity for Purchase Order: " +
-                                            $"{deliveryReceipt.PurchaseOrder.PurchaseOrderNo}. " +
-                                            "Please contact the TNS department to verify the appointed supplier.");
+                throw new ArgumentException($"The inputted quantity exceeds the remaining balance for Purchase Order: " +
+                                            $"{deliveryReceipt.PurchaseOrder.PurchaseOrderNo}.");
             }
 
             var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
@@ -296,38 +295,32 @@ namespace IBS.DataAccess.Repository.Filpride
             model.DueDate = await ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
 
-            if (deliveryReceipt.PurchaseOrder.UnTriggeredQuantity != deliveryReceipt.PurchaseOrder.Quantity)
+            var poActualPrice = await _db.FilpridePOActualPrices
+                .FirstOrDefaultAsync(a => a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId
+                                          && a.IsApproved
+                                          && a.AppliedVolume != a.TriggeredVolume,
+                    cancellationToken);
+
+            var remainingQuantity = model.QuantityReceived;
+            decimal totalAmount = 0;
+
+            if (poActualPrice != null)
             {
-                var poActualPrice = await _db.FilpridePOActualPrices
-                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == deliveryReceipt.PurchaseOrderId
-                                             && a.IsApproved
-                                             && a.AppliedVolume != a.TriggeredVolume, cancellationToken);
+                var availableQuantity = poActualPrice.TriggeredVolume - poActualPrice.AppliedVolume;
 
-                var remainingQuantity = model.QuantityReceived;
-                decimal totalAmount = 0;
-
-                if (poActualPrice != null)
+                // Compute using poActualPrice.Price for the available quantity
+                if (availableQuantity > 0)
                 {
-                    var availableQuantity = poActualPrice.TriggeredVolume - poActualPrice.AppliedVolume;
-
-                    // Compute using poActualPrice.Price for the available quantity
-                    if (availableQuantity > 0)
-                    {
-                        var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
-                        totalAmount += applicableQuantity * (poActualPrice.TriggeredPrice + freight);
-                        poActualPrice.AppliedVolume += applicableQuantity;
-                        remainingQuantity -= applicableQuantity;
-                    }
+                    var applicableQuantity = Math.Min(remainingQuantity, availableQuantity);
+                    totalAmount += applicableQuantity * (poActualPrice.TriggeredPrice + freight);
+                    poActualPrice.AppliedVolume += applicableQuantity;
+                    remainingQuantity -= applicableQuantity;
                 }
+            }
 
-                // Compute the remaining using the default price
-                totalAmount += remainingQuantity * (deliveryReceipt.PurchaseOrder.Price + freight);
-                model.Amount = totalAmount;
-            }
-            else
-            {
-                model.Amount = model.QuantityReceived * (deliveryReceipt.PurchaseOrder.Price + freight);
-            }
+            // Compute the remaining using the default price
+            totalAmount += remainingQuantity * (deliveryReceipt.PurchaseOrder.Price + freight);
+            model.Amount = totalAmount;
 
             #region --Audit Trail Recording
 
@@ -345,7 +338,6 @@ namespace IBS.DataAccess.Repository.Filpride
             await _db.AddAsync(auditTrailPost, cancellationToken);
 
             #endregion --Audit Trail Recording
-
 
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);

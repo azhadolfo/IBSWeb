@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250613023909_CreateNewTableToStoreTheNotUpdatedRecordsButLocked")]
+    partial class CreateNewTableToStoreTheNotUpdatedRecordsButLocked
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3234,10 +3237,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("total_amount");
 
-                    b.Property<string[]>("UploadedFiles")
-                        .HasColumnType("varchar[]")
-                        .HasColumnName("uploaded_files");
-
                     b.HasKey("CustomerOrderSlipId")
                         .HasName("pk_filpride_customer_order_slips");
 
@@ -3774,10 +3773,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_mobility");
 
-                    b.Property<bool>("RequiresPriceAdjustment")
-                        .HasColumnType("boolean")
-                        .HasColumnName("requires_price_adjustment");
-
                     b.Property<decimal?>("RetentionRate")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("retention_rate");
@@ -4181,10 +4176,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("ReasonOfExemption")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("reason_of_exemption");
-
-                    b.Property<bool>("RequiresPriceAdjustment")
-                        .HasColumnType("boolean")
-                        .HasColumnName("requires_price_adjustment");
 
                     b.Property<string>("SupplierAddress")
                         .IsRequired()

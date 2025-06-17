@@ -283,6 +283,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                    if (customer == null)
+                    {
+                        return BadRequest();
+                    }
+
                     FilprideCustomerOrderSlip model = new()
                     {
                         CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
@@ -305,6 +313,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Terms = viewModel.Terms,
                         Branch = viewModel.SelectedBranch,
                         CustomerType = viewModel.CustomerType!,
+                        OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
                     };
 
                     // Upload files if there is existing
@@ -338,6 +347,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.CommissioneeId = viewModel.CommissioneeId;
                         model.CommissionRate = viewModel.CommissionRate;
                     }
+
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
 

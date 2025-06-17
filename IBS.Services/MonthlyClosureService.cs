@@ -50,6 +50,9 @@ namespace IBS.Services
                 await InTransit(dataMap);
                 await AutoReversalForCvWithoutDcrDate(dataMap);
                 await ComputeNibit(dataMap);
+                await RecordNotUpdatedSales(dataMap);
+                await RecordNotUpdatedPurchases(dataMap);
+
                 _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
                 await transaction.CommitAsync();
             }
@@ -307,6 +310,96 @@ namespace IBS.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while computing the nibit for the month.");
+                throw;
+            }
+        }
+
+        private async Task RecordNotUpdatedSales(DateTime previousMonth)
+        {
+            try
+            {
+                var cosNotUpdatedPrice = await _dbContext.FilprideCustomerOrderSlips
+                    .Include(x => x.DeliveryReceipts)
+                    .Where(x => x.Date.Month == previousMonth.Month
+                                      && x.Date.Year == previousMonth.Year
+                                      && x.OldPrice == 0
+                                      && x.DeliveredQuantity > 0)
+                    .ToListAsync();
+
+                if (cosNotUpdatedPrice.Count == 0)
+                {
+                    return;
+                }
+
+                var lockedRecordQueues = new List<FilprideSalesLockedRecordsQueue>();
+                var lockedDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+
+                foreach (var cos in cosNotUpdatedPrice)
+                {
+                    foreach (var dr in cos.DeliveryReceipts!)
+                    {
+                        lockedRecordQueues.Add(new FilprideSalesLockedRecordsQueue
+                        {
+                            LockedDate = lockedDate,
+                            DeliveryReceiptId = dr.DeliveryReceiptId,
+                            Quantity = dr.Quantity,
+                            Price = cos.DeliveredPrice
+                        });
+                    }
+                }
+
+                await _dbContext.FilprideSalesLockedRecordsQueues.AddRangeAsync(lockedRecordQueues);
+                await _dbContext.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while recording the not updated sales for the month.");
+                throw;
+            }
+        }
+
+        private async Task RecordNotUpdatedPurchases(DateTime previousMonth)
+        {
+            try
+            {
+                var poNotUpdatedPrice = await _dbContext.FilpridePurchaseOrders
+                    .Include(x => x.ReceivingReports)
+                    .Where(x => x.Date.Month == previousMonth.Month
+                                && x.Date.Year == previousMonth.Year
+                                && x.UnTriggeredQuantity != 0
+                                && x.QuantityReceived > 0)
+                    .ToListAsync();
+
+                if (poNotUpdatedPrice.Count == 0)
+                {
+                    return;
+                }
+
+                var lockedRecordQueues = new List<FilpridePurchaseLockedRecordsQueue>();
+                var lockedDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+
+                foreach (var po in poNotUpdatedPrice)
+                {
+                    foreach (var rr in po.ReceivingReports!)
+                    {
+                        lockedRecordQueues.Add(new FilpridePurchaseLockedRecordsQueue
+                        {
+                            LockedDate = lockedDate,
+                            ReceivingReportId = rr.ReceivingReportId,
+                            Quantity = rr.QuantityReceived,
+                            Price = po.Price
+                        });
+                    }
+                }
+
+                await _dbContext.FilpridePurchaseLockedRecordsQueues.AddRangeAsync(lockedRecordQueues);
+                await _dbContext.SaveChangesAsync();
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while recording the not updated sales for the month.");
                 throw;
             }
         }

@@ -209,5 +209,7 @@ namespace IBS.Models.Filpride.Integrated
 
         [Column(TypeName = "varchar(50)")]
         public string PriceReference { get; set; } =  string.Empty;
+
+        public ICollection<FilprideDeliveryReceipt>? DeliveryReceipts { get; set; }
     }
 }
