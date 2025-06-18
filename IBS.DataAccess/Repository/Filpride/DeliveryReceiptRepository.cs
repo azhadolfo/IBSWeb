@@ -818,7 +818,14 @@ namespace IBS.DataAccess.Repository.Filpride
                                     && x.Reference == deliveryReceipt.DeliveryReceiptNo)
                         .ExecuteDeleteAsync(cancellationToken);
 
-                    await PostAsync(deliveryReceipt, cancellationToken);
+                    var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
+                        .AnyAsync(x => x.Year == deliveryReceipt.Date.Year
+                                       && x.Month == deliveryReceipt.Date.Month, cancellationToken);
+
+                    if (!isNibitForThisPeriodLocked)
+                    {
+                        await PostAsync(deliveryReceipt, cancellationToken);
+                    }
 
                 }
             }
