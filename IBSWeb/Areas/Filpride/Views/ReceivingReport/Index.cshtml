@@ -165,7 +165,10 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "receivingReportNo" },
+                    { 
+                        "data": "receivingReportNo",
+                        "name": "receivingReportNo"
+                    },
                     {
                         "data": "date",
                         "name": "date",
@@ -179,22 +182,36 @@
                             });
                         }
                     },
-                    { "data": "purchaseOrder.purchaseOrderNo" },
-                    { "data": "purchaseOrder.oldPoNo" },
-                    { "data": "oldRRNo" },
                     { 
-                        "data": "deliveryReceiptId",
+                        "data": "purchaseOrderNo",
+                        "name": "purchaseOrder.purchaseOrderNo"
+                    },
+                    { 
+                        "data": "oldPoNo",
+                        "name": "purchaseOrder.oldPoNo"
+                    },
+                    { 
+                        "data": "oldRRNo",
+                        "name": "oldRRNo"
+                    },
+                    { 
+                        "data": "deliveryReceiptNo",
+                        "name": "deliveryReceipt.deliveryReceiptNo,",
                         "render" : function (data, type, row){
-                            return row.deliveryReceipt ? row.deliveryReceipt.deliveryReceiptNo : "" ;
+                            return row.deliveryReceiptNo ?? "" ;
                         }
                     },
                     {
-                        "data": "deliveryReceiptId",
+                        "data": "customerName",
+                        "name": "deliveryReceipt.customer.customerName,",
                         "render" : function (data, type, row){
-                            return row.deliveryReceipt ? row.deliveryReceipt.customer.customerName : "" ;
+                            return row.customerName ?? "" ;
                         }
                     },
-                    { "data": "purchaseOrder.product.productName" },
+                    { 
+                        "data": "productName",
+                        "name": "purchaseOrder.product.productName"
+                    },
                     {
                         "data": "quantityReceived",
                         "render": function (data, type, row) {
@@ -202,9 +219,13 @@
                             return `<span class="d-block fw-medium">${amount}</span>`;
                         }
                     },
-                    { "data": "createdBy" },
+                    { 
+                        "data": "createdBy",
+                        "name": "createdBy"
+                    },
                     {
                         "data": "status",
+                        "name": "status",
                         "render": function(data, type, row) {
                             var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
                                               row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
@@ -215,6 +236,7 @@
                     },
                     {
                         "data": "receivingReportId",
+                        "name": "receivingReportId",
                         "orderable": false,
                         "render": function (data, type, row) {
                             var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">

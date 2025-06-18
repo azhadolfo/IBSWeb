@@ -159,7 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     receivingReports = receivingReports
@@ -173,6 +173,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var pagedData = receivingReports
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
+                    .Select(rr => new
+                    {
+                        rr.ReceivingReportId,
+                        rr.ReceivingReportNo,
+                        rr.Date,
+                        rr.PurchaseOrder!.PurchaseOrderNo,
+                        rr.PurchaseOrder.OldPoNo,
+                        rr.OldRRNo,
+                        rr.DeliveryReceiptId,
+                        rr.DeliveryReceipt?.DeliveryReceiptNo,
+                        rr.DeliveryReceipt?.Customer?.CustomerName,
+                        rr.PurchaseOrder!.Product!.ProductName,
+                        rr.QuantityReceived,
+                        rr.CreatedBy,
+                        rr.Status
+                    })
                     .ToList();
 
                 return Json(new
