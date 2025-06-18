@@ -662,7 +662,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var mergedCellsA7 = worksheet.Cells["A7:B7"];
                     mergedCellsA7.Merge = true;
-                    mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
+                    mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "DELIVERED" : "IN TRANSIT";
 
                     // Table headers
                     worksheet.Cells["A9"].Value = "DR DATE";
