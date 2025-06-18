@@ -18,24 +18,11 @@ $(document).ready(function () {
         spinnerWrapper.hide();
     }
 
-    $('form').on('submit', function (e) {
-        // Get the submit button
-        const submitButton = $(this).find('button[type="submit"], input[type="submit"]');
-
-        // Check if form is already being submitted
-        if (submitButton.prop('disabled')) {
-            e.preventDefault();
-            return false; // Prevent duplicate submission
-        }
-
+    $('form').on('submit', function () {
         $(this).validate();
         if (!$(this).valid()) {
             return false; // Stop execution if invalid
         }
-
-        // Disable the submit button to prevent double clicks
-        submitButton.prop('disabled', true);
-
         // Show the spinner wrapper when submitting
         spinnerWrapper.show();
         $('body').addClass('loading'); // Optional: prevent scrolling
