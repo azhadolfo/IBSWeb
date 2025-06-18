@@ -21,10 +21,13 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PO { get; set; }
 
         public List<int>? Customers { get; set; }
+        public List<int>? Commissionee { get; set; }
 
         #region Gross Margin
 
         public List<SelectListItem>? CustomerList { get; set; }
+
+        public List<SelectListItem>? CommissioneeList { get; set; }
 
         #endregion
 
