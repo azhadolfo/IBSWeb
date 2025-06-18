@@ -671,11 +671,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Get signed url of uploads
                 if (customerOrderSlip.UploadedFiles != null)
                 {
-                    var listOfSignedUrls = new List<(string FileName, string SignedUrl)>();
+                    var listOfSignedUrls = new List<COSFileInfo>();
 
                     foreach (var fileUrl in customerOrderSlip.UploadedFiles)
                     {
-                        listOfSignedUrls.Add((System.IO.Path.GetFileName(fileUrl), await _cloudStorageService.GetSignedUrlAsync(fileUrl)));
+                        var fileInfoInstance = new COSFileInfo
+                        {
+                            FileName = System.IO.Path.GetFileName(fileUrl),
+                            SignedUrl = await _cloudStorageService.GetSignedUrlAsync(fileUrl)
+                        };
+
+                        listOfSignedUrls.Add(fileInfoInstance);
                     }
 
                     model.UploadedFiles = listOfSignedUrls;
