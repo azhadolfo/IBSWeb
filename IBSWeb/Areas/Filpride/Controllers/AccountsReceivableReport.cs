@@ -646,7 +646,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (dateRangeType == "AsOf")
                     {
-                        mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
+                        if (viewModel.DateFrom == default)
+                        {
+                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {DateTimeHelper.GetCurrentPhilippineTime():dd MMM, yyyy}";
+                        }
+                        else
+                        {
+                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
+                        }
                     }
                     else
                     {
