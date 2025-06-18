@@ -131,7 +131,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Credit = 0,
                         Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedDate = collectionReceipt.CreatedDate,
+                        BankAccountId = collectionReceipt.BankId
                     }
                 );
             }
@@ -274,7 +275,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = collectionReceipt.TransactionDate,
                     RefNo = collectionReceipt.CollectionReceiptNo!,
                     CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                    Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                    Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                     CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                     COA = $"{cashInBankTitle.AccountNumber} {cashInBankTitle.AccountName}",
                     Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -295,7 +296,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
                         CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                        Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                        Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{cwt.AccountNumber} {cwt.AccountName}",
                         Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -316,7 +317,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
                         CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                        Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                        Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{cwv.AccountNumber} {cwv.AccountName}",
                         Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -340,7 +341,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
                         CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                        Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                        Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{account.AccountNumber} {account.AccountName}",
                         Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -359,7 +360,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Date = collectionReceipt.TransactionDate,
                     RefNo = collectionReceipt.CollectionReceiptNo!,
                     CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                    Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                    Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                     CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                     COA = $"{arTradeTitle.AccountNumber} {arTradeTitle.AccountName}",
                     Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -379,7 +380,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
                         CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                        Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                        Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{arTradeCwt.AccountNumber} {arTradeCwt.AccountName}",
                         Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -400,7 +401,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
                         CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
-                        Bank = collectionReceipt.CheckBank ?? (collectionReceipt.ManagerCheckBank ?? "--"),
+                        Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? (collectionReceipt.ManagerCheckNo ?? "--"),
                         COA = $"{arTradeCwv.AccountNumber} {arTradeCwv.AccountName}",
                         Particulars = (collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.SalesInvoiceNo : collectionReceipt.MultipleSIId != null ? string.Join(", ", collectionReceipt.MultipleSI!.Select(si => si.ToString())) : collectionReceipt.ServiceInvoice!.ServiceInvoiceNo)!,
@@ -603,7 +604,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cr => cr.ServiceInvoice)
                 .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
-                .ThenInclude(sv => sv!.Service);
+                .ThenInclude(sv => sv!.Service)
+                .Include(cr => cr.BankAccount);
 
             if (filter != null)
             {
@@ -625,6 +627,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenInclude(sv => sv!.Customer)
                 .Include(cr => cr.ServiceInvoice)
                 .ThenInclude(sv => sv!.Service)
+                .Include(cr => cr.BankAccount)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }

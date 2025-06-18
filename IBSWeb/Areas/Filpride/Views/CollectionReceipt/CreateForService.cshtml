@@ -78,10 +78,10 @@
                             <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
                         </tr>
                         <tr>
-                            <td class="text-center" style="width:25%"></td>
+                            <td class="text-center" style="width:20%"></td>
                             <td class="text-center" style="width:15%">DATE</td>
                             <td class="text-center" style="width:15%">CHK #</td>
-                            <td class="text-center" style="width:15%">BANK</td>
+                            <td class="text-center" style="width:20%">BANK</td>
                             <td class="text-center" style="width:15%">BRANCH</td>
                             <td class="text-center" style="width:15%">AMOUNT</td>
                         </tr>
@@ -99,7 +99,12 @@
                             <td style="padding-left:20px;">Check</td>
                             <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
                             <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
-                            <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
+                            <td>
+                                <select asp-for="BankId" asp-items="@Model.BankAccounts" 
+                                        class="form-select js-select2">
+                                    <option></option>
+                                </select>
+                            </td>
                             <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
                             <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
                         </tr>

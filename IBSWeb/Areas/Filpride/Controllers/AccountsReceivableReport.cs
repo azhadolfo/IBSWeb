@@ -646,7 +646,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (dateRangeType == "AsOf")
                     {
-                        mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
+                        if (viewModel.DateFrom == default)
+                        {
+                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {DateTimeHelper.GetCurrentPhilippineTime():dd MMM, yyyy}";
+                        }
+                        else
+                        {
+                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
+                        }
                     }
                     else
                     {
@@ -655,7 +662,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var mergedCellsA7 = worksheet.Cells["A7:B7"];
                     mergedCellsA7.Merge = true;
-                    mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "ALL DELIVERIES" : "IN TRANSIT DELIVERIES";
+                    mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "DELIVERED" : "IN TRANSIT";
 
                     // Table headers
                     worksheet.Cells["A9"].Value = "DR DATE";
@@ -687,9 +694,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int currentRow = 10;
                     string headerColumn = viewModel.ReportType == "Delivered" ? "S9" : "Q9";
                     int grandTotalColumn = viewModel.ReportType == "Delivered" ? 19 : 17;
-
-                    decimal grandSumOfFreight = 0;
-                    decimal grandSumOfECC = 0;
                     decimal grandSumOfTotalFreightAmount = 0;
                     decimal grandTotalQuantity = 0;
 
@@ -700,36 +704,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var ecc = dr.ECC;
                         var totalFreightAmount = quantity * (freightCharge + ecc);
 
-                        worksheet.Cells[currentRow, 1].Value = dr.Date;
-                        worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
-                        worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
-                        worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                        worksheet.Cells[currentRow, 5].Value = dr.PurchaseOrder!.Product!.ProductName;
-                        worksheet.Cells[currentRow, 6].Value = dr.Quantity;
-                        worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
-                        worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
-                        worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
-                        worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
-                        worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
-                        worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
-                        worksheet.Cells[currentRow, 13].Value = freightCharge;
-                        worksheet.Cells[currentRow, 14].Value = ecc;
-                        worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
-                        worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
-                        worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
-
-                        if (viewModel.ReportType == "Delivered")
+                        if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
+                            dr.Date != viewModel.DateFrom)
                         {
-                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
-                            worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            // Don't show record of other dates if entry is "as of" and "delivered"
+                        }
+                        else
+                        {
+                            worksheet.Cells[currentRow, 1].Value = dr.Date;
+                            worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
+                            worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
+                            worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                            worksheet.Cells[currentRow, 5].Value = dr.PurchaseOrder!.Product!.ProductName;
+                            worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                            worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
+                            worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
+                            worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
+                            worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
+                            worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
+                            worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
+                            worksheet.Cells[currentRow, 13].Value = freightCharge;
+                            worksheet.Cells[currentRow, 14].Value = ecc;
+                            worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
+                            worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
+                            worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
+
+                            if (viewModel.ReportType == "Delivered")
+                            {
+                                worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                                worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            }
+
+                            currentRow++;
                         }
 
-                        currentRow++;
                         grandTotalQuantity += quantity;
-                        grandSumOfFreight += freightCharge;
-                        grandSumOfECC += ecc;
                         grandSumOfTotalFreightAmount += totalFreightAmount;
                     }
 
@@ -737,10 +748,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Grand Total row
                     worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
-                    worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                    worksheet.Cells[currentRow, 13].Value = grandSumOfFreight;
-                    worksheet.Cells[currentRow, 14].Value = grandSumOfECC;
-                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+
+                    if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
+                    {
+                        // Don't add record of other dates if entry is "as of" and "delivered"
+                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom);
+                        worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
+                        worksheet.Cells[currentRow, 15].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
+                    }
+                    else
+                    {
+                        worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                        worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+                    }
 
                     // Adding borders and bold styling to the total row
                     using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, grandTotalColumn]) // Whole row
@@ -763,8 +783,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
                     worksheet.Cells[currentRow, 1].Value = currentUser.ToUpper();
-                    worksheet.Cells[currentRow, 4].Value = "JOEYLITO M. CAILAN";
-                    worksheet.Cells[currentRow, 8].Value = "IVY PAGKATIPUNAN";
 
                     currentRow += 1;
 
@@ -2558,7 +2576,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckBank);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -2683,7 +2701,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 5].Value = cr.SalesInvoice?.SalesInvoiceNo ?? "";
                         worksheet.Cells[row, 6].Value = cr.SalesInvoice?.DueDate ?? default;
                         worksheet.Cells[row, 7].Value = cr.CheckDate;
-                        worksheet.Cells[row, 8].Value = cr.CheckBank;
+                        worksheet.Cells[row, 8].Value = $"{cr.BankAccount?.Bank} {cr.BankAccount?.AccountNo}";
                         worksheet.Cells[row, 9].Value = cr.CheckNo;
                         worksheet.Cells[row, 10].Value = currentAmount;
 

@@ -220,9 +220,9 @@
                     }
                 </td>
                 <td class="text-center">
-                    @if (Model.CheckBank != null)
+                    @if (Model.BankId != null)
                     {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckBank)</p>
+                        <p style="height: 9px;">@Model.BankAccount?.Bank @Model.BankAccount?.AccountNo</p>
                     }
                     else
                     {
