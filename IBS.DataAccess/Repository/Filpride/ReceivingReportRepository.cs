@@ -258,7 +258,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, CancellationToken cancellationToken = default)
+        public async Task<string> AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly liftingDate, string userName, CancellationToken cancellationToken = default)
         {
             FilprideReceivingReport model = new()
             {
@@ -272,9 +272,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 Company = deliveryReceipt.Company,
-                CreatedBy = "SYSTEM GENERATED",
+                CreatedBy = userName,
                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                PostedBy = "SYSTEM GENERATED",
+                PostedBy = userName,
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
                 Type = deliveryReceipt.PurchaseOrder.Type,

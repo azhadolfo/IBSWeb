@@ -1132,7 +1132,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var receivingReportNo = await _unitOfWork.FilprideReceivingReport
-                    .AutoGenerateReceivingReport(model, liftingDate, cancellationToken);
+                    .AutoGenerateReceivingReport(model, liftingDate, User.Identity!.Name!, cancellationToken);
 
                 #region --Audit Trail Recording
 
