@@ -247,7 +247,7 @@
                     <div class="px-1 row d-flex justify-content-start">
                         <label class="mt-3">Attachments: </label>
                     </div>
-                    <div class="pt-2     px-1 row">
+                    <div class="pt-2 px-1 row">
                         @foreach (var file in Model.FileInfos)
                         {
                             <div class="file-item d-inline-flex align-items-center mb-3 col-3">
@@ -256,6 +256,16 @@
                                 </a>
                             </div>
                         }
+                        <div class="file-item d-inline-flex align-items-center mb-3 col-3">
+                            <a class="newAttachmentButton btn btn-outline-danger border shadow text-truncate">
+                                New attachments
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="pt-2 px-1 row">
                         <div class="file-item d-inline-flex align-items-center mb-3 col-3">
                             <a class="newAttachmentButton btn btn-outline-danger border shadow text-truncate">
                                 New attachments
