@@ -27,6 +27,18 @@
                     <input type="date" asp-for="DateTo" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
+                <div class="mb-3">
+                    <label asp-for="Commissionee" class="control-label">
+                        Commissionee List <small class="text-muted">(optional)</small>
+                    </label>
+                    <select asp-for="Commissionee" asp-items="@Model.CommissioneeList" class="form-select js-multiple" multiple="multiple" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="Commissionee" class="text-danger"></span>
+                    <div class="form-text text-muted">
+                        Leave empty to include all commissionee by default. You can select more than one commissionee to filter results.
+                    </div>
+                </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
                         <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedSalesReport')"><i class="bi bi-printer"></i> Generate</button>
