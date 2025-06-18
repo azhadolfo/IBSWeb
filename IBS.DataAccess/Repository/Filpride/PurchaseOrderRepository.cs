@@ -206,7 +206,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     #region Update RR Inventory
 
-                    var inventory = inventories.FirstOrDefault(inv => inv.Reference == receivingReports[i].ReceivingReportNo);
+                    var inventory = inventories.FirstOrDefault(inv => inv.Reference == receivingReports[i].ReceivingReportNo
+                                                                      && inv.Company == receivingReports[i].Company);
 
                     inventory!.Cost = ComputeNetOfVat(model.TriggeredPrice);
                     inventory.Total = inventory.Quantity * inventory.Cost;
@@ -231,46 +232,53 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     #endregion Update Purchase Book
 
-                    #region Update RR General Ledger
+                    var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
+                        .AnyAsync(x => x.Year == receivingReports[i].Date.Year
+                                       && x.Month == receivingReports[i].Date.Year, cancellationToken);
 
-                    var journalEntries = await _db.FilprideGeneralLedgerBooks
-                        .Where(g => g.Company == receivingReports[i].Company && g.Reference == receivingReports[i].ReceivingReportNo)
-                        .OrderBy(g => g.GeneralLedgerBookId)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var journalEntry in journalEntries)
+                    if (!isNibitForThisPeriodLocked)
                     {
-                        if (journalEntry.AccountNo.StartsWith("10104"))
+                        #region Update RR General Ledger
+
+                        var journalEntries = await _db.FilprideGeneralLedgerBooks
+                            .Where(g => g.Company == receivingReports[i].Company && g.Reference == receivingReports[i].ReceivingReportNo)
+                            .OrderBy(g => g.GeneralLedgerBookId)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var journalEntry in journalEntries)
                         {
-                            journalEntry.Debit = purchaseBook.NetPurchases;
-                        }
-                        else if (journalEntry.AccountNo.StartsWith("1010602"))
-                        {
-                            journalEntry.Debit = purchaseBook.VatAmount;
-                        }
-                        else if (journalEntry.AccountNo.StartsWith("2010302"))
-                        {
-                            journalEntry.Credit = purchaseBook.WhtAmount;
-                        }
-                        else
-                        {
-                            if (purchaseBook.WhtAmount > 0)
+                            if (journalEntry.AccountNo.StartsWith("10104"))
                             {
-                                journalEntry.Credit = ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount);
+                                journalEntry.Debit = purchaseBook.NetPurchases;
+                            }
+                            else if (journalEntry.AccountNo.StartsWith("1010602"))
+                            {
+                                journalEntry.Debit = purchaseBook.VatAmount;
+                            }
+                            else if (journalEntry.AccountNo.StartsWith("2010302"))
+                            {
+                                journalEntry.Credit = purchaseBook.WhtAmount;
                             }
                             else
                             {
-                                journalEntry.Credit = purchaseBook.Amount;
+                                if (purchaseBook.WhtAmount > 0)
+                                {
+                                    journalEntry.Credit = ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount);
+                                }
+                                else
+                                {
+                                    journalEntry.Credit = purchaseBook.Amount;
+                                }
                             }
                         }
-                    }
 
-                    if (!IsJournalEntriesBalanced(journalEntries))
-                    {
-                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                    }
+                        if (!IsJournalEntriesBalanced(journalEntries))
+                        {
+                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                        }
 
-                    #endregion Update RR General Ledger
+                        #endregion Update RR General Ledger
+                    }
 
                     // Break the loop if TriggeredQuantity is met
                     if (model.AppliedVolume >= model.TriggeredVolume)

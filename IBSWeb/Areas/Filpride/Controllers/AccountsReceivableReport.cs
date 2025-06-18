@@ -1021,15 +1021,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        public IActionResult SalesReport()
+        public async Task<IActionResult> SalesReport()
         {
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            ViewModelBook viewmodel = new()
+            {
+                CommissioneeList = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims)
+            };
+            return View(viewmodel);
         }
 
         #region -- Generated Sales Report as Quest PDF
 
         [HttpPost]
-        public async Task<IActionResult> GeneratedSalesReport(ViewModelBook model)
+        public async Task<IActionResult> GeneratedSalesReport(ViewModelBook model, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -1041,7 +1051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims!);
+                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims!, model.Commissionee, cancellationToken);
 
                 if (!sales.Any())
                 {
@@ -1464,7 +1474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(GenerateSalesInvoiceReportExcelFile), new { dateFrom = model.DateFrom, dateTo = model.DateTo, cancellationToken });
                 }
 
-                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+                var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, cancellationToken);
                 if (salesReport.Count == 0)
                 {
                     TempData["error"] = "No Record Found";
