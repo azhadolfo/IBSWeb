@@ -238,7 +238,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ToListAsync();
         }
 
-        public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
+        public async Task<List<SalesReportViewModel>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? commissioneeIds = null, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -250,7 +250,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(dr => dr.Company == company &&
                              dr.DeliveredDate >= dateFrom &&
                              dr.DeliveredDate <= dateTo &&
-                             (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced)))
+                             (dr.Status == nameof(DRStatus.ForInvoicing) || dr.Status == nameof(DRStatus.Invoiced))
+                             && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value)))
                 .Include(dr => dr.CustomerOrderSlip!.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
                 .Include(dr => dr.Customer)
@@ -365,7 +366,7 @@ namespace IBS.DataAccess.Repository.Filpride
             return checkVoucherHeader;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, string dateSelectionType = "RRDate", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, List<int>? commissioneeIds = null, string dateSelectionType = "RRDate", CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
@@ -376,7 +377,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var receivingReportsQuery = _db.FilprideReceivingReports
                 .Where(rr => rr.Company == company
                             && rr.Status == nameof(Status.Posted)
-                            && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt!.CustomerId)));
+                            && (customerIds == null || customerIds.Contains(rr.DeliveryReceipt!.CustomerId))
+                            && (commissioneeIds == null || commissioneeIds.Contains(rr.DeliveryReceipt!.CommissioneeId!.Value)));
 
             // Apply date filter based on dateSelectionType
             if (dateSelectionType == "RRDate")
@@ -415,7 +417,8 @@ namespace IBS.DataAccess.Repository.Filpride
             var additionalDeliveryReceiptsQuery = _db.FilprideDeliveryReceipts
                 .Where(dr => dr.Date >= dateFrom && dr.Date <= dateTo
                           && dr.Status == nameof(DRStatus.PendingDelivery)
-                          && (customerIds == null || customerIds.Contains(dr.CustomerId)));
+                          && (customerIds == null || customerIds.Contains(dr.CustomerId))
+                          && (commissioneeIds == null || commissioneeIds.Contains(dr.CommissioneeId!.Value)));
 
             var additionalDeliveryReceipts = await additionalDeliveryReceiptsQuery
                 .Include(dr => dr.CustomerOrderSlip)

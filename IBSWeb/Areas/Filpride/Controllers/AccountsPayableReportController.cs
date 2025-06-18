@@ -1511,7 +1511,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             ViewModelBook viewmodel = new()
             {
-                CustomerList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims)
+                CustomerList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims),
+                CommissioneeList = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims)
             };
 
             return View(viewmodel);
@@ -1532,7 +1533,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers);
+                var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, model.Commissionee);
 
                 if (!grossMarginReport.Any())
                 {
@@ -2276,7 +2277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken:cancellationToken);
+                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee, cancellationToken:cancellationToken);
 
                 if (purchaseReport.Count == 0)
                 {
