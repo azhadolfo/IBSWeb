@@ -748,8 +748,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // Grand Total row
                     worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
-                    worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+
+                    if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
+                    {
+                        // Don't add record of other dates if entry is "as of" and "delivered"
+                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom);
+                        worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
+                        worksheet.Cells[currentRow, 15].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
+                    }
+                    else
+                    {
+                        worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                        worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+                    }
 
                     // Adding borders and bold styling to the total row
                     using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, grandTotalColumn]) // Whole row
