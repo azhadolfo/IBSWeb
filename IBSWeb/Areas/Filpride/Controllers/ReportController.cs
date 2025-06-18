@@ -6101,7 +6101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = cr.SalesInvoice?.SalesInvoiceNo ?? "";
                     worksheet.Cells[row, 6].Value = cr.SalesInvoice?.DueDate ?? default;
                     worksheet.Cells[row, 7].Value = cr.CheckDate;
-                    worksheet.Cells[row, 8].Value = cr.CheckBank;
+                    worksheet.Cells[row, 8].Value = cr.BankId;
                     worksheet.Cells[row, 9].Value = cr.CheckNo;
                     worksheet.Cells[row, 10].Value = currentAmount;
 

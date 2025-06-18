@@ -887,6 +887,11 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(cr => cr.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                cr.HasOne(cr => cr.BankAccount)
+                    .WithMany()
+                    .HasForeignKey(cr => cr.BankId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion -- Collection Receipt --

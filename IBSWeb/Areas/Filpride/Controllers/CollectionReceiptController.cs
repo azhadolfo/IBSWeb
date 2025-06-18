@@ -90,7 +90,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetCollectionReceipts([FromForm] DataTablesParameters parameters, string invoiceType, CancellationToken cancellationToken)
         {
             try
             {
@@ -103,6 +103,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
                     .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
+
+                switch (invoiceType)
+                {
+                    case "Sales":
+                        collectionReceipts = collectionReceipts
+                            .Where(s => s.SalesInvoiceId != null || s.MultipleSIId != null)
+                            .ToList();
+                        break;
+                    case "Service":
+                        collectionReceipts = collectionReceipts
+                            .Where(s => s.ServiceInvoiceId != null)
+                            .ToList();
+                        break;
+                }
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -183,6 +197,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
             return View(viewModel);
         }
 
@@ -210,6 +226,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -336,6 +354,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
             return View(viewModel);
         }
 
@@ -364,6 +384,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -510,6 +532,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
+            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
             var findCustomers = await _dbContext.FilprideCustomers
                 .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
 
@@ -534,6 +558,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+
+            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
+                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
+                .OrderBy(si => si.SalesInvoiceId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SalesInvoiceId.ToString(),
+                    Text = s.SalesInvoiceNo
+                })
+                .ToListAsync(cancellationToken);
+
+            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -575,7 +622,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Remarks = model.Remarks;
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
-                    existingModel.CheckBank = model.CheckBank;
+                    existingModel.BankId = model.BankId;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
@@ -720,6 +767,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             return View(viewModel);
         }
@@ -736,6 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             model.SalesInvoices = await _dbContext.FilprideServiceInvoices
                 .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
@@ -1038,6 +1087,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
+            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
             var findCustomers = await _dbContext.FilprideCustomers
                 .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
 
@@ -1063,19 +1114,45 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+
+            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
+                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
+                .OrderBy(si => si.SalesInvoiceId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SalesInvoiceId.ToString(),
+                    Text = s.SalesInvoiceNo
+                })
+                .ToListAsync(cancellationToken);
+
+            existingModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
+                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
+                .OrderBy(si => si.ServiceInvoiceId)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.ServiceInvoiceId.ToString(),
+                    Text = s.ServiceInvoiceNo
+                })
+                .ToListAsync(cancellationToken);
+
+            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    if (companyClaims == null)
-                    {
-                        return BadRequest();
-                    }
-
                     #region --Saving default value
 
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
@@ -1090,7 +1167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Remarks = model.Remarks;
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
-                    existingModel.CheckBank = model.CheckBank;
+                    existingModel.BankId = model.BankId;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
@@ -1232,7 +1309,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
             if (model != null)
             {
@@ -1654,7 +1732,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 4].Value = item.CashAmount;
                     worksheet.Cells[row, 5].Value = item.CheckDate;
                     worksheet.Cells[row, 6].Value = item.CheckNo;
-                    worksheet.Cells[row, 7].Value = item.CheckBank;
+                    worksheet.Cells[row, 7].Value = item.BankAccount?.Bank;
                     worksheet.Cells[row, 8].Value = item.CheckBranch;
                     worksheet.Cells[row, 9].Value = item.CheckAmount;
                     worksheet.Cells[row, 10].Value = item.ManagerCheckDate?.ToString("yyyy-MM-dd");

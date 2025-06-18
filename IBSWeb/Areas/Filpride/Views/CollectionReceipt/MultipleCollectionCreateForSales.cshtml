@@ -80,7 +80,7 @@
                                     <th class="text-end" style="width:14%;">Invoice Amount</th>
                                     <th class="text-end" style="width:14%;">WVat</th>
                                     <th class="text-end" style="width:14%;">EWT</th>
-                                    <th class="text-end" style="width:14%; padding-right:20px;">Less EWT/WVat</th>
+                                    <th class="text-end" style="width:14%; padding-left:20px;">Less EWT/WVat</th>
                                     <th class="text-end" style="width:14%;">Amount Paid</th>
                                     <th class="text-end" style="width:14%; padding-right:20px;">Balance</th>
                                 </tr>
@@ -96,7 +96,7 @@
                                     <td class="text-end" id="grandTotalRRAmount">0.000</td>
                                     <td class="text-end" id="grandTotalVatAmount">0.000</td>
                                     <td class="text-end" id="grandTotalEWTAmount">0.000</td>
-                                    <td class="text-end" id="grandTotalNetOfEWT">0.000</td>
+                                    <td class="text-end" id="grandTotalNetOfEWT" style="padding-left:20px;">0.000</td>
                                     <td class="text-end" id="grandTotalAmountPaid">0.000</td>
                                     <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.000</td>
                                 </tr>
@@ -132,7 +132,12 @@
                             <td style="padding-left:20px;">Check</td>
                             <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
                             <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
-                            <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
+                            <td>
+                                <select asp-for="BankId" asp-items="@Model.BankAccounts" 
+                                        class="form-select js-select2">
+                                    <option></option>
+                                </select>
+                            </td>
                             <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
                             <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
                         </tr>
@@ -353,7 +358,7 @@
                                                                     <td class="text-end" id='amount_${siNo}'>0.000</td>
                                                                     <td class="text-end" id='vatAmount_${siNo}'>0.000</td>
                                                                     <td class="text-end" id='ewtAmount_${siNo}'>0.000</td>
-                                                                    <td class="text-end" id='siAmountNetOfEWT_${siNo}'>0.000</td>
+                                                                    <td class="text-end" id='siAmountNetOfEWT_${siNo}' style="padding-left:20px;">0.000</td>
                                                                     <td class="text-end" id='amountPaid_${siNo}'>0.000</td>
                                                                     <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.000</td>
                                                                 </tr>`;

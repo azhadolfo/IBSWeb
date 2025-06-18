@@ -66,8 +66,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly TransactionDate { get; set; }
 
-        public long SeriesNumber { get; set; }
-
         [Display(Name = "Reference No")]
         [Required]
         [Column(TypeName = "varchar(50)")]
@@ -87,11 +85,16 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "varchar(50)")]
         public string? CheckNo { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
-        public string? CheckBank { get; set; }
+        public int? BankId { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string? CheckBranch { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? BankAccounts { get; set; }
+
+        [ForeignKey(nameof(BankId))]
+        public FilprideBankAccount? BankAccount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]

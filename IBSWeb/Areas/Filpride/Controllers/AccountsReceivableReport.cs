@@ -2566,7 +2566,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckBank);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
 
@@ -2691,7 +2691,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[row, 5].Value = cr.SalesInvoice?.SalesInvoiceNo ?? "";
                         worksheet.Cells[row, 6].Value = cr.SalesInvoice?.DueDate ?? default;
                         worksheet.Cells[row, 7].Value = cr.CheckDate;
-                        worksheet.Cells[row, 8].Value = cr.CheckBank;
+                        worksheet.Cells[row, 8].Value = $"{cr.BankAccount?.Bank} {cr.BankAccount?.AccountNo}";
                         worksheet.Cells[row, 9].Value = cr.CheckNo;
                         worksheet.Cells[row, 10].Value = currentAmount;
 
