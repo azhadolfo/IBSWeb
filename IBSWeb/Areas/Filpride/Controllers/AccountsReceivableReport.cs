@@ -744,8 +744,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         grandSumOfTotalFreightAmount += totalFreightAmount;
                     }
 
-                    currentRow += 2;
-
                     // Grand Total row
                     worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
 
