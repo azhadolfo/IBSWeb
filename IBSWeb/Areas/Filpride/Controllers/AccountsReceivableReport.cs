@@ -779,8 +779,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
                     worksheet.Cells[currentRow, 1].Value = currentUser.ToUpper();
-                    worksheet.Cells[currentRow, 4].Value = "JOEYLITO M. CAILAN";
-                    worksheet.Cells[currentRow, 8].Value = "IVY PAGKATIPUNAN";
 
                     currentRow += 1;
 
