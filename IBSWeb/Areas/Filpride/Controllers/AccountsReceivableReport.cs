@@ -694,9 +694,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int currentRow = 10;
                     string headerColumn = viewModel.ReportType == "Delivered" ? "S9" : "Q9";
                     int grandTotalColumn = viewModel.ReportType == "Delivered" ? 19 : 17;
-
-                    decimal grandSumOfFreight = 0;
-                    decimal grandSumOfECC = 0;
                     decimal grandSumOfTotalFreightAmount = 0;
                     decimal grandTotalQuantity = 0;
 
@@ -744,8 +741,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         grandTotalQuantity += quantity;
-                        grandSumOfFreight += freightCharge;
-                        grandSumOfECC += ecc;
                         grandSumOfTotalFreightAmount += totalFreightAmount;
                     }
 
@@ -754,8 +749,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Grand Total row
                     worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
                     worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                    worksheet.Cells[currentRow, 13].Value = grandSumOfFreight;
-                    worksheet.Cells[currentRow, 14].Value = grandSumOfECC;
                     worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
 
                     // Adding borders and bold styling to the total row
