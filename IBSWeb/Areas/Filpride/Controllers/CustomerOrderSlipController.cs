@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -7,6 +8,7 @@ using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
+using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -38,17 +40,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<CustomerOrderSlipController> _logger;
 
+        private readonly ICloudStorageService _cloudStorageService;
+
         public CustomerOrderSlipController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
             IHubContext<NotificationHub> hubContext,
-            ILogger<CustomerOrderSlipController> logger)
+            ILogger<CustomerOrderSlipController> logger,
+            ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
             _hubContext = hubContext;
             _logger = logger;
+            _cloudStorageService = cloudStorageService;
         }
 
         private async Task<string?> GetCompanyClaimAsync()
@@ -277,6 +283,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                    if (customer == null)
+                    {
+                        return BadRequest();
+                    }
+
                     FilprideCustomerOrderSlip model = new()
                     {
                         CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
@@ -299,7 +313,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Terms = viewModel.Terms,
                         Branch = viewModel.SelectedBranch,
                         CustomerType = viewModel.CustomerType!,
+                        OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
                     };
+
+                    // Upload files if there is existing
+                    if (viewModel.UploadedFiles != null)
+                    {
+                        var uploadUrls = new List<string>();
+
+                        foreach (var file in viewModel.UploadedFiles)
+                        {
+                            string fileName = GenerateFileNameToSave(file.FileName)!;
+                            await _cloudStorageService.UploadFileAsync(file, fileName);
+                            uploadUrls.Add(fileName);
+                        }
+
+                        model.UploadedFiles = uploadUrls.ToArray();
+                    }
 
                     if (model.Branch != null)
                     {
@@ -317,6 +347,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.CommissioneeId = viewModel.CommissioneeId;
                         model.CommissionRate = viewModel.CommissionRate;
                     }
+
 
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
 
@@ -407,6 +438,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     StationCode = getPurchaseOrder?.StationCode,
                 };
 
+                // If there is uploaded, get signed URL
+                if (exisitingRecord.UploadedFiles != null)
+                {
+                    var fileInfos = new List<COSFileInfo>();
+
+                    foreach (var file in exisitingRecord.UploadedFiles)
+                    {
+                        var fileInfo = new COSFileInfo();
+                        fileInfo.FileName = file;
+                        fileInfo.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file);
+                        fileInfos.Add(fileInfo);
+                    }
+
+                    viewModel.FileInfos = fileInfos;
+                }
+
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -441,6 +488,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord == null)
                     {
                         return NotFound();
+                    }
+
+                    // If there is new upload...
+                    if (viewModel.UploadedFiles != null)
+                    {
+                        // Delete old files
+                        if (existingRecord.UploadedFiles != null)
+                        {
+                            foreach (var oldFiles in existingRecord.UploadedFiles)
+                            {
+                                await _cloudStorageService.DeleteFileAsync(oldFiles);
+                            }
+                        }
+
+                        // And upload new files
+                        var uploadUrls = new List<string>();
+
+                        foreach (var file in viewModel.UploadedFiles)
+                        {
+                            var fileName = GenerateFileNameToSave(file.FileName)!;
+                            await _cloudStorageService.UploadFileAsync(file, fileName);
+                            uploadUrls.Add(fileName);
+                        }
+
+                        // Replace the old array with new array
+                        existingRecord.UploadedFiles = uploadUrls.ToArray();
                     }
 
                     viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -594,6 +667,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Create the view model with basic information
                 var model = CreateBaseViewModel(customerOrderSlip);
+
+                // Get signed url of uploads
+                if (customerOrderSlip.UploadedFiles != null)
+                {
+                    var listOfSignedUrls = new List<(string FileName, string SignedUrl)>();
+
+                    foreach (var fileUrl in customerOrderSlip.UploadedFiles)
+                    {
+                        listOfSignedUrls.Add((System.IO.Path.GetFileName(fileUrl), await _cloudStorageService.GetSignedUrlAsync(fileUrl)));
+                    }
+
+                    model.UploadedFiles = listOfSignedUrls;
+                }
 
                 // Calculate product costs based on appointed suppliers
                 await CalculateProductCosts(customerOrderSlip.CustomerOrderSlipId, model, cancellationToken);
@@ -1696,6 +1782,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
+        }
+
+        private string? GenerateFileNameToSave(string incomingFileName)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
+            var extension = Path.GetExtension(incomingFileName);
+            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace IBS.Models.Filpride.ViewModels
 {
@@ -73,5 +74,15 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PurchaseOrder { get; set; }
 
         public string? StationCode { get; set; }
+
+        public List<IFormFile>? UploadedFiles { get; set; }
+
+        public List<COSFileInfo>? FileInfos { get; set; }
+    }
+
+    public class COSFileInfo
+    {
+        public string FileName { get; set; }
+        public string SignedUrl { get; set; }
     }
 }

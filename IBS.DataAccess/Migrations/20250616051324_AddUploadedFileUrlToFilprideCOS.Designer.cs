@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250616051324_AddUploadedFileUrlToFilprideCOS")]
+    partial class AddUploadedFileUrlToFilprideCOS
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2792,80 +2795,6 @@ namespace IBS.DataAccess.Migrations
                     b.ToTable("filpride_offsettings", (string)null);
                 });
 
-            modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseLockedRecordsQueue", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateOnly>("LockedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("locked_date");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("price");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<int>("ReceivingReportId")
-                        .HasColumnType("integer")
-                        .HasColumnName("receiving_report_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_filpride_purchase_locked_records_queues");
-
-                    b.HasIndex("LockedDate")
-                        .HasDatabaseName("ix_filpride_purchase_locked_records_queues_locked_date");
-
-                    b.HasIndex("ReceivingReportId")
-                        .HasDatabaseName("ix_filpride_purchase_locked_records_queues_receiving_report_id");
-
-                    b.ToTable("filpride_purchase_locked_records_queues", (string)null);
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideSalesLockedRecordsQueue", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DeliveryReceiptId")
-                        .HasColumnType("integer")
-                        .HasColumnName("delivery_receipt_id");
-
-                    b.Property<DateOnly>("LockedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("locked_date");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("price");
-
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.HasKey("Id")
-                        .HasName("pk_filpride_sales_locked_records_queues");
-
-                    b.HasIndex("DeliveryReceiptId")
-                        .HasDatabaseName("ix_filpride_sales_locked_records_queues_delivery_receipt_id");
-
-                    b.HasIndex("LockedDate")
-                        .HasDatabaseName("ix_filpride_sales_locked_records_queues_locked_date");
-
-                    b.ToTable("filpride_sales_locked_records_queues", (string)null);
-                });
-
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>
                 {
                     b.Property<int>("AuthorityToLoadId")
@@ -3234,9 +3163,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("total_amount");
 
-                    b.Property<string[]>("UploadedFiles")
+                    b.Property<string[]>("UploadedFilesUrl")
                         .HasColumnType("varchar[]")
-                        .HasColumnName("uploaded_files");
+                        .HasColumnName("uploaded_files_url");
 
                     b.HasKey("CustomerOrderSlipId")
                         .HasName("pk_filpride_customer_order_slips");
@@ -3774,10 +3703,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_mobility");
 
-                    b.Property<bool>("RequiresPriceAdjustment")
-                        .HasColumnType("boolean")
-                        .HasColumnName("requires_price_adjustment");
-
                     b.Property<decimal?>("RetentionRate")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("retention_rate");
@@ -4181,10 +4106,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("ReasonOfExemption")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("reason_of_exemption");
-
-                    b.Property<bool>("RequiresPriceAdjustment")
-                        .HasColumnType("boolean")
-                        .HasColumnName("requires_price_adjustment");
 
                     b.Property<string>("SupplierAddress")
                         .IsRequired()
@@ -11110,30 +11031,6 @@ namespace IBS.DataAccess.Migrations
                         .HasConstraintName("fk_filpride_freights_filpride_pick_up_points_pick_up_point_id");
 
                     b.Navigation("PickUpPoint");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilpridePurchaseLockedRecordsQueue", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideReceivingReport", "ReceivingReport")
-                        .WithMany()
-                        .HasForeignKey("ReceivingReportId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_purchase_locked_records_queues_filpride_receiving_");
-
-                    b.Navigation("ReceivingReport");
-                });
-
-            modelBuilder.Entity("IBS.Models.Filpride.FilprideSalesLockedRecordsQueue", b =>
-                {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", "DeliveryReceipt")
-                        .WithMany()
-                        .HasForeignKey("DeliveryReceiptId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_sales_locked_records_queues_filpride_delivery_rece");
-
-                    b.Navigation("DeliveryReceipt");
                 });
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", b =>

@@ -45,7 +45,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         #endregion
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

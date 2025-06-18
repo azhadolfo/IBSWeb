@@ -39,5 +39,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string Status { get; set; }
 
         public string PriceReference { get; set; }
+
+        public List<(string FileName, string SignedUrl)>? UploadedFiles { get; set; }
     }
 }

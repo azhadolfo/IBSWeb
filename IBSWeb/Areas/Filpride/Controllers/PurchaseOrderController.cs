@@ -248,7 +248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
-                    model.UnTriggeredQuantity = model.Quantity;
+                    model.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : model.Quantity;
                     model.SupplierAddress = supplier.SupplierAddress;
                     model.SupplierTin = supplier.SupplierTin;
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -336,10 +336,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
-                    var suppliers = await _dbContext.FilprideSuppliers
+                    var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
-                    if (suppliers == null)
+                    if (supplier == null)
                     {
                         return NotFound();
                     }
@@ -351,7 +351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.SupplierId = model.SupplierId;
                     existingModel.ProductId = model.ProductId;
                     existingModel.Quantity = model.Quantity;
-                    existingModel.UnTriggeredQuantity = existingModel.Quantity;
+                    existingModel.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : existingModel.Quantity;
                     existingModel.Price = model.Price;
                     existingModel.Amount = model.Quantity * model.Price;
                     existingModel.SupplierSalesOrderNo = model.SupplierSalesOrderNo;
@@ -362,8 +362,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
                     existingModel.PickUpPointId = model.PickUpPointId;
-                    existingModel.SupplierAddress = suppliers.SupplierAddress;
-                    existingModel.SupplierTin = suppliers.SupplierTin;
+                    existingModel.SupplierAddress = supplier.SupplierAddress;
+                    existingModel.SupplierTin = supplier.SupplierTin;
 
                     #region --Audit Trail Recording
 
@@ -886,6 +886,46 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = TempData["error"] });
             }
 
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSupplierSalesOrderNo(int purchaseOrderId, string supplierSalesOrderNo, CancellationToken cancellationToken)
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                if (purchaseOrder == null)
+                {
+                    return Json(new { success = false, message = "Purchase Order not found." });
+                }
+
+                purchaseOrder.SupplierSalesOrderNo = supplierSalesOrderNo;
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update sales order number of purchase order# {purchaseOrder.PurchaseOrderNo}.", "Purchase Order", purchaseOrder.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Json(new { success = true, message = "Supplier Order # updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update sales order number of purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Transfer by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return Json(new { success = false, message = TempData["error"] });
+            }
         }
     }
 }

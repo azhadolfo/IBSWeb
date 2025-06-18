@@ -117,5 +117,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Column(TypeName = "varchar(15)")]
         public string Type { get; set; } = string.Empty;
+
+        [Display(Name = "Requires Price Adjustment")]
+        public bool RequiresPriceAdjustment { get; set; }
     }
 }

@@ -566,7 +566,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var companyClaims = await GetCompanyClaimAsync();
                     var currentUser = _userManager.GetUserName(User);
                     var today = DateTimeHelper.GetCurrentPhilippineTime();
-                    var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                    var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
                     var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
                     ViewData["DateFrom"] = firstDayOfMonth;
@@ -7356,87 +7356,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == BY SUPPLIER ==
 
-                #region == PO & RR ==
-
-                worksheet = package.Workbook.Worksheets.Add("PO & RR");
-
-                worksheet.Cells[1, 1].Value = "Date";
-                worksheet.Cells[1, 2].Value = "Number";
-                worksheet.Cells[1, 3].Value = "Quantity";
-                worksheet.Cells[1, 4].Value = "Supplier";
-                using (var range = worksheet.Cells[1, 1, 1, 4])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                }
-
-                row = 2;
-
-                foreach (var po in apReport)
-                {
-                    worksheet.Cells[row, 1].Value = po.Date.ToString("MM/dd/yyyy");
-                    worksheet.Cells[row, 2].Value = po.PurchaseOrderNo;
-                    worksheet.Cells[row, 3].Value = po.Quantity;
-                    worksheet.Cells[row, 4].Value = po.Supplier!.SupplierName;
-                    worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                    if (po.ReceivingReports!.Count == 0)
-                    {
-                        worksheet.Cells[row, 5].Value = po.Quantity;
-                        worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        worksheet.Cells[row, 5].Style.Font.Bold = true;
-                    }
-
-                    row++;
-
-                    if (po.ReceivingReports!.Count != 0)
-                    {
-                        decimal rrSubtotal = 0m;
-
-                        foreach (var rr in po.ReceivingReports)
-                        {
-                            worksheet.Cells[row, 1].Value = rr.Date.ToString("MM/dd/yyyy");
-                            worksheet.Cells[row, 2].Value = rr.ReceivingReportNo;
-                            worksheet.Cells[row, 4].Value = rr.QuantityReceived;
-                            worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                            rrSubtotal += rr.QuantityReceived;
-
-                            row++;
-                        }
-
-                        worksheet.Cells[row, 2].Value = "Subtotal:";
-                        worksheet.Cells[row, 3].Value = po.Quantity;
-                        worksheet.Cells[row, 3].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        worksheet.Cells[row, 4].Value = rrSubtotal;
-                        worksheet.Cells[row, 4].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                        if (rrSubtotal != 0)
-                        {
-                            worksheet.Cells[row, 5].Value = po.Quantity - rrSubtotal;
-                            worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        }
-
-                        using (var range = worksheet.Cells[row, 1, row, 5])
-                        {
-                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                            range.Style.Font.Bold = true;
-                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,204,172));
-                        }
-                        row++;
-                    }
-
-                    row++;
-                }
-
-                worksheet.Columns.AutoFit();
-
-                #endregion == PO & RR ==
-
                 var excelBytes = package.GetAsByteArray();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -8059,7 +7978,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var currentUser = _userManager.GetUserName(User)!;
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
-                var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
