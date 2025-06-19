@@ -103,6 +103,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Terms = viewModel.Terms;
             existingRecord.CustomerType = viewModel.CustomerType!;
             existingRecord.OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0;
+            existingRecord.Freight = viewModel.Freight;
 
             if (existingRecord.Branch != null)
             {

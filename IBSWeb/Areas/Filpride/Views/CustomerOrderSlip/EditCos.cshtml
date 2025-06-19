@@ -171,7 +171,7 @@
                     </div>
                 </fieldset>
                 <div class="row py-2">
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
                         <input asp-for="Quantity" 
                                class="form-control border-0 shadow" 
                                placeholder="" 
@@ -181,12 +181,17 @@
                         <label asp-for="Quantity" class="ms-2">Quantity<span class="required">*</span></label>
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
                         <input asp-for="DeliveredPrice" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                         <label asp-for="DeliveredPrice" class="ms-2">Delivered Price<span class="required">*</span></label>
                         <span asp-validation-for="DeliveredPrice" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
+                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" />
+                        <label asp-for="Freight" class="ms-2">Freight<span class="required">*</span></label>
+                        <span asp-validation-for="Freight" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3">
                         <input asp-for="Vat" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="Vat" class="ms-2">VAT</label>
                         <span asp-validation-for="Vat" class="text-danger"></span>

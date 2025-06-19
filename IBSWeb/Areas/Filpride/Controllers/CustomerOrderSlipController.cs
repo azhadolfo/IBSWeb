@@ -314,6 +314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Branch = viewModel.SelectedBranch,
                         CustomerType = viewModel.CustomerType!,
                         OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
+                        Freight = viewModel.Freight
                     };
 
                     // Upload files if there is existing
@@ -436,6 +437,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SelectedBranch = exisitingRecord.Branch,
                     CustomerType = exisitingRecord.CustomerType,
                     StationCode = getPurchaseOrder?.StationCode,
+                    Freight = exisitingRecord.Freight ?? 0,
                 };
 
                 // If there is uploaded, get signed URL
@@ -593,6 +595,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord.Terms != viewModel.Terms)
                     {
                         changes.Add("Terms was updated.");
+                    }
+
+                    if (existingRecord.Freight != viewModel.Freight)
+                    {
+                        changes.Add("Freight was updated.");
                     }
 
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
