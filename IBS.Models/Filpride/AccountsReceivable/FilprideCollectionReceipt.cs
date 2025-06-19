@@ -80,7 +80,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal CashAmount { get; set; }
 
         //Check
-        public string? CheckDate { get; set; }
+        [Column(TypeName = "date")]
+        public DateOnly? CheckDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string? CheckNo { get; set; }
