@@ -2,7 +2,7 @@ namespace IBS.DTOs
 {
     public class ExportCsvDto
     {
-        public class FilprideCollectionReceiptDto
+        public class FilprideCollectionReceiptCsvForDcrDto
         {
             public string DATE { get; set; }
             public string PAYEE { get; set; }
@@ -16,7 +16,7 @@ namespace IBS.DTOs
             public string DATEDEPOSITED { get; set; }
         }
 
-        public class FilprideCheckVoucherDto
+        public class FilprideCheckVoucherHeaderCsvForDcrDto
         {
             public string VOUCHER_NO { get; set; }
             public string VCH_DATE { get; set; }

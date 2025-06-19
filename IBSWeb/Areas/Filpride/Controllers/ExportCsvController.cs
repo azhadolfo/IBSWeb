@@ -33,15 +33,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
-        public async Task<IActionResult> ExportFilprideCollectionToCsv(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ExportFilprideCollectionReceiptCsvForDcr(CancellationToken cancellationToken = default)
         {
             try
             {
-                // Get all collections
-                var collections = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
+                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
 
-                // Map to DTO
-                var collectionDtos = collections.Select(c => new ExportCsvDto.FilprideCollectionReceiptDto
+                var collectionReceiptDtosList = collectionReceipts.Select(c => new ExportCsvDto.FilprideCollectionReceiptCsvForDcrDto
                 {
                     DATE = c.TransactionDate.ToString("MM/dd/yyyy"),
                     PAYEE = c.Customer!.CustomerName,
@@ -55,23 +53,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DATEDEPOSITED = c.TransactionDate.ToString("MM/dd/yyyy")
                 }).ToList();
 
-                // Configure CsvHelper
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HasHeaderRecord = true,
                 };
 
-                // Create CSV in memory
                 using var memoryStream = new MemoryStream();
                 using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
                 using var csv = new CsvWriter(writer, config);
-
-                // Write the DTO collection to CSV
-                csv.WriteRecords(collectionDtos);
-                await writer.FlushAsync(); // Ensure all data is written
-                memoryStream.Position = 0; // Reset stream position
-
-                // Return the CSV file for download
+                csv.WriteRecords(collectionReceiptDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
                 return File(memoryStream.ToArray(), "text/csv", "COLLECTION.csv");
             }
             catch (Exception ex)
@@ -81,15 +73,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> ExportFilprideDisbursementToCsv(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ExportFilprideCheckVoucherHeaderToCsvForDcr(CancellationToken cancellationToken = default)
         {
             try
             {
-                // Get all collections
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher.GetAllAsync(null, cancellationToken);
 
-                // Map to DTO
-                var checkVoucherDtos = checkVoucherHeaders.Select(cv => new ExportCsvDto.FilprideCheckVoucherDto
+                var checkVoucherHeaderDtosList = checkVoucherHeaders.Select(cv => new ExportCsvDto.FilprideCheckVoucherHeaderCsvForDcrDto
                 {
                     VOUCHER_NO = cv.CheckVoucherHeaderNo ?? string.Empty,
                     VCH_DATE = cv.Date.ToString("MM/dd/yyyy"),
@@ -104,23 +94,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ISCANCELLED = ((cv.CanceledBy != null || (cv.Status == nameof(Status.Voided)))),
                 }).ToList();
 
-                // Configure CsvHelper
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HasHeaderRecord = true,
                 };
 
-                // Create CSV in memory
                 using var memoryStream = new MemoryStream();
                 using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
                 using var csv = new CsvWriter(writer, config);
-
-                // Write the DTO collection to CSV
-                csv.WriteRecords(checkVoucherDtos);
-                await writer.FlushAsync(); // Ensure all data is written
-                memoryStream.Position = 0; // Reset stream position
-
-                // Return the CSV file for download
+                csv.WriteRecords(checkVoucherHeaderDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
                 return File(memoryStream.ToArray(), "text/csv", "DISBURSEMENT.csv");
             }
             catch (Exception ex)
