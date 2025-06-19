@@ -30,5 +30,18 @@ namespace IBS.DTOs
             public string DCRDATE { get; set; }
             public bool ISCANCELLED { get; set; }
         }
+
+        public class FilprideCheckVoucherDetailsCsvForDcrDto
+        {
+            public string ACCTCD { get; set; }
+            public string ACCTNAME { get; set; }
+            public string CVNO { get; set; }
+            public decimal DEBIT { get; set; }
+            public decimal CREDIT { get; set; }
+            public string CUSTOMER_NAME { get; set; }
+            public string BANK { get; set; }
+            public string EMPLOYEE_NAME { get; set; }
+            public string COMPANY_NAME { get; set; }
+        }
     }
 }

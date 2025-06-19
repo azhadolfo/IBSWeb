@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Models.Filpride.MasterFile;
+using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.AccountsPayable
@@ -56,6 +57,18 @@ namespace IBS.Models.Filpride.AccountsPayable
         public int? CustomerId { get; set; }
 
         public int? EmployeeId { get; set; }
+
+        [ForeignKey(nameof(BankId))]
+        public FilprideBankAccount? BankAccount { get; set; }
+
+        [ForeignKey(nameof(CompanyId))]
+        public Company? Company { get; set; }
+
+        [ForeignKey(nameof(CustomerId))]
+        public FilprideCustomer? Customer { get; set; }
+
+        [ForeignKey(nameof(EmployeeId))]
+        public FilprideEmployee? Employee { get; set; }
 
     }
 }
