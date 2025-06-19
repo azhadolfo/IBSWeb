@@ -11,6 +11,7 @@ using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
 using IBS.DTOs;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -71,7 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0; // Reset stream position
 
                 // Return the CSV file for download
-                return File(memoryStream.ToArray(), "text/csv", "FilprideCollections.csv");
+                return File(memoryStream.ToArray(), "text/csv", $"FilprideCollections_{DateTimeHelper.GetCurrentPhilippineTime().AddHours(8):yyyyddMMHHmmss}.csv");
             }
             catch (Exception ex)
             {
