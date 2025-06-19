@@ -113,5 +113,67 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return RedirectToAction("Index");
             }
         }
+
+        public async Task<IActionResult> ExportFilprideCheckVoucherDetailsToCsvForDcr(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var cvHeaders = await _unitOfWork.FilprideCheckVoucher.GetAllAsync(null, cancellationToken);
+
+                foreach (var cvHeader in cvHeaders)
+                {
+                    cvHeader.Details = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvd.CheckVoucherHeaderId == cvHeader.CheckVoucherHeaderId)
+                        .Include(cvd => cvd.Employee)
+                        .Include(cvd => cvd.Company)
+                        .Include(cvd => cvd.BankAccount)
+                        .Include(cvd => cvd.Customer)
+                        .ToListAsync(cancellationToken);
+                }
+
+                var checkVoucherHeaderDtosList = new List<ExportCsvDto.FilprideCheckVoucherDetailsCsvForDcrDto>();
+
+                foreach (var cvHeader in cvHeaders)
+                {
+                    if (cvHeader.Details != null)
+                    {
+                        var tempCvd = cvHeader.Details.Select(cvd => new ExportCsvDto.FilprideCheckVoucherDetailsCsvForDcrDto
+                        {
+                            // fetch coll in general ledger
+                            // reference == crno && company == company
+                            ACCTCD = cvd.AccountNo,
+                            ACCTNAME = cvd.AccountName,
+                            CVNO = cvd.TransactionNo, // CRNO in collection
+                            DEBIT = cvd.Debit,
+                            CREDIT = cvd.Credit,
+                            CUSTOMER_NAME = cvd.Customer?.CustomerName ?? string.Empty,
+                            BANK = cvd.BankAccount?.AccountNo ?? string.Empty, // remove in coll
+                            EMPLOYEE_NAME = $"{cvd.Employee?.FirstName ?? string.Empty} {cvd.Employee?.LastName ?? string.Empty}", // remove in coll
+                            COMPANY_NAME = cvd.Company?.CompanyName ?? string.Empty // remove in coll
+                        }).ToList();
+
+                        checkVoucherHeaderDtosList.AddRange(tempCvd);
+                    }
+                }
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+                csv.WriteRecords(checkVoucherHeaderDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+                return File(memoryStream.ToArray(), "text/csv", "CV_DETAILS.csv");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
     }
 }
