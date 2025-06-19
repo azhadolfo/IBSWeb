@@ -72,7 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0; // Reset stream position
 
                 // Return the CSV file for download
-                return File(memoryStream.ToArray(), "text/csv", $"FilprideCollections_{DateTimeHelper.GetCurrentPhilippineTime().AddHours(8):yyyyddMMHHmmss}.csv");
+                return File(memoryStream.ToArray(), "text/csv", "COLLECTION.csv");
             }
             catch (Exception ex)
             {
@@ -121,7 +121,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0; // Reset stream position
 
                 // Return the CSV file for download
-                return File(memoryStream.ToArray(), "text/csv", $"FilprideDisbursements_{DateTimeHelper.GetCurrentPhilippineTime().AddHours(8):yyyyddMMHHmmss}.csv");
+                return File(memoryStream.ToArray(), "text/csv", "DISBURSEMENT.csv");
             }
             catch (Exception ex)
             {
