@@ -79,7 +79,55 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction("Index");
             }
+        }
 
+        public async Task<IActionResult> ExportFilprideDisbursementToCsv(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // Get all collections
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher.GetAllAsync(null, cancellationToken);
+
+                // Map to DTO
+                var checkVoucherDtos = checkVoucherHeaders.Select(cv => new ExportCsvDto.FilprideCheckVoucherDto
+                {
+                    VOUCHER_NO = cv.CheckVoucherHeaderNo ?? string.Empty,
+                    VCH_DATE = cv.Date.ToString("MM/dd/yyyy"),
+                    PAYEE = cv.Supplier!.SupplierName,
+                    AMOUNT = cv.Total,
+                    PARTICULARS = cv.Particulars ?? string.Empty,
+                    CHECKNO = cv.CheckNo ?? string.Empty,
+                    CHKDATE = cv.CheckDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    ACCOUNTNO = cv.BankAccount?.AccountNo ?? string.Empty,
+                    CASHPODATE = cv.DcpDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    DCRDATE = cv.DcrDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    ISCANCELLED = ((cv.CanceledBy != null || (cv.Status == nameof(Status.Voided)))),
+                }).ToList();
+
+                // Configure CsvHelper
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                // Create CSV in memory
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+
+                // Write the DTO collection to CSV
+                csv.WriteRecords(checkVoucherDtos);
+                await writer.FlushAsync(); // Ensure all data is written
+                memoryStream.Position = 0; // Reset stream position
+
+                // Return the CSV file for download
+                return File(memoryStream.ToArray(), "text/csv", $"FilprideDisbursements_{DateTimeHelper.GetCurrentPhilippineTime().AddHours(8):yyyyddMMHHmmss}.csv");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
         }
     }
 }
