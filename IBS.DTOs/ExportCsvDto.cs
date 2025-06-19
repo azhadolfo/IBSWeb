@@ -15,5 +15,20 @@ namespace IBS.DTOs
             public bool ISORCANCEL { get; set; }
             public string DATEDEPOSITED { get; set; }
         }
+
+        public class FilprideCheckVoucherDto
+        {
+            public string VOUCHER_NO { get; set; }
+            public string VCH_DATE { get; set; }
+            public string PAYEE { get; set; }
+            public decimal AMOUNT { get; set; }
+            public string PARTICULARS { get; set; }
+            public string CHECKNO { get; set; }
+            public string CHKDATE { get; set; }
+            public string ACCOUNTNO { get; set; }
+            public string CASHPODATE { get; set; }
+            public string DCRDATE { get; set; }
+            public bool ISCANCELLED { get; set; }
+        }
     }
 }

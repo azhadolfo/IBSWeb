@@ -115,6 +115,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public override async Task<IEnumerable<FilprideCheckVoucherHeader>> GetAllAsync(Expression<Func<FilprideCheckVoucherHeader, bool>>? filter, CancellationToken cancellationToken = default)
         {
             IQueryable<FilprideCheckVoucherHeader> query = dbSet
+                .Include(cv => cv.BankAccount)
                 .Include(x => x.Employee)
                 .Include(c => c.Supplier);
 
