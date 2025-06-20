@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> ExportFilprideCollectionReceiptCsvToGdrive(CancellationToken cancellationToken = default)
+        public async Task<IActionResult> ExportFilprideCollectionReceiptCsvToGDrive(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -155,6 +155,53 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await writer.FlushAsync();
                 memoryStream.Position = 0;
                 return File(memoryStream.ToArray(), "text/csv", "DISBURSEMENT.csv");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        public async Task<IActionResult> ExportFilprideCheckVoucherHeaderToGDrive(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher.GetAllAsync(null, cancellationToken);
+
+                var checkVoucherHeaderDtosList = checkVoucherHeaders.Select(cv => new ExportCsvDto.FilprideCheckVoucherHeaderCsvForDcrDto
+                {
+                    VOUCHER_NO = cv.CheckVoucherHeaderNo ?? string.Empty,
+                    VCH_DATE = cv.Date.ToString("MM/dd/yyyy"),
+                    PAYEE = cv.Supplier!.SupplierName,
+                    AMOUNT = cv.Total,
+                    PARTICULARS = cv.Particulars ?? string.Empty,
+                    CHECKNO = cv.CheckNo ?? string.Empty,
+                    CHKDATE = cv.CheckDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    ACCOUNTNO = cv.BankAccount?.AccountNo ?? string.Empty,
+                    CASHPODATE = cv.DcpDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    DCRDATE = cv.DcrDate?.ToString("MM/dd/yyyy") ?? string.Empty,
+                    ISCANCELLED = ((cv.CanceledBy != null || (cv.Status == nameof(Status.Voided)))),
+                }).ToList();
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+                csv.WriteRecords(checkVoucherHeaderDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+
+                // Uploading
+                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
+                string fileName = "DISBURSEMENT.csv";
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
