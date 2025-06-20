@@ -43,5 +43,15 @@ namespace IBS.DTOs
             public string EMPLOYEE_NAME { get; set; }
             public string COMPANY_NAME { get; set; }
         }
+
+        public class FilprideCollectionDetailsCsvForDcrDto
+        {
+            public string ACCTCD { get; set; }
+            public string ACCTNAME { get; set; }
+            public string CRNO { get; set; }
+            public decimal DEBIT { get; set; }
+            public decimal CREDIT { get; set; }
+            public string CUSTOMER_NAME { get; set; }
+        }
     }
 }
