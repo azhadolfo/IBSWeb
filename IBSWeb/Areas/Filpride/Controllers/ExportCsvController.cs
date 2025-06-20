@@ -11,6 +11,7 @@ using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
 using IBS.DTOs;
+using IBS.Services;
 using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -21,11 +22,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IGoogleDriveService _googleDriveService;
 
-        public ExportCsvController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork)
+        public ExportCsvController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, IGoogleDriveService googleDriveService)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
+            _googleDriveService = googleDriveService;
         }
 
         public IActionResult Index()
@@ -233,6 +236,79 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await writer.FlushAsync();
                 memoryStream.Position = 0;
                 return File(memoryStream.ToArray(), "text/csv", "CR_DETAILS.csv");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        public async Task<IActionResult> ExportFilprideCollectionDetailsToGDrive(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var collectionHeaders = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
+
+                foreach (var collectionHeader in collectionHeaders)
+                {
+                    var collectionDetails = await _dbContext.FilprideGeneralLedgerBooks
+                        .Where(gl => gl.Reference == collectionHeader.CollectionReceiptNo)
+                        .ToListAsync(cancellationToken);
+
+                    if (collectionDetails.Count != 0)
+                    {
+                        collectionHeader.Details = collectionDetails;
+
+                        foreach (var gl in collectionHeader.Details)
+                        {
+                            if (gl.CustomerId.HasValue)
+                            {
+                                gl.Customer = await _unitOfWork.FilprideCustomer
+                                    .GetAsync(c => c.CustomerId == gl.CustomerId, cancellationToken);
+;                            }
+                        }
+                    }
+                }
+
+                var collectionDetailsDtosList = new List<ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto>();
+
+                foreach (var collectionHeader in collectionHeaders)
+                {
+                    if (collectionHeader.Details != null)
+                    {
+                        var tempGl = collectionHeader.Details.Select(gl => new ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto
+                        {
+                            ACCTCD = gl?.AccountNo ?? string.Empty,
+                            ACCTNAME = gl?.AccountTitle ?? string.Empty,
+                            CRNO = gl?.Reference ?? string.Empty,
+                            DEBIT = gl?.Debit ?? 0,
+                            CREDIT = gl?.Credit ?? 0,
+                            CUSTOMER_NAME = gl?.Customer?.CustomerName ?? string.Empty
+                        }).ToList();
+
+                        collectionDetailsDtosList.AddRange(tempGl);
+                    }
+                }
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+                csv.WriteRecords(collectionDetailsDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+
+                // Uploading
+                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
+                string fileName = "CR_DETAILS.csv";
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {

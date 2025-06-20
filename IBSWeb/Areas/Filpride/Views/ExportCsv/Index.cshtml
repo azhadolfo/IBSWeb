@@ -8,10 +8,10 @@
     </div>
 
     <div class="card shadow border-0 mt-3 p-3">
-        <div class="row d-flex justify-content-start mb-3">
+        <div class="row d-flex justify-content-start mb-1">
             <h5> Select what to import: </h5>
         </div>
-        <div class="row mt-1 d-flex justify-content-start">
+        <div class="row mt-2 d-flex justify-content-start">
             <div class="col-3 d-flex justify-content-end">
                 <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCollectionReceiptCsvForDcr">
                     <i class="bi bi-file-text"></i> Collection.Csv
@@ -30,6 +30,13 @@
             <div class="col-3 d-flex justify-content-end">
                 <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCheckVoucherDetailsToCsvForDcr">
                     <i class="bi bi-file-text"></i> CV_Details.Csv
+                </a>
+            </div>
+        </div>
+        <div class="row mt-2 d-flex justify-content-start">
+            <div class="col-3 d-flex justify-content-end">
+                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCollectionDetailsToGDrive">
+                    <i class="bi bi-file-text"></i> CV_Details.Csv (upload)
                 </a>
             </div>
         </div>
