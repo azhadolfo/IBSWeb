@@ -76,6 +76,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        public async Task<IActionResult> ExportFilprideCollectionReceiptCsvToGdrive(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
+
+                var collectionReceiptDtosList = collectionReceipts.Select(c => new ExportCsvDto.FilprideCollectionReceiptCsvForDcrDto
+                {
+                    DATE = c.TransactionDate.ToString("MM/dd/yyyy"),
+                    PAYEE = c.Customer!.CustomerName,
+                    CVNO = c.CollectionReceiptNo ?? string.Empty,
+                    CHECKNO = c.CheckNo ?? string.Empty,
+                    PARTICULARS = c.Remarks ?? string.Empty,
+                    AMOUNT = (c.CashAmount + c.CheckAmount + c.EWT + c.WVAT),
+                    ACCOUNTNO = c.BankAccount?.AccountNo ?? string.Empty,
+                    CHECKDATE = c.CheckDate?.ToString("MM/dd/yyy") ?? string.Empty,
+                    ISORCANCEL = ((c.CanceledBy != null || (c.Status == nameof(Status.Voided)))),
+                    DATEDEPOSITED = c.TransactionDate.ToString("MM/dd/yyyy")
+                }).ToList();
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+                csv.WriteRecords(collectionReceiptDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+
+                // Uploading
+                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
+                string fileName = "COLLECTION.csv";
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
         public async Task<IActionResult> ExportFilprideCheckVoucherHeaderToCsvForDcr(CancellationToken cancellationToken = default)
         {
             try
