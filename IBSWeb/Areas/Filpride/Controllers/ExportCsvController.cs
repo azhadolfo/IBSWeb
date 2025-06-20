@@ -139,17 +139,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var tempCvd = cvHeader.Details.Select(cvd => new ExportCsvDto.FilprideCheckVoucherDetailsCsvForDcrDto
                         {
-                            // fetch coll in general ledger
-                            // reference == crno && company == company
                             ACCTCD = cvd.AccountNo,
                             ACCTNAME = cvd.AccountName,
-                            CVNO = cvd.TransactionNo, // CRNO in collection
+                            CVNO = cvd.TransactionNo,
                             DEBIT = cvd.Debit,
                             CREDIT = cvd.Credit,
                             CUSTOMER_NAME = cvd.Customer?.CustomerName ?? string.Empty,
-                            BANK = cvd.BankAccount?.AccountNo ?? string.Empty, // remove in coll
-                            EMPLOYEE_NAME = $"{cvd.Employee?.FirstName ?? string.Empty} {cvd.Employee?.LastName ?? string.Empty}", // remove in coll
-                            COMPANY_NAME = cvd.Company?.CompanyName ?? string.Empty // remove in coll
+                            BANK = cvd.BankAccount?.AccountNo ?? string.Empty,
+                            EMPLOYEE_NAME = $"{cvd.Employee?.FirstName ?? string.Empty} {cvd.Employee?.LastName ?? string.Empty}",
+                            COMPANY_NAME = cvd.Company?.CompanyName ?? string.Empty
                         }).ToList();
 
                         checkVoucherHeaderDtosList.AddRange(tempCvd);
@@ -168,6 +166,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await writer.FlushAsync();
                 memoryStream.Position = 0;
                 return File(memoryStream.ToArray(), "text/csv", "CV_DETAILS.csv");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        public async Task<IActionResult> ExportFilprideCollectionDetailsToCsvForDcr(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var collectionHeaders = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
+
+                foreach (var collectionHeader in collectionHeaders)
+                {
+                    var collectionDetails = await _dbContext.FilprideGeneralLedgerBooks
+                        .Where(gl => gl.Reference == collectionHeader.CollectionReceiptNo)
+                        .ToListAsync(cancellationToken);
+
+                    if (collectionDetails.Count != 0)
+                    {
+                        collectionHeader.Details = collectionDetails;
+
+                        foreach (var gl in collectionHeader.Details)
+                        {
+                            if (gl.CustomerId.HasValue)
+                            {
+                                gl.Customer = await _unitOfWork.FilprideCustomer
+                                    .GetAsync(c => c.CustomerId == gl.CustomerId, cancellationToken);
+;                            }
+                        }
+                    }
+                }
+
+                var collectionDetailsDtosList = new List<ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto>();
+
+                foreach (var collectionHeader in collectionHeaders)
+                {
+                    if (collectionHeader.Details != null)
+                    {
+                        var tempGl = collectionHeader.Details.Select(gl => new ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto
+                        {
+                            ACCTCD = gl?.AccountNo ?? string.Empty,
+                            ACCTNAME = gl?.AccountTitle ?? string.Empty,
+                            CRNO = gl?.Reference ?? string.Empty,
+                            DEBIT = gl?.Debit ?? 0,
+                            CREDIT = gl?.Credit ?? 0,
+                            CUSTOMER_NAME = gl?.Customer?.CustomerName ?? string.Empty
+                        }).ToList();
+
+                        collectionDetailsDtosList.AddRange(tempGl);
+                    }
+                }
+
+                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    HasHeaderRecord = true,
+                };
+
+                using var memoryStream = new MemoryStream();
+                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                using var csv = new CsvWriter(writer, config);
+                csv.WriteRecords(collectionDetailsDtosList);
+                await writer.FlushAsync();
+                memoryStream.Position = 0;
+                return File(memoryStream.ToArray(), "text/csv", "CR_DETAILS.csv");
             }
             catch (Exception ex)
             {

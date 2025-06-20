@@ -69,6 +69,5 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey(nameof(EmployeeId))]
         public FilprideEmployee? Employee { get; set; }
-
     }
 }
