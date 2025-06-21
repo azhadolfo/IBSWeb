@@ -1089,15 +1089,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
-
-                    if (existingCos.Status == nameof(CosStatus.HaulerAppointed))
-                    {
-                        existingCos.Status = nameof(CosStatus.ForAtlBooking);
-                    }
-                    else
-                    {
-                        existingCos.Status = nameof(CosStatus.SupplierAppointed);
-                    }
+                    existingCos.Status = nameof(CosStatus.ForAtlBooking);
 
                     switch (viewModel.DeliveryOption)
                     {

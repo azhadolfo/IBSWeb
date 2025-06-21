@@ -250,42 +250,24 @@
                             if (data) {
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
-                                    if (parseInt(cosId) > 748) {
-                                        $('input[name="Freight"]').parent().show();
+                                    $('input[name="Freight"]').parent().show();
 
-                                        // Set values based on whether it's initial load or not
-                                        if (isInitialLoad && initialHaulerId) {
-                                            $('select[name="HaulerId"]').val(initialHaulerId).change();
-                                            $('input[name="Freight"]').val(initialFreight);
-                                        } else {
-                                            $('select[name="HaulerId"]').val(data.haulerId).change();
-                                            $('input[name="Freight"]').val(data.freight);
-                                        }
+                                    // Set values based on whether it's initial load or not
+                                    if (isInitialLoad && initialHaulerId) {
+                                        $('select[name="HaulerId"]').val(initialHaulerId).change();
+                                        $('input[name="Freight"]').val(initialFreight);
                                     } else {
-                                        if (isInitialLoad && initialHaulerId) {
-                                            $('select[name="HaulerId"]').val(initialHaulerId).change();
-                                            $('input[name="Freight"]').parent().show();
-                                            $('input[name="Freight"]').val(initialFreight);
-                                        } else {
-                                            $('select[name="HaulerId"]').val("").change();
-                                            $('input[name="Freight"]').parent().show();
-                                            $('input[name="Freight"]').val("");
-                                        }
+                                        $('select[name="HaulerId"]').val(data.haulerId).change();
+                                        $('input[name="Freight"]').val(data.freight);
                                     }
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
 
                                     if (isInitialLoad && initialHaulerId) {
-                                        $('input[name="Freight"]').val(initialFreight);
                                         $('select[name="HaulerId"]').val(initialHaulerId).change();
                                     } else {
-                                        $('input[name="Freight"]').val(data.freight);
-                                        if (parseInt(cosId) > 748) {
-                                            $('select[name="HaulerId"]').val(data.haulerId).change();
-                                        } else {
-                                            $('select[name="HaulerId"]').val("").change();
-                                        }
+                                        $('select[name="HaulerId"]').val(data.haulerId).change();
                                     }
                                 } else {
                                     $('input[name="Freight"]').parent().hide();

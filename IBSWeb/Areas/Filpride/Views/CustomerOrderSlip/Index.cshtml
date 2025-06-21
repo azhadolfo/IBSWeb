@@ -262,39 +262,16 @@
                             switch (status) {
                                 case '@CosStatus.Created':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
+                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
                                     break;
-                                case '@CosStatus.SupplierAppointed':
-                                case '@CosStatus.HaulerAppointed':
                                 case '@CosStatus.ForAtlBooking':
-                                    // Check for Supplier Appointment Status
-
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
-
-                                    if (row.pickUpPointId != null ) {
-                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
-                                    } else {
-                                        actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
-                                    }
-
-                                    // Check for Hauler Appointment Status
-                                    if (row.driver != null && row.plateNo != null) {
-                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Hauler</a></li>`;
-                                    } else {
-                                        actions += `<li><a class="dropdown-item" href="@Url.Action("AppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Hauler</a></li>`;
-                                    }
-
-                                    if (status === '@CosStatus.ForAtlBooking') {
-                                        actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
-                                    }
-
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
                                     break;
                                 case '@CosStatus.ForApprovalOfOM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointHauler", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Hauler</a></li>`;
                                     break;
                             }
 
