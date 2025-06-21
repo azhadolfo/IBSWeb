@@ -23,6 +23,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGoogleDriveService _googleDriveService;
+        private string dcrMainId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB";
 
         public ExportCsvController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, IGoogleDriveService googleDriveService)
         {
@@ -69,9 +70,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0;
 
                 // Uploading
-                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
                 string fileName = "COLLECTION.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrMainId, "text/csv");
                 TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
                 return RedirectToAction("Index");
             }
@@ -116,9 +116,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0;
 
                 // Uploading
-                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
                 string fileName = "DISBURSEMENT.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrMainId, "text/csv");
                 TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
                 return RedirectToAction("Index");
             }
@@ -182,9 +181,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0;
 
                 // Uploading
-                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
                 string fileName = "CV_DETAILS.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrMainId, "text/csv");
                 TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
                 return RedirectToAction("Index");
             }
@@ -255,9 +253,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 memoryStream.Position = 0;
 
                 // Uploading
-                string folderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
                 string fileName = "CR_DETAILS.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, folderId, "text/csv");
+                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrMainId, "text/csv");
                 TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
                 return RedirectToAction("Index");
             }
