@@ -57,22 +57,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DATEDEPOSITED = c.TransactionDate.ToString("MM/dd/yyyy")
                 }).ToList();
 
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = true,
-                };
-
-                using var memoryStream = new MemoryStream();
-                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-                using var csv = new CsvWriter(writer, config);
-                csv.WriteRecords(collectionReceiptDtosList);
-                await writer.FlushAsync();
-                memoryStream.Position = 0;
-
-                // Uploading
                 string fileName = "COLLECTION.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"{fileName} uploaded to Google Drive.";
+                await UploadDcrFile(fileName, collectionReceiptDtosList, cancellationToken);
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -103,22 +89,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ISCANCELLED = ((cv.CanceledBy != null || (cv.Status == nameof(Status.Voided)))),
                 }).ToList();
 
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = true,
-                };
-
-                using var memoryStream = new MemoryStream();
-                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-                using var csv = new CsvWriter(writer, config);
-                csv.WriteRecords(checkVoucherHeaderDtosList);
-                await writer.FlushAsync();
-                memoryStream.Position = 0;
-
-                // Uploading
                 string fileName = "DISBURSEMENT.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"{fileName} uploaded to Google Drive.";
+                await UploadDcrFile(fileName, checkVoucherHeaderDtosList, cancellationToken);
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -168,22 +140,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = true,
-                };
-
-                using var memoryStream = new MemoryStream();
-                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-                using var csv = new CsvWriter(writer, config);
-                csv.WriteRecords(checkVoucherHeaderDtosList);
-                await writer.FlushAsync();
-                memoryStream.Position = 0;
-
-                // Uploading
                 string fileName = "CV_DETAILS.csv";
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"{fileName} uploaded to Google Drive.";
+                await UploadDcrFile(fileName, checkVoucherHeaderDtosList, cancellationToken);
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -240,6 +198,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
+                string fileName = "CR_DETAILS.csv";
+                await UploadDcrFile(fileName, collectionDetailsDtosList, cancellationToken);
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+        }
+
+        private async Task UploadDcrFile<T>(string fileName, IEnumerable<T> entities, CancellationToken cancellationToken)
+            where T : class
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(fileName))
+                {
+                    throw new ArgumentException("File name cannot be empty.", nameof(fileName));
+                }
+                if (entities == null)
+                {
+                    throw new ArgumentException("Entities cannot be null.", nameof(entities));
+                }
+
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HasHeaderRecord = true,
@@ -248,20 +231,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var memoryStream = new MemoryStream();
                 using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
                 using var csv = new CsvWriter(writer, config);
-                csv.WriteRecords(collectionDetailsDtosList);
+                csv.WriteRecords(entities);
                 await writer.FlushAsync();
                 memoryStream.Position = 0;
-
-                // Uploading
-                string fileName = "CR_DETAILS.csv";
                 var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
                 TempData["success"] = $"{fileName} uploaded to Google Drive.";
-                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                TempData["error"] = ex.Message;
-                return RedirectToAction("Index");
+                throw new Exception(ex.Message);
             }
         }
     }
