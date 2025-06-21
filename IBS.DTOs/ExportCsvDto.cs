@@ -52,6 +52,7 @@ namespace IBS.DTOs
             public decimal DEBIT { get; set; }
             public decimal CREDIT { get; set; }
             public string CUSTOMER_NAME { get; set; }
+            public string BANK { get; set; }
         }
     }
 }

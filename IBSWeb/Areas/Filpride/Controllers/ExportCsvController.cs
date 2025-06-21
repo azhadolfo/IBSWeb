@@ -13,6 +13,7 @@ using IBS.Utility.Enums;
 using IBS.DTOs;
 using IBS.Services;
 using IBS.Utility.Helpers;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -131,9 +132,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             DEBIT = cvd.Debit,
                             CREDIT = cvd.Credit,
                             CUSTOMER_NAME = cvd.Customer?.CustomerName ?? string.Empty,
-                            BANK = cvd.BankAccount?.AccountNo ?? string.Empty,
-                            EMPLOYEE_NAME = $"{cvd.Employee?.FirstName ?? string.Empty} {cvd.Employee?.LastName ?? string.Empty}",
-                            COMPANY_NAME = cvd.Company?.CompanyName ?? string.Empty
+                            BANK = (cvd?.BankAccount?.AccountName).IsNullOrEmpty() ? string.Empty : $"{cvd?.BankAccount?.AccountName} - {cvd?.BankAccount?.AccountNo}",
+                            EMPLOYEE_NAME = $"{cvd?.Employee?.FirstName ?? string.Empty} {cvd?.Employee?.LastName ?? string.Empty}",
+                            COMPANY_NAME = cvd?.Company?.CompanyName ?? string.Empty
                         }).ToList();
 
                         checkVoucherHeaderDtosList.AddRange(tempCvd);
@@ -191,7 +192,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CRNO = gl?.Reference ?? string.Empty,
                             DEBIT = gl?.Debit ?? 0,
                             CREDIT = gl?.Credit ?? 0,
-                            CUSTOMER_NAME = gl?.Customer?.CustomerName ?? string.Empty
+                            CUSTOMER_NAME = gl?.Customer?.CustomerName ?? string.Empty,
+                            BANK = (gl?.BankAccount?.AccountName).IsNullOrEmpty() ? string.Empty : $"{gl?.BankAccount?.AccountName} - {gl?.BankAccount?.AccountNo}"
                         }).ToList();
 
                         collectionDetailsDtosList.AddRange(tempGl);
