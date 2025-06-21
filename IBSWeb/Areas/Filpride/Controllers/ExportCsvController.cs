@@ -2,17 +2,14 @@ using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
-using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
 using IBS.DTOs;
 using IBS.Services;
-using IBS.Utility.Helpers;
 using Microsoft.IdentityModel.Tokens;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -44,7 +41,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt.GetAllAsync(null, cancellationToken);
 
-                var collectionReceiptDtosList = collectionReceipts.Select(c => new ExportCsvDto.FilprideCollectionReceiptCsvForDcrDto
+                var collectionReceiptDtosList = collectionReceipts.Select(c => new FilprideCollectionReceiptCsvForDcrDto
                 {
                     DATE = c.TransactionDate.ToString("MM/dd/yyyy"),
                     PAYEE = c.Customer!.CustomerName,
@@ -75,7 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher.GetAllAsync(null, cancellationToken);
 
-                var checkVoucherHeaderDtosList = checkVoucherHeaders.Select(cv => new ExportCsvDto.FilprideCheckVoucherHeaderCsvForDcrDto
+                var checkVoucherHeaderDtosList = checkVoucherHeaders.Select(cv => new FilprideCheckVoucherHeaderCsvForDcrDto
                 {
                     VOUCHER_NO = cv.CheckVoucherHeaderNo ?? string.Empty,
                     VCH_DATE = cv.Date.ToString("MM/dd/yyyy"),
@@ -118,13 +115,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
                 }
 
-                var checkVoucherHeaderDtosList = new List<ExportCsvDto.FilprideCheckVoucherDetailsCsvForDcrDto>();
+                var checkVoucherHeaderDtosList = new List<FilprideCheckVoucherDetailsCsvForDcrDto>();
 
                 foreach (var cvHeader in cvHeaders)
                 {
                     if (cvHeader.Details != null)
                     {
-                        var tempCvd = cvHeader.Details.Select(cvd => new ExportCsvDto.FilprideCheckVoucherDetailsCsvForDcrDto
+                        var tempCvd = cvHeader.Details.Select(cvd => new FilprideCheckVoucherDetailsCsvForDcrDto
                         {
                             ACCTCD = cvd.AccountNo,
                             ACCTNAME = cvd.AccountName,
@@ -179,13 +176,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                var collectionDetailsDtosList = new List<ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto>();
+                var collectionDetailsDtosList = new List<FilprideCollectionDetailsCsvForDcrDto>();
 
                 foreach (var collectionHeader in collectionHeaders)
                 {
                     if (collectionHeader.Details != null)
                     {
-                        var tempGl = collectionHeader.Details.Select(gl => new ExportCsvDto.FilprideCollectionDetailsCsvForDcrDto
+                        var tempGl = collectionHeader.Details.Select(gl => new FilprideCollectionDetailsCsvForDcrDto
                         {
                             ACCTCD = gl?.AccountNo ?? string.Empty,
                             ACCTNAME = gl?.AccountTitle ?? string.Empty,
