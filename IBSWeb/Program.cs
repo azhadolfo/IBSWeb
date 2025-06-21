@@ -83,30 +83,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 });
 
-builder.Services.AddSingleton<GoogleCredential>(sp =>
-{
-    GoogleCredential credential;
-    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-    if (environment == Environments.Production)
-    {
-        credential = GoogleCredential.GetApplicationDefault();
-    }
-    else
-    {
-        using var stream = new FileStream("C:\\\\ibs-key\\\\integrated-business-system-78af9a37f8dd.json", FileMode.Open, FileAccess.Read);
-        credential = GoogleCredential.FromStream(stream);
-    }
-
-    return credential.CreateScoped(new[] { "https://www.googleapis.com/auth/drive" });
-});
-
 builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 //builder.Services.AddHostedService<ExpireUnusedCustomerOrderSlipsService>();
 builder.Services.Configure<GCSConfigOptions>(builder.Configuration);
 builder.Services.AddScoped<GoogleDriveImportService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
-builder.Services.AddSingleton<IGoogleDriveService, GoogleDriveService>();
+builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
 builder.Services.AddSignalR();
 
