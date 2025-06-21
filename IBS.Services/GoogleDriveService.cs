@@ -13,6 +13,8 @@ namespace IBS.Services
     {
         Task<string> UploadFileAsync(Stream fileStream, string fileName, string folderId, string mimeType);
         Task<GoogleDriveFileViewModel> DownloadFileAsync(string fileId);
+        Task<GoogleDriveFileViewModel> GetFileByNameAsync(string fileName, string folderId);
+        Task DeleteFileAsync(string? fileId);
     }
 
     public class GoogleDriveService : IGoogleDriveService
@@ -135,6 +137,89 @@ namespace IBS.Services
             {
                 _logger.LogError($"Failed to download file with ID '{fileId}' from Google Drive: {ex.Message}");
                 throw new Exception($"Failed to download file with ID '{fileId}' from Google Drive: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<GoogleDriveFileViewModel> GetFileByNameAsync(string fileName, string folderId)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException("File name cannot be empty.", nameof(fileName));
+            }
+            if (string.IsNullOrEmpty(folderId))
+            {
+                throw new ArgumentException("Folder ID cannot be empty.", nameof(folderId));
+            }
+
+            try
+            {
+                string query = $"name = '{fileName}' and '{folderId}' in parents and trashed = false";
+                var listRequest = _driveService.Files.List();
+                listRequest.Q = query;
+                listRequest.Fields = "files(id, name, webViewLink)";
+                listRequest.Spaces = "drive";
+                var result = await listRequest.ExecuteAsync();
+                var files = result.Files;
+
+                if (files == null || !files.Any())
+                {
+                    return new GoogleDriveFileViewModel
+                    {
+                        FileName = string.Empty,
+                        FileLink = string.Empty,
+                        FileContent = null,
+                        FileId = string.Empty,
+                        DoesExist = false
+                    };
+                }
+
+                if (files.Count > 1)
+                {
+                    _logger.LogWarning($"Multiple files found with name '{fileName}' in folder ID '{folderId}'. Returning the first match.");
+                }
+
+                var file = files.First();
+
+                // Downloading
+                var fileRequest = _driveService.Files.Get(file.Id);
+                fileRequest.Fields = "id, name, webViewLink";
+                var fileMetadata = await fileRequest.ExecuteAsync();
+                using var stream = new MemoryStream();
+                await fileRequest.DownloadAsync(stream);
+
+                return new GoogleDriveFileViewModel
+                {
+                    FileName = fileMetadata.Name,
+                    FileLink = fileMetadata.WebViewLink,
+                    FileContent = stream.ToArray(),
+                    FileId = file.Id,
+                    DoesExist = true
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to retrieve file '{fileName}' from folder ID '{folderId}' in Google Drive: {ex.Message}");
+                throw new Exception($"Failed to retrieve file '{fileName}' from folder ID '{folderId}' in Google Drive: {ex.Message}", ex);
+            }
+        }
+
+        public async Task DeleteFileAsync(string? fileId)
+        {
+            if (string.IsNullOrEmpty(fileId))
+            {
+                throw new ArgumentException("File ID cannot be empty.", nameof(fileId));
+            }
+
+            try
+            {
+                // Execute the delete request
+                await _driveService.Files.Delete(fileId).ExecuteAsync();
+                _logger.LogInformation($"Successfully deleted file with ID '{fileId}' from Google Drive.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to delete file with ID '{fileId}' from Google Drive: {ex.Message}");
+                throw new Exception($"Failed to delete file with ID '{fileId}' from Google Drive: {ex.Message}", ex);
             }
         }
     }

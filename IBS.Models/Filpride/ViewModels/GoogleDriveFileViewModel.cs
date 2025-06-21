@@ -4,6 +4,8 @@ namespace IBS.Models.Filpride.ViewModels
     {
         public string FileName { get; set; }
         public string FileLink { get; set; }
-        public byte[] FileContent { get; set; }
+        public byte[]? FileContent { get; set; }
+        public bool DoesExist { get; set; }
+        public string? FileId { get; set; }
     }
 }
