@@ -222,6 +222,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException("Entities cannot be null.", nameof(entities));
                 }
 
+                var existingFile = await _googleDriveService.GetFileByNameAsync(fileName, dcrCsvFolderId);
+
+                if (existingFile.DoesExist)
+                {
+                    await _googleDriveService.DeleteFileAsync(existingFile.FileId);
+                }
+
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HasHeaderRecord = true,
