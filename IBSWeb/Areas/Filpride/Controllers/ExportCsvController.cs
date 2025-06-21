@@ -72,7 +72,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Uploading
                 string fileName = "COLLECTION.csv";
                 var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                TempData["success"] = $"{fileName} uploaded to Google Drive.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Uploading
                 string fileName = "DISBURSEMENT.csv";
                 var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                TempData["success"] = $"{fileName} uploaded to Google Drive.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -183,7 +183,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Uploading
                 string fileName = "CV_DETAILS.csv";
                 var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                TempData["success"] = $"{fileName} uploaded to Google Drive.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -255,7 +255,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Uploading
                 string fileName = "CR_DETAILS.csv";
                 var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
-                TempData["success"] = $"CSV uploaded to Google Drive with file ID: {fileId}";
+                TempData["success"] = $"{fileName} uploaded to Google Drive.";
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
