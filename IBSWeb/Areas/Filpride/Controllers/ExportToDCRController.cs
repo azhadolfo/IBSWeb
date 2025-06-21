@@ -16,14 +16,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    public class ExportCsvController : Controller
+    public class ExportToDCRController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGoogleDriveService _googleDriveService;
         private string dcrCsvFolderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
 
-        public ExportCsvController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, IGoogleDriveService googleDriveService)
+        public ExportToDCRController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, IGoogleDriveService googleDriveService)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;

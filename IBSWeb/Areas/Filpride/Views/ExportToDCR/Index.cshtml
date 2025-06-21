@@ -1,34 +1,34 @@
 @{
-    ViewData["Title"] = "Export Csv";
+    ViewData["Title"] = "Export to DCR";
 }
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Export CSV</h2>
+        <h2 class="text-white m-0">Export to DCR</h2>
     </div>
 
     <div class="card shadow border-0 mt-3 p-3">
         <div class="row d-flex justify-content-start mb-1">
-            <h5> Select what to import: </h5>
+            <h5> Select what to export: </h5>
         </div>
         <div class="row mt-2 d-flex justify-content-start">
             <div class="col-3 d-flex justify-content-end">
-                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCollectionReceiptCsvToGDrive">
+                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCollectionReceiptCsvToGDrive">
                     <i class="bi bi-file-text"></i> Collection.Csv (upload)
                 </a>
             </div>
             <div class="col-3 d-flex justify-content-end">
-                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCollectionDetailsToGDrive">
+                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCollectionDetailsToGDrive">
                     <i class="bi bi-file-text"></i> CR_Details.Csv (upload)
                 </a>
             </div>
             <div class="col-3 d-flex justify-content-end">
-                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCheckVoucherHeaderToGDrive">
+                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCheckVoucherHeaderToGDrive">
                     <i class="bi bi-file-text"></i> Disbursement.Csv (upload)
                 </a>
             </div>
             <div class="col-3 d-flex justify-content-end">
-                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportCsv" asp-action="ExportFilprideCheckVoucherDetailsToGDrive">
+                <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCheckVoucherDetailsToGDrive">
                     <i class="bi bi-file-text"></i> CV_Details.Csv (upload)
                 </a>
             </div>
