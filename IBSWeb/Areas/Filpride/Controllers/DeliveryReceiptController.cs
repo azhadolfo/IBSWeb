@@ -137,7 +137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             break;
                         case "RecordLiftingDate":
                             drList = drList.Where(dr =>
-                                !dr.HasReceivingReport && dr.CanceledBy == null);
+                                !dr.HasReceivingReport && dr.CanceledBy == null && dr.VoidedBy == null);
                             break;
                             // Add other cases as needed
                     }
