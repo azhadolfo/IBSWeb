@@ -29,6 +29,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
+        public string SupplierName { get; set; } = string.Empty;
+
         public string SupplierAddress { get; set; } = string.Empty;
 
         public string SupplierTin { get; set; } = string.Empty;
@@ -41,6 +43,8 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey(nameof(ProductId))]
         public Product? Product { get; set; }
+
+        public string ProductName { get; set; } = string.Empty;
 
         #endregion
 
@@ -127,6 +131,10 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [ForeignKey(nameof(PickUpPointId))]
         public FilpridePickUpPoint? PickUpPoint { get; set; }
+
+        public string VatType { get; set; } = string.Empty;
+
+        public string TaxType { get; set; } = string.Empty;
 
         [NotMapped]
         public List<SelectListItem>? PickUpPoints { get; set; }
