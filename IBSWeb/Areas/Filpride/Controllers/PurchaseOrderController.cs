@@ -247,6 +247,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    if (product == null)
+                    {
+                        return NotFound();
+                    }
+
                     model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
@@ -254,7 +259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.SupplierName = supplier.SupplierName;
                     model.SupplierAddress = supplier.SupplierAddress;
                     model.SupplierTin = supplier.SupplierTin;
-                    model.ProductName = product!.ProductName;
+                    model.ProductName = product.ProductName;
                     model.VatType = supplier.VatType;
                     model.TaxType = supplier.TaxType;
                     await _dbContext.AddAsync(model, cancellationToken);
@@ -345,7 +350,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
+                    var product = await _dbContext.Products
+                        .FirstOrDefaultAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
                     if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (product == null)
                     {
                         return NotFound();
                     }
@@ -368,8 +381,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
                     existingModel.PickUpPointId = model.PickUpPointId;
+                    existingModel.SupplierName = supplier.SupplierName;
                     existingModel.SupplierAddress = supplier.SupplierAddress;
                     existingModel.SupplierTin = supplier.SupplierTin;
+                    existingModel.ProductName = product.ProductName;
+                    existingModel.VatType = supplier.VatType;
+                    existingModel.TaxType = supplier.TaxType;
 
                     #region --Audit Trail Recording
 
