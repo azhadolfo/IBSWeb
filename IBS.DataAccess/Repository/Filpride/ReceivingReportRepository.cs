@@ -370,7 +370,7 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal ewtAmount = 0;
             decimal netOfEwtAmount = 0;
 
-            if (model.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable)
+            if (model.PurchaseOrder!.VatType == SD.VatType_Vatable)
             {
                 netOfVatAmount = ComputeNetOfVat(model.Amount);
                 vatAmount = ComputeVatAmount(netOfVatAmount);
@@ -502,11 +502,11 @@ namespace IBS.DataAccess.Repository.Filpride
             FilpridePurchaseBook purchaseBook = new()
             {
                 Date = model.Date,
-                SupplierName = model.PurchaseOrder.Supplier.SupplierName,
-                SupplierTin = model.PurchaseOrder.Supplier.SupplierTin,
-                SupplierAddress = model.PurchaseOrder.Supplier.SupplierAddress,
+                SupplierName = model.PurchaseOrder.SupplierName,
+                SupplierTin = model.PurchaseOrder.SupplierTin,
+                SupplierAddress = model.PurchaseOrder.SupplierAddress,
                 DocumentNo = model.ReceivingReportNo!,
-                Description = model.PurchaseOrder.Product.ProductName,
+                Description = model.PurchaseOrder.ProductName,
                 Amount = model.Amount,
                 VatAmount = vatAmount,
                 WhtAmount = ewtAmount,
