@@ -279,7 +279,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     decimal netOfVatAmount = 0;
                     decimal vatAmount = 0;
 
-                    if (model.Customer!.VatType == SD.VatType_Vatable)
+                    if (model.VatType == SD.VatType_Vatable)
                     {
                         netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.Total);
                         vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
@@ -289,26 +289,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         netOfVatAmount = model.Total;
                     }
 
-                    if (model.Customer!.WithHoldingTax)
+                    if (model.HasEwt)
                     {
                         withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
                     }
 
-                    if (model.Customer.WithHoldingVat)
+                    if (model.HasWvat)
                     {
                         withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
                     }
 
                     var sales = new FilprideSalesBook();
 
-                    if (model.Customer.VatType == SD.VatType_Vatable)
+                    if (model.VatType == SD.VatType_Vatable)
                     {
                         sales.TransactionDate = postedDate;
                         sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.Customer.CustomerName;
-                        sales.TinNo = model.Customer.CustomerTin;
-                        sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service!.Name;
+                        sales.SoldTo = model.CustomerName;
+                        sales.TinNo = model.CustomerTin;
+                        sales.Address = model.CustomerAddress;
+                        sales.Description = model.ServiceName;
                         sales.Amount = model.Total;
                         sales.VatAmount = vatAmount;
                         sales.VatableSales = netOfVatAmount;
@@ -320,14 +320,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         sales.DocumentId = model.ServiceInvoiceId;
                         sales.Company = model.Company;
                     }
-                    else if (model.Customer.VatType == SD.VatType_Exempt)
+                    else if (model.VatType == SD.VatType_Exempt)
                     {
                         sales.TransactionDate = postedDate;
                         sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.Customer.CustomerName;
-                        sales.TinNo = model.Customer.CustomerTin;
-                        sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service!.Name;
+                        sales.SoldTo = model.CustomerName;
+                        sales.TinNo = model.CustomerTin;
+                        sales.Address = model.CustomerAddress;
+                        sales.Description = model.ServiceName;
                         sales.Amount = model.Total;
                         sales.VatExemptSales = model.Total;
                         sales.Discount = model.Discount;
@@ -342,10 +342,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         sales.TransactionDate = postedDate;
                         sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.Customer.CustomerName;
-                        sales.TinNo = model.Customer.CustomerTin;
-                        sales.Address = model.Customer.CustomerAddress;
-                        sales.Description = model.Service!.Name;
+                        sales.SoldTo = model.CustomerName;
+                        sales.TinNo = model.CustomerTin;
+                        sales.Address = model.CustomerAddress;
+                        sales.Description = model.ServiceName;
                         sales.Amount = model.Total;
                         sales.ZeroRated = model.Total;
                         sales.Discount = model.Discount;
@@ -376,7 +376,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 Date = postedDate,
                                 Reference = model.ServiceInvoiceNo,
-                                Description = model.Service.Name,
+                                Description = model.ServiceName,
                                 AccountId = arNonTradeTitle.AccountId,
                                 AccountNo = arNonTradeTitle.AccountNumber,
                                 AccountTitle = arNonTradeTitle.AccountName,
@@ -395,7 +395,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 Date = postedDate,
                                 Reference = model.ServiceInvoiceNo,
-                                Description = model.Service.Name,
+                                Description = model.ServiceName,
                                 AccountId = arTradeCwt.AccountId,
                                 AccountNo = arTradeCwt.AccountNumber,
                                 AccountTitle = arTradeCwt.AccountName,
@@ -414,7 +414,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 Date = postedDate,
                                 Reference = model.ServiceInvoiceNo,
-                                Description = model.Service.Name,
+                                Description = model.ServiceName,
                                 AccountId = arTradeCwv.AccountId,
                                 AccountNo = arTradeCwv.AccountNumber,
                                 AccountTitle = arTradeCwv.AccountName,
@@ -432,7 +432,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                            {
                                Date = postedDate,
                                Reference = model.ServiceInvoiceNo,
-                               Description = model.Service.Name,
+                               Description = model.ServiceName,
                                AccountNo = model.Service!.CurrentAndPreviousNo!,
                                AccountTitle = model.Service!.CurrentAndPreviousTitle!,
                                Debit = 0,
@@ -450,7 +450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 Date = postedDate,
                                 Reference = model.ServiceInvoiceNo,
-                                Description = model.Service.Name,
+                                Description = model.ServiceName,
                                 AccountId = vatOutputTitle.AccountId,
                                 AccountNo = vatOutputTitle.AccountNumber,
                                 AccountTitle = vatOutputTitle.AccountName,
