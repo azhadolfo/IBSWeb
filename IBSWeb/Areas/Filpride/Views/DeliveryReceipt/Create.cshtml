@@ -213,14 +213,12 @@
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().show();
-                                    $('input[name="Freight"]').val(data.freight);
+                                    $('input[name="Freight"]').parent().show().val(data.freight);
                                     $('select[name="HaulerId"]').val(data.haulerId).change();
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
 
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
-                                    $('input[name="Freight"]').val(data.freight);
                                     $('select[name="HaulerId"]').val(data.haulerId).change();
 
                                 } else {

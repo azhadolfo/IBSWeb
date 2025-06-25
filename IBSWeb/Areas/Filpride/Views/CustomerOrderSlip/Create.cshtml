@@ -162,17 +162,22 @@
                     </div>
                 </fieldset>
                 <div class="row py-2">
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
                         <input asp-for="Quantity" class="form-control border-0 shadow" placeholder="" required min="0.01"/>
                         <label asp-for="Quantity" class="ms-2">Quantity<span class="required">*</span></label>
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
                         <input asp-for="DeliveredPrice" class="form-control border-0 shadow" placeholder="" required min="0.01" />
                         <label asp-for="DeliveredPrice" class="ms-2">Delivered Price<span class="required">*</span></label>
                         <span asp-validation-for="DeliveredPrice" class="text-danger"></span>
                     </div>
-                    <div class="form-floating col-4">
+                    <div class="form-floating col-3">
+                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" value="0.0000" />
+                        <label asp-for="Freight" class="ms-2">Freight</label>
+                        <span asp-validation-for="Freight" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating col-3">
                         <input asp-for="Vat" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
                         <label asp-for="Vat" class="ms-2">VAT</label>
                         <span asp-validation-for="Vat" class="text-danger"></span>
@@ -237,7 +242,7 @@
                                 <h5>Browse or drop image</h5>
                             </a>
                         </div>
-                        <input asp-for="UploadedFiles" type="file" multiple style="display: none;" />
+                        <input asp-for="UploadedFiles" type="file" accept="image/*" multiple style="display: none;" />
                     </div>
                 </div>
                 <div id="previewContainer" class="pt-2"></div>

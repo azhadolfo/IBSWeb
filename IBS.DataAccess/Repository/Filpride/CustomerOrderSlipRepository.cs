@@ -80,7 +80,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
             var customer = await _db.FilprideCustomers
-                .FirstOrDefaultAsync(x => x.CustomerId ==  viewModel.CustomerOrderSlipId, cancellationToken)
+                .FirstOrDefaultAsync(x => x.CustomerId ==  viewModel.CustomerId, cancellationToken)
                 ?? throw new ArgumentException("Customer not found");
 
             existingRecord.Date = viewModel.Date;
@@ -103,6 +103,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.Terms = viewModel.Terms;
             existingRecord.CustomerType = viewModel.CustomerType!;
             existingRecord.OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0;
+            existingRecord.Freight = viewModel.Freight;
 
             if (existingRecord.Branch != null)
             {

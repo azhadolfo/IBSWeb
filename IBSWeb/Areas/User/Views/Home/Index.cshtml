@@ -62,33 +62,6 @@
                             </div>
                             
                             <div class="col-md-4">
-                                @if (department == SD.Department_Logistics || User.IsInRole("Admin"))
-                                {
-                                    <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForAppointHauler" })" class="text-decoration-none">
-                                        <div class="card shadow-sm h-100 border-0">
-                                            <div class="card-body text-center">
-                                                <h5 class="card-title text-dark fw-semibold">
-                                                    <i class="bi bi-truck me-2 text-primary"></i>Hauler Appointment
-                                                </h5>
-                                                <p class="card-text display-6 text-primary fw-bold">@Model.HaulerAppointmentCount.ToString("N0")</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                }
-                                else
-                                {
-                                    <div class="card shadow-sm h-100 border-0">
-                                        <div class="card-body text-center">
-                                            <h5 class="card-title text-dark fw-semibold">
-                                                <i class="bi bi-truck me-2 text-primary"></i>Hauler Appointment
-                                            </h5>
-                                            <p class="card-text display-6 text-primary fw-bold">@Model.HaulerAppointmentCount.ToString("N0")</p>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                            
-                            <div class="col-md-4">
                                 @if (department == SD.Department_TradeAndSupply || User.IsInRole("Admin"))
                                 {
                                     <a href="@Url.Action("Index", "CustomerOrderSlip", new { area = "Filpride", filterType = "ForATLBooking" })" class="text-decoration-none">
