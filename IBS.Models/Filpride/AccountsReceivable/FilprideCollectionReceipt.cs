@@ -2,6 +2,7 @@ using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.Books;
 
 namespace IBS.Models.Filpride.AccountsReceivable
 {
@@ -80,7 +81,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal CashAmount { get; set; }
 
         //Check
-        public string? CheckDate { get; set; }
+        [Column(TypeName = "date")]
+        public DateOnly? CheckDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
         public string? CheckNo { get; set; }
@@ -153,5 +155,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         public string? Type { get; set; }
+
+        [NotMapped]
+        public List<FilprideGeneralLedgerBook>? Details { get; set; }
     }
 }

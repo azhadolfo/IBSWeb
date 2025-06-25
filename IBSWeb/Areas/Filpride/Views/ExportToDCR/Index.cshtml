@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Export to DCR";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+                <h2 class="text-white m-0">Export to DCR</h2>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-6">
+            <div class="card shadow border-0 mt-3 p-3">
+                <div class="row d-flex justify-content-start mb-1">
+                    <h4> Select what to export: </h4>
+                </div>
+                <div class="row d-flex justify-content-center my-2">
+                    <div class="col-6 d-flex justify-content-end">
+                        <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCollectionReceiptCsvToGDrive">
+                            <i class="bi bi-file-text"></i> Collection.Csv (upload)
+                        </a>
+                    </div>
+                </div>
+                <div class="row d-flex justify-content-center my-2">
+                    <div class="col-6 d-flex justify-content-end">
+                        <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCollectionDetailsToGDrive">
+                            <i class="bi bi-file-text"></i> CR_Details.Csv (upload)
+                        </a>
+                    </div>
+                </div>
+                <div class="row d-flex justify-content-center my-2">
+                    <div class="col-6 d-flex justify-content-end">
+                        <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCheckVoucherHeaderToGDrive">
+                            <i class="bi bi-file-text"></i> Disbursement.Csv (upload)
+                        </a>
+                    </div>
+                </div>
+                <div class="row d-flex justify-content-center my-2">
+                    <div class="col-6 d-flex justify-content-end">
+                        <a class="btn btn-primary w-100" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="ExportFilprideCheckVoucherDetailsToGDrive">
+                            <i class="bi bi-file-text"></i> CV_Details.Csv (upload)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

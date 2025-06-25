@@ -2573,12 +2573,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
 
                                     totalAmount += currentAmount;
+
                                 }
 
                             #endregion

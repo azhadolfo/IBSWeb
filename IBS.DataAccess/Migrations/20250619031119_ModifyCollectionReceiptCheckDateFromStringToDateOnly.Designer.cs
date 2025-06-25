@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250619031119_ModifyCollectionReceiptCheckDateFromStringToDateOnly")]
+    partial class ModifyCollectionReceiptCheckDateFromStringToDateOnly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -391,20 +394,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("CheckVoucherDetailId")
                         .HasName("pk_filpride_check_voucher_details");
 
-                    b.HasIndex("BankId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_bank_id");
-
                     b.HasIndex("CheckVoucherHeaderId")
                         .HasDatabaseName("ix_filpride_check_voucher_details_check_voucher_header_id");
-
-                    b.HasIndex("CompanyId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_company_id");
-
-                    b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_customer_id");
-
-                    b.HasIndex("EmployeeId")
-                        .HasDatabaseName("ix_filpride_check_voucher_details_employee_id");
 
                     b.HasIndex("SupplierId")
                         .HasDatabaseName("ix_filpride_check_voucher_details_supplier_id");
@@ -10765,11 +10756,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherDetail", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideBankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_bank_accounts_bank_");
-
                     b.HasOne("IBS.Models.Filpride.AccountsPayable.FilprideCheckVoucherHeader", "CheckVoucherHeader")
                         .WithMany("Details")
                         .HasForeignKey("CheckVoucherHeaderId")
@@ -10777,35 +10763,12 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_check_voucher_heade");
 
-                    b.HasOne("IBS.Models.MasterFile.Company", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_companies_company_id");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideCustomer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_customers_customer_");
-
-                    b.HasOne("IBS.Models.Filpride.MasterFile.FilprideEmployee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .HasConstraintName("fk_filpride_check_voucher_details_filpride_employees_employee_");
-
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Supplier")
                         .WithMany()
                         .HasForeignKey("SupplierId")
                         .HasConstraintName("fk_filpride_check_voucher_details_filpride_suppliers_supplier_");
 
-                    b.Navigation("BankAccount");
-
                     b.Navigation("CheckVoucherHeader");
-
-                    b.Navigation("Company");
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Employee");
 
                     b.Navigation("Supplier");
                 });
