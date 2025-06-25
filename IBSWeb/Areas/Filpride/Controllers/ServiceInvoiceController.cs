@@ -163,6 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
+
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -174,7 +175,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
+                    var service = await _unitOfWork.FilprideService.GetAsync(c => c.ServiceId == model.ServiceId, cancellationToken);
+
                     if (customer == null)
+                    {
+                        return NotFound();
+                    }
+                    if (service == null)
                     {
                         return NotFound();
                     }
@@ -184,11 +191,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Saving the default properties
 
                     model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
+                    model.ServiceName = service.Name;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = model.Amount;
                     model.Company = companyClaims;
+                    model.CustomerName = customer.CustomerName;
+                    model.CustomerBusinessType = customer.BusinessStyle ?? string.Empty;
                     model.CustomerAddress = customer.CustomerAddress;
                     model.CustomerTin = customer.CustomerTin;
+                    model.VatType = customer.VatType;
+                    model.HasEwt = customer.WithHoldingTax;
+                    model.HasWvat = customer.WithHoldingVat;
 
                     if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {

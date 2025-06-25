@@ -41,7 +41,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(ServiceId))]
         public FilprideService? Service { get; set; }
 
-        public string ServiceName { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Due Date")]
