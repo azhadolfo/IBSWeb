@@ -646,10 +646,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var customer = await _dbContext.FilprideCustomers
-                        .FirstOrDefaultAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                    var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                    var service = await _unitOfWork.FilprideService.GetAsync(c => c.ServiceId == model.ServiceId, cancellationToken);
 
                     if (customer == null)
+                    {
+                        return NotFound();
+                    }
+                    if (service == null)
                     {
                         return NotFound();
                     }
@@ -666,8 +670,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Total = model.Amount;
                     existingModel.CustomerId = model.CustomerId;
                     existingModel.ServiceId = model.ServiceId;
+                    existingModel.ServiceName = service.Name;
+                    existingModel.CustomerName = customer.CustomerName;
+                    existingModel.CustomerBusinessType = customer.BusinessStyle ?? "";
                     existingModel.CustomerAddress = customer.CustomerAddress;
                     existingModel.CustomerTin = customer.CustomerTin;
+                    existingModel.VatType = customer.VatType;
+                    existingModel.HasEwt = customer.WithHoldingTax;
+                    existingModel.HasWvat = customer.WithHoldingVat;
 
                     if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
                     {
