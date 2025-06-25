@@ -169,7 +169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     drList = drList
@@ -183,6 +183,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var pagedData = drList
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
+                    .Select(dr => new
+                    {
+                        dr.DeliveryReceiptId,
+                        dr.DeliveryReceiptNo,
+                        dr.ManualDrNo,
+                        dr.Date,
+                        dr.DeliveredDate,
+                        dr.CustomerOrderSlip!.CustomerOrderSlipNo,
+                        dr.PurchaseOrder!.PurchaseOrderNo,
+                        dr.CustomerOrderSlip!.PickUpPoint!.Depot,
+                        dr.CustomerOrderSlip!.Customer!.CustomerName,
+                        dr.CustomerOrderSlip!.Product!.ProductName,
+                        dr.Quantity,
+                        dr.CreatedBy,
+                        dr.Status,
+                        dr.VoidedBy,
+                        dr.CanceledBy,
+                        dr.HasReceivingReport
+                    })
                     .ToList();
 
                 return Json(new

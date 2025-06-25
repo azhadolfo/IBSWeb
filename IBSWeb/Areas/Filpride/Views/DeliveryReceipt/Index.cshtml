@@ -122,9 +122,18 @@
                 $('[data-bs-toggle="tooltip"]').tooltip();
             },
             "columns": [
-                { "data": "deliveryReceiptNo" },
-                { "data": "manualDrNo" },
-                { "data": "date", "render": function (data) {
+                { 
+                    "data": "deliveryReceiptNo",
+                    "name": "deliveryReceiptNo"
+                },
+                { 
+                    "data": "manualDrNo",
+                    "name": "manualDrNo"
+                },
+                { 
+                    "data": "date",
+                    "name": "date",
+                    "render": function (data) {
                     var date = new Date(data);
                     return date.toLocaleDateString('en-US', { 
                         year: 'numeric',
@@ -133,7 +142,8 @@
                     });
                 }},
                 { 
-                    "data": "deliveredDate", 
+                    "data": "deliveredDate",
+                    "name": "deliveredDate",
                     "render": function (data) {
                         if (!data) return '';
                         var date = new Date(data);
@@ -143,21 +153,41 @@
                             day: '2-digit'
                         });
                 }},
-                { "data": "customerOrderSlip.customerOrderSlipNo" },
-                { "data": "purchaseOrder.purchaseOrderNo" },
-                { "data": "customerOrderSlip.pickUpPoint.depot" },
-                { "data": "customer.customerName" },
-                { "data": "customerOrderSlip.product.productName" },
+                { 
+                    "data": "customerOrderSlipNo",
+                    "name": "customerOrderSlip.customerOrderSlipNo"
+                },
+                { 
+                    "data": "purchaseOrderNo",
+                    "name": "purchaseOrder.PurchaseOrderNo"
+                },
+                { 
+                    "data": "depot",
+                    "name": "purchaseOrderSlip.pickUpPoint.pickUpPoint.depot"
+                },
+                { 
+                    "data": "customerName",
+                    "name": "customer.customerName",
+                },
+                { 
+                    "data": "productName",
+                    "name": "customerOrderSlip.product.productName"
+                },
                 {
                     "data": "quantity",
+                    "name": "quantity",
                     "render": function (data, type, row) {
                         var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                         return `<span class="d-block fw-medium">${amount}</span>`;
                     }
                 },
-                { "data": "createdBy" },
+                { 
+                    "data": "createdBy",
+                    "name": "createdBy",
+                },
                 {
                     "data": "status",
+                    "name": "status",
                     "render": function(data, type, row) {
                         var statusClass = row.status == "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
                                           row.status == "@nameof(DRStatus.Invoiced)" ? "bg-success" :
@@ -169,6 +199,7 @@
                 },
                 {
                     "data": "deliveryReceiptId",
+                    "name": "deliveryReceiptId",
                     "orderable": false,
                     "render": function (data, type, row) {
                         let actions = `
