@@ -1472,7 +1472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingCos.PickUpPoint != null)
                     {
-                        if (existingCos.DeliveryOption != SD.DeliveryOption_ForPickUpByClient)
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                         {
                             existingCos.Freight = viewModel.Freight;
                             existingCos.HaulerId = viewModel.HaulerId;
@@ -1582,7 +1582,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingCos.PickUpPoint != null)
                     {
-                        if (existingCos.DeliveryOption != SD.DeliveryOption_ForPickUpByClient)
+                        if (existingCos.DeliveryOption == SD.DeliveryOption_ForPickUpByHauler)
                         {
                             existingCos.Freight = viewModel.Freight;
                             existingCos.HaulerId = viewModel.HaulerId;
