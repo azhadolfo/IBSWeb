@@ -187,7 +187,7 @@ else if (Model.Source == "Service Invoice")
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerName) &nbsp;<br />
 
                         <span><b>Address:</b></span>
                         &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerAddress) &nbsp;<br />
@@ -196,7 +196,7 @@ else if (Model.Source == "Service Invoice")
                         &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerTin) &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle) &nbsp;
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerBusinessType) &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -227,7 +227,7 @@ else if (Model.Source == "Service Invoice")
                             @Model.Period.ToString("MMMM yyyy")
                         </p>
                     </td>
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.Service!.Name)</td>
+                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td class="pt-2">
                         <p style="line-height:15px">
@@ -262,7 +262,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice!.Customer!.VatType == "Zero Rated")
+                                        @if (Model.ServiceInvoice!.VatType == "Zero Rated")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
@@ -274,7 +274,7 @@ else if (Model.Source == "Service Invoice")
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
-                                        @if (Model.ServiceInvoice.Customer.VatType == "Exempt")
+                                        @if (Model.ServiceInvoice.VatType == "Exempt")
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
