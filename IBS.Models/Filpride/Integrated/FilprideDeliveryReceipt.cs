@@ -128,5 +128,7 @@ namespace IBS.Models.Filpride.Integrated
         public decimal CommissionAmount { get; set; }
 
         public bool HasReceivingReport { get; set; }
+
+        public string HaulerName { get; set; }
     }
 }

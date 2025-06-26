@@ -216,8 +216,10 @@ namespace IBS.Models.Filpride.Integrated
 
         public string ProductName { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal AvailableCreditLimit { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal CreditBalance { get; set; }
 
         public string VatType { get; set; }

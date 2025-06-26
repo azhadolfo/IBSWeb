@@ -84,6 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId,
                     cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
+            var supplierHauler = await _db.FilprideSuppliers.FirstOrDefaultAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
 
             #region--Update COS
 
@@ -124,6 +125,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
             existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
             existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
+            existingRecord.HaulerName = supplierHauler?.SupplierName ?? string.Empty;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -205,8 +207,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
                 var vatAmount = ComputeVatAmount(netOfVatAmount);
-                var arTradeCwtAmount = deliveryReceipt.Customer!.WithHoldingTax ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.01m) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.Customer.WithHoldingTax ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.05m) : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.01m) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.05m) : 0m;
                 var netOfEwtAmount = deliveryReceipt.TotalAmount - (arTradeCwtAmount + arTradeCwvAmount);
 
 

@@ -266,6 +266,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
+                    var supplierHauler = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+                    
                     if (customerOrderSlip == null)
                     {
                         return BadRequest();
@@ -295,6 +297,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                         CustomerAddress = customerOrderSlip.CustomerAddress,
                         CustomerTin = customerOrderSlip.CustomerTin,
+                        HaulerName = supplierHauler?.SupplierName ?? string.Empty
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -390,9 +393,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             return NotFound();
                         }
 
-                        var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
-                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler!.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
-                                      $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
+                        ///TODO: pending revision(AZH)
+                        // var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
+                        //               $" Please review and approve the changes from '{customerOrderSlip.Hauler!.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                        //               $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
+                        var message = string.Empty;
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
 
