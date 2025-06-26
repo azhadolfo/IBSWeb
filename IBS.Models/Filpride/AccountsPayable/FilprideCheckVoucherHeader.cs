@@ -43,6 +43,8 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey("SupplierId")]
         public FilprideSupplier? Supplier { get; set; }
 
+        public string SupplierName { get; set; } = string.Empty;
+
         [NotMapped]
         public List<SelectListItem>? Suppliers { get; set; }
 
