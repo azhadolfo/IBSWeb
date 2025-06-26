@@ -646,6 +646,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     var details = new List<FilprideCheckVoucherDetail>();
+                    var supplier = await _dbContext.FilprideSuppliers
+                        .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                    if (supplier == null)
+                    {
+                        return BadRequest();
+                    }
 
                     var cashInBank = 0m;
                     for (int i = 0; i < viewModel.AccountTitle.Length; i++)
@@ -674,6 +680,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.PONo = viewModel.POSeries;
                     existingHeaderModel.SupplierId = viewModel.SupplierId;
+                    existingHeaderModel.SupplierName = supplier.SupplierName;
                     existingHeaderModel.Address = viewModel.SupplierAddress;
                     existingHeaderModel.Tin = viewModel.SupplierTinNo;
                     existingHeaderModel.Particulars = viewModel.Particulars;
