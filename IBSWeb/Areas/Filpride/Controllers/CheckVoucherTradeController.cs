@@ -288,6 +288,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Date = viewModel.TransactionDate,
                         PONo = viewModel.POSeries,
                         SupplierId = viewModel.SupplierId,
+                        SupplierName = supplier.SupplierName,
                         Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
                         Reference = viewModel.AdvancesCVNo,
                         BankId = viewModel.BankId,
