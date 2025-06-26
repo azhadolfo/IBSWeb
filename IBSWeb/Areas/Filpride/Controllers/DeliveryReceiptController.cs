@@ -391,7 +391,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
-                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler!.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler?.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
                                       $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
