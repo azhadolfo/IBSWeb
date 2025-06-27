@@ -75,19 +75,16 @@
                 <td class="text-end"><b>Date:</b> @Model.CustomerOrderSlip.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td><b>Customer Name:</b> @Model.CustomerOrderSlip.Customer?.CustomerName</td>
+                <td><b>Customer Name:</b> @Model.CustomerOrderSlip.CustomerName</td>
                 <td class="text-end"><b>Exp Date:</b> @Model.CustomerOrderSlip.ExpirationDate?.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td><b>Terms:</b> @(Model.CustomerOrderSlip.Terms ?? Model.CustomerOrderSlip.Customer?.CustomerTerms)</td>
+                <td><b>Terms:</b> @Model.CustomerOrderSlip.Terms</td>
                 <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
             </tr>
             <tr>
                 <td><b>Branch:</b> @Model.CustomerOrderSlip.Branch</td>
-                <td class="text-end">
-                    <b>IS PO#:</b>
-                    @Model.CustomerOrderSlip.PurchaseOrder?.OldPoNo
-                </td>
+                <td></td>
             </tr>
             </tbody>
         </table>
@@ -107,7 +104,7 @@
             </thead>
             <tbody>
             <tr>
-                <td>@Model.CustomerOrderSlip.Product?.ProductName</td>
+                <td>@Model.CustomerOrderSlip.ProductName</td>
                 <td>@Model.CustomerOrderSlip.Quantity.ToString(decimalFormat)</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                 <td>@Model.VatAmount.ToString(decimalFormat)</td>
