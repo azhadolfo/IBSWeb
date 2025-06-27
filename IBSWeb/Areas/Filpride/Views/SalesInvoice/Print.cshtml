@@ -285,7 +285,7 @@
                             <td style="padding-left: 0.5rem;"><b>TOTAL SALES: </b></td>
                             @if (Model.Customer?.VatType == "Vatable")
                             {
-                                <td class="text-end px-2">@netOfVatAmount.ToString(decimalFormat)</td>
+                                <td class="text-end px-2">@Model.Amount.ToString(decimalFormat)</td>
                             }
                             else
                             {
