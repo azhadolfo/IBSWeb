@@ -628,6 +628,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cr => cr.ServiceInvoice)
                 .ThenInclude(sv => sv!.Service)
                 .Include(cr => cr.BankAccount)
+                .Include(cr => cr.SalesInvoice)
+                .ThenInclude(s => s!.CustomerOrderSlip)
                 .FirstOrDefaultAsync(cancellationToken);
         }
     }
