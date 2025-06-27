@@ -189,8 +189,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 for (int i = 0; i < receivingReports.Count; i++)
                 {
 
-                    var isSupplierVatable = receivingReports[i].PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable;
-                    var isSupplierTaxable = receivingReports[i].PurchaseOrder!.Supplier!.TaxType == SD.TaxType_WithTax;
+                    var isSupplierVatable = receivingReports[i].PurchaseOrder!.VatType == SD.VatType_Vatable;
+                    var isSupplierTaxable = receivingReports[i].PurchaseOrder!.TaxType == SD.TaxType_WithTax;
 
                     #region Update RR Amount
 
