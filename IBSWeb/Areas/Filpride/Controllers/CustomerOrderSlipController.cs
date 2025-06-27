@@ -756,7 +756,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                 ? vatCalculator.ComputeVatAmount(
                     vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount))
-                : vatCalculator.ComputeVatAmount(customerOrderSlip.TotalAmount);
+                : 0m;
 
             return new CustomerOrderSlipForApprovalViewModel
             {
