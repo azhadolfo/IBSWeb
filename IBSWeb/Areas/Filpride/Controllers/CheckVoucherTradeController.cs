@@ -282,6 +282,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type!, cancellationToken);
                     var cashInBank = viewModel.Credit[1];
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
@@ -292,6 +294,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
                         Reference = viewModel.AdvancesCVNo,
                         BankId = viewModel.BankId,
+                        BankAccountName = bank!.AccountName,
+                        BankAccountNumber = bank.AccountNo,
                         CheckNo = viewModel.CheckNo,
                         Category = "Trade",
                         Payee = viewModel.Payee,
