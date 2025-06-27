@@ -43,6 +43,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public string ServiceName { get; set; } = string.Empty;
 
+        public decimal ServicePercent { get; set; }
+
         [Required]
         [Display(Name = "Due Date")]
         [Column(TypeName = "date")]
