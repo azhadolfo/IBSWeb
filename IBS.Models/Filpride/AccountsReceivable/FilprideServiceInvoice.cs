@@ -24,9 +24,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        public string CustomerName { get; set; } = string.Empty;
+
         public string CustomerAddress { get; set; } = string.Empty;
 
         public string CustomerTin { get; set; } = string.Empty;
+
+        public string CustomerBusinessType { get; set; } = string.Empty;
 
         #endregion Customer properties
 
@@ -36,6 +40,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [ForeignKey(nameof(ServiceId))]
         public FilprideService? Service { get; set; }
+
+        public string ServiceName { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Due Date")]
@@ -96,5 +102,11 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         public string Type { get; set; } = string.Empty;
+
+        public string VatType { get; set; } = string.Empty;
+
+        public bool HasEwt { get; set; } = false;
+
+        public bool HasWvat { get; set; } = false;
     }
 }
