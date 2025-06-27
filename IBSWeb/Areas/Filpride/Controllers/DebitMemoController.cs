@@ -572,7 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
                                 viewModelDMCM.NetAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
                                 viewModelDMCM.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.HasEwt ? existingSv.Service!.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.HasEwt ? existingSv.ServicePercent / 100m : 0);
                                 if (existingSv.HasEwt)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
@@ -581,7 +581,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.HasEwt ? existingSv.Service!.Percent / 100m : 0);
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.HasEwt ? existingSv.ServicePercent / 100m : 0);
                                 if (existingSv.HasWvat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
