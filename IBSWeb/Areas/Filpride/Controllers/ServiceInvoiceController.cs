@@ -192,6 +192,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
                     model.ServiceName = service.Name;
+                    model.ServicePercent = service.Percent;
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Total = model.Amount;
                     model.Company = companyClaims;
@@ -671,6 +672,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.CustomerId = model.CustomerId;
                     existingModel.ServiceId = model.ServiceId;
                     existingModel.ServiceName = service.Name;
+                    existingModel.ServicePercent = service.Percent;
                     existingModel.CustomerName = customer.CustomerName;
                     existingModel.CustomerBusinessType = customer.BusinessStyle ?? "";
                     existingModel.CustomerAddress = customer.CustomerAddress;
