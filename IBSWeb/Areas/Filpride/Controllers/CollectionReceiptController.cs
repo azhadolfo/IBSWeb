@@ -967,9 +967,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.Customer!.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.Customer!.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = si.CustomerOrderSlip!.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = si.CustomerOrderSlip!.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -1025,9 +1025,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = si.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = si.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -1532,17 +1532,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var amount = salesInvoice.Amount;
                 var amountPaid = salesInvoice.AmountPaid;
-                var netAmount = salesInvoice.Amount - salesInvoice.Discount;
-                var vatAmount = salesInvoice.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount((netAmount / 1.12m) * 0.12m) : 0;
-                var ewtAmount = salesInvoice.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.01m) : 0;
-                var wvatAmount = salesInvoice.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.05m) : 0;
+                var netDiscount = salesInvoice.Amount - salesInvoice.Discount;
+                var netOfVatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(netDiscount) : netDiscount;
+                var vatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount) : 0m;
+                var ewtAmount = salesInvoice.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
+                var wvatAmount = salesInvoice.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
                 var balance = amount - amountPaid;
 
                 return Json(new
                 {
                     Amount = amount,
                     AmountPaid = amountPaid,
-                    NetAmount = netAmount,
+                    NetAmount = netOfVatAmount,
                     VatAmount = vatAmount,
                     EwtAmount = ewtAmount,
                     WvatAmount = wvatAmount,

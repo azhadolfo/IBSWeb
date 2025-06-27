@@ -53,23 +53,23 @@
             <tr>
                 <td colspan="2" style="padding-left:10px;">
                     Received from: &nbsp;
-                    @Html.DisplayFor(model => model.Customer!.CustomerName)
+                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerName)
                 </td>
             </tr>
             <tr>
                 <td colspan="2" class="w-50" style="padding-left:10px;">
                     Address: &nbsp;
-                    @Html.DisplayFor(model => model.Customer!.CustomerAddress)
+                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerAddress)
                 </td>
             </tr>
             <tr>
                 <td style="padding-left:10px;">
                     TIN: &nbsp;
-                    @Html.DisplayFor(model => model.Customer!.CustomerTin)
+                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerTin)
                 </td>
                 <td style="padding-left:10px;">
                     Buss. Style: &nbsp;
-                    @Html.DisplayFor(model => model.Customer!.BusinessStyle)
+                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.BusinessStyle)
                 </td>
             </tr>
             @{
