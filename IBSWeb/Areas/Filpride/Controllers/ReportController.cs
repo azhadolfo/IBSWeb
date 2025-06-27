@@ -566,7 +566,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var companyClaims = await GetCompanyClaimAsync();
                     var currentUser = _userManager.GetUserName(User);
                     var today = DateTimeHelper.GetCurrentPhilippineTime();
-                    var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                    var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
                     var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
                     ViewData["DateFrom"] = firstDayOfMonth;
@@ -8043,7 +8043,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         #region -- Generate Dispatch Report Excel File --
-        public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
+         public async Task<IActionResult> GenerateDispatchReportExcelFile(DispatchReportViewModel viewModel, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(viewModel.ReportType))
             {
@@ -8059,7 +8059,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var currentUser = _userManager.GetUserName(User)!;
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
-                var firstDayOfMonth = new DateOnly(viewModel.AsOf.Year, viewModel.AsOf.Month, 1);
+                var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
