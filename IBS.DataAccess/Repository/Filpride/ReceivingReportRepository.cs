@@ -365,22 +365,13 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var ledgers = new List<FilprideGeneralLedgerBook>();
 
-            decimal netOfVatAmount = 0;
-            decimal vatAmount = 0;
-            decimal ewtAmount = 0;
-            decimal netOfEwtAmount = 0;
-
-            if (model.PurchaseOrder!.VatType == SD.VatType_Vatable)
-            {
-                netOfVatAmount = ComputeNetOfVat(model.Amount);
-                vatAmount = ComputeVatAmount(netOfVatAmount);
-            }
-            else
-            {
-                netOfVatAmount = model.Amount;
-            }
-
-            ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
+            var netOfVatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(model.Amount)
+                : model.Amount;
+            var vatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeVatAmount(netOfVatAmount)
+                : 0m;
+            var ewtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
 
             if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
             {
@@ -402,7 +393,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+            var netOfEwtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax ? ComputeNetOfEwt(model.Amount, ewtAmount) : model.Amount;
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product!.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
