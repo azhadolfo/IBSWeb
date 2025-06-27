@@ -107,13 +107,13 @@ namespace IBS.DataAccess.Repository.Filpride
 
             salesBook.TransactionDate = salesInvoice.TransactionDate;
             salesBook.SerialNo = salesInvoice.SalesInvoiceNo!;
-            salesBook.SoldTo = salesInvoice.Customer!.CustomerName;
-            salesBook.TinNo = salesInvoice.Customer.CustomerTin;
-            salesBook.Address = salesInvoice.Customer.CustomerAddress;
-            salesBook.Description = salesInvoice.Product!.ProductName;
+            salesBook.SoldTo = salesInvoice.CustomerOrderSlip!.CustomerName;
+            salesBook.TinNo = salesInvoice.CustomerOrderSlip.CustomerTin;
+            salesBook.Address = salesInvoice.CustomerOrderSlip.CustomerAddress;
+            salesBook.Description = salesInvoice.CustomerOrderSlip!.ProductName;
             salesBook.Amount = salesInvoice.Amount - salesInvoice.Discount;
 
-            switch (salesInvoice.Customer.VatType)
+            switch (salesInvoice.CustomerOrderSlip.VatType)
             {
                 case SD.VatType_Vatable:
                     salesBook.VatableSales = ComputeNetOfVat(salesBook.Amount);
@@ -205,6 +205,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(si => si.Product)
                 .Include(si => si.Customer)
                 .Include(si => si.DeliveryReceipt).ThenInclude(dr => dr!.Hauler)
+                .Include(si => si.CustomerOrderSlip)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
