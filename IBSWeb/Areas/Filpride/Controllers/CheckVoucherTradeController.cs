@@ -650,6 +650,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
                     var details = new List<FilprideCheckVoucherDetail>();
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
                     var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
                     if (supplier == null)
@@ -689,6 +691,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Tin = viewModel.SupplierTinNo;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.BankId = viewModel.BankId;
+                    existingHeaderModel.BankAccountName = bank!.AccountName;
+                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
                     existingHeaderModel.Payee = viewModel.Payee;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
