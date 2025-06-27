@@ -934,6 +934,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 decimal totalWHTAmount = 0m;
                 decimal totalNetPurchases = 0m;
                 decimal totalCOSAmount = 0m;
+                decimal totalFreight = 0m;
                 decimal totalNetFreight = 0m;
                 decimal totalCommission = 0m;
 
@@ -989,18 +990,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["Y7"].Value = "HAULER'S NAME";
                     purchaseReportWorksheet.Cells["Z7"].Value = "PURCHASES N.VAT";
                     purchaseReportWorksheet.Cells["AA7"].Value = "FREIGHT N.VAT";
-                    purchaseReportWorksheet.Cells["AB7"].Value = "FREIGHT AMT N.VAT";
-                    purchaseReportWorksheet.Cells["AC7"].Value = "COMMISSION";
-                    purchaseReportWorksheet.Cells["AD7"].Value = "OTC COS#.";
-                    purchaseReportWorksheet.Cells["AE7"].Value = "OTC DR#.";
-                    purchaseReportWorksheet.Cells["AF7"].Value = "IS PO#";
-                    purchaseReportWorksheet.Cells["AG7"].Value = "IS RR#";
+                    purchaseReportWorksheet.Cells["AB7"].Value = "FREIGHT AMT G.VAT";
+                    purchaseReportWorksheet.Cells["AC7"].Value = "FREIGHT AMT N.VAT";
+                    purchaseReportWorksheet.Cells["AD7"].Value = "COMMISSION";
+                    purchaseReportWorksheet.Cells["AE7"].Value = "OTC COS#.";
+                    purchaseReportWorksheet.Cells["AF7"].Value = "OTC DR#.";
+                    purchaseReportWorksheet.Cells["AG7"].Value = "IS PO#";
+                    purchaseReportWorksheet.Cells["AH7"].Value = "IS RR#";
 
                     #endregion
 
                     #region -- Apply styling to the header row --
 
-                    using (var range = purchaseReportWorksheet.Cells["A7:AG7"])
+                    using (var range = purchaseReportWorksheet.Cells["A7:AH7"])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
@@ -1030,7 +1032,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var costAmount = pr.Amount; // purchase total gross
                         var netPurchases = costAmount / 1.12m; // purchase total net
                         var freight = pr.DeliveryReceipt?.Freight ?? 0m; // freight g vat
-                        var netFreight = pr.DeliveryReceipt?.Freight / 1.12m ?? 0m; // freight n vat
+                        var netFreight = freight / 1.12m; // freight n vat
+                        var freightAmount = freight * volume; // purchase total net
                         var freightAmountNet = netFreight * volume; // purchase total net
                         var vatAmount = netPurchases * 0.12m; // vat total
                         var whtAmount = netPurchases * 0.01m; // wht total
@@ -1073,12 +1076,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
                         purchaseReportWorksheet.Cells[row, 26].Value = netPurchases; // Purchase total net ======== move to third last
                         purchaseReportWorksheet.Cells[row, 27].Value = netFreight; // freight n vat ============
-                        purchaseReportWorksheet.Cells[row, 28].Value = freightAmountNet; // freight amount n vat ============
-                        purchaseReportWorksheet.Cells[row, 29].Value = commission; // commission =========
-                        purchaseReportWorksheet.Cells[row, 30].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // OTC COS =========
-                        purchaseReportWorksheet.Cells[row, 31].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
-                        purchaseReportWorksheet.Cells[row, 32].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
-                        purchaseReportWorksheet.Cells[row, 33].Value = pr.OldRRNo; // IS RR =========
+                        purchaseReportWorksheet.Cells[row, 28].Value = freightAmount; // freight amount n vat ============
+                        purchaseReportWorksheet.Cells[row, 29].Value = freightAmountNet; // freight amount n vat ============
+                        purchaseReportWorksheet.Cells[row, 30].Value = commission; // commission =========
+                        purchaseReportWorksheet.Cells[row, 31].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.OldCosNo; // OTC COS =========
+                        purchaseReportWorksheet.Cells[row, 32].Value = pr.DeliveryReceipt?.ManualDrNo; // OTC DR =========
+                        purchaseReportWorksheet.Cells[row, 33].Value = pr.PurchaseOrder?.OldPoNo; // IS PO =========
+                        purchaseReportWorksheet.Cells[row, 34].Value = pr.OldRRNo; // IS RR =========
 
                         #endregion -- Assign Values to Cells --
 
@@ -1090,6 +1094,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         totalNetPurchases += netPurchases;
                         totalCOSAmount += cosAmount;
                         totalCommission += commission;
+                        totalFreight += freightAmount;
                         totalNetFreight += freightAmountNet;
 
                         #endregion -- Add the values to total and format number cells --
@@ -1108,6 +1113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
                         purchaseReportWorksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat2;
                         purchaseReportWorksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat2;
+                        purchaseReportWorksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat2;
 
                         #endregion -- Add format number cells from Assign Values to Cells --
 
@@ -1129,8 +1135,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 24].Value = totalWHTAmount;
                     purchaseReportWorksheet.Cells[row, 26].Value = totalNetPurchases;
                     purchaseReportWorksheet.Cells[row, 27].Value = "";
-                    purchaseReportWorksheet.Cells[row, 28].Value = totalNetFreight;
-                    purchaseReportWorksheet.Cells[row, 29].Value = totalCommission;
+                    purchaseReportWorksheet.Cells[row, 28].Value = totalFreight;
+                    purchaseReportWorksheet.Cells[row, 29].Value = totalNetFreight;
+                    purchaseReportWorksheet.Cells[row, 30].Value = totalCommission;
 
                     purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
@@ -1140,19 +1147,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat2;
                     purchaseReportWorksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat2;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
                     // Apply style to subtotal rows
                     // color to whole row
-                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 29])
+                    using (var range = purchaseReportWorksheet.Cells[row, 1, row, 30])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                     }
                     // line to subtotal values
-                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 29])
+                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 30])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
