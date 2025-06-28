@@ -20,5 +20,15 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerOrderSlipId))]
         public FilprideCustomerOrderSlip? CustomerOrderSlip { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal Quantity {get; set;}
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal UnservedQuantity {get; set;}
+
+        public int? AppointedId { get; set; }
+
+        [ForeignKey(nameof(AppointedId))]
+        public FilprideCOSAppointedSupplier? AppointedSupplier { get; set; }
     }
 }

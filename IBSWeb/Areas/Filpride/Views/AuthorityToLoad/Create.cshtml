@@ -1,16 +1,10 @@
 @model BookATLViewModel
-
 @{
-    ViewBag.Title = "Create ATL";
-    Layout = "_Layout";
+ViewBag.Title = "Create ATL";
+Layout = "_Layout";
 }
-
 <link rel="stylesheet" href="~/css/form-style.css">
 
-<div class="loader-container">
-    <div class="loader"></div>
-    <div class="loader-text">Loading...</div>
-</div>
 <div class="card shadow border-0 mt-4">
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
@@ -22,177 +16,176 @@
     <div class="card-body p-4">
         <form method="post" class="row">
             @Html.AntiForgeryToken()
-            <div class="border-2 p-3">
-                <div asp-validation-summary="ModelOnly"></div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
-                    <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
-                    <span asp-validation-for="Date" class="text-danger"></span>
+
+            <div class="form-floating py-2 col-12">
+                <input asp-for="Date" type="date" class="form-control border-0 shadow" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Load Port<span class="required">*</span></label>
+                <select id="LoadPortSelect" name="LoadPortId" class="form-select js-select2 border-0 shadow" style="width:100%">
+                    <option value="" selected>Select load port</option>
+                    @foreach (var port in Model.LoadPorts)
+                    {
+                    <option value="@port.Value">@port.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">Supplier List<span class="required">*</span></label>
+                <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" id="SupplierId" style="width:100%">
+                    <option value="" selected>Select supplier</option>
+                </select>
+                <span asp-validation-for="SupplierId" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating py-2 col-12" id="uppiAtlWrapper" style="display:none;">
+                <input asp-for="UPPIAtlNo" class="form-control border-0 shadow" />
+                <label asp-for="UPPIAtlNo" class="ms-2">UPPI ATL#<span class="required">*</span></label>
+                <span asp-validation-for="UPPIAtlNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group py-2 col-12">
+                <label class="control-label">COS List<span class="required">*</span></label>
+                <div id="cosContainer"></div>
+                <div class="text-danger d-none" id="cosErrorMessage">Please select at least one COS with valid volume.</div>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 col-md-3">
+                    <button type="submit" class="btn btn-primary form-control" id="submitBtn" disabled>Create</button>
                 </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">Supplier List<span class="required">*</span></label>
-                    <select asp-for="SupplierId" asp-items="@Model.SupplierList" class="form-select js-select2 border-0 shadow" style="width:100%">
-                        <option value="" selected>Select supplier</option>
-                    </select>
-                    <span asp-validation-for="SupplierId" class="text-danger"></span>
-                </div>
-                <div class="form-floating py-2 col-12">
-                    <input asp-for="UPPIAtlNo" class="form-control border-0 shadow" placeholder="" required/>
-                    <label asp-for="UPPIAtlNo" class="ms-2">UPPI ATL#<span class="required">*</span></label>
-                    <span asp-validation-for="UPPIAtlNo" class="text-danger"></span>
-                </div>
-                <div class="form-group py-2 col-12">
-                    <label class="control-label">COS List<span class="required">*</span></label>
-                    <select asp-for="CosIds" asp-items="@Model.CosList" class="form-select js-multiple border-0 shadow" multiple="multiple" style="width:100%">
-                    </select>
-                    <span asp-validation-for="CosIds" class="text-danger"></span>
-                </div>
-                <fieldset class="border p-2 py-2">
-                    <legend class="w-auto px-2">Hauler Details</legend>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="Hauler" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
-                        <label asp-for="Hauler"></label>
-                        <span asp-validation-for="Hauler" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="Driver" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
-                        <label asp-for="Driver"></label>
-                        <span asp-validation-for="Driver" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="PlateNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
-                        <label asp-for="PlateNo">Plate#</label>
-                        <span asp-validation-for="PlateNo" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="Freight" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
-                        <label asp-for="Freight"></label>
-                        <span asp-validation-for="Freight" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating py-2 col-12">
-                        <input asp-for="LoadPort" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
-                        <label asp-for="LoadPort">Load Port</label>
-                        <span asp-validation-for="LoadPort" class="text-danger"></span>
-                    </div>
-                </fieldset>
-                <div class="row pt-2">
-                    <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Create</button>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    </div>
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="AuthorityToLoad" asp-action="Index" class="btn btn-outline-primary form-control">Back to List</a>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-@section Scripts
-{
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+@section Scripts {
+@await Html.PartialAsync("_ValidationScriptsPartial")
+<script>
+    let cosIndex = 0;
 
-    <script>
-        $(window).on('load', function () {
+    $(document).ready(function () {
+        const createBtn = $('#submitBtn');
+        const supplierIdInput = $('#SupplierId');
+        const loadPortInput = $('#LoadPortSelect');
 
-            // Handle supplier change event
-            $('#SupplierId').on('change', function () {
-                const supplierId = $(this).val();
-                handleSupplierChange(supplierId);
-            });
-
-            // Handle COS selection change
-            $('#CosIds').on('change', function () {
-                const selectedCos = $(this).val();
-                handleCosChange(selectedCos);
-            });
-
-            function handleSupplierChange(supplierId) {
-                if (!supplierId) {
-                    // Clear COS dropdown and hauler details if no supplier selected
-                    $('#CosIds').empty().trigger('change');
-                    clearHaulerDetails();
-                    toggleUPPIAtl(false);
-                    return;
-                }
-
-                console.log(supplierId);
-
-                // Show or hide UPPI ATL# based on supplierId
-                toggleUPPIAtl(supplierId === "19");
-
-                // Fetch connected COS list for selected supplier
-                $.ajax({
-                    url: '@Url.Action("GetSupplierCOS", "AuthorityToLoad", new { area = "Filpride" })',
-                    type: 'GET',
-                    data: { supplierId: supplierId },
-                    success: function (data) {
-                        const cosSelect = $('#CosIds');
-                        cosSelect.empty();
-
-                        if (data && data.cosList) {
-                            data.cosList.forEach(function (cos) {
-                                const option = new Option(cos.text, cos.value, false, false);
-                                cosSelect.append(option);
-                            });
-                        }
-                        cosSelect.trigger('change');
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching COS list:', error);
-                    }
-                });
-            }
-
-            function handleCosChange(selectedCos) {
-                if (!selectedCos || selectedCos.length === 0) {
-                    clearHaulerDetails();
-                    return;
-                }
-
-                // Fetch hauler details for first selected COS
-                const firstCosId = selectedCos[0];
-                $.ajax({
-                    url: '@Url.Action("GetHaulerDetails", "AuthorityToLoad", new { area = "Filpride" })',
-                    type: 'GET',
-                    data: { cosId: firstCosId },
-                    success: function (data) {
-                        if (data) {
-                            $('#Hauler').val(data.hauler || '');
-                            $('#Driver').val(data.driver || '');
-                            $('#PlateNo').val(data.plateNo || '');
-                            $('#Freight').val(data.freight || '0');
-                            $('#LoadPort').val(data.loadPort || '');
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching hauler details:', error);
-                        clearHaulerDetails();
-                    }
-                });
-            }
-
-            function toggleUPPIAtl(show) {
-                const uppiAtlDiv = $('input[name="UPPIAtlNo"]');
-                if (show) {
-                    uppiAtlDiv.parent().show(); // Ensure it's displayed as a block
-                } else {
-                    uppiAtlDiv.parent().hide(); // Hide the element
-                }
-            }
-
-            function clearHaulerDetails() {
-                $('#Hauler').val('');
-                $('#Driver').val('');
-                $('#PlateNo').val('');
-                $('#Freight').val('');
-                $('#LoadPort').val('');
-            }
+        supplierIdInput.on('change', function () {
+            $('#uppiAtlWrapper').toggle($(this).val() === '19');
+            loadCosList();
         });
-    
-    </script>
 
+        loadPortInput.on('change', loadCosList);
 
+        function loadCosList() {
+            const supplierId = supplierIdInput.val();
+            const loadPortId = loadPortInput.val();
+            const container = $('#cosContainer');
+            container.empty();
+            cosIndex = 0;
+            disableCreateButton(true);
+
+            if (!supplierId || !loadPortId) return;
+
+            $.ajax({
+                url: '@Url.Action("GetSupplierCOS", "AuthorityToLoad", new { area = "Filpride" })',
+                type: 'GET',
+                data: { supplierId, loadPortId },
+                success: function (data) {
+                    if (data?.length > 0) {
+                        data.forEach(cos => {
+                            const html = `
+                                    <div class="row align-items-center mb-2 cos-entry" 
+                                         data-cos-id="${cos.cosId}" 
+                                         data-appointed-id="${cos.appointedId}" 
+                                         data-volume="${cos.volume}">
+                                        <div class="col-md-6">
+                                            <input type="checkbox" class="form-check-input me-1 cos-checkbox" />
+                                            ${cos.cosNo} (Available: ${cos.volume})
+                                        </div>
+                                        <div class="col-md-6 volume-wrapper" style="display:none;">
+                                            <input type="number" step="0.01"
+                                                   class="form-control form-control-sm cos-volume"
+                                                   placeholder="Enter volume (max: ${cos.volume})"
+                                                   min="0.01" max="${cos.volume}" />
+                                        </div>
+                                    </div>`;
+                            container.append(html);
+                        });
+                        bindCosCheckboxEvents();
+                    }
+                },
+                error: function () {
+                    console.error("Failed to fetch COS list");
+                }
+            });
+        }
+
+        function bindCosCheckboxEvents() {
+            $('.cos-checkbox').on('change', function () {
+                const entry = $(this).closest('.cos-entry');
+                const volumeInput = entry.find('.cos-volume');
+                const wrapper = entry.find('.volume-wrapper');
+
+                if (this.checked) {
+                    wrapper.show();
+                    volumeInput.prop('disabled', false).prop('required', true);
+
+                    const appointedId = entry.data('appointed-id');
+                    const cosId = entry.data('cos-id');
+
+                    entry.append(`
+                            <input type="hidden" name="SelectedCosDetails[${cosIndex}].AppointedId" value="${appointedId}" class="hidden-appointed" />
+                            <input type="hidden" name="SelectedCosDetails[${cosIndex}].CosId" value="${cosId}" class="hidden-cosid" />
+                            <input type="hidden" name="SelectedCosDetails[${cosIndex}].Volume" class="hidden-volume" />
+                        `);
+
+                    cosIndex++;
+                } else {
+                    wrapper.hide();
+                    volumeInput.prop('disabled', true).prop('required', false).val('');
+                    entry.find('.hidden-appointed, .hidden-cosid, .hidden-volume').remove();
+                }
+
+                validateVolumes();
+            });
+
+            $('#cosContainer').on('input', '.cos-volume', function () {
+                const entry = $(this).closest('.cos-entry');
+                entry.find('.hidden-volume').val($(this).val());
+                validateVolumes();
+            });
+        }
+
+        function validateVolumes() {
+            let isValid = true;
+            let hasAnyChecked = false;
+
+            $('.cos-checkbox:checked').each(function () {
+                hasAnyChecked = true;
+                const entry = $(this).closest('.cos-entry');
+                const input = entry.find('.cos-volume');
+                const max = parseFloat(entry.data('volume'));
+                const val = parseFloat(input.val());
+
+                if (isNaN(val) || val <= 0 || val > max) {
+                    isValid = false;
+                }
+            });
+
+            $('#cosErrorMessage').toggleClass('d-none', isValid && hasAnyChecked);
+            disableCreateButton(!(isValid && hasAnyChecked));
+        }
+
+        function disableCreateButton(disable) {
+            $('#submitBtn').prop('disabled', disable);
+        }
+    });
+</script>
 }

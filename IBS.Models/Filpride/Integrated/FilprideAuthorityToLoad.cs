@@ -44,6 +44,28 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string Company { get; set; }
+
+        [Column(TypeName = "varchar(100)")]
+        public string? HaulerName { get; set; }
+
+        [Column(TypeName = "varchar(100)")]
+        public string? Driver { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string? PlateNo { get; set; }
+
+        [Column(TypeName = "varchar(100)")]
+        public string? SupplierName { get; set; }
+
+        [Column(TypeName = "varchar(50)")]
+        public string Depot { get; set; }
+
+        public int LoadPortId { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal Freight { get; set; }
+
     }
 }

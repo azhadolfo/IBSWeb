@@ -137,6 +137,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             BookATLViewModel viewModel = new()
             {
                 SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken),
                 Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                 CurrentUser = _userManager.GetUserName(User)
             };
@@ -158,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
                 TempData["error"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -166,10 +168,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var firstCosId = viewModel.SelectedCosDetails.FirstOrDefault()!.CosId;
+
+                var cosRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(x => x.CustomerOrderSlipId == firstCosId, cancellationToken);
+
+                if (cosRecord == null)
+                {
+                    return BadRequest();
+                }
+
                 FilprideAuthorityToLoad model = new()
                 {
                     AuthorityToLoadNo = await _unitOfWork.FilprideAuthorityToLoad.GenerateAtlNo(companyClaims, cancellationToken),
-                    CustomerOrderSlipId = viewModel.CosIds.FirstOrDefault(),
+                    CustomerOrderSlipId = cosRecord.CustomerOrderSlipId,
+                    LoadPortId = cosRecord.PickUpPointId ?? 0,
+                    Depot = cosRecord.PickUpPoint!.Depot,
+                    Freight = cosRecord.Freight ?? 0m,
                     DateBooked = viewModel.Date,
                     ValidUntil = viewModel.Date.AddDays(4),
                     UppiAtlNo = viewModel.UPPIAtlNo,
@@ -184,39 +199,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var bookDetails = new List<FilprideBookAtlDetail>();
 
-                foreach (var cosId in viewModel.CosIds)
+                foreach (var details in viewModel.SelectedCosDetails)
                 {
                     // Get all appointed suppliers for this COS in a single query
                     var appointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
                         .Include(c => c.CustomerOrderSlip)
-                        .Where(c => c.CustomerOrderSlipId == cosId)
+                        .Where(c => c.CustomerOrderSlipId == details.CosId)
                         .ToListAsync(cancellationToken);
 
-                    if (appointedSuppliers.Count == 0)
+                    var appointedSupplier = appointedSuppliers.FirstOrDefault(x => x.SequenceId == details.AppointedId);
+
+                    if (appointedSupplier == null)
                     {
                         continue;
                     }
 
-                    var matchingSuppliers = appointedSuppliers.Where(c => c.SupplierId == viewModel.SupplierId).ToList();
-
-                    // Update AtlNo for matching suppliers
-                    foreach (var supplier in matchingSuppliers)
-                    {
-                        supplier.AtlNo = model.AuthorityToLoadNo;
-                    }
+                    appointedSupplier.UnreservedQuantity -= details.Volume;
 
                     // Add new book details
                     bookDetails.Add(new FilprideBookAtlDetail
                     {
                         AuthorityToLoadId = model.AuthorityToLoadId,
-                        CustomerOrderSlipId = cosId,
+                        CustomerOrderSlipId = appointedSupplier.CustomerOrderSlipId,
+                        Quantity = details.Volume,
+                        UnservedQuantity = details.Volume,
                     });
 
-                    var allHaveAtlNo = appointedSuppliers.All(e => e.AtlNo != null);
-
-                    if (allHaveAtlNo)
+                    if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
                     {
-                        appointedSuppliers.First().CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
+                        appointedSupplier.CustomerOrderSlip!.Status = nameof(CosStatus.ForApprovalOfOM);
                     }
                 }
 
@@ -225,7 +236,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new atl# {model.AuthorityToLoadNo}", "Authority To Load", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                TempData["success"] = "ATL booked successfully";
+                TempData["success"] = $"ATL# {model.AuthorityToLoadNo} booked successfully.";
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
@@ -273,23 +284,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSupplierCOS(int supplierId)
+        public async Task<IActionResult> GetSupplierCOS(int supplierId, int loadPortId)
         {
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
-                .Where(a => a.SupplierId == supplierId &&
-                            a.CustomerOrderSlip!.Status == nameof(CosStatus.ForAtlBooking) &&
-                            a.AtlNo == null)
-                .GroupBy(a => new { a.CustomerOrderSlipId, a.CustomerOrderSlip!.CustomerOrderSlipNo })
-                .Select(g => new SelectListItem
+                .Where(a => a.SupplierId == supplierId
+                            && a.CustomerOrderSlip!.Status == nameof(CosStatus.ForAtlBooking)
+                            && a.CustomerOrderSlip!.PickUpPointId == loadPortId
+                            && a.UnreservedQuantity > 0)
+                .Select(g => new
                 {
-                    Value = g.Key.CustomerOrderSlipId.ToString(),
-                    Text = g.Key.CustomerOrderSlipNo
+                    appointedId = g.SequenceId,
+                    cosId = g.CustomerOrderSlipId,
+                    cosNo = g.CustomerOrderSlip!.CustomerOrderSlipNo,
+                    volume = g.UnreservedQuantity
                 })
                 .ToListAsync();
 
-            return Json(new { cosList });
+            return Json(cosList);
         }
+
 
 
         [HttpGet]

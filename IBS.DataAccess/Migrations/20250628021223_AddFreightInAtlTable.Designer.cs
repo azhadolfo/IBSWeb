@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250628021223_AddFreightInAtlTable")]
+    partial class AddFreightInAtlTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -442,16 +445,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_per_month");
 
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_number");
-
                     b.Property<int?>("BankId")
                         .HasColumnType("integer")
                         .HasColumnName("bank_id");
@@ -610,11 +603,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
 
                     b.Property<string>("SupportingFileSavedFileName")
                         .HasColumnType("text")
@@ -945,11 +933,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("product_id");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
-
                     b.Property<string>("PurchaseOrderNo")
                         .HasColumnType("text")
                         .HasColumnName("purchase_order_no");
@@ -989,11 +972,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
 
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
-
                     b.Property<string>("SupplierSalesOrderNo")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("supplier_sales_order_no");
@@ -1002,11 +980,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("supplier_tin");
-
-                    b.Property<string>("TaxType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("tax_type");
 
                     b.Property<string>("Terms")
                         .IsRequired()
@@ -1024,11 +997,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("UnTriggeredQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("un_triggered_quantity");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -1245,16 +1213,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("collection_receipt_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CollectionReceiptId"));
-
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_number");
 
                     b.Property<int?>("BankId")
                         .HasColumnType("integer")
@@ -1994,19 +1952,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("customer_address");
 
-                    b.Property<string>("CustomerBusinessType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_business_type");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
@@ -2028,14 +1976,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
-
-                    b.Property<bool>("HasEwt")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_ewt");
-
-                    b.Property<bool>("HasWvat")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_wvat");
 
                     b.Property<string>("Instructions")
                         .HasColumnType("varchar(200)")
@@ -2075,15 +2015,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(12)")
                         .HasColumnName("service_invoice_no");
 
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("service_name");
-
-                    b.Property<decimal>("ServicePercent")
-                        .HasColumnType("numeric")
-                        .HasColumnName("service_percent");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2101,11 +2032,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("UnearnedAmount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unearned_amount");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -3164,10 +3090,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(20)")
                         .HasColumnName("authority_to_load_no");
 
-                    b.Property<decimal>("AvailableCreditLimit")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("available_credit_limit");
-
                     b.Property<decimal>("BalanceQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("balance_quantity");
@@ -3176,11 +3098,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("branch");
 
-                    b.Property<string>("BusinessStyle")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("business_style");
-
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("commission_rate");
@@ -3188,11 +3105,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CommissioneeId")
                         .HasColumnType("integer")
                         .HasColumnName("commissionee_id");
-
-                    b.Property<string>("CommissioneeName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("commissionee_name");
 
                     b.Property<string>("Company")
                         .IsRequired()
@@ -3207,10 +3119,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<decimal>("CreditBalance")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("credit_balance");
-
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
                         .HasColumnType("text")
@@ -3219,11 +3127,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerOrderSlipNo")
                         .IsRequired()
@@ -3260,11 +3163,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("DeliveryOption")
                         .HasColumnType("varchar(50)")
                         .HasColumnName("delivery_option");
-
-                    b.Property<string>("Depot")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("depot");
 
                     b.Property<string>("DisapprovedBy")
                         .HasColumnType("varchar(100)")
@@ -3310,17 +3208,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("has_commission");
 
-                    b.Property<bool>("HasEWT")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_ewt");
-
                     b.Property<bool>("HasMultiplePO")
                         .HasColumnType("boolean")
                         .HasColumnName("has_multiple_po");
-
-                    b.Property<bool>("HasWVAT")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_wvat");
 
                     b.Property<int?>("HaulerId")
                         .HasColumnType("integer")
@@ -3363,11 +3253,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
                         .HasColumnName("product_id");
-
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
 
                     b.Property<int?>("PurchaseOrderId")
                         .HasColumnType("integer")
@@ -3414,11 +3299,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string[]>("UploadedFiles")
                         .HasColumnType("varchar[]")
                         .HasColumnName("uploaded_files");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("vat_type");
 
                     b.HasKey("CustomerOrderSlipId")
                         .HasName("pk_filpride_customer_order_slips");
@@ -3577,11 +3457,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("HaulerId")
                         .HasColumnType("integer")
                         .HasColumnName("hauler_id");
-
-                    b.Property<string>("HaulerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("hauler_name");
 
                     b.Property<bool>("IsCommissionPaid")
                         .HasColumnType("boolean")
