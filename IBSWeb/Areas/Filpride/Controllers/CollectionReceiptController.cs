@@ -246,6 +246,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
                                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
+
                     if (existingSalesInvoice == null)
                     {
                         return NotFound();
@@ -259,6 +261,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
                     model.Type = existingSalesInvoice.Type;
+                    model.BankAccountName = bankAccount!.AccountName;
+                    model.BankAccountNumber = bankAccount.AccountNo;
 
                     if (bir2306 != null && bir2306.Length > 0)
                     {
@@ -370,6 +374,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
+
+            model.BankAccountName = bankAccount!.AccountName;
+            model.BankAccountNumber = bankAccount.AccountNo;
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
 
@@ -590,6 +598,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Saving default value
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
@@ -623,6 +632,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
                     existingModel.BankId = model.BankId;
+                    existingModel.BankAccountName = bankAccount!.AccountName;
+                    existingModel.BankAccountNumber = bankAccount.AccountNo;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
@@ -814,6 +825,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
 
                     if (existingServiceInvoice == null)
                     {
@@ -828,6 +840,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
                     model.Type = existingServiceInvoice.Type;
+                    model.BankAccountName = bankAccount!.AccountName;
+                    model.BankAccountNumber = bankAccount.AccountNo;
 
                     if (bir2306 != null && bir2306.Length > 0)
                     {
@@ -1155,6 +1169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Saving default value
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
@@ -1168,6 +1183,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
                     existingModel.BankId = model.BankId;
+                    existingModel.BankAccountName = bankAccount!.AccountName;
+                    existingModel.BankAccountNumber = bankAccount.AccountNo;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
