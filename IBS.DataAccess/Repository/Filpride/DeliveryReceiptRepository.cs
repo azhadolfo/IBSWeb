@@ -84,6 +84,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId,
                     cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
+            var supplierHauler = await _db.FilprideSuppliers.FirstOrDefaultAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
 
             #region--Update COS
 
@@ -124,6 +125,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
             existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
             existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
+            existingRecord.HaulerName = supplierHauler?.SupplierName ?? string.Empty;
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -203,12 +205,17 @@ namespace IBS.DataAccess.Repository.Filpride
                 var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
                 var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
 
-                var netOfVatAmount = ComputeNetOfVat(deliveryReceipt.TotalAmount);
-                var vatAmount = ComputeVatAmount(netOfVatAmount);
-                var arTradeCwtAmount = deliveryReceipt.Customer!.WithHoldingTax ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.01m) : 0m;
-                var arTradeCwvAmount = deliveryReceipt.Customer.WithHoldingTax ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.05m) : 0m;
-                var netOfEwtAmount = deliveryReceipt.TotalAmount - (arTradeCwtAmount + arTradeCwvAmount);
-
+                var netOfVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    ? ComputeNetOfVat(deliveryReceipt.TotalAmount)
+                    : deliveryReceipt.TotalAmount;
+                var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    ? ComputeVatAmount(netOfVatAmount)
+                    : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.01m) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(deliveryReceipt.TotalAmount, 0.05m) : 0m;
+                var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
+                    ? ComputeNetOfEwt(deliveryReceipt.TotalAmount, (arTradeCwtAmount + arTradeCwvAmount))
+                    : deliveryReceipt.TotalAmount;
 
                 if (arTradeCwtAmount > 0)
                 {
@@ -293,6 +300,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 });
 
                 var cogsGrossAmount = deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity;
+                var cogsNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    ? ComputeNetOfVat(cogsGrossAmount)
+                    : cogsGrossAmount;
 
                 ledgers.Add(new FilprideGeneralLedgerBook
                 {
@@ -302,7 +312,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountId = cogsTitle.AccountId,
                     AccountNo = cogsTitle.AccountNumber,
                     AccountTitle = cogsTitle.AccountName,
-                    Debit = cogsGrossAmount,
+                    Debit = cogsNetOfVat,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
@@ -318,7 +328,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountNo = inventoryTitle.AccountNumber,
                     AccountTitle = inventoryTitle.AccountName,
                     Debit = 0,
-                    Credit = cogsGrossAmount,
+                    Credit = cogsNetOfVat,
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
@@ -328,6 +338,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     if (deliveryReceipt.Freight > 0)
                     {
+                        var freightGrossAmount = deliveryReceipt.Freight * deliveryReceipt.Quantity;
+                        var freightNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                            ? ComputeNetOfVat(freightGrossAmount)
+                            : freightGrossAmount;
+
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -336,12 +351,16 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountId = freightTitle.AccountId,
                             AccountNo = freightTitle.AccountNumber,
                             AccountTitle = freightTitle.AccountName,
-                            Debit = ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity),
+                            Debit = freightNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.CreatedBy,
                             CreatedDate = deliveryReceipt.CreatedDate
                         });
+
+                        var freightVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                            ? ComputeVatAmount(freightNetOfVat)
+                            : 0m;
 
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
@@ -351,7 +370,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountId = vatInputTitle.AccountId,
                             AccountNo = vatInputTitle.AccountNumber,
                             AccountTitle = vatInputTitle.AccountName,
-                            Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.Freight * deliveryReceipt.Quantity)),
+                            Debit = freightVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.CreatedBy,
@@ -361,6 +380,11 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     if (deliveryReceipt.ECC > 0)
                     {
+                        var eccGrossAmount = deliveryReceipt.ECC * deliveryReceipt.Quantity;
+                        var eccNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                            ? ComputeNetOfVat(eccGrossAmount)
+                            : eccGrossAmount;
+
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
                             Date = (DateOnly)deliveryReceipt.DeliveredDate,
@@ -369,12 +393,16 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountId = freightTitle.AccountId,
                             AccountNo = freightTitle.AccountNumber,
                             AccountTitle = freightTitle.AccountName,
-                            Debit = ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity),
+                            Debit = eccNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.CreatedBy,
                             CreatedDate = deliveryReceipt.CreatedDate
                         });
+
+                        var eccVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                            ? ComputeVatAmount(eccNetOfVat)
+                            : 0m;
 
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
@@ -384,7 +412,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             AccountId = vatInputTitle.AccountId,
                             AccountNo = vatInputTitle.AccountNumber,
                             AccountTitle = vatInputTitle.AccountName,
-                            Debit = ComputeVatAmount(ComputeNetOfVat(deliveryReceipt.ECC * deliveryReceipt.Quantity)),
+                            Debit = eccVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.CreatedBy,
@@ -393,9 +421,15 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
 
                     var totalFreightGrossAmount = deliveryReceipt.FreightAmount;
-                    var totalFreightNetOfVat = ComputeNetOfVat(totalFreightGrossAmount);
-                    var totalFreightEwtAmount = ComputeEwtAmount(totalFreightNetOfVat, 0.02m);
-                    var totalFreightNetOfEwt = ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount);
+                    var totalFreightNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                        ? ComputeNetOfVat(totalFreightGrossAmount)
+                        : totalFreightGrossAmount;
+                    var totalFreightEwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT
+                        ? ComputeEwtAmount(totalFreightNetOfVat, 0.02m)
+                        : 0m;
+                    var totalFreightNetOfEwt = totalFreightEwtAmount > 0
+                        ? ComputeNetOfEwt(totalFreightGrossAmount, totalFreightEwtAmount)
+                        : totalFreightGrossAmount;
 
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -435,7 +469,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     var commissionGrossAmount = deliveryReceipt.CommissionAmount;
                     var commissionEwtAmount = deliveryReceipt.Commissionee!.TaxType == SD.TaxType_WithTax ?
                         ComputeEwtAmount(commissionGrossAmount, 0.05m) : 0;
-                    var commissionNetOfEwt = deliveryReceipt.Commissionee.TaxType == SD.TaxType_WithTax ?
+                    var commissionNetOfEwt = commissionEwtAmount > 0 ?
                         ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount) : commissionGrossAmount;
 
                     ledgers.Add(new FilprideGeneralLedgerBook

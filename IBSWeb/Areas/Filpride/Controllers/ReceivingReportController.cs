@@ -457,6 +457,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            receivingReport.PurchaseOrder =
+                await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == receivingReport.POId);
+
             return View(receivingReport);
         }
 

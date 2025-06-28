@@ -266,6 +266,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
+                    var supplierHauler = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+                    
                     if (customerOrderSlip == null)
                     {
                         return BadRequest();
@@ -295,6 +297,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                         CustomerAddress = customerOrderSlip.CustomerAddress,
                         CustomerTin = customerOrderSlip.CustomerTin,
+                        HaulerName = supplierHauler?.SupplierName ?? string.Empty
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;

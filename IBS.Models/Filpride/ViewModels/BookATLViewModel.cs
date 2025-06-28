@@ -18,9 +18,9 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? Hauler { get; set; }
 
-        public string Driver { get; set; }
+        public string? Driver { get; set; }
 
-        public string PlateNo { get; set; }
+        public string? PlateNo { get; set; }
 
         public decimal Freight { get; set; }
 

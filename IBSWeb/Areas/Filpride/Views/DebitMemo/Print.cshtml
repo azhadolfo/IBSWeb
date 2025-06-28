@@ -8,8 +8,20 @@
 
 @{
     ViewData["Title"] = "Print Debit Memo";
-    decimal netOfVatAmount = Model.DebitAmount / 1.12m;
-    decimal vatAmount = netOfVatAmount * 0.12m;
+
+    decimal netOfVatAmount = 0m;
+    decimal vatAmount = 0m;
+    
+    if ( Model.SalesInvoice != null) 
+    {
+        netOfVatAmount = Model.SalesInvoice!.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? (Model.DebitAmount / 1.12m) : Model.DebitAmount;
+        vatAmount = Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Vatable ? (netOfVatAmount * 0.12m) : 0m;
+    }
+    else 
+    {
+        netOfVatAmount = Model.ServiceInvoice!.VatType == SD.VatType_Vatable ? Model.DebitAmount / 1.12m : Model.DebitAmount;
+        vatAmount = Model.ServiceInvoice.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0m;
+    }
     
     var selectedCompany = string.Empty;
 
@@ -18,7 +30,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
+    var customerType = Model.SalesInvoice?.CustomerOrderSlip?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -66,16 +78,16 @@
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.Customer!.CustomerName) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerName) &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerAddress) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerAddress) &nbsp;<br />
 
                         <span><b>TIN:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerTin) &nbsp;<br />
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerTin) &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.Customer!.BusinessStyle) &nbsp;
+                        &nbsp; @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.BusinessStyle) &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -108,7 +120,7 @@
                 <tr style="height:80px;">
                     <td>@Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)</td>
                     <td>@Model.SalesInvoice!.TransactionDate.ToString(SD.Date_Format)</td>
-                    <td>@Html.DisplayFor(model => model.SalesInvoice!.Product!.ProductName)</td>
+                    <td>@Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.ProductName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td>@Model.DebitAmount.ToString(decimalFormat)</td>
                 </tr>
@@ -128,42 +140,47 @@
                                 <tbody class="text-nowrap">
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
-                                        <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer!.VatType == "Vatable")
-                                            {
-                                                <p style="height: 9px;">@netOfVatAmount.ToString(decimalFormat)</p>
-                                            }
-                                        </td>
+                                        @if (Model.SalesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable)
+                                        {
+                                            <td class="text-end">@netOfVatAmount.ToString(decimalFormat)</td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                        }
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-
-                                        <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.VatType == "Zero Rated")
-                                            {
-                                                <p style="height: 9px;">@Model.DebitAmount.ToString(decimalFormat)</p>
-                                            }
-                                        </td>
+                                        @if (Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_ZeroRated)
+                                        {
+                                            <td class="text-end">@Model.DebitAmount.ToString(decimalFormat)</td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                        }
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
-
-                                        <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.VatType == "Exempt")
-                                            {
-                                                <p style="height: 9px;">@Model.DebitAmount.ToString(decimalFormat)</p>
-                                            }
-                                        </td>
+                                        @if (Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Exempt)
+                                        {
+                                            <td class="text-end">@Model.DebitAmount.ToString(decimalFormat)</td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                        }
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT Amount: </b></p></td>
-
-                                        <td class="text-end">
-                                            @if (Model.SalesInvoice.Customer.VatType == "Vatable")
-                                            {
-                                                <p style="height: 9px;">@vatAmount.ToString(decimalFormat)</p>
-                                            }
-                                        </td>
+                                        @if (Model.SalesInvoice.CustomerOrderSlip.VatType == "Vatable")
+                                        {
+                                            <td class="text-end">@vatAmount.ToString(decimalFormat)</td>
+                                        }
+                                        else
+                                        {
+                                            <td></td>
+                                        }
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
@@ -186,16 +203,16 @@ else if (Model.Source == "Service Invoice")
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerName) &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerAddress) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerAddress) &nbsp;<br />
 
                         <span><b>TIN:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerTin) &nbsp;<br />
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerTin) &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle) &nbsp;
+                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerBusinessType) &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -226,7 +243,7 @@ else if (Model.Source == "Service Invoice")
                             @Model.Period.ToString("MMMM yyyy")
                         </p>
                     </td>
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.Service!.Name)</td>
+                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceName)</td>
                     <td>@Html.DisplayFor(model => model.Description)</td>
                     <td class="pt-2">
                         <p style="line-height:15px">
@@ -250,7 +267,7 @@ else if (Model.Source == "Service Invoice")
                                 <tbody class="text-nowrap">
                                     <tr>
                                         <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
-                                        @if (netOfVatAmount != 0)
+                                        @if (Model.ServiceInvoice!.VatType == SD.VatType_Vatable)
                                         {
                                             <td class="text-end">@netOfVatAmount.ToString(decimalFormat)</td>
                                         }
@@ -261,9 +278,9 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice!.Customer!.VatType == "Zero Rated")
+                                        @if (Model.ServiceInvoice!.VatType == SD.VatType_ZeroRated)
                                         {
-                                            <td class="text-end">@Model.DebitAmount.ToString(decimalFormat)</td>
+                                            <td class="text-end">@netOfVatAmount.ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -272,10 +289,9 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
-
-                                        @if (Model.ServiceInvoice.Customer.VatType == "Exempt")
+                                        @if (Model.ServiceInvoice.VatType == SD.VatType_Exempt)
                                         {
-                                            <td class="text-end">@Model.DebitAmount.ToString(decimalFormat)</td>
+                                            <td class="text-end">@netOfVatAmount.ToString(decimalFormat)</td>
                                         }
                                         else
                                         {
@@ -284,8 +300,7 @@ else if (Model.Source == "Service Invoice")
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT Amount: </b></p></td>
-
-                                        @if (vatAmount != 0)
+                                        @if (Model.ServiceInvoice!.VatType == SD.VatType_Vatable)
                                         {
                                             <td class="text-end">@vatAmount.ToString(decimalFormat)</td>
                                         }

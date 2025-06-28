@@ -197,7 +197,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-
             var viewModel = new FilpridePurchaseOrder();
 
             var companyClaims = await GetCompanyClaimAsync();
@@ -240,7 +239,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
+                    var product = await _dbContext.Products
+                        .FirstOrDefaultAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
                     if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (product == null)
                     {
                         return NotFound();
                     }
@@ -249,8 +256,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.CreatedBy = _userManager.GetUserName(this.User);
                     model.Amount = model.Quantity * model.Price;
                     model.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : model.Quantity;
+                    model.SupplierName = supplier.SupplierName;
                     model.SupplierAddress = supplier.SupplierAddress;
                     model.SupplierTin = supplier.SupplierTin;
+                    model.ProductName = product.ProductName;
+                    model.VatType = supplier.VatType;
+                    model.TaxType = supplier.TaxType;
                     await _dbContext.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
@@ -339,7 +350,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
 
+                    var product = await _dbContext.Products
+                        .FirstOrDefaultAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
                     if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    if (product == null)
                     {
                         return NotFound();
                     }
@@ -362,8 +381,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.OldPoNo = model.OldPoNo;
                     existingModel.TriggerDate = model.TriggerDate;
                     existingModel.PickUpPointId = model.PickUpPointId;
+                    existingModel.SupplierName = supplier.SupplierName;
                     existingModel.SupplierAddress = supplier.SupplierAddress;
                     existingModel.SupplierTin = supplier.SupplierTin;
+                    existingModel.ProductName = product.ProductName;
+                    existingModel.VatType = supplier.VatType;
+                    existingModel.TaxType = supplier.TaxType;
 
                     #region --Audit Trail Recording
 

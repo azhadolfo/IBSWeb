@@ -211,5 +211,27 @@ namespace IBS.Models.Filpride.Integrated
         public string PriceReference { get; set; } =  string.Empty;
 
         public ICollection<FilprideDeliveryReceipt>? DeliveryReceipts { get; set; }
+
+        public string CustomerName { get; set; }
+
+        public string ProductName { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal AvailableCreditLimit { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CreditBalance { get; set; }
+
+        public string VatType { get; set; }
+
+        public bool HasEWT { get; set; }
+
+        public bool HasWVAT { get; set; }
+
+        public string Depot { get; set; }
+
+        public string CommissioneeName { get; set; }
+
+        public string BusinessStyle { get; set; }
     }
 }

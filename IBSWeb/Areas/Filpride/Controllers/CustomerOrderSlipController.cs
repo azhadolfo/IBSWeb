@@ -286,7 +286,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var customer = await _unitOfWork.FilprideCustomer
                         .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
 
-                    if (customer == null)
+                    var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
+
+                    var commissionee = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
+
+                    if (customer == null || product == null)
                     {
                         return BadRequest();
                     }
@@ -314,7 +318,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Branch = viewModel.SelectedBranch,
                         CustomerType = viewModel.CustomerType!,
                         OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
-                        Freight = viewModel.Freight
+                        Freight = viewModel.Freight,
+                        CustomerName = customer.CustomerName,
+                        ProductName = product.ProductName,
+                        VatType = customer.VatType,
+                        HasEWT = customer.WithHoldingTax,
+                        HasWVAT = customer.WithHoldingVat,
+                        CommissioneeName = commissionee?.SupplierName ?? string.Empty,
+                        BusinessStyle = customer.BusinessStyle ?? string.Empty,
+                        ///TODO: pending revision(AZH)
+                        AvailableCreditLimit = customer.CreditLimitAsOfToday,
+                        CreditBalance = await _unitOfWork.FilprideCustomerOrderSlip.GetCustomerCreditBalance(viewModel.CustomerId, cancellationToken),
+                        Depot = String.Empty
                     };
 
                     // Upload files if there is existing
@@ -705,6 +720,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (customerOrderSlip.FirstApprovedBy == null)
                     return View("PreviewByOperationManager", model);
 
+                ///TODO: pending revision(AZH)
                 // Add credit information for finance view
                 model.CreditBalance = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetCustomerCreditBalance(customerOrderSlip.CustomerId, cancellationToken);
@@ -725,15 +741,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var vatCalculator = _unitOfWork.FilprideCustomerOrderSlip;
 
+            var netOfVatCosPrice = customerOrderSlip.VatType == SD.VatType_Vatable
+                ? vatCalculator.ComputeNetOfVat(customerOrderSlip.DeliveredPrice)
+                : customerOrderSlip.DeliveredPrice;
+
+            var netOfVatFreightCharge = 0m;
+            if (customerOrderSlip.Freight != 0)
+            {
+                netOfVatFreightCharge = customerOrderSlip.VatType == SD.VatType_Vatable
+                    ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight!)
+                    : (decimal)customerOrderSlip.Freight!;
+            }
+
+            var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
+                ? vatCalculator.ComputeVatAmount(
+                    vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount))
+                : 0m;
+
             return new CustomerOrderSlipForApprovalViewModel
             {
                 CustomerOrderSlip = customerOrderSlip,
-                NetOfVatCosPrice = vatCalculator.ComputeNetOfVat(customerOrderSlip.DeliveredPrice),
-                NetOfVatFreightCharge = customerOrderSlip.Freight != 0
-                    ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight!)
-                    : (decimal)customerOrderSlip.Freight,
-                VatAmount = vatCalculator.ComputeVatAmount(
-                    vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount)),
+                NetOfVatCosPrice = netOfVatCosPrice,
+                NetOfVatFreightCharge = netOfVatFreightCharge,
+                VatAmount = vatAmount,
                 Status = customerOrderSlip.Status,
                 PriceReference = customerOrderSlip.PriceReference
             };
@@ -762,8 +792,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    totalPoAmount += supplier.Quantity *
-                                     _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price);
+                    var grossAmount = supplier.Quantity * po.Price;
+                    var netOfVat = po.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(grossAmount)
+                            : grossAmount;
+
+                    totalPoAmount += netOfVat;
                 }
             }
 
@@ -789,10 +823,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (totalCOSVolume > 0)
             {
                 var weightedAvgPrice = weightedCostTotal / totalCOSVolume;
-                return requiredQuantity * _unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedAvgPrice);
+                var finalWeightedAvgPrice = po.VatType == SD.VatType_Vatable
+                        ?_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedAvgPrice)
+                        : weightedAvgPrice;
+
+                return requiredQuantity * finalWeightedAvgPrice;
             }
 
-            return requiredQuantity * _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price);
+            var finalPrice = po.VatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price)
+                    : po.Price;
+
+            return requiredQuantity * finalPrice;
         }
 
         [Authorize(Roles = "OperationManager, Admin, HeadApprover")]
@@ -858,7 +900,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Status = nameof(Status.Posted),
                                 OldPoNo = existingPo.OldPoNo,
                                 PickUpPointId = existingPo.PickUpPointId,
-                                Type = existingPo.Type
+                                Type = existingPo.Type,
+                                SupplierName = existingPo.SupplierName,
+                                SupplierAddress = existingPo.SupplierAddress,
+                                SupplierTin = existingPo.SupplierTin,
+                                ProductName = existingPo.ProductName,
+                                VatType = existingPo.VatType,
+                                TaxType = existingPo.TaxType
                             };
 
                             poNumbers.Add(subPoModel.PurchaseOrderNo);
@@ -1083,12 +1131,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
-                    if (existingCos == null)
+                    var depo = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
+
+                    if (existingCos == null || depo == null)
                     {
                         return BadRequest();
                     }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
+                    existingCos.Depot = depo.Depot;
                     existingCos.Status = nameof(CosStatus.ForAtlBooking);
 
                     switch (viewModel.DeliveryOption)
@@ -1275,8 +1326,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
                         }
                     }
+                    var depot = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
+
+                    if (depot == null)
+                    {
+                        return BadRequest();
+                    }
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
+                    existingCos.Depot = depot.Depot;
 
                     switch (viewModel.DeliveryOption)
                     {

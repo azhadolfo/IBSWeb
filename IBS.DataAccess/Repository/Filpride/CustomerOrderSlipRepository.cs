@@ -83,6 +83,15 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(x => x.CustomerId ==  viewModel.CustomerId, cancellationToken)
                 ?? throw new ArgumentException("Customer not found");
 
+            var product = await _db.Products
+                .FirstOrDefaultAsync(x => x.ProductId == viewModel.ProductId, cancellationToken)
+                ?? throw new ArgumentException("Product not found");
+
+            var commissionee = await _db.FilprideSuppliers
+                .FirstOrDefaultAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken)
+                ?? throw new ArgumentException("Commissionee not found");
+
+
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.CustomerAddress = viewModel.CustomerAddress!;
@@ -104,6 +113,16 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerType = viewModel.CustomerType!;
             existingRecord.OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0;
             existingRecord.Freight = viewModel.Freight;
+            existingRecord.CustomerName = customer.CustomerName;
+            existingRecord.ProductName = product.ProductName;
+            existingRecord.VatType = customer.VatType;
+            existingRecord.HasEWT = customer.WithHoldingTax;
+            existingRecord.HasWVAT = customer.WithHoldingVat;
+            existingRecord.CommissioneeName = commissionee.SupplierName;
+            existingRecord.BusinessStyle = customer.BusinessStyle ?? string.Empty;
+            ///TODO: pending revision(AZH)
+            existingRecord.AvailableCreditLimit = customer.CreditLimitAsOfToday;
+            existingRecord.CreditBalance = await GetCustomerCreditBalance(viewModel.CustomerId, cancellationToken);
 
             if (existingRecord.Branch != null)
             {

@@ -356,6 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .FilprideSalesInvoices
                                 .Include(c => c.Customer)
                                 .Include(s => s.Product)
+                                .Include(s => s.CustomerOrderSlip)
                                 .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
 
                             #endregion --Retrieval of SI
@@ -364,91 +365,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.SalesInvoice.Customer!.VatType == "Vatable")
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.DebitMemoNo!;
+                            sales.SoldTo = model.SalesInvoice.CustomerOrderSlip!.CustomerName;
+                            sales.TinNo = model.SalesInvoice.CustomerOrderSlip!.CustomerTin;
+                            sales.Address = model.SalesInvoice.CustomerOrderSlip!.CustomerAddress;
+                            sales.Description = model.SalesInvoice.CustomerOrderSlip!.ProductName;
+                            sales.Amount = model.DebitAmount;
+
+                            switch (model.SalesInvoice.CustomerOrderSlip?.VatType)
                             {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.DebitAmount;
-                                sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
-                                sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.VatableSales;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
+                                case SD.VatType_Vatable:
+                                    sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
+                                    sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
+                                    sales.NetSales = sales.VatableSales - sales.Discount;
+                                    break;
+                                case SD.VatType_Exempt:
+                                    sales.VatExemptSales = sales.Amount;
+                                    sales.NetSales = sales.VatExemptSales - sales.Discount;
+                                    break;
+                                default:
+                                    sales.ZeroRated = sales.Amount;
+                                    sales.NetSales = sales.ZeroRated - sales.Discount;
+                                    break;
                             }
-                            else if (model.SalesInvoice.Customer.VatType == "Exempt")
-                            {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.DebitAmount;
-                                sales.VatExemptSales = model.DebitAmount;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.Amount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
-                            }
-                            else
-                            {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.DebitAmount;
-                                sales.ZeroRated = model.DebitAmount;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.Amount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
-                            }
+
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = existingSI!.DueDate;
+                            sales.DocumentId = model.SalesInvoiceId;
+                            sales.Company = model.Company;
+
                             await _dbContext.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SI)--
 
                             #region --General Ledger Book Recording(SI)--
 
-                            decimal withHoldingTaxAmount = 0;
-                            decimal withHoldingVatAmount = 0;
-                            decimal netOfVatAmount = 0;
-                            decimal vatAmount = 0;
+                            var netOfVatAmount = model.SalesInvoice.CustomerOrderSlip?.VatType == SD.VatType_Vatable
+                                ? _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.DebitAmount)
+                                : model.DebitAmount;
 
-                            if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
-                            {
-                                netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.DebitAmount);
-                                vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
-                            }
-                            else
-                            {
-                                netOfVatAmount = model.DebitAmount;
-                            }
+                            var vatAmount = model.SalesInvoice.CustomerOrderSlip?.VatType == SD.VatType_Vatable
+                                ? _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount)
+                                : 0m;
 
-                            if (model.SalesInvoice.Customer.WithHoldingTax)
-                            {
-                                withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
-                            }
+                            var withHoldingTaxAmount = model.SalesInvoice.CustomerOrderSlip!.HasEWT
+                                ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                                : 0m;
 
-                            if (model.SalesInvoice.Customer.WithHoldingVat)
-                            {
-                                withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
-                            }
+                            var withHoldingVatAmount = model.SalesInvoice.CustomerOrderSlip!.HasWVAT
+                                ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                                : 0m;
 
                             var ledgers = new List<FilprideGeneralLedgerBook>();
 
@@ -563,92 +531,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 .Include(sv => sv.Service)
                                 .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-                            #region --SV Computation--
+                            #region -- Computation --
 
                             viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv!.Customer!.VatType == "Vatable")
-                            {
-                                viewModelDMCM.Total = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.NetAmount = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(viewModelDMCM.Total);
-                                viewModelDMCM.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(viewModelDMCM.NetAmount);
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
-                                if (existingSv.Customer.WithHoldingVat)
-                                {
-                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
-                                }
-                            }
-                            else
-                            {
-                                viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Customer.WithHoldingTax ? existingSv.Service!.Percent / 100m : 0);
-                                if (existingSv.Customer.WithHoldingVat)
-                                {
-                                    viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
-                                }
-                            }
+                            var netDiscount = model.Amount ?? 0 - existingSv!.Discount;
+                            var netOfVatAmount = model.ServiceInvoice!.VatType == SD.VatType_Vatable
+                                ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount)
+                                : netDiscount;
+                            var vatAmount = model.ServiceInvoice!.VatType == SD.VatType_Vatable
+                                ? _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(netOfVatAmount)
+                                : 0m;
+                            var ewt = model.ServiceInvoice!.HasEwt
+                                ? _unitOfWork.FilprideDebitMemo.ComputeEwtAmount(netOfVatAmount, existingSv!.ServicePercent / 100m)
+                                : 0m;
 
-                            #endregion --SV Computation--
+                            var wvat = model.ServiceInvoice!.HasWvat
+                                ? _unitOfWork.FilprideDebitMemo.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                                : 0m;
+
+                            #endregion -- Computation --
 
                             #region --Sales Book Recording(SV)--
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.ServiceInvoice!.Customer!.VatType == "Vatable")
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.DebitMemoNo!;
+                            sales.SoldTo = model.ServiceInvoice.CustomerName;
+                            sales.TinNo = model.ServiceInvoice.CustomerTin;
+                            sales.Address = model.ServiceInvoice.CustomerAddress;
+                            sales.Description = model.ServiceInvoice.ServiceName;
+                            sales.Amount = model.DebitAmount;
+                            //sales.Discount = model.Discount;
+
+                            switch (model.ServiceInvoice.VatType)
                             {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.VatAmount = viewModelDMCM.VatAmount;
-                                sales.VatableSales = viewModelDMCM.Total / 1.12m;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = existingSv.ServiceInvoiceId;
-                                sales.Company = model.Company;
+                                case SD.VatType_Vatable:
+                                    sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
+                                    sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
+                                    sales.NetSales = sales.VatableSales - sales.Discount;
+                                    break;
+                                case SD.VatType_Exempt:
+                                    sales.VatExemptSales = sales.Amount;
+                                    sales.NetSales = sales.VatExemptSales - sales.Discount;
+                                    break;
+                                default:
+                                    sales.ZeroRated = sales.Amount;
+                                    sales.NetSales = sales.ZeroRated - sales.Discount;
+                                    break;
                             }
-                            else if (model.ServiceInvoice.Customer.VatType == "Exempt")
-                            {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.VatExemptSales = viewModelDMCM.Total;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = existingSv.ServiceInvoiceId;
-                                sales.Company = model.Company;
-                            }
-                            else
-                            {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.DebitMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.ZeroRated = viewModelDMCM.Total;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = existingSv.ServiceInvoiceId;
-                                sales.Company = model.Company;
-                            }
+
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = existingSv!.DueDate;
+                            sales.DocumentId = existingSv.ServiceInvoiceId;
+                            sales.Company = model.Company;
+
                             await _dbContext.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SV)--
@@ -662,11 +601,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arNonTradeTitle.AccountId,
                                         AccountNo = arNonTradeTitle.AccountNumber,
                                         AccountTitle = arNonTradeTitle.AccountName,
-                                        Debit = viewModelDMCM.Total - (viewModelDMCM.WithholdingTaxAmount + viewModelDMCM.WithholdingVatAmount),
+                                        Debit = netDiscount - (ewt + wvat),
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -674,18 +613,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         CustomerId = model.ServiceInvoice.CustomerId
                                     }
                                 );
-                            if (viewModelDMCM.WithholdingTaxAmount > 0)
+                            if (ewt > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arTradeCwt.AccountId,
                                         AccountNo = arTradeCwt.AccountNumber,
                                         AccountTitle = arTradeCwt.AccountName,
-                                        Debit = viewModelDMCM.WithholdingTaxAmount,
+                                        Debit = ewt,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -693,18 +632,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
                                 );
                             }
-                            if (viewModelDMCM.WithholdingVatAmount > 0)
+                            if (wvat > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arTradeCwv.AccountId,
                                         AccountNo = arTradeCwv.AccountNumber,
                                         AccountTitle = arTradeCwv.AccountName,
-                                        Debit = viewModelDMCM.WithholdingVatAmount,
+                                        Debit = wvat,
                                         Credit = 0,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
@@ -713,36 +652,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 );
                             }
 
-                            if (viewModelDMCM.Total > 0)
+                            if (netOfVatAmount > 0)
                             {
                                 ledgers.Add(new FilprideGeneralLedgerBook
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.DebitMemoNo!,
-                                    Description = model.ServiceInvoice.Service.Name,
-                                    AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo!,
+                                    Description = model.ServiceInvoice.ServiceName,
+                                    AccountNo = model.ServiceInvoice.Service!.CurrentAndPreviousNo!,
                                     AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle!,
                                     Debit = 0,
-                                    Credit = viewModelDMCM.NetAmount,
+                                    Credit = netOfVatAmount,
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate
                                 });
                             }
 
-                            if (viewModelDMCM.VatAmount > 0)
+                            if (vatAmount > 0)
                             {
                                 ledgers.Add(
                                     new FilprideGeneralLedgerBook
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.DebitMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = vatOutputTitle.AccountId,
                                         AccountNo = vatOutputTitle.AccountNumber,
                                         AccountTitle = vatOutputTitle.AccountName,
                                         Debit = 0,
-                                        Credit = viewModelDMCM.VatAmount,
+                                        Credit = vatAmount,
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate
