@@ -8,8 +8,20 @@
 
 @{
     ViewData["Title"] = "Print Credit Memo";
-    var netOfVatAmount = Model.SalesInvoice!.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? (Model.CreditAmount / 1.12m) : Model.CreditAmount;
-    var vatAmount = Model.SalesInvoice!.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? (netOfVatAmount * 0.12m) : 0m;
+
+    decimal netOfVatAmount = 0m;
+    decimal vatAmount = 0m;
+    
+    if ( Model.SalesInvoice != null) 
+    {
+        netOfVatAmount = Model.SalesInvoice!.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? (Model.CreditAmount / 1.12m) : Model.CreditAmount;
+        vatAmount = Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Vatable ? (netOfVatAmount * 0.12m) : 0m;
+    }
+    else 
+    {
+        netOfVatAmount = Model.ServiceInvoice!.VatType == SD.VatType_Vatable ? Model.CreditAmount / 1.12m : Model.CreditAmount;
+        vatAmount = Model.ServiceInvoice.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0m;
+    }
         
     var selectedCompany = string.Empty;
 
