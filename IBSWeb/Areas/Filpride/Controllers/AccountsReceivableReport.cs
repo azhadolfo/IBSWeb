@@ -584,7 +584,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (viewModel.DateFrom == default && viewModel.ReportType != "InTransit")
             {
-                throw new NullReferenceException("Please enter a valid Date From");
+                TempData["error"] = "Please enter a valid Date From";
+                return RedirectToAction(nameof(DispatchReport));
+            }
+
+            if (viewModel.DateFrom == default || viewModel.DateTo == default && viewModel.ReportType == "InTransit")
+            {
+                TempData["error"] = "Please enter a valid Date From and To";
+                return RedirectToAction(nameof(DispatchReport));
             }
 
             try
@@ -597,7 +604,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var currentUser = _userManager.GetUserName(User)!;
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
                 Expression<Func<FilprideDeliveryReceipt, bool>>? filter = default;
-                string dateRangeType = viewModel.DateTo.HasValue ? "ByRange" : "AsOf";
+                string dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
                 string currencyFormatTwoDecimal = "#,##0.00";
 
                 if(viewModel.ReportType == "Delivered")
@@ -619,11 +626,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else
                 {
                     filter = i => i.Company == companyClaims
-                                  && i.Status == nameof(DRStatus.PendingDelivery);
+                                  && i.Date >= viewModel.DateFrom
+                                  && i.Date <= viewModel.DateTo
+                                  && (i.DeliveredDate == null || i.DeliveredDate > viewModel.DateTo)
+                                  && i.CanceledBy == null
+                                  && i.VoidedBy == null;
                 }
 
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAllAsync(filter, cancellationToken);
+
+                if (!deliveryReceipts.Any())
+                {
+                    TempData["error"] = "No record found";
+                    return RedirectToAction(nameof(DispatchReport));
+                }
 
                 deliveryReceipts = deliveryReceipts.OrderBy(dr => dr.Date);
 
@@ -646,14 +663,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (dateRangeType == "AsOf")
                     {
-                        if (viewModel.DateFrom == default)
-                        {
-                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {DateTimeHelper.GetCurrentPhilippineTime():dd MMM, yyyy}";
-                        }
-                        else
-                        {
-                            mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
-                        }
+                        mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
                     }
                     else
                     {

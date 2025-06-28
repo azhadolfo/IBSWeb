@@ -6,6 +6,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly DateFrom { get; set; }
 
-        public DateOnly? DateTo { get; set; }
+        public DateOnly DateTo { get; set; }
     }
 }
