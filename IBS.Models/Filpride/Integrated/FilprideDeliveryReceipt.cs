@@ -129,6 +129,6 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool HasReceivingReport { get; set; }
 
-        public string HaulerName { get; set; }
+        public string HaulerName { get; set; } = string.Empty;
     }
 }
