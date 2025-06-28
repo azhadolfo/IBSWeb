@@ -1006,9 +1006,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
-                decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = sv.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
+                decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -1053,7 +1053,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
                 });
             }
-            return Json(null);
+            else
+            {
+                var sv = await _dbContext
+                    .FilprideServiceInvoices
+                    .Include(sv => sv.Customer)
+                    .FirstOrDefaultAsync(sv => siNo.Contains(sv.ServiceInvoiceId), cancellationToken);
+
+                if (sv == null)
+                {
+                    return Json(null);
+                }
+
+                decimal netDiscount = sv.Amount - sv.Discount;
+                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+
+                return Json(new
+                {
+                    Amount = netDiscount,
+                    AmountPaid = sv.AmountPaid,
+                    Balance = sv.Balance,
+                    WithholdingTax = withHoldingTaxAmount,
+                    WithholdingVat = withHoldingVatAmount,
+                    Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
+                });
+            }
         }
 
         [HttpGet]
