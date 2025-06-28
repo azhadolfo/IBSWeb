@@ -376,8 +376,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             switch (model.SalesInvoice.CustomerOrderSlip?.VatType)
                             {
                                 case SD.VatType_Vatable:
-                                    sales.VatableSales = _unitOfWork.FilprideSalesInvoice.ComputeNetOfVat(sales.Amount);
-                                    sales.VatAmount = _unitOfWork.FilprideSalesInvoice.ComputeVatAmount(sales.VatableSales);
+                                    sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
+                                    sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
                                     sales.NetSales = sales.VatableSales - sales.Discount;
                                     break;
                                 case SD.VatType_Exempt:
@@ -556,20 +556,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            sales.TransactionDate = viewModelDMCM.Period;
+                            sales.TransactionDate = model.TransactionDate;
                             sales.SerialNo = model.DebitMemoNo!;
                             sales.SoldTo = model.ServiceInvoice.CustomerName;
                             sales.TinNo = model.ServiceInvoice.CustomerTin;
                             sales.Address = model.ServiceInvoice.CustomerAddress;
                             sales.Description = model.ServiceInvoice.ServiceName;
-                            sales.Amount = viewModelDMCM.Total;
+                            sales.Amount = model.DebitAmount;
                             //sales.Discount = model.Discount;
 
                             switch (model.ServiceInvoice.VatType)
                             {
                                 case SD.VatType_Vatable:
-                                    sales.VatableSales = _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sales.Amount);
-                                    sales.VatAmount = _unitOfWork.FilprideServiceInvoice.ComputeVatAmount(sales.VatableSales);
+                                    sales.VatableSales = _unitOfWork.FilprideDebitMemo.ComputeNetOfVat(sales.Amount);
+                                    sales.VatAmount = _unitOfWork.FilprideDebitMemo.ComputeVatAmount(sales.VatableSales);
                                     sales.NetSales = sales.VatableSales - sales.Discount;
                                     break;
                                 case SD.VatType_Exempt:
