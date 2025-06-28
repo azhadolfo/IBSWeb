@@ -107,8 +107,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public string VatType { get; set; } = string.Empty;
 
-        public bool HasEwt { get; set; } = false;
+        public bool HasEwt { get; set; }
 
-        public bool HasWvat { get; set; } = false;
+        public bool HasWvat { get; set; }
     }
 }
