@@ -36,5 +36,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public string? AtlNo { get; set; }
 
+        public decimal UnreservedQuantity { get; set; }
+
     }
 }
