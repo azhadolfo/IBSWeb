@@ -6,6 +6,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility;
+using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -115,7 +116,9 @@ namespace IBS.DataAccess.Repository.Filpride
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
 
             // Calculate initial values
-            decimal total = ComputeNetOfVat(receivingReport.Amount);
+            decimal total = receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(receivingReport.Amount)
+                : receivingReport.Amount;
             decimal inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
             decimal totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
 
@@ -232,7 +235,11 @@ namespace IBS.DataAccess.Repository.Filpride
                 var purchaseOrder = await _db.FilpridePurchaseOrders
                     .FindAsync(deliveryReceipt.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
 
-                cost = ComputeNetOfVat(purchaseOrder.Price);
+                var netOfVat = purchaseOrder.VatType == SD.VatType_Vatable
+                    ? ComputeNetOfVat(purchaseOrder.Price)
+                    : purchaseOrder.Price;
+
+                cost = netOfVat;
             }
             else
             {

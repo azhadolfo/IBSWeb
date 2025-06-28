@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250625064444_AddNeededFieldsForApplicationOfVatInCOSMdule")]
+    partial class AddNeededFieldsForApplicationOfVatInCOSMdule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -442,16 +445,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("amount_per_month");
 
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_number");
-
                     b.Property<int?>("BankId")
                         .HasColumnType("integer")
                         .HasColumnName("bank_id");
@@ -610,11 +603,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
 
                     b.Property<string>("SupportingFileSavedFileName")
                         .HasColumnType("text")
@@ -945,11 +933,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("product_id");
 
-                    b.Property<string>("ProductName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("product_name");
-
                     b.Property<string>("PurchaseOrderNo")
                         .HasColumnType("text")
                         .HasColumnName("purchase_order_no");
@@ -989,11 +972,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
 
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
-
                     b.Property<string>("SupplierSalesOrderNo")
                         .HasColumnType("varchar(100)")
                         .HasColumnName("supplier_sales_order_no");
@@ -1002,11 +980,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("supplier_tin");
-
-                    b.Property<string>("TaxType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("tax_type");
 
                     b.Property<string>("Terms")
                         .IsRequired()
@@ -1024,11 +997,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("UnTriggeredQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("un_triggered_quantity");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -1245,16 +1213,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("collection_receipt_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CollectionReceiptId"));
-
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_number");
 
                     b.Property<int?>("BankId")
                         .HasColumnType("integer")
@@ -1994,19 +1952,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("customer_address");
 
-                    b.Property<string>("CustomerBusinessType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_business_type");
-
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
@@ -2028,14 +1976,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<DateTime?>("EditedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("edited_date");
-
-                    b.Property<bool>("HasEwt")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_ewt");
-
-                    b.Property<bool>("HasWvat")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_wvat");
 
                     b.Property<string>("Instructions")
                         .HasColumnType("varchar(200)")
@@ -2075,15 +2015,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("varchar(12)")
                         .HasColumnName("service_invoice_no");
 
-                    b.Property<string>("ServiceName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("service_name");
-
-                    b.Property<decimal>("ServicePercent")
-                        .HasColumnType("numeric")
-                        .HasColumnName("service_percent");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2101,11 +2032,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<decimal>("UnearnedAmount")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unearned_amount");
-
-                    b.Property<string>("VatType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
                         .HasColumnType("varchar(50)")
@@ -2970,7 +2896,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("text")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -2990,31 +2916,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("date")
                         .HasColumnName("date_booked");
 
-                    b.Property<string>("Depot")
-                        .IsRequired()
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("depot");
-
-                    b.Property<string>("Driver")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("driver");
-
-                    b.Property<decimal>("Freight")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("freight");
-
-                    b.Property<string>("HaulerName")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("hauler_name");
-
-                    b.Property<int>("LoadPortId")
-                        .HasColumnType("integer")
-                        .HasColumnName("load_port_id");
-
-                    b.Property<string>("PlateNo")
-                        .HasColumnType("varchar(50)")
-                        .HasColumnName("plate_no");
-
                     b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("varchar(255)")
@@ -3023,10 +2924,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("supplier_name");
 
                     b.Property<string>("UppiAtlNo")
                         .HasColumnType("varchar(20)")
@@ -3055,10 +2952,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<int?>("AppointedId")
-                        .HasColumnType("integer")
-                        .HasColumnName("appointed_id");
-
                     b.Property<int>("AuthorityToLoadId")
                         .HasColumnType("integer")
                         .HasColumnName("authority_to_load_id");
@@ -3067,19 +2960,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("customer_order_slip_id");
 
-                    b.Property<decimal>("Quantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("quantity");
-
-                    b.Property<decimal>("UnservedQuantity")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("unserved_quantity");
-
                     b.HasKey("Id")
                         .HasName("pk_filpride_book_atl_details");
-
-                    b.HasIndex("AppointedId")
-                        .HasDatabaseName("ix_filpride_book_atl_details_appointed_id");
 
                     b.HasIndex("AuthorityToLoadId")
                         .HasDatabaseName("ix_filpride_book_atl_details_authority_to_load_id");
@@ -3123,10 +3005,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
 
-                    b.Property<decimal>("UnreservedQuantity")
-                        .HasColumnType("numeric")
-                        .HasColumnName("unreserved_quantity");
-
                     b.Property<decimal>("UnservedQuantity")
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("unserved_quantity");
@@ -3165,7 +3043,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("authority_to_load_no");
 
                     b.Property<decimal>("AvailableCreditLimit")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("available_credit_limit");
 
                     b.Property<decimal>("BalanceQuantity")
@@ -3208,7 +3086,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<decimal>("CreditBalance")
-                        .HasColumnType("numeric(18,4)")
+                        .HasColumnType("numeric")
                         .HasColumnName("credit_balance");
 
                     b.Property<string>("CustomerAddress")
@@ -3577,11 +3455,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("HaulerId")
                         .HasColumnType("integer")
                         .HasColumnName("hauler_id");
-
-                    b.Property<string>("HaulerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("hauler_name");
 
                     b.Property<bool>("IsCommissionPaid")
                         .HasColumnType("boolean")
@@ -11380,12 +11253,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideBookAtlDetail", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideCOSAppointedSupplier", "AppointedSupplier")
-                        .WithMany()
-                        .HasForeignKey("AppointedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_filpride_book_atl_details_filpride_cos_appointed_suppliers_");
-
                     b.HasOne("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", "Header")
                         .WithMany("Details")
                         .HasForeignKey("AuthorityToLoadId")
@@ -11399,8 +11266,6 @@ namespace IBS.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_filpride_book_atl_details_filpride_customer_order_slips_cus");
-
-                    b.Navigation("AppointedSupplier");
 
                     b.Navigation("CustomerOrderSlip");
 

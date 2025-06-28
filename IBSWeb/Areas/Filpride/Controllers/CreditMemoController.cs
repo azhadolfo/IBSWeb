@@ -484,6 +484,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var existingSI = await _dbContext.FilprideSalesInvoices
                                                         .Include(s => s.Customer)
                                                         .Include(s => s.Product)
+                                                        .Include(s => s.CustomerOrderSlip)
                                                         .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
                             #endregion --Retrieval of SI and SOA--
@@ -492,61 +493,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.SalesInvoice!.Customer!.VatType == "Vatable")
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.CreditMemoNo!;
+                            sales.SoldTo = model.SalesInvoice.CustomerOrderSlip!.CustomerName;
+                            sales.TinNo = model.SalesInvoice.CustomerOrderSlip.CustomerTin;
+                            sales.Address = model.SalesInvoice.CustomerOrderSlip.CustomerAddress;
+                            sales.Description = model.SalesInvoice.CustomerOrderSlip.ProductName;
+                            sales.Amount = model.CreditAmount;
+                            //sales.Discount = model.Discount;
+
+                            switch (model.SalesInvoice.CustomerOrderSlip!.VatType)
                             {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.CreditAmount;
-                                sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
-                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.VatableSales;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
+                                case SD.VatType_Vatable:
+                                    sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
+                                    sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
+                                    sales.NetSales = sales.VatableSales - sales.Discount;
+                                    break;
+                                case SD.VatType_Exempt:
+                                    sales.VatExemptSales = sales.Amount;
+                                    sales.NetSales = sales.VatExemptSales - sales.Discount;
+                                    break;
+                                default:
+                                    sales.ZeroRated = sales.Amount;
+                                    sales.NetSales = sales.ZeroRated - sales.Discount;
+                                    break;
                             }
-                            else if (model.SalesInvoice.Customer.VatType == "Exempt")
-                            {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.CreditAmount;
-                                sales.VatExemptSales = model.CreditAmount;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.Amount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
-                            }
-                            else
-                            {
-                                sales.TransactionDate = model.TransactionDate;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.SalesInvoice.Customer.CustomerName;
-                                sales.TinNo = model.SalesInvoice.Customer.CustomerTin;
-                                sales.Address = model.SalesInvoice.Customer.CustomerAddress;
-                                sales.Description = model.SalesInvoice.Product.ProductName;
-                                sales.Amount = model.CreditAmount;
-                                sales.ZeroRated = model.CreditAmount;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = sales.Amount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSI!.DueDate;
-                                sales.DocumentId = model.SalesInvoiceId;
-                                sales.Company = model.Company;
-                            }
+
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = existingSI!.DueDate;
+                            sales.DocumentId = model.SalesInvoiceId;
+                            sales.Company = model.Company;
+
                             await _dbContext.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SI)--
@@ -558,7 +536,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             decimal netOfVatAmount = 0;
                             decimal vatAmount = 0;
 
-                            if (model.SalesInvoice.Customer.VatType == SD.VatType_Vatable)
+                            if (model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Vatable)
                             {
                                 netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
                                 vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(netOfVatAmount))) * -1;
@@ -568,12 +546,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 netOfVatAmount = model.CreditAmount;
                             }
 
-                            if (model.SalesInvoice.Customer.WithHoldingTax)
+                            if (model.SalesInvoice.CustomerOrderSlip.HasEWT)
                             {
                                 withHoldingTaxAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m)) * -1;
                             }
 
-                            if (model.SalesInvoice.Customer.WithHoldingVat)
+                            if (model.SalesInvoice.CustomerOrderSlip.HasWVAT)
                             {
                                 withHoldingVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m)) * -1;
                             }
@@ -585,7 +563,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.CreditMemoNo!,
-                                    Description = model.SalesInvoice.Product.ProductName,
+                                    Description = model.SalesInvoice.CustomerOrderSlip.ProductName,
                                     AccountId = arTradeReceivableTitle.AccountId,
                                     AccountNo = arTradeReceivableTitle.AccountNumber,
                                     AccountTitle = arTradeReceivableTitle.AccountName,
@@ -605,7 +583,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.SalesInvoice.Product.ProductName,
+                                        Description = model.SalesInvoice.CustomerOrderSlip.ProductName,
                                         AccountId = arTradeCwt.AccountId,
                                         AccountNo = arTradeCwt.AccountNumber,
                                         AccountTitle = arTradeCwt.AccountName,
@@ -624,7 +602,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.SalesInvoice.Product.ProductName,
+                                        Description = model.SalesInvoice.CustomerOrderSlip.ProductName,
                                         AccountId = arTradeCwv.AccountId,
                                         AccountNo = arTradeCwv.AccountNumber,
                                         AccountTitle = arTradeCwv.AccountName,
@@ -642,7 +620,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     Date = model.TransactionDate,
                                     Reference = model.CreditMemoNo!,
-                                    Description = model.SalesInvoice.Product.ProductName,
+                                    Description = model.SalesInvoice.CustomerOrderSlip.ProductName,
                                     AccountId = salesTitle.AccountId,
                                     AccountNo = salesTitle.AccountNumber,
                                     AccountTitle = salesTitle.AccountName,
@@ -661,7 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.SalesInvoice.Product.ProductName,
+                                        Description = model.SalesInvoice.CustomerOrderSlip.ProductName,
                                         AccountId = vatOutputTitle.AccountId,
                                         AccountNo = vatOutputTitle.AccountNumber,
                                         AccountTitle = vatOutputTitle.AccountName,
@@ -695,13 +673,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
-                            if (existingSv!.Customer!.VatType == "Vatable")
+                            if (existingSv!.VatType == "Vatable")
                             {
                                 viewModelDMCM.Total = -model.Amount ?? 0;
                                 viewModelDMCM.NetAmount = (model.Amount ?? 0 - existingSv.Discount) / 1.12m;
                                 viewModelDMCM.VatAmount = (model.Amount ?? 0 - existingSv.Discount) - viewModelDMCM.NetAmount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service!.Percent / 100m);
-                                if (existingSv.Customer.WithHoldingVat)
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.ServicePercent / 100m);
+                                if (existingSv.HasWvat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
                                 }
@@ -709,14 +687,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             else
                             {
                                 viewModelDMCM.NetAmount = model.Amount ?? 0 - existingSv.Discount;
-                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.Service!.Percent / 100m);
-                                if (existingSv.Customer.WithHoldingVat)
+                                viewModelDMCM.WithholdingTaxAmount = viewModelDMCM.NetAmount * (existingSv.ServicePercent / 100m);
+                                if (existingSv.HasWvat)
                                 {
                                     viewModelDMCM.WithholdingVatAmount = viewModelDMCM.NetAmount * 0.05m;
                                 }
                             }
 
-                            if (existingSv.Customer.VatType == "Vatable")
+                            if (existingSv.VatType == "Vatable")
                             {
                                 var total = Math.Round(model.Amount ?? 0 / 1.12m, 4);
 
@@ -736,61 +714,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             var sales = new FilprideSalesBook();
 
-                            if (model.ServiceInvoice!.Customer!.VatType == "Vatable")
+                            sales.TransactionDate = model.TransactionDate;
+                            sales.SerialNo = model.CreditMemoNo!;
+                            sales.SoldTo = model.ServiceInvoice!.CustomerName;
+                            sales.TinNo = model.ServiceInvoice.CustomerTin;
+                            sales.Address = model.ServiceInvoice.CustomerAddress;
+                            sales.Description = model.ServiceInvoice!.ServiceName;
+                            sales.Amount = model.CreditAmount;
+
+                            switch (model.ServiceInvoice.VatType)
                             {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice!.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
-                                sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = model.ServiceInvoiceId;
-                                sales.Company = model.Company;
+                                case SD.VatType_Vatable:
+                                    sales.VatableSales = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(sales.Amount))) * -1;
+                                    sales.VatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(sales.VatableSales))) * -1;
+                                    sales.NetSales = sales.VatableSales - sales.Discount;
+                                    break;
+                                case SD.VatType_Exempt:
+                                    sales.VatExemptSales = sales.Amount;
+                                    sales.NetSales = sales.VatExemptSales - sales.Discount;
+                                    break;
+                                default:
+                                    sales.ZeroRated = sales.Amount;
+                                    sales.NetSales = sales.ZeroRated - sales.Discount;
+                                    break;
                             }
-                            else if (model.ServiceInvoice.Customer.VatType == "Exempt")
-                            {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice!.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.VatExemptSales = viewModelDMCM.Total;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = model.ServiceInvoiceId;
-                                sales.Company = model.Company;
-                            }
-                            else
-                            {
-                                sales.TransactionDate = viewModelDMCM.Period;
-                                sales.SerialNo = model.CreditMemoNo!;
-                                sales.SoldTo = model.ServiceInvoice.Customer.CustomerName;
-                                sales.TinNo = model.ServiceInvoice.Customer.CustomerTin;
-                                sales.Address = model.ServiceInvoice.Customer.CustomerAddress;
-                                sales.Description = model.ServiceInvoice.Service!.Name;
-                                sales.Amount = viewModelDMCM.Total;
-                                sales.ZeroRated = viewModelDMCM.Total;
-                                //sales.Discount = model.Discount;
-                                sales.NetSales = viewModelDMCM.NetAmount;
-                                sales.CreatedBy = model.CreatedBy;
-                                sales.CreatedDate = model.CreatedDate;
-                                sales.DueDate = existingSv.DueDate;
-                                sales.DocumentId = model.ServiceInvoiceId;
-                                sales.Company = model.Company;
-                            }
+
+                            //sales.Discount = model.Discount;
+                            sales.CreatedBy = model.CreatedBy;
+                            sales.CreatedDate = model.CreatedDate;
+                            sales.DueDate = existingSv.DueDate;
+                            sales.DocumentId = model.ServiceInvoiceId;
+                            sales.Company = model.Company;
+
                             await _dbContext.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SV)--
@@ -802,7 +757,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             decimal netOfVatAmount = 0;
                             decimal vatAmount = 0;
 
-                            if (model.ServiceInvoice.Customer.VatType == SD.VatType_Vatable)
+                            if (model.ServiceInvoice.VatType == SD.VatType_Vatable)
                             {
                                 netOfVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeNetOfVat(Math.Abs(model.CreditAmount))) * -1;
                                 vatAmount = (_unitOfWork.FilprideCreditMemo.ComputeVatAmount(Math.Abs(netOfVatAmount))) * -1;
@@ -812,12 +767,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 netOfVatAmount = model.CreditAmount;
                             }
 
-                            if (model.ServiceInvoice.Customer.WithHoldingTax)
+                            if (model.ServiceInvoice.HasEwt)
                             {
                                 withHoldingTaxAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.01m)) * -1;
                             }
 
-                            if (model.ServiceInvoice.Customer.WithHoldingVat)
+                            if (model.ServiceInvoice.HasWvat)
                             {
                                 withHoldingVatAmount = (_unitOfWork.FilprideCreditMemo.ComputeEwtAmount(Math.Abs(netOfVatAmount), 0.05m)) * -1;
                             }
@@ -829,7 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arNonTradeTitle.AccountId,
                                         AccountNo = arNonTradeTitle.AccountNumber,
                                         AccountTitle = arNonTradeTitle.AccountName,
@@ -848,7 +803,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arTradeCwt.AccountId,
                                         AccountNo = arTradeCwt.AccountNumber,
                                         AccountTitle = arTradeCwt.AccountName,
@@ -867,7 +822,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = arTradeCwv.AccountId,
                                         AccountNo = arTradeCwv.AccountNumber,
                                         AccountTitle = arTradeCwv.AccountName,
@@ -884,8 +839,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 Date = model.TransactionDate,
                                 Reference = model.CreditMemoNo!,
-                                Description = model.ServiceInvoice.Service.Name,
-                                AccountNo = model.ServiceInvoice.Service.CurrentAndPreviousNo!,
+                                Description = model.ServiceInvoice.ServiceName,
+                                ///TODO to inquire if needs to store
+                                AccountNo = model.ServiceInvoice.Service!.CurrentAndPreviousNo!,
                                 AccountTitle = model.ServiceInvoice.Service.CurrentAndPreviousTitle!,
                                 Debit = viewModelDMCM.NetAmount,
                                 Credit = 0,
@@ -901,7 +857,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     {
                                         Date = model.TransactionDate,
                                         Reference = model.CreditMemoNo!,
-                                        Description = model.ServiceInvoice.Service.Name,
+                                        Description = model.ServiceInvoice.ServiceName,
                                         AccountId = vatOutputTitle.AccountId,
                                         AccountNo = vatOutputTitle.AccountNumber,
                                         AccountTitle = vatOutputTitle.AccountName,

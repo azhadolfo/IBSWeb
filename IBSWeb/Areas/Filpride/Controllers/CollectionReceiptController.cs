@@ -246,6 +246,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
                                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
+
                     if (existingSalesInvoice == null)
                     {
                         return NotFound();
@@ -259,6 +261,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
                     model.Type = existingSalesInvoice.Type;
+                    model.BankAccountName = bankAccount!.AccountName;
+                    model.BankAccountNumber = bankAccount.AccountNo;
 
                     if (bir2306 != null && bir2306.Length > 0)
                     {
@@ -370,6 +374,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
+
+            model.BankAccountName = bankAccount!.AccountName;
+            model.BankAccountNumber = bankAccount.AccountNo;
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Company = companyClaims;
 
@@ -590,6 +598,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Saving default value
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
@@ -623,6 +632,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
                     existingModel.BankId = model.BankId;
+                    existingModel.BankAccountName = bankAccount!.AccountName;
+                    existingModel.BankAccountNumber = bankAccount.AccountNo;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
@@ -814,6 +825,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
                                                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
 
                     if (existingServiceInvoice == null)
                     {
@@ -828,6 +840,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = computeTotalInModelIfZero;
                     model.Company = companyClaims;
                     model.Type = existingServiceInvoice.Type;
+                    model.BankAccountName = bankAccount!.AccountName;
+                    model.BankAccountNumber = bankAccount.AccountNo;
 
                     if (bir2306 != null && bir2306.Length > 0)
                     {
@@ -967,9 +981,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.Customer!.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.Customer!.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = si.CustomerOrderSlip!.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = si.CustomerOrderSlip!.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -992,9 +1006,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                decimal netOfVatAmount = sv.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
-                decimal withHoldingTaxAmount = sv.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = sv.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
+                decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -1025,9 +1039,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = si.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = si.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
                 return Json(new
                 {
@@ -1039,7 +1053,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
                 });
             }
-            return Json(null);
+            else
+            {
+                var sv = await _dbContext
+                    .FilprideServiceInvoices
+                    .Include(sv => sv.Customer)
+                    .FirstOrDefaultAsync(sv => siNo.Contains(sv.ServiceInvoiceId), cancellationToken);
+
+                if (sv == null)
+                {
+                    return Json(null);
+                }
+
+                decimal netDiscount = sv.Amount - sv.Discount;
+                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
+                decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
+                decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+
+                return Json(new
+                {
+                    Amount = netDiscount,
+                    AmountPaid = sv.AmountPaid,
+                    Balance = sv.Balance,
+                    WithholdingTax = withHoldingTaxAmount,
+                    WithholdingVat = withHoldingVatAmount,
+                    Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
+                });
+            }
         }
 
         [HttpGet]
@@ -1155,6 +1195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region --Saving default value
 
+                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
@@ -1168,6 +1209,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.CheckDate = model.CheckDate;
                     existingModel.CheckNo = model.CheckNo;
                     existingModel.BankId = model.BankId;
+                    existingModel.BankAccountName = bankAccount!.AccountName;
+                    existingModel.BankAccountNumber = bankAccount.AccountNo;
                     existingModel.CheckBranch = model.CheckBranch;
                     existingModel.CashAmount = model.CashAmount;
                     existingModel.CheckAmount = model.CheckAmount;
@@ -1532,17 +1575,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var amount = salesInvoice.Amount;
                 var amountPaid = salesInvoice.AmountPaid;
-                var netAmount = salesInvoice.Amount - salesInvoice.Discount;
-                var vatAmount = salesInvoice.Customer!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount((netAmount / 1.12m) * 0.12m) : 0;
-                var ewtAmount = salesInvoice.Customer.WithHoldingTax ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.01m) : 0;
-                var wvatAmount = salesInvoice.Customer.WithHoldingVat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount((netAmount / 1.12m), 0.05m) : 0;
+                var netDiscount = salesInvoice.Amount - salesInvoice.Discount;
+                var netOfVatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(netDiscount) : netDiscount;
+                var vatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount) : 0m;
+                var ewtAmount = salesInvoice.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
+                var wvatAmount = salesInvoice.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
                 var balance = amount - amountPaid;
 
                 return Json(new
                 {
                     Amount = amount,
                     AmountPaid = amountPaid,
-                    NetAmount = netAmount,
+                    NetAmount = netOfVatAmount,
                     VatAmount = vatAmount,
                     EwtAmount = ewtAmount,
                     WvatAmount = wvatAmount,

@@ -18,7 +18,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
+    var customerType = Model.SalesInvoice?.CustomerOrderSlip?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -85,11 +85,11 @@
                     Received from: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice!.Customer!.CustomerName)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerName)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.CustomerName)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.CustomerName)
                     }
                 </td>
             </tr>
@@ -98,7 +98,7 @@
                     Address: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerAddress)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerAddress)
                     }
                     else
                     {
@@ -111,7 +111,7 @@
                     TIN: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerTin)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerTin)
                     }
                     else
                     {
@@ -122,11 +122,11 @@
                     Buss. Style: &nbsp;
                     @if (Model.SalesInvoiceId != null)
                     {
-                        @Html.DisplayFor(model => model.SalesInvoice!.Customer!.BusinessStyle)
+                        @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.BusinessStyle)
                     }
                     else
                     {
-                        @Html.DisplayFor(model => model.ServiceInvoice!.Customer!.BusinessStyle)
+                        @Html.DisplayFor(model => model.ServiceInvoice!.CustomerBusinessType)
                     }
                 </td>
             </tr>
@@ -310,7 +310,7 @@
                 <td class="text-center">
                     @if (Model.BankId != null)
                     {
-                        <p style="height: 9px;">@Model.BankAccount?.Bank @Model.BankAccount?.AccountNo</p>
+                        <p style="height: 9px;">@Model.BankAccountName @Model.BankAccountNumber</p>
                     }
                     else
                     {

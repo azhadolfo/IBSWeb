@@ -86,6 +86,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
                 .ThenInclude(sv => sv!.Service)
+                .Include(si => si!.SalesInvoice)
+                .ThenInclude(cos => cos!.CustomerOrderSlip)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

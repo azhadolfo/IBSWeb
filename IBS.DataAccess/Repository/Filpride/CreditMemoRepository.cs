@@ -81,6 +81,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenInclude(s => s!.Product)
                 .Include(c => c.SalesInvoice)
                 .ThenInclude(s => s!.Customer)
+                .Include(c => c.SalesInvoice)
+                .ThenInclude(s => s!.CustomerOrderSlip)
                 .Include(c => c.ServiceInvoice)
                 .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)

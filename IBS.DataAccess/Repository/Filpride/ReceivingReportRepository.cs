@@ -365,22 +365,13 @@ namespace IBS.DataAccess.Repository.Filpride
 
             var ledgers = new List<FilprideGeneralLedgerBook>();
 
-            decimal netOfVatAmount = 0;
-            decimal vatAmount = 0;
-            decimal ewtAmount = 0;
-            decimal netOfEwtAmount = 0;
-
-            if (model.PurchaseOrder!.Supplier!.VatType == SD.VatType_Vatable)
-            {
-                netOfVatAmount = ComputeNetOfVat(model.Amount);
-                vatAmount = ComputeVatAmount(netOfVatAmount);
-            }
-            else
-            {
-                netOfVatAmount = model.Amount;
-            }
-
-            ewtAmount = ComputeEwtAmount(netOfVatAmount, 0.01m);
+            var netOfVatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(model.Amount)
+                : model.Amount;
+            var vatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeVatAmount(netOfVatAmount)
+                : 0m;
+            var ewtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
 
             if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
             {
@@ -402,7 +393,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            netOfEwtAmount = ComputeNetOfEwt(model.Amount, ewtAmount);
+            var netOfEwtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax ? ComputeNetOfEwt(model.Amount, ewtAmount) : model.Amount;
 
             var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product!.ProductCode);
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
@@ -502,11 +493,11 @@ namespace IBS.DataAccess.Repository.Filpride
             FilpridePurchaseBook purchaseBook = new()
             {
                 Date = model.Date,
-                SupplierName = model.PurchaseOrder.Supplier.SupplierName,
-                SupplierTin = model.PurchaseOrder.Supplier.SupplierTin,
-                SupplierAddress = model.PurchaseOrder.Supplier.SupplierAddress,
+                SupplierName = model.PurchaseOrder.SupplierName,
+                SupplierTin = model.PurchaseOrder.SupplierTin,
+                SupplierAddress = model.PurchaseOrder.SupplierAddress,
                 DocumentNo = model.ReceivingReportNo!,
-                Description = model.PurchaseOrder.Product.ProductName,
+                Description = model.PurchaseOrder.ProductName,
                 Amount = model.Amount,
                 VatAmount = vatAmount,
                 WhtAmount = ewtAmount,
