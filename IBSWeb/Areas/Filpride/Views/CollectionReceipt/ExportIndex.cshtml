@@ -130,7 +130,7 @@
                         <td>
                             @if (item.SalesInvoiceId != null)
                             {
-                                @Html.DisplayFor(modelItem => item.SalesInvoice!.Customer!.CustomerName)
+                                @Html.DisplayFor(modelItem => item.SalesInvoice!.CustomerOrderSlip!.CustomerName)
                             }
                             else if (item.MultipleSIId != null)
                             {
@@ -138,7 +138,7 @@
                             }
                             else
                             {
-                                @Html.DisplayFor(modelItem => item.ServiceInvoice!.Customer!.CustomerName)
+                                @Html.DisplayFor(modelItem => item.ServiceInvoice!.CustomerName)
                             }
                         </td>
                         <td class="text-end px-4">
