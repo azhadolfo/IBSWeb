@@ -622,7 +622,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 PayeeTin = existingHeaderModel.Tin,
                 MultipleSupplierId = existingHeaderModel.SupplierId ?? existingDetailsModel.SupplierId,
                 Suppliers = suppliers,
-                CvId = existingHeaderModel.CheckVoucherHeaderId
+                CvId = existingHeaderModel.CheckVoucherHeaderId,
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             return View(model);
@@ -735,6 +736,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.CheckAmount = viewModel.Total;
                     existingHeaderModel.Total = viewModel.Total;
+                    existingHeaderModel.OldCvNo = viewModel.OldCVNo;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -1093,7 +1095,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckDate = viewModel.CheckDate,
                         CheckAmount = viewModel.Total,
                         Company = companyClaims,
-                        Type = invoicingVoucher.Select(i => i.Type).First()
+                        Type = invoicingVoucher.Select(i => i.Type).First(),
+                        OldCvNo = viewModel.OldCVNo
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
