@@ -29,7 +29,7 @@ namespace IBS.Models.Filpride.ViewModels
         #region Finance Approval
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
-        public decimal CreditBalance { get; set; }
+        public decimal AvailableCreditLimit { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Total { get; set; }

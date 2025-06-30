@@ -122,7 +122,6 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.BusinessStyle = customer.BusinessStyle ?? string.Empty;
             ///TODO: pending revision(AZH)
             existingRecord.AvailableCreditLimit = customer.CreditLimitAsOfToday;
-            existingRecord.CreditBalance = await GetCustomerCreditBalance(viewModel.CustomerId, cancellationToken);
 
             if (existingRecord.Branch != null)
             {
@@ -214,13 +213,16 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)
         {
             //Beginning Balance to be discussed
-
             var drForTheMonth = await _db.FilprideDeliveryReceipts
-                .Where(dr => dr.CustomerId == customerId && dr.Date.Month == DateTime.UtcNow.Month && dr.Date.Year == DateTime.UtcNow.Year)
+                .Where(dr => dr.CustomerId == customerId
+                             && dr.Date.Month == DateTime.UtcNow.Month
+                             && dr.Date.Year == DateTime.UtcNow.Year)
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.CustomerId == customerId && cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.UtcNow) && cos.Status == nameof(CosStatus.ForDR))
+                .Where(cos => cos.CustomerId == customerId
+                              && cos.ExpirationDate >= DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
+                              && cos.Status == nameof(CosStatus.ForDR))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers

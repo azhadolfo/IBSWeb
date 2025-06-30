@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -326,9 +325,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         HasWVAT = customer.WithHoldingVat,
                         CommissioneeName = commissionee?.SupplierName ?? string.Empty,
                         BusinessStyle = customer.BusinessStyle ?? string.Empty,
-                        ///TODO: pending revision(AZH)
-                        AvailableCreditLimit = customer.CreditLimitAsOfToday,
-                        CreditBalance = await _unitOfWork.FilprideCustomerOrderSlip.GetCustomerCreditBalance(viewModel.CustomerId, cancellationToken),
+                        AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
+                            .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
                         Depot = String.Empty
                     };
 
@@ -699,7 +697,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         var fileInfoInstance = new COSFileInfo
                         {
-                            FileName = System.IO.Path.GetFileName(fileUrl),
+                            FileName = Path.GetFileName(fileUrl),
                             SignedUrl = await _cloudStorageService.GetSignedUrlAsync(fileUrl)
                         };
 
@@ -716,15 +714,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost -
                                     model.NetOfVatFreightCharge - customerOrderSlip.CommissionRate;
 
-                // Return appropriate view based on approval status
-                if (customerOrderSlip.FirstApprovedBy == null)
-                    return View("PreviewByOperationManager", model);
 
-                ///TODO: pending revision(AZH)
+                // Return appropriate view based on approval status
+                if (customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfOM))
+                {
+                    return View("PreviewByOperationManager", model);
+                }
+
                 // Add credit information for finance view
-                model.CreditBalance = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetCustomerCreditBalance(customerOrderSlip.CustomerId, cancellationToken);
-                model.Total = model.CreditBalance - customerOrderSlip.TotalAmount;
+                model.AvailableCreditLimit = customerOrderSlip.AvailableCreditLimit;
+                model.Total = model.AvailableCreditLimit - customerOrderSlip.TotalAmount;
 
                 return View("PreviewByFinance", model);
             }
@@ -936,13 +935,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
                     }
-
-                    await _unitOfWork.FilprideCustomerOrderSlip.OperationManagerApproved(existingRecord, cancellationToken);
                 }
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Customer Order Slip has been successfully approved by the Operations Manager. \n\n {message}";
@@ -1299,36 +1295,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return BadRequest();
                     }
 
-                    if (existingCos.DeliveryOption != viewModel.DeliveryOption && existingCos.Status != nameof(CosStatus.SupplierAppointed))
-                    {
-                        var logisticUsers = await _dbContext.ApplicationUsers
-                            .Where(a => a.Department == SD.Department_Logistics)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var message = $"{viewModel.CurrentUser!.ToUpper()} has updated the delivery option of {existingCos.CustomerOrderSlipNo} from {existingCos.DeliveryOption} to {viewModel.DeliveryOption}. " +
-                                      $"Please reappoint your hauler if necessary.";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(logisticUsers, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => logisticUsers.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-                    }
                     var depot = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
 
                     if (depot == null)
