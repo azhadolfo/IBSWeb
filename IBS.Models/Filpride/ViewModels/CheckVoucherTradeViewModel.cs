@@ -9,6 +9,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? CVNo { get; set; }
 
+        public string? OldCVNo { get; set; }
+
         public List<SelectListItem>? Suppliers { get; set; }
 
         [Required]
