@@ -864,6 +864,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FirstApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.OperationManagerReason = reason;
+                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
+                    existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
 
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                     {
@@ -1167,6 +1169,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             PurchaseOrderId = po.PurchaseOrderId,
                             Quantity = po.Quantity,
                             UnservedQuantity = po.Quantity,
+                            UnreservedQuantity = po.Quantity,
                         });
                     }
 
@@ -1335,6 +1338,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Depot = depot.Depot;
+                    existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                    existingCos.FirstApprovedBy = null;
+                    existingCos.FirstApprovedDate = null;
+                    existingCos.SecondApprovedBy = null;
+                    existingCos.SecondApprovedDate = null;
+                    existingCos.OperationManagerReason = null;
+                    existingCos.ExpirationDate = null;
 
                     switch (viewModel.DeliveryOption)
                     {
@@ -1368,6 +1378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             PurchaseOrderId = po.PurchaseOrderId,
                             Quantity = po.Quantity,
                             UnservedQuantity = po.Quantity,
+                            UnreservedQuantity = po.Quantity,
                         });
                     }
 
