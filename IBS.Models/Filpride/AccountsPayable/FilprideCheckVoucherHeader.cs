@@ -14,6 +14,8 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public string? CheckVoucherHeaderNo { get; set; }
 
+        public string? OldCvNo { get; set; }
+
         [Display(Name = "Transaction Date")]
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
