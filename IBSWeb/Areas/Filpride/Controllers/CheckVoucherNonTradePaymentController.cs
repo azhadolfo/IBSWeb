@@ -472,6 +472,80 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
+        {
+            var cvHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cvHeader != null)
+            {
+                var userName = _userManager.GetUserName(this.User);
+
+                if (userName == null)
+                {
+                    TempData["error"] = "User not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+                try
+                {
+                    if (cvHeader == null)
+                    {
+                        throw new NullReferenceException("CV Header not found.");
+                    }
+
+                    var latestNibit = await _dbContext.FilprideMonthlyNibits
+                        .OrderByDescending(nb => nb.Year)
+                        .ThenByDescending(nb => nb.Month)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (latestNibit == null)
+                    {
+                        throw new NullReferenceException("No NIBIT found.");
+                    }
+
+                    var latestNibitDate = new DateOnly(latestNibit.Year, latestNibit.Month, 1);
+
+                    if ((latestNibit.Month == cvHeader.Date.Month && latestNibit.Year == cvHeader.Date.Year) || latestNibitDate > cvHeader.Date)
+                    {
+                        TempData["error"] = "Period closed, CV cannot be unposted.";
+                        await transaction.RollbackAsync(cancellationToken);
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    cvHeader.PostedBy = null;
+                    cvHeader.Status = nameof(CheckVoucherPaymentStatus.ForPosting);
+
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Unposted.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to unpost check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                    await transaction.RollbackAsync(cancellationToken);
+                    TempData["error"] = ex.Message;
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            return NotFound();
+        }
+
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
