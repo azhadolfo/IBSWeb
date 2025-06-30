@@ -137,14 +137,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 cos.Status == nameof(CosStatus.HaulerAppointed) ||
                                 cos.Status == nameof(CosStatus.Created));
                             break;
-                        case "ForAppointHauler":
-                            query = query.Where(cos =>
-                                cos.Status == nameof(CosStatus.SupplierAppointed) ||
-                                cos.Status == nameof(CosStatus.Created));
-                            break;
                         case "ForATLBooking":
                             query = query.Where(cos =>
                                 cos.Status == nameof(CosStatus.ForAtlBooking));
+                            break;
+                        case "ForCNCApproval":
+                            query = query.Where(cos =>
+                                cos.Status == nameof(CosStatus.ForApprovalOfCNC));
                             break;
                         case "ForOMApproval":
                             query = query.Where(cos =>
@@ -858,13 +857,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 string message = string.Empty;
 
-                if (existingRecord.FirstApprovedBy == null)
+                if (existingRecord.OmApprovedBy == null)
                 {
-                    existingRecord.FirstApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.FirstApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.OperationManagerReason = reason;
+                    existingRecord.OmApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingRecord.OMReason = reason;
                     existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
-                    existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
+                    existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
 
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                     {
@@ -894,9 +893,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 IsSubPo = true,
                                 CustomerId = existingRecord.CustomerId,
                                 SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo!, existingPo.Company, cancellationToken),
-                                CreatedBy = existingRecord.FirstApprovedBy,
+                                CreatedBy = existingRecord.OmApprovedBy,
                                 CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                                PostedBy = existingRecord.FirstApprovedBy,
+                                PostedBy = existingRecord.OmApprovedBy,
                                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                                 Status = nameof(Status.Posted),
                                 OldPoNo = existingPo.OldPoNo,
@@ -954,7 +953,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        [Authorize(Roles = "FinanceManager, Admin, HeadApprover")]
+        [Authorize(Roles = "FinanceManager, CncManager, Admin, HeadApprover")]
         public async Task<IActionResult> ApproveByFinance(int? id, string? terms, string? instructions, CancellationToken cancellationToken)
         {
             if (id == null)
@@ -974,20 +973,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (existingRecord.SecondApprovedBy == null)
+                if (existingRecord.Status == nameof(CosStatus.ForApprovalOfCNC))
                 {
-                    existingRecord.SecondApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.SecondApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Terms = terms ?? existingRecord.Terms;
-                    existingRecord.FinanceInstruction = instructions;
-                    await _unitOfWork.FilprideCustomerOrderSlip.FinanceApproved(existingRecord, cancellationToken);
+                    existingRecord.CncApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
+                    TempData["success"] = "Customer order slip approved by cnc successfully.";
                 }
+                else
+                {
+                    existingRecord.FmApprovedBy = _userManager.GetUserName(User);
+                    existingRecord.FmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingRecord.Status = nameof(CosStatus.ForDR);
+                    TempData["success"] = "Customer order slip approved by finance successfully.";
+                }
+
+                existingRecord.Terms = terms ?? existingRecord.Terms;
+                existingRecord.FinanceInstruction = instructions;
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Customer order slip approved by finance successfully.";
                 return RedirectToAction(nameof(Preview), new { id });
             }
             catch (Exception ex)
@@ -1305,11 +1312,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingCos.PickUpPointId = viewModel.PickUpPointId;
                     existingCos.Depot = depot.Depot;
                     existingCos.Status = nameof(CosStatus.ForAtlBooking);
-                    existingCos.FirstApprovedBy = null;
-                    existingCos.FirstApprovedDate = null;
-                    existingCos.SecondApprovedBy = null;
-                    existingCos.SecondApprovedDate = null;
-                    existingCos.OperationManagerReason = null;
+                    existingCos.OmApprovedBy = null;
+                    existingCos.OmApprovedDate = null;
+                    existingCos.FmApprovedBy = null;
+                    existingCos.FmApprovedDate = null;
+                    existingCos.CncApprovedBy = null;
+                    existingCos.CncApprovedDate = null;
+                    existingCos.FinanceInstruction = null;
+                    existingCos.OMReason = null;
                     existingCos.ExpirationDate = null;
 
                     switch (viewModel.DeliveryOption)

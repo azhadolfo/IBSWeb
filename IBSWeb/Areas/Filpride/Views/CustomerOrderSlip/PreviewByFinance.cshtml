@@ -187,9 +187,9 @@
 
     <div class="row pt-2">
         @{
-            if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
+            if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) || Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
             {
-                if (User.IsInRole("FinanceManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+                if (User.IsInRole("FinanceManager") || User.IsInRole("CncManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
                 {
                     <div class="col-6 col-md-3">
                         <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>

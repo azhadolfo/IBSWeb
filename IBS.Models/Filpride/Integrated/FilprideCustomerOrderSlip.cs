@@ -128,24 +128,33 @@ namespace IBS.Models.Filpride.Integrated
         #region Approval of Operation Manager
 
         [Column(TypeName = "varchar(100)")]
-        public string? FirstApprovedBy { get; set; }
+        public string? OmApprovedBy { get; set; }
 
-        public DateTime? FirstApprovedDate { get; set; }
+        public DateTime? OmApprovedDate { get; set; }
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
 
-        public string? OperationManagerReason { get; set; }
+        public string? OMReason { get; set; }
+
+        #endregion
+
+        #region Approval of Cnc
+
+        [Column(TypeName = "varchar(100)")]
+        public string? CncApprovedBy { get; set; }
+
+        public DateTime? CncApprovedDate { get; set; }
 
         #endregion
 
         #region Approval of Finance
 
         [Column(TypeName = "varchar(100)")]
-        public string? SecondApprovedBy { get; set; }
+        public string? FmApprovedBy { get; set; }
 
-        public DateTime? SecondApprovedDate { get; set; }
+        public DateTime? FmApprovedDate { get; set; }
 
         public string? Terms { get; set; }
 

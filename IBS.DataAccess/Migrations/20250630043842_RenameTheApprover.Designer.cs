@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630043842_RenameTheApprover")]
+    partial class RenameTheApprover
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3180,14 +3183,6 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("business_style");
-
-                    b.Property<string>("CncApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("cnc_approved_by");
-
-                    b.Property<DateTime?>("CncApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("cnc_approved_date");
 
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric(18,4)")

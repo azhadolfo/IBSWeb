@@ -75,6 +75,10 @@ namespace IBSWeb.Areas.User.Controllers
                         .Where(po => po.Status == nameof(CosStatus.ForApprovalOfOM) && po.Company == companyClaims)
                         .CountAsync(),
 
+                CNCApprovalCount = await _dbContext.FilprideCustomerOrderSlips
+                    .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfCNC) && cos.Company == companyClaims)
+                    .CountAsync(),
+
                 FMApprovalCount = await _dbContext.FilprideCustomerOrderSlips
                         .Where(cos => cos.Status == nameof(CosStatus.ForApprovalOfFM) && cos.Company == companyClaims)
                         .CountAsync(),
