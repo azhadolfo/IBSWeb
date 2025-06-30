@@ -307,6 +307,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = "Supplier",
                         Address = supplier.SupplierAddress,
                         Tin = supplier.SupplierTin,
+                        OldCvNo = viewModel.OldCVNo
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -584,7 +585,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CVId = existingHeaderModel.CheckVoucherHeaderId,
                 CVNo = existingHeaderModel.CheckVoucherHeaderNo,
                 CreatedBy = _userManager.GetUserName(this.User),
-                RRs = new List<ReceivingReportList>()
+                RRs = new List<ReceivingReportList>(),
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
@@ -700,6 +702,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.EditedBy = _userManager.GetUserName(User);
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingHeaderModel.Reference = viewModel.AdvancesCVNo;
+                    existingHeaderModel.OldCvNo = viewModel.OldCVNo;
 
                     #endregion --Saving the default entries
 
