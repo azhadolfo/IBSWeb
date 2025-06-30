@@ -25,6 +25,7 @@
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
+                <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <input type="hidden" asp-for="IsECCEdited" />
                 <input type="hidden" asp-for="ATLNo" />
                 <div class="form-floating col-12">
@@ -72,7 +73,7 @@
                         <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
                             <option value="" selected>Select po</option>
                         </select>
-                        <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
+                        <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="Product" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -192,13 +193,15 @@
             // Initial load for editing
             var initialCustomerId = $('select[name="CustomerId"]').val();
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
-            var initialCosId = $('select[name="CustomerOrderSlipId"]').val();
+            var initialCosId = $("#CustomerOrderSlipId").val();
             var currentVolume = parseNumber($('input[name="Volume"]').val());
             var initialPoId = $('select[name="PurchaseOrderId"]').val();
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
             var initialFreight = $('input[name="Freight"]').val();
+            
+            console.log(initialCosId);
 
             // Load customer details if CustomerId exists
             if (initialCustomerId) {
