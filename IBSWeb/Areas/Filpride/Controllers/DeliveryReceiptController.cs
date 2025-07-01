@@ -152,12 +152,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.DeliveryReceiptNo.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                        s.Customer!.CustomerName.ToLower().Contains(searchValue) == true ||
+                        s.CustomerOrderSlip!.CustomerName.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
                         s.ManualDrNo.ToLower().Contains(searchValue) ||
                         s.CustomerOrderSlip!.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
-                        s.CustomerOrderSlip!.Product!.ProductName.ToLower().Contains(searchValue) ||
+                        s.CustomerOrderSlip!.ProductName.ToLower().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue) ||
                         s.PurchaseOrder!.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
                         s.CreatedBy!.ToLower().Contains(searchValue)
@@ -192,9 +192,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.DeliveredDate,
                         dr.CustomerOrderSlip!.CustomerOrderSlipNo,
                         dr.PurchaseOrder!.PurchaseOrderNo,
-                        dr.CustomerOrderSlip!.PickUpPoint!.Depot,
-                        dr.CustomerOrderSlip!.Customer!.CustomerName,
-                        dr.CustomerOrderSlip!.Product!.ProductName,
+                        dr.CustomerOrderSlip!.Depot,
+                        dr.CustomerOrderSlip!.CustomerName,
+                        dr.CustomerOrderSlip!.ProductName,
                         dr.Quantity,
                         dr.CreatedBy,
                         dr.Status,
@@ -267,7 +267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
                     var supplierHauler = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
-                    
+
                     if (customerOrderSlip == null)
                     {
                         return BadRequest();
