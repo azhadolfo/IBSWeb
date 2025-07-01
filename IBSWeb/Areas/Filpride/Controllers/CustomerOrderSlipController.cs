@@ -173,10 +173,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.OldCosNo.ToLower().Contains(searchValue) ||
                         (s.PurchaseOrder != null && s.PurchaseOrder.PurchaseOrderNo!.ToLower().Contains(searchValue)) ||
-                        (s.Customer != null && s.Customer.CustomerName.ToLower().Contains(searchValue)) ||
+                        s.CustomerName.ToLower().Contains(searchValue) ||
                         (isDateSearch && s.Date == searchDate) ||
-                        (s.PickUpPoint != null && s.PickUpPoint.Depot.ToLower().Contains(searchValue)) ||
-                        s.Product!.ProductName.ToLower().Contains(searchValue) ||
+                        (s.Depot != null && s.Depot.ToLower().Contains(searchValue)) ||
+                        s.ProductName.ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.TotalAmount.ToString().Contains(searchValue) ||
                         s.Status.ToLower().Contains(searchValue));
