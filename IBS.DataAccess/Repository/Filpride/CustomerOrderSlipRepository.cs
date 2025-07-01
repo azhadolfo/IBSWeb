@@ -88,9 +88,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 ?? throw new ArgumentException("Product not found");
 
             var commissionee = await _db.FilprideSuppliers
-                .FirstOrDefaultAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken)
-                ?? throw new ArgumentException("Commissionee not found");
-
+                .FirstOrDefaultAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerId = viewModel.CustomerId;
@@ -118,10 +116,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.VatType = customer.VatType;
             existingRecord.HasEWT = customer.WithHoldingTax;
             existingRecord.HasWVAT = customer.WithHoldingVat;
-            existingRecord.CommissioneeName = commissionee.SupplierName;
+            existingRecord.CommissioneeName = commissionee?.SupplierName ?? string.Empty;
             existingRecord.BusinessStyle = customer.BusinessStyle ?? string.Empty;
-            ///TODO: pending revision(AZH)
-            existingRecord.AvailableCreditLimit = customer.CreditLimitAsOfToday;
+            existingRecord.AvailableCreditLimit = await GetCustomerCreditBalance(customer.CustomerId, cancellationToken);
 
             if (existingRecord.Branch != null)
             {

@@ -361,7 +361,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.CommissionRate = viewModel.CommissionRate;
                     }
 
-
                     await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
 
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", model.Company);
@@ -545,11 +544,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         viewModel.Terms = customer.CustomerTerms;
                     }
 
-                    if (viewModel.ProductId == 0)
-                    {
-                        viewModel.ProductId = existingRecord.ProductId;
-                    }
-
                     var changes = new List<string>();
 
                     if (existingRecord.Date != viewModel.Date)
@@ -560,6 +554,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingRecord.ProductId != viewModel.ProductId)
                     {
                         changes.Add("Product was updated.");
+                    }
+
+                    if (existingRecord.Quantity != viewModel.Quantity)
+                    {
+                        changes.Add("Quantity was updated.");
                     }
 
                     if (existingRecord.OldCosNo != viewModel.OtcCosNo)
@@ -598,17 +597,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         changes.Add("Remarks were updated.");
                     }
-
                     if (existingRecord.Branch != viewModel.SelectedBranch)
                     {
                         changes.Add("Branch was updated.");
                     }
-
                     if (existingRecord.Terms != viewModel.Terms)
                     {
                         changes.Add("Terms was updated.");
                     }
-
                     if (existingRecord.Freight != viewModel.Freight)
                     {
                         changes.Add("Freight was updated.");
@@ -616,20 +612,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
 
-                    if (existingRecord.AuthorityToLoadNo != null && changes.Count > 0)
+                    if (changes.Count > 0 && existingRecord.Status != nameof(CosStatus.Created))
                     {
-                        var tnsAndLogisticUsers = await _dbContext.ApplicationUsers
-                            .Where(a => a.Department == SD.Department_TradeAndSupply || a.Department == SD.Department_Logistics)
+                        var users = await _dbContext.ApplicationUsers
+                            .Where(a => a.Department == SD.Department_TradeAndSupply
+                                        || a.Department == SD.Department_CreditAndCollection
+                                        || a.Department == SD.Department_Finance)
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{viewModel.CurrentUser!.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}. Updates include:\n{string.Join("\n", changes)}";
-                        message += $"\nKindly reappoint the supplier/hauler, if necessary.";
+                        var message = $"{viewModel.CurrentUser!.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}." +
+                                      $" Updates include:\n{string.Join("\n", changes)}";
 
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsAndLogisticUsers, message);
+                        if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
+                        {
+                            message += "\nFor TNS kindly reappoint the supplier.";
+                            existingRecord.Status = nameof(CosStatus.Created);
+                            existingRecord.PickUpPointId = null;
+                            existingRecord.Depot = string.Empty;
+                            existingRecord.OmApprovedBy = null;
+                            existingRecord.OmApprovedDate = null;
+                            existingRecord.FmApprovedBy = null;
+                            existingRecord.FmApprovedDate = null;
+                            existingRecord.CncApprovedBy = null;
+                            existingRecord.CncApprovedDate = null;
+                            existingRecord.FinanceInstruction = null;
+                            existingRecord.OMReason = null;
+                            existingRecord.ExpirationDate = null;
+
+                            await _dbContext.FilprideCOSAppointedSuppliers
+                                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                                .ExecuteDeleteAsync(cancellationToken);
+                        }
+
+                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
 
                         var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => tnsAndLogisticUsers.Contains(a.Id))
+                            .Where(a => users.Contains(a.Id))
                             .Select(u => u.UserName)
                             .ToListAsync(cancellationToken);
 

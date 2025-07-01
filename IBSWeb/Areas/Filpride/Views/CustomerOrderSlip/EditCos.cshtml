@@ -152,7 +152,7 @@
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Product List<span class="required">*</span></label>
-                        <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow products" style="width:100%" disabled="@(Model.Status != nameof(CosStatus.Created))">
+                        <select asp-for="ProductId" asp-items="@Model.Products" class="form-select js-select2 border-0 shadow products" style="width:100%">
                             <option value="" selected>Select product</option>
                         </select>
                         <span asp-validation-for="ProductId" class="text-danger"></span>
@@ -172,12 +172,11 @@
                 </fieldset>
                 <div class="row py-2">
                     <div class="form-floating col-3">
-                        <input asp-for="Quantity" 
-                               class="form-control border-0 shadow" 
-                               placeholder="" 
+                        <input asp-for="Quantity"
+                               class="form-control border-0 shadow"
+                               placeholder=""
                                required min="0.01"
-                               readonly="@(Model.Status != nameof(CosStatus.Created))"
-                               value="@Model.Quantity.ToString("0.0000")" />
+                               value="@Model.Quantity"/>
                         <label asp-for="Quantity" class="ms-2">Quantity<span class="required">*</span></label>
                         <span asp-validation-for="Quantity" class="text-danger"></span>
                     </div>

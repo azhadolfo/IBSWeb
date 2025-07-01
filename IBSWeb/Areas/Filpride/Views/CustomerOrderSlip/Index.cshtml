@@ -260,32 +260,42 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
+                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
+                            
                             switch (status) {
                                 case '@CosStatus.Created':
-                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>
-                                                <li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForAtlBooking':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     actions += `<li><a class="dropdown-item" target="_blank" href="@Url.Action("Create", "AuthorityToLoad", new { area = "Filpride" })">Book ATL</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForApprovalOfOM':
+                                case '@CosStatus.ForApprovalOfCNC':
+                                case '@CosStatus.ForApprovalOfFM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                                    break;
+                                case '@CosStatus.ForDR':
+                                    if (row.balanceQuantity === row.quantity){
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
+                                        actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
+                                    }
+                                    else{
+                                        actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    }
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                                    break;
+                                case '@CosStatus.Completed':
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                             }
-
-                            if (status !== '@CosStatus.Expired' && status !== '@CosStatus.Completed' && status !== '@CosStatus.Closed')
-                            {
-                                actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
-                            }
-                            
-                            if (isAdmin && row.oldPrice === 0){
-                                actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
-                            }
-
-                            actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                             
                             actions += `</ul></div>`;
                             return actions;
