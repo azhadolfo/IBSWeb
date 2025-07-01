@@ -448,7 +448,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 CreatedBy = model.CreatedBy,
                 CreatedDate = model.CreatedDate,
                 Company = model.Company,
-                SupplierId = model.PurchaseOrder.SupplierId
+                SupplierId = model.PurchaseOrder.SupplierId,
+                SupplierName = model.PurchaseOrder.SupplierName
             });
 
             if (ewtAmount > 0)
