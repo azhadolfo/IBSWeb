@@ -116,8 +116,8 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.VatType = customer.VatType;
             existingRecord.HasEWT = customer.WithHoldingTax;
             existingRecord.HasWVAT = customer.WithHoldingVat;
-            existingRecord.CommissioneeName = commissionee?.SupplierName ?? string.Empty;
-            existingRecord.BusinessStyle = customer.BusinessStyle ?? string.Empty;
+            existingRecord.CommissioneeName = commissionee?.SupplierName;
+            existingRecord.BusinessStyle = customer.BusinessStyle;
             existingRecord.AvailableCreditLimit = await GetCustomerCreditBalance(customer.CustomerId, cancellationToken);
 
             if (existingRecord.Branch != null)

@@ -320,11 +320,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         VatType = customer.VatType,
                         HasEWT = customer.WithHoldingTax,
                         HasWVAT = customer.WithHoldingVat,
-                        CommissioneeName = commissionee?.SupplierName ?? string.Empty,
-                        BusinessStyle = customer.BusinessStyle ?? string.Empty,
+                        CommissioneeName = commissionee?.SupplierName,
+                        BusinessStyle = customer.BusinessStyle,
                         AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                             .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
-                        Depot = String.Empty
                     };
 
                     // Upload files if there is existing

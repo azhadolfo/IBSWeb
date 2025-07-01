@@ -221,23 +221,29 @@ namespace IBS.Models.Filpride.Integrated
 
         public ICollection<FilprideDeliveryReceipt>? DeliveryReceipts { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
         public string CustomerName { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
         public string ProductName { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AvailableCreditLimit { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string VatType { get; set; }
 
         public bool HasEWT { get; set; }
 
         public bool HasWVAT { get; set; }
 
-        public string Depot { get; set; }
+        [Column(TypeName = "varchar(20)")]
+        public string? Depot { get; set; }
 
-        public string CommissioneeName { get; set; }
+        [Column(TypeName = "varchar(200)")]
+        public string? CommissioneeName { get; set; }
 
-        public string BusinessStyle { get; set; }
+        [Column(TypeName = "varchar(100)")]
+        public string? BusinessStyle { get; set; }
     }
 }
