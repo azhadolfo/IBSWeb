@@ -478,26 +478,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (cvHeader == null)
             {
-                return NotFound();
+                throw new NullReferenceException("CV Header not found.");
             }
 
             var userName = _userManager.GetUserName(this.User);
 
             if (userName == null)
             {
-                TempData["error"] = "User not found.";
-                return RedirectToAction(nameof(Index));
+                throw new NullReferenceException("User not found.");
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (cvHeader == null)
-                {
-                    throw new NullReferenceException("CV Header not found.");
-                }
-
                 var latestNibit = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(nb => nb.Year)
                     .ThenByDescending(nb => nb.Month)
