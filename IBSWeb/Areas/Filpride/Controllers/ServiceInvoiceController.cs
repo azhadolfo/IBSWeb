@@ -386,7 +386,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
                                 CreatedDate = model.CreatedDate,
-                                CustomerId = model.CustomerId
+                                CustomerId = model.CustomerId,
+                                CustomerName = model.CustomerName
                             }
                         );
                     if (withHoldingTaxAmount > 0)

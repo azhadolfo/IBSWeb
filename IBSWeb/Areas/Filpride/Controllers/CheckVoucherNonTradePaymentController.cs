@@ -194,6 +194,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
+                .Include(cvd => cvd.Customer)
                 .ToListAsync(cancellationToken);
 
             if (modelHeader != null)
@@ -231,6 +232,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                     SupplierId = details.SupplierId,
                                     CustomerId = details.CustomerId,
+                                    CustomerName = details.Customer!.CustomerName,
                                     EmployeeId = details.EmployeeId,
                                     CompanyId = details.CompanyId,
                                 }
