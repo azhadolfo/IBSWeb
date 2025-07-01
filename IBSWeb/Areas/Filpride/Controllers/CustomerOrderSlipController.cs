@@ -205,18 +205,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.OldCosNo,
                         cos.PurchaseOrderId,
                         cos.PurchaseOrder!.PurchaseOrderNo,
-                        cos.PickUpPoint!.Depot,
-                        cos.PickUpPointId,
+                        cos.Depot,
                         cos.Date,
-                        cos.Customer!.CustomerName,
-                        cos.Product!.ProductName,
+                        cos.CustomerName,
+                        cos.ProductName,
                         cos.Quantity,
                         cos.DeliveredPrice,
                         cos.TotalAmount,
                         cos.Status,
                         cos.SupplierId,
-                        cos.Driver,
-                        cos.PlateNo,
                         cos.BalanceQuantity,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
@@ -286,7 +283,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
 
-                    var commissionee = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
+                    var commissionee = await _unitOfWork.FilprideSupplier
+                        .GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
 
                     if (customer == null || product == null)
                     {

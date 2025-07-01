@@ -151,11 +151,8 @@
                         },
                     },
                     { 
-                        "data": "pickUpPointId",
-                        "name": "PickUpPointId",
-                        "render": function (data, type, row){
-                            return row.depot
-                        },
+                        "data": "depot",
+                        "name": "Depot",
                     },
                     {
                         "data": "date",
@@ -171,11 +168,11 @@
                     },
                     { 
                         "data": "customerName",
-                        "name": "Customer.CustomerName",
+                        "name": "CustomerName",
                     },
                     { 
                         "data": "productName",
-                        "name": "Product.ProductName",
+                        "name": "ProductName",
                     },
                     {
                         "data": "deliveredPrice",
@@ -286,7 +283,7 @@
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     }
-                                    else{
+                                    else if (row.oldPrice === 0){
                                         actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
                                     }
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
@@ -353,8 +350,6 @@
                 }
             });
         }
-
-
 
     </script>
 
