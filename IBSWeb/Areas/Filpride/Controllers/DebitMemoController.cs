@@ -434,7 +434,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Company = model.Company,
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate,
-                                    CustomerId = model.SalesInvoice.CustomerId
+                                    CustomerId = model.SalesInvoice.CustomerId,
+                                    CustomerName = model.SalesInvoice.Customer!.CustomerName
                                 }
                             );
 
@@ -610,7 +611,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Company = model.Company,
                                         CreatedBy = model.CreatedBy,
                                         CreatedDate = model.CreatedDate,
-                                        CustomerId = model.ServiceInvoice.CustomerId
+                                        CustomerId = model.ServiceInvoice.CustomerId,
+                                        CustomerName = model.ServiceInvoice.CustomerName
                                     }
                                 );
                             if (ewt > 0)

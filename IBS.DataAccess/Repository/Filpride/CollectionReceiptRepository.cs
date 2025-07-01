@@ -220,6 +220,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = collectionReceipt.CreatedBy,
                         CreatedDate = collectionReceipt.CreatedDate,
                         CustomerId = collectionReceipt.CustomerId,
+                        CustomerName = collectionReceipt.Customer!.CustomerName
                     }
                 );
             }

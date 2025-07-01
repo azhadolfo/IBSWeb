@@ -267,6 +267,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = deliveryReceipt.CreatedBy,
                     CreatedDate = deliveryReceipt.CreatedDate,
                     CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
+                    CustomerName = deliveryReceipt.Customer!.CustomerName
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
