@@ -1017,6 +1017,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var modelDetails = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
                 .Include(cvd => cvd.Customer)
+                .Include(cvd => cvd.Employee)
                 .ToListAsync(cancellationToken);
             var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
@@ -1061,6 +1062,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         CustomerName = details.Customer!.CustomerName,
                                         CompanyId = details.CompanyId,
                                         EmployeeId = details.EmployeeId,
+                                        EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}"
                                     }
                                 );
                         }
