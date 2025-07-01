@@ -492,23 +492,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var latestNibit = await _dbContext.FilprideMonthlyNibits
-                    .OrderByDescending(nb => nb.Year)
-                    .ThenByDescending(nb => nb.Month)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var isClosed = await _dbContext.FilprideMonthlyNibits
+                    .Where(n => n.Month == cvHeader.Date.Month && n.Year == cvHeader.Date.Year)
+                    .AnyAsync(cancellationToken);
 
-                if (latestNibit == null)
+                if (isClosed)
                 {
-                    throw new NullReferenceException("No NIBIT found.");
-                }
-
-                var latestNibitDate = new DateOnly(latestNibit.Year, latestNibit.Month, 1);
-
-                if ((latestNibit.Month == cvHeader.Date.Month && latestNibit.Year == cvHeader.Date.Year) || latestNibitDate > cvHeader.Date)
-                {
-                    TempData["error"] = "Period closed, CV cannot be unposted.";
-                    await transaction.RollbackAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
+                    throw new ArgumentException("Period closed, CV cannot be unposted.");
                 }
 
                 cvHeader.PostedBy = null;
