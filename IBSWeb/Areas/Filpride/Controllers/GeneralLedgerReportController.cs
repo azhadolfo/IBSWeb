@@ -295,9 +295,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = gl.Credit;
                     worksheet.Cells[row, 7].Value = gl.CompanyModel?.CompanyName ?? "";
                     worksheet.Cells[row, 8].Value = gl.BankAccountName;
-                    worksheet.Cells[row, 9].Value = gl.Customer?.CustomerName ?? "";
-                    worksheet.Cells[row, 10].Value = gl.Supplier?.SupplierName ?? "";
-                    worksheet.Cells[row, 11].Value = (gl.EmployeeId != null) ? $"{gl.Employee?.FirstName} {gl.Employee?.MiddleName} {gl.Employee?.LastName}" : "";
+                    worksheet.Cells[row, 9].Value = gl.CustomerName;
+                    worksheet.Cells[row, 10].Value = gl.SupplierName;
+                    worksheet.Cells[row, 11].Value = gl.EmployeeName;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
