@@ -528,7 +528,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Unposted.";
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Print), new { id });
             }
             catch (Exception ex)
             {
@@ -536,7 +536,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Print), new { id });
             }
         }
 
