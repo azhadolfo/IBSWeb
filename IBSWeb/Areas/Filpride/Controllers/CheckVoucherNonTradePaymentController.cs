@@ -515,6 +515,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cvHeader.Status = nameof(CheckVoucherPaymentStatus.ForPosting);
 
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(d => d.CVNo == cvHeader.CheckVoucherHeaderNo);
 
                 #region --Audit Trail Recording
 
