@@ -1014,7 +1014,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
+            var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync(cancellationToken);
             var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
             if (modelHeader != null)
@@ -1051,6 +1051,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         CreatedBy = modelHeader.CreatedBy,
                                         CreatedDate = modelHeader.CreatedDate,
                                         BankAccountId = details.BankId,
+                                        BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                         SupplierId = details.SupplierId,
                                         CustomerId = details.CustomerId,
                                         CompanyId = details.CompanyId,
