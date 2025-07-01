@@ -472,7 +472,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return NotFound();
         }
 
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
         {
             var cvHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
