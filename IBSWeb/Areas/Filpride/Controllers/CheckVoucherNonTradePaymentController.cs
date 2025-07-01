@@ -196,6 +196,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
                 .Include(cvd => cvd.Customer)
                 .Include(cvd => cvd.Employee)
+                .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
 
             if (modelHeader != null)
@@ -238,6 +239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     EmployeeId = details.EmployeeId,
                                     EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}",
                                     CompanyId = details.CompanyId,
+                                    CompanyName = details.Company!.CompanyName
                                 }
                             );
                     }

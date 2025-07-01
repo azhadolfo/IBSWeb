@@ -293,7 +293,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 5].Value = gl.Debit;
                     worksheet.Cells[row, 6].Value = gl.Credit;
-                    worksheet.Cells[row, 7].Value = gl.CompanyModel?.CompanyName ?? "";
+                    worksheet.Cells[row, 7].Value = gl.CompanyName;
                     worksheet.Cells[row, 8].Value = gl.BankAccountName;
                     worksheet.Cells[row, 9].Value = gl.CustomerName;
                     worksheet.Cells[row, 10].Value = gl.SupplierName;
