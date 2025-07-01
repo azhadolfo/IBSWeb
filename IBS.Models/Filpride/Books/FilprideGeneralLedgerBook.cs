@@ -52,6 +52,8 @@ namespace IBS.Models.Filpride.Books
         [ForeignKey(nameof(BankAccountId))]
         public FilprideBankAccount? BankAccount { get; set; }
 
+        public string BankAccountName { get; set; } = string.Empty;
+
         #endregion
 
         #region Supplier Properties
@@ -60,6 +62,8 @@ namespace IBS.Models.Filpride.Books
 
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
+
+        public string SupplierName { get; set; } = string.Empty;
 
         #endregion
 
@@ -79,6 +83,8 @@ namespace IBS.Models.Filpride.Books
         [ForeignKey(nameof(EmployeeId))]
         public FilprideEmployee Employee { get; set; }
 
+        public string EmployeeName { get; set; } = string.Empty;
+
         #endregion
 
         #region Customer Properties
@@ -88,6 +94,8 @@ namespace IBS.Models.Filpride.Books
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        public string CustomerName { get; set; } = string.Empty;
+
         #endregion
 
         #region Company Properties
@@ -96,6 +104,8 @@ namespace IBS.Models.Filpride.Books
 
         [ForeignKey(nameof(CompanyId))]
         public Company? CompanyModel { get; set; }
+
+        public string CompanyName { get; set; } = string.Empty;
 
         #endregion
     }

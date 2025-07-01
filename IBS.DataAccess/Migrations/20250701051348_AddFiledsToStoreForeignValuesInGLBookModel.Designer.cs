@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250701051348_AddFiledsToStoreForeignValuesInGLBookModel")]
+    partial class AddFiledsToStoreForeignValuesInGLBookModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3206,16 +3209,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("branch");
 
                     b.Property<string>("BusinessStyle")
-                        .HasColumnType("varchar(100)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("business_style");
-
-                    b.Property<string>("CncApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("cnc_approved_by");
-
-                    b.Property<DateTime?>("CncApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("cnc_approved_date");
 
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric(18,4)")
@@ -3226,7 +3222,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("commissionee_id");
 
                     b.Property<string>("CommissioneeName")
-                        .HasColumnType("varchar(200)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("commissionee_name");
 
                     b.Property<string>("Company")
@@ -3242,6 +3239,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<decimal>("CreditBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit_balance");
+
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
                         .HasColumnType("text")
@@ -3253,7 +3254,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("text")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerOrderSlipNo")
@@ -3293,7 +3294,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("delivery_option");
 
                     b.Property<string>("Depot")
-                        .HasColumnType("varchar(20)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("depot");
 
                     b.Property<string>("DisapprovedBy")
@@ -3324,13 +3326,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("finance_instruction");
 
-                    b.Property<string>("FmApprovedBy")
+                    b.Property<string>("FirstApprovedBy")
                         .HasColumnType("varchar(100)")
-                        .HasColumnName("fm_approved_by");
+                        .HasColumnName("first_approved_by");
 
-                    b.Property<DateTime?>("FmApprovedDate")
+                    b.Property<DateTime?>("FirstApprovedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("fm_approved_date");
+                        .HasColumnName("first_approved_date");
 
                     b.Property<decimal?>("Freight")
                         .HasColumnType("numeric(18,4)")
@@ -3364,10 +3366,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<string>("OMReason")
-                        .HasColumnType("text")
-                        .HasColumnName("om_reason");
-
                     b.Property<string>("OldCosNo")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -3377,13 +3375,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("old_price");
 
-                    b.Property<string>("OmApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("om_approved_by");
-
-                    b.Property<DateTime?>("OmApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("om_approved_date");
+                    b.Property<string>("OperationManagerReason")
+                        .HasColumnType("text")
+                        .HasColumnName("operation_manager_reason");
 
                     b.Property<int?>("PickUpPointId")
                         .HasColumnType("integer")
@@ -3404,7 +3398,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("product_name");
 
                     b.Property<int?>("PurchaseOrderId")
@@ -3419,6 +3413,14 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("remarks");
+
+                    b.Property<string>("SecondApprovedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("second_approved_by");
+
+                    b.Property<DateTime?>("SecondApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("second_approved_date");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -3447,7 +3449,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("text")
                         .HasColumnName("vat_type");
 
                     b.HasKey("CustomerOrderSlipId")
