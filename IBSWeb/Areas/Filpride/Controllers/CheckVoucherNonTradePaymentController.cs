@@ -228,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = modelHeader.CreatedBy,
                                     CreatedDate = modelHeader.CreatedDate,
                                     BankAccountId = details.BankId,
+                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                     SupplierId = details.SupplierId,
                                     CustomerId = details.CustomerId,
                                     EmployeeId = details.EmployeeId,

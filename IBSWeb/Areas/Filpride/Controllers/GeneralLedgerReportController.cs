@@ -294,7 +294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = gl.Debit;
                     worksheet.Cells[row, 6].Value = gl.Credit;
                     worksheet.Cells[row, 7].Value = gl.CompanyModel?.CompanyName ?? "";
-                    worksheet.Cells[row, 8].Value = (gl.BankAccountId != null) ? $"{gl.BankAccount?.AccountNo} {gl.BankAccount?.AccountName}" : "";
+                    worksheet.Cells[row, 8].Value = gl.BankAccountName;
                     worksheet.Cells[row, 9].Value = gl.Customer?.CustomerName ?? "";
                     worksheet.Cells[row, 10].Value = gl.Supplier?.SupplierName ?? "";
                     worksheet.Cells[row, 11].Value = (gl.EmployeeId != null) ? $"{gl.Employee?.FirstName} {gl.Employee?.MiddleName} {gl.Employee?.LastName}" : "";

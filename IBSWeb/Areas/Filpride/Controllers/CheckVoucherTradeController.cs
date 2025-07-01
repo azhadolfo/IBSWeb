@@ -982,7 +982,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Company = modelHeader.Company,
                                     CreatedBy = modelHeader.CreatedBy,
                                     CreatedDate = modelHeader.CreatedDate,
-                                    BankAccountId = modelHeader.BankId
+                                    BankAccountId = modelHeader.BankId,
+                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                 }
                             );
                     }

@@ -132,7 +132,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = collectionReceipt.Company,
                         CreatedBy = collectionReceipt.CreatedBy,
                         CreatedDate = collectionReceipt.CreatedDate,
-                        BankAccountId = collectionReceipt.BankId
+                        BankAccountId = collectionReceipt.BankId,
+                        BankAccountName = collectionReceipt.BankAccountNumber + collectionReceipt.BankAccountName,
                     }
                 );
             }
