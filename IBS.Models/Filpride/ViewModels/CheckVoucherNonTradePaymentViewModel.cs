@@ -41,6 +41,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string Particulars { get; set; }
 
+        public string? OldCVNo { get; set; }
+
         public List<SelectListItem>? ChartOfAccounts { get; set; }
 
         public string[] AccountNumber { get; set; }

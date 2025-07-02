@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630044335_AddOldCVNoToCVHeaderModel")]
+    partial class AddOldCVNoToCVHeaderModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2347,11 +2350,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("bank_account_id");
 
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2360,11 +2358,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CompanyId")
                         .HasColumnType("integer")
                         .HasColumnName("company_id");
-
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company_name");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -2381,11 +2374,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
@@ -2404,11 +2392,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("employee_id");
 
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("employee_name");
-
                     b.Property<bool>("IsPosted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_posted");
@@ -2421,11 +2404,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
 
                     b.HasKey("GeneralLedgerBookId")
                         .HasName("pk_filpride_general_ledger_books");
@@ -3206,16 +3184,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("branch");
 
                     b.Property<string>("BusinessStyle")
-                        .HasColumnType("varchar(100)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("business_style");
-
-                    b.Property<string>("CncApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("cnc_approved_by");
-
-                    b.Property<DateTime?>("CncApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("cnc_approved_date");
 
                     b.Property<decimal>("CommissionRate")
                         .HasColumnType("numeric(18,4)")
@@ -3226,7 +3197,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("commissionee_id");
 
                     b.Property<string>("CommissioneeName")
-                        .HasColumnType("varchar(200)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("commissionee_name");
 
                     b.Property<string>("Company")
@@ -3242,6 +3214,10 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<decimal>("CreditBalance")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("credit_balance");
+
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
                         .HasColumnType("text")
@@ -3253,7 +3229,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("text")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerOrderSlipNo")
@@ -3293,7 +3269,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("delivery_option");
 
                     b.Property<string>("Depot")
-                        .HasColumnType("varchar(20)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("depot");
 
                     b.Property<string>("DisapprovedBy")
@@ -3324,13 +3301,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("text")
                         .HasColumnName("finance_instruction");
 
-                    b.Property<string>("FmApprovedBy")
+                    b.Property<string>("FirstApprovedBy")
                         .HasColumnType("varchar(100)")
-                        .HasColumnName("fm_approved_by");
+                        .HasColumnName("first_approved_by");
 
-                    b.Property<DateTime?>("FmApprovedDate")
+                    b.Property<DateTime?>("FirstApprovedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("fm_approved_date");
+                        .HasColumnName("first_approved_date");
 
                     b.Property<decimal?>("Freight")
                         .HasColumnType("numeric(18,4)")
@@ -3364,10 +3341,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<string>("OMReason")
-                        .HasColumnType("text")
-                        .HasColumnName("om_reason");
-
                     b.Property<string>("OldCosNo")
                         .IsRequired()
                         .HasColumnType("varchar(50)")
@@ -3377,13 +3350,9 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("old_price");
 
-                    b.Property<string>("OmApprovedBy")
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("om_approved_by");
-
-                    b.Property<DateTime?>("OmApprovedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("om_approved_date");
+                    b.Property<string>("OperationManagerReason")
+                        .HasColumnType("text")
+                        .HasColumnName("operation_manager_reason");
 
                     b.Property<int?>("PickUpPointId")
                         .HasColumnType("integer")
@@ -3404,7 +3373,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("product_name");
 
                     b.Property<int?>("PurchaseOrderId")
@@ -3419,6 +3388,14 @@ namespace IBS.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("remarks");
+
+                    b.Property<string>("SecondApprovedBy")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("second_approved_by");
+
+                    b.Property<DateTime?>("SecondApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("second_approved_date");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -3447,7 +3424,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("text")
                         .HasColumnName("vat_type");
 
                     b.HasKey("CustomerOrderSlipId")
@@ -3491,10 +3468,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("delivery_receipt_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DeliveryReceiptId"));
-
-                    b.Property<int>("AuthorityToLoadId")
-                        .HasColumnType("integer")
-                        .HasColumnName("authority_to_load_id");
 
                     b.Property<string>("AuthorityToLoadNo")
                         .HasColumnType("varchar(20)")
@@ -3614,7 +3587,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("HaulerName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("text")
                         .HasColumnName("hauler_name");
 
                     b.Property<bool>("IsCommissionPaid")
@@ -3678,9 +3651,6 @@ namespace IBS.DataAccess.Migrations
 
                     b.HasKey("DeliveryReceiptId")
                         .HasName("pk_filpride_delivery_receipts");
-
-                    b.HasIndex("AuthorityToLoadId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_authority_to_load_id");
 
                     b.HasIndex("CommissioneeId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_commissionee_id");
@@ -11534,13 +11504,6 @@ namespace IBS.DataAccess.Migrations
 
             modelBuilder.Entity("IBS.Models.Filpride.Integrated.FilprideDeliveryReceipt", b =>
                 {
-                    b.HasOne("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", "AuthorityToLoad")
-                        .WithMany()
-                        .HasForeignKey("AuthorityToLoadId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_authority_to_loads_auth");
-
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Commissionee")
                         .WithMany()
                         .HasForeignKey("CommissioneeId")
@@ -11571,8 +11534,6 @@ namespace IBS.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("PurchaseOrderId")
                         .HasConstraintName("fk_filpride_delivery_receipts_filpride_purchase_orders_purchas");
-
-                    b.Navigation("AuthorityToLoad");
 
                     b.Navigation("Commissionee");
 

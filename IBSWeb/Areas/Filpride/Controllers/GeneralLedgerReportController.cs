@@ -262,9 +262,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["D7"].Value = "Account Title";
                 worksheet.Cells["E7"].Value = "Debit";
                 worksheet.Cells["F7"].Value = "Credit";
+                worksheet.Cells["G7"].Value = "Company";
+                worksheet.Cells["H7"].Value = "Bank";
+                worksheet.Cells["I7"].Value = "Customer";
+                worksheet.Cells["J7"].Value = "Supplier";
+                worksheet.Cells["K7"].Value = "Employee";
 
                 // Apply styling to the header row
-                using (var range = worksheet.Cells["A7:F7"])
+                using (var range = worksheet.Cells["A7:K7"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -277,7 +282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Populate the data rows
                 int row = 8;
-                string currencyFormat = "#,##0.0000";
+                string currencyFormat = "#,##0.00";
 
                 foreach (var gl in generalBooks)
                 {
@@ -288,6 +293,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells[row, 5].Value = gl.Debit;
                     worksheet.Cells[row, 6].Value = gl.Credit;
+                    worksheet.Cells[row, 7].Value = gl.CompanyName;
+                    worksheet.Cells[row, 8].Value = gl.BankAccountName;
+                    worksheet.Cells[row, 9].Value = gl.CustomerName;
+                    worksheet.Cells[row, 10].Value = gl.SupplierName;
+                    worksheet.Cells[row, 11].Value = gl.EmployeeName;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
@@ -304,7 +314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
 
                 // Apply style to subtotal row
-                using (var range = worksheet.Cells[row, 1, row, 6])
+                using (var range = worksheet.Cells[row, 1, row, 11])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;

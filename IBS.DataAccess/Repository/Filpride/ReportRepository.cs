@@ -103,7 +103,15 @@ namespace IBS.DataAccess.Repository.Filpride
             var generalLedgerBooks = await _db
                 .FilprideGeneralLedgerBooks
                 .Where(i => i.Company == company && i.Date >= dateFrom && i.Date <= dateTo && i.IsPosted)
+                .Include(i => i.BankAccount)
+                .Include(i => i.Customer)
+                .Include(i => i.Supplier)
+                .Include(i => i.Account)
+                .Include(i => i.Employee)
+                .Include(i => i.CompanyModel)
                 .OrderBy(i => i.Date)
+                .ThenBy(i => i.Reference)
+                .ThenByDescending(i => i.Debit)
                 .ToListAsync(cancellationToken);
 
             return generalLedgerBooks;
