@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250701072730_AddAtlIdInFilprideDr")]
+    partial class AddAtlIdInFilprideDr
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3463,9 +3466,9 @@ namespace IBS.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DeliveryReceiptId"));
 
-                    b.Property<int>("AuthorityToLoadId")
+                    b.Property<int>("AtlId")
                         .HasColumnType("integer")
-                        .HasColumnName("authority_to_load_id");
+                        .HasColumnName("atl_id");
 
                     b.Property<string>("AuthorityToLoadNo")
                         .HasColumnType("varchar(20)")
@@ -3650,8 +3653,8 @@ namespace IBS.DataAccess.Migrations
                     b.HasKey("DeliveryReceiptId")
                         .HasName("pk_filpride_delivery_receipts");
 
-                    b.HasIndex("AuthorityToLoadId")
-                        .HasDatabaseName("ix_filpride_delivery_receipts_authority_to_load_id");
+                    b.HasIndex("AtlId")
+                        .HasDatabaseName("ix_filpride_delivery_receipts_atl_id");
 
                     b.HasIndex("CommissioneeId")
                         .HasDatabaseName("ix_filpride_delivery_receipts_commissionee_id");
@@ -11507,10 +11510,10 @@ namespace IBS.DataAccess.Migrations
                 {
                     b.HasOne("IBS.Models.Filpride.Integrated.FilprideAuthorityToLoad", "AuthorityToLoad")
                         .WithMany()
-                        .HasForeignKey("AuthorityToLoadId")
+                        .HasForeignKey("AtlId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_authority_to_loads_auth");
+                        .HasConstraintName("fk_filpride_delivery_receipts_filpride_authority_to_loads_atl_");
 
                     b.HasOne("IBS.Models.Filpride.MasterFile.FilprideSupplier", "Commissionee")
                         .WithMany()

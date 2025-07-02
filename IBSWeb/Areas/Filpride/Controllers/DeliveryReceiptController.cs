@@ -291,13 +291,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Driver = viewModel.Driver,
                         PlateNo = viewModel.PlateNo,
                         HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
+                        AuthorityToLoadId = viewModel.ATLId,
                         AuthorityToLoadNo = viewModel.ATLNo,
                         CommissioneeId = customerOrderSlip.CommissioneeId,
                         CommissionRate = customerOrderSlip.CommissionRate,
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                         CustomerAddress = customerOrderSlip.CustomerAddress,
                         CustomerTin = customerOrderSlip.CustomerTin,
-                        HaulerName = supplierHauler?.SupplierName ?? string.Empty
+                        HaulerName = supplierHauler?.SupplierName ?? string.Empty,
+                        PurchaseOrderId = viewModel.PurchaseOrderId,
                     };
 
                     customerOrderSlip.DeliveredQuantity += model.Quantity;
@@ -308,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         customerOrderSlip.Status = nameof(CosStatus.Completed);
                     }
 
-                    await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(viewModel, model);
+                    await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(model);
 
                     await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
 
@@ -348,37 +350,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
 
-                    if ((viewModel.Driver != customerOrderSlip.Driver || viewModel.PlateNo != customerOrderSlip.PlateNo) && !string.IsNullOrEmpty(viewModel.ATLNo))
-                    {
-                        var tnsUsers = await _dbContext.ApplicationUsers
-                            .Where(a => a.Department == SD.Department_TradeAndSupply)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var message = $"Please be informed that {model.CreatedBy!.ToUpper()} has updated the 'Driver' and 'Plate#' for {model.DeliveryReceiptNo}.";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => tnsUsers.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-                    }
-
-                    if ((viewModel.HaulerId != customerOrderSlip.HaulerId || viewModel.Freight != customerOrderSlip.Freight) && !string.IsNullOrEmpty(viewModel.ATLNo))
+                    if (viewModel.Freight != customerOrderSlip.Freight)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
@@ -394,7 +366,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
-                                      $" Please review and approve the changes from '{customerOrderSlip.Hauler?.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
+                                      $" Please review and approve the changes from of '{customerOrderSlip.Hauler?.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
                                       $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
@@ -471,14 +443,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var purchaseOrders = await _dbContext.FilprideCOSAppointedSuppliers
-                    .Include(a => a.PurchaseOrder)
-                    .Include(a => a.Supplier)
-                    .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                var purchaseOrders = await _dbContext.FilprideBookAtlDetails
+                    .Include(x => x.Header)
+                    .Include(x => x.CustomerOrderSlip)
+                    .Include(x => x.AppointedSupplier!)
+                    .ThenInclude(x => x.PurchaseOrder!)
+                    .ThenInclude(x => x.Supplier)
+                    .Where(x => x.CustomerOrderSlipId == id)
                     .Select(a => new SelectListItem
                     {
-                        Value = a.PurchaseOrderId.ToString(),
-                        Text = $"{a.PurchaseOrder!.PurchaseOrderNo} - {a.Supplier!.SupplierName} (Unserved: {a.UnservedQuantity})"
+                        Value = a.AppointedSupplier!.PurchaseOrderId.ToString(),
+                        Text = $"PO: {a.AppointedSupplier.PurchaseOrder!.PurchaseOrderNo} | " +
+                               $"Supplier: {a.AppointedSupplier.Supplier!.SupplierName} | " +
+                               $"ATL#: {a.Header!.AuthorityToLoadNo} | " +
+                               $"Unserved: {a.UnservedQuantity}"
                     })
                     .ToListAsync(cancellationToken);
 
@@ -509,6 +487,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     Driver = existingRecord.Driver!,
                     PlateNo = existingRecord.PlateNo!,
+                    ATLId = existingRecord.AuthorityToLoadId,
                     ATLNo = existingRecord.AuthorityToLoadNo,
                     HasReceivingReport = existingRecord.HasReceivingReport,
                 };
@@ -840,54 +819,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(result);
         }
 
-        public async Task<IActionResult> GetCosDetails(int? id, int? initialPoId, decimal? currentVolume)
+        public async Task<IActionResult> GetCosDetails(int? id, int? initialPoId, int? initialAtlId, decimal? currentVolume)
         {
             if (id == null)
             {
                 return Json(null);
             }
 
-            var cos = await _dbContext.FilprideCustomerOrderSlips
-                .Include(cos => cos.Product)
-                .Include(cos => cos.AppointedSuppliers)!
-                .ThenInclude(a => a.Supplier)
-                .Include(cos => cos.AppointedSuppliers)!
-                .ThenInclude(a => a.PurchaseOrder)
-                .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == id);
+            var cosAtlDetails = await _dbContext.FilprideBookAtlDetails
+                .Include(x => x.Header)
+                .Include(x => x.CustomerOrderSlip)
+                .Include(x => x.AppointedSupplier!)
+                .ThenInclude(x => x.PurchaseOrder!)
+                .ThenInclude(x => x.Supplier)
+                .Where(x => x.CustomerOrderSlipId == id)
+                .ToListAsync();
 
-            if (cos == null)
+            if (!cosAtlDetails.Any())
             {
                 return Json(null);
             }
 
             if (initialPoId != null && currentVolume != null)
             {
-                var existingSelection = cos.AppointedSuppliers!.FirstOrDefault(sp => sp.PurchaseOrderId == initialPoId);
+                var existingSelection = cosAtlDetails
+                    .FirstOrDefault(x => x.AppointedSupplier!.PurchaseOrderId == initialPoId
+                                && x.AuthorityToLoadId == initialAtlId);
                 existingSelection!.UnservedQuantity += (decimal)currentVolume;
             }
 
             return Json(new
             {
-                Product = cos.Product!.ProductName,
-                cos.Quantity,
-                RemainingVolume = cos.BalanceQuantity,
-                Price = cos.DeliveredPrice,
-                cos.DeliveryOption,
-                ATLNo = cos.AuthorityToLoadNo,
-                cos.HaulerId,
-                cos.Driver,
-                cos.PlateNo,
-                cos.Freight,
-                PurchaseOrders = cos.AppointedSuppliers!
-                    .Where(a => a.UnservedQuantity > 0 || (initialPoId.HasValue && a.PurchaseOrderId == initialPoId))
+                Product = cosAtlDetails.First().CustomerOrderSlip!.ProductName,
+                cosAtlDetails.First().CustomerOrderSlip!.Quantity,
+                RemainingVolume = cosAtlDetails.First().CustomerOrderSlip!.BalanceQuantity,
+                Price = cosAtlDetails.First().CustomerOrderSlip!.DeliveredPrice,
+                cosAtlDetails.First().CustomerOrderSlip!.DeliveryOption,
+                cosAtlDetails.First().CustomerOrderSlip!.Freight,
+                PurchaseOrders = cosAtlDetails
+                    .Where(a => a.UnservedQuantity > 0 || (initialPoId.HasValue && a.AppointedSupplier!.PurchaseOrderId == initialPoId))
                     .Select(a => new
                     {
-                        a.PurchaseOrderId,
-                        a.PurchaseOrder!.PurchaseOrderNo,
-                        a.Supplier!.SupplierName,
+                        a.AppointedSupplier!.PurchaseOrderId,
+                        a.AppointedSupplier!.PurchaseOrder!.PurchaseOrderNo,
+                        a.AppointedSupplier.PurchaseOrder!.Supplier!.SupplierName,
                         a.UnservedQuantity,
-                        a.AtlNo,
-                        IsCurrentlySelected = initialPoId.HasValue && a.PurchaseOrderId == initialPoId
+                        atlId = a.AuthorityToLoadId,
+                        atlNo = a.Header!.AuthorityToLoadNo,
+                        IsCurrentlySelected = initialPoId.HasValue && a.AppointedSupplier!.PurchaseOrderId == initialPoId
                     })
             });
         }

@@ -26,8 +26,10 @@
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
                 <input asp-for="CustomerOrderSlipId" type="hidden" />
-                <input type="hidden" asp-for="IsECCEdited" />
-                <input type="hidden" asp-for="ATLNo" />
+                <input asp-for="ATLId" type="hidden" />
+                <input asp-for="IsECCEdited" type="hidden" />
+                <input asp-for="ATLNo" type="hidden" />
+                <input asp-for="PurchaseOrderId" type="hidden" />
                 <div class="form-floating col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
@@ -195,13 +197,12 @@
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
             var initialCosId = $("#CustomerOrderSlipId").val();
             var currentVolume = parseNumber($('input[name="Volume"]').val());
-            var initialPoId = $('select[name="PurchaseOrderId"]').val();
+            var initialPoId = $("#PurchaseOrderId").val();
+            var initialAtlId = $("#ATLId").val();
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
             var initialFreight = $('input[name="Freight"]').val();
-            
-            console.log(initialCosId);
 
             // Load customer details if CustomerId exists
             if (initialCustomerId) {
@@ -246,8 +247,9 @@
                         type: "GET",
                         data: { 
                             id: cosId,
-                            initialPoId: initialPoId, 
-                            currentVolume: currentVolume
+                            initialPoId: initialPoId,
+                            initialAtlId: initialAtlId,
+                            currentVolume: currentVolume,
                         },
                         success: function (data) {
                             if (data) {
@@ -303,27 +305,35 @@
                                 // Populate Purchase Orders dropdown
                                 var $poSelect = $('select[name="PurchaseOrderId"]');
                                 $poSelect.empty();
-                                
+
                                 if (data.purchaseOrders && data.purchaseOrders.length > 0) {
                                     $poSelect.append('<option value="">Select po</option>');
                                     $.each(data.purchaseOrders, function(index, item) {
-                                        var option = $('<option value="' + item.purchaseOrderId + '" ' +
-                                            'data-unserved="' + item.unservedQuantity + '" ' +
-                                            'data-atl-no="' + (item.atlNo || '') + '">' +
-                                            item.purchaseOrderNo + ' - ' + item.supplierName +
-                                            ' (Unserved: ' + formatNumber(item.unservedQuantity) + ')</option>');
-                                        
-                                        if (item.isCurrentlySelected){
+                                        const formattedOption =
+                                            'PO: ' + item.purchaseOrderNo + ' | ' +
+                                            'Supplier: ' + item.supplierName + ' | ' +
+                                            'ATL#: ' + (item.atlNo || '') + ' | ' +
+                                            'Unserved: ' + formatNumber(item.unservedQuantity);
+
+                                        const option = $('<option>', {
+                                            value: item.purchaseOrderId,
+                                            text: formattedOption,
+                                            'data-unserved': item.unservedQuantity,
+                                            'data-atl-id': item.atlId || '',
+                                            'data-atl-no': item.atlNo || ''
+                                        });
+
+                                        if (item.isCurrentlySelected) {
                                             option.prop('selected', true);
                                         }
 
                                         $poSelect.append(option);
-                                        
                                     });
                                 } else {
                                     $poSelect.append('<option value="">No purchase orders available</option>');
                                 }
-                                
+
+
                                 calculateTotalAmount();
                             }
                         },
@@ -357,10 +367,10 @@
             $('select[name="PurchaseOrderId"]').on('change', function() {
                 var $selectedOption = $(this).find('option:selected');
                 var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
+                var atlId = $selectedOption.data('atl-id') || '';
                 var atlNo = $selectedOption.data('atl-no') || '';
-                
-                console.log($selectedOption);
 
+                $('input[name="ATLId"]').val(atlId);
                 $('input[name="ATLNo"]').val(atlNo);
 
                 // Set max volume to unserved quantity

@@ -64,6 +64,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? ATLNo { get; set; }
 
+        public int ATLId { get; set; }
+
         public int? HaulerId { get; set; }
 
         public List<SelectListItem>? Haulers { get; set; }

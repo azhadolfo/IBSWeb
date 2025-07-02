@@ -102,7 +102,6 @@ namespace IBS.DataAccess.Repository.Filpride
             #region--Update Appointed PO
 
             await UpdatePreviousAppointedSupplierAsync(existingRecord);
-            await AssignNewPurchaseOrderAsync(viewModel, existingRecord);
 
             #endregion
 
@@ -126,6 +125,10 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
             existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
             existingRecord.HaulerName = supplierHauler?.SupplierName ?? string.Empty;
+            existingRecord.AuthorityToLoadId = viewModel.ATLId;
+            existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
+
+            await AssignNewPurchaseOrderAsync(existingRecord);
 
             if (_db.ChangeTracker.HasChanges())
             {
@@ -543,7 +546,8 @@ namespace IBS.DataAccess.Repository.Filpride
         private async Task UpdateCosRemainingVolumeAsync(int cosId, decimal drVolume, CancellationToken cancellationToken)
         {
             var cos = await _db.FilprideCustomerOrderSlips
-                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
+                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken)
+                      ?? throw new InvalidOperationException("No record found.");
 
             cos.DeliveredQuantity += drVolume;
             cos.BalanceQuantity -= drVolume;
@@ -561,7 +565,8 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task DeductTheVolumeToCos(int cosId, decimal drVolume, CancellationToken cancellationToken = default)
         {
             var cos = await _db.FilprideCustomerOrderSlips
-                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken) ?? throw new InvalidOperationException("No record found.");
+                .FirstOrDefaultAsync(po => po.CustomerOrderSlipId == cosId, cancellationToken)
+                      ?? throw new InvalidOperationException("No record found.");
 
             if (cos.Status == nameof(CosStatus.Completed))
             {
@@ -575,26 +580,24 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdatePreviousAppointedSupplierAsync(FilprideDeliveryReceipt model)
         {
-            var previousAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
-                .FirstOrDefaultAsync(a => a.CustomerOrderSlipId == model.CustomerOrderSlipId && a.PurchaseOrderId == model.PurchaseOrderId);
-
-            if (previousAppointedSupplier == null)
-                throw new InvalidOperationException("Previous appointed supplier not found.");
+            var previousAppointedSupplier = await _db.FilprideBookAtlDetails
+                .Include(x => x.AppointedSupplier)
+                .FirstOrDefaultAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId
+                                          && x.CustomerOrderSlipId == model.CustomerOrderSlipId
+                                          && x.AppointedSupplier!.PurchaseOrderId == model.PurchaseOrderId)
+                ?? throw new InvalidOperationException("Previous appointed supplier not found.");
 
             previousAppointedSupplier.UnservedQuantity += model.Quantity;
         }
 
-        public async Task AssignNewPurchaseOrderAsync(DeliveryReceiptViewModel viewModel, FilprideDeliveryReceipt model)
+        public async Task AssignNewPurchaseOrderAsync(FilprideDeliveryReceipt model)
         {
-            var newAppointedSupplier = await _db.FilprideCOSAppointedSuppliers
-                .OrderBy(s => s.PurchaseOrderId)
-                .FirstOrDefaultAsync(s =>
-                    s.CustomerOrderSlipId == viewModel.CustomerOrderSlipId &&
-                    s.PurchaseOrderId == viewModel.PurchaseOrderId)
-                ?? throw new InvalidOperationException($"Purchase Order not found for this volume ({viewModel.Volume:N2}), contact the TNS.");
-
-            model.PurchaseOrderId = newAppointedSupplier.PurchaseOrderId;
-            model.Quantity = viewModel.Volume;
+            var newAppointedSupplier = await _db.FilprideBookAtlDetails
+                .Include(x => x.AppointedSupplier)
+                .FirstOrDefaultAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId
+                                          && x.CustomerOrderSlipId == model.CustomerOrderSlipId
+                                          && x.AppointedSupplier!.PurchaseOrderId == model.PurchaseOrderId)
+                ?? throw new InvalidOperationException("No atl detail found, contact the TNS.");
 
             newAppointedSupplier.UnservedQuantity -= model.Quantity;
         }

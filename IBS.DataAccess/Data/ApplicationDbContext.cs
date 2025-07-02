@@ -711,6 +711,11 @@ namespace IBS.DataAccess.Data
                     .WithMany()
                     .HasForeignKey(dr => dr.HaulerId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                dr.HasOne(dr => dr.AuthorityToLoad)
+                    .WithMany()
+                    .HasForeignKey(dr => dr.AuthorityToLoadId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<FilprideCOSAppointedSupplier>(a =>

@@ -129,6 +129,12 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool HasReceivingReport { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
         public string HaulerName { get; set; } = string.Empty;
+
+        public int AuthorityToLoadId { get; set; }
+
+        [ForeignKey(nameof(AuthorityToLoadId))]
+        public FilprideAuthorityToLoad? AuthorityToLoad { get; set; }
     }
 }
