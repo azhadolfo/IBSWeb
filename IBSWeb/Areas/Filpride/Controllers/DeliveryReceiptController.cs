@@ -339,7 +339,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var updatedGrossMargin = grossMargin + freightDifference;
 
-                        var message = $"A new Delivery Receipt ({model.DeliveryReceiptNo}) has been successfully generated. " +
+                        var message = $"Delivery Receipt ({model.DeliveryReceiptNo}) has been successfully generated. " +
                                       $"The Freight and/or ECC values have been modified by {model.CreatedBy!.ToUpper()}. " +
                                       $"Please review and approve the adjustment in freight charges, which changed from {customerOrderSlip.Freight:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
                                       $"Note that this change will impact the approved gross margin, updating it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
