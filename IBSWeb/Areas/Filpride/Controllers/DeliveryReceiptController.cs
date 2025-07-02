@@ -378,6 +378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to create delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
@@ -388,6 +389,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
@@ -514,7 +516,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, existingRecord.PurchaseOrder!);
+                        var po = await _dbContext.FilpridePurchaseOrders
+                                     .Include(x => x.ActualPrices)
+                                     .FirstOrDefaultAsync(x => x.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken)
+                                 ?? throw new NullReferenceException($"{existingRecord.PurchaseOrderId} not found");
+
+                        var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, po, (viewModel.Freight + viewModel.ECC));
 
                         var freightDifference = viewModel.Freight + viewModel.ECC - existingRecord.Freight;
 
@@ -1087,7 +1094,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var freight = 0m;
 
-            if (drFreight != 0)
+            if (drFreight == 0)
             {
                 freight = cos.VatType == SD.VatType_Vatable
                     ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!)
@@ -1099,7 +1106,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 freight = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(drFreight);
             }
 
-            var productCost = po.ActualPrices!.Any(x => x.IsApproved)
+            bool hasActualPrice = po.ActualPrices != null && po.ActualPrices.Any(x => x.IsApproved);
+
+            var productCost = hasActualPrice
                 ? po.ActualPrices!.First().TriggeredPrice
                 : po.Price;
 
