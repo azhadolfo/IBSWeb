@@ -197,7 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.Total = model.Amount;
                     model.Company = companyClaims;
                     model.CustomerName = customer.CustomerName;
-                    model.CustomerBusinessType = customer.BusinessStyle ?? string.Empty;
+                    model.CustomerBusinessStyle = customer.BusinessStyle ?? string.Empty;
                     model.CustomerAddress = customer.CustomerAddress;
                     model.CustomerTin = customer.CustomerTin;
                     model.VatType = customer.VatType;
@@ -675,7 +675,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.ServiceName = service.Name;
                     existingModel.ServicePercent = service.Percent;
                     existingModel.CustomerName = customer.CustomerName;
-                    existingModel.CustomerBusinessType = customer.BusinessStyle ?? "";
+                    existingModel.CustomerBusinessStyle = customer.BusinessStyle ?? "";
                     existingModel.CustomerAddress = customer.CustomerAddress;
                     existingModel.CustomerTin = customer.CustomerTin;
                     existingModel.VatType = customer.VatType;
