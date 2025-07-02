@@ -112,6 +112,7 @@
                     <input asp-for="ATLNo" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1"/>
                     <label asp-for="ATLNo" class="ms-2">ATL#</label>
                     <span asp-validation-for="ATLNo" class="text-danger"></span>
+                    <input asp-for="ATLId" type="hidden" />
                 </div>
                 <div class="form-group py-2 col-12" id="haulerList">
                     <label class="control-label">Hauler List<span class="required">*</span></label>
@@ -213,7 +214,8 @@
 
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
-                                    $('input[name="Freight"]').parent().show().val(data.freight);
+                                    $('input[name="Freight"]').parent().show(); 
+                                    $('input[name="Freight"]').val(data.freight); 
                                     $('select[name="HaulerId"]').val(data.haulerId).change();
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
 
@@ -244,16 +246,22 @@
                                 if (data.purchaseOrders && data.purchaseOrders.length > 0) {
                                     $poSelect.append('<option value="">Select po</option>');
                                     $.each(data.purchaseOrders, function(index, item) {
+                                        const formattedOption =
+                                            'PO: ' + item.purchaseOrderNo + ' | ' +
+                                            'Supplier: ' + item.supplierName + ' | ' +
+                                            'ATL#: ' + (item.atlNo || '') + ' | ' +
+                                            'Unserved: ' + formatNumber(item.unservedQuantity);
+
                                         $poSelect.append('<option value="' + item.purchaseOrderId + '" ' +
                                             'data-unserved="' + item.unservedQuantity + '" ' +
+                                            'data-atl-id="' + item.atlId + '" ' +
                                             'data-atl-no="' + (item.atlNo || '') + '">' +
-                                            item.purchaseOrderNo + ' - ' + item.supplierName +
-                                            ' (Unserved: ' + formatNumber(item.unservedQuantity) + ')</option>');
+                                            formattedOption + '</option>');
                                     });
                                 } else {
                                     $poSelect.append('<option value="">No purchase orders available</option>');
                                 }
-                                
+
                             } else {
                                 $('input[name="Product"]').val('');
                                 $('input[name="CosVolume"]').val('');
@@ -279,8 +287,10 @@
             $('select[name="PurchaseOrderId"]').on('change', function() {
                 var $selectedOption = $(this).find('option:selected');
                 var unservedQuantity = parseFloat($selectedOption.data('unserved')) || 0;
+                var atlId = $selectedOption.data('atl-id') || '';
                 var atlNo = $selectedOption.data('atl-no') || '';
 
+                $('input[name="ATLId"]').val(atlId);
                 $('input[name="ATLNo"]').val(atlNo);
 
                 // Set max volume to unserved quantity
