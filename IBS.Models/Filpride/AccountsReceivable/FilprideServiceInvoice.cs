@@ -30,7 +30,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public string CustomerTin { get; set; } = string.Empty;
 
-        public string CustomerBusinessType { get; set; } = string.Empty;
+        public string? CustomerBusinessStyle { get; set; }
 
         #endregion Customer properties
 
