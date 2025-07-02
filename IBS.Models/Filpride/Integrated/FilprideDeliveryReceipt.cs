@@ -136,5 +136,6 @@ namespace IBS.Models.Filpride.Integrated
 
         [ForeignKey(nameof(AuthorityToLoadId))]
         public FilprideAuthorityToLoad? AuthorityToLoad { get; set; }
+
     }
 }

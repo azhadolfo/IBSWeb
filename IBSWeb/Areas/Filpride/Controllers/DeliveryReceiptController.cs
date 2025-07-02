@@ -3,6 +3,7 @@ using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
@@ -317,57 +318,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    if (viewModel.IsECCEdited)
+                    if (viewModel.Freight != customerOrderSlip.Freight || viewModel.IsECCEdited)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{model.DeliveryReceiptNo} has been generated and includes an ECC entry created by {model.CreatedBy!.ToUpper()}. " +
-                                      $"Please review and approve.";
+                        var po = await _dbContext.FilpridePurchaseOrders
+                            .Include(x => x.ActualPrices)
+                            .FirstOrDefaultAsync(x => x.PurchaseOrderId == model.PurchaseOrderId, cancellationToken)
+                            ?? throw new NullReferenceException($"{model.PurchaseOrderId} not found");
 
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+                        var grossMargin = ComputeGrossMargin(customerOrderSlip, po);
 
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => operationManager.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
+                        var freightDifference = viewModel.Freight + viewModel.ECC - (decimal)customerOrderSlip.Freight!;
 
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
+                        /// TODO Revise this later for dynamic checking
+                        freightDifference = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference);
 
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
+                        var updatedGrossMargin = grossMargin + freightDifference;
 
-                        model.Status = nameof(DRStatus.ForApprovalOfOM);
-                    }
-
-                    if (viewModel.Freight != customerOrderSlip.Freight)
-                    {
-                        var operationManager = await _dbContext.ApplicationUsers
-                            .Where(a => a.Position == SD.Position_OperationManager)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var hauler = await _unitOfWork.FilprideSupplier
-                            .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
-
-                        if (hauler == null)
-                        {
-                            return NotFound();
-                        }
-
-                        var message = $"{model.DeliveryReceiptNo} has been generated and the Hauler/Freight has been modified by {model.CreatedBy!.ToUpper()}." +
-                                      $" Please review and approve the changes from of '{customerOrderSlip.Hauler?.SupplierName}' with a freight cost of '{customerOrderSlip.Freight:N4}'" +
-                                      $" to '{hauler.SupplierName}' with a freight cost of '{model.Freight:N4}'.";
+                        var message = $"A new Delivery Receipt ({model.DeliveryReceiptNo}) has been successfully generated. " +
+                                      $"The Freight and/or ECC values have been modified by {model.CreatedBy!.ToUpper()}. " +
+                                      $"Please review and approve the adjustment in freight charges, which changed from {customerOrderSlip.Freight:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
+                                      $"Note that this change will impact the approved gross margin, updating it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
 
@@ -532,87 +507,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
-                    if (viewModel.IsECCEdited)
+                    if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
                     {
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
                             .Select(u => u.Id)
                             .ToListAsync(cancellationToken);
 
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified and includes an ECC entry created by {viewModel.CurrentUser!.ToUpper()}. " +
-                                      $"Please review and approve.";
+                        var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, existingRecord.PurchaseOrder!);
 
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+                        var freightDifference = viewModel.Freight + viewModel.ECC - existingRecord.Freight;
 
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => operationManager.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
+                        /// TODO Revise this later for dynamic checking
+                        freightDifference = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference);
 
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
+                        var updatedGrossMargin = grossMargin + freightDifference;
 
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-
-                        existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
-                    }
-
-                    if (viewModel.Driver != existingRecord.Driver || viewModel.PlateNo != existingRecord.PlateNo)
-                    {
-                        var tnsUsers = await _dbContext.ApplicationUsers
-                            .Where(a => a.Department == SD.Department_TradeAndSupply)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var message = $"Please be informed that {viewModel.CurrentUser!.ToUpper()} has updated the 'Driver' and 'Plate#' for {existingRecord.DeliveryReceiptNo}.";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(tnsUsers, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => tnsUsers.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-                    }
-
-                    if (viewModel.HaulerId != existingRecord.HaulerId || viewModel.Freight != existingRecord.Freight)
-                    {
-                        var operationManager = await _dbContext.ApplicationUsers
-                            .Where(a => a.Position == SD.Position_OperationManager)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var hauler = await _unitOfWork.FilprideSupplier
-                            .GetAsync(h => h.SupplierId == viewModel.HaulerId, cancellationToken);
-
-                        if (hauler == null)
-                        {
-                            return NotFound();
-                        }
-
-                        var message = $"{existingRecord.DeliveryReceiptNo} has been modified by {viewModel.CurrentUser!.ToUpper()} to update the Hauler/Freight." +
-                                      $" Please review and approve the changes from '{existingRecord.Hauler!.SupplierName}' with a freight cost of '{existingRecord.Freight:N4}'" +
-                                      $" to '{hauler.SupplierName}' with a freight cost of '{viewModel.Freight:N4}'.";
+                        var message = $"Delivery Receipt ({existingRecord.DeliveryReceiptNo}) has been updated by {existingRecord.CreatedBy!.ToUpper()}. " +
+                                      $"The Freight and/or ECC values have been modified. Please review and approve the updated freight charges, " +
+                                      $"which changed from {existingRecord.Freight + existingRecord.ECC:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
+                                      $"This update will affect the approved gross margin, changing it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
 
                         await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
 
@@ -893,7 +807,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                /// TODO Delete this feature once the mobility company is on live
+                /// TODO Uncomment this feature once the mobility company is on live
                 // if (existingRecord.Customer!.CustomerType == nameof(CustomerType.Retail))
                 // {
                 //     await _unitOfWork.MobilityReceivingReport
@@ -1160,6 +1074,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
+
+        }
+
+        private decimal ComputeGrossMargin(FilprideCustomerOrderSlip cos, FilpridePurchaseOrder po, decimal drFreight = 0)
+        {
+            var netSellingPrice = cos.VatType == SD.VatType_Vatable
+                ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(cos.DeliveredPrice)
+                : cos.DeliveredPrice;
+
+            var commission = cos.CommissionRate;
+
+            var freight = 0m;
+
+            if (drFreight != 0)
+            {
+                freight = cos.VatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!)
+                    : (decimal)cos.Freight!;
+            }
+            else
+            {
+                ///TODO Revise this later for dynamic checking
+                freight = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(drFreight);
+            }
+
+            var productCost = po.ActualPrices!.Any(x => x.IsApproved)
+                ? po.ActualPrices!.First().TriggeredPrice
+                : po.Price;
+
+            var netProductCost = po.VatType == SD.VatType_Vatable
+                ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(productCost)
+                : productCost;
+
+            return netSellingPrice -  netProductCost - commission - freight;
 
         }
 
