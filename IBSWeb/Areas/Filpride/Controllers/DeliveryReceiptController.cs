@@ -367,6 +367,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(DRStatus.ForApprovalOfOM);
                     }
 
+                    var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
+                        .GetAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId, cancellationToken)
+                        ?? throw new NullReferenceException("Authority to load not found");
+
+                    authorityToLoad.HaulerName = supplierHauler?.SupplierName;
+                    authorityToLoad.Freight = viewModel.Freight;
+                    authorityToLoad.Driver = viewModel.Driver;
+                    authorityToLoad.PlateNo = viewModel.PlateNo;
+
                     await _unitOfWork.SaveAsync(cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
@@ -560,6 +569,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
 
+                    var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
+                                              .GetAsync(x => x.AuthorityToLoadId == existingRecord.AuthorityToLoadId, cancellationToken)
+                                          ?? throw new NullReferenceException("Authority to load not found");
+
+                    authorityToLoad.HaulerName = existingRecord.HaulerName;
+                    authorityToLoad.Freight = existingRecord.Freight;
+                    authorityToLoad.Driver = existingRecord.Driver;
+                    authorityToLoad.PlateNo = existingRecord.PlateNo;
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
+
                     await transaction.CommitAsync(cancellationToken);
 
                     TempData["success"] = "Delivery receipt updated successfully.";
@@ -569,6 +589,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
+                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
                     _logger.LogError(ex, "Failed to edit delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
@@ -579,6 +600,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
+            viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
             TempData["error"] = "The submitted information is invalid.";
             return View(viewModel);
         }
