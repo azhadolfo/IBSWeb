@@ -98,9 +98,9 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(BankId))]
         public FilprideBankAccount? BankAccount { get; set; }
 
-        public string BankAccountName { get; set; } = string.Empty;
+        public string? BankAccountName { get; set; }
 
-        public string BankAccountNumber { get; set; } = string.Empty;
+        public string? BankAccountNumber { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
