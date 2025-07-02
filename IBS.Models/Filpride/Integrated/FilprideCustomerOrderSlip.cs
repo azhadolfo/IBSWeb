@@ -128,24 +128,33 @@ namespace IBS.Models.Filpride.Integrated
         #region Approval of Operation Manager
 
         [Column(TypeName = "varchar(100)")]
-        public string? FirstApprovedBy { get; set; }
+        public string? OmApprovedBy { get; set; }
 
-        public DateTime? FirstApprovedDate { get; set; }
+        public DateTime? OmApprovedDate { get; set; }
 
         [Column(TypeName = "date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
 
-        public string? OperationManagerReason { get; set; }
+        public string? OMReason { get; set; }
+
+        #endregion
+
+        #region Approval of Cnc
+
+        [Column(TypeName = "varchar(100)")]
+        public string? CncApprovedBy { get; set; }
+
+        public DateTime? CncApprovedDate { get; set; }
 
         #endregion
 
         #region Approval of Finance
 
         [Column(TypeName = "varchar(100)")]
-        public string? SecondApprovedBy { get; set; }
+        public string? FmApprovedBy { get; set; }
 
-        public DateTime? SecondApprovedDate { get; set; }
+        public DateTime? FmApprovedDate { get; set; }
 
         public string? Terms { get; set; }
 
@@ -212,26 +221,29 @@ namespace IBS.Models.Filpride.Integrated
 
         public ICollection<FilprideDeliveryReceipt>? DeliveryReceipts { get; set; }
 
+        [Column(TypeName = "varchar(200)")]
         public string CustomerName { get; set; }
 
+        [Column(TypeName = "varchar(50)")]
         public string ProductName { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AvailableCreditLimit { get; set; }
 
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal CreditBalance { get; set; }
-
+        [Column(TypeName = "varchar(20)")]
         public string VatType { get; set; }
 
         public bool HasEWT { get; set; }
 
         public bool HasWVAT { get; set; }
 
-        public string Depot { get; set; }
+        [Column(TypeName = "varchar(20)")]
+        public string? Depot { get; set; }
 
-        public string CommissioneeName { get; set; }
+        [Column(TypeName = "varchar(200)")]
+        public string? CommissioneeName { get; set; }
 
-        public string BusinessStyle { get; set; }
+        [Column(TypeName = "varchar(100)")]
+        public string? BusinessStyle { get; set; }
     }
 }

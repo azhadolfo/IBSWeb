@@ -88,9 +88,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 ?? throw new ArgumentException("Product not found");
 
             var commissionee = await _db.FilprideSuppliers
-                .FirstOrDefaultAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken)
-                ?? throw new ArgumentException("Commissionee not found");
-
+                .FirstOrDefaultAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
 
             existingRecord.Date = viewModel.Date;
             existingRecord.CustomerId = viewModel.CustomerId;
@@ -118,11 +116,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.VatType = customer.VatType;
             existingRecord.HasEWT = customer.WithHoldingTax;
             existingRecord.HasWVAT = customer.WithHoldingVat;
-            existingRecord.CommissioneeName = commissionee.SupplierName;
-            existingRecord.BusinessStyle = customer.BusinessStyle ?? string.Empty;
-            ///TODO: pending revision(AZH)
-            existingRecord.AvailableCreditLimit = customer.CreditLimitAsOfToday;
-            existingRecord.CreditBalance = await GetCustomerCreditBalance(viewModel.CustomerId, cancellationToken);
+            existingRecord.CommissioneeName = commissionee?.SupplierName;
+            existingRecord.BusinessStyle = customer.BusinessStyle;
+            existingRecord.AvailableCreditLimit = await GetCustomerCreditBalance(customer.CustomerId, cancellationToken);
 
             if (existingRecord.Branch != null)
             {
@@ -214,13 +210,16 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)
         {
             //Beginning Balance to be discussed
-
             var drForTheMonth = await _db.FilprideDeliveryReceipts
-                .Where(dr => dr.CustomerId == customerId && dr.Date.Month == DateTime.UtcNow.Month && dr.Date.Year == DateTime.UtcNow.Year)
+                .Where(dr => dr.CustomerId == customerId
+                             && dr.Date.Month == DateTime.UtcNow.Month
+                             && dr.Date.Year == DateTime.UtcNow.Year)
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips
-                .Where(cos => cos.CustomerId == customerId && cos.ExpirationDate >= DateOnly.FromDateTime(DateTime.UtcNow) && cos.Status == nameof(CosStatus.ForDR))
+                .Where(cos => cos.CustomerId == customerId
+                              && cos.ExpirationDate >= DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
+                              && cos.Status == nameof(CosStatus.ForDR))
                 .SumAsync(cos => cos.TotalAmount, cancellationToken);
 
             var availableCreditLimit = await _db.FilprideCustomers

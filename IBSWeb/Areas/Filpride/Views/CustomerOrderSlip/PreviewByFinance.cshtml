@@ -84,7 +84,7 @@
             </tr>
             <tr>
                 <td><b>Branch:</b> @Model.CustomerOrderSlip.Branch</td>
-                <td></td>
+                <td class="text-end"><b>@Model.CustomerOrderSlip.DeliveryOption</b></td>
             </tr>
             </tbody>
         </table>
@@ -161,7 +161,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Model.CreditBalance.ToString(decimalFormat)</td></tr>
+            <tr><td class="text-center col-6">Available Credit Limit</td><td class="col-6">@Model.AvailableCreditLimit.ToString(decimalFormat)</td></tr>
             <tr><td class="text-center">COS Amount</td><td>@Model.CustomerOrderSlip.TotalAmount.ToString(decimalFormat)</td></tr>
             <tr><td class="text-center">Credit Balance</td><td>@Model.Total.ToString(decimalFormat)</td></tr>
             </tbody>
@@ -187,9 +187,9 @@
 
     <div class="row pt-2">
         @{
-            if (Model.CustomerOrderSlip.SecondApprovedBy == null)
+            if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) || Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
             {
-                if (User.IsInRole("FinanceManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+                if (User.IsInRole("FinanceManager") || User.IsInRole("CncManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
                 {
                     <div class="col-6 col-md-3">
                         <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>

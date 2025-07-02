@@ -34,6 +34,7 @@ namespace IBS.Utility.Enums
         HaulerAppointed,
         ForAtlBooking,
         ForApprovalOfOM,
+        ForApprovalOfCNC,
         ForApprovalOfFM,
         ForDR,
         Completed,

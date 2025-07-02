@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250630045738_AddCncApprovalInCos")]
+    partial class AddCncApprovalInCos
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -565,10 +568,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("NumberOfMonthsCreated")
                         .HasColumnType("integer")
                         .HasColumnName("number_of_months_created");
-
-                    b.Property<string>("OldCvNo")
-                        .HasColumnType("text")
-                        .HasColumnName("old_cv_no");
 
                     b.Property<string[]>("PONo")
                         .HasColumnType("varchar[]")
@@ -2347,11 +2346,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("bank_account_id");
 
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("text")
@@ -2360,11 +2354,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CompanyId")
                         .HasColumnType("integer")
                         .HasColumnName("company_id");
-
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("company_name");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("varchar(50)")
@@ -2381,11 +2370,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("customer_name");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
@@ -2404,11 +2388,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("employee_id");
 
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("employee_name");
-
                     b.Property<bool>("IsPosted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_posted");
@@ -2421,11 +2400,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int?>("SupplierId")
                         .HasColumnType("integer")
                         .HasColumnName("supplier_id");
-
-                    b.Property<string>("SupplierName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("supplier_name");
 
                     b.HasKey("GeneralLedgerBookId")
                         .HasName("pk_filpride_general_ledger_books");
@@ -3206,7 +3180,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("branch");
 
                     b.Property<string>("BusinessStyle")
-                        .HasColumnType("varchar(100)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("business_style");
 
                     b.Property<string>("CncApprovedBy")
@@ -3226,7 +3201,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("commissionee_id");
 
                     b.Property<string>("CommissioneeName")
-                        .HasColumnType("varchar(200)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("commissionee_name");
 
                     b.Property<string>("Company")
@@ -3253,7 +3229,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasColumnType("text")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerOrderSlipNo")
@@ -3293,7 +3269,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("delivery_option");
 
                     b.Property<string>("Depot")
-                        .HasColumnType("varchar(20)")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("depot");
 
                     b.Property<string>("DisapprovedBy")
@@ -3404,7 +3381,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("text")
                         .HasColumnName("product_name");
 
                     b.Property<int?>("PurchaseOrderId")
@@ -3447,7 +3424,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("text")
                         .HasColumnName("vat_type");
 
                     b.HasKey("CustomerOrderSlipId")

@@ -32,7 +32,7 @@ namespace IBS.Models.Filpride.ViewModels
         [Required(ErrorMessage = "Customer PO No field is required.")]
         public string CustomerPoNo { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Quantity { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]

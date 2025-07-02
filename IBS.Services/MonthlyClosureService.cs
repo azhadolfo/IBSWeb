@@ -47,7 +47,6 @@ namespace IBS.Services
                     throw new InvalidOperationException($"{dataMap:MMM yyyy} is already locked.");
                 }
 
-                await InTransit(dataMap);
                 await AutoReversalForCvWithoutDcrDate(dataMap);
                 await ComputeNibit(dataMap);
                 await RecordNotUpdatedSales(dataMap);
