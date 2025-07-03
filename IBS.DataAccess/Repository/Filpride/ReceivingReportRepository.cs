@@ -287,7 +287,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
-                ? deliveryReceipt.Freight
+                ? (decimal)deliveryReceipt.CustomerOrderSlip!.Freight!
                 : 0;
 
             model.ReceivedDate = model.Date;
