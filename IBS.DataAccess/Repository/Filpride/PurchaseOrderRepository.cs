@@ -181,7 +181,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var inventories = await _db.FilprideInventories
                 .Where(i => i.POId == model.PurchaseOrderId)
                 .OrderBy(i => i.Date)
-                .ThenBy(i => i.InventoryId)
+                .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
             if (receivingReports.Count > 0)
