@@ -296,5 +296,20 @@ namespace IBS.DataAccess.Repository.Filpride
                 await _db.SaveChangesAsync(cancellationToken);
             }
         }
+
+        public async Task<decimal> GetPurchaseOrderCost(int purchaseOrderId, CancellationToken cancellationToken = default)
+        {
+            var purchaseOrder = await _db.FilpridePurchaseOrders
+                .Include(p => p.ActualPrices)
+                .FirstOrDefaultAsync(x => x.PurchaseOrderId == purchaseOrderId, cancellationToken)
+                                ?? throw new NullReferenceException("PurchaseOrder not found");
+
+            if (purchaseOrder.ActualPrices!.Count != 0)
+            {
+                return purchaseOrder.ActualPrices!.First().TriggeredPrice;
+            }
+
+            return purchaseOrder.Price;
+        }
     }
 }

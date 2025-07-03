@@ -819,8 +819,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
         public async Task<IActionResult> Delivered(int? id, DateOnly deliveredDate, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
             if (id == null)
             {
                 return NotFound();

@@ -235,9 +235,14 @@ namespace IBS.DataAccess.Repository.Filpride
                 var purchaseOrder = await _db.FilpridePurchaseOrders
                     .FindAsync(deliveryReceipt.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
 
+                var unitOfWork = new UnitOfWork(_db);
+
+                var poPrice = await unitOfWork.FilpridePurchaseOrder
+                    .GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken);
+
                 var netOfVat = purchaseOrder.VatType == SD.VatType_Vatable
-                    ? ComputeNetOfVat(purchaseOrder.Price)
-                    : purchaseOrder.Price;
+                    ? ComputeNetOfVat(poPrice)
+                    : poPrice;
 
                 cost = netOfVat;
             }

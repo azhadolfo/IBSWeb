@@ -188,6 +188,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 #region General Ledger Book Recording
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
+                var unitOfWork = new UnitOfWork(_db);
                 var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip!.Product!.ProductCode);
                 var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
                 var (freightAcctNo, freightAcctTitle) = GetFreightAccount(deliveryReceipt.CustomerOrderSlip.Product.ProductCode);
@@ -305,7 +306,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 });
 
-                var cogsGrossAmount = deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity;
+                var poPrice = await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)deliveryReceipt.PurchaseOrderId!, cancellationToken);
+                var cogsGrossAmount = poPrice * deliveryReceipt.Quantity;
                 var cogsNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
                     ? ComputeNetOfVat(cogsGrossAmount)
                     : cogsGrossAmount;
