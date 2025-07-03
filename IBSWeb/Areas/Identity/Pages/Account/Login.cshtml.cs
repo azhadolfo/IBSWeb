@@ -131,26 +131,11 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
-                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
-
-                    var existingStationCodeClaim = existingClaims.FirstOrDefault(c => c.Type == "StationCode");
-
-                    if (existingStationCodeClaim != null)
-                    {
-                        await _signInManager.UserManager.RemoveClaimAsync(user, existingStationCodeClaim);
-                    }
 
                     if (Input.StationCode != null)
                     {
                         var newStationCodeClaim = new Claim("StationCode", Input.StationCode);
                         await _signInManager.UserManager.AddClaimAsync(user, newStationCodeClaim);
-                    }
-
-                    var existingCompanyClaim = existingClaims.FirstOrDefault(c => c.Type == "Company");
-
-                    if (existingCompanyClaim != null)
-                    {
-                        await _signInManager.UserManager.RemoveClaimAsync(user, existingCompanyClaim);
                     }
 
                     var newCompanyClaim = new Claim("Company", Input.Company);
