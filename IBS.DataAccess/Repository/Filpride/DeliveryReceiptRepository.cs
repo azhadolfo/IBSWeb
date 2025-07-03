@@ -235,8 +235,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = arTradeCwtAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     });
                 }
 
@@ -253,8 +253,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = arTradeCwvAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     });
                 }
 
@@ -269,8 +269,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = netOfEwtAmount,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate,
+                    CreatedBy = deliveryReceipt.PostedBy,
+                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
                     CustomerName = deliveryReceipt.Customer!.CustomerName
                 });
@@ -286,8 +286,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = netOfVatAmount,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate
+                    CreatedBy = deliveryReceipt.PostedBy,
+                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -301,8 +301,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = vatAmount,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate
+                    CreatedBy = deliveryReceipt.PostedBy,
+                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 });
 
                 var cogsGrossAmount = deliveryReceipt.PurchaseOrder.Price * deliveryReceipt.Quantity;
@@ -321,8 +321,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = cogsNetOfVat,
                     Credit = 0,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate
+                    CreatedBy = deliveryReceipt.PostedBy,
+                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -336,8 +336,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = cogsNetOfVat,
                     Company = deliveryReceipt.Company,
-                    CreatedBy = deliveryReceipt.CreatedBy,
-                    CreatedDate = deliveryReceipt.CreatedDate,
+                    CreatedBy = deliveryReceipt.PostedBy,
+                    CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 });
 
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
@@ -360,8 +360,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = freightNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.CreatedBy,
-                            CreatedDate = deliveryReceipt.CreatedDate
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
 
                         var freightVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
@@ -379,8 +379,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = freightVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.CreatedBy,
-                            CreatedDate = deliveryReceipt.CreatedDate
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
                     }
 
@@ -402,8 +402,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = eccNetOfVat,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.CreatedBy,
-                            CreatedDate = deliveryReceipt.CreatedDate
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
 
                         var eccVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
@@ -421,8 +421,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = eccVatAmount,
                             Credit = 0,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.CreatedBy,
-                            CreatedDate = deliveryReceipt.CreatedDate
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
                     }
 
@@ -449,8 +449,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = totalFreightNetOfEwt,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate,
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.HaulerId,
                         SupplierName = deliveryReceipt.Hauler!.SupplierName
                     });
@@ -466,8 +466,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = totalFreightEwtAmount,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     });
                 }
 
@@ -490,8 +490,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = commissionGrossAmount,
                         Credit = 0,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -505,8 +505,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = commissionNetOfEwt,
                         Company = deliveryReceipt.Company,
-                        CreatedBy = deliveryReceipt.CreatedBy,
-                        CreatedDate = deliveryReceipt.CreatedDate,
+                        CreatedBy = deliveryReceipt.PostedBy,
+                        CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
                         SupplierName = deliveryReceipt.Commissionee.SupplierName
                     });
@@ -524,8 +524,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Debit = 0,
                             Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,
-                            CreatedBy = deliveryReceipt.CreatedBy,
-                            CreatedDate = deliveryReceipt.CreatedDate
+                            CreatedBy = deliveryReceipt.PostedBy,
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime()
                         });
                     }
 

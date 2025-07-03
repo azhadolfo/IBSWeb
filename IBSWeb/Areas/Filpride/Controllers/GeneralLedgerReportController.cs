@@ -262,14 +262,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["D7"].Value = "Account Title";
                 worksheet.Cells["E7"].Value = "Debit";
                 worksheet.Cells["F7"].Value = "Credit";
-                worksheet.Cells["G7"].Value = "Company";
-                worksheet.Cells["H7"].Value = "Bank";
-                worksheet.Cells["I7"].Value = "Customer";
-                worksheet.Cells["J7"].Value = "Supplier";
-                worksheet.Cells["K7"].Value = "Employee";
+                worksheet.Cells["G7"].Value = "Posted By";
+                worksheet.Cells["H7"].Value = "Company";
+                worksheet.Cells["I7"].Value = "Bank";
+                worksheet.Cells["J7"].Value = "Customer";
+                worksheet.Cells["K7"].Value = "Supplier";
+                worksheet.Cells["L7"].Value = "Employee";
 
                 // Apply styling to the header row
-                using (var range = worksheet.Cells["A7:K7"])
+                using (var range = worksheet.Cells["A7:L7"])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -290,14 +291,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 2].Value = gl.Reference;
                     worksheet.Cells[row, 3].Value = gl.Description;
                     worksheet.Cells[row, 4].Value = $"{gl.AccountNo} {gl.AccountTitle}";
-
                     worksheet.Cells[row, 5].Value = gl.Debit;
                     worksheet.Cells[row, 6].Value = gl.Credit;
-                    worksheet.Cells[row, 7].Value = gl.CompanyName;
-                    worksheet.Cells[row, 8].Value = gl.BankAccountName;
-                    worksheet.Cells[row, 9].Value = gl.CustomerName;
-                    worksheet.Cells[row, 10].Value = gl.SupplierName;
-                    worksheet.Cells[row, 11].Value = gl.EmployeeName;
+                    worksheet.Cells[row, 7].Value = gl.CreatedBy!.ToUpper();
+                    worksheet.Cells[row, 8].Value = gl.CompanyName;
+                    worksheet.Cells[row, 9].Value = gl.BankAccountName;
+                    worksheet.Cells[row, 10].Value = gl.CustomerName;
+                    worksheet.Cells[row, 11].Value = gl.SupplierName;
+                    worksheet.Cells[row, 12].Value = gl.EmployeeName;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
                     worksheet.Cells[row, 5].Style.Numberformat.Format = currencyFormat;
@@ -314,7 +315,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
 
                 // Apply style to subtotal row
-                using (var range = worksheet.Cells[row, 1, row, 11])
+                using (var range = worksheet.Cells[row, 1, row, 12])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;

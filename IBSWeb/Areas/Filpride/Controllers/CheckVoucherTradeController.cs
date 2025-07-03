@@ -980,8 +980,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Debit = details.Debit,
                                     Credit = details.Credit,
                                     Company = modelHeader.Company,
-                                    CreatedBy = modelHeader.CreatedBy,
-                                    CreatedDate = modelHeader.CreatedDate,
+                                    CreatedBy = modelHeader.PostedBy,
+                                    CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     BankAccountId = modelHeader.BankId,
                                     BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                 }

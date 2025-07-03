@@ -609,8 +609,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = netDiscount - (ewt + wvat),
                                         Credit = 0,
                                         Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        CreatedDate = model.CreatedDate,
+                                        CreatedBy = model.PostedBy,
+                                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                         CustomerId = model.ServiceInvoice.CustomerId,
                                         CustomerName = model.ServiceInvoice.CustomerName
                                     }
@@ -629,8 +629,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = ewt,
                                         Credit = 0,
                                         Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        CreatedDate = model.CreatedDate
+                                        CreatedBy = model.PostedBy,
+                                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     }
                                 );
                             }
@@ -648,8 +648,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = wvat,
                                         Credit = 0,
                                         Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        CreatedDate = model.CreatedDate
+                                        CreatedBy = model.PostedBy,
+                                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     }
                                 );
                             }
@@ -666,8 +666,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Debit = 0,
                                     Credit = netOfVatAmount,
                                     Company = model.Company,
-                                    CreatedBy = model.CreatedBy,
-                                    CreatedDate = model.CreatedDate
+                                    CreatedBy = model.PostedBy,
+                                    CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                 });
                             }
 
@@ -685,8 +685,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         Debit = 0,
                                         Credit = vatAmount,
                                         Company = model.Company,
-                                        CreatedBy = model.CreatedBy,
-                                        CreatedDate = model.CreatedDate
+                                        CreatedBy = model.PostedBy,
+                                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     }
                                 );
                             }

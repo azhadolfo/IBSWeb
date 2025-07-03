@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.Books;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -130,8 +131,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate,
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         BankAccountId = collectionReceipt.BankId,
                         BankAccountName = collectionReceipt.BankAccountNumber + collectionReceipt.BankAccountName,
                     }
@@ -152,8 +153,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -172,8 +173,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -195,8 +196,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
 
@@ -217,8 +218,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount + offsetAmount,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate,
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         CustomerId = collectionReceipt.CustomerId,
                         CustomerName = collectionReceipt.Customer!.CustomerName
                     }
@@ -239,8 +240,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -259,8 +260,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -284,8 +285,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount,
                     Credit = 0,
                     Company = collectionReceipt.Company,
-                    CreatedBy = collectionReceipt.CreatedBy,
-                    CreatedDate = collectionReceipt.CreatedDate
+                    CreatedBy = collectionReceipt.PostedBy,
+                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 }
 
             );
@@ -305,8 +306,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.EWT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -326,8 +327,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = collectionReceipt.WVAT,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -350,8 +351,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = item.Amount,
                         Credit = 0,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -369,8 +370,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Debit = 0,
                     Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount + collectionReceipt.ManagerCheckAmount + offsetAmount,
                     Company = collectionReceipt.Company,
-                    CreatedBy = collectionReceipt.CreatedBy,
-                    CreatedDate = collectionReceipt.CreatedDate
+                    CreatedBy = collectionReceipt.PostedBy,
+                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 }
             );
 
@@ -389,8 +390,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.EWT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }
@@ -410,8 +411,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         Debit = 0,
                         Credit = collectionReceipt.WVAT,
                         Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.CreatedBy,
-                        CreatedDate = collectionReceipt.CreatedDate
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     }
                 );
             }

@@ -384,8 +384,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate,
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                 CustomerId = model.CustomerId,
                                 CustomerName = model.CustomerName
                             }
@@ -404,8 +404,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = withHoldingTaxAmount,
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                             }
                         );
                     }
@@ -423,8 +423,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = withHoldingVatAmount,
                                 Credit = 0,
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                             }
                         );
                     }
@@ -440,8 +440,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                Debit = 0,
                                Credit = Math.Round((netOfVatAmount), 4),
                                Company = model.Company,
-                               CreatedBy = model.CreatedBy,
-                               CreatedDate = model.CreatedDate
+                               CreatedBy = model.PostedBy,
+                               CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                            }
                        );
 
@@ -459,8 +459,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Debit = 0,
                                 Credit = Math.Round((vatAmount), 4),
                                 Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedBy = model.PostedBy,
+                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                             }
                         );
                     }
