@@ -795,35 +795,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     existingRecord.Status = nameof(Status.Posted);
 
-                    var users = await _dbContext.ApplicationUsers
-                        .Where(u => u.Department == SD.Department_TradeAndSupply ||
-                                    u.Department == SD.Department_ManagementAccounting)
-                        .Select(u => u.Id)
-                        .ToListAsync(cancellationToken);
-
-                    var message = "Please be informed that all un-triggered POs have now been triggered completely. The creation of POs is now available. \n" +
-                                  "CC: Management Accounting";
-
-                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
-
-                    var usernames = await _dbContext.ApplicationUsers
-                        .Where(a => users.Contains(a.Id))
-                        .Select(u => u.UserName)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var username in usernames)
-                    {
-                        var hubConnections = await _dbContext.HubConnections
-                            .Where(h => h.UserName == username)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var hubConnection in hubConnections)
-                        {
-                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                        }
-                    }
-
                     #region --Audit Trail Recording
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
