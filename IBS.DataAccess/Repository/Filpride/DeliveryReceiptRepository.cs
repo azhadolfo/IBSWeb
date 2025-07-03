@@ -52,7 +52,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.PickUpPoint)
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
-                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product);
+                .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
+                .Include(dr => dr.AuthorityToLoad);
 
             if (filter != null)
             {
@@ -72,6 +73,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
                 .Include(dr => dr.CustomerOrderSlip).ThenInclude(cos => cos!.Commissionee)
+                .Include(dr => dr.AuthorityToLoad)
                 .FirstOrDefaultAsync(cancellationToken);
         }
 

@@ -201,7 +201,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         dr.Status,
                         dr.VoidedBy,
                         dr.CanceledBy,
-                        dr.HasReceivingReport
+                        dr.HasReceivingReport,
+                        dr.AuthorityToLoad!.UppiAtlNo,
+                        dr.AuthorityToLoadNo
                     })
                     .ToList();
 
