@@ -244,6 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -398,6 +399,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                ViewBag.FilterType = await GetCurrentFilterType();
                 var companyClaims = await GetCompanyClaimAsync();
 
                 if (companyClaims == null)
@@ -694,6 +696,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                ViewBag.FilterType = await GetCurrentFilterType();
                 var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
@@ -1097,6 +1100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> AppointSupplier(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();
@@ -1149,6 +1153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    ViewBag.FilterType = await GetCurrentFilterType();
                     var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
@@ -1225,6 +1230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> ReAppointSupplier(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();
@@ -1475,6 +1481,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> AppointHauler(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();
@@ -1582,6 +1589,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> ReAppointHauler(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();
