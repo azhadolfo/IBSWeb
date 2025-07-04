@@ -274,7 +274,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
                     model.PONo = existingPo.PurchaseOrderNo;
                     model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-                    model.Amount = model.QuantityReceived * existingPo.Price;
+                    model.Amount = model.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken);
                     model.Company = companyClaims;
                     model.Type = existingPo.Type;
 
@@ -393,16 +393,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.Date = model.Date;
                     existingModel.POId = model.POId;
 
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(po => po.PurchaseOrderId == model.POId);
-
-                    if (existingPo == null)
-                    {
-                        return NotFound();
-                    }
-
-                    existingModel.PONo = existingPo.PurchaseOrderNo;
-
+                    existingModel.PONo = po.PurchaseOrderNo;
                     existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
                     existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
                     existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
@@ -415,7 +406,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.AuthorityToLoadNo = model.AuthorityToLoadNo;
                     existingModel.Remarks = model.Remarks;
                     existingModel.ReceivedDate = model.ReceivedDate;
-                    existingModel.Amount = model.QuantityReceived * po.Price;
+                    existingModel.Amount = model.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
 
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();

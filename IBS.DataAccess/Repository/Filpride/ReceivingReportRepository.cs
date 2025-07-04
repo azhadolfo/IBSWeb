@@ -287,7 +287,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var freight = deliveryReceipt.CustomerOrderSlip.DeliveryOption == SD.DeliveryOption_DirectDelivery
-                ? deliveryReceipt.Freight
+                ? (decimal)deliveryReceipt.CustomerOrderSlip!.Freight!
                 : 0;
 
             model.ReceivedDate = model.Date;
@@ -412,8 +412,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = inventoryTitle.AccountName,
                 Debit = netOfVatAmount,
                 Credit = 0,
-                CreatedBy = model.CreatedBy,
-                CreatedDate = model.CreatedDate,
+                CreatedBy = model.PostedBy,
+                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company
             });
 
@@ -429,8 +429,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = vatInputTitle.AccountName,
                     Debit = vatAmount,
                     Credit = 0,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
+                    CreatedBy = model.PostedBy,
+                    CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     Company = model.Company
                 });
             }
@@ -445,8 +445,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 AccountTitle = apTradeTitle.AccountName,
                 Debit = 0,
                 Credit = netOfEwtAmount,
-                CreatedBy = model.CreatedBy,
-                CreatedDate = model.CreatedDate,
+                CreatedBy = model.PostedBy,
+                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company,
                 SupplierId = model.PurchaseOrder.SupplierId,
                 SupplierName = model.PurchaseOrder.SupplierName
@@ -464,8 +464,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     AccountTitle = ewtTitle.AccountName,
                     Debit = 0,
                     Credit = ewtAmount,
-                    CreatedBy = model.CreatedBy,
-                    CreatedDate = model.CreatedDate,
+                    CreatedBy = model.PostedBy,
+                    CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     Company = model.Company
                 });
             }

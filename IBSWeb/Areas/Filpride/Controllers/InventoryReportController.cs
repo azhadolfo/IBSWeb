@@ -87,10 +87,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var inventories = await _dbContext.FilprideInventories
-                    .OrderBy(e => e.POId)
-                    .ThenBy(e => e.Date)
-                    .ThenBy(e => e.InventoryId)
-                    .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
+                    .OrderBy(i => i.POId)
+                    .Where(i => i.Date >= viewModel.DateTo
+                                && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1)
+                                && i.Company == companyClaims
+                                && i.ProductId == viewModel.ProductId
+                                && (viewModel.POId == null || i.POId == viewModel.POId))
                     .GroupBy(x => x.POId)
                     .ToListAsync(cancellationToken);
 
@@ -200,26 +202,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var subTotalAverageCost = 0m;
                                     var subTotalTotalBalance = 0m;
 
-                                    foreach (var record in group)
+                                    foreach (var record in group.OrderBy(e => e.Date)
+                                                 .ThenBy(x => x.Particular))
                                     {
                                         var getPurchaseOrder  =
                                         _unitOfWork.FilpridePurchaseOrder.GetAsync(x =>
                                             x.PurchaseOrderId == record.POId, cancellationToken);
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Particular);
-                                    table.Cell().Border(0.5f).Padding(3).Text(getPurchaseOrder.Result?.PurchaseOrderNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Reference);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Cost != 0 ? record.Cost < 0 ? $"({Math.Abs(record.Cost).ToString(SD.Four_Decimal_Format)})" : record.Cost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.Cost < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Total != 0 ? record.Total < 0 ? $"({Math.Abs(record.Total).ToString(SD.Two_Decimal_Format)})" : record.Total.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Total < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.InventoryBalance != 0 ? record.InventoryBalance < 0 ? $"({Math.Abs(record.InventoryBalance).ToString(SD.Two_Decimal_Format)})" : record.InventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.InventoryBalance < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AverageCost != 0 ? record.AverageCost < 0 ? $"({Math.Abs(record.AverageCost).ToString(SD.Four_Decimal_Format)})" : record.AverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.AverageCost < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.TotalBalance != 0 ? record.TotalBalance < 0 ? $"({Math.Abs(record.TotalBalance).ToString(SD.Two_Decimal_Format)})" : record.TotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.TotalBalance < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Particular);
+                                        table.Cell().Border(0.5f).Padding(3).Text(getPurchaseOrder.Result?.PurchaseOrderNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Reference);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Cost != 0 ? record.Cost < 0 ? $"({Math.Abs(record.Cost).ToString(SD.Four_Decimal_Format)})" : record.Cost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.Cost < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Total != 0 ? record.Total < 0 ? $"({Math.Abs(record.Total).ToString(SD.Two_Decimal_Format)})" : record.Total.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Total < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.InventoryBalance != 0 ? record.InventoryBalance < 0 ? $"({Math.Abs(record.InventoryBalance).ToString(SD.Two_Decimal_Format)})" : record.InventoryBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.InventoryBalance < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AverageCost != 0 ? record.AverageCost < 0 ? $"({Math.Abs(record.AverageCost).ToString(SD.Four_Decimal_Format)})" : record.AverageCost.ToString(SD.Four_Decimal_Format) : null).FontColor(record.AverageCost < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.TotalBalance != 0 ? record.TotalBalance < 0 ? $"({Math.Abs(record.TotalBalance).ToString(SD.Two_Decimal_Format)})" : record.TotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.TotalBalance < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    subTotalInventoryBalance = record.InventoryBalance;
-                                    subTotalAverageCost = record.AverageCost;
-                                    subTotalTotalBalance = record.TotalBalance;
+                                        subTotalInventoryBalance = record.InventoryBalance;
+                                        subTotalAverageCost = record.AverageCost;
+                                        subTotalTotalBalance = record.TotalBalance;
 
                                     }
 

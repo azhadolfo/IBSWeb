@@ -980,8 +980,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Debit = details.Debit,
                                     Credit = details.Credit,
                                     Company = modelHeader.Company,
-                                    CreatedBy = modelHeader.CreatedBy,
-                                    CreatedDate = modelHeader.CreatedDate,
+                                    CreatedBy = modelHeader.PostedBy,
+                                    CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     BankAccountId = modelHeader.BankId,
                                     BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
                                 }
@@ -1753,7 +1753,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet3.Cells[poRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
                         worksheet3.Cells[poRow, 2].Value = item.Terms;
                         worksheet3.Cells[poRow, 3].Value = item.Quantity;
-                        worksheet3.Cells[poRow, 4].Value = item.Price;
+                        worksheet3.Cells[poRow, 4].Value = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(item.PurchaseOrderId);
                         worksheet3.Cells[poRow, 5].Value = item.Amount;
                         worksheet3.Cells[poRow, 6].Value = item.FinalPrice;
                         worksheet3.Cells[poRow, 7].Value = item.QuantityReceived;

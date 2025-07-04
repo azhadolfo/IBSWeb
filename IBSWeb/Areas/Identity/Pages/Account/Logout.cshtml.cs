@@ -22,6 +22,9 @@ namespace IBSWeb.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
+            var user = await _signInManager.UserManager.FindByNameAsync(User.Identity!.Name!);
+            var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+            await _signInManager.UserManager.RemoveClaimsAsync(user, existingClaims);
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)
             {

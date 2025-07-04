@@ -107,7 +107,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             i.ProductId == receivingReport.PurchaseOrder!.Product!.ProductId &&
                             i.POId == receivingReport.POId)
                 .OrderBy(i => i.Date)
-                .ThenBy(i => i.InventoryId)
+                .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
             // Find the insertion point and get relevant transactions
@@ -222,7 +222,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             i.ProductId == deliveryReceipt.CustomerOrderSlip!.ProductId &&
                             i.POId == deliveryReceipt.PurchaseOrderId)
                 .OrderBy(i => i.Date)
-                .ThenBy(i => i.InventoryId)
+                .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
             var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= deliveryReceipt.DeliveredDate);
@@ -235,9 +235,14 @@ namespace IBS.DataAccess.Repository.Filpride
                 var purchaseOrder = await _db.FilpridePurchaseOrders
                     .FindAsync(deliveryReceipt.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
 
+                var unitOfWork = new UnitOfWork(_db);
+
+                var poPrice = await unitOfWork.FilpridePurchaseOrder
+                    .GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken);
+
                 var netOfVat = purchaseOrder.VatType == SD.VatType_Vatable
-                    ? ComputeNetOfVat(purchaseOrder.Price)
-                    : purchaseOrder.Price;
+                    ? ComputeNetOfVat(poPrice)
+                    : poPrice;
 
                 cost = netOfVat;
             }

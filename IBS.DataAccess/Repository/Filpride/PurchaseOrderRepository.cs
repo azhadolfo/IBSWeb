@@ -181,7 +181,7 @@ namespace IBS.DataAccess.Repository.Filpride
             var inventories = await _db.FilprideInventories
                 .Where(i => i.POId == model.PurchaseOrderId)
                 .OrderBy(i => i.Date)
-                .ThenBy(i => i.InventoryId)
+                .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
             if (receivingReports.Count > 0)
@@ -295,6 +295,21 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 await _db.SaveChangesAsync(cancellationToken);
             }
+        }
+
+        public async Task<decimal> GetPurchaseOrderCost(int purchaseOrderId, CancellationToken cancellationToken = default)
+        {
+            var purchaseOrder = await _db.FilpridePurchaseOrders
+                .Include(p => p.ActualPrices)
+                .FirstOrDefaultAsync(x => x.PurchaseOrderId == purchaseOrderId, cancellationToken)
+                                ?? throw new NullReferenceException("PurchaseOrder not found");
+
+            if (purchaseOrder.ActualPrices!.Count != 0)
+            {
+                return purchaseOrder.ActualPrices!.First().TriggeredPrice;
+            }
+
+            return purchaseOrder.Price;
         }
     }
 }
