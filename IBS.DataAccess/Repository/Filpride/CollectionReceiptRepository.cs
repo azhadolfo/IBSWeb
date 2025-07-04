@@ -458,7 +458,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 sv.AmountPaid -= total;
                 sv.Balance += total;
 
-                if (sv.IsPaid == true && sv.PaymentStatus == "Paid" || sv.IsPaid == true && sv.PaymentStatus == "OverPaid")
+                if (sv.IsPaid && sv.PaymentStatus == "Paid" || sv.IsPaid && sv.PaymentStatus == "OverPaid")
                 {
                     sv.IsPaid = false;
                     sv.PaymentStatus = "Pending";
@@ -579,7 +579,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var total = paidAmount + offsetAmount;
                 sv.AmountPaid += total;
-                sv.Balance = (sv.Total - sv.Discount) - sv.AmountPaid;
+                sv.Balance -= sv.AmountPaid;
 
                 if (sv.Balance == 0 && sv.AmountPaid == (sv.Total - sv.Discount))
                 {

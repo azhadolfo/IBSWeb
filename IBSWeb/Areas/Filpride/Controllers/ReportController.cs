@@ -8277,7 +8277,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = sv.Service!.Name;
                     worksheet.Cells[row, 7].Value = sv.Period;
                     worksheet.Cells[row, 8].Value = sv.DueDate;
-                    worksheet.Cells[row, 9].Value = sv.Amount;
+                    worksheet.Cells[row, 9].Value = sv.Total;
                     worksheet.Cells[row, 10].Value = sv.AmountPaid;
                     worksheet.Cells[row, 11].Value = sv.PaymentStatus;
                     worksheet.Cells[row, 12].Value = sv.Instructions;
@@ -8290,7 +8290,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
 
-                    totalAmount += sv.Amount;
+                    totalAmount += sv.Total;
                     totalAmountPaid += sv.AmountPaid;
                     row++;
                 }

@@ -85,14 +85,14 @@
                 <td class="px-3"> @sv.Service!.Name</td>
                 <td class="px-3"> @Html.DisplayFor(model => sv.Period)</td>
                 <td class="px-3"> @Html.DisplayFor(model => sv.DueDate)</td>
-                <td class="px-3"> @sv.Amount.ToString(SD.Two_Decimal_Format)</td>
+                <td class="px-3"> @sv.Total.ToString(SD.Two_Decimal_Format)</td>
                 <td class="px-3"> @sv.AmountPaid.ToString(SD.Two_Decimal_Format)</td>
                 <td class="px-3"> @sv.PaymentStatus</td>
                 <td class="px-3"> @sv.Instructions</td>
                 <td class="px-3"> @sv.Type</td>
             </tr>
             
-            totalAmount += sv.Amount;
+            totalAmount += sv.Total;
             totalAmountPaid += sv.AmountPaid;
         }
         
