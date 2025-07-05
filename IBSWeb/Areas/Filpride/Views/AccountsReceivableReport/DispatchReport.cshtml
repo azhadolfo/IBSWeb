@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form id="dynamicForm" method="post">
+        <form id="dynamicForm" method="post" target="_blank">
 
             <div class="form-group row">
                 <label asp-for="ReportType" class="col-sm-4 col-form-label text-right">Select Report Type</label>
@@ -41,9 +41,9 @@
             </div>
 
             <div class="row mt-5">
-                @* <div class="col-6 col-md-3"> *@
-                @*     <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedDispatchReport')"><i class="bi bi-printer"></i> Generate</button> *@
-                @* </div> *@
+                <div class="col-6 col-md-3">
+                    <button type="button" class="btn btn-primary form-control" onclick="submitForm('GeneratedDispatchReport')"><i class="bi bi-printer"></i> Generate</button>
+                </div>
                 <div class="col-6 col-md-3">
                     <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateDispatchReportExcelFile')"><i class="bi bi-file-text"></i> Generate as Excel file</button>
                 </div>
