@@ -897,7 +897,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var subPoModel = new FilpridePurchaseOrder
                             {
                                 PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo!.Type!, cancellationToken),
-                                Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
                                 SupplierId = existingPo.SupplierId,
                                 ProductId = existingRecord.ProductId,
                                 Terms = existingPo.Terms,
@@ -1854,7 +1854,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
     }
 }

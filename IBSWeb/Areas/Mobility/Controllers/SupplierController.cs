@@ -6,6 +6,7 @@ using IBS.Models.Mobility.MasterFile;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -57,7 +58,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
         private async Task GenerateSignedUrl(FilprideSupplier model)

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OfficeOpenXml;
 using System.Threading;
 using IBS.Utility.Enums;
+using IBS.Utility.Helpers;
 
 namespace IBSWeb.Areas.User.Controllers
 {
@@ -266,7 +267,7 @@ namespace IBSWeb.Areas.User.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ProductList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ProductList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

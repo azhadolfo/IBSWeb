@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Integrated;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -24,7 +25,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(c => c.Company == company)
                 .LastOrDefaultAsync(cancellationToken);
 
-            var yearToday = DateTime.UtcNow.Year;
+            var yearToday = DateTimeHelper.GetCurrentPhilippineTime().Year;
 
             if (lastAtl != null)
             {

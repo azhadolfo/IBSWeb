@@ -62,7 +62,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
-                                    <input asp-for="Date" type="date" id="Date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
+                                    <input asp-for="Date" type="date" id="Date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow">
                                     <label asp-for="Date" for="Date" class="ms-2">Date</label>
                                     <span asp-validation-for="Date" class="text-danger"></span>
                                 </div>
@@ -102,12 +102,12 @@
                                     <span asp-validation-for="CheckNumber" class="text-danger"></span>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input asp-for="CheckDate" id="CheckDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <input asp-for="CheckDate" id="CheckDate" type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
                                     <label asp-for="CheckDate" for="CheckDate" class="ms-2">CheckDate<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="CheckDate" class="text-danger"></span>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
+                                    <input asp-for="DepositDate" id="DepositDate" type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow" required>
                                     <label asp-for="DepositDate" for="DepositDate" class="ms-2">Date Deposited<span class="required text-danger">*</span></label>
                                     <span asp-validation-for="DepositDate" class="text-danger"></span>
                                 </div>

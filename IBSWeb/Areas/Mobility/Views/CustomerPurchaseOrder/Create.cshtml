@@ -22,7 +22,7 @@
 
                 <div class="row pt-2">
                     <div class="form-floating py-2 px-2 col-12">
-                        <input type="date" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
+                        <input type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" asp-for="Date" class="form-control border-0 shadow" placeholder="" />
                         <label class="ms-2">Date<span class="required">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>

@@ -21,7 +21,7 @@
                 
                 <div class="row">
                     <div class="form-floating col-6 my-3">
-                        <input asp-for="AsOfDate" type="date" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="AsOfDate" placeholder="Name" required>
+                        <input asp-for="AsOfDate" type="date" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="AsOfDate" placeholder="Name" required>
                         <label asp-for="AsOfDate" for="AsOfDate" class="ms-2">Tariff as of:<span class="required text-danger">*</span></label>
                         <span asp-validation-for="AsOfDate" class="text-danger"></span>
                     </div>

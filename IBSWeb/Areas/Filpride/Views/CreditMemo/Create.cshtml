@@ -40,7 +40,7 @@
             </fieldset>
             <div class="form-group mb-3">
                 <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM-dd")"/>
+                <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"/>
                 <span asp-validation-for="TransactionDate" class="text-danger"></span>
             </div>
             <div class="form-group" id="siList">

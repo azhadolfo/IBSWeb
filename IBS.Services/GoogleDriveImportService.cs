@@ -219,7 +219,7 @@ namespace IBS.Services
 
                     try
                     {
-                        var currentYear = DateTime.UtcNow.ToString("yyyy");
+                        var currentYear = DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy");
 
                         var files = fileList.Where(f =>
                                 (f.FileName.Contains("fuels", StringComparison.CurrentCultureIgnoreCase) ||
@@ -380,11 +380,11 @@ namespace IBS.Services
 
                     try
                     {
-                        var currentYear = DateTime.UtcNow.ToString("yyyy");
+                        var currentYear = DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy");
                         var files = fileList.Where(f =>
                                 (f.FileName.Contains("FUEL_DELIVERY", StringComparison.CurrentCulture) ||
                                 f.FileName.Contains("LUBE_DELIVERY", StringComparison.CurrentCulture)) &&
-                                Path.GetFileNameWithoutExtension(f.FileName).EndsWith(DateTime.UtcNow.ToString(currentYear)));
+                                Path.GetFileNameWithoutExtension(f.FileName).EndsWith(DateTimeHelper.GetCurrentPhilippineTime().ToString(currentYear)));
 
                         if (!files.Any())
                         {
@@ -532,7 +532,7 @@ namespace IBS.Services
 
                     try
                     {
-                        var currentYear = DateTime.UtcNow.ToString("yyyy");
+                        var currentYear = DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy");
 
                         var files = fileList.Where(f =>
                                 (f.FileName.Contains("FMS_CALIBRATION", StringComparison.CurrentCultureIgnoreCase) ||

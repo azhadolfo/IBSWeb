@@ -356,7 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = package.GetAsByteArray();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"ClearedDisbursementReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                    $"ClearedDisbursementReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -637,7 +637,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var excelBytes = package.GetAsByteArray();
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"PurchaseOrderReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                    $"PurchaseOrderReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -1495,7 +1495,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Purchase Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Purchase Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -3030,7 +3030,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GM Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GM Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -3863,7 +3863,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = package.GetAsByteArray();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Trade Payable Report_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Trade Payable Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
 
             }
             catch (Exception ex)

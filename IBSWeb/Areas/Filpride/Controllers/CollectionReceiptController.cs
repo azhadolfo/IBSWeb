@@ -65,7 +65,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
@@ -1984,7 +1984,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CollectionReceiptList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CollectionReceiptList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
         }
 
