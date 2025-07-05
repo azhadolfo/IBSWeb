@@ -876,18 +876,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Summary
                     if (dateRangeType == "AsOf" && viewModel.ReportType == "Delivered")
                     {
-                        string[] customerTypes = { "Retail", "Industrial", "Government" };
-                        var groupByCustomerType = deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType);
+                        //string[] customerTypes = { "Retail", "Industrial", "Government" };
+                        //var groupByCustomerType = deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType);
 
-                        foreach (var customerType in customerTypes)
+                        string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
+
+                        foreach (var customerType in deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType))
                         {
-                            string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
                             using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
                             {
                                 range.Style.Font.Bold = true;
                                 range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                             }
-                            worksheet.Cells[startOfSummary, 11].Value = customerType;
+                            worksheet.Cells[startOfSummary, 11].Value = customerType.Key;
                             worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
                             worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
                             worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
@@ -898,76 +899,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[startOfSummary, 15].Value = "ENVIROGAS";
                             worksheet.Cells[startOfSummary, 15].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,4,4));
 
+                            #region -- totalToday --
+
                             startOfSummary++;
-                            var selectedGroup = groupByCustomerType.FirstOrDefault(g => g.Key == customerType);
                             worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalToday = customerType.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                            worksheet.Cells[startOfSummary, 12].Value = totalToday != 0 ? totalToday : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnOne = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup
-                                    .Where(dr => dr.Date == viewModel.DateFrom)
-                                    .GroupBy(dr => dr.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductToday = customerType.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                    .Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnOne].Value = totalProductToday != 0 ? totalProductToday : 0m;
+                                worksheet.Cells[startOfSummary, columnOne].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnOne++;
                             }
+
+                            #endregion
+
+                            #region -- totalYesterday --
 
                             startOfSummary++;
                             worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalYesterday = customerType.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, 12].Value = totalYesterday != 0 ? totalYesterday : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnTwo = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Where(dr => dr.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup
-                                    .Where(dr => dr.Date < viewModel.DateFrom)
-                                    .GroupBy(g => g.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductYesterday = customerType.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnTwo].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
+                                worksheet.Cells[startOfSummary, columnTwo].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnTwo++;
                             }
+
+                            #endregion
+
+                            #region -- Month to date --
 
                             startOfSummary++;
                             worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalMonthToDate = customerType.Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, 12].Value = totalMonthToDate != 0 ? totalMonthToDate : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnThree = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup.GroupBy(g => g.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnThree].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
+                                worksheet.Cells[startOfSummary, columnThree].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnThree++;
                             }
+
+                            #endregion
 
                             worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
                             startOfSummary += 2;
@@ -975,99 +973,91 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                         // All product types
-                        using (var testTemp = worksheet.Cells[1, 1])
+                        using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
                         {
-                            string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
-                            using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
-                            {
-                                range.Style.Font.Bold = true;
-                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            }
-                            worksheet.Cells[startOfSummary, 11].Value = "ALL";
-                            worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
-                            worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
-                            worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
-                            worksheet.Cells[startOfSummary, 13].Value = "BIODIESEL";
-                            worksheet.Cells[startOfSummary, 13].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 4));
-                            worksheet.Cells[startOfSummary, 14].Value = "ECONOGAS";
-                            worksheet.Cells[startOfSummary, 14].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 156, 100));
-                            worksheet.Cells[startOfSummary, 15].Value = "ENVIROGAS";
-                            worksheet.Cells[startOfSummary, 15].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,4,4));
+                            range.Style.Font.Bold = true;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        }
+                        worksheet.Cells[startOfSummary, 11].Value = "ALL";
+                        worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
+                        worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
+                        worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
+                        worksheet.Cells[startOfSummary, 13].Value = "BIODIESEL";
+                        worksheet.Cells[startOfSummary, 13].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 4));
+                        worksheet.Cells[startOfSummary, 14].Value = "ECONOGAS";
+                        worksheet.Cells[startOfSummary, 14].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 156, 100));
+                        worksheet.Cells[startOfSummary, 15].Value = "ENVIROGAS";
+                        worksheet.Cells[startOfSummary, 15].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,4,4));
+
+                        #region -- totalToday --
 
                             startOfSummary++;
-                            var selectedGroup = deliveryReceipts;
                             worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalTodayOverAll = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                            worksheet.Cells[startOfSummary, 12].Value = totalTodayOverAll != 0 ? totalTodayOverAll : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnOneOverAll = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup
-                                    .Where(dr => dr.Date == viewModel.DateFrom)
-                                    .GroupBy(dr => dr.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductToday = deliveryReceipts.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                    .Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnOneOverAll].Value = totalProductToday != 0 ? totalProductToday : 0m;
+                                worksheet.Cells[startOfSummary, columnOneOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnOneOverAll++;
                             }
+
+                        #endregion
+
+                        #region -- totalYesterday --
 
                             startOfSummary++;
                             worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalYesterdayOverAll = deliveryReceipts.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, 12].Value = totalYesterdayOverAll != 0 ? totalYesterdayOverAll : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnTwoOverAll = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Where(dr => dr.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup
-                                    .Where(dr => dr.Date < viewModel.DateFrom)
-                                    .GroupBy(g => g.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductYesterday = deliveryReceipts.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnTwoOverAll].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
+                                worksheet.Cells[startOfSummary, columnTwoOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnTwoOverAll++;
                             }
+
+                        #endregion
+
+                        #region -- Month to date --
 
                             startOfSummary++;
                             worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
                             worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            if (selectedGroup != null)
+                            var totalMonthToDateOverAll = deliveryReceipts.Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, 12].Value = totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll : 0m;
+                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                            int columnThreeOverAll = 13;
+
+                            foreach (var productName in productList)
                             {
-                                decimal totalToday = selectedGroup.Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, 12].Value = totalToday;
-                                worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                int columnStart = 13;
-                                var groupByProduct = selectedGroup.GroupBy(g => g.PurchaseOrder?.Product!.ProductName);
-                                foreach (string product in productList)
-                                {
-                                    decimal selectedGroupByProduct = groupByProduct
-                                        .FirstOrDefault(g => g.FirstOrDefault()?.PurchaseOrder?.Product!.ProductName == product)?
-                                        .Sum(dr => dr.Quantity) ?? 0m;
-                                    worksheet.Cells[startOfSummary, columnStart].Value = selectedGroupByProduct;
-                                    worksheet.Cells[startOfSummary, columnStart].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                    columnStart++;
-                                }
+                                var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                worksheet.Cells[startOfSummary, columnThreeOverAll].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
+                                worksheet.Cells[startOfSummary, columnThreeOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                columnThreeOverAll++;
                             }
 
-                            worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                            startOfSummary += 2;
-                        }
+                        #endregion
+
+                        worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     }
 
 
