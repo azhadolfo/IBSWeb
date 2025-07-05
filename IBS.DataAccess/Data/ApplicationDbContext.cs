@@ -875,6 +875,11 @@ namespace IBS.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(sv => sv.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+                sv.HasOne(sv => sv.DeliveryReceipt)
+                    .WithMany()
+                    .HasForeignKey(sv => sv.DeliveryReceiptId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             #endregion -- Service Invoice --

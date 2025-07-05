@@ -25,5 +25,9 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal Total { get; set; }
 
         public decimal Discount { get; set; }
+
+        public List<SelectListItem> DeliveryReceipts { get; set; } = new();
+
+        public int? DeliveryReceiptId { get; set; }
     }
 }
