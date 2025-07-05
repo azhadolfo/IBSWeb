@@ -74,7 +74,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 var model = await CreateCollectionVmToCollectionModel(viewModel);
-                var dateNow = DateTime.Now;
+                var dateNow = DateTimeHelper.GetCurrentPhilippineTime();
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = dateNow;
                 model.Status = "Create";

@@ -3,6 +3,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     model.CreatedBy = _userManager.GetUserName(User)!;
-                    model.CreatedDate = DateTime.Now;
+                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     await _dbContext.FilpridePickUpPoints.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);

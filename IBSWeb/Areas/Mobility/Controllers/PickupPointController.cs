@@ -4,6 +4,7 @@ using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -80,7 +81,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 try
                 {
                     model.CreatedBy = _userManager.GetUserName(User)!;
-                    model.CreatedDate = DateTime.Now;
+                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                     await _dbContext.MobilityPickUpPoints.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);

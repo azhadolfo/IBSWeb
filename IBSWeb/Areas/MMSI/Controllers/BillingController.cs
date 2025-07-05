@@ -109,7 +109,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var model = CreateBillingVmToBillingModel(viewModel);
                 model.Status = "For Collection";
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                var datetimeNow = DateTime.Now;
+                var datetimeNow = DateTimeHelper.GetCurrentPhilippineTime();
                 model.CreatedDate = datetimeNow;
 
                 if (model.IsUndocumented)

@@ -375,7 +375,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 #endregion -- Changes
 
                 currentModel.TariffEditedBy = user!.UserName!;
-                currentModel.TariffEditedDate = DateTime.Now;
+                currentModel.TariffEditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 currentModel.Status = "For Approval";
                 currentModel.DispatchChargeType = chargeType;
                 currentModel.BAFChargeType = chargeType2;
@@ -570,7 +570,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #endregion -- Changes
 
                     currentModel.EditedBy = user!.UserName;
-                    currentModel.EditedDate = DateTime.Now;
+                    currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     currentModel.TotalHours = totalHours;
                     currentModel.Date = model.Date;
                     currentModel.DispatchNumber = model.DispatchNumber;

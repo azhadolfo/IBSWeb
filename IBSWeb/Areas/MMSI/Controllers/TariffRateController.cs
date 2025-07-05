@@ -2,6 +2,7 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
+using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -88,7 +89,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     existingModel.DispatchDiscount = model.DispatchDiscount;
                     existingModel.BAFDiscount = model.BAFDiscount;
                     existingModel.UpdateBy = user?.UserName;
-                    existingModel.UpdateDate = DateTime.Now;
+                    existingModel.UpdateDate = DateTimeHelper.GetCurrentPhilippineTime();
                     model = existingModel;
                     await _unitOfWork.TariffTable.SaveAsync(cancellationToken);
                     TempData["success"] = "Tariff rate updated successfully.";
@@ -96,7 +97,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     model.CreatedBy = user?.UserName;
-                    model.CreatedDate = DateTime.Now;
+                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     await _unitOfWork.TariffTable.AddAsync(model, cancellationToken);
                     TempData["success"] = "Tariff rate created successfully.";
                 }

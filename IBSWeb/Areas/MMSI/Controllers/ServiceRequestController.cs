@@ -146,7 +146,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
                     model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                    timeStamp = DateTime.Now;
+                    timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CreatedDate = timeStamp;
 
                     // upload file if something is submitted
@@ -395,7 +395,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     #endregion -- Changes
 
                     currentModel.EditedBy = user!.UserName;
-                    currentModel.EditedDate = DateTime.Now;
+                    currentModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     currentModel.Date = model.Date;
                     currentModel.DispatchNumber = model.DispatchNumber;
                     currentModel.COSNumber = model.COSNumber;
