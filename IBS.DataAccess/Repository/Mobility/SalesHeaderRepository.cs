@@ -31,17 +31,17 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 // ALREADY SHOW PROBLEMS HERE: THROWS EXCEPTION
                 var fuelSales = await _db.FuelSalesViews
-                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTimeHelper.GetCurrentPhilippineTime().Year)
                     .ToListAsync(cancellationToken);
 
                 var lubeSales = await _db.MobilityLubes
                     .Where(l => !l.IsProcessed)
-                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTimeHelper.GetCurrentPhilippineTime().Year)
                     .ToListAsync(cancellationToken);
 
                 var safeDropDeposits = await _db.MobilitySafeDrops
                     .Where(s => !s.IsProcessed)
-                    .Where(f => f.BusinessDate.Year == DateTime.UtcNow.Year)
+                    .Where(f => f.BusinessDate.Year == DateTimeHelper.GetCurrentPhilippineTime().Year)
                     .ToListAsync(cancellationToken);
 
                 var fuelPoSales = Enumerable.Empty<MobilityFuel>();
@@ -843,7 +843,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
 
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.UtcNow)
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
                         ? record.INV_DATE.AddDays(-1)
                         : record.INV_DATE;
 
@@ -891,7 +891,7 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 if (!existingNozdownSet.Contains(record.xSTAMP))
                 {
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTime.UtcNow)
+                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
                         ? record.INV_DATE.AddDays(-1)
                         : record.INV_DATE;
 
@@ -1377,7 +1377,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 .ToListAsync(cancellationToken);
 
             var fmsPoSales = await _db.MobilityFmsPoSales
-                .Where(x => !x.IsProcessed && x.ShiftDate.Year == DateTime.UtcNow.Year)
+                .Where(x => !x.IsProcessed && x.ShiftDate.Year == DateTimeHelper.GetCurrentPhilippineTime().Year)
                 .OrderBy(x => x.ShiftDate)
                 .ThenBy(x => x.ShiftNumber)
                 .ToListAsync(cancellationToken);

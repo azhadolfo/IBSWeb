@@ -80,7 +80,7 @@
 
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input asp-for="Date" type="date" value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="Date" placeholder=" ">
+                        <input asp-for="Date" type="date" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="Date" placeholder=" ">
                         <label asp-for="Date" for="Date" class="ms-2">Date Today<span class="required text-danger">*</span></label>
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
@@ -104,24 +104,24 @@
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateLeft" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
+                        <input type="date" asp-for="DateLeft" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="DateLeft" placeholder=" " required>
                         <label asp-for="DateLeft" for="DateLeft" class="ms-2">Date Start<span class="required text-danger">*</span></label>
                         <span asp-validation-for="DateLeft" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeLeft" value="@TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("HH\\:mm")" class="form-control border-0 shadow" id="TimeLeft" placeholder=" " required>
+                        <input type="time" asp-for="TimeLeft" value="@TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm")" class="form-control border-0 shadow" id="TimeLeft" placeholder=" " required>
                         <label asp-for="TimeLeft" for="TimeLeft" class="ms-2">Time Start<span class="required text-danger">*</span></label>
                         <span asp-validation-for="TimeLeft" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-floating col-6 my-2">
-                        <input type="date" asp-for="DateArrived" value="@DateOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="DateArrived" placeholder=" " required>
+                        <input type="date" asp-for="DateArrived" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("yyyy-MM-dd")" class="form-control border-0 shadow" id="DateArrived" placeholder=" " required>
                         <label asp-for="DateArrived" for="DateArrived" class="ms-2">Date End<span class="required text-danger">*</span></label>
                         <span asp-validation-for="DateArrived" class="text-danger"></span>
                     </div>
                     <div class="form-floating col-6 my-2">
-                        <input type="time" asp-for="TimeArrived" value="@TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)).ToString("HH\\:mm")" class="form-control border-0 shadow" id="TimeArrived" placeholder=" " required>
+                        <input type="time" asp-for="TimeArrived" value="@TimeOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()).ToString("HH\\:mm")" class="form-control border-0 shadow" id="TimeArrived" placeholder=" " required>
                         <label asp-for="TimeArrived" for="TimeArrived" class="ms-2">Time End<span class="required text-danger">*</span></label>
                         <span asp-validation-for="TimeArrived" class="text-danger"></span>
                     </div>

@@ -17,7 +17,7 @@
             <div class="row">
                 <div class="form-group mb-3">
                     <label class="control-label">As Of</label>
-                    <input name="monthYear" type="month" class="form-control" value="@DateTime.UtcNow.ToString("yyyy-MM")" />
+                    <input name="monthYear" type="month" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM")" />
                     <span asp-validation-for="DateTo" class="text-danger"></span>
                 </div>
                 <div class="row pt-2">

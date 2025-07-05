@@ -157,7 +157,7 @@
             <input type="hidden" asp-for="CustomerOrderSlipId" />
             <div class="row pt-2">
                 <div class="form-floating py-1 px-1 col-6">
-                    <input type="datetime-local" id="uploadDate" value="@DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
+                    <input type="datetime-local" id="uploadDate" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-ddTHH:mm")" name="loadDate" class="form-control border-0 shadow" placeholder="" required />
                     <label>Transaction Date<span class="required">*</span></label>
                     <span asp-validation-for="LoadDate" class="text-danger"></span>
                 </div>

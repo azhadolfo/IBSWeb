@@ -198,7 +198,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
         {
-            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
 
             customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
 
@@ -212,8 +212,8 @@ namespace IBS.DataAccess.Repository.Filpride
             //Beginning Balance to be discussed
             var drForTheMonth = await _db.FilprideDeliveryReceipts
                 .Where(dr => dr.CustomerId == customerId
-                             && dr.Date.Month == DateTime.UtcNow.Month
-                             && dr.Date.Year == DateTime.UtcNow.Year)
+                             && dr.Date.Month == DateTimeHelper.GetCurrentPhilippineTime().Month
+                             && dr.Date.Year == DateTimeHelper.GetCurrentPhilippineTime().Year)
                 .SumAsync(dr => dr.TotalAmount, cancellationToken);
 
             var outstandingCos = await _db.FilprideCustomerOrderSlips

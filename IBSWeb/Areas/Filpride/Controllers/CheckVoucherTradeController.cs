@@ -69,7 +69,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
-            return $"{fileName}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
         }
 
         private async Task GenerateSignedUrl(FilprideCheckVoucherHeader model)
@@ -1787,7 +1787,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Convert the Excel package to a byte array
                     var excelBytes = await package.GetAsByteArrayAsync();
 
-                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
                 }
             }
             catch (Exception ex)

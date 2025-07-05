@@ -29,7 +29,7 @@
 //             {
 //                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(); // Replace with your actual DbContext
 //
-//                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
+//                 var today = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
 //
 //                 var expiredCosList = await dbContext.FilprideCustomerOrderSlips
 //                     .Where(cos => cos.ExpirationDate != null && cos.ExpirationDate < today && cos.Status != nameof(CosStatus.Expired) && cos.DeliveredQuantity == 0)

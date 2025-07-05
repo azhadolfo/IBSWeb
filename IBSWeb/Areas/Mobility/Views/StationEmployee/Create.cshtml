@@ -83,7 +83,7 @@
             <div class="form-floating py-2 col-12">
                 <input asp-for="BirthDate" type="date" class="form-control border-0 shadow"
                        placeholder=""
-                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                       value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                 <label asp-for="BirthDate">Birth Date</label>
                 <span asp-validation-for="BirthDate" class="text-danger"></span>
             </div>
@@ -131,7 +131,7 @@
             <div class="form-floating py-2 col-12">
                 <input asp-for="DateHired" type="date" class="form-control border-0 shadow"
                        placeholder=""
-                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                       value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                 <label asp-for="DateHired">Date Hired</label>
                 <span asp-validation-for="DateHired" class="text-danger"></span>
             </div>
@@ -139,7 +139,7 @@
             <div class="form-floating py-2 col-12">
                 <input asp-for="DateResigned" type="date" class="form-control border-0 shadow"
                        placeholder=""
-                       value="@DateTime.UtcNow.AddHours(8).ToString("yyyy-MM-dd")" />
+                       value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")" />
                 <label asp-for="DateResigned">Date Resigned</label>
                 <span asp-validation-for="DateResigned" class="text-danger"></span>
             </div>
