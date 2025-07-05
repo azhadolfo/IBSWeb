@@ -49,6 +49,16 @@
                 </select>
                 <span asp-validation-for="ServiceId" class="text-danger"></span>
             </div>
+            <div id="drDiv" class="form-group mb-3" style="display: none">
+                <label asp-for="DeliveryReceiptId" class="control-label">DR<span class="required">*</span></label>
+                <select asp-for="DeliveryReceiptId" 
+                        class="form-control js-select2" 
+                        asp-items="@Model.DeliveryReceipts" 
+                        style="width:100%">
+                    <option></option>
+                </select>
+                <span asp-validation-for="DeliveryReceiptId" class="text-danger"></span>
+            </div>
             <div class="form-group mb-3">
                 <label asp-for="DueDate" class="control-label">Due Date<span class="required">*</span></label>
                 <input asp-for="DueDate" type="date" class="form-control" value=""/>
@@ -93,4 +103,83 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        $(document).ready(function () {
+            const $serviceSelect = $('select[name="ServiceId"]');
+            const $customerSelect = $('select[name="CustomerId"]');
+            const $drSelect = $('select[name="DeliveryReceiptId"]');
+            const $drFormGroup = $('#drDiv');
+            const $totalField = $('input[name="Total"]');
+
+            let drTotalMap = {}; // Map DR ID to its gross total
+
+            function fetchDRs() {
+                const serviceText = $serviceSelect.find('option:selected').text().trim().toUpperCase();
+                const customerId = $customerSelect.val();
+
+                if (serviceText === "TRANSACTION FEE" && customerId) {
+                    $drFormGroup.show();
+
+                    $.ajax({
+                        url: '@Url.Action("GetDRsByCustomer", "ServiceInvoice", new { area = "Filpride" })',
+                        type: 'GET',
+                        data: { customerId: customerId },
+                        beforeSend: function () {
+                            $drSelect.prop("disabled", true);
+                            drTotalMap = {};
+                            $totalField.val('');
+                        },
+                        success: function (data) {
+                            $drSelect.empty();
+                            
+                            console.log(data);
+
+                            if (data?.length > 0) {
+                                console.log("working");
+                                $.each(data, function (index, dr) {
+                                    $drSelect.append(new Option(dr.text, dr.value));
+                                    drTotalMap[dr.value] = parseFloat(dr.grossTotal);
+                                });
+                            } else {
+                                $drSelect.append(new Option("No related DRs found", ""));
+                            }
+
+                            $drSelect.prop("disabled", false);
+                            calculateTotal(); // Initial total
+                        },
+                        error: function () {
+                            alert("Error fetching delivery receipts.");
+                            $drSelect.prop("disabled", false);
+                        }
+                    });
+                } else {
+                    $drFormGroup.hide();
+                    $drSelect.empty().append(new Option(""));
+                    $totalField.val('');
+                }
+            }
+
+            function calculateTotal() {
+                let total = 0;
+                $drSelect.find('option:selected').each(function () {
+                    const id = $(this).val();
+                    if (drTotalMap[id]) {
+                        total += drTotalMap[id];
+                    }
+                });
+                $totalField.val(total.toFixed(2));
+            }
+
+            $serviceSelect.on("change", fetchDRs);
+            $customerSelect.on("change", function () {
+                if ($serviceSelect.val()) fetchDRs();
+            });
+            $drSelect.on("change", calculateTotal);
+
+            fetchDRs(); // On load
+        });
+    </script>
+
+
 }

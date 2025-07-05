@@ -212,6 +212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         DueDate = viewModel.DueDate,
                         Discount = viewModel.Discount,
                         Type = viewModel.Type,
+                        DeliveryReceiptId = viewModel.DeliveryReceiptId,
                     };
 
                     await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
@@ -337,6 +338,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.AddAsync(sales, cancellationToken);
 
                     #endregion --Sales Book Recording
+
+                    #region Reverse the DR related
+
+                    var drGl = await _dbContext.FilprideGeneralLedgerBooks
+                        .Where(x => x.Reference == model.DeliveryReceipt.DeliveryReceiptNo
+                                    && x.Company == model.Company)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var dr in drGl)
+                    {
+                        (dr.Debit, dr.Credit) = (dr.Credit, dr.Debit);
+                    }
+
+                    #endregion
 
                     #region --General Ledger Book Recording
 
@@ -610,6 +625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Instructions = existingModel.Instructions,
                 Period = existingModel.Period,
                 Total = existingModel.Total,
+                DeliveryReceiptId = existingModel.DeliveryReceiptId,
             };
 
             return View(viewModel);
@@ -669,6 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.VatType = customer.VatType;
                     existingModel.HasEwt = customer.WithHoldingTax;
                     existingModel.HasWvat = customer.WithHoldingVat;
+                    existingModel.DeliveryReceiptId = viewModel.DeliveryReceiptId;
 
                     #endregion --Saving the default properties
 
@@ -825,5 +842,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(svIds);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDRsByCustomer(int customerId)
+        {
+            var drs = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAllAsync(x => x.CustomerId == customerId);
+
+            var result = new List<object>();
+
+            foreach (var dr in drs)
+            {
+                decimal cosPrice = dr.CustomerOrderSlip!.DeliveredPrice;
+                decimal cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)dr.PurchaseOrderId!);
+                decimal freight = dr.Freight;
+                decimal commission = dr.CommissionRate;
+                decimal grossMargin = cosPrice - (cost + freight + commission);
+                decimal total = dr.Quantity * grossMargin;
+
+                result.Add(new
+                {
+                    value = dr.DeliveryReceiptId.ToString(),
+                    text = $"{dr.DeliveryReceiptNo} ({total:N2})",
+                    grossTotal = total
+                });
+            }
+
+            return Json(result);
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.MasterFile;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -93,5 +94,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public bool HasEwt { get; set; }
 
         public bool HasWvat { get; set; }
+
+        public int? DeliveryReceiptId { get; set; }
+
+        [ForeignKey(nameof(DeliveryReceiptId))]
+        public FilprideDeliveryReceipt DeliveryReceipt { get; set; }
     }
 }
