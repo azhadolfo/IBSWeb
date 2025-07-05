@@ -606,7 +606,160 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     }
 
                                 #endregion
+
+                                //Summary Table
+                            col.Item().PaddingTop(50).Text("SUMMARY").Bold().FontSize(14);
+
+                            #region -- Overall Summary
+
+                                col.Item().PaddingTop(10).Table(table =>
+                                {
+                                    #region -- Columns Definition
+
+                                        table.ColumnsDefinition(columns =>
+                                        {
+                                            columns.RelativeColumn();
+                                            columns.RelativeColumn();
+                                            columns.RelativeColumn();
+                                            columns.RelativeColumn();
+                                            columns.RelativeColumn();
+                                        });
+
+                                    #endregion
+
+                                    #region -- Loop to Show Records
+
+                                        string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
+
+                                        foreach (var customerType in deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType))
+                                        {
+
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text(customerType.Key).SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
+                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
+
+                                            #region -- Total Today --
+
+                                            table.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
+
+                                            var totalToday = customerType.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalToday != 0 ? totalToday < 0 ? $"({Math.Abs(totalToday).ToString(SD.Two_Decimal_Format)})" : totalToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalToday < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            foreach (var productName in productList)
+                                            {
+                                                var totalProductToday = customerType.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                                    .Sum(dr => dr.Quantity);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductToday != 0 ? totalProductToday < 0 ? $"({Math.Abs(totalProductToday).ToString(SD.Two_Decimal_Format)})" : totalProductToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductToday < 0 ? Colors.Red.Medium : Colors.Black);
+                                            }
+
+                                            #endregion
+
+                                            #region -- Total Yesterday --
+
+                                            table.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
+
+                                            var totalYesterday = customerType.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterday != 0 ? totalYesterday < 0 ? $"({Math.Abs(totalYesterday).ToString(SD.Two_Decimal_Format)})" : totalYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterday < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            foreach (var productName in productList)
+                                            {
+                                                var totalProductYesterday = customerType.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                                    .Sum(dr => dr.Quantity);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterday != 0 ? totalProductYesterday < 0 ? $"({Math.Abs(totalProductYesterday).ToString(SD.Two_Decimal_Format)})" : totalProductYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterday < 0 ? Colors.Red.Medium : Colors.Black);
+                                            }
+
+                                            #endregion
+
+                                            #region -- Total Month ToDate --
+
+                                            table.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
+
+                                            var totalMonthToDate = customerType.Sum(dr => dr.Quantity);
+
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDate != 0 ? totalMonthToDate < 0 ? $"({Math.Abs(totalMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            foreach (var productName in productList)
+                                            {
+                                                var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDate != 0 ? totalProductMonthToDate < 0 ? $"({Math.Abs(totalProductMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
+                                            }
+
+                                            #endregion
+
+                                            table.Cell().Height(10).Text(" ");
+                                            table.Cell().Height(10).Text(" ");
+                                            table.Cell().Height(10).Text(" ");
+                                            table.Cell().Height(10).Text(" ");
+                                            table.Cell().Height(10).Text(" ");
+                                        }
+
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ALL").SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
+
+                                        #region -- Total Today --
+
+                                        table.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
+
+                                        var totalTodayOverAll = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalTodayOverAll != 0 ? totalTodayOverAll < 0 ? $"({Math.Abs(totalTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                        foreach (var productName in productList)
+                                        {
+                                            var totalProductTodayOverAll = deliveryReceipts.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                                .Sum(dr => dr.Quantity);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductTodayOverAll != 0 ? totalProductTodayOverAll < 0 ? $"({Math.Abs(totalProductTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        }
+
+                                        #endregion
+
+                                        #region -- Total Yesterday --
+
+                                        table.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
+
+                                        var totalYesterdayOverAll = deliveryReceipts.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterdayOverAll != 0 ? totalYesterdayOverAll < 0 ? $"({Math.Abs(totalYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                        foreach (var productName in productList)
+                                        {
+                                            var totalProductYesterdayOverAll = deliveryReceipts.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                                .Sum(dr => dr.Quantity);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterdayOverAll != 0 ? totalProductYesterdayOverAll < 0 ? $"({Math.Abs(totalProductYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        }
+
+                                        #endregion
+
+                                        #region -- Total Month ToDate --
+
+                                        table.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
+
+                                        var totalMonthToDateOverAll = deliveryReceipts.Sum(dr => dr.Quantity);
+
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll < 0 ? $"({Math.Abs(totalMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                        foreach (var productName in productList)
+                                        {
+                                            var totalProductMonthToDateOverAll = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDateOverAll != 0 ? totalProductMonthToDateOverAll < 0 ? $"({Math.Abs(totalProductMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        }
+
+                                        #endregion
+
+                                    #endregion
+                                });
+
+                            #endregion
                             });
+
+
                         });
 
                         #endregion
