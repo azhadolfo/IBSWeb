@@ -71,7 +71,7 @@
                         <th class="text-start">Customer</th>
                         <th class="text-start">Service</th>
                         <th class="text-start">Period</th>
-                        <th class="text-start">Amount</th>
+                        <th class="text-start">Total</th>
                         <th class="text-start">Created By</th>
                         <th class="text-start">Status</th>
                         <th class="text-center" style="width: 100px;">Actions</th>
@@ -177,13 +177,12 @@
                         var date = new Date(data);
                         return date.toLocaleDateString('en-US', { 
                             year: 'numeric',
-                            month: 'short',
-                            day: '2-digit' 
+                            month: 'short', 
                         });
                     }
                 },
                 {
-                    "data": "amount",
+                    "data": "total",
                     "render": function (data, type, row) {
                         var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                         return `<span class="d-block fw-medium">${amount}</span>`;

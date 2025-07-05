@@ -1006,7 +1006,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Amount) - sv.Discount : sv.Amount - sv.Discount;
+                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Total) - sv.Discount : sv.Total - sv.Discount;
                 decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                 decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
@@ -1065,7 +1065,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return Json(null);
                 }
 
-                decimal netDiscount = sv.Amount - sv.Discount;
+                decimal netDiscount = sv.Total - sv.Discount;
                 decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
                 decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                 decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
@@ -1879,7 +1879,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     currentSV = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet4.Cells[svRow, 1].Value = item.ServiceInvoice.DueDate.ToString("yyyy-MM-dd");
                     worksheet4.Cells[svRow, 2].Value = item.ServiceInvoice.Period.ToString("yyyy-MM-dd");
-                    worksheet4.Cells[svRow, 3].Value = item.ServiceInvoice.Amount;
+                    worksheet4.Cells[svRow, 3].Value = item.ServiceInvoice.Total;
                     worksheet4.Cells[svRow, 4].Value = item.ServiceInvoice.Total;
                     worksheet4.Cells[svRow, 5].Value = item.ServiceInvoice.Discount;
                     worksheet4.Cells[svRow, 6].Value = item.ServiceInvoice.CurrentAndPreviousAmount;

@@ -830,7 +830,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     model.Period,
-                    model.Amount
+                    model.Total
                 });
             }
 
@@ -1208,7 +1208,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     currentSV = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet3.Cells[svRow, 1].Value = item.ServiceInvoice.DueDate.ToString("yyyy-MM-dd");
                     worksheet3.Cells[svRow, 2].Value = item.ServiceInvoice.Period.ToString("yyyy-MM-dd");
-                    worksheet3.Cells[svRow, 3].Value = item.ServiceInvoice.Amount;
+                    worksheet3.Cells[svRow, 3].Value = item.ServiceInvoice.Total;
                     worksheet3.Cells[svRow, 4].Value = item.ServiceInvoice.Total;
                     worksheet3.Cells[svRow, 5].Value = item.ServiceInvoice.Discount;
                     worksheet3.Cells[svRow, 6].Value = item.ServiceInvoice.CurrentAndPreviousAmount;

@@ -228,6 +228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -409,6 +410,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();
@@ -609,6 +611,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
+            ViewBag.FilterType = await GetCurrentFilterType();
             if (id == null)
             {
                 return NotFound();

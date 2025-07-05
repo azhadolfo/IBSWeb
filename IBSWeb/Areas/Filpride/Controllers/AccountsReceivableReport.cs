@@ -3915,13 +3915,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Service?.Name);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Period.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Amount != 0 ? record.Amount < 0 ? $"({Math.Abs(record.Amount).ToString(SD.Two_Decimal_Format)})" : record.Amount.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Amount < 0 ? Colors.Red.Medium : Colors.Black);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Total != 0 ? record.Total < 0 ? $"({Math.Abs(record.Total).ToString(SD.Two_Decimal_Format)})" : record.Total.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Total < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AmountPaid != 0 ? record.AmountPaid < 0 ? $"({Math.Abs(record.AmountPaid).ToString(SD.Two_Decimal_Format)})" : record.AmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(record.AmountPaid < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.PaymentStatus);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Instructions);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Type);
 
-                                    totalAmount += record.Amount;
+                                    totalAmount += record.Total;
                                     totalAmountPaid += record.AmountPaid;
                                 }
 
@@ -4059,7 +4059,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = sv.Service!.Name;
                     worksheet.Cells[row, 7].Value = sv.Period;
                     worksheet.Cells[row, 8].Value = sv.DueDate;
-                    worksheet.Cells[row, 9].Value = sv.Amount;
+                    worksheet.Cells[row, 9].Value = sv.Total;
                     worksheet.Cells[row, 10].Value = sv.AmountPaid;
                     worksheet.Cells[row, 11].Value = sv.PaymentStatus;
                     worksheet.Cells[row, 12].Value = sv.Instructions;
@@ -4072,7 +4072,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
 
-                    totalAmount += sv.Amount;
+                    totalAmount += sv.Total;
                     totalAmountPaid += sv.AmountPaid;
                     row++;
                 }

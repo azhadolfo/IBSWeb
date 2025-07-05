@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -85,13 +86,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     serviceInvoices = serviceInvoices
                         .Where(s =>
                             s.ServiceInvoiceNo.ToLower().Contains(searchValue) ||
-                            s.Customer?.CustomerName.ToLower().Contains(searchValue) == true ||
-                            s.Customer?.CustomerTerms.ToLower().Contains(searchValue) == true ||
-                            s.Service?.ServiceNo?.ToLower().Contains(searchValue) == true ||
-                            s.Service?.Name.ToLower().Contains(searchValue) == true ||
+                            s.CustomerName.ToLower().Contains(searchValue) ||
+                            s.ServiceName.ToLower().Contains(searchValue) == true ||
                             s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                            s.Amount.ToString().Contains(searchValue) ||
-                            s.Instructions?.ToLower().Contains(searchValue) == true ||
+                            s.Total.ToString().Contains(searchValue) ||
+                            s.Instructions.ToLower().Contains(searchValue) == true ||
                             s.CreatedBy?.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
@@ -137,7 +136,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideServiceInvoice();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -145,14 +143,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
+            var viewModel = new ServiceInvoiceViewModel
+            {
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken)
+
+            };
+
             return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideServiceInvoice model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(ServiceInvoiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -161,8 +164,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
-            model.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -171,61 +174,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
 
-                    #region --Retrieval of Customer
+                    #region --Retrieval of Customer/Service
 
-                    var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
-                    var service = await _unitOfWork.FilprideService.GetAsync(c => c.ServiceId == model.ServiceId, cancellationToken);
+                    var service = await _unitOfWork.FilprideService
+                        .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
 
-                    if (customer == null)
+                    if (customer == null || service == null)
                     {
                         return NotFound();
                     }
-                    if (service == null)
+
+                    #endregion --Retrieval of Customer/Service
+
+                    var model = new FilprideServiceInvoice
                     {
-                        return NotFound();
-                    }
+                        ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                        ServiceId = service.ServiceId,
+                        ServiceName = service.Name,
+                        ServicePercent = service.Percent,
+                        CustomerId = customer.CustomerId,
+                        CustomerName = customer.CustomerName,
+                        CustomerAddress = customer.CustomerAddress,
+                        CustomerBusinessStyle = customer.BusinessStyle,
+                        CustomerTin = customer.CustomerTin,
+                        VatType = customer.VatType,
+                        HasEwt = customer.WithHoldingTax,
+                        HasWvat = customer.WithHoldingVat,
+                        CreatedBy = User.Identity!.Name,
+                        Total = viewModel.Total,
+                        Balance = viewModel.Total,
+                        Company = companyClaims,
+                        Period = viewModel.Period,
+                        Instructions = viewModel.Instructions,
+                        DueDate = viewModel.DueDate,
+                        Discount = viewModel.Discount,
+                        Type = viewModel.Type,
+                    };
 
-                    #endregion --Retrieval of Customer
-
-                    #region --Saving the default properties
-
-                    model.ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
-                    model.ServiceName = service.Name;
-                    model.ServicePercent = service.Percent;
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Total = model.Amount;
-                    model.Company = companyClaims;
-                    model.CustomerName = customer.CustomerName;
-                    model.CustomerBusinessStyle = customer.BusinessStyle ?? string.Empty;
-                    model.CustomerAddress = customer.CustomerAddress;
-                    model.CustomerTin = customer.CustomerTin;
-                    model.VatType = customer.VatType;
-                    model.HasEwt = customer.WithHoldingTax;
-                    model.HasWvat = customer.WithHoldingVat;
-
-                    if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
-                    {
-                        model.UnearnedAmount += model.Amount;
-                    }
-                    else
-                    {
-                        model.CurrentAndPreviousAmount += model.Amount;
-                    }
-
-                    _dbContext.Add(model);
-
-                    #endregion --Saving the default properties
+                    await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
-                    TempData["success"] = "Service invoice created successfully.";
+                    TempData["success"] = $"Service invoice #{model.ServiceInvoiceNo} created successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -236,12 +234,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
             TempData["error"] = "The submitted information is invalid.";
-            return View(model);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
@@ -269,7 +267,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --SV Date Computation--
 
-                    var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
+                    var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period
+                        ? DateOnly.FromDateTime(model.CreatedDate)
+                        : model.Period.AddMonths(1).AddDays(-1);
 
                     #endregion --SV Date Computation--
 
@@ -300,62 +300,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
                     }
 
-                    var sales = new FilprideSalesBook();
+                    var sales = new FilprideSalesBook
+                    {
+                        TransactionDate = postedDate,
+                        SerialNo = model.ServiceInvoiceNo,
+                        SoldTo = model.CustomerName,
+                        TinNo = model.CustomerTin,
+                        Address = model.CustomerAddress,
+                        Description = model.ServiceName,
+                        Amount = model.Total,
+                        VatAmount = vatAmount,
+                        VatableSales = netOfVatAmount,
+                        Discount = model.Discount,
+                        NetSales = netOfVatAmount,
+                        CreatedBy = model.CreatedBy,
+                        CreatedDate = model.CreatedDate,
+                        DueDate = model.DueDate,
+                        DocumentId = model.ServiceInvoiceId,
+                        Company = model.Company,
+                    };
 
-                    if (model.VatType == SD.VatType_Vatable)
+                    switch (model.VatType)
                     {
-                        sales.TransactionDate = postedDate;
-                        sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.CustomerName;
-                        sales.TinNo = model.CustomerTin;
-                        sales.Address = model.CustomerAddress;
-                        sales.Description = model.ServiceName;
-                        sales.Amount = model.Total;
-                        sales.VatAmount = vatAmount;
-                        sales.VatableSales = netOfVatAmount;
-                        sales.Discount = model.Discount;
-                        sales.NetSales = netOfVatAmount;
-                        sales.CreatedBy = model.CreatedBy;
-                        sales.CreatedDate = model.CreatedDate;
-                        sales.DueDate = model.DueDate;
-                        sales.DocumentId = model.ServiceInvoiceId;
-                        sales.Company = model.Company;
-                    }
-                    else if (model.VatType == SD.VatType_Exempt)
-                    {
-                        sales.TransactionDate = postedDate;
-                        sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.CustomerName;
-                        sales.TinNo = model.CustomerTin;
-                        sales.Address = model.CustomerAddress;
-                        sales.Description = model.ServiceName;
-                        sales.Amount = model.Total;
-                        sales.VatExemptSales = model.Total;
-                        sales.Discount = model.Discount;
-                        sales.NetSales = netOfVatAmount;
-                        sales.CreatedBy = model.CreatedBy;
-                        sales.CreatedDate = model.CreatedDate;
-                        sales.DueDate = model.DueDate;
-                        sales.DocumentId = model.ServiceInvoiceId;
-                        sales.Company = model.Company;
-                    }
-                    else
-                    {
-                        sales.TransactionDate = postedDate;
-                        sales.SerialNo = model.ServiceInvoiceNo;
-                        sales.SoldTo = model.CustomerName;
-                        sales.TinNo = model.CustomerTin;
-                        sales.Address = model.CustomerAddress;
-                        sales.Description = model.ServiceName;
-                        sales.Amount = model.Total;
-                        sales.ZeroRated = model.Total;
-                        sales.Discount = model.Discount;
-                        sales.NetSales = netOfVatAmount;
-                        sales.CreatedBy = model.CreatedBy;
-                        sales.CreatedDate = model.CreatedDate;
-                        sales.DueDate = model.DueDate;
-                        sales.DocumentId = model.ServiceInvoiceId;
-                        sales.Company = model.Company;
+                        case SD.VatType_Vatable:
+                            sales.VatAmount = vatAmount;
+                            sales.VatableSales = netOfVatAmount;
+                            break;
+                        case SD.VatType_Exempt:
+                            sales.VatExemptSales = model.Total;
+                            break;
+                        default:
+                            sales.ZeroRated = model.Total;
+                            break;
                     }
 
                     await _dbContext.AddAsync(sales, cancellationToken);
@@ -381,7 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountId = arNonTradeTitle.AccountId,
                                 AccountNo = arNonTradeTitle.AccountNumber,
                                 AccountTitle = arNonTradeTitle.AccountName,
-                                Debit = Math.Round(model.Total - (withHoldingTaxAmount + withHoldingVatAmount), 4),
+                                Debit = model.Total - (withHoldingTaxAmount + withHoldingVatAmount),
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
@@ -438,7 +414,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                AccountNo = model.Service!.CurrentAndPreviousNo!,
                                AccountTitle = model.Service!.CurrentAndPreviousTitle!,
                                Debit = 0,
-                               Credit = Math.Round((netOfVatAmount), 4),
+                               Credit = netOfVatAmount,
                                Company = model.Company,
                                CreatedBy = model.PostedBy,
                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
@@ -457,7 +433,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 AccountNo = vatOutputTitle.AccountNumber,
                                 AccountTitle = vatOutputTitle.AccountName,
                                 Debit = 0,
-                                Credit = Math.Round((vatAmount), 4),
+                                Credit = vatAmount,
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
@@ -476,7 +452,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
@@ -519,7 +494,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region --Audit Trail Recording
 
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                         FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                         await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
@@ -617,30 +591,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var existingModel = await _unitOfWork.FilprideServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == id, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideServiceInvoice
+                .GetAsync(sv => sv.ServiceInvoiceId == id, cancellationToken);
 
             if (existingModel == null)
             {
                 return NotFound();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
-            existingModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
+            var viewModel = new ServiceInvoiceViewModel
+            {
+                ServiceInvoiceId = existingModel.ServiceInvoiceId,
+                CustomerId = existingModel.CustomerId,
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                ServiceId = existingModel.ServiceId,
+                Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken),
+                DueDate = existingModel.DueDate,
+                Instructions = existingModel.Instructions,
+                Period = existingModel.Period,
+                Total = existingModel.Total,
+            };
 
-            return View(existingModel);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideServiceInvoice model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(ServiceInvoiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideServiceInvoice
-                .GetAsync(s => s.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                .GetAsync(s => s.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
 
             if (existingModel == null)
             {
                 return NotFound();
             }
+
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(existingModel.Company, cancellationToken);
+            viewModel.Services = await _unitOfWork.GetFilprideServiceListById(existingModel.Company, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -648,54 +636,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
-                    var service = await _unitOfWork.FilprideService.GetAsync(c => c.ServiceId == model.ServiceId, cancellationToken);
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
-                    if (customer == null)
-                    {
-                        return NotFound();
-                    }
-                    if (service == null)
+                    var service = await _unitOfWork.FilprideService
+                        .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
+
+                    if (customer == null || service == null)
                     {
                         return NotFound();
                     }
 
                     #region --Saving the default properties
 
-                    existingModel.Discount = model.Discount;
-                    existingModel.Amount = model.Amount;
-                    existingModel.Period = model.Period;
-                    existingModel.DueDate = model.DueDate;
-                    existingModel.Instructions = model.Instructions;
+                    existingModel.Discount = viewModel.Discount;
+                    existingModel.Total = viewModel.Total;
+                    existingModel.Balance = viewModel.Total;
+                    existingModel.Period = viewModel.Period;
+                    existingModel.DueDate = viewModel.DueDate;
+                    existingModel.Instructions = viewModel.Instructions;
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingModel.Total = model.Amount;
-                    existingModel.CustomerId = model.CustomerId;
-                    existingModel.ServiceId = model.ServiceId;
+                    existingModel.Total = viewModel.Total;
+                    existingModel.CustomerId = viewModel.CustomerId;
+                    existingModel.ServiceId = viewModel.ServiceId;
                     existingModel.ServiceName = service.Name;
                     existingModel.ServicePercent = service.Percent;
                     existingModel.CustomerName = customer.CustomerName;
-                    existingModel.CustomerBusinessStyle = customer.BusinessStyle ?? "";
+                    existingModel.CustomerBusinessStyle = customer.BusinessStyle;
                     existingModel.CustomerAddress = customer.CustomerAddress;
                     existingModel.CustomerTin = customer.CustomerTin;
                     existingModel.VatType = customer.VatType;
                     existingModel.HasEwt = customer.WithHoldingTax;
                     existingModel.HasWvat = customer.WithHoldingVat;
 
-                    if (DateOnly.FromDateTime(model.CreatedDate) < model.Period)
-                    {
-                        existingModel.UnearnedAmount += model.Amount;
-                    }
-                    else
-                    {
-                        existingModel.CurrentAndPreviousAmount += model.Amount;
-                    }
-
                     #endregion --Saving the default properties
 
                     #region --Audit Trail Recording
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", existingModel.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
@@ -712,16 +690,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(existingModel);
+                    return View(viewModel);
                 }
             }
 
-            return View(existingModel);
+            TempData["error"] = "The submitted information is invalid.";
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var sv = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
+            var sv = await _unitOfWork.FilprideServiceInvoice
+                .GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
 
             if (sv == null)
             {
@@ -742,6 +722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 sv.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
+
             return RedirectToAction(nameof(Print), new { id });
         }
 
@@ -799,7 +780,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 worksheet.Cells[row, 1].Value = item.DueDate.ToString("yyyy-MM-dd");
                 worksheet.Cells[row, 2].Value = item.Period.ToString("yyyy-MM-dd");
-                worksheet.Cells[row, 3].Value = item.Amount;
+                worksheet.Cells[row, 3].Value = item.Total;
                 worksheet.Cells[row, 4].Value = item.Total;
                 worksheet.Cells[row, 5].Value = item.Discount;
                 worksheet.Cells[row, 6].Value = item.CurrentAndPreviousAmount;
