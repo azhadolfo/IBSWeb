@@ -26,14 +26,7 @@
                     </select>
                 </div>
             </div>
-
-            <div class="form-group row mt-4">
-                <label asp-for="DateFrom" class="col-sm-4 col-form-label text-right">Date From</label>
-                <div class="col-sm-6">
-                    <input type="date" id="dateFrom" class="form-control" asp-for="DateFrom" value="@DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddHours(8)).ToString("yyyy-MM-dd")" required>
-                </div>
-                <span asp-validation-for="DateFrom" class="text-danger m-0 p-0 col">*</span>
-            </div>
+            
             <div class="form-group row mt-4">
                 <label asp-for="DateFrom" class="col-sm-4 col-form-label text-right">Date From</label>
                 <div class="col-sm-6">

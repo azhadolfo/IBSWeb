@@ -362,9 +362,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            if (!ModelState.IsValid)
+            if (viewModel.DateFrom == default && viewModel.ReportType != "InTransit")
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["error"] = "Please enter a valid Date From";
+                return RedirectToAction(nameof(DispatchReport));
+            }
+
+            if (viewModel.DateFrom == default || viewModel.DateTo == default && viewModel.ReportType == "InTransit")
+            {
+                TempData["error"] = "Please enter a valid Date From and To";
                 return RedirectToAction(nameof(DispatchReport));
             }
 
@@ -378,12 +384,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
                 var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
+                var currentUser = _userManager.GetUserName(User)!;
+                var today = DateTimeHelper.GetCurrentPhilippineTime();
+                Expression<Func<FilprideDeliveryReceipt, bool>>? filter = default;
+                string dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
+
+                if(viewModel.ReportType == "Delivered")
+                {
+                    if (dateRangeType == "AsOf")
+                    {
+                        filter = i => i.Company == companyClaims
+                                      && i.Date <= viewModel.DateFrom
+                                      && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
+                    }
+                    else
+                    {
+                        filter = i => i.Company == companyClaims
+                                      && i.Date >= viewModel.DateFrom
+                                      && i.Date <= viewModel.DateTo
+                                      && (i.Status == nameof(DRStatus.Invoiced) || i.Status == nameof(DRStatus.ForInvoicing));
+                    }
+                }
+                else
+                {
+                    filter = i => i.Company == companyClaims
+                                  && i.Date >= viewModel.DateFrom
+                                  && i.Date <= viewModel.DateTo
+                                  && (i.DeliveredDate == null || i.DeliveredDate > viewModel.DateTo)
+                                  && i.CanceledBy == null
+                                  && i.VoidedBy == null;
+                }
+
                 var deliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAllAsync(i => i.Company == companyClaims
-                                      && i.AuthorityToLoadNo != null
-                                      && i.Date >= firstDayOfMonth
-                                      && i.Date <= lastDayOfMonth
-                                      && (viewModel.ReportType == "AllDeliveries" || i.Status == nameof(DRStatus.PendingDelivery)), cancellationToken);
+                    .GetAllAsync(filter, cancellationToken);
 
                 if (!deliveryReceipts.Any())
                 {
@@ -411,20 +444,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             row.RelativeItem().Column(column =>
                             {
-                                column.Item()
-                                    .Text("DISPATCH REPORT")
-                                    .FontSize(20).SemiBold();
+                                if (dateRangeType == "AsOf")
+                                {
+                                    column.Item()
+                                        .Text($"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}")
+                                        .FontSize(20).SemiBold();
+                                }
+                                else
+                                {
+                                    column.Item()
+                                        .Text($"DISPATCH REPORT AS OF {viewModel.DateTo:dd MMM, yyyy}")
+                                        .FontSize(20).SemiBold();
+                                }
 
                                 column.Item().Text(text =>
                                 {
-                                    text.Span("Date From: ").SemiBold();
-                                    text.Span(firstDayOfMonth.ToString(SD.Date_Format));
-                                });
-
-                                column.Item().Text(text =>
-                                {
-                                    text.Span("Date To: ").SemiBold();
-                                    text.Span(lastDayOfMonth.ToString(SD.Date_Format));
+                                    text.Span(viewModel.ReportType == "Delivered" ? "DELIVERED" : "IN TRANSIT").SemiBold();
                                 });
                             });
 
@@ -486,8 +521,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Freight Charge").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("ECC").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Total Freight").SemiBold();
-                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Delivery Date").SemiBold();
-                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Status").SemiBold();
+
+                                        if (viewModel.ReportType == "Delivered")
+                                        {
+                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Delivery Date").SemiBold();
+                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Status").SemiBold();
+                                        }
                                     });
 
                                 #endregion
@@ -495,8 +534,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 #region -- Initialize Variable for Computation
 
                                     decimal totalQuantity = 0m;
-                                    decimal totalFreightCharge = 0m;
-                                    decimal totalECC = 0m;
                                     decimal totalFreightAmount = 0m;
 
                                 #endregion
@@ -510,27 +547,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var ecc = record.ECC;
                                         var totalFreight = quantity * (freightCharge + ecc);
 
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceiptNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity != 0 ? quantity < 0 ? $"({Math.Abs(quantity).ToString(SD.Two_Decimal_Format)})" : quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(quantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.PickUpPoint?.Depot);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.Hauler?.SupplierName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freightCharge != 0 ? freightCharge < 0 ? $"({Math.Abs(freightCharge).ToString(SD.Four_Decimal_Format)})" : freightCharge.ToString(SD.Four_Decimal_Format) : null).FontColor(freightCharge < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ecc != 0 ? ecc < 0 ? $"({Math.Abs(ecc).ToString(SD.Four_Decimal_Format)})" : ecc.ToString(SD.Four_Decimal_Format) : null).FontColor(ecc < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalFreight != 0 ? totalFreight < 0 ? $"({Math.Abs(totalFreight).ToString(SD.Two_Decimal_Format)})" : totalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreight < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveredDate?.ToString(SD.Date_Format));
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.Status);
+                                        if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
+                                            record.Date != viewModel.DateFrom)
+                                        {
+                                            // Don't show record of other dates if entry is "as of" and "delivered"
+                                        }
+                                        else
+                                        {
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceiptNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(quantity != 0 ? quantity < 0 ? $"({Math.Abs(quantity).ToString(SD.Two_Decimal_Format)})" : quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(quantity < 0 ? Colors.Red.Medium : Colors.Black);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.PickUpPoint?.Depot);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.AuthorityToLoadNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Hauler?.SupplierName);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freightCharge != 0 ? freightCharge < 0 ? $"({Math.Abs(freightCharge).ToString(SD.Four_Decimal_Format)})" : freightCharge.ToString(SD.Four_Decimal_Format) : null).FontColor(freightCharge < 0 ? Colors.Red.Medium : Colors.Black);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ecc != 0 ? ecc < 0 ? $"({Math.Abs(ecc).ToString(SD.Four_Decimal_Format)})" : ecc.ToString(SD.Four_Decimal_Format) : null).FontColor(ecc < 0 ? Colors.Red.Medium : Colors.Black);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalFreight != 0 ? totalFreight < 0 ? $"({Math.Abs(totalFreight).ToString(SD.Two_Decimal_Format)})" : totalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreight < 0 ? Colors.Red.Medium : Colors.Black);
+                                            if (viewModel.ReportType == "Delivered")
+                                            {
+                                                table.Cell().Border(0.5f).Padding(3).Text(record.DeliveredDate?.ToString(SD.Date_Format));
+                                                table.Cell().Border(0.5f).Padding(3).Text(record.Status);
+                                            }
 
+                                        }
                                         totalQuantity += quantity;
-                                        totalFreightCharge += freightCharge;
-                                        totalECC += ecc;
                                         totalFreightAmount += totalFreight;
                                     }
 
@@ -539,12 +585,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 #region -- Create Table Cell for Totals
 
                                     table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantity != 0 ? totalQuantity < 0 ? $"({Math.Abs(totalQuantity).ToString(SD.Two_Decimal_Format)})" : totalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
+                                    {
+                                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom);
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity) != 0 ? entriesToday.Sum(dr => dr.Quantity) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightCharge != 0 ? totalFreightCharge < 0 ? $"({Math.Abs(totalFreightCharge).ToString(SD.Four_Decimal_Format)})" : totalFreightCharge.ToString(SD.Four_Decimal_Format) : null).FontColor(totalFreightCharge < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalECC != 0 ? totalECC < 0 ? $"({Math.Abs(totalECC).ToString(SD.Four_Decimal_Format)})" : totalECC.ToString(SD.Four_Decimal_Format) : null).FontColor(totalECC < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightAmount != 0 ? totalFreightAmount < 0 ? $"({Math.Abs(totalFreightAmount).ToString(SD.Two_Decimal_Format)})" : totalFreightAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreightAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity * dr.Freight) != 0 ? entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity * dr.Freight)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity * dr.Freight).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    }
+                                    else
+                                    {
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantity != 0 ? totalQuantity < 0 ? $"({Math.Abs(totalQuantity).ToString(SD.Two_Decimal_Format)})" : totalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightAmount != 0 ? totalFreightAmount < 0 ? $"({Math.Abs(totalFreightAmount).ToString(SD.Two_Decimal_Format)})" : totalFreightAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreightAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    }
+
                                 #endregion
                             });
                         });
