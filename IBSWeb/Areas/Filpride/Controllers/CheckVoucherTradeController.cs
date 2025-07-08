@@ -341,34 +341,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --CV Details Entry
 
-                    #region -- Partial payment of RR's
-
-                    var cvTradePaymentModel = new List<FilprideCVTradePayment>();
-                    foreach (var item in viewModel.RRs)
-                    {
-                        var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
-
-                        if (getReceivingReport == null)
-                        {
-                            return NotFound();
-                        }
-
-                        getReceivingReport.AmountPaid += item.Amount;
-
-                        cvTradePaymentModel.Add(
-                            new FilprideCVTradePayment
-                            {
-                                DocumentId = getReceivingReport.ReceivingReportId,
-                                DocumentType = "RR",
-                                CheckVoucherId = cvh.CheckVoucherHeaderId,
-                                AmountPaid = item.Amount
-                            });
-                    }
-
-                    await _dbContext.AddRangeAsync(cvTradePaymentModel);
-
-                    #endregion -- Partial payment of RR's
-
                     #region -- Uploading file --
 
                     if (file != null && file.Length > 0)
@@ -907,7 +879,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     modelHeader.Status = nameof(Status.Posted);
 
-                    #region -- Recalculate payment of RR's or DR's
+                    #region -- Mark as paid the RR's or DR's
 
                     var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
                         .Where(cv => cv.CheckVoucherId == id)
@@ -938,7 +910,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                     }
 
-                    #endregion -- Recalculate payment of RR's or DR's
+                    #endregion -- Mark as paid the RR's or DR's
 
                     #region Add amount paid for the advances if applicable
 
@@ -1105,6 +1077,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion -- Recalculate payment of RR's or DR's
 
+                        #region Revert the amount paid of advances
+
+                        if (model.Reference != null)
+                        {
+                            var advances = await _unitOfWork.FilprideCheckVoucher
+                                .GetAsync(cv =>
+                                        cv.CheckVoucherHeaderNo == model.Reference &&
+                                        cv.Company == model.Company,
+                                    cancellationToken);
+
+                            if (advances == null)
+                            {
+                                return NotFound();
+                            }
+
+                            advances.AmountPaid -= advances.AmountPaid;
+                        }
+
+                        #endregion
+
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
@@ -1192,7 +1184,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #endregion -- Recalculate payment of RR's or DR's
 
-                        #region Revert the amount paid of advances
+                        #region -- Revert the amount paid of advances
 
                         if (model.Reference != null)
                         {
@@ -1271,6 +1263,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo);
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(d => d.CVNo == cvHeader.CheckVoucherHeaderNo);
+
+                #region -- Revert the tagging of RR's or DR's
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == id)
+                    .Include(cv => cv.CV)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    if (item.DocumentType == "RR")
+                    {
+                        var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+
+                        receivingReport!.IsPaid = false;
+                    }
+                    if (item.DocumentType == "DR")
+                    {
+                        var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                        if (item.CV.CvType == "Commission")
+                        {
+                            deliveryReceipt!.IsCommissionPaid = false;
+                        }
+                        if (item.CV.CvType == "Hauler")
+                        {
+                            deliveryReceipt!.IsFreightPaid = false;
+                        }
+                    }
+                }
+
+                #endregion -- Recalculate payment of RR's or DR's
+
+                #region -- Revert the amount paid of advances
+
+                if (cvHeader.Reference != null)
+                {
+                    var advances = await _unitOfWork.FilprideCheckVoucher
+                        .GetAsync(cv =>
+                                cv.CheckVoucherHeaderNo == cvHeader.Reference &&
+                                cv.Company == cvHeader.Company,
+                            cancellationToken);
+
+                    if (advances == null)
+                    {
+                        return NotFound();
+                    }
+
+                    advances.AmountPaid -= advances.AmountPaid;
+                }
+
+                #endregion
 
                 #region --Audit Trail Recording
 

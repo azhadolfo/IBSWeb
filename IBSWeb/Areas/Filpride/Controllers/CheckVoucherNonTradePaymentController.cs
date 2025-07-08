@@ -515,6 +515,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo);
                 await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(d => d.CVNo == cvHeader.CheckVoucherHeaderNo);
 
+                var updateMultipleInvoicingVoucher = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(mcvp => mcvp.CheckVoucherHeaderPaymentId == id)
+                    .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
+                    .ToListAsync(cancellationToken);
+
+                for (int j = 0; j < updateMultipleInvoicingVoucher.Count; j++)
+                {
+                    if (updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice!.IsPaid)
+                    {
+                        updateMultipleInvoicingVoucher[j].CheckVoucherHeaderInvoice!.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                    }
+                }
+
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
