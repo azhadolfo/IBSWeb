@@ -1056,15 +1056,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         CreatedBy = modelHeader.PostedBy,
                                         CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                         BankAccountId = details.BankId,
-                                        BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
+                                        BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccount?.AccountNo} {modelHeader.BankAccount?.AccountName}" : string.Empty,
                                         SupplierId = details.SupplierId,
                                         SupplierName = modelHeader.SupplierName,
                                         CustomerId = details.CustomerId,
-                                        CustomerName = details.Customer!.CustomerName,
+                                        CustomerName = details.Customer?.CustomerName,
                                         CompanyId = details.CompanyId,
-                                        CompanyName = details.Company!.CompanyName,
+                                        CompanyName = details.Company?.CompanyName ?? string.Empty,
                                         EmployeeId = details.EmployeeId,
-                                        EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}"
+                                        EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : string.Empty
                                     }
                                 );
                         }
@@ -1233,6 +1233,64 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return NotFound();
+        }
+
+        public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
+        {
+            var cvHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+            if (cvHeader == null)
+            {
+                throw new NullReferenceException("CV Header not found.");
+            }
+
+            var userName = _userManager.GetUserName(this.User);
+            if (userName == null)
+            {
+                throw new NullReferenceException("User not found.");
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var isClosed = await _dbContext.FilprideMonthlyNibits
+                    .Where(n => n.Month == cvHeader.Date.Month && n.Year == cvHeader.Date.Year)
+                    .AnyAsync(cancellationToken);
+
+                if (isClosed)
+                {
+                    throw new ArgumentException("Period closed, CV cannot be unposted.");
+                }
+
+                cvHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
+                cvHeader.PostedBy = null;
+                cvHeader.PostedDate = null;
+
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == cvHeader.CheckVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Unposted.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to unpost invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Printed(int id, int? supplierId, CancellationToken cancellationToken)
