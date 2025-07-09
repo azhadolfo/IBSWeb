@@ -98,6 +98,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int? DeliveryReceiptId { get; set; }
 
         [ForeignKey(nameof(DeliveryReceiptId))]
-        public FilprideDeliveryReceipt DeliveryReceipt { get; set; }
+        public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
     }
 }

@@ -82,7 +82,7 @@
                 </div>
                 <div class="col-sm mb-3">
                     <label asp-for="Total" class="control-label">Total<span class="required">*</span></label>
-                    <input asp-for="Total" class="form-control money" placeholder="0.000"/>
+                    <input asp-for="Total" class="form-control money" placeholder="0.00"/>
                     <span asp-validation-for="Total" class="text-danger"></span>
                 </div>
             </div>
@@ -128,7 +128,7 @@
                         beforeSend: function () {
                             $drSelect.prop("disabled", true);
                             drTotalMap = {};
-                            $totalField.val('');
+                            $totalField.prop("readonly", true).val('');
                         },
                         success: function (data) {
                             $drSelect.empty();
@@ -156,7 +156,7 @@
                 } else {
                     $drFormGroup.hide();
                     $drSelect.empty().append(new Option(""));
-                    $totalField.val('');
+                    $totalField.prop("readonly", false).val('');
                 }
             }
 
