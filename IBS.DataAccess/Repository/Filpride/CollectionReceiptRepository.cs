@@ -134,7 +134,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = collectionReceipt.PostedBy,
                         CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         BankAccountId = collectionReceipt.BankId,
-                        BankAccountName = collectionReceipt.BankAccountNumber + collectionReceipt.BankAccountName,
+                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccount?.AccountNo} {collectionReceipt.BankAccount?.AccountName}" : null,
                     }
                 );
             }

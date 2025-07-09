@@ -955,7 +955,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = modelHeader.PostedBy,
                                     CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     BankAccountId = modelHeader.BankId,
-                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
+                                    BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccount?.AccountNo} {modelHeader.BankAccount?.AccountName}" : null,
                                 }
                             );
                     }
