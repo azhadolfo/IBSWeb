@@ -231,7 +231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = modelHeader.PostedBy,
                                     CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     BankAccountId = details.BankId,
-                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
+                                    BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccount?.AccountNo} {modelHeader.BankAccount?.AccountName}" : null,
                                     SupplierId = details.SupplierId,
                                     SupplierName = modelHeader.SupplierName,
                                     CustomerId = details.CustomerId,
