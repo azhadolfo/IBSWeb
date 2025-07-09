@@ -1058,7 +1058,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         BankAccountId = details.BankId,
                                         BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccount?.AccountNo} {modelHeader.BankAccount?.AccountName}" : null,
                                         SupplierId = details.SupplierId,
-                                        SupplierName = modelHeader.SupplierName,
+                                        SupplierName = modelHeader.SupplierName ?? null,
                                         CustomerId = details.CustomerId,
                                         CustomerName = details.Customer?.CustomerName,
                                         CompanyId = details.CompanyId,
