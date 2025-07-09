@@ -235,7 +235,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     SupplierId = details.SupplierId ?? null,
                                     SupplierName = modelHeader.SupplierName ?? null,
                                     CustomerId = details.CustomerId,
-                                    CustomerName = details.Customer!.CustomerName,
+                                    CustomerName = details.Customer?.CustomerName,
                                     EmployeeId = details.EmployeeId,
                                     EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}",
                                     CompanyId = details.CompanyId,

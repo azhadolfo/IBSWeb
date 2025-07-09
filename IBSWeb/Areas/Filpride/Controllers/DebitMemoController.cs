@@ -435,7 +435,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = model.CreatedBy,
                                     CreatedDate = model.CreatedDate,
                                     CustomerId = model.SalesInvoice.CustomerId,
-                                    CustomerName = model.SalesInvoice.Customer!.CustomerName
+                                    CustomerName = model.SalesInvoice.Customer?.CustomerName
                                 }
                             );
 
