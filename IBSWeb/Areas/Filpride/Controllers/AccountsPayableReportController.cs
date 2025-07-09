@@ -758,7 +758,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     table.Header(header =>
                                     {
-                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date").SemiBold();
+                                        header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Lifting Date").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Name").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Tin").SemiBold();
                                         header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Supplier Address").SemiBold();
@@ -1126,7 +1126,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells["B3"].Value = $"{extractedBy}";
                     purchaseReportWorksheet.Cells["B4"].Value = $"{companyClaims}";
 
-                    purchaseReportWorksheet.Cells["A7"].Value = "TRANSACTION DATE";
+                    purchaseReportWorksheet.Cells["A7"].Value = "LIFTING DATE";
                     purchaseReportWorksheet.Cells["B7"].Value = "CUSTOMER RECEIVED DATE";
                     purchaseReportWorksheet.Cells["C7"].Value = "SUPPLIER NAME";
                     purchaseReportWorksheet.Cells["D7"].Value = "SUPPLIER TIN";

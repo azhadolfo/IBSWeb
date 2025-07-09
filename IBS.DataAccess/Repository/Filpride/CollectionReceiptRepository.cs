@@ -134,7 +134,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = collectionReceipt.PostedBy,
                         CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         BankAccountId = collectionReceipt.BankId,
-                        BankAccountName = collectionReceipt.BankAccountNumber + collectionReceipt.BankAccountName,
+                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
                     }
                 );
             }
@@ -221,7 +221,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = collectionReceipt.PostedBy,
                         CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         CustomerId = collectionReceipt.CustomerId,
-                        CustomerName = collectionReceipt.Customer!.CustomerName
+                        CustomerName = collectionReceipt.SalesInvoiceId.HasValue ? collectionReceipt.SalesInvoice?.CustomerOrderSlip!.CustomerName : collectionReceipt.ServiceInvoice?.CustomerName
                     }
                 );
             }

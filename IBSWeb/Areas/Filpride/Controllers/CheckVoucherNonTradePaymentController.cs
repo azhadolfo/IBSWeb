@@ -231,15 +231,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = modelHeader.PostedBy,
                                     CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     BankAccountId = details.BankId,
-                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
+                                    BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccountNumber} {modelHeader.BankAccountName}" : null,
                                     SupplierId = details.SupplierId,
                                     SupplierName = modelHeader.SupplierName,
                                     CustomerId = details.CustomerId,
-                                    CustomerName = details.Customer!.CustomerName,
+                                    CustomerName = details.Customer?.CustomerName,
                                     EmployeeId = details.EmployeeId,
-                                    EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}",
+                                    EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
                                     CompanyId = details.CompanyId,
-                                    CompanyName = details.Company!.CompanyName
+                                    CompanyName = details.Company?.CompanyName
                                 }
                             );
                     }

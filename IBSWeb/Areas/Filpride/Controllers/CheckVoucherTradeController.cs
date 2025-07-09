@@ -866,7 +866,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId).ToListAsync();
+            var modelDetails = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == modelHeader.CheckVoucherHeaderId)
+                .Include(cvd => cvd.Supplier)
+                .Include(cvd => cvd.BankAccount)
+                .ToListAsync(cancellationToken);
             var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
 
             if (modelHeader != null)
@@ -954,8 +957,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Company = modelHeader.Company,
                                     CreatedBy = modelHeader.PostedBy,
                                     CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                    BankAccountId = modelHeader.BankId,
-                                    BankAccountName = $"{modelHeader.BankAccount!.AccountNo} {modelHeader.BankAccount.AccountName}",
+                                    BankAccountId = details.BankId,
+                                    BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
+                                    SupplierId = details.SupplierId,
+                                    SupplierName = details.Supplier?.SupplierName,
                                 }
                             );
                     }
