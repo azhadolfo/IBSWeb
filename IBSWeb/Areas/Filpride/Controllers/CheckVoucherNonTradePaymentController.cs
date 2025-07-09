@@ -237,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CustomerId = details.CustomerId,
                                     CustomerName = details.Customer?.CustomerName,
                                     EmployeeId = details.EmployeeId,
-                                    EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}",
+                                    EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
                                     CompanyId = details.CompanyId,
                                     CompanyName = details.Company?.CompanyName
                                 }
