@@ -948,7 +948,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     int grandTotalColumn = 19;
                     decimal grandSumOfTotalFreightAmount = 0;
                     decimal grandTotalQuantity = 0;
-                    decimal totalRRVolume = 0;
+                    decimal totalLiftedQuantity = 0;
 
                     foreach (var dr in deliveryReceipts)
                     {
@@ -956,7 +956,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var freightCharge = dr.Freight;
                         var ecc = dr.ECC;
                         var totalFreightAmount = quantity * (freightCharge + ecc);
-                        var rrVolume = 0m;
+                        var liftedQuantity = 0m;
 
                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                             dr.Date != viewModel.DateFrom)
@@ -995,10 +995,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 if (dr.HasReceivingReport)
                                 {
                                     var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
-                                    rrVolume = getReceivingReport?.QuantityReceived ?? 0m;
+                                    liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
                                     worksheet.Cells[currentRow, 18].Value = getReceivingReport?.Date;
                                     worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                                    worksheet.Cells[currentRow, 19].Value = rrVolume;
+                                    worksheet.Cells[currentRow, 19].Value = liftedQuantity;
                                     worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                                 }
                             }
@@ -1008,7 +1008,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         grandTotalQuantity += quantity;
                         grandSumOfTotalFreightAmount += totalFreightAmount;
-                        totalRRVolume += rrVolume;
+                        totalLiftedQuantity += liftedQuantity;
                     }
 
                     // Grand Total row
@@ -1025,7 +1025,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
                         worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
-                        worksheet.Cells[currentRow, 19].Value = totalRRVolume;
+                        worksheet.Cells[currentRow, 19].Value = totalLiftedQuantity;
                         worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
