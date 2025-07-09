@@ -273,7 +273,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
-                    CustomerName = deliveryReceipt.Customer!.CustomerName
+                    CustomerName = deliveryReceipt.Customer?.CustomerName
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook

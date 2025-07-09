@@ -573,7 +573,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     CreatedBy = model.PostedBy,
                                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                                     CustomerId = model.SalesInvoice.CustomerId,
-                                    CustomerName = model.SalesInvoice.Customer!.CustomerName,
+                                    CustomerName = model.SalesInvoice.Customer?.CustomerName,
                                 }
                             );
 
