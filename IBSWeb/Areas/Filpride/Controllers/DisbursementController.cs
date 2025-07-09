@@ -7,6 +7,7 @@ using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -165,6 +166,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
+            var isBookClosed = await _dbContext.FilprideMonthlyNibits
+                .AnyAsync(x => x.Year == cv.Date.Year
+                               && x.Month == cv.Date.Month, cancellationToken);
+
+            if (isBookClosed)
+            {
+                return Json(new { success = false, message = "Book already closed." });
+            }
+
             cv.DcpDate = dcpDate;
             await _unitOfWork.SaveAsync(cancellationToken);
 
@@ -180,6 +190,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (cv == null)
             {
                 return Json(new { success = false, message = "Record not found" });
+            }
+
+            var isBookClosed = await _dbContext.FilprideMonthlyNibits
+                .AnyAsync(x => x.Year == cv.Date.Year
+                               && x.Month == cv.Date.Month, cancellationToken);
+
+            if (isBookClosed)
+            {
+                return Json(new { success = false, message = "Book already closed." });
             }
 
             cv.DcrDate = dcrDate;
