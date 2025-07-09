@@ -572,7 +572,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     Company = model.Company,
                                     CreatedBy = model.PostedBy,
                                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                    CustomerId = model.SalesInvoice.CustomerId,
+                                    CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
                                     CustomerName = model.SalesInvoice.Customer?.CustomerName,
                                 }
                             );
