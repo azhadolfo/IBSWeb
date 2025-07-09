@@ -454,7 +454,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.HaulerId,
-                        SupplierName = deliveryReceipt.Hauler?.SupplierName
+                        SupplierName = deliveryReceipt.HaulerName
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
