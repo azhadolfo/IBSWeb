@@ -212,8 +212,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         DueDate = viewModel.DueDate,
                         Discount = viewModel.Discount,
                         Type = viewModel.Type,
-                        DeliveryReceiptId = viewModel.DeliveryReceiptId,
                     };
+
+                    #region --Additional procedure for Transaction Fee
+
+                    if (viewModel.DeliveryReceiptId != null)
+                    {
+                        model.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                    }
+
+                    #endregion
 
                     await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
 
@@ -338,20 +346,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.AddAsync(sales, cancellationToken);
 
                     #endregion --Sales Book Recording
-
-                    #region Reverse the DR related
-
-                    var drGl = await _dbContext.FilprideGeneralLedgerBooks
-                        .Where(x => x.Reference == model.DeliveryReceipt.DeliveryReceiptNo
-                                    && x.Company == model.Company)
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var dr in drGl)
-                    {
-                        (dr.Debit, dr.Credit) = (dr.Credit, dr.Debit);
-                    }
-
-                    #endregion
 
                     #region --General Ledger Book Recording
 
@@ -507,6 +501,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.Status = nameof(Status.Canceled);
                         model.CancellationRemarks = cancellationRemarks;
 
+                        if (model.DeliveryReceiptId != null)
+                        {
+                            await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
+                        }
+
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
@@ -565,6 +564,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VoidedBy = _userManager.GetUserName(this.User);
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
+
+                        if (model.DeliveryReceiptId != null)
+                        {
+                            await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
+                        }
 
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
                         await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
@@ -685,7 +689,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.VatType = customer.VatType;
                     existingModel.HasEwt = customer.WithHoldingTax;
                     existingModel.HasWvat = customer.WithHoldingVat;
-                    existingModel.DeliveryReceiptId = viewModel.DeliveryReceiptId;
 
                     #endregion --Saving the default properties
 
@@ -695,6 +698,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
+
+                    #region --Additional procedure for Transaction Fee
+
+                    if (existingModel.DeliveryReceiptId != viewModel.DeliveryReceiptId && existingModel.DeliveryReceipt != null)
+                    {
+                        await ReverseTheProcessedDr(existingModel.DeliveryReceiptId, cancellationToken);
+                    }
+
+                    if (viewModel.DeliveryReceiptId != null)
+                    {
+                        existingModel.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                    }
+
+                    #endregion
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
@@ -844,10 +861,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDRsByCustomer(int customerId)
+        public async Task<IActionResult> GetDRsByCustomer(int customerId, int previousSelectedDr)
         {
             var drs = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(x => x.CustomerId == customerId);
+                .GetAllAsync(x => x.CustomerId == customerId
+                                  && !x.HasAlreadyInvoiced
+                                  || x.DeliveryReceiptId == previousSelectedDr);
 
             var result = new List<object>();
 
@@ -869,6 +888,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return Json(result);
+        }
+
+        private async Task<int> ProcessTheDrForTransactionFee(int? deliveryReceiptId,
+            CancellationToken cancellationToken)
+        {
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(x => x.DeliveryReceiptId == deliveryReceiptId, cancellationToken);
+
+            if (deliveryReceipt == null)
+            {
+                throw new NullReferenceException("DR not found!");
+            }
+
+            deliveryReceipt.HasAlreadyInvoiced = true;
+            deliveryReceipt.Status = nameof(DRStatus.Invoiced);
+
+            #region Reverse the DR related
+
+            var drGl = await _dbContext.FilprideGeneralLedgerBooks
+                .Where(x => x.Reference == deliveryReceipt.DeliveryReceiptNo
+                            && x.Company == deliveryReceipt.Company)
+                .ToListAsync(cancellationToken);
+
+            foreach (var dr in drGl)
+            {
+                (dr.Debit, dr.Credit) = (dr.Credit, dr.Debit);
+            }
+
+            #endregion
+
+            return deliveryReceipt.DeliveryReceiptId;
+        }
+
+        private async Task ReverseTheProcessedDr(int? previousDeliveryReceiptId,
+            CancellationToken cancellationToken)
+        {
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(x => x.DeliveryReceiptId == previousDeliveryReceiptId, cancellationToken);
+
+            if (deliveryReceipt == null)
+            {
+                throw new NullReferenceException("DR not found!");
+            }
+
+            deliveryReceipt.HasAlreadyInvoiced = false;
+            deliveryReceipt.Status = nameof(DRStatus.ForInvoicing);
+
+            #region Reverse the DR related
+
+            var drGl = await _dbContext.FilprideGeneralLedgerBooks
+                .Where(x => x.Reference == deliveryReceipt.DeliveryReceiptNo
+                            && x.Company == deliveryReceipt.Company)
+                .ToListAsync(cancellationToken);
+
+            foreach (var dr in drGl)
+            {
+                (dr.Credit, dr.Debit) = (dr.Debit, dr.Credit);
+            }
+
+            #endregion
         }
 
     }
