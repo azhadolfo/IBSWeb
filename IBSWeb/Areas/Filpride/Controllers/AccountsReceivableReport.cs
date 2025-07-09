@@ -540,7 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     decimal totalQuantity = 0m;
                                     decimal totalFreightAmount = 0m;
-                                    decimal totalRRVolume = 0m;
+                                    decimal totalLiftedQuantity = 0m;
 
                                 #endregion
 
@@ -552,7 +552,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var freightCharge = record.Freight;
                                         var ecc = record.ECC;
                                         var totalFreight = quantity * (freightCharge + ecc);
-                                        var rrVolume = 0m;
+                                        var liftedQuantity = 0m;
 
                                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                                             record.Date != viewModel.DateFrom)
@@ -586,9 +586,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 if (record.HasReceivingReport)
                                                 {
                                                     var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == record.DeliveryReceiptId);
-                                                    rrVolume = getReceivingReport?.QuantityReceived ?? 0m;
+                                                    liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
                                                     table.Cell().Border(0.5f).Padding(3).Text(getReceivingReport?.Date.ToString(SD.Date_Format) ?? string.Empty);
-                                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(rrVolume != 0 ? rrVolume < 0 ? $"({Math.Abs(rrVolume).ToString(SD.Two_Decimal_Format)})" : rrVolume.ToString(SD.Two_Decimal_Format) : null).FontColor(rrVolume < 0 ? Colors.Red.Medium : Colors.Black);
+                                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(liftedQuantity != 0 ? liftedQuantity < 0 ? $"({Math.Abs(liftedQuantity).ToString(SD.Two_Decimal_Format)})" : liftedQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(liftedQuantity < 0 ? Colors.Red.Medium : Colors.Black);
                                                 }
                                                 else
                                                 {
@@ -599,7 +599,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         }
                                         totalQuantity += quantity;
                                         totalFreightAmount += totalFreight;
-                                        totalRRVolume += rrVolume;
+                                        totalLiftedQuantity += liftedQuantity;
                                     }
 
                                 #endregion
@@ -625,7 +625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightAmount != 0 ? totalFreightAmount < 0 ? $"({Math.Abs(totalFreightAmount).ToString(SD.Two_Decimal_Format)})" : totalFreightAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreightAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                         table.Cell().ColumnSpan(1).Background(Colors.Grey.Lighten1).Border(0.5f);
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalRRVolume != 0 ? totalRRVolume < 0 ? $"({Math.Abs(totalRRVolume).ToString(SD.Two_Decimal_Format)})" : totalRRVolume.ToString(SD.Two_Decimal_Format) : null).FontColor(totalRRVolume < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalLiftedQuantity != 0 ? totalLiftedQuantity < 0 ? $"({Math.Abs(totalLiftedQuantity).ToString(SD.Two_Decimal_Format)})" : totalLiftedQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalLiftedQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     }
 
                                 #endregion
