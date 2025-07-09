@@ -527,6 +527,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Delivery Date").SemiBold();
                                             header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Status").SemiBold();
                                         }
+                                        else
+                                        {
+                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Lifting Date").SemiBold();
+                                            header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Lifting Quantity").SemiBold();
+                                        }
                                     });
 
                                 #endregion
@@ -535,6 +540,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     decimal totalQuantity = 0m;
                                     decimal totalFreightAmount = 0m;
+                                    decimal totalRRVolume = 0m;
 
                                 #endregion
 
@@ -546,6 +552,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var freightCharge = record.Freight;
                                         var ecc = record.ECC;
                                         var totalFreight = quantity * (freightCharge + ecc);
+                                        var rrVolume = 0m;
 
                                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                                             record.Date != viewModel.DateFrom)
@@ -574,10 +581,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 table.Cell().Border(0.5f).Padding(3).Text(record.DeliveredDate?.ToString(SD.Date_Format));
                                                 table.Cell().Border(0.5f).Padding(3).Text(record.Status);
                                             }
-
+                                            else
+                                            {
+                                                if (record.HasReceivingReport)
+                                                {
+                                                    var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == record.DeliveryReceiptId);
+                                                    rrVolume = getReceivingReport?.QuantityReceived ?? 0m;
+                                                    table.Cell().Border(0.5f).Padding(3).Text(getReceivingReport?.Date.ToString(SD.Date_Format) ?? string.Empty);
+                                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(rrVolume != 0 ? rrVolume < 0 ? $"({Math.Abs(rrVolume).ToString(SD.Two_Decimal_Format)})" : rrVolume.ToString(SD.Two_Decimal_Format) : null).FontColor(rrVolume < 0 ? Colors.Red.Medium : Colors.Black);
+                                                }
+                                                else
+                                                {
+                                                    table.Cell().Border(0.5f);
+                                                    table.Cell().Border(0.5f);
+                                                }
+                                            }
                                         }
                                         totalQuantity += quantity;
                                         totalFreightAmount += totalFreight;
+                                        totalRRVolume += rrVolume;
                                     }
 
                                 #endregion
@@ -602,7 +624,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalFreightAmount != 0 ? totalFreightAmount < 0 ? $"({Math.Abs(totalFreightAmount).ToString(SD.Two_Decimal_Format)})" : totalFreightAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalFreightAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                        table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().ColumnSpan(1).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalRRVolume != 0 ? totalRRVolume < 0 ? $"({Math.Abs(totalRRVolume).ToString(SD.Two_Decimal_Format)})" : totalRRVolume.ToString(SD.Two_Decimal_Format) : null).FontColor(totalRRVolume < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                     }
 
                                 #endregion
@@ -913,12 +936,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells["R9"].Value = "DELIVERED DATE";
                         worksheet.Cells["S9"].Value = "STATUS";
                     }
+                    else
+                    {
+                        worksheet.Cells["R9"].Value = "LIFTING DATE";
+                        worksheet.Cells["S9"].Value = "LIFTING QUANTITY";
+                    }
+
 
                     int currentRow = 10;
-                    string headerColumn = viewModel.ReportType == "Delivered" ? "S9" : "Q9";
-                    int grandTotalColumn = viewModel.ReportType == "Delivered" ? 19 : 17;
+                    string headerColumn = "S9";
+                    int grandTotalColumn = 19;
                     decimal grandSumOfTotalFreightAmount = 0;
                     decimal grandTotalQuantity = 0;
+                    decimal totalRRVolume = 0;
 
                     foreach (var dr in deliveryReceipts)
                     {
@@ -926,6 +956,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var freightCharge = dr.Freight;
                         var ecc = dr.ECC;
                         var totalFreightAmount = quantity * (freightCharge + ecc);
+                        var rrVolume = 0m;
 
                         if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
                             dr.Date != viewModel.DateFrom)
@@ -959,12 +990,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
                                 worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                             }
+                            else
+                            {
+                                if (dr.HasReceivingReport)
+                                {
+                                    var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
+                                    rrVolume = getReceivingReport?.QuantityReceived ?? 0m;
+                                    worksheet.Cells[currentRow, 18].Value = getReceivingReport?.Date;
+                                    worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                    worksheet.Cells[currentRow, 19].Value = rrVolume;
+                                    worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                            }
 
                             currentRow++;
                         }
 
                         grandTotalQuantity += quantity;
                         grandSumOfTotalFreightAmount += totalFreightAmount;
+                        totalRRVolume += rrVolume;
                     }
 
                     // Grand Total row
@@ -981,6 +1025,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
                         worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+                        worksheet.Cells[currentRow, 19].Value = totalRRVolume;
+                        worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
                     // Adding borders and bold styling to the total row
@@ -1018,6 +1064,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                     {
+                        range.AutoFilter = true;
                         range.Style.Font.Bold = true;
                         range.Style.Font.Color.SetColor(System.Drawing.Color.White);
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
