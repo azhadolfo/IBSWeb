@@ -239,7 +239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     EmployeeId = details.EmployeeId,
                                     EmployeeName = $"{details.Employee!.FirstName} {details.Employee!.MiddleName} {details.Employee!.LastName}",
                                     CompanyId = details.CompanyId,
-                                    CompanyName = details.Company!.CompanyName
+                                    CompanyName = details.Company?.CompanyName
                                 }
                             );
                     }
