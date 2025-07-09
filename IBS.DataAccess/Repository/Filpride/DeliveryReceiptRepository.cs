@@ -686,8 +686,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder?.SupplierId,
-                    SupplierName = dr.PurchaseOrder?.SupplierName
+                    SupplierId = dr.PurchaseOrder.SupplierId,
+                    SupplierName = dr.PurchaseOrder.SupplierName
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -778,8 +778,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder?.SupplierId,
-                    SupplierName = dr.PurchaseOrder?.SupplierName
+                    SupplierId = dr.PurchaseOrder.SupplierId,
+                    SupplierName = dr.PurchaseOrder.SupplierName
                 });
 
                 journalBooks.Add(new FilprideJournalBook
