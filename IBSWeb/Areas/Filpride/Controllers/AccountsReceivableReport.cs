@@ -1064,7 +1064,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                     {
-                        range.AutoFilter = true;
                         range.Style.Font.Bold = true;
                         range.Style.Font.Color.SetColor(System.Drawing.Color.White);
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
