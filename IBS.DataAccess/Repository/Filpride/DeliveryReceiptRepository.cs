@@ -454,7 +454,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.HaulerId,
-                        SupplierName = deliveryReceipt.Hauler!.SupplierName
+                        SupplierName = deliveryReceipt.Hauler?.SupplierName
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -510,7 +510,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.Commissionee.SupplierName
+                        SupplierName = deliveryReceipt.Commissionee?.SupplierName
                     });
 
                     if (commissionEwtAmount > 0)
@@ -686,8 +686,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder.SupplierId,
-                    SupplierName = dr.PurchaseOrder.SupplierName
+                    SupplierId = dr.PurchaseOrder?.SupplierId,
+                    SupplierName = dr.PurchaseOrder?.SupplierName
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -778,8 +778,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = dr.Company,
                     CreatedBy = "SYSTEM GENERATED",
                     CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                    SupplierId = dr.PurchaseOrder.SupplierId,
-                    SupplierName = dr.PurchaseOrder.SupplierName
+                    SupplierId = dr.PurchaseOrder?.SupplierId,
+                    SupplierName = dr.PurchaseOrder?.SupplierName
                 });
 
                 journalBooks.Add(new FilprideJournalBook
