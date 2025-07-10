@@ -1122,7 +1122,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (drFreight == 0)
             {
                 freight = cos.VatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!)
+                    ? cos.Freight == 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!) : (decimal)cos.Freight!
                     : (decimal)cos.Freight!;
             }
             else

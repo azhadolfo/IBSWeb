@@ -1,4 +1,3 @@
-using Google.Apis.Auth.OAuth2;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
@@ -99,6 +98,7 @@ builder.Services.AddQuartz(q =>
     // Register the job
     var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
     var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));
+    var firstOfTheMonthKey = JobKey.Create(nameof(FirstOfTheMonthService));
 
     ///TODO Register the job for COS Expiration
 
@@ -108,6 +108,9 @@ builder.Services.AddQuartz(q =>
 
     q.AddJob<LockPlacementService>(options =>
         options.WithIdentity(dailyPlacementLockKey));
+
+    q.AddJob<FirstOfTheMonthService>(options =>
+        options.WithIdentity(firstOfTheMonthKey));
 
     // Add the first trigger
     // Format (sec, min, hour, day, month, year)
@@ -126,6 +129,14 @@ builder.Services.AddQuartz(q =>
             x => x.InTimeZone(
                 TimeZoneInfo
                 .FindSystemTimeZoneById("Asia/Manila"))));
+
+    q.AddTrigger(opts => opts
+        .ForJob(firstOfTheMonthKey)
+        .WithIdentity("FirstOfTheMonthTrigger")
+        .WithCronSchedule("0 0 0 1 * ?",
+            x => x.InTimeZone(
+                TimeZoneInfo
+                    .FindSystemTimeZoneById("Asia/Manila"))));
 });
 
 // Add Quartz Hosted Service
