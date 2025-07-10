@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = s.AccountNumber + " " + s.AccountName
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -213,7 +213,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
                 if (computeTotalInModelIfZero == 0)
                 {
-                    TempData["error"] = "Please input atleast one type form of payment";
+                    TempData["warning"] = "Please input atleast one type form of payment";
                     return View(viewModel);
                 }
                 var existingServiceInvoice = await _unitOfWork.MobilityServiceInvoice
@@ -474,7 +474,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -487,7 +487,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var computeTotalInModelIfZero = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagerCheckAmount + viewModel.EWT + viewModel.WVAT;
                 if (computeTotalInModelIfZero == 0)
                 {
-                    TempData["error"] = "Please input atleast one type form of payment";
+                    TempData["warning"] = "Please input atleast one type form of payment";
                     return View(viewModel);
                 }
 
@@ -745,7 +745,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         }
                         else
                         {
-                            TempData["error"] = "No series number found";
+                            TempData["info"] = "No series number found";
                             return RedirectToAction(nameof(Index));
                         }
 

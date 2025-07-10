@@ -235,7 +235,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             }
 
             viewModel.Products = await _unitOfWork.GetMobilityProductListAsyncByCode(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 

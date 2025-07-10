@@ -172,7 +172,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = cvh.CheckVoucherHeaderNo
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -186,7 +186,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var totalCredit = 0m;
                 if (totalDebit != totalCredit)
                 {
-                    TempData["error"] = "The debit and credit should be equal!";
+                    TempData["warning"] = "The debit and credit should be equal!";
                     return View(viewModel);
                 }
 
@@ -655,7 +655,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = cvh.CheckVoucherHeaderNo
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 

@@ -237,7 +237,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     })
                     .ToListAsync();
 
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -290,7 +290,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                             })
                             .ToListAsync();
 
-                        TempData["error"] = "Check No. Is already exist";
+                        TempData["info"] = "Check No. Is already exist";
                         return View(viewModel);
                     }
                 }
@@ -729,7 +729,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 viewModel.Suppliers =
                     await _unitOfWork.GetMobilitySupplierListAsyncById(stationCodeClaims, cancellationToken);
 
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 

@@ -61,7 +61,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             var stationCodeClaims = await GetStationCodeClaimAsync();
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
 
@@ -99,7 +99,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
 

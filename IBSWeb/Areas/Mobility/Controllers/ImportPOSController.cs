@@ -53,11 +53,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     }
 
                     ViewData["LastManualImport"] = lastImport.LoggerName;
-                    TempData["error"] = "The import is not finished per logging";
+                    TempData["info"] = "The import is not finished per logging";
                     return View();
                 }
 
-                TempData["error"] = "No manual import found";
+                TempData["info"] = "No manual import found";
                 return View();
             }
             catch (Exception ex)
