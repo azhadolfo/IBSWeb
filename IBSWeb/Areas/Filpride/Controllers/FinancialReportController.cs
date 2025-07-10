@@ -148,7 +148,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 });
 
                                 column.Item().Text("PNL REPORT").FontSize(14).SemiBold().AlignCenter();
-                                column.Item().Text($"As Of {monthDate.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
+                                column.Item().Text($"As Of {monthDate:MMM yyyy}").SemiBold().AlignCenter();
                             });
 
 
@@ -187,70 +187,85 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #endregion
 
-                             #region -- Loop to Show Records
+                            #region -- Loop to Show Records
 
-                                foreach (var record in chartOfAccounts.Where(a => a.IsMain))
+                            decimal totalRevenue = 0;
+                            foreach (var record in chartOfAccounts.Where(a => a.IsMain))
+                            {
+                                decimal grandTotal = 0;
+
+                                table.Cell().ColumnSpan(6).Border(0.5f).Padding(3).Text(record.AccountName);
+
+                                foreach (var levelTwo in record.Children)
                                 {
-                                    decimal grandTotal = 0;
+                                    decimal subTotal = 0;
+                                    table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
+                                    table.Cell().ColumnSpan(5).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelTwo.AccountName);
 
-                                    table.Cell().ColumnSpan(6).Border(0.5f).Padding(3).Text(record.AccountName);
-
-                                    foreach (var levelTwo in record.Children)
+                                    foreach (var levelThree in levelTwo.Children)
                                     {
-                                        decimal subTotal = 0;
-                                        table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
-                                        table.Cell().ColumnSpan(5).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelTwo.AccountName);
+                                        table.Cell().ColumnSpan(2).BorderLeft(0.5f).BorderBottom(0.5f);
+                                        table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelThree.AccountName);
 
-                                        foreach (var levelThree in levelTwo.Children)
+                                        foreach (var levelFour in levelThree.Children)
                                         {
-                                            table.Cell().ColumnSpan(2).BorderLeft(0.5f).BorderBottom(0.5f);
-                                            table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelThree.AccountName);
+                                            table.Cell().ColumnSpan(3).BorderLeft(0.5f).BorderBottom(0.5f);
+                                            table.Cell().ColumnSpan(2).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelFour.AccountName);
+                                            var levelFourBalance = generalLedgers
+                                                .Where(gl =>
+                                                    gl.AccountNo == levelFour.AccountNumber)
+                                                .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
+                                                    gl.Debit - gl.Credit :
+                                                    gl.Credit - gl.Debit);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(levelFourBalance != 0 ? levelFourBalance < 0 ? $"({Math.Abs(levelFourBalance).ToString(SD.Two_Decimal_Format)})" : levelFourBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(levelFourBalance < 0 ? Colors.Red.Medium : Colors.Black);
+                                            subTotal += levelFourBalance;
 
-                                            foreach (var levelFour in levelThree.Children)
+                                            foreach (var levelFive in levelFour.Children)
                                             {
-                                                table.Cell().ColumnSpan(3).BorderLeft(0.5f).BorderBottom(0.5f);
-                                                table.Cell().ColumnSpan(2).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelFour.AccountName);
-                                                var levelFourBalance = generalLedgers
+                                                table.Cell().ColumnSpan(4).BorderLeft(0.5f).BorderBottom(0.5f);
+                                                table.Cell().BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelFive.AccountName);
+                                                var levelFiveBalance = generalLedgers
                                                     .Where(gl =>
                                                         gl.AccountNo == levelFour.AccountNumber)
                                                     .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
                                                         gl.Debit - gl.Credit :
                                                         gl.Credit - gl.Debit);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(levelFourBalance != 0 ? levelFourBalance < 0 ? $"({Math.Abs(levelFourBalance).ToString(SD.Two_Decimal_Format)})" : levelFourBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(levelFourBalance < 0 ? Colors.Red.Medium : Colors.Black);
-                                                subTotal += levelFourBalance;
-
-                                                foreach (var levelFive in levelFour.Children)
-                                                {
-                                                    table.Cell().ColumnSpan(4).BorderLeft(0.5f).BorderBottom(0.5f);
-                                                    table.Cell().BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text(levelFive.AccountName);
-                                                    var levelFiveBalance = generalLedgers
-                                                        .Where(gl =>
-                                                            gl.AccountNo == levelFour.AccountNumber)
-                                                        .Sum(gl => gl.Account.NormalBalance == nameof(NormalBalance.Debit) ?
-                                                            gl.Debit - gl.Credit :
-                                                            gl.Credit - gl.Debit);
-                                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(levelFiveBalance != 0 ? levelFiveBalance < 0 ? $"({Math.Abs(levelFiveBalance).ToString(SD.Two_Decimal_Format)})" : levelFiveBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(levelFiveBalance < 0 ? Colors.Red.Medium : Colors.Black);
-                                                }
+                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(levelFiveBalance != 0 ? levelFiveBalance < 0 ? $"({Math.Abs(levelFiveBalance).ToString(SD.Two_Decimal_Format)})" : levelFiveBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(levelFiveBalance < 0 ? Colors.Red.Medium : Colors.Black);
                                             }
                                         }
-
-                                        table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
-                                        table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text($"TOTAL {levelTwo.AccountName.ToUpper()}").SemiBold();
-
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(subTotal != 0 ? subTotal < 0 ? $"({Math.Abs(subTotal).ToString(SD.Two_Decimal_Format)})" : subTotal.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotal < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                        grandTotal += subTotal;
-
                                     }
 
-                                    table.Cell().ColumnSpan(5).Border(0.5f).Padding(3).Text($"TOTAL {record.AccountName.ToUpper()}").Bold();
+                                    table.Cell().BorderLeft(0.5f).BorderBottom(0.5f);
+                                    table.Cell().ColumnSpan(4).BorderTop(0.5f).BorderRight(0.5f).BorderBottom(0.5f).Padding(3).Text($"TOTAL {levelTwo.AccountName.ToUpper()}").SemiBold();
 
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(grandTotal != 0 ? grandTotal < 0 ? $"({Math.Abs(grandTotal).ToString(SD.Two_Decimal_Format)})" : grandTotal.ToString(SD.Two_Decimal_Format) : null).Bold();
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(subTotal != 0 ? subTotal < 0 ? $"({Math.Abs(subTotal).ToString(SD.Two_Decimal_Format)})" : subTotal.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotal < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    grandTotal += subTotal;
 
                                 }
 
-                                table.Cell().ColumnSpan(6).Border(0.5f).Text("");
-                                table.Cell().ColumnSpan(5).Border(0.5f).Padding(3).Text("NIBIT").Bold();
-                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome < 0 ? $"({Math.Abs(nibitForThePeriod.NetIncome).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.NetIncome.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.NetIncome < 0 ? Colors.Red.Medium : Colors.Black).Bold();
+                                table.Cell().ColumnSpan(5).Border(0.5f).Padding(3).Text($"TOTAL {record.AccountName.ToUpper()}").Bold();
+
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(grandTotal != 0 ? grandTotal < 0 ? $"({Math.Abs(grandTotal).ToString(SD.Two_Decimal_Format)})" : grandTotal.ToString(SD.Two_Decimal_Format) : null).Bold();
+
+                                if (record.AccountName.Contains("Revenue"))
+                                {
+                                    totalRevenue = grandTotal;
+                                }
+
+                                if (record.AccountName.Contains("Cost of Goods Sold"))
+                                {
+                                    var totalGrossMargin = totalRevenue - grandTotal;
+
+                                    table.Cell().ColumnSpan(5).Border(0.5f).Padding(3).Text("TOTAL GROSS MARGIN").Bold();
+
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalGrossMargin != 0 ? totalGrossMargin < 0 ? $"({Math.Abs(totalGrossMargin).ToString(SD.Two_Decimal_Format)})" : totalGrossMargin.ToString(SD.Two_Decimal_Format) : null).Bold();
+                                }
+
+                            }
+
+                            table.Cell().ColumnSpan(6).Border(0.5f).Text("");
+                            table.Cell().ColumnSpan(5).Border(0.5f).Padding(3).Text("NIBIT").Bold();
+                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(nibitForThePeriod.NetIncome != 0 ? nibitForThePeriod.NetIncome < 0 ? $"({Math.Abs(nibitForThePeriod.NetIncome).ToString(SD.Two_Decimal_Format)})" : nibitForThePeriod.NetIncome.ToString(SD.Two_Decimal_Format) : null).FontColor(nibitForThePeriod.NetIncome < 0 ? Colors.Red.Medium : Colors.Black).Bold();
 
                             #endregion
 
@@ -355,7 +370,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -386,7 +401,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 7])
                 {
                     range.Merge = true;
-                    range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
+                    range.Value = "As of " + monthDate.ToString("MMM yyyy");
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
@@ -409,6 +424,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
+                decimal totalRevenue = 0;
                 foreach (var account in chartOfAccounts.Where(a => a.IsMain))
                 {
                     decimal grandTotal = 0;
@@ -472,6 +488,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     row++;
+
+                    if (account.AccountName.Contains("Revenue"))
+                    {
+                        totalRevenue = grandTotal;
+                    }
+
+                    if (account.AccountName.Contains("Cost of Goods Sold"))
+                    {
+                        var totalGrossMargin = totalRevenue - grandTotal;
+
+                        worksheet.Cells[row, 1].Value = "TOTAL GROSS MARGIN";
+                        worksheet.Cells[row, 1].Style.Font.Bold = true;
+                        worksheet.Cells[row, 6].Value = totalGrossMargin != 0 ? totalGrossMargin : null;
+                        worksheet.Cells[row, 6].Style.Font.Bold = true;
+                        worksheet.Cells[row, 6].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[row, 6].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        row++;
+                    }
 
                 }
 
@@ -575,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 });
 
                                 column.Item().Text("Level 1").FontSize(14).SemiBold().AlignCenter();
-                                column.Item().Text($"As Of: {monthDate:dd MMM yyyy}").SemiBold().AlignCenter();
+                                column.Item().Text($"As Of: {monthDate:MMM yyyy}").SemiBold().AlignCenter();
                             });
 
 
@@ -751,7 +785,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 row++;
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -778,7 +812,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 4])
                 {
                     range.Merge = true;
-                    range.Value = "As of " + monthDate.ToString("dd MMMM yyyy");
+                    range.Value = "As of " + monthDate.ToString("MMM yyyy");
                 }
                 row++;
                 using (var range = worksheet.Cells[1, 1, row, 4])
@@ -1145,7 +1179,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["B1"].Value = "FILPRIDE RESOURCES INC.";
                 worksheet.Cells["B1"].Style.HorizontalAlignment = alignmentCenter;
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -1381,7 +1415,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 });
 
                                 column.Item().Text("BALANCE SHEET").FontSize(14).SemiBold().AlignCenter();
-                                column.Item().Text($"As Of {monthDate.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
+                                column.Item().Text($"As Of {monthDate:MMM yyyy}").SemiBold().AlignCenter();
                             });
 
 
@@ -1637,7 +1671,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
@@ -1668,7 +1702,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using (var range = worksheet.Cells[row, 1, row, 6])
                 {
                     range.Merge = true;
-                    range.Value = "As of " + monthDate.ToString("MMM dd, yyyy");
+                    range.Value = "As of " + monthDate.ToString("MMM yyyy");
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 }
                 row++;
@@ -2053,7 +2087,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 row++;
 
 
-                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img\\Filpride.jpg");
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg");
                 var imageFile = new FileInfo(imagePath);
 
                 if (imageFile.Exists)
