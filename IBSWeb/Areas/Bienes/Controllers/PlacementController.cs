@@ -674,7 +674,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 if (companyId == existingRecord.CompanyId)
                 {
-                    TempData["warning"] = "The selected company matches the previously chosen company. Please select a different company.";
+                    TempData["info"] = "The selected company matches the previously chosen company. Please select a different company.";
                     return RedirectToAction(nameof(Preview), new { id });
                 }
 
