@@ -39,12 +39,24 @@ namespace IBS.Services
             {
                 var dataMap = context.MergedJobDataMap.GetDateTime("monthDate");
 
-                var isMonthAlreadyLocked = await _dbContext.
-                    FilprideMonthlyNibits.AnyAsync(m => m.Month == dataMap.Month && m.Year == dataMap.Year);
+                var isMonthAlreadyLocked = await _dbContext.FilprideMonthlyNibits
+                    .AnyAsync(m => m.Month == dataMap.Month
+                                   && m.Year == dataMap.Year);
 
                 if (isMonthAlreadyLocked)
                 {
                     throw new InvalidOperationException($"{dataMap:MMM yyyy} is already locked.");
+                }
+
+                var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
+                    .AnyAsync(x => x.Date.Month == dataMap.Month
+                                   && x.Date.Year == dataMap.Year
+                                   && !x.HasReceivingReport);
+
+                if (hasUnliftedDrs)
+                {
+                    throw new InvalidOperationException($"There are still unlifted DRs for {dataMap:MMM yyyy}. " +
+                                                        $"Closing for this month cannot proceed.");
                 }
 
                 await AutoReversalForCvWithoutDcrDate(dataMap);

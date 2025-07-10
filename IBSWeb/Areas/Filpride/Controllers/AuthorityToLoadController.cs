@@ -223,6 +223,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CustomerOrderSlipId = appointedSupplier.CustomerOrderSlipId,
                         Quantity = details.Volume,
                         UnservedQuantity = details.Volume,
+                        AppointedId = appointedSupplier.SequenceId,
                     });
 
                     if (appointedSuppliers.All(x => x.UnreservedQuantity == 0))
