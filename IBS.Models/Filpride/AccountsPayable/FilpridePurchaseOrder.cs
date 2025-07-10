@@ -64,7 +64,13 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
-        public string Remarks { get; set; }
+        private string _remarks;
+
+        public string Remarks
+        {
+            get => _remarks;
+            set => _remarks = value.Trim();
+        }
 
         [Column(TypeName = "varchar(10)")]
         public string Terms { get; set; }
@@ -76,10 +82,17 @@ namespace IBS.Models.Filpride.AccountsPayable
         public bool IsReceived { get; set; }
 
         [Column(TypeName = "timestamp with time zone")]
+
         public DateTime ReceivedDate { get; set; }
 
+        private string? _supplierSalesOrderNo;
+
         [Column(TypeName = "varchar(100)")]
-        public string? SupplierSalesOrderNo { get; set; }
+        public string? SupplierSalesOrderNo
+        {
+            get => _supplierSalesOrderNo;
+            set => _supplierSalesOrderNo = value?.Trim();
+        }
 
         public bool IsClosed { get; set; }
 
@@ -116,7 +129,13 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         #endregion
 
-        public string OldPoNo { get; set; }
+        private string _oldPoNo;
+
+        public string OldPoNo
+        {
+            get => _oldPoNo;
+            set => _oldPoNo = value.Trim();
+        }
 
         public string? Type { get; set; }
 
