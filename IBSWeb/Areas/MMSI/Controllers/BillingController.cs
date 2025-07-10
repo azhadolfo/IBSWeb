@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (!ModelState.IsValid)
             {
                 viewModel = await GetBillingSelectLists(viewModel, cancellationToken);
-                TempData["error"] = "Can't create entry, please review your input.";
+                TempData["warning"] = "Can't create entry, please review your input.";
                 return View(viewModel);
             }
 
@@ -532,7 +532,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
-                    TempData["error"] = "Can't create entry, please review your input.";
+                    TempData["warning"] = "Can't create entry, please review your input.";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
             }

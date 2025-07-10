@@ -44,7 +44,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Invalid entry, please try again.";
+                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 
@@ -108,7 +108,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Invalid entry, please try again.";
+                TempData["warning"] = "Invalid entry, please try again.";
                 return View(model);
             }
 

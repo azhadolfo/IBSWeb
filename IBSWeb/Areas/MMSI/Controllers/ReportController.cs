@@ -49,7 +49,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 // check if there is no record
                 if (salesReport.Count == 0)
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(SalesReport));
                 }
 

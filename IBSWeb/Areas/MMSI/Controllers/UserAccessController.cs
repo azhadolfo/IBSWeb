@@ -46,7 +46,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Invalid input please try again.";
+                TempData["warning"] = "Invalid input please try again.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -85,7 +85,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             if (model == null)
             {
-                TempData["error"] = "User access not found.";
+                TempData["info"] = "User access not found.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -97,7 +97,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Invalid input please try again.";
+                TempData["warning"] = "Invalid input please try again.";
                 return RedirectToAction(nameof(Index));
             }
 
