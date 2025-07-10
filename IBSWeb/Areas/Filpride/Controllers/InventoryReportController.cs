@@ -80,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(InventoryReport));
             }
 
@@ -101,7 +101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!inventories.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(InventoryReport));
                 }
 

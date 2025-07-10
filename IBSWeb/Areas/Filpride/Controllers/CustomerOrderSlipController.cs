@@ -384,7 +384,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -685,7 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -1405,7 +1405,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -1581,7 +1581,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -1690,7 +1690,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 

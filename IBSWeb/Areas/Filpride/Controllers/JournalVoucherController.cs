@@ -201,7 +201,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var totalCredit = 0m;
                     if (totalDebit != totalCredit)
                     {
-                        TempData["error"] = "The debit and credit should be equal!";
+                        TempData["warning"] = "The debit and credit should be equal!";
                         return View(model);
                     }
 
@@ -266,7 +266,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information you submitted is not valid!";
+            TempData["warning"] = "The information you submitted is not valid!";
             return View(model);
         }
 
@@ -743,7 +743,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 

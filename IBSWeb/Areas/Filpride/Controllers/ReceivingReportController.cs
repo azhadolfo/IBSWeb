@@ -265,7 +265,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (model.QuantityDelivered > totalAmountRR)
                     {
-                        TempData["error"] = "Input is exceed to remaining quantity delivered";
+                        TempData["info"] = "Input is exceed to remaining quantity delivered";
                         return View(model);
                     }
 
@@ -386,7 +386,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (model.QuantityDelivered > totalAmountRR && existingModel.PostedBy == null)
                     {
-                        TempData["error"] = "Input is exceed to remaining quantity delivered";
+                        TempData["info"] = "Input is exceed to remaining quantity delivered";
                         return View(model);
                     }
 
@@ -464,7 +464,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (model.ReceivedDate == null)
                     {
-                        TempData["error"] = "Please indicate the received date.";
+                        TempData["info"] = "Please indicate the received date.";
                         return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                     }
 
@@ -529,7 +529,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
+                    TempData["info"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 

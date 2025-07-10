@@ -75,7 +75,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(COSUnservedVolume));
             }
 
@@ -85,7 +85,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!cosSummary.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(COSUnservedVolume));
                 }
 
@@ -343,7 +343,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "Please input date from";
+            TempData["warning"] = "Please input date from";
             return RedirectToAction(nameof(COSUnservedVolume));
         }
 
@@ -364,13 +364,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (viewModel.DateFrom == default && viewModel.ReportType != "InTransit")
             {
-                TempData["error"] = "Please enter a valid Date From";
+                TempData["warning"] = "Please enter a valid Date From";
                 return RedirectToAction(nameof(DispatchReport));
             }
 
             if (viewModel.DateFrom == default || viewModel.DateTo == default && viewModel.ReportType == "InTransit")
             {
-                TempData["error"] = "Please enter a valid Date From and To";
+                TempData["warning"] = "Please enter a valid Date From and To";
                 return RedirectToAction(nameof(DispatchReport));
             }
 
@@ -420,7 +420,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!deliveryReceipts.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found";
                     return RedirectToAction(nameof(DispatchReport));
                 }
 
@@ -820,13 +820,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (viewModel.DateFrom == default && viewModel.ReportType != "InTransit")
             {
-                TempData["error"] = "Please enter a valid Date From";
+                TempData["warning"] = "Please enter a valid Date From";
                 return RedirectToAction(nameof(DispatchReport));
             }
 
             if (viewModel.DateFrom == default || viewModel.DateTo == default && viewModel.ReportType == "InTransit")
             {
-                TempData["error"] = "Please enter a valid Date From and To";
+                TempData["warning"] = "Please enter a valid Date From and To";
                 return RedirectToAction(nameof(DispatchReport));
             }
 
@@ -874,7 +874,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!deliveryReceipts.Any())
                 {
-                    TempData["error"] = "No record found";
+                    TempData["info"] = "No record found";
                     return RedirectToAction(nameof(DispatchReport));
                 }
 
@@ -1304,7 +1304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(SalesReport));
             }
 
@@ -1314,7 +1314,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!sales.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found";
                     return RedirectToAction(nameof(SalesReport));
                 }
 
@@ -1713,7 +1713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Please input date range";
+                TempData["warning"] = "Please input date range";
                 return RedirectToAction(nameof(SalesReport));
             }
 
@@ -1736,7 +1736,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesReport = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, cancellationToken);
                 if (salesReport.Count == 0)
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(SalesReport));
                 }
                 var totalQuantity = salesReport.Sum(s => s.DeliveryReceipt.Quantity);
@@ -2212,7 +2212,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Please input date range";
+                TempData["warning"] = "Please input date range";
                 return RedirectToAction(nameof(SalesReport));
             }
 
@@ -2228,7 +2228,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var salesReport = await _unitOfWork.FilprideReport.GetSalesInvoiceReport(dateFrom, dateTo, companyClaims, cancellationToken);
                 if (salesReport.Count == 0)
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(SalesReport));
                 }
                 var totalQuantity = salesReport.Sum(s => s.Quantity);
@@ -2717,7 +2717,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(PostedCollection));
             }
 
@@ -2728,7 +2728,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!collectionReceiptReport.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found";
                     return RedirectToAction(nameof(PostedCollection));
                 }
 
@@ -2889,7 +2889,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    TempData["error"] = "Please input date range";
+                    TempData["warning"] = "Please input date range";
                     return RedirectToAction(nameof(PostedCollection));
                 }
 
@@ -3024,7 +3024,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(AgingReport));
             }
 
@@ -3035,7 +3035,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!salesInvoice.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(AgingReport));
                 }
 
@@ -3286,7 +3286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Please input date range";
+                TempData["warning"] = "Please input date range";
                 return RedirectToAction(nameof(AgingReport));
             }
 
@@ -3304,7 +3304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!salesInvoice.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(AgingReport));
                 }
 
@@ -3536,7 +3536,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(ArPerCustomer));
             }
 
@@ -3552,7 +3552,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!salesInvoice.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found";
                     return RedirectToAction(nameof(ArPerCustomer));
                 }
 
@@ -3797,7 +3797,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Please input date range";
+                TempData["warning"] = "Please input date range";
                 return RedirectToAction(nameof(ArPerCustomer));
             }
 
@@ -3822,7 +3822,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!salesInvoice.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(ArPerCustomer));
                 }
 
@@ -4044,7 +4044,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(ServiceInvoiceReport));
             }
 
@@ -4054,7 +4054,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!serviceInvoice.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(ServiceInvoiceReport));
                 }
 
@@ -4223,7 +4223,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Please input date range";
+                TempData["warning"] = "Please input date range";
                 return RedirectToAction(nameof(ServiceInvoiceReport));
             }
 
@@ -4242,7 +4242,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (serviceReport.Count == 0)
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(ServiceInvoiceReport));
                 }
                 // Create the Excel package

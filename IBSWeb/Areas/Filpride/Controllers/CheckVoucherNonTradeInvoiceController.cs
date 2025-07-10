@@ -603,7 +603,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -956,7 +956,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Suppliers = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
             viewModel.ChartOfAccounts = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -1542,7 +1542,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 

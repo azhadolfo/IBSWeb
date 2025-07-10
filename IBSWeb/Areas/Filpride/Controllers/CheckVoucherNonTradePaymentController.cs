@@ -871,7 +871,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -1222,7 +1222,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -1511,7 +1511,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to create advances to employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    TempData["Error"] = ex.Message;
+                    TempData["error"] = ex.Message;
                     await transaction.RollbackAsync(cancellationToken);
 
                     viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
@@ -1522,7 +1522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
 
             viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
 
@@ -1702,7 +1702,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -1890,7 +1890,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
@@ -2084,7 +2084,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 

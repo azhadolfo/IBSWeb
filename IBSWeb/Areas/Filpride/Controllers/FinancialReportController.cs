@@ -70,7 +70,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(ProfitAndLossReport));
             }
 
@@ -109,13 +109,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (nibitForThePeriod == null)
                 {
-                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                     return RedirectToAction(nameof(ProfitAndLossReport));
                 }
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(ProfitAndLossReport));
                 }
 
@@ -327,13 +327,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (nibitForThePeriod == null)
                 {
-                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                     return RedirectToAction(nameof(ProfitAndLossReport));
                 }
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(ProfitAndLossReport));
                 }
 
@@ -542,7 +542,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(LevelOneReport));
                 }
 
@@ -730,7 +730,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(LevelOneReport));
                 }
 
@@ -882,7 +882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(TrialBalanceReport));
             }
 
@@ -917,7 +917,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!currentLedgers.Any() || !priorLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(TrialBalanceReport));
                 }
 
@@ -1130,7 +1130,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!currentLedgers.Any() || !priorLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(TrialBalanceReport));
                 }
 
@@ -1306,7 +1306,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(BalanceSheetReport));
             }
 
@@ -1341,14 +1341,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (nibitForThePeriod == null)
                     {
-                        TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                        TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                         return RedirectToAction(nameof(BalanceSheetReport));
                     }
                 }
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(BalanceSheetReport));
                 }
 
@@ -1608,14 +1608,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (nibitForThePeriod == null)
                     {
-                        TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                        TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                         return RedirectToAction(nameof(BalanceSheetReport));
                     }
                 }
 
                 if (!generalLedgers.Any())
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(BalanceSheetReport));
                 }
 
@@ -1857,7 +1857,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["info"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
             }
 
@@ -1875,7 +1875,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (nibitForThePeriod == null)
                 {
-                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                     return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
                 }
 
@@ -2031,7 +2031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (nibitForThePeriod == null)
                 {
-                    TempData["error"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
+                    TempData["info"] = "NIBIT For The Period not found. Contact MIS-Enterprise.";
                     return RedirectToAction(nameof(StatementOfRetainedEarningsReport));
                 }
 

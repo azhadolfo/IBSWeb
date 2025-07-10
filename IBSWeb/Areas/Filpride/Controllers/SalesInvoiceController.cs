@@ -197,7 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    TempData["error"] = "Please input below or exact amount based on the Sales Invoice";
+                    TempData["warning"] = "Please input below or exact amount based on the Sales Invoice";
                     return View(model);
 
                     #endregion Saving Default Entries
@@ -216,7 +216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(model);
         }
 
@@ -391,7 +391,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(model);
         }
 
@@ -480,7 +480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
+                    TempData["info"] = "Please note that this record has already been utilized in collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
 

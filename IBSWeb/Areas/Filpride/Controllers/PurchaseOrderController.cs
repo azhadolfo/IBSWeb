@@ -483,7 +483,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (hasAlreadyBeenUsed)
             {
-                TempData["error"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                TempData["info"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 

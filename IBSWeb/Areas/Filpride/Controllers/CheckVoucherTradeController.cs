@@ -245,7 +245,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync();
 
-                            TempData["error"] = "Check No. Is already exist";
+                            TempData["info"] = "Check No. Is already exist";
                             return View(viewModel);
                         }
                     }
@@ -402,7 +402,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -773,7 +773,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -1932,7 +1932,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync();
 
-                            TempData["error"] = "Check No. Is already exist";
+                            TempData["info"] = "Check No. Is already exist";
                             return View(viewModel);
                         }
                     }
@@ -2076,7 +2076,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -2153,7 +2153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 })
                                 .ToListAsync();
 
-                            TempData["error"] = "Check No. Is already exist";
+                            TempData["info"] = "Check No. Is already exist";
                             return View(viewModel);
                         }
                     }
@@ -2297,7 +2297,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -2634,7 +2634,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
@@ -2861,7 +2861,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
 
