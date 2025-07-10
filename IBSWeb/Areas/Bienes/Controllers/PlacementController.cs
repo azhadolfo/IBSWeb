@@ -172,7 +172,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -321,7 +321,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 viewModel.Companies = await _unitOfWork.GetCompanyListAsyncById(cancellationToken);
                 viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
@@ -401,7 +401,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 if (existingRecord.DateFrom == default || existingRecord.DateTo == default)
                 {
-                    TempData["error"] = "The system has detected that this is a newly rolled-over account. " +
+                    TempData["info"] = "The system has detected that this is a newly rolled-over account. " +
                                         "Please ensure necessary modifications are made before proceeding with the posting.";
                     return RedirectToAction(nameof(Preview), new { id });
                 }
@@ -674,7 +674,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 if (companyId == existingRecord.CompanyId)
                 {
-                    TempData["error"] = "The selected company matches the previously chosen company. Please select a different company.";
+                    TempData["warning"] = "The selected company matches the previously chosen company. Please select a different company.";
                     return RedirectToAction(nameof(Preview), new { id });
                 }
 
