@@ -66,7 +66,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "There was an error creating the collection.";
+                TempData["warning"] = "There was an error creating the collection.";
                 viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(0, String.Empty, cancellationToken);
                 return View(viewModel);
             }
@@ -385,7 +385,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var customer = await _unitOfWork.FilprideCustomer
                         .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
-                    TempData["error"] = "There was an error updating the collection.";
+                    TempData["warning"] = "There was an error updating the collection.";
                     viewModel.Customers = await _unitOfWork.Collection.GetMMSICustomersWithCollectiblesSelectList(viewModel.MMSICollectionId ?? 0, customer!.Type, cancellationToken);
                     return View(viewModel);
                 }

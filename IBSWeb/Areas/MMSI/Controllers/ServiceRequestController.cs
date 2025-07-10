@@ -128,7 +128,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-                TempData["error"] = "Can't create entry, please review your input.";
+                TempData["warning"] = "Can't create entry, please review your input.";
                 ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
@@ -219,7 +219,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = "Start Date/Time should be earlier than End Date/Time!";
+                    TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
                     ViewData["PortId"] = model?.Terminal?.Port?.PortId;
                     return View(viewModel);
                 }
@@ -292,7 +292,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "Can't apply edit, please review your input.";
+                TempData["warning"] = "Can't apply edit, please review your input.";
                 return RedirectToAction("Edit", new { id = vm.DispatchTicketId });
             }
 
@@ -451,7 +451,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 else
                 {
                     await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = "Date/Time Left cannot be later than Date/Time Arrived!";
+                    TempData["warning"] = "Date/Time Left cannot be later than Date/Time Arrived!";
 
                     model = await _dbContext.MMSIDispatchTickets
                         .Include(dt => dt.Terminal)
@@ -802,7 +802,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     return RedirectToAction(nameof(Index));
                 }
             }
-            TempData["error"] = "Passed record list is empty";
+            TempData["info"] = "Passed record list is empty";
             return RedirectToAction(nameof(Index));
         }
 
