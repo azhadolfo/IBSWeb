@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(GeneralLedgerBook));
             }
 
@@ -77,7 +77,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!generalLedgerBooks.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(GeneralLedgerBook));
                 }
 
@@ -231,7 +231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
                 if (generalBooks.Count == 0)
                 {
-                    TempData["error"] = "No Record Found";
+                    TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(GeneralLedgerBook));
                 }
                 var totalDebit = generalBooks.Sum(gb => gb.Debit);
@@ -367,7 +367,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
             }
 
@@ -384,7 +384,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (!generalLedgerByAccountNo.Any())
                 {
-                    TempData["error"] = "No records found!";
+                    TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
                 }
 
@@ -613,7 +613,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (generalLedgerByAccountNo.Count == 0)
             {
-                TempData["error"] = "No Record Found";
+                TempData["info"] = "No Record Found";
                 return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
             }
 
@@ -784,7 +784,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
                         if (generalBooks.Count == 0)
                         {
-                            TempData["error"] = "No Record Found";
+                            TempData["info"] = "No Record Found";
                             return RedirectToAction(nameof(GeneralLedgerBook));
                         }
                         var totalDebit = generalBooks.Sum(gb => gb.Debit);

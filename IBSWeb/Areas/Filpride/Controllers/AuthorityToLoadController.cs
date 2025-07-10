@@ -160,7 +160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 viewModel.SupplierList = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 viewModel.LoadPorts = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 

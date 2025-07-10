@@ -60,7 +60,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
 
@@ -98,7 +98,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
 

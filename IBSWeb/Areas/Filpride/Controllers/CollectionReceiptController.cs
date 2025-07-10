@@ -240,7 +240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
-                        TempData["error"] = "Please input atleast one type form of payment";
+                        TempData["warning"] = "Please input atleast one type form of payment";
                         return View(model);
                     }
                     var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
@@ -338,7 +338,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                TempData["error"] = "The information you submitted is not valid!";
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(model);
             }
         }
@@ -406,7 +406,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
-                        TempData["error"] = "Please input atleast one type form of payment";
+                        TempData["warning"] = "Please input atleast one type form of payment";
                         return View(model);
                     }
 
@@ -500,7 +500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                TempData["error"] = "The information you submitted is not valid!";
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(model);
             }
         }
@@ -760,7 +760,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                TempData["error"] = "The information you submitted is not valid!";
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(model);
             }
         }
@@ -917,7 +917,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                TempData["error"] = "The information you submitted is not valid!";
+                TempData["warning"] = "The information you submitted is not valid!";
                 return View(model);
             }
         }
@@ -1199,7 +1199,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
                     if (computeTotalInModelIfZero == 0)
                     {
-                        TempData["error"] = "Please input atleast one type form of payment";
+                        TempData["warning"] = "Please input atleast one type form of payment";
                         return View(model);
                     }
 
@@ -1346,7 +1346,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The information you submitted is not valid!";
+            TempData["warning"] = "The information you submitted is not valid!";
             return View(model);
         }
 
@@ -1468,7 +1468,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
                         else
                         {
-                            TempData["error"] = "No series number found";
+                            TempData["info"] = "No series number found";
                             return RedirectToAction(nameof(Index));
                         }
 

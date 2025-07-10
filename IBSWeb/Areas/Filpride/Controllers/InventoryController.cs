@@ -93,7 +93,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-                        TempData["error"] = "Beginning Inventory for this product already exists. Please contact MIS if you think this was a mistake.";
+                        TempData["info"] = "Beginning Inventory for this product already exists. Please contact MIS if you think this was a mistake.";
                         return View(viewModel);
                     }
 
@@ -107,7 +107,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to create beginning inventory. Created by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.ToString();
+                    TempData["error"] = ex.Message;
                     return View();
                 }
             }
@@ -124,7 +124,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            TempData["error"] = "The information you submitted is not valid!";
+            TempData["warning"] = "The information you submitted is not valid!";
             return View(viewModel);
         }
 
@@ -378,7 +378,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            TempData["error"] = "The information provided was invalid.";
+            TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
         }
     }

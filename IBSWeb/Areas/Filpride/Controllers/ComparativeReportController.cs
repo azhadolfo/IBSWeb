@@ -70,7 +70,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (lockedSales.Count == 0)
                     {
-                        TempData["error"] = "No records found!";
+                        TempData["info"] = "No records found!";
                         return RedirectToAction(nameof(Index));
                     }
 
@@ -271,7 +271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (lockedPurchases.Count == 0)
                     {
-                        TempData["error"] = "No records found!";
+                        TempData["info"] = "No records found!";
                         return RedirectToAction(nameof(Index));
                     }
 

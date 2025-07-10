@@ -247,7 +247,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -546,7 +546,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
+                    TempData["info"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -728,7 +728,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
 
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
