@@ -328,7 +328,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .GetUnpostedDsrList(await GetStationCodeClaimAsync() ?? throw new NullReferenceException(), cancellationToken);
             viewModel.Customers = await _unitOfWork.GetMobilityCustomerListAsyncByCodeName(cancellationToken);
             viewModel.Lubes = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
     }

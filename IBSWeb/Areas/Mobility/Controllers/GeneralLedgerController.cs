@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return View(ledgers);
             }
 
-            TempData["error"] = "Please select journal.";
+            TempData["warning"] = "Please select journal.";
             return View();
         }
 

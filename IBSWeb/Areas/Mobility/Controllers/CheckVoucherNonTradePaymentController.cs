@@ -593,7 +593,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = cvh.SupplierName
                     })
                     .ToListAsync();
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -1030,7 +1030,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = ba.AccountNo + " " + ba.AccountName
                     })
                     .ToListAsync();
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 viewModel.Suppliers = await _dbContext.MobilitySuppliers
                     .Where(cvh => cvh.StationCode == stationCodeClaims && cvh.Category == "Non-Trade")
                     .Select(cvh => new SelectListItem
@@ -1448,7 +1448,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -1656,7 +1656,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = ba.AccountNo + " " + ba.AccountName
                     })
                     .ToListAsync();
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -1853,7 +1853,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
@@ -2065,7 +2065,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = ba.Bank + " " + ba.AccountNo + " " + ba.AccountName
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 

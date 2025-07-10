@@ -215,7 +215,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                                 Text = po.PurchaseOrderNo
                             })
                             .ToListAsync(cancellationToken);
-                        TempData["error"] = "Input is exceed to remaining quantity delivered";
+                        TempData["info"] = "Input is exceed to remaining quantity delivered";
                         return View(viewModel);
                     }
 
@@ -284,7 +284,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Text = po.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -393,7 +393,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     Text = po.PurchaseOrderNo
                 })
                 .ToListAsync(cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
+            TempData["warning"] = "The submitted information is invalid.";
             return View(viewModel);
         }
 
@@ -472,7 +472,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 {
                     if (model.ReceivedDate == null)
                     {
-                        TempData["error"] = "Please indicate the received date.";
+                        TempData["warning"] = "Please indicate the received date.";
                         return RedirectToAction(nameof(Index));
                     }
 
@@ -533,7 +533,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["error"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
+                    TempData["info"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index));
                 }
 

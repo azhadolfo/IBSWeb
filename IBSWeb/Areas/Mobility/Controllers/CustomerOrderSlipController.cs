@@ -491,12 +491,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
                 catch (Exception ex)
                 {
-                    TempData["error"] = ex.ToString();
+                    TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Print), new { model.CustomerOrderSlipId });
                 }
             }
 
-            TempData["error"] = "Please upload an image file only!";
+            TempData["warning"] = "Please upload an image file only!";
 
             return RedirectToAction(nameof(Print), new { model.CustomerOrderSlipId });
         }
@@ -645,7 +645,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 if (string.IsNullOrWhiteSpace(jsonModel) || jsonModel == "[]")
                 {
-                    TempData["error"] = "The data is empty or invalid.";
+                    TempData["info"] = "The data is empty or invalid.";
                     return Json(new { success = false, error = "The data is empty or invalid." });
                 }
 
@@ -754,7 +754,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 }
 
-                TempData["error"] = "The data is empty or invalid.";
+                TempData["info"] = "The data is empty or invalid.";
                 return Json(new { success = false, error = "The data is empty or invalid." });
             }
             catch (Exception ex)
@@ -771,7 +771,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 if (jsonModel.IsNullOrWhiteSpace() || jsonModel == "[]")
                 {
-                    TempData["error"] = "The data is empty or invalid.";
+                    TempData["info"] = "The data is empty or invalid.";
                     return RedirectToAction(nameof(Index));
                 }
 

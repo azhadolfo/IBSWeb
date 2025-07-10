@@ -184,7 +184,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         Text = s.Name
                     })
                     .ToListAsync(cancellationToken);
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return RedirectToAction(nameof(Create), viewModel);
             }
 
@@ -619,7 +619,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["error"] = "The submitted information is invalid.";
+                TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
