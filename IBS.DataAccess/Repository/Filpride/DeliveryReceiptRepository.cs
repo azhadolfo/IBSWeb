@@ -478,7 +478,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 if (deliveryReceipt.CommissionRate > 0)
                 {
                     var commissionGrossAmount = deliveryReceipt.CommissionAmount;
-                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.CommssioneeTaxType == SD.TaxType_WithTax ?
+                    var commissionEwtAmount = deliveryReceipt.CustomerOrderSlip.CommissioneeTaxType == SD.TaxType_WithTax ?
                         ComputeEwtAmount(commissionGrossAmount, 0.05m) : 0;
                     var commissionNetOfEwt = commissionEwtAmount > 0 ?
                         ComputeNetOfEwt(commissionGrossAmount, commissionEwtAmount) : commissionGrossAmount;

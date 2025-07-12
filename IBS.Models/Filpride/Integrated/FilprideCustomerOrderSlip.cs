@@ -277,9 +277,9 @@ namespace IBS.Models.Filpride.Integrated
         public string? BusinessStyle { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string? CommssioneeVatType { get; set; }
+        public string? CommissioneeVatType { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string? CommssioneeTaxType { get; set; }
+        public string? CommissioneeTaxType { get; set; }
     }
 }

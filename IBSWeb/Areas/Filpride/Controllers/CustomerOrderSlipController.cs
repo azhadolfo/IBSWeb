@@ -322,8 +322,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         HasEWT = customer.WithHoldingTax,
                         HasWVAT = customer.WithHoldingVat,
                         CommissioneeName = commissionee?.SupplierName,
-                        CommssioneeVatType = commissionee?.VatType,
-                        CommssioneeTaxType = commissionee?.TaxType,
+                        CommissioneeVatType = commissionee?.VatType,
+                        CommissioneeTaxType = commissionee?.TaxType,
                         BusinessStyle = customer.BusinessStyle,
                         AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                             .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
@@ -773,7 +773,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount))
                 : 0m;
 
-            var netOfVatCommission = customerOrderSlip.CommssioneeVatType == SD.VatType_Vatable  && customerOrderSlip.CommissionRate != 0
+            var netOfVatCommission = customerOrderSlip.CommissioneeVatType == SD.VatType_Vatable  && customerOrderSlip.CommissionRate != 0
                 ? vatCalculator.ComputeNetOfVat(customerOrderSlip.CommissionRate)
                 : customerOrderSlip.CommissionRate;
 
