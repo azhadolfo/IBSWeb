@@ -358,7 +358,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    TempData["success"] = "Check voucher trade created successfully";
+                    TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -2050,7 +2050,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    TempData["success"] = "Check voucher trade created successfully";
+                    TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -2271,7 +2271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    TempData["success"] = "Check voucher trade created successfully";
+                    TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
