@@ -204,7 +204,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _unitOfWork.FilprideSalesInvoice.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Sales invoice created successfully";
+                        TempData["success"] = $"Sales invoice #{model.SalesInvoiceNo} created successfully";
                         return RedirectToAction(nameof(Index));
                     }
 
