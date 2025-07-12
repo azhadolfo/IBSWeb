@@ -43,11 +43,23 @@ namespace IBS.Models.Filpride.Integrated
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
-        public string Remarks { get; set; }
+        public string Remarks
+        {
+            get => _remarks;
+            set => _remarks = value.Trim();
+        }
+
+        private string _remarks;
 
         [Column(TypeName = "varchar(100)")]
         [Display(Name = "Customer PO No.")]
-        public string CustomerPoNo { get; set; }
+        public string CustomerPoNo
+        {
+            get => _customerPoNo;
+            set => _customerPoNo = value.Trim();
+        }
+
+        private string _customerPoNo;
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -136,7 +148,13 @@ namespace IBS.Models.Filpride.Integrated
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly? ExpirationDate { get; set; }
 
-        public string? OMReason { get; set; }
+        public string? OMReason
+        {
+            get => _omReason;
+            set => _omReason = value?.Trim();
+        }
+
+        private string? _omReason;
 
         #endregion
 
@@ -158,7 +176,13 @@ namespace IBS.Models.Filpride.Integrated
 
         public string? Terms { get; set; }
 
-        public string? FinanceInstruction { get; set; }
+        public string? FinanceInstruction
+        {
+            get => _financeInstruction;
+            set => _financeInstruction = value?.Trim();
+        }
+
+        private string? _financeInstruction;
 
         #endregion
 
@@ -204,7 +228,13 @@ namespace IBS.Models.Filpride.Integrated
         public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Approved
 
         [Column(TypeName = "varchar(50)")]
-        public string OldCosNo { get; set; }
+        public string OldCosNo
+        {
+            get => _oldCosNo;
+            set => _oldCosNo = value.Trim();
+        }
+
+        private string _oldCosNo;
 
         public bool HasMultiplePO { get; set; }
 
