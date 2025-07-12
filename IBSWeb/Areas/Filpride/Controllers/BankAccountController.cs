@@ -113,7 +113,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Bank#{model.AccountNo} created successfully.";
+                    TempData["success"] = $"Bank #{model.AccountNo} created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)

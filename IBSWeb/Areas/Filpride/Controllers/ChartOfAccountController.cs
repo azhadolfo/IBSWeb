@@ -92,7 +92,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _dbContext.FilprideChartOfAccounts.AddAsync(newAccount, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                TempData["success"] = $"Account#{newAccount.AccountNumber} Created Successfully";
+                TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
