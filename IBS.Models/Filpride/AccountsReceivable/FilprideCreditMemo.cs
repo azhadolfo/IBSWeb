@@ -37,7 +37,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [NotMapped]
         public List<SelectListItem>? ServiceInvoices { get; set; }
 
-        public string Description { get; set; }
+        public string Description
+        {
+            get => _description;
+            set => _description = value.Trim();
+        }
+
+        private string _description;
 
         [Display(Name = "Price Adjustment")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -56,7 +62,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         public string Source { get; set; }
 
-        public string? Remarks { get; set; }
+        public string? Remarks
+        {
+            get => _remarks;
+            set => _remarks = value?.Trim();
+        }
+
+        private string? _remarks;
 
         [Column(TypeName = "date")]
         public DateOnly Period { get; set; }
