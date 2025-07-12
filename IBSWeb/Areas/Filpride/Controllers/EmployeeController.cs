@@ -73,7 +73,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Employee created successfully";
+                TempData["success"] = $"Employee {model.EmployeeNumber} created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
