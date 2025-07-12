@@ -47,7 +47,13 @@ namespace IBS.Models.Filpride.Integrated
         #endregion
 
         [Column(TypeName = "varchar(200)")]
-        public string Remarks { get; set; }
+        public string Remarks
+        {
+            get => _remarks;
+            set => _remarks = value.Trim();
+        }
+
+        private string _remarks;
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -62,7 +68,13 @@ namespace IBS.Models.Filpride.Integrated
         public string Company { get; set; } = string.Empty;
 
         [Column(TypeName = "varchar(50)")]
-        public string ManualDrNo { get; set; }
+        public string ManualDrNo
+        {
+            get => _manualDrNo;
+            set => _manualDrNo = value.Trim();
+        }
+
+        private string _manualDrNo;
 
         public string Status { get; set; } = nameof(DRStatus.PendingDelivery);
 
@@ -77,7 +89,13 @@ namespace IBS.Models.Filpride.Integrated
         public string? Driver { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string? PlateNo { get; set; }
+        public string? PlateNo
+        {
+            get => _plateNo;
+            set => _plateNo = value?.Trim();
+        }
+
+        private string? _plateNo;
 
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]

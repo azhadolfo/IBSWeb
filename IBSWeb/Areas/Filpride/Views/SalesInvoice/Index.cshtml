@@ -166,8 +166,14 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "salesInvoiceNo" },
-                    { "data": "deliveryReceipt.deliveryReceiptNo" },
+                    { 
+                        "data": "salesInvoiceNo",
+                        "name": "salesInvoiceNo"
+                    },
+                    {
+                        "data": "deliveryReceiptNo",
+                        "name": "deliveryReceipt.deliveryReceiptNo"
+                    },
                     {
                         "data": "transactionDate",
                         "name": "transactionDate",
@@ -180,19 +186,33 @@
                             });
                         }
                     },
-                    { "data": "customer.customerName" },
-                    { "data": "terms" },
-                    { "data": "product.productName" },
+                    { 
+                        "data": "customerName",
+                        "name": "customer.customerName"
+                    },
+                    { 
+                        "data": "terms",
+                        "name": "terms"
+                    },
+                    { 
+                        "data": "productName",
+                        "name": "product.productName",
+                    },
                     {
                         "data": "amount",
+                        "name": "amount",
                         "render": function (data, type, row) {
                             var amount = $.fn.dataTable.render.number(',', '.', 2).display(data);
                             return `<span class="d-block fw-medium">${amount}</span>`;
                         }
                     },
-                    { "data": "createdBy" },
+                    { 
+                        "data": "createdBy",
+                        "name": "createBy"
+                    },
                     {
                         "data": "status",
+                        "name": "status",
                         "render": function(data, type, row) {
                             var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
                                               row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
@@ -208,6 +228,7 @@
                     },
                     {
                         "data": "salesInvoiceId",
+                        "name": "salesInvoiceId",
                         "orderable": false,
                         "render": function (data, type, row) {
                             var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">

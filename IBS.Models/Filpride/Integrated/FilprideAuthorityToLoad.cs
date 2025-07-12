@@ -27,7 +27,13 @@ namespace IBS.Models.Filpride.Integrated
         public DateOnly ValidUntil { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string? UppiAtlNo { get; set; }
+        public string? UppiAtlNo
+        {
+            get => _uppiAtlNo;
+            set => _uppiAtlNo = value?.Trim();
+        }
+
+        private string? _uppiAtlNo;
 
         [Column(TypeName = "varchar(255)")]
         public string Remarks { get; set; }

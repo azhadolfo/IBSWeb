@@ -102,7 +102,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     salesInvoices = salesInvoices
@@ -116,6 +116,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var pagedData = salesInvoices
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
+                    .Select(si => new
+                    {
+                        si.Amount,
+                        si.SalesInvoiceNo,
+                        DeliveryReceiptNo = si.DeliveryReceipt?.DeliveryReceiptNo ?? "",
+                        si.TransactionDate,
+                        si.Customer!.CustomerName,
+                        si.Terms,
+                        si.Product!.ProductName,
+                        si.CreatedBy,
+                        si.Status,
+                        si.SalesInvoiceId,
+                    })
                     .ToList();
 
                 return Json(new
