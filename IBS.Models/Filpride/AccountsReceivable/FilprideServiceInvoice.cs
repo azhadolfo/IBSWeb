@@ -77,7 +77,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal Balance { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string Instructions { get; set; } = string.Empty;
+        public string Instructions
+        {
+            get => _instructions;
+            set => _instructions = value.Trim();
+        }
+
+        private string _instructions = string.Empty;
 
         public bool IsPaid { get; set; }
 
