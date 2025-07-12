@@ -388,7 +388,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await transaction.CommitAsync(cancellationToken);
 
-                    TempData["success"] = "Delivery receipt created successfully.";
+                    TempData["success"] = $"Delivery receipt #{model.DeliveryReceiptNo} created successfully.";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
