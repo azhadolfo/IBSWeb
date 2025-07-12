@@ -245,5 +245,11 @@ namespace IBS.Models.Filpride.Integrated
 
         [Column(TypeName = "varchar(100)")]
         public string? BusinessStyle { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? CommssioneeVatType { get; set; }
+
+        [Column(TypeName = "varchar(20)")]
+        public string? CommssioneeTaxType { get; set; }
     }
 }

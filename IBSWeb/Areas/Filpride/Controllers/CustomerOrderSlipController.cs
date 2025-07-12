@@ -322,6 +322,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         HasEWT = customer.WithHoldingTax,
                         HasWVAT = customer.WithHoldingVat,
                         CommissioneeName = commissionee?.SupplierName,
+                        CommssioneeVatType = commissionee?.VatType,
+                        CommssioneeTaxType = commissionee?.TaxType,
                         BusinessStyle = customer.BusinessStyle,
                         AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                             .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
@@ -730,7 +732,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Calculate gross margin
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost -
-                                    model.NetOfVatFreightCharge - customerOrderSlip.CommissionRate;
+                                    model.NetOfVatFreightCharge - model.NetOfVatCommission;
 
 
                 // Return appropriate view based on approval status
@@ -762,24 +764,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? vatCalculator.ComputeNetOfVat(customerOrderSlip.DeliveredPrice)
                 : customerOrderSlip.DeliveredPrice;
 
-            var netOfVatFreightCharge = 0m;
-            if (customerOrderSlip.Freight != 0)
-            {
-                netOfVatFreightCharge = customerOrderSlip.VatType == SD.VatType_Vatable
-                    ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight!)
-                    : (decimal)customerOrderSlip.Freight!;
-            }
+            var netOfVatFreightCharge = customerOrderSlip.VatType == SD.VatType_Vatable && customerOrderSlip.Freight != 0
+                ? vatCalculator.ComputeNetOfVat((decimal)customerOrderSlip.Freight!)
+                : (decimal)customerOrderSlip.Freight!;
 
             var vatAmount = customerOrderSlip.VatType == SD.VatType_Vatable
                 ? vatCalculator.ComputeVatAmount(
                     vatCalculator.ComputeNetOfVat(customerOrderSlip.TotalAmount))
                 : 0m;
 
+            var netOfVatCommission = customerOrderSlip.CommssioneeVatType == SD.VatType_Vatable  && customerOrderSlip.CommissionRate != 0
+                ? vatCalculator.ComputeNetOfVat(customerOrderSlip.CommissionRate)
+                : customerOrderSlip.CommissionRate;
+
             return new CustomerOrderSlipForApprovalViewModel
             {
                 CustomerOrderSlip = customerOrderSlip,
                 NetOfVatCosPrice = netOfVatCosPrice,
                 NetOfVatFreightCharge = netOfVatFreightCharge,
+                NetOfVatProductCost = netOfVatCommission,
                 VatAmount = vatAmount,
                 Status = customerOrderSlip.Status,
                 PriceReference = customerOrderSlip.PriceReference

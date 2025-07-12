@@ -1115,7 +1115,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(cos.DeliveredPrice)
                 : cos.DeliveredPrice;
 
-            var commission = cos.CommissionRate;
+            var commission = cos.CommssioneeVatType == SD.VatType_Vatable && cos.CommissionRate != 0
+                ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(cos.CommissionRate)
+                : cos.CommissionRate;
 
             var freight = 0m;
 
