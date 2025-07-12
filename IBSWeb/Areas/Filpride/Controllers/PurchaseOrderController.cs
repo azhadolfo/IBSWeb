@@ -273,7 +273,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Purchase Order created successfully";
+                    TempData["success"] = $"Purchase Order #{model.PurchaseOrderNo} created successfully";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
