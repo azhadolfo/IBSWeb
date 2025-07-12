@@ -282,7 +282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Credit memo created successfully.";
+                    TempData["success"] = $"Credit memo #{model.CreditMemoNo} created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
