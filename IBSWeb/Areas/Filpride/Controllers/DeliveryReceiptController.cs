@@ -268,9 +268,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
-                    var supplierHauler = await _unitOfWork.FilprideSupplier.GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+                    var hauler = await _unitOfWork.FilprideSupplier
+                        .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
 
                     if (customerOrderSlip == null)
                     {
@@ -302,7 +304,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
                         CustomerAddress = customerOrderSlip.CustomerAddress,
                         CustomerTin = customerOrderSlip.CustomerTin,
-                        HaulerName = supplierHauler?.SupplierName ?? string.Empty,
+                        HaulerName = hauler?.SupplierName,
+                        HaulerVatType = hauler?.VatType,
+                        HaulerTaxType = hauler?.TaxType,
                         PurchaseOrderId = viewModel.PurchaseOrderId,
                     };
 
@@ -337,8 +341,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var freightDifference = viewModel.Freight + viewModel.ECC - (decimal)customerOrderSlip.Freight!;
 
-                        /// TODO Revise this later for dynamic checking
-                        freightDifference = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference);
+                        freightDifference = hauler?.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
+                            : freightDifference;
 
                         var updatedGrossMargin = grossMargin + freightDifference;
 
@@ -374,7 +379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId, cancellationToken)
                         ?? throw new NullReferenceException("Authority to load not found");
 
-                    authorityToLoad.HaulerName = supplierHauler?.SupplierName;
+                    authorityToLoad.HaulerName = hauler?.SupplierName;
                     authorityToLoad.Freight = viewModel.Freight;
                     authorityToLoad.Driver = viewModel.Driver;
                     authorityToLoad.PlateNo = viewModel.PlateNo;
@@ -524,6 +529,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
                     {
+                        var hauler = await _unitOfWork.FilprideSupplier
+                            .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+
                         var operationManager = await _dbContext.ApplicationUsers
                             .Where(a => a.Position == SD.Position_OperationManager)
                             .Select(u => u.Id)
@@ -538,8 +546,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         var freightDifference = viewModel.Freight + viewModel.ECC - existingRecord.Freight;
 
-                        /// TODO Revise this later for dynamic checking
-                        freightDifference = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference);
+                        freightDifference = hauler!.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
+                            : freightDifference;
 
                         var updatedGrossMargin = grossMargin + freightDifference;
 
@@ -1129,8 +1138,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                ///TODO Revise this later for dynamic checking
-                freight = _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(drFreight);
+                freight = cos.VatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(drFreight)
+                    : drFreight;
             }
 
             bool hasActualPrice = po.ActualPrices != null && po.ActualPrices.Any(x => x.IsApproved);

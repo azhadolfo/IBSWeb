@@ -86,7 +86,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId,
                     cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
 
-            var supplierHauler = await _db.FilprideSuppliers.FirstOrDefaultAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+            var hauler = await _db.FilprideSuppliers.FirstOrDefaultAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
 
             #region--Update COS
 
@@ -126,7 +126,9 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CommissionAmount = existingRecord.Quantity * existingRecord.CommissionRate;
             existingRecord.CustomerAddress = customerOrderSlip.CustomerAddress;
             existingRecord.CustomerTin = customerOrderSlip.CustomerTin;
-            existingRecord.HaulerName = supplierHauler?.SupplierName ?? string.Empty;
+            existingRecord.HaulerName = hauler?.SupplierName;
+            existingRecord.HaulerVatType = hauler?.VatType;
+            existingRecord.HaulerTaxType = hauler?.TaxType;
             existingRecord.AuthorityToLoadId = viewModel.ATLId;
             existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
 
@@ -347,7 +349,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     if (deliveryReceipt.Freight > 0)
                     {
                         var freightGrossAmount = deliveryReceipt.Freight * deliveryReceipt.Quantity;
-                        var freightNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                        var freightNetOfVat = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
                             ? ComputeNetOfVat(freightGrossAmount)
                             : freightGrossAmount;
 
@@ -366,7 +368,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
 
-                        var freightVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                        var freightVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
                             ? ComputeVatAmount(freightNetOfVat)
                             : 0m;
 
@@ -389,7 +391,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     if (deliveryReceipt.ECC > 0)
                     {
                         var eccGrossAmount = deliveryReceipt.ECC * deliveryReceipt.Quantity;
-                        var eccNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                        var eccNetOfVat = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
                             ? ComputeNetOfVat(eccGrossAmount)
                             : eccGrossAmount;
 
@@ -408,7 +410,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         });
 
-                        var eccVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                        var eccVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
                             ? ComputeVatAmount(eccNetOfVat)
                             : 0m;
 
@@ -429,10 +431,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     }
 
                     var totalFreightGrossAmount = deliveryReceipt.FreightAmount;
-                    var totalFreightNetOfVat = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    var totalFreightNetOfVat = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
                         ? ComputeNetOfVat(totalFreightGrossAmount)
                         : totalFreightGrossAmount;
-                    var totalFreightEwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT
+                    var totalFreightEwtAmount = deliveryReceipt.HaulerTaxType == SD.TaxType_WithTax
                         ? ComputeEwtAmount(totalFreightNetOfVat, 0.02m)
                         : 0m;
                     var totalFreightNetOfEwt = totalFreightEwtAmount > 0
