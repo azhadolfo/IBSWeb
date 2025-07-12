@@ -285,7 +285,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Debit memo created successfully.";
+                    TempData["success"] = $"Debit memo #{model.DebitMemoNo} created successfully.";
 
                     return RedirectToAction(nameof(Index));
                 }
