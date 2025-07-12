@@ -322,7 +322,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Audit Trail Recording
 
-                    TempData["success"] = "Collection receipt created successfully.";
+                    TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
@@ -903,7 +903,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Collection receipt created successfully.";
+                    TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
                     return RedirectToAction(nameof(ServiceInvoiceIndex));
                 }
                 catch (Exception ex)
