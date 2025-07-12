@@ -450,7 +450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Check voucher invoicing#{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
+                    TempData["success"] = $"Check voucher invoicing #{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -583,7 +583,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Check voucher invoicing${checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
+                    TempData["success"] = $"Check voucher invoicing #{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
