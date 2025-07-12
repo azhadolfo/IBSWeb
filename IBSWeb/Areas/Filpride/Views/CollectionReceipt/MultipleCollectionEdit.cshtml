@@ -172,39 +172,39 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
-                        Add Entry
-                    </button>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th class="w-100">Account Title</th>
-                                <th class="w-20">
-                                    Amount
-                                </th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="accountingEntriesBody">
-                            @for (int i = 0; i < ViewBag.Offsettings.Count; i++)
-                            {
-                                <tr>
-                                    <td>
-                                        <input type="hidden" name="accountTitle" value="@ViewBag.Offsettings[i].AccountNo" />
-                                        <input type="text" name="accountTitleText" value="@ViewBag.Offsettings[i].AccountNo  @ViewBag.Offsettings[i].AccountTitle" style="border:none; width: 70%" readonly />
-                                    </td>
-                                    <td>
-                                        <input type="text" name="accountAmount" value="@ViewBag.Offsettings[i].Amount" style="border:none" readonly />
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+                @* <div class="form-group"> *@
+                @*     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry"> *@
+                @*         Add Entry *@
+                @*     </button> *@
+                @*     <table class="table"> *@
+                @*         <thead> *@
+                @*             <tr> *@
+                @*                 <th class="w-100">Account Title</th> *@
+                @*                 <th class="w-20"> *@
+                @*                     Amount *@
+                @*                 </th> *@
+                @*                 <th></th> *@
+                @*             </tr> *@
+                @*         </thead> *@
+                @*         <tbody id="accountingEntriesBody"> *@
+                @*             @for (int i = 0; i < ViewBag.Offsettings.Count; i++) *@
+                @*             { *@
+                @*                 <tr> *@
+                @*                     <td> *@
+                @*                         <input type="hidden" name="accountTitle" value="@ViewBag.Offsettings[i].AccountNo" /> *@
+                @*                         <input type="text" name="accountTitleText" value="@ViewBag.Offsettings[i].AccountNo  @ViewBag.Offsettings[i].AccountTitle" style="border:none; width: 70%" readonly /> *@
+                @*                     </td> *@
+                @*                     <td> *@
+                @*                         <input type="text" name="accountAmount" value="@ViewBag.Offsettings[i].Amount" style="border:none" readonly /> *@
+                @*                     </td> *@
+                @*                     <td> *@
+                @*                         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button> *@
+                @*                     </td> *@
+                @*                 </tr> *@
+                @*             } *@
+                @*         </tbody> *@
+                @*     </table> *@
+                @* </div> *@
 
                 <br />
                 <div class="row pt-2">
