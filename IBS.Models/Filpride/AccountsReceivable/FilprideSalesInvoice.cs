@@ -64,7 +64,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal Amount { get; set; }
 
         [Required]
-        public string Remarks { get; set; }
+        public string Remarks
+        {
+            get => _remarks;
+            set => _remarks = value.Trim();
+        }
+
+        private string _remarks;
 
         [Column(TypeName = "varchar(20)")]
         public string PaymentStatus { get; set; } = "Pending";
