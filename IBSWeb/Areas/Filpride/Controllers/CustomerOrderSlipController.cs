@@ -1778,7 +1778,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             });
         }
 
-        [DepartmentAuthorize(SD.Department_Marketing)]
+        [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
         public async Task<IActionResult> ChangePrice(int? id, decimal newPrice, string referenceNo, CancellationToken cancellationToken)
         {
             if (id == null)
