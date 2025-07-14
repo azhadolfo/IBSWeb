@@ -1258,9 +1258,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 throw new ArgumentException("Period closed, CV cannot be unposted.");
             }
 
-            cvHeader.Details = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == id && cvd.AmountPaid != 0m).ToListAsync(cancellationToken);
-
-            if (cvHeader.Details.Any() || cvHeader.AmountPaid != 0m)
+            if (cvHeader.Details!.Any(x => x.AmountPaid != 0) || cvHeader.AmountPaid != 0m)
             {
                 throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
             }
