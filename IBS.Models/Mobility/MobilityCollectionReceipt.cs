@@ -45,10 +45,22 @@ namespace IBS.Models.Mobility
         [Display(Name = "Reference No")]
         [Required]
         [Column(TypeName = "varchar(50)")]
-        public string ReferenceNo { get; set; }
+        public string ReferenceNo
+        {
+            get => _referenceNo;
+            set => _referenceNo = value.Trim();
+        }
+
+        private string _referenceNo;
 
         [Column(TypeName = "varchar(100)")]
-        public string? Remarks { get; set; }
+        public string? Remarks
+        {
+            get => _remarks;
+            set => _remarks = value?.Trim();
+        }
+
+        private string? _remarks;
 
         //Cash
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -59,13 +71,31 @@ namespace IBS.Models.Mobility
         public string? CheckDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
-        public string? CheckNo { get; set; }
+        public string? CheckNo
+        {
+            get => _checkNo;
+            set => _checkNo = value?.Trim();
+        }
+
+        private string? _checkNo;
 
         [Column(TypeName = "varchar(50)")]
-        public string? CheckBank { get; set; }
+        public string? CheckBank
+        {
+            get => _checkBank;
+            set => _checkBank = value?.Trim();
+        }
+
+        private string? _checkBank;
 
         [Column(TypeName = "varchar(50)")]
-        public string? CheckBranch { get; set; }
+        public string? CheckBranch
+        {
+            get => _checkBranch;
+            set => _checkBranch = value?.Trim();
+        }
+
+        private string? _checkBranch;
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]

@@ -168,7 +168,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
-                    TempData["success"] = $"Billing was successfully created.";
+                    TempData["success"] = $"Billing #{model.MMSIBillingNumber} was successfully created.";
                 }
 
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });

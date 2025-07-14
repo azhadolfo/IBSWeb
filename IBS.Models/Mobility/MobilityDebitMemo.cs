@@ -31,10 +31,22 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "numeric(18,4)")]
         public decimal DebitAmount { get; set; }
 
-        public string Description { get; set; }
+        public string Description
+        {
+            get => _description;
+            set => _description = value.Trim();
+        }
+
+        private string _description;
 
         [Required]
-        public string? Remarks { get; set; }
+        public string? Remarks
+        {
+            get => _remarks;
+            set => _remarks = value?.Trim();
+        }
+
+        private string? _remarks;
 
         [Column(TypeName = "date")]
         public DateOnly Period { get; set; }

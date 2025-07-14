@@ -26,14 +26,26 @@ namespace IBS.Models.Mobility
         [ForeignKey("ServiceInvoiceId")]
         public MobilityServiceInvoice? ServiceInvoice { get; set; }
 
-        public string Description { get; set; }
+        public string Description
+        {
+            get => _description;
+            set => _description = value.Trim();
+        }
+
+        private string _description;
 
         [Display(Name = "Credit Amount")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CreditAmount { get; set; }
 
-        public string? Remarks { get; set; }
+        public string? Remarks
+        {
+            get => _remarks;
+            set => _remarks = value?.Trim();
+        }
+
+        private string? _remarks;
 
         [Column(TypeName = "date")]
         public DateOnly Period { get; set; }

@@ -15,10 +15,22 @@ namespace IBS.Models.MMSI
         public DateOnly Date { get; set; }
 
         [Column(TypeName = "varchar(20)")]
-        public string DispatchNumber { get; set; }
+        public string DispatchNumber
+        {
+            get => _dispatchNumber;
+            set => _dispatchNumber = value.Trim();
+        }
+
+        private string _dispatchNumber;
 
         [Column(TypeName = "varchar(10)")]
-        public string? COSNumber { get; set; }
+        public string? COSNumber
+        {
+            get => _cosNumber;
+            set => _cosNumber = value?.Trim();
+        }
+
+        private string? _cosNumber;
 
         [Display(Name = "Date Left")]
         public DateOnly DateLeft { get; set; }
@@ -33,13 +45,25 @@ namespace IBS.Models.MMSI
         public TimeOnly TimeArrived { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string? Remarks { get; set; }
+        public string? Remarks
+        {
+            get => _remarks;
+            set => _remarks = value?.Trim();
+        }
+
+        private string? _remarks;
 
         [Column(TypeName = "varchar(100)")]
         public string? BaseOrStation { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string? VoyageNumber { get; set; }
+        public string? VoyageNumber
+        {
+            get => _voyageNumber;
+            set => _voyageNumber = value?.Trim();
+        }
+
+        private string? _voyageNumber;
 
         public string DispatchChargeType { get; set; }
 
