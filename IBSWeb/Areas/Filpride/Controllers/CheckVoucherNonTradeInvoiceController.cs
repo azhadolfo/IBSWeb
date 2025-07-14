@@ -1249,19 +1249,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 throw new NullReferenceException("User not found.");
             }
 
+            var isClosed = await _dbContext.FilprideMonthlyNibits
+                .Where(n => n.Month == cvHeader.Date.Month && n.Year == cvHeader.Date.Year)
+                .AnyAsync(cancellationToken);
+
+            if (isClosed)
+            {
+                throw new ArgumentException("Period closed, CV cannot be unposted.");
+            }
+
+            cvHeader.Details = await _dbContext.FilprideCheckVoucherDetails.Where(cvd => cvd.CheckVoucherHeaderId == id && cvd.AmountPaid != 0m).ToListAsync(cancellationToken);
+
+            if (cvHeader.Details.Any() || cvHeader.AmountPaid != 0m)
+            {
+                throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var isClosed = await _dbContext.FilprideMonthlyNibits
-                    .Where(n => n.Month == cvHeader.Date.Month && n.Year == cvHeader.Date.Year)
-                    .AnyAsync(cancellationToken);
-
-                if (isClosed)
-                {
-                    throw new ArgumentException("Period closed, CV cannot be unposted.");
-                }
-
                 cvHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
                 cvHeader.PostedBy = null;
                 cvHeader.PostedDate = null;
