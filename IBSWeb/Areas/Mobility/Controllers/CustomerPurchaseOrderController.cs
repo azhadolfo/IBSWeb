@@ -136,7 +136,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     await _dbContext.MobilityCustomerPurchaseOrders.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    TempData["success"] = "Creation Succeed!";
+                    TempData["success"] = $"Purchase Order created successfully. Series No. {model.CustomerPurchaseOrderNo}";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
