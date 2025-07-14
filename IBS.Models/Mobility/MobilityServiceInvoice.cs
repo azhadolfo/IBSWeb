@@ -78,7 +78,13 @@ namespace IBS.Models.Mobility
         public decimal Balance { get; set; }
 
         [Column(TypeName = "varchar(200)")]
-        public string? Instructions { get; set; }
+        public string? Instructions
+        {
+            get => _instructions;
+            set => _instructions = value?.Trim();
+        }
+
+        private string? _instructions;
 
         public bool IsPaid { get; set; }
 
