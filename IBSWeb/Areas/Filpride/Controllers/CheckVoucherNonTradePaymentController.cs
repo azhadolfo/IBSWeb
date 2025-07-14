@@ -1,8 +1,6 @@
-using System.Collections;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
@@ -31,8 +29,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
         private readonly ICloudStorageService _cloudStorageService;
 
         private readonly ILogger<CheckVoucherNonTradePaymentController> _logger;
@@ -40,14 +36,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public CheckVoucherNonTradePaymentController(IUnitOfWork unitOfWork,
             UserManager<IdentityUser> userManager,
             ApplicationDbContext dbContext,
-            IWebHostEnvironment webHostEnvironment,
             ICloudStorageService cloudStorageService,
             ILogger<CheckVoucherNonTradePaymentController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
-            _webHostEnvironment = webHostEnvironment;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
         }
@@ -65,7 +59,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
@@ -199,9 +193,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
 
-            if (modelHeader != null)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
                 try
                 {
@@ -319,14 +311,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["error"] = ex.Message;
                     return RedirectToAction(nameof(Index));
                 }
-            }
-
-            return NotFound();
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -339,7 +330,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                     existingHeaderModel.CancellationRemarks = cancellationRemarks;
 
-                    var IsForTheBir = existingHeaderModel.SupplierId == 133; //BIR
+                    var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
+                                                                           && existingHeaderModel.SupplierId != 133); //BIR
 
                     var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                         .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
@@ -347,7 +339,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cvp => cvp.CheckVoucherHeaderPayment)
                         .ToListAsync(cancellationToken);
 
-                    if (IsForTheBir)
+                    if (isForTheBir)
                     {
                         foreach (var cv in getCVs)
                         {
@@ -402,7 +394,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
+                .Include(x => x.Details)
+                .FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
             if (existingHeaderModel != null)
             {
@@ -410,7 +404,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var IsForTheBir = existingHeaderModel.SupplierId == 133; //BIR
+                    var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
+                                                                            && existingHeaderModel.SupplierId != 133); //BIR
 
                     var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                         .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
@@ -418,7 +413,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cvp => cvp.CheckVoucherHeaderPayment)
                         .ToListAsync(cancellationToken);
 
-                    if (IsForTheBir)
+                    if (isForTheBir)
                     {
                         foreach (var cv in getCVs)
                         {
@@ -453,7 +448,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo);
                     await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo);
 
-                    //re-compute amount paid in trade and payment voucher
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy!, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
@@ -573,7 +567,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.Supplier)
                 .FirstOrDefaultAsync();
 
-            if (existingHeaderModel == null || existingDetailsModel == null)
+            if (existingDetailsModel == null)
             {
                 return NotFound();
             }
@@ -655,6 +649,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
                         .Include(cv => cv.Supplier)
+                        .Include(x => x.Details)
                         .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
 
                     if (existingHeaderModel == null)
@@ -668,7 +663,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cvp => cvp.CheckVoucherHeaderPayment)
                         .ToListAsync(cancellationToken);
 
-                    if (existingHeaderModel.SupplierId == 133)//BIR
+                    if (existingHeaderModel.Details!.Any(x => x.SupplierId == 133
+                                                     && existingHeaderModel.SupplierId != 133))//BIR
                     {
                         foreach (var cv in getCVs)
                         {
@@ -712,7 +708,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (getCVDetails != null && getCVDetails.CheckVoucherHeaderId == cv.CVId)
                         {
                             getCVDetails.AmountPaid += cv.AmountPaid;
-                            isForTheBir = getCVDetails.SupplierId == 133 && !getCVDetails.IsUserSelected; //BIR Supplier Id
+                            isForTheBir = getCVDetails.SupplierId == 133
+                                          && invoice.SupplierId != 133
+                                          && !getCVDetails.IsUserSelected; //BIR Supplier Id
                         }
                     }
 
@@ -928,12 +926,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            // Retrieve the list of supplier IDs from the check voucher details
-            var supplierIds = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.TransactionNo == cv.CheckVoucherHeaderNo)
-                .Select(cvd => cvd.SupplierId)
-                .ToListAsync(cancellationToken);
-
             // Fetch suppliers whose IDs are in the supplierIds list
             var suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
@@ -1069,7 +1061,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         if (getCVDetails != null && getCVDetails.CheckVoucherHeaderId == cv.CVId)
                         {
                             getCVDetails.AmountPaid += cv.AmountPaid;
-                            isForTheBir = getCVDetails.SupplierId == 133 && !getCVDetails.IsUserSelected; //BIR Supplier Id
+                            isForTheBir = getCVDetails.SupplierId == 133
+                                          && invoice.SupplierId != 133
+                                          && !getCVDetails.IsUserSelected; //BIR Supplier Id
                         }
                     }
 
@@ -1248,7 +1242,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         WithholdingTax = supplier.WithholdingTaxtitle
                     });
                 }
-                return Json(null);
             }
             return Json(null);
         }
@@ -1314,7 +1307,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMultipleInvoiceDetails(int[] cvId, int supplierId, CancellationToken cancellationToken)
         {
-            if (cvId == null)
+            if (cvId.Length == 0)
             {
                 return Json(null);
             }
@@ -1633,8 +1626,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     _dbContext.RemoveRange(existingDetailsModel);
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    var details = new List<FilprideCheckVoucherDetail>();
 
                     var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                     var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
