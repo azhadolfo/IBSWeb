@@ -2178,22 +2178,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder!.Type!, cancellationToken);
                     var cashInBank = viewModel.Credit[1];
+
+                    var getBank = await _dbContext.FilprideBankAccounts.FindAsync(viewModel.BankId);
                     var cvh = new FilprideCheckVoucherHeader
                     {
                         CheckVoucherHeaderNo = generateCVNo,
                         Date = viewModel.TransactionDate,
                         SupplierId = viewModel.SupplierId,
+                        Total = cashInBank,
                         Particulars = viewModel.Particulars,
                         BankId = viewModel.BankId,
                         CheckNo = viewModel.CheckNo,
                         Category = "Trade",
                         Payee = viewModel.Payee,
                         CheckDate = viewModel.CheckDate,
-                        Total = cashInBank,
-                        CreatedBy = _userManager.GetUserName(this.User),
+                        CvType = "Hauler",
                         Company = companyClaims,
+                        CreatedBy = User.Identity?.Name,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        SupplierName = viewModel.Payee,
+                        Address = viewModel.SupplierAddress,
+                        Tin = viewModel.SupplierTinNo,
                         Type = getDeliveryReceipt.PurchaseOrder.Type,
-                        CvType = "Hauler"
+                        BankAccountName = getBank!.AccountName,
+                        BankAccountNumber = getBank!.AccountNo
                     };
 
                     await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
@@ -2684,7 +2692,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Particulars = existingHeaderModel.Particulars!,
                 CreatedBy = _userManager.GetUserName(this.User),
                 DRs = [],
-                Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken)
+                Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
             };
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -2699,8 +2708,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Amount = item.AmountPaid
                 });
             }
-
-            model.BankAccounts = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
 
             return View(model);
         }
@@ -2762,17 +2769,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Saving the default entries
 
+                    var getBank = await _dbContext.FilprideBankAccounts.FindAsync(viewModel.BankId, cancellationToken);
+
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.SupplierId = viewModel.SupplierId;
+                    existingHeaderModel.Total = cashInBank;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.BankId = viewModel.BankId;
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
                     existingHeaderModel.Category = "Trade";
                     existingHeaderModel.Payee = viewModel.Payee;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
-                    existingHeaderModel.Total = cashInBank;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                    existingHeaderModel.EditedBy = User.Identity!.Name;
                     existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    existingHeaderModel.SupplierName = viewModel.Payee;
+                    existingHeaderModel.Address = viewModel.SupplierAddress;
+                    existingHeaderModel.Tin = viewModel.SupplierTinNo;
+                    existingHeaderModel.BankAccountName = getBank?.AccountName ?? String.Empty;
+                    existingHeaderModel.BankAccountNumber = getBank?.AccountNo ?? String.Empty;
 
                     #endregion --Saving the default entries
 

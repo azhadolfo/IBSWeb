@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -10,6 +11,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly Date { get; set; }
 
+        [StringLength(100)]
         public string? UPPIAtlNo { get; set; }
 
         public int LoadPortId { get; set; }
@@ -17,7 +19,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? CurrentUser { get; set; }
 
         public List<SelectListItem> SupplierList { get; set; } = new();
-      
+
         public List<SelectListItem> LoadPorts { get; set; } = new();
 
         public List<CosAppointedDetails> SelectedCosDetails { get; set; } = new();

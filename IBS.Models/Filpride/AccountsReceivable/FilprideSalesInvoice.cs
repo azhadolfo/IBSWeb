@@ -64,6 +64,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public decimal Amount { get; set; }
 
         [Required]
+        [StringLength(1000)]
         public string Remarks
         {
             get => _remarks;

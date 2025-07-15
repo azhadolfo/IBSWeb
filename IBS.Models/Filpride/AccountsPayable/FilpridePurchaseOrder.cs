@@ -64,8 +64,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Amount { get; set; }
 
+
         private string _remarks;
 
+        [StringLength(1000)]
         public string Remarks
         {
             get => _remarks;
@@ -88,6 +90,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         private string? _supplierSalesOrderNo;
 
         [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? SupplierSalesOrderNo
         {
             get => _supplierSalesOrderNo;
@@ -129,8 +132,10 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         #endregion
 
+
         private string _oldPoNo;
 
+        [StringLength(50)]
         public string OldPoNo
         {
             get => _oldPoNo;

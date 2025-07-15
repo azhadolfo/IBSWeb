@@ -22,6 +22,7 @@ namespace IBS.Models.Filpride.ViewModels
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
 
+        [StringLength(1000)]
         public string? SubPoRemarks { get; set; }
 
         public int PickUpPointId { get; set; }
