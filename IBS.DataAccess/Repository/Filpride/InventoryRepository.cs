@@ -377,7 +377,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 decimal total = previousInventory!.Total;
                 decimal inventoryBalance = previousInventory.InventoryBalance;
                 decimal totalBalance = previousInventory.TotalBalance;
-                decimal averageCost = Math.Round(inventoryBalance, 4) == 0 && Math.Round(totalBalance, 4) == 0
+                decimal averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
                     ? previousInventory.AverageCost
                     : totalBalance / inventoryBalance;
 

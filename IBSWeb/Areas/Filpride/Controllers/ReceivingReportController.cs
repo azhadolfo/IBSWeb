@@ -1,20 +1,20 @@
+using System.Linq.Dynamic.Core;
+using System.Security.Claims;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using OfficeOpenXml;
-using System.Linq.Dynamic.Core;
-using System.Security.Claims;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -516,9 +516,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingInventory = await _dbContext.FilprideInventories
                 .Include(i => i.Product)
-                .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo && i.Company == model.Company);
+                .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo
+                                          && i.Company == model.Company, cancellationToken: cancellationToken);
 
-            if (model != null && existingInventory != null)
+            if (existingInventory != null)
             {
                 var hasAlreadyBeenUsed =
                     await _dbContext.FilprideSalesInvoices.AnyAsync(
