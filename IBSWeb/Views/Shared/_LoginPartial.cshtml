@@ -8,7 +8,7 @@
 
     if (SignInManager.IsSignedIn(User))
     {
-        company = User.Claims.FirstOrDefault(c => c.Type == "Company")!.Value;
+        company = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         stationCode = User.Claims.FirstOrDefault(c => c.Type == "StationCode")?.Value;
     }
 }
