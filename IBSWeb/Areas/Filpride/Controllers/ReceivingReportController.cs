@@ -519,66 +519,59 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FirstOrDefaultAsync(i => i.Reference == model.ReceivingReportNo
                                           && i.Company == model.Company, cancellationToken: cancellationToken);
 
-            if (existingInventory != null)
+            if (existingInventory == null)
             {
-                var hasAlreadyBeenUsed =
-                    await _dbContext.FilprideSalesInvoices.AnyAsync(
-                        si => si.ReceivingReportId == model.ReceivingReportId && si.Status != nameof(Status.Voided),
-                        cancellationToken) ||
-                    await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
-                        cv.CvType == "Trade" && cv.RRNo!.Contains(model.ReceivingReportNo) && cv.Status != nameof(Status.Voided), cancellationToken);
+                return NotFound();
+            }
 
-                if (hasAlreadyBeenUsed)
-                {
-                    TempData["info"] = "Please note that this record has already been utilized in a sales invoice or check voucher. As a result, voiding it is not permitted.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
+            var connectedSi = await _unitOfWork.FilprideSalesInvoice
+                .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
 
-                if (model.VoidedBy == null)
-                {
-                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            if (connectedSi != null)
+            {
+                connectedSi.ReceivingReportId = 0;
+            }
 
-                    if (model.PostedBy != null)
-                    {
-                        model.PostedBy = null;
-                    }
-
-                    try
-                    {
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
-                        await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
-                        await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                        await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
-                        model.QuantityReceived = 0;
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Receiving Report has been Voided.";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to void receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                            ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                        await transaction.RollbackAsync(cancellationToken);
-                        TempData["error"] = ex.Message;
-                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                    }
-                }
+            if (model.VoidedBy != null)
+            {
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+                model.PostedBy = null;
+
+                await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
+                await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
+                await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
+                await _unitOfWork.FilprideReceivingReport.RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Receiving Report has been Voided.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
