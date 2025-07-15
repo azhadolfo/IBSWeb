@@ -39,6 +39,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Display(Name = "Supplier Invoice#")]
         [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? SupplierInvoiceNumber { get; set; }
 
         [Display(Name = "Supplier Invoice Date")]
@@ -46,14 +47,17 @@ namespace IBS.Models.Filpride.AccountsPayable
         public DateOnly? SupplierInvoiceDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? SupplierDrNo { get; set; }
 
         [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? WithdrawalCertificate { get; set; }
 
         [Required]
         [Display(Name = "Truck/Vessels")]
         [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string TruckOrVessels { get; set; }
 
         [Required]
@@ -79,9 +83,11 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [Display(Name = "ATL No")]
         [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? AuthorityToLoadNo { get; set; }
 
         [Required]
+        [StringLength(1000)]
         public string Remarks { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
@@ -114,6 +120,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsCostUpdated { get; set; }
 
+        [StringLength(10)]
         public string? OldRRNo { get; set; }
     }
 }

@@ -70,6 +70,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Display(Name = "Reference No")]
         [Required]
         [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string ReferenceNo
         {
             get => _referenceNo;
@@ -79,6 +80,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         private string _referenceNo;
 
         [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? Remarks
         {
             get => _remarks;
@@ -97,6 +99,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public DateOnly? CheckDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CheckNo
         {
             get => _checkNo;
@@ -108,6 +111,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int? BankId { get; set; }
 
         [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CheckBranch
         {
             get => _checkBranch;

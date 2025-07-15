@@ -37,6 +37,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [NotMapped]
         public List<SelectListItem>? ServiceInvoices { get; set; }
 
+        [StringLength(200)]
         public string Description
         {
             get => _description;
@@ -62,6 +63,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Required]
         public string Source { get; set; }
 
+        [StringLength(1000)]
         public string? Remarks
         {
             get => _remarks;

@@ -17,6 +17,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
 
+        [StringLength(100)]
         public string? References
         {
             get => _references;
@@ -34,6 +35,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [NotMapped]
         public List<SelectListItem>? CheckVoucherHeaders { get; set; }
 
+        [StringLength(1000)]
         public string Particulars
         {
             get => _particulars;
@@ -42,6 +44,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         private string _particulars;
 
+        [StringLength(100)]
         [Display(Name = "CR No")]
         public string? CRNo
         {
@@ -51,6 +54,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         private string? _crNo;
 
+        [StringLength(1000)]
         [Display(Name = "JV Reason")]
         public string JVReason
         {

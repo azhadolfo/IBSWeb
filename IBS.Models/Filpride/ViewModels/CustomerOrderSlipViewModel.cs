@@ -29,6 +29,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion Customer properties
 
+        [StringLength(100)]
         [Required(ErrorMessage = "Customer PO No field is required.")]
         public string CustomerPoNo { get; set; }
 
@@ -53,6 +54,7 @@ namespace IBS.Models.Filpride.ViewModels
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal CommissionRate { get; set; }
 
+        [StringLength(1000)]
         public string Remarks { get; set; }
 
         public string AccountSpecialist { get; set; }
@@ -63,6 +65,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public string? CurrentUser { get; set; }
 
+        [StringLength(50)]
         public string OtcCosNo { get; set; }
 
         public string? Status { get; set; }

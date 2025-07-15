@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.ViewModels
@@ -18,6 +19,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly DueDate { get; set; }
 
+        [StringLength(200)]
         public string Instructions { get; set; } = string.Empty;
 
         public DateOnly Period { get; set; }
