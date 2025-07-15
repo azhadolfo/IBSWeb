@@ -1,11 +1,9 @@
 ﻿using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
-using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
-using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -379,7 +377,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 decimal total = previousInventory!.Total;
                 decimal inventoryBalance = previousInventory.InventoryBalance;
                 decimal totalBalance = previousInventory.TotalBalance;
-                decimal averageCost = Math.Round(inventoryBalance, 4) == 0 && Math.Round(totalBalance, 4) == 0
+                decimal averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
                     ? previousInventory.AverageCost
                     : totalBalance / inventoryBalance;
 
@@ -457,7 +455,7 @@ namespace IBS.DataAccess.Repository.Filpride
             decimal total = previousInventory!.Total;
             decimal inventoryBalance = previousInventory.InventoryBalance;
             decimal totalBalance = previousInventory.TotalBalance;
-            decimal averageCost = Math.Round(inventoryBalance, 4) == 0 && Math.Round(totalBalance, 4) == 0
+            decimal averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
                 ? previousInventory.AverageCost
                 : totalBalance / inventoryBalance;
 

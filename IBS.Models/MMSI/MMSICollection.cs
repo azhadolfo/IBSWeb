@@ -11,7 +11,13 @@ namespace IBS.Models.MMSI
         [Key]
         public int MMSICollectionId { get; set; }
 
-        public string MMSICollectionNumber { get; set; }
+        public string MMSICollectionNumber
+        {
+            get => _collectionNumber;
+            set => _collectionNumber = value.Trim();
+        }
+
+        private string _collectionNumber;
 
         public string CheckNumber { get; set; }
 

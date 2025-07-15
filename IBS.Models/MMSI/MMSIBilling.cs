@@ -12,7 +12,13 @@ namespace IBS.Models.MMSI
         public int MMSIBillingId { get; set; }
 
         [Column(TypeName = "varchar(10)")]
-        public string MMSIBillingNumber { get; set; }
+        public string MMSIBillingNumber
+        {
+            get => _billingNumber;
+            set => _billingNumber = value.Trim();
+        }
+
+        private string _billingNumber;
 
         public DateOnly Date { get; set; }
 
@@ -23,8 +29,13 @@ namespace IBS.Models.MMSI
         [Column(TypeName = "varchar(10)")]
         public string BilledTo { get; set; }
 
-        public string? VoyageNumber { get; set; }
+        public string? VoyageNumber
+        {
+            get => _voyageNumber;
+            set => _voyageNumber = value?.Trim();
+        }
 
+        private string? _voyageNumber;
         public decimal Amount { get; set; }
 
         public string CreatedBy { get; set; }

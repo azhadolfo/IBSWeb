@@ -132,7 +132,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
                 else
                 {
-                    TempData["success"] = $"Collection was successfully created.";
+                    TempData["success"] = $"Collection #{model.MMSICollectionNumber} was successfully created.";
                 }
 
                 return RedirectToAction(nameof(Index));

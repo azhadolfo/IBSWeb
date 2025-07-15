@@ -224,7 +224,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
 
-                    TempData["success"] = "Creation Succeed!";
+                    TempData["success"] = $"COS created successfully. Series Number: {model.CustomerOrderSlipNo}";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
