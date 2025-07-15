@@ -183,28 +183,28 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.FilpridePurchaseOrders
-                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
+                .Include(po => po.ActualPrices)
+                .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
-            if (po != null)
-            {
-                po.QuantityReceived -= quantityReceived;
-
-                if (po.IsReceived)
-                {
-                    po.IsReceived = false;
-                    po.ReceivedDate = DateTime.MaxValue;
-                }
-                if (po.QuantityReceived > po.Quantity)
-                {
-                    throw new ArgumentException("Input is exceed to remaining quantity received");
-                }
-
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
+            if (po == null)
             {
                 throw new ArgumentException("No record found.");
             }
+
+            po.QuantityReceived -= quantityReceived;
+
+            if (po.IsReceived)
+            {
+                po.IsReceived = false;
+                po.ReceivedDate = DateTime.MaxValue;
+            }
+
+            if (po.ActualPrices!.Count > 0)
+            {
+                po.ActualPrices.FirstOrDefault()!.AppliedVolume -= quantityReceived;;
+            }
+
+            return await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
@@ -539,16 +539,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new InvalidOperationException("This record has already been utilized in a sales invoice. Voiding is not permitted.");
             }
 
-            if (model.VoidedBy != null)
-            {
-                return;
-            }
-
-            if (model.PostedBy != null)
-            {
-                model.PostedBy = null;
-            }
-
+            model.PostedBy = null;
             model.VoidedBy = currentUser;
             model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
             model.Status = nameof(Status.Voided);
@@ -558,8 +549,6 @@ namespace IBS.DataAccess.Repository.Filpride
             var unitOfWork = new UnitOfWork(_db);
             await unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
             await RemoveQuantityReceived(model.POId, model.QuantityReceived, cancellationToken);
-
-            model.QuantityReceived = 0;
 
             #region --Audit Trail Recording
 
