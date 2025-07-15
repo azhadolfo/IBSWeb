@@ -718,6 +718,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Saving the default entries --
 
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.MultipleSupplierId, cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     #region -- Check Voucher Header --
 
                     existingHeaderModel.Date = viewModel.TransactionDate;
@@ -740,6 +765,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckAmount = viewModel.Total;
                     existingHeaderModel.Total = viewModel.Total;
                     existingHeaderModel.OldCvNo = viewModel.OldCVNo;
+                    existingHeaderModel.SupplierName = supplier.SupplierName;
+                    existingHeaderModel.BankAccountName = bank.AccountName;
+                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -1071,6 +1099,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Saving the default entries --
 
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.MultipleSupplierId, cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     #region -- Check Voucher Header --
 
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
@@ -1095,7 +1148,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CheckAmount = viewModel.Total,
                         Company = companyClaims,
                         Type = invoicingVoucher.Select(i => i.Type).First(),
-                        OldCvNo = viewModel.OldCVNo
+                        OldCvNo = viewModel.OldCVNo,
+                        SupplierName = supplier.SupplierName,
+                        BankAccountName = bank.AccountName,
+                        BankAccountNumber = bank.AccountNo
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -1412,6 +1468,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Header
 
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, viewModel.DocumentType!, cancellationToken),
@@ -1434,6 +1502,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Type = viewModel.DocumentType,
                         IsAdvances = true,
                         EmployeeId = viewModel.EmployeeId,
+                        SupplierName = viewModel.Payee,
+                        BankAccountName = bank.AccountName,
+                        BankAccountNumber = bank.AccountNo
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -1599,6 +1670,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Update Record
 
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     #region Header
 
                     existingHeaderModel.Date = viewModel.TransactionDate;
@@ -1613,6 +1696,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.CheckAmount = viewModel.Total;
+                    existingHeaderModel.SupplierName = viewModel.Payee;
+                    existingHeaderModel.BankAccountName = bank.AccountName;
+                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -1763,6 +1849,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Header
 
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion --Retrieve Supplier
+
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultiplePaymentAsync(companyClaims, viewModel.DocumentType!, cancellationToken),
@@ -1785,6 +1896,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Type = viewModel.DocumentType,
                         IsAdvances = true,
                         SupplierId = viewModel.SupplierId,
+                        SupplierName = supplier.SupplierName,
+                        BankAccountName = bank.AccountName,
+                        BankAccountNumber = bank.AccountNo
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -1967,6 +2081,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region Header
 
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion --Retrieve Supplier
+
+                    #region  -- Get bank account
+
+                    var bank = await _unitOfWork.FilprideBankAccount
+                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                    if (bank == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     existingHeaderModel.Date = viewModel.TransactionDate;
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.Total = viewModel.Total;
@@ -1980,6 +2119,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.CheckAmount = viewModel.Total;
                     existingHeaderModel.SupplierId = viewModel.SupplierId;
+                    existingHeaderModel.SupplierName = supplier.SupplierName;
+                    existingHeaderModel.BankAccountName = bank.AccountName;
+                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
 
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
