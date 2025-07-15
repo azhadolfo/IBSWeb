@@ -718,19 +718,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Saving the default entries --
 
-                    #region -- Get Supplier
-
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.MultipleSupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion
-
                     #region  -- Get bank account
 
                     var bank = await _unitOfWork.FilprideBankAccount
@@ -765,7 +752,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckAmount = viewModel.Total;
                     existingHeaderModel.Total = viewModel.Total;
                     existingHeaderModel.OldCvNo = viewModel.OldCVNo;
-                    existingHeaderModel.SupplierName = supplier.SupplierName;
                     existingHeaderModel.BankAccountName = bank.AccountName;
                     existingHeaderModel.BankAccountNumber = bank.AccountNo;
 
@@ -1502,7 +1488,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Type = viewModel.DocumentType,
                         IsAdvances = true,
                         EmployeeId = viewModel.EmployeeId,
-                        SupplierName = viewModel.Payee,
                         BankAccountName = bank.AccountName,
                         BankAccountNumber = bank.AccountNo
                     };
