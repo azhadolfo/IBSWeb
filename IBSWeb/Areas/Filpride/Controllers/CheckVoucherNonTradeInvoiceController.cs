@@ -245,6 +245,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region -- Saving the default entries --
 
+                    #region --Retrieve Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion --Retrieve Supplier
+
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
@@ -261,7 +274,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = nameof(CVType.Invoicing),
                         Company = companyClaims,
                         Type = viewModel.Type,
-                        Total = viewModel.Total
+                        Total = viewModel.Total,
+                        SupplierName = supplier.SupplierName
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -512,13 +526,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region -- Saving the default entries --
 
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(x => viewModel.MultipleSupplierId!.Contains(x.SupplierId), cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     FilprideCheckVoucherHeader checkVoucherHeader = new()
                     {
                         CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
                         Date = viewModel.TransactionDate,
-                        Payee = null,
-                        Address = "",
-                        Tin = "",
+                        Payee = supplier.SupplierName,
+                        Address = supplier.SupplierAddress,
+                        Tin = supplier.SupplierTin,
                         PONo = [viewModel.PoNo ?? string.Empty],
                         SINo = [viewModel.SiNo ?? string.Empty],
                         SupplierId = null,
@@ -529,7 +556,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CvType = nameof(CVType.Invoicing),
                         Company = companyClaims,
                         Type = viewModel.Type,
-                        InvoiceAmount = viewModel.Total
+                        InvoiceAmount = viewModel.Total,
+                        SupplierName = supplier.SupplierName
                     };
 
                     await _dbContext.AddAsync(checkVoucherHeader, cancellationToken);
@@ -696,6 +724,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return NotFound();
                     }
 
+                    #region -- Get supplier
+
                     var supplier = await _unitOfWork.FilprideSupplier
                         .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
@@ -703,6 +733,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         return NotFound();
                     }
+
+                    #endregion
 
                     existingModel.EditedBy = _userManager.GetUserName(User);
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -715,6 +747,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.SINo = [viewModel.SiNo ?? string.Empty];
                     existingModel.Particulars = viewModel.Particulars;
                     existingModel.Total = viewModel.Total;
+                    existingModel.SupplierName = supplier.SupplierName;
 
                     //For automation purposes
                     if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
@@ -1410,6 +1443,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
+                    #region -- Get Supplier
+
+                    var supplier = await _dbContext
+                        .FilprideSuppliers
+                        .FirstOrDefaultAsync(x => viewModel.MultipleSupplierId!.Contains(x.SupplierId), cancellationToken);
+
+                    if (supplier == null)
+                    {
+                        return NotFound();
+                    }
+
+                    #endregion
+
                     #region -- Saving the default entries --
 
                     var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
@@ -1428,21 +1474,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
                     existingHeaderModel.Particulars = viewModel.Particulars;
                     existingHeaderModel.Total = viewModel.Total;
+                    existingHeaderModel.SupplierName = supplier.SupplierName;
+                    existingHeaderModel.Address = supplier.SupplierAddress;
+                    existingHeaderModel.Tin = supplier.SupplierTin;
+                    existingHeaderModel.Payee = supplier.SupplierName;
 
                     #endregion -- Saving the default entries --
-
-                    #region -- Get Supplier --
-
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .Where(s => s.SupplierId == viewModel.SupplierId)
-                        .FirstOrDefaultAsync(cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion -- Get Supplier --
 
                     #region -- Automatic entry --
 
