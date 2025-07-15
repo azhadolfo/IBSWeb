@@ -64,7 +64,13 @@ namespace IBS.Models.Mobility
 
         [Display(Name = "Note/Remarks")]
         [Column(TypeName = "varchar(200)")]
-        public string Remarks { get; set; }
+        public string Remarks
+        {
+            get => _remarks;
+            set => _remarks = value.Trim();
+        }
+
+        private string _remarks;
 
         [Column(TypeName = "varchar(10)")]
         public string Terms { get; set; }
@@ -79,7 +85,13 @@ namespace IBS.Models.Mobility
         public DateTime ReceivedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
-        public string? SupplierSalesOrderNo { get; set; }
+        public string? SupplierSalesOrderNo
+        {
+            get => _supplierSO;
+            set => _supplierSO = value?.Trim();
+        }
+
+        private string? _supplierSO;
 
         public bool IsClosed { get; set; }
 

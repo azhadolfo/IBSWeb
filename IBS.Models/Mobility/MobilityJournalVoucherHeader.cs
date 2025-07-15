@@ -18,7 +18,13 @@ namespace IBS.Models.Mobility
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
         public DateOnly Date { get; set; }
 
-        public string? References { get; set; }
+        public string? References
+        {
+            get => _references;
+            set => _references = value?.Trim();
+        }
+
+        private string? _references;
 
         [Display(Name = "Check Voucher Id")]
         public int? CVId { get; set; }
@@ -26,13 +32,31 @@ namespace IBS.Models.Mobility
         [ForeignKey(nameof(CVId))]
         public MobilityCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
-        public string Particulars { get; set; }
+        public string Particulars
+        {
+            get => _particulars;
+            set => _particulars = value.Trim();
+        }
+
+        private string _particulars;
 
         [Display(Name = "CR No")]
-        public string? CRNo { get; set; }
+        public string? CRNo
+        {
+            get => _checkNo;
+            set => _checkNo = value?.Trim();
+        }
+
+        private string? _checkNo;
 
         [Display(Name = "JV Reason")]
-        public string JVReason { get; set; }
+        public string JVReason
+        {
+            get => _jvReason;
+            set => _jvReason = value.Trim();
+        }
+
+        private string _jvReason;
 
         public string StationCode { get; set; } = string.Empty;
 
