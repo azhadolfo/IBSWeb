@@ -1,0 +1,72 @@
+@model IEnumerable<FilprideCustomerBranch>
+
+@{
+    ViewData["Title"] = "Customer branch";
+}
+
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">CUSTOMER BRANCH</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4 table-responsive">
+        <div class="row pb-3">
+            <div class="col-6">
+            </div>
+            <div class="col-6 text-end">
+                <a asp-area="Filpride" asp-controller="CustomerBranch" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> New Branch
+                </a>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr class="text-nowrap">
+                    <th>
+                        Customer 
+                    </th>
+                    <th>
+                        Branch name
+                    </th>
+                    <th>
+                        Branch address
+                    </th>
+                    <th>
+                        Branch tin
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var obj in Model.OrderBy(u => u.Customer!.CustomerName))
+                {
+                    <tr>
+                        <td>
+                            @obj.Customer!.CustomerName
+                        </td>
+                        <td>
+                            @obj.BranchName
+                        </td>
+                        <td>
+                            @obj.BranchAddress
+                        </td>
+                        <td>
+                            @obj.BranchTin
+                        </td>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                <a asp-area="Filpride" asp-controller="CustomerBranch" asp-action="Edit" asp-route-id="@obj.Id" class="btn btn-primary mx-2">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

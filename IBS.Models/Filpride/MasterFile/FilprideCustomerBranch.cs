@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.Models.Filpride.MasterFile
 {
@@ -22,5 +23,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Column(TypeName = "varchar(50)")]
         public string BranchTin { get; set; }
+
+        [NotMapped]
+        public List<SelectListItem>? CustomerSelectList { get; set; }
     }
 }
