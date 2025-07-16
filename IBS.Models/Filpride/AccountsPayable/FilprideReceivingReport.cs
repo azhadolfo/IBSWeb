@@ -11,6 +11,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ReceivingReportId { get; set; }
 
+        [StringLength(13)]
         public string? ReceivingReportNo { get; set; }
 
         [Required]
@@ -34,11 +35,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         public List<SelectListItem>? PurchaseOrders { get; set; }
 
         [Display(Name = "PO No")]
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         public string? PONo { get; set; }
 
         [Display(Name = "Supplier Invoice#")]
-        [Column(TypeName = "varchar(100)")]
         [StringLength(100)]
         public string? SupplierInvoiceNumber { get; set; }
 
@@ -46,43 +46,39 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "date")]
         public DateOnly? SupplierInvoiceDate { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
         public string? SupplierDrNo { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
         public string? WithdrawalCertificate { get; set; }
 
         [Required]
         [Display(Name = "Truck/Vessels")]
-        [Column(TypeName = "varchar(100)")]
         [StringLength(100)]
         public string TruckOrVessels { get; set; }
 
         [Required]
         [Display(Name = "Qty Delivered")]
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal QuantityDelivered { get; set; }
 
         [Required]
         [Display(Name = "Qty Received")]
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal QuantityReceived { get; set; }
 
         [Display(Name = "Gain/Loss")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal GainOrLoss { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Amount { get; set; }
 
         [Display(Name = "ATL No")]
-        [Column(TypeName = "varchar(100)")]
         [StringLength(100)]
         public string? AuthorityToLoadNo { get; set; }
 
@@ -90,7 +86,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(1000)]
         public string Remarks { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
 
@@ -102,6 +98,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal CanceledQuantity { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
@@ -114,8 +111,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(DeliveryReceiptId))]
         public FilprideDeliveryReceipt? DeliveryReceipt { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
+        [StringLength(13)]
         public string? Type { get; set; }
 
         public bool IsCostUpdated { get; set; }
