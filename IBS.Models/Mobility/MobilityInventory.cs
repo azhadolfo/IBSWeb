@@ -79,7 +79,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         public string? ValidatedBy { get; set; }
 
-        [Column(TypeName = "timestamp without time zone")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? ValidatedDate { get; set; }
 
         // This property handle
