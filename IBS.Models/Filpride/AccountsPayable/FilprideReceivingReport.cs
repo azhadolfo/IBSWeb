@@ -120,7 +120,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsCostUpdated { get; set; }
 
-        [StringLength(10)]
+        [StringLength(50)]
         public string? OldRRNo { get; set; }
     }
 }

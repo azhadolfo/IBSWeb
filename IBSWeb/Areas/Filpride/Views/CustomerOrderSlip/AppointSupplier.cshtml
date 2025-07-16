@@ -43,7 +43,6 @@
                     <div class="form-group py-2">
                         <label class="fw-bold">Pick-up Point<span class="required">*</span></label>
                         <select asp-for="PickUpPointId" asp-items="@Model.PickUpPoints" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select pick up point</option>
                         </select>
                         <span asp-validation-for="PickUpPointId" class="text-danger"></span>
                     </div>

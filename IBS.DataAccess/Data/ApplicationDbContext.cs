@@ -767,7 +767,7 @@ namespace IBS.DataAccess.Data
                 b.HasOne(b => b.AppointedSupplier)
                     .WithMany()
                     .HasForeignKey(b => b.AppointedId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<FilprideAuthorityToLoad>(b =>
