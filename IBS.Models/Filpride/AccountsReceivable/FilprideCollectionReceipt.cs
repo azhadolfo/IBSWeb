@@ -12,14 +12,14 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CollectionReceiptId { get; set; }
 
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         [Display(Name = "CR No")]
         public string? CollectionReceiptNo { get; set; }
 
         public int? SalesInvoiceId { get; set; }
 
         [Display(Name = "Sales Invoice No.")]
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         public string? SINo { get; set; }
 
         public int[]? MultipleSIId { get; set; }
@@ -37,7 +37,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int? ServiceInvoiceId { get; set; }
 
         [Display(Name = "Sales Invoice No.")]
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         public string? SVNo { get; set; }
 
         [ForeignKey("ServiceInvoiceId")]
@@ -69,7 +69,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [Display(Name = "Reference No")]
         [Required]
-        [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
         public string ReferenceNo
         {
@@ -79,7 +78,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         private string _referenceNo;
 
-        [Column(TypeName = "varchar(100)")]
         [StringLength(100)]
         public string? Remarks
         {
@@ -90,7 +88,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         private string? _remarks;
 
         //Cash
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CashAmount { get; set; }
 
@@ -98,7 +96,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "date")]
         public DateOnly? CheckDate { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
         public string? CheckNo
         {
@@ -110,7 +107,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public int? BankId { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
         [StringLength(50)]
         public string? CheckBranch
         {
@@ -126,11 +122,13 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(BankId))]
         public FilprideBankAccount? BankAccount { get; set; }
 
+        [StringLength(50)]
         public string? BankAccountName { get; set; }
 
+        [StringLength(30)]
         public string? BankAccountNumber { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
 
@@ -138,54 +136,59 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "date")]
         public DateOnly? ManagerCheckDate { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? ManagerCheckNo { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? ManagerCheckBank { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? ManagerCheckBranch { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal ManagerCheckAmount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal EWT { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal WVAT { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
         public bool IsCertificateUpload { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? F2306FilePath { get; set; }
 
+        [StringLength(100)]
         public string? F2306FileName { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? F2307FilePath { get; set; }
 
+        [StringLength(100)]
         public string? F2307FileName { get; set; }
 
         [Column(TypeName = "numeric[]")]
         public decimal[]? SIMultipleAmount { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
         public DateOnly[]? MultipleTransactionDate { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
+        [StringLength(13)]
         public string? Type { get; set; }
 
         [NotMapped]
