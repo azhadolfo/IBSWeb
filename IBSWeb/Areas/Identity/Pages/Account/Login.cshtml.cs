@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
@@ -125,48 +126,56 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Username, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
 
-                    if (Input.StationCode != null)
+                    // Remove existing dynamic claims
+                    var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+                    var dynamicClaims = existingClaims.Where(c => c.Type == "Company" || c.Type == "StationCode").ToList();
+
+                    if (dynamicClaims.Any())
                     {
-                        var newStationCodeClaim = new Claim("StationCode", Input.StationCode);
-                        await _signInManager.UserManager.AddClaimAsync(user, newStationCodeClaim);
+                        await _signInManager.UserManager.RemoveClaimsAsync(user, dynamicClaims);
                     }
 
-                    var newCompanyClaim = new Claim("Company", Input.Company);
-                    await _signInManager.UserManager.AddClaimAsync(user, newCompanyClaim);
+                    // Add fresh dynamic claims based on user input
+                    var newClaims = new List<Claim>
+                    {
+                        new Claim("Company", Input.Company)
+                    };
 
-                    await _signInManager.RefreshSignInAsync(user);
+                    if (!string.IsNullOrEmpty(Input.StationCode))
+                    {
+                        newClaims.Add(new Claim("StationCode", Input.StationCode));
+                    }
+
+                    await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
+
                 if (result.RequiresTwoFactor)
                 {
                     return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
                 }
+
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    await LoadPageData(returnUrl); // Reload data when the form is redisplayed
-                    return Page();
-                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             }
 
-            // If we got this far, something failed, redisplay form
-            await LoadPageData(returnUrl); // Reload data when the form is redisplayed
+            await LoadPageData(returnUrl);
             return Page();
         }
+
+
 
         private async Task LoadPageData(string returnUrl)
         {
