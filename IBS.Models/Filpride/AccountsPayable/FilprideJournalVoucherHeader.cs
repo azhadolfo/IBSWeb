@@ -10,6 +10,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int JournalVoucherHeaderId { get; set; }
 
+        [StringLength(13)]
         public string? JournalVoucherHeaderNo { get; set; }
 
         [Display(Name = "Transaction Date")]
@@ -67,12 +68,15 @@ namespace IBS.Models.Filpride.AccountsPayable
         [NotMapped]
         public List<SelectListItem>? COA { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
+        [StringLength(13)]
         public string? Type { get; set; }
 
         public ICollection<FilprideJournalVoucherDetail>? Details { get; set; }
