@@ -1681,7 +1681,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingHeaderModel.CheckNo = viewModel.CheckNo;
                     existingHeaderModel.CheckDate = viewModel.CheckDate;
                     existingHeaderModel.CheckAmount = viewModel.Total;
-                    existingHeaderModel.SupplierName = viewModel.Payee;
                     existingHeaderModel.BankAccountName = bank.AccountName;
                     existingHeaderModel.BankAccountNumber = bank.AccountNo;
 
