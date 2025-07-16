@@ -24,6 +24,67 @@ namespace IBS.DataAccess.Repository.MMSI
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        public override async Task<IEnumerable<MMSIBilling>> GetAllAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIBilling> query = dbSet
+                .Include(a => a.Terminal)
+                .Include(a => a.Vessel)
+                .Include(a => a.Customer)
+                .Include(a => a.Port);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
+        }
+
+        public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<MMSIBilling> query = dbSet
+                .Include(b => b.Terminal)
+                .ThenInclude(t => t!.Port)
+                .Include(b => b.Vessel)
+                .Include(b => b.Customer)
+                .Include(b => b.Principal);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<List<string>?> GetToBillDispatchTicketListAsync(string billingId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.MMSIDispatchTickets.Where(t => t.BillingId == billingId)
+                .Select(d => d.DispatchTicketId.ToString()).ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<string>?> GetUniqueTugboatsListAsync(string billingId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.MMSIDispatchTickets
+                .Where(dt => dt.BillingId == billingId)
+                .Select(dt => dt.Tugboat!.TugboatName.ToString())
+                .Distinct() // Ensures unique values
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<MMSIDispatchTicket>?> GetPaidDispatchTicketsAsync(string billingId, CancellationToken cancellationToken = default)
+        {
+            return await _dbContext.MMSIDispatchTickets
+                .Where(dt => dt.BillingId == billingId)
+                .Include(a => a.Service)
+                .Include(a => a.Terminal).ThenInclude(t => t!.Port)
+                .Include(a => a.Tugboat)
+                .Include(a => a.TugMaster)
+                .Include(a => a.Vessel)
+                .OrderBy(dt => dt.DateLeft).ThenBy(dt => dt.TimeLeft)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<List<SelectListItem>> GetMMSITerminalsByPortId(int portId, CancellationToken cancellationToken)
         {
             var terminals = await _dbContext
@@ -118,39 +179,6 @@ namespace IBS.DataAccess.Repository.MMSI
                 }).ToListAsync(cancellationToken);
 
             return dispatchTicketList;
-        }
-
-        public override async Task<IEnumerable<MMSIBilling>> GetAllAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
-        {
-            IQueryable<MMSIBilling> query = dbSet
-                .Include(a => a.Terminal)
-                .Include(a => a.Vessel)
-                .Include(a => a.Customer)
-                .Include(a => a.Port);
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            return await query.ToListAsync(cancellationToken);
-        }
-
-        public override async Task<MMSIBilling?> GetAsync(Expression<Func<MMSIBilling, bool>>? filter, CancellationToken cancellationToken = default)
-        {
-            IQueryable<MMSIBilling> query = dbSet
-                .Include(b => b.Terminal)
-                .ThenInclude(t => t!.Port)
-                .Include(b => b.Vessel)
-                .Include(b => b.Customer)
-                .Include(b => b.Principal);
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<string> GenerateBillingNumber(CancellationToken cancellationToken = default)

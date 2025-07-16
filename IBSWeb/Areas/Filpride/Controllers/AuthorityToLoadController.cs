@@ -289,6 +289,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var cosList = await _dbContext.FilprideCOSAppointedSuppliers
                 .Include(a => a.CustomerOrderSlip)
+                .Include(a => a.PurchaseOrder)
                 .Where(a => a.SupplierId == supplierId
                             && a.CustomerOrderSlip!.Status == nameof(CosStatus.ForAtlBooking)
                             && a.CustomerOrderSlip!.PickUpPointId == loadPortId
@@ -298,7 +299,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     appointedId = g.SequenceId,
                     cosId = g.CustomerOrderSlipId,
                     cosNo = g.CustomerOrderSlip!.CustomerOrderSlipNo,
-                    volume = g.UnreservedQuantity
+                    volume = g.UnreservedQuantity,
+                    poNo = g.PurchaseOrder!.PurchaseOrderNo,
                 })
                 .ToListAsync();
 
