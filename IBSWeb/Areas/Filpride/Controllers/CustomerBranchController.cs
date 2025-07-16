@@ -95,15 +95,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var customer = await _dbContext.FilprideCustomerBranches.FindAsync(id, cancellationToken);
+            var branch = await _unitOfWork.FilprideCustomerBranch.GetAsync(b => b.Id == id, cancellationToken);
 
-            if (customer == null)
+            if (branch == null)
             {
                 return NotFound();
             }
 
-            customer.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-            return View(customer);
+            branch.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
+            return View(branch);
         }
 
         [HttpPost]
@@ -118,7 +118,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    await UpdateAsync(model, cancellationToken);
+                    await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer branch updated successfully";
                     return RedirectToAction(nameof(Index));
@@ -128,7 +128,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await transaction.RollbackAsync(cancellationToken);
                     _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
                     TempData["error"] = $"Error: '{ex.Message}'";
-                    model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken)
+                    model.CustomerSelectList =
+                        await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                     return View(model);
                 }
             }
@@ -137,23 +138,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.CustomerSelectList =
                 await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
             return View(model);
-        }
-
-        public async Task UpdateAsync(FilprideCustomerBranch model, CancellationToken cancellationToken)
-        {
-            var currentModel = await _dbContext.FilprideCustomerBranches.FindAsync(model.Id, cancellationToken);
-
-            if (currentModel == null)
-            {
-                throw new NullReferenceException("Customer branch not found");
-            }
-
-            currentModel.CustomerId = model.CustomerId;
-            currentModel.BranchName = model.BranchName;
-            currentModel.BranchAddress = model.BranchAddress;
-            currentModel.BranchTin = model.BranchTin;
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         private async Task<string?> GetCompanyClaimAsync()
