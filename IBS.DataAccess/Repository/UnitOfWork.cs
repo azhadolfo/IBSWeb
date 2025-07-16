@@ -98,6 +98,7 @@ namespace IBS.DataAccess.Repository
         public Filpride.IRepository.IChartOfAccountRepository FilprideChartOfAccount { get; private set; }
         public IAuditTrailRepository FilprideAuditTrail { get; private set; }
         public Filpride.IRepository.IEmployeeRepository FilprideEmployee { get; private set; }
+        public ICustomerBranchRepository FilprideCustomerBranch { get; private set; }
 
         #endregion
 
@@ -221,6 +222,7 @@ namespace IBS.DataAccess.Repository
             FilprideChartOfAccount = new Filpride.ChartOfAccountRepository(_db);
             FilprideAuditTrail = new AuditTrailRepository(_db);
             FilprideEmployee = new Filpride.EmployeeRepository(_db);
+            FilprideCustomerBranch = new CustomerBranchRepository(_db);
 
             #endregion
 
