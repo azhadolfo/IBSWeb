@@ -506,8 +506,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideReceivingReports
-                .FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (model == null)
             {
@@ -524,6 +524,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             var connectedSi = await _unitOfWork.FilprideSalesInvoice
                 .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
 
@@ -532,19 +534,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 connectedSi.ReceivingReportId = 0;
             }
 
-            if (model.VoidedBy != null)
-            {
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
-
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
             try
             {
                 model.VoidedBy = _userManager.GetUserName(this.User);
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
                 model.PostedBy = null;
+                model.DeliveryReceipt!.HasReceivingReport = false;
 
                 await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilpridePurchaseBook>(pb => pb.DocumentNo == model.ReceivingReportNo, cancellationToken);
                 await _unitOfWork.FilprideReceivingReport.RemoveRecords<FilprideGeneralLedgerBook>(pb => pb.Reference == model.ReceivingReportNo, cancellationToken);
