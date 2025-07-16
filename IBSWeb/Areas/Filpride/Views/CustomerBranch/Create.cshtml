@@ -1,0 +1,97 @@
+@model FilprideCustomerBranch
+
+@{
+    ViewData["Title"] = "Create Customer Branch";
+}
+
+<link rel="stylesheet" href="~/css/form-style.css">
+
+<div class="loader-container">
+    <div class="loader"></div>
+    <div class="loader-text">Loading...</div>
+</div>
+<div class="card shadow border-0 mt-4">
+    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2 class="text-white py-2">Create Customer Branch</h2>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-4">
+        <form method="post" class="row">
+            @Html.AntiForgeryToken()
+            <div class="border p-3">
+                <div asp-validation-summary="ModelOnly"></div>
+                
+                <div class="form-group py-2 col-12">
+                    <label class="control-label">Customer Type<span class="required">*</span></label>
+                    <select asp-for="CustomerId" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="" selected disabled>Select customer type</option>
+                        @foreach (var customer in Model.CustomerSelectList!)
+                        {
+                            <option value="@customer.Value">@customer.Text</option>
+                        }
+                    </select>
+                    <span asp-validation-for="CustomerId" class="text-danger"></span>
+                </div>
+                
+                <div id="branch-div" >
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="BranchName" class="form-control border-0 shadow " placeholder="" />
+                        <label asp-for="BranchName" class="ms-2">Branch name<span class="required">*</span></label>
+                        <span asp-validation-for="BranchName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="BranchAddress" class="form-control border-0 shadow " placeholder="" />
+                        <label asp-for="BranchAddress" class="ms-2">Branch Address<span class="required">*</span></label>
+                        <span asp-validation-for="BranchAddress" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating py-2 col-12">
+                        <input asp-for="BranchTin" class="form-control border-0 shadow formattedTinNumberInput" placeholder="" maxlength="17" />
+                        <label asp-for="BranchTin" class="ms-2">Branch Tin<span class="required">*</span></label>
+                        <span asp-validation-for="BranchTin" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="row pt-4">
+                    <div class="col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary form-control">Create</button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a asp-area="Filpride" asp-controller="CustomerBranch" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            function toggleStationDiv() {
+                var selectedCustomer = $('select[name="CustomerId"]').val();
+                var branchDiv = $('#branch-div');
+
+                console.log(selectedCustomer);
+                if (selectedCustomer !== null) {
+                    branchDiv.show();
+                } else {
+                    branchDiv.hide();
+                }
+            }
+
+            // Attach the change event listener
+            $('select[name="CustomerId"]').on('change', toggleStationDiv);
+
+            // Initial check on page load
+            toggleStationDiv();
+        });
+    </script>
+}
