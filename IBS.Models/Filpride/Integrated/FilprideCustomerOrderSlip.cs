@@ -43,6 +43,7 @@ namespace IBS.Models.Filpride.Integrated
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
+        [StringLength(1000)]
         public string Remarks
         {
             get => _remarks;
@@ -51,7 +52,7 @@ namespace IBS.Models.Filpride.Integrated
 
         private string _remarks;
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         [Display(Name = "Customer PO No.")]
         public string CustomerPoNo
         {
@@ -133,6 +134,8 @@ namespace IBS.Models.Filpride.Integrated
         public FilprideSupplier? Supplier { get; set; }
 
         #endregion
+
+        [StringLength(1000)]
         public string? SubPORemarks { get; set; }
 
         #endregion
@@ -227,7 +230,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "varchar(50)")]
         public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Approved
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string OldCosNo
         {
             get => _oldCosNo;

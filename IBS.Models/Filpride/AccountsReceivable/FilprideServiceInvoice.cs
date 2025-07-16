@@ -76,7 +76,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "numeric(18,4)")]
         public decimal Balance { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(1000)]
         public string Instructions
         {
             get => _instructions;
