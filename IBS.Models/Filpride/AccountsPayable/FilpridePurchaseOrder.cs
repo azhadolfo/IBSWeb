@@ -14,6 +14,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public int PurchaseOrderId { get; set; }
 
         [Display(Name = "PO No")]
+        [StringLength(13)]
         public string? PurchaseOrderNo { get; set; }
 
         [Required]
@@ -29,10 +30,13 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
+        [StringLength(200)]
         public string SupplierName { get; set; } = string.Empty;
 
+        [StringLength(200)]
         public string SupplierAddress { get; set; } = string.Empty;
 
+        [StringLength(20)]
         public string SupplierTin { get; set; } = string.Empty;
 
         #endregion
@@ -44,6 +48,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(ProductId))]
         public Product? Product { get; set; }
 
+        [StringLength(100)]
         public string ProductName { get; set; } = string.Empty;
 
         #endregion
@@ -53,15 +58,15 @@ namespace IBS.Models.Filpride.AccountsPayable
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Price { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal FinalPrice { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Amount { get; set; }
 
 
@@ -74,22 +79,20 @@ namespace IBS.Models.Filpride.AccountsPayable
             set => _remarks = value.Trim();
         }
 
-        [Column(TypeName = "varchar(10)")]
+        [StringLength(10)]
         public string Terms { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal QuantityReceived { get; set; }
 
         public bool IsReceived { get; set; }
 
         [Column(TypeName = "timestamp with time zone")]
-
         public DateTime ReceivedDate { get; set; }
 
         private string? _supplierSalesOrderNo;
 
-        [Column(TypeName = "varchar(100)")]
         [StringLength(100)]
         public string? SupplierSalesOrderNo
         {
@@ -99,10 +102,12 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsClosed { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         #region--Select List Item
@@ -132,7 +137,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         #endregion
 
-
         private string _oldPoNo;
 
         [StringLength(50)]
@@ -142,8 +146,10 @@ namespace IBS.Models.Filpride.AccountsPayable
             set => _oldPoNo = value.Trim();
         }
 
+        [StringLength(13)]
         public string? Type { get; set; }
 
+        [Column(TypeName = "date")]
         public DateOnly TriggerDate { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
@@ -156,8 +162,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey(nameof(PickUpPointId))]
         public FilpridePickUpPoint? PickUpPoint { get; set; }
 
+        [StringLength(10)]
         public string VatType { get; set; } = string.Empty;
 
+        [StringLength(20)]
         public string TaxType { get; set; } = string.Empty;
 
         [NotMapped]
