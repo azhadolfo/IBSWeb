@@ -15,16 +15,20 @@ namespace IBS.Models.Filpride.AccountsPayable
         [NotMapped]
         public List<SelectListItem>? DefaultExpenses { get; set; }
 
+        [StringLength(20)]
         public string AccountNo { get; set; } = " ";
+
+        [StringLength(200)]
         public string AccountName { get; set; } = " ";
 
+        [StringLength(13)]
         public string TransactionNo { get; set; } = " ";
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Debit { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal Credit { get; set; }
 
@@ -46,6 +50,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsVatable { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal EwtPercent { get; set; }
 
         public bool IsUserSelected { get; set; }
