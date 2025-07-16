@@ -42,7 +42,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "numeric(18,4)")]
         public decimal DebitAmount { get; set; }
 
-        [StringLength(200)]
+        [StringLength(1000)]
         public string Description
         {
             get => _description;
