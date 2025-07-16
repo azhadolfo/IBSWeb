@@ -46,7 +46,7 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(1000)]
         public string Remarks
         {
             get => _remarks;
@@ -67,7 +67,7 @@ namespace IBS.Models.Filpride.Integrated
 
         public string Company { get; set; } = string.Empty;
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string ManualDrNo
         {
             get => _manualDrNo;
@@ -85,10 +85,10 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(HaulerId))]
         public FilprideSupplier? Hauler { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? Driver { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? PlateNo
         {
             get => _plateNo;

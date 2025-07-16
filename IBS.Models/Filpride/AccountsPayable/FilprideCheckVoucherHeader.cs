@@ -14,6 +14,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public string? CheckVoucherHeaderNo { get; set; }
 
+        [StringLength(100)]
         public string? OldCvNo
         {
             get => _oldCvNo;
@@ -62,6 +63,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public decimal[]? Amount { get; set; }
 
+        [StringLength(1000)]
         public string? Particulars
         {
             get => _particulars;
@@ -81,6 +83,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string? BankAccountNumber { get; set; }
 
         [Display(Name = "Check #")]
+        [StringLength(50)]
         [RegularExpression(@"^(?:\d{10,}|DM\d{10})$", ErrorMessage = "Invalid format. Please enter either a 'DM' followed by a 10-digits or CV number minimum 10 digits.")]
         public string? CheckNo
         {
@@ -93,6 +96,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         public string Category { get; set; }
 
         [Display(Name = "Payee")]
+        [StringLength(150)]
         public string? Payee { get; set; }
 
         [NotMapped]
