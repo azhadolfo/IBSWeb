@@ -910,31 +910,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                if (model.CanceledBy == null)
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var connectedReceivingReport = await _dbContext.FilprideReceivingReports
+                    .FirstOrDefaultAsync(
+                        rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted),
+                        cancellationToken);
+
+                if (connectedReceivingReport != null)
                 {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(DRStatus.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
-                    await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-                    await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    TempData["success"] = "Delivery Receipt has been canceled.";
+                    await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(
+                        connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
                 }
+
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(DRStatus.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
+                await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId,
+                    model.Quantity, cancellationToken);
+                await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!,
+                    $"Canceled delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Delivery Receipt has been canceled.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to cancel delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Canceled by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
 
-            return NotFound();
         }
 
         [Authorize(Roles = "Admin")]
@@ -950,66 +975,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingInventory = await _dbContext.FilprideInventories
                 .Include(i => i.Product)
-                .FirstOrDefaultAsync(i => i.Reference == model.DeliveryReceiptNo && i.Company == model.Company);
+                .FirstOrDefaultAsync(i => i.Reference == model.DeliveryReceiptNo
+                                          && i.Company == model.Company, cancellationToken);
 
-            if (model != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-                try
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(DRStatus.Voided);
+
+                if (existingInventory != null)
                 {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(DRStatus.Voided);
-
-                        if (existingInventory != null)
-                        {
-                            await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
-                        }
-
-                        var connectedReceivingReport = await _dbContext.FilprideReceivingReports
-                            .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
-
-                        if (connectedReceivingReport != null)
-                        {
-                            await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
-                        }
-
-                        await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
-                        await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
-                        await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _unitOfWork.SaveAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Delivery receipt has been Voided.";
-                    }
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                 }
-                catch (Exception ex)
+
+                var connectedReceivingReport = await _dbContext.FilprideReceivingReports
+                    .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
+
+                if (connectedReceivingReport != null)
                 {
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to void delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
                 }
+
+                await _unitOfWork.FilprideDeliveryReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DeliveryReceiptNo, cancellationToken);
+                await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId, model.Quantity, cancellationToken);
+                await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Delivery receipt has been Voided.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            return BadRequest();
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to void delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
         }
 
         public async Task<IActionResult> GenerateExcel(int id)

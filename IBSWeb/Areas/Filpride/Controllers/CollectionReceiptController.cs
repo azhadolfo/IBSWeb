@@ -1571,29 +1571,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                 .GetAsync(si => si.SalesInvoiceId == siNo);
 
-            if (salesInvoice != null)
+            if (salesInvoice == null)
             {
-                var amount = salesInvoice.Amount;
-                var amountPaid = salesInvoice.AmountPaid;
-                var netDiscount = salesInvoice.Amount - salesInvoice.Discount;
-                var netOfVatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(netDiscount) : netDiscount;
-                var vatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount) : 0m;
-                var ewtAmount = salesInvoice.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
-                var wvatAmount = salesInvoice.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0m;
-                var balance = amount - amountPaid;
-
-                return Json(new
-                {
-                    Amount = amount,
-                    AmountPaid = amountPaid,
-                    NetAmount = netOfVatAmount,
-                    VatAmount = vatAmount,
-                    EwtAmount = ewtAmount,
-                    WvatAmount = wvatAmount,
-                    Balance = balance
-                });
+                return Json(null);
             }
-            return Json(null);
+
+            var amount = salesInvoice.Amount;
+            var amountPaid = salesInvoice.AmountPaid;
+            var netDiscount = salesInvoice.Amount - salesInvoice.Discount;
+            var netOfVatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(netDiscount)
+                : netDiscount;
+            var vatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount)
+                : 0m;
+            var ewtAmount = salesInvoice.CustomerOrderSlip.HasEWT
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                : 0m;
+            var wvatAmount = salesInvoice.CustomerOrderSlip.HasWVAT
+                ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                : 0m;
+            var balance = amount - amountPaid;
+
+            return Json(new
+            {
+                Amount = amount,
+                AmountPaid = amountPaid,
+                NetAmount = netOfVatAmount,
+                VatAmount = vatAmount,
+                EwtAmount = ewtAmount,
+                WvatAmount = wvatAmount,
+                Balance = balance
+            });
         }
 
         public async Task<IActionResult> MultipleCollectionPrint(int id, CancellationToken cancellationToken)
