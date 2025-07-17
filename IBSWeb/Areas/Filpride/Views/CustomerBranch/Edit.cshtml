@@ -24,14 +24,12 @@
             <div class="border p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 
+                <input asp-for="Id" type="hidden" ></input>
+                
                 <div class="form-group py-2 col-12">
-                    <label class="control-label">Customer Type<span class="required">*</span></label>
-                    <select asp-for="CustomerId" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
-                        <option value="" selected disabled>Select customer type</option>
-                        @foreach (var customer in Model.CustomerSelectList!)
-                        {
-                            <option value="@customer.Value">@customer.Text</option>
-                        }
+                    <label class="control-label">Customer Name<span class="required">*</span></label>
+                    <select asp-for="CustomerId" id="CustomerId" asp-items="@Model.CustomerSelectList" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
+                        <option value="" disabled>Select...</option>
                     </select>
                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                 </div>
@@ -74,23 +72,20 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        const customerSelectElement =  $("#CustomerId");
+        const branchDiv = $('#branch-div');
+        
         $(document).ready(function () {
             function toggleStationDiv() {
-                var selectedCustomer = $('select[name="CustomerId"]').val();
-                var branchDiv = $('#branch-div');
-
-                console.log(selectedCustomer);
-                if (selectedCustomer !== null) {
-                    branchDiv.show();
-                } else {
+                if (customerSelectElement.val() === "") {
                     branchDiv.hide();
+                } else {
+                    branchDiv.show();
                 }
             }
-
-            // Attach the change event listener
-            $('select[name="CustomerId"]').on('change', toggleStationDiv);
-
-            // Initial check on page load
+            
+            customerSelectElement.on('change', toggleStationDiv);
+            
             toggleStationDiv();
         });
     </script>
