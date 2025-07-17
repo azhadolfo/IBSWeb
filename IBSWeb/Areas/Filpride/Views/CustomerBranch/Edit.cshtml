@@ -72,21 +72,41 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        const customerSelectElement =  $("#CustomerId");
-        const branchDiv = $('#branch-div');
-        
         $(document).ready(function () {
+            const customerField = $('select[name="CustomerId"]');
+
             function toggleStationDiv() {
-                if (customerSelectElement.val() === "") {
-                    branchDiv.hide();
-                } else {
+                const branchDiv = $('#branch-div');
+                console.log("customer val = " + customerField.val());
+                if (customerField.length && customerField.val()) {
                     branchDiv.show();
+                    updateWithCustomerDetails(customerField.val());
+                } else {
+                    branchDiv.hide();
                 }
             }
-            
-            customerSelectElement.on('change', toggleStationDiv);
-            
-            toggleStationDiv();
+
+            function updateWithCustomerDetails (customerId){
+                const addressField = $('[name="BranchAddress"]');
+                const tinField = $('[name="BranchTin"]');
+                console.log("update customer : " + customerId);
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "CustomerBranch", new { area = "Filpride" })',
+                    type: 'POST',
+                    data: { customerId: customerId },
+                    dataType: 'json',
+                    success: function (data) {
+                        addressField.val(data.address);
+                        tinField.val(data.tin);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            // Attach the change event listener
+            customerField.on('change', toggleStationDiv);
         });
     </script>
 }
