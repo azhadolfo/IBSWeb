@@ -16,7 +16,7 @@ namespace IBS.Models.Filpride.Integrated
         public int CustomerOrderSlipId { get; set; }
 
         [Display(Name = "COS No.")]
-        [Column(TypeName = "varchar(13)")]
+        [StringLength(13)]
         public string CustomerOrderSlipNo { get; set; }
 
         [Column(TypeName = "date")]
@@ -30,16 +30,19 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        [StringLength(20)]
         public string CustomerType { get; set; }
 
+        [StringLength(200)]
         public string CustomerAddress { get; set; }
 
+        [StringLength(20)]
         public string CustomerTin { get; set; }
 
         #endregion Preparation of COS
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Display(Name = "Total Amount")]
         public decimal TotalAmount { get; set; }
 
@@ -63,19 +66,19 @@ namespace IBS.Models.Filpride.Integrated
         private string _customerPoNo;
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal DeliveredPrice { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal DeliveredQuantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal BalanceQuantity { get; set; }
 
         #region Commissionee's Properties
@@ -87,12 +90,12 @@ namespace IBS.Models.Filpride.Integrated
         public FilprideSupplier? Commissionee { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal CommissionRate { get; set; }
 
         #endregion Commissionee's Properties
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string AccountSpecialist { get; set; }
 
         #region Product's Properties
@@ -104,6 +107,7 @@ namespace IBS.Models.Filpride.Integrated
 
         #endregion Product's Properties
 
+        [StringLength(100)]
         public string? Branch { get; set; }
 
         #endregion
@@ -116,11 +120,11 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(PurchaseOrderId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? DeliveryOption { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal? Freight { get; set; }
 
         public int? PickUpPointId { get; set; }
@@ -142,9 +146,10 @@ namespace IBS.Models.Filpride.Integrated
 
         #region Approval of Operation Manager
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? OmApprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? OmApprovedDate { get; set; }
 
         [Column(TypeName = "date")]
@@ -163,22 +168,26 @@ namespace IBS.Models.Filpride.Integrated
 
         #region Approval of Cnc
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? CncApprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? CncApprovedDate { get; set; }
 
         #endregion
 
         #region Approval of Finance
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? FmApprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? FmApprovedDate { get; set; }
 
+        [StringLength(15)]
         public string? Terms { get; set; }
 
+        [StringLength(1000)]
         public string? FinanceInstruction
         {
             get => _financeInstruction;
@@ -193,41 +202,48 @@ namespace IBS.Models.Filpride.Integrated
 
         public int? HaulerId { get; set; }
         public FilprideSupplier? Hauler { get; set; }
+
+        [StringLength(100)]
         public string? Driver { get; set; }
+
+        [StringLength(50)]
         public string? PlateNo { get; set; }
 
         #endregion
 
         #region Booking of ATL
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? AuthorityToLoadNo { get; set; }
 
         #endregion
 
         public bool IsDelivered { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? EditedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? EditedDate { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? DisapprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? DisapprovedDate { get; set; }
 
         public bool IsPrinted { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string Status { get; set; } //Created, Supplier Appointed, Approved by Ops Manager, Approved by Finance, Hauler Appointed, Approved
 
         [StringLength(50)]
@@ -249,40 +265,40 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "numeric(18,4)")]
         public decimal OldPrice { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string PriceReference { get; set; } =  string.Empty;
 
         public ICollection<FilprideDeliveryReceipt>? DeliveryReceipts { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string CustomerName { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string ProductName { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
         public decimal AvailableCreditLimit { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string VatType { get; set; }
 
         public bool HasEWT { get; set; }
 
         public bool HasWVAT { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? Depot { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? CommissioneeName { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? BusinessStyle { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? CommissioneeVatType { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? CommissioneeTaxType { get; set; }
     }
 }
