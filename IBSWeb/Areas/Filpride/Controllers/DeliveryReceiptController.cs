@@ -927,7 +927,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (connectedReceivingReport != null)
                 {
                     await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(
-                        connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
+                        connectedReceivingReport.ReceivingReportId, User.Identity!.Name!, cancellationToken);
                 }
 
                 model.CanceledBy = _userManager.GetUserName(this.User);
@@ -1148,7 +1148,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (drFreight == 0)
             {
                 freight = cos.VatType == SD.VatType_Vatable
-                    ? cos.Freight == 0 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!) : (decimal)cos.Freight!
+                    ? cos.Freight != 0
+                        ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat((decimal)cos.Freight!)
+                        : (decimal)cos.Freight!
                     : (decimal)cos.Freight!;
             }
             else
