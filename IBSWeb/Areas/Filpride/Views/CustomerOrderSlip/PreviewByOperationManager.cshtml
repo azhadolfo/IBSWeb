@@ -152,7 +152,7 @@
             @foreach (var file in Model.UploadedFiles)
             {
                 <div class="file-item d-inline-flex align-items-center mb-3 col-3">
-                    <a class="existingFile-link btn btn-outline-primary border shadow text-truncate" data-name="@file.FileName" data-url="@file.SignedUrl" title="@file.FileName">
+                    <a class="btn btn-outline-primary border shadow text-truncate" href="@file.SignedUrl" target="_blank" data-name="@file.FileName" data-url="@file.SignedUrl" title="@file.FileName">
                         @file.FileName
                     </a>
                 </div>
