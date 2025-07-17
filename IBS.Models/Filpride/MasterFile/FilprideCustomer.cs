@@ -12,42 +12,42 @@ namespace IBS.Models.Filpride.MasterFile
         public int CustomerId { get; set; }
 
         [Display(Name = "Customer Code")]
-        [Column(TypeName = "varchar(7)")]
+        [StringLength(7)]
         public string? CustomerCode { get; set; }
 
         [Required]
         [Display(Name = "Customer Name")]
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string CustomerName { get; set; }
 
         [Required]
         [Display(Name = "Customer Address")]
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string CustomerAddress { get; set; }
 
         [Required]
         [Display(Name = "TIN No")]
         [RegularExpression(@"\d{3}-\d{3}-\d{3}-\d{5}", ErrorMessage = "Invalid TIN number format.")]
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string CustomerTin { get; set; }
 
         [Display(Name = "Business Style")]
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? BusinessStyle { get; set; }
 
         [Required]
         [Display(Name = "Payment Terms")]
-        [Column(TypeName = "varchar(10)")]
+        [StringLength(10)]
         public string CustomerTerms { get; set; }
 
         [Required]
         [Display(Name = "Customer Type")]
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string CustomerType { get; set; }
 
         [Required]
         [Display(Name = "Vat Type")]
-        [Column(TypeName = "varchar(10)")]
+        [StringLength(10)]
         public string VatType { get; set; }
 
         [Required]
@@ -61,36 +61,39 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Created By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? EditedDate { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public ClusterArea? ClusterCode { get; set; }
 
         #region For Retail
 
-        [Column(TypeName = "varchar(3)")]
+        [StringLength(3)]
         public string? StationCode { get; set; }
 
         #endregion
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal CreditLimit { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal CreditLimitAsOfToday { get; set; }
 
         public bool HasBranch { get; set; }
@@ -99,7 +102,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "Zip Code")]
-        [Column(TypeName = "varchar(10)")]
+        [StringLength(10)]
         public string? ZipCode { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
@@ -115,7 +118,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         public bool IsMMSI { get; set; }
 
-        [Column(TypeName = "varchar(15)")]
+        [StringLength(13)]
         public string Type { get; set; } = string.Empty;
 
         [Display(Name = "Requires Price Adjustment")]
