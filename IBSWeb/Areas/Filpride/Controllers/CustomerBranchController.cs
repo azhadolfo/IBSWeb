@@ -1,5 +1,7 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -151,6 +153,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var claims = await _userManager.GetClaimsAsync(user);
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCustomerBranchesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+                var queried = _dbContext.FilprideCustomerBranches
+                    .Include(b => b.Customer)
+                    .Where(b => b.Id != 0); // Need to add at least 1 where to make it iqueryable
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
+
+                    queried = queried
+                    .Where(b =>
+                        b.BranchName.ToLower().Contains(searchValue) == true ||
+                        b.BranchAddress.ToLower().Contains(searchValue) == true ||
+                        b.BranchTin.ToLower().Contains(searchValue) == true ||
+                        b.Customer!.CustomerName.ToLower().Contains(searchValue) == true
+                        );
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}");
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Select(b  => new
+                    {
+                        b.Id,
+                        b.Customer!.CustomerName,
+                        b.BranchName,
+                        b.BranchAddress,
+                        b.BranchTin,
+                    })
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get dispatch tickets.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
     }
 }
