@@ -71,20 +71,40 @@
     }
     <script>
         $(document).ready(function () {
+            const customerField = $('select[name="CustomerId"]');
+            
             function toggleStationDiv() {
-                var selectedCustomer = $('select[name="CustomerId"]').val();
-                var branchDiv = $('#branch-div');
-
-                console.log(selectedCustomer);
-                if (selectedCustomer !== null) {
+                const branchDiv = $('#branch-div');
+                console.log("customer val = " + customerField.val());
+                if (customerField.length && customerField.val()) {
                     branchDiv.show();
+                    updateWithCustomerDetails(customerField.val());
                 } else {
                     branchDiv.hide();
                 }
             }
+            
+            function updateWithCustomerDetails (customerId){
+                const addressField = $('[name="BranchAddress"]');
+                const tinField = $('[name="BranchTin"]');
+                console.log("update customer : " + customerId);
+                $.ajax({
+                    url: '@Url.Action("GetCustomerDetails", "CustomerBranch", new { area = "Filpride" })',
+                    type: 'POST',
+                    data: { customerId: customerId },
+                    dataType: 'json',
+                    success: function (data) {
+                        addressField.val(data.address);
+                        tinField.val(data.tin);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
 
             // Attach the change event listener
-            $('select[name="CustomerId"]').on('change', toggleStationDiv);
+            customerField.on('change', toggleStationDiv);
 
             // Initial check on page load
             toggleStationDiv();

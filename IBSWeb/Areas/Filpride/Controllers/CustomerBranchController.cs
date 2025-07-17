@@ -206,6 +206,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get customer branches.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetCustomerDetails(int customerId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == customerId, cancellationToken);
+
+                if (customer == null)
+                {
+                    TempData["error"] = "Customer not found";
+                }
+
+                return Json(new
+                {
+                    address = customer!.CustomerAddress,
+                    tin = customer.CustomerTin,
+                });
+            }
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "Failed to get dispatch tickets.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
