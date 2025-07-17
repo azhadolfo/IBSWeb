@@ -927,7 +927,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (connectedReceivingReport != null)
                 {
                     await _unitOfWork.FilprideReceivingReport.VoidReceivingReportAsync(
-                        connectedReceivingReport.ReceivingReportId, model.VoidedBy!, cancellationToken);
+                        connectedReceivingReport.ReceivingReportId, User.Identity!.Name!, cancellationToken);
                 }
 
                 model.CanceledBy = _userManager.GetUserName(this.User);
