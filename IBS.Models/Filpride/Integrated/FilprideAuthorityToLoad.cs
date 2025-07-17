@@ -57,10 +57,10 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(100)]
         public string? HaulerName { get; set; }
 
-        [StringLength(100)]
+        [StringLength(200)]
         public string? Driver { get; set; }
 
-        [StringLength(50)]
+        [StringLength(200)]
         public string? PlateNo { get; set; }
 
         [StringLength(100)]
