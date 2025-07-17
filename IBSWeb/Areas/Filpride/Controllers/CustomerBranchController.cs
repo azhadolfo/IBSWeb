@@ -32,13 +32,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index(string? view, CancellationToken cancellationToken)
         {
-            IEnumerable<FilprideCustomerBranch> customer = await _dbContext.FilprideCustomerBranches
-                .Include(b => b.Customer)
-                .ToListAsync(cancellationToken);
-
-            return View(customer);
+            return View();
         }
 
         [HttpGet]
@@ -66,8 +62,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    await _dbContext.FilprideCustomerBranches.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer branch created successfully";
                     return RedirectToAction(nameof(Index));
@@ -77,7 +72,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-
                     model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                     return View(model);
                 }
@@ -160,16 +154,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
-                var queried = _dbContext.FilprideCustomerBranches
-                    .Include(b => b.Customer)
-                    .Where(b => b.Id != 0); // Need to add at least 1 where to make it iqueryable
+                var queried = await _unitOfWork.FilprideCustomerBranch
+                    .GetAllAsync(null, cancellationToken);
 
                 // Global search
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
-                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
 
                     queried = queried
                     .Where(b =>
@@ -177,14 +168,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         b.BranchAddress.ToLower().Contains(searchValue) == true ||
                         b.BranchTin.ToLower().Contains(searchValue) == true ||
                         b.Customer!.CustomerName.ToLower().Contains(searchValue) == true
-                        );
+                        ).ToList();
                 }
 
                 // Sorting
                 if (parameters.Order != null && parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
                     queried = queried
                         .AsQueryable()

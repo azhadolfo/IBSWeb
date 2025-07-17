@@ -1,5 +1,3 @@
-@model IEnumerable<FilprideCustomerBranch>
-
 @{
     ViewData["Title"] = "Customer branch";
 }
@@ -121,11 +119,20 @@
                 "columns": [
                     {
                         "data": "customerName",
-                        "name": "customer.customerName"
+                        "name": "Customer.CustomerName"
                     },
-                    {"data": "branchName"},
-                    {"data": "branchAddress"},
-                    {"data": "branchTin"},
+                    {
+                        "data": "branchName",
+                        "name": "BranchName"
+                    },
+                    {
+                        "data": "branchAddress",
+                        "name": "BranchAddress"
+                    },
+                    {
+                        "data": "branchTin",
+                        "name": "BranchTin"
+                    },
                     {
                         "data": "null",
                         "orderable": false,

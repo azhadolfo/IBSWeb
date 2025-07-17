@@ -1,6 +1,8 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.MasterFile;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
@@ -28,6 +30,19 @@ namespace IBS.DataAccess.Repository.Filpride
             currentModel.BranchTin = model.BranchTin;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<FilprideCustomerBranch>> GetAllAsync(Expression<Func<FilprideCustomerBranch, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideCustomerBranch> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query
+                .Include(b => b.Customer)
+                .ToListAsync(cancellationToken);
         }
     }
 }
