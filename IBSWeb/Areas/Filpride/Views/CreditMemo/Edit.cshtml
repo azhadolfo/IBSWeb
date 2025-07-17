@@ -55,12 +55,12 @@
                 </div>
                 <div class="form-group mb-3">
                     <label class="control-label">Quantity</label>
-                    <input asp-for="Quantity" class="form-control money" placeholder="0.000" required/>
+                    <input asp-for="Quantity" class="form-control money" value="@Model.Quantity" placeholder="0.000" required/>
                     <span asp-validation-for="Quantity" class="text-danger"></span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="AdjustedPrice" class="control-label"></label>
-                    <input asp-for="AdjustedPrice" class="form-control money" placeholder="0.000" required/>
+                    <input asp-for="AdjustedPrice" class="form-control money" value="@Model.AdjustedPrice" placeholder="0.000" required/>
                     <span asp-validation-for="AdjustedPrice" class="text-danger"></span>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                     </div>
                     <div class="col-sm">
                         <label asp-for="Amount" class="control-label"></label>
-                        <input asp-for="Amount" class="form-control money amount" placeholder="0.000" required/>
+                        <input asp-for="Amount" class="form-control money amount" value="@Model.Amount" placeholder="0.000" required/>
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                 </div>
