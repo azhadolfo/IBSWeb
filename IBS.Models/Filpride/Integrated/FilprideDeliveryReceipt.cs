@@ -12,7 +12,7 @@ namespace IBS.Models.Filpride.Integrated
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DeliveryReceiptId { get; set; }
 
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         [Display(Name = "DR No")]
         public string DeliveryReceiptNo { get; set; }
 
@@ -31,8 +31,10 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        [StringLength(200)]
         public string CustomerAddress { get; set; }
 
+        [StringLength(20)]
         public string CustomerTin { get; set; }
 
         #endregion
@@ -56,15 +58,16 @@ namespace IBS.Models.Filpride.Integrated
         private string _remarks;
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Quantity { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal TotalAmount { get; set; }
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         [StringLength(50)]
@@ -76,6 +79,7 @@ namespace IBS.Models.Filpride.Integrated
 
         private string _manualDrNo;
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(DRStatus.PendingDelivery);
 
         #region Appointing Hauler
@@ -98,18 +102,18 @@ namespace IBS.Models.Filpride.Integrated
         private string? _plateNo;
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal Freight { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         public decimal ECC { get; set; }
 
         #endregion
 
         #region Booking of ATL
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? AuthorityToLoadNo { get; set; }
 
         #endregion
@@ -147,13 +151,13 @@ namespace IBS.Models.Filpride.Integrated
 
         public bool HasReceivingReport { get; set; }
 
-        [Column(TypeName = "varchar(200)")]
+        [StringLength(200)]
         public string? HaulerName { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? HaulerVatType { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? HaulerTaxType { get; set; }
         public int AuthorityToLoadId { get; set; }
 

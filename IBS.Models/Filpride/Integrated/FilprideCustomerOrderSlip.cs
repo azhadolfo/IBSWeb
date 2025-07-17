@@ -203,10 +203,10 @@ namespace IBS.Models.Filpride.Integrated
         public int? HaulerId { get; set; }
         public FilprideSupplier? Hauler { get; set; }
 
-        [StringLength(100)]
+        [StringLength(200)]
         public string? Driver { get; set; }
 
-        [StringLength(50)]
+        [StringLength(200)]
         public string? PlateNo { get; set; }
 
         #endregion
