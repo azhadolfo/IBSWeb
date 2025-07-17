@@ -33,7 +33,7 @@ namespace IBS.Models.Filpride.ViewModels
         [Required(ErrorMessage = "The bank account is required.")]
         public int BankId { get; set; }
 
-        [StringLength(20)]
+        [StringLength(50)]
         [Display(Name = "Check No.")]
         public string CheckNo { get; set; }
 

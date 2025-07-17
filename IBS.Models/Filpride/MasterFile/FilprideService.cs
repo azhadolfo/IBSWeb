@@ -11,14 +11,15 @@ namespace IBS.Models.Filpride.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ServiceId { get; set; }
 
+        [StringLength(5)]
         [Display(Name = "Service No")]
         public string? ServiceNo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? CurrentAndPreviousNo { get; set; }
 
         [Display(Name = "Current and Previous")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CurrentAndPreviousTitle { get; set; }
 
         [NotMapped]
@@ -30,10 +31,10 @@ namespace IBS.Models.Filpride.MasterFile
         [NotMapped]
         public int UnearnedId { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? UnearnedTitle { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? UnearnedNo { get; set; }
 
         [NotMapped]
@@ -41,19 +42,20 @@ namespace IBS.Models.Filpride.MasterFile
 
         [Required]
         [Display(Name = "Service Name")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string Name { get; set; }
 
         [Required]
         public int Percent { get; set; }
 
         [Display(Name = "Created By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsFilpride { get; set; }

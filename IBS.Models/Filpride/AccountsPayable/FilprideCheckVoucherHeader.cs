@@ -12,8 +12,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CheckVoucherHeaderId { get; set; }
 
+        [StringLength(13)]
         public string? CheckVoucherHeaderNo { get; set; }
 
+        [StringLength(100)]
         public string? OldCvNo
         {
             get => _oldCvNo;
@@ -51,6 +53,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey("SupplierId")]
         public FilprideSupplier? Supplier { get; set; }
 
+        [StringLength(200)]
         public string? SupplierName { get; set; }
 
         [NotMapped]
@@ -60,8 +63,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Column(TypeName = "numeric(18,4)")]
         public decimal Total { get; set; }
 
+        [Column(TypeName = "numeric(18,4)[]")]
         public decimal[]? Amount { get; set; }
 
+        [StringLength(1000)]
         public string? Particulars
         {
             get => _particulars;
@@ -76,11 +81,14 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey("BankId")]
         public FilprideBankAccount? BankAccount { get; set; }
 
+        [StringLength(200)]
         public string? BankAccountName { get; set; }
 
+        [StringLength(100)]
         public string? BankAccountNumber { get; set; }
 
         [Display(Name = "Check #")]
+        [StringLength(50)]
         [RegularExpression(@"^(?:\d{10,}|DM\d{10})$", ErrorMessage = "Invalid format. Please enter either a 'DM' followed by a 10-digits or CV number minimum 10 digits.")]
         public string? CheckNo
         {
@@ -90,9 +98,11 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         private string? _checkNo;
 
+        [StringLength(20)]
         public string Category { get; set; }
 
         [Display(Name = "Payee")]
+        [StringLength(150)]
         public string? Payee { get; set; }
 
         [NotMapped]
@@ -117,43 +127,49 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int NumberOfMonthsCreated { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime? LastCreatedDate { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPerMonth { get; set; }
 
         public bool IsComplete { get; set; }
 
+        [StringLength(50)]
         public string? AccruedType { get; set; }
 
+        [StringLength(13)]
         public string? Reference { get; set; }
 
         [NotMapped]
         public List<SelectListItem>? CheckVouchers { get; set; }
 
-        [Column(TypeName = "varchar(10)")]
+        [StringLength(10)]
         public string? CvType { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal AmountPaid { get; set; }
 
         public bool IsPaid { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(CheckVoucherPaymentStatus.ForPosting);
 
+        [StringLength(13)]
         public string? Type { get; set; }
 
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal InvoiceAmount { get; set; }
 
@@ -161,8 +177,10 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public string? SupportingFileSavedUrl { get; set; }
 
+        [Column(TypeName = "date")]
         public DateOnly? DcpDate { get; set; }
 
+        [Column(TypeName = "date")]
         public DateOnly? DcrDate { get; set; }
 
         public bool IsAdvances { get; set; }
@@ -172,8 +190,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [ForeignKey("EmployeeId")]
         public FilprideEmployee? Employee { get; set; }
 
+        [StringLength(200)]
         public string Address { get; set; }
 
+        [StringLength(20)]
         public string Tin { get; set; }
 
         public ICollection<FilprideCheckVoucherDetail>? Details { get; set; }

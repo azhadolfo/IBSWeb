@@ -34,8 +34,10 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
+        [StringLength(20)]
         public string? AtlNo { get; set; }
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal UnreservedQuantity { get; set; }
 
     }

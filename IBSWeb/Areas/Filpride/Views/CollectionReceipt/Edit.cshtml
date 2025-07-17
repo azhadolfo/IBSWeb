@@ -103,7 +103,7 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput" /></td>
+                        <td><input asp-for="CashAmount" style="border:none" value="@Model.CashAmount" class="form-control moneyInput" /></td>
                     </tr>
 
                     <tr>
@@ -117,7 +117,7 @@ Balance:        <span id="balance"></span>
                             </select>
                         </td>
                         <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
+                        <td><input asp-for="CheckAmount" style="border:none" value="@Model.CheckAmount" class="form-control moneyInput" /></td>
                     </tr>
 
                     <tr>
@@ -126,7 +126,7 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
+                        <td><input asp-for="EWT" style="border:none" value="@Model.EWT" class="form-control moneyInput" /></td>
                     </tr>
                     <tr>
                         <td style="padding-left:20px;">WVAT</td>
@@ -134,7 +134,7 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
+                        <td><input asp-for="WVAT" style="border:none" value="@Model.WVAT" class="form-control moneyInput" /></td>
                     </tr>
                 </tbody>
             </table>

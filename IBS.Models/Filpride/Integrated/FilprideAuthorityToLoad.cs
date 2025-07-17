@@ -10,7 +10,7 @@ namespace IBS.Models.Filpride.Integrated
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AuthorityToLoadId { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string AuthorityToLoadNo { get; set; } = string.Empty;
 
         public int? CustomerOrderSlipId { get; set; }
@@ -26,7 +26,7 @@ namespace IBS.Models.Filpride.Integrated
         [Column(TypeName = "date")]
         public DateOnly ValidUntil { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(100)]
         public string? UppiAtlNo
         {
             get => _uppiAtlNo;
@@ -35,12 +35,13 @@ namespace IBS.Models.Filpride.Integrated
 
         private string? _uppiAtlNo;
 
-        [Column(TypeName = "varchar(255)")]
+        [StringLength(255)]
         public string Remarks { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedDate { get; set; }
 
         public ICollection<FilprideBookAtlDetail> Details { get; set; }
@@ -50,22 +51,22 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string Company { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? HaulerName { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(200)]
         public string? Driver { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(200)]
         public string? PlateNo { get; set; }
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         public string? SupplierName { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string Depot { get; set; }
 
         public int LoadPortId { get; set; }
