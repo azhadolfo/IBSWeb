@@ -15,17 +15,17 @@ namespace IBS.Models.Filpride.MasterFile
         public bool IsMain { get; set; }
 
         [Display(Name = "Account Number")]
-        [Column(TypeName = "varchar(15)")]
+        [StringLength(20)]
         public string? AccountNumber { get; set; }
 
         [Display(Name = "Account Name")]
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(200)]
         public string AccountName { get; set; }
 
-        [Column(TypeName = "varchar(25)")]
+        [StringLength(25)]
         public string? AccountType { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? NormalBalance { get; set; }
 
         public int Level { get; set; }
@@ -44,17 +44,19 @@ namespace IBS.Models.Filpride.MasterFile
         public List<SelectListItem>? Main { get; set; }
 
         [Display(Name = "Created By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime EditedDate { get; set; }
 
         public bool HasChildren { get; set; }
@@ -63,6 +65,8 @@ namespace IBS.Models.Filpride.MasterFile
 
         [NotMapped]
         public List<SelectListItem>? Accounts { get; set; }
+
+        [StringLength(20)]
         public string FinancialStatementType { get; set; }
     }
 }

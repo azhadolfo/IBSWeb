@@ -73,7 +73,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         public string createdby { get; set; } //remove the "E" when saving in actual database
 
-        [Column(TypeName = "timestamp without time zone")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime createddate { get; set; }
     }
 }

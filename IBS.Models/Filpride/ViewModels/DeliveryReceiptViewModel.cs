@@ -50,7 +50,7 @@ namespace IBS.Models.Filpride.ViewModels
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal TotalAmount { get; set; }
 
-        [StringLength(200)]
+        [StringLength(1000)]
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }

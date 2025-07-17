@@ -10,22 +10,29 @@ namespace IBS.Models.Filpride.MasterFile
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int BankAccountId { get; set; }
 
+        [StringLength(10)]
         public string Bank { get; set; }
+
+        [StringLength(200)]
         public string Branch { get; set; }
 
+        [StringLength(20)]
         [Display(Name = "Account No")]
         public string AccountNo { get; set; }
 
+        [StringLength(200)]
         [Display(Name = "Account Name")]
         public string AccountName { get; set; }
 
         [Display(Name = "Created By")]
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string? CreatedBy { get; set; } = "";
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsFilpride { get; set; }

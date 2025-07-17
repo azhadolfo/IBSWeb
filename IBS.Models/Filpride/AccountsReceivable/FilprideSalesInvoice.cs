@@ -15,7 +15,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         public int SalesInvoiceId { get; set; }
 
         [Display(Name = "SI No")]
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         public string? SalesInvoiceNo { get; set; }
 
         #region Customer properties
@@ -27,8 +27,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        [StringLength(200)]
         public string CustomerAddress { get; set; } = string.Empty;
 
+        [StringLength(20)]
         public string CustomerTin { get; set; } = string.Empty;
 
         #endregion Customer properties
@@ -44,7 +46,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         #endregion Product properties
 
-        [Column(TypeName = "varchar(100)")]
+        [StringLength(100)]
         [Display(Name = "Other Ref No")]
         public string OtherRefNo { get; set; }
 
@@ -74,6 +76,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         private string _remarks;
 
         [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string PaymentStatus { get; set; } = "Pending";
 
         [Required]
@@ -120,14 +123,17 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [NotMapped]
         public List<SelectListItem>? Products { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(13)]
         public string Type { get; set; } = string.Empty;
 
         public int ReceivingReportId { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         #region Enhancing
@@ -148,6 +154,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [NotMapped]
         public List<SelectListItem>? COS { get; set; }
 
+        [StringLength(15)]
         public string Terms { get; set; }
 
         #endregion

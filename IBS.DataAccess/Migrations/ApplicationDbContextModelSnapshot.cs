@@ -300,7 +300,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("DocumentType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("document_type");
 
                     b.HasKey("Id")
@@ -323,12 +324,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("account_name");
 
                     b.Property<string>("AccountNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("account_no");
 
                     b.Property<decimal>("Amount")
@@ -368,7 +371,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("employee_id");
 
                     b.Property<decimal>("EwtPercent")
-                        .HasColumnType("numeric")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("ewt_percent");
 
                     b.Property<bool>("IsUserSelected")
@@ -385,7 +388,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("transaction_no");
 
                     b.HasKey("CheckVoucherDetailId")
@@ -422,16 +426,18 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CheckVoucherHeaderId"));
 
                     b.Property<string>("AccruedType")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("accrued_type");
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("address");
 
                     b.Property<decimal[]>("Amount")
-                        .HasColumnType("numeric[]")
+                        .HasColumnType("numeric(18,4)[]")
                         .HasColumnName("amount");
 
                     b.Property<decimal>("AmountPaid")
@@ -443,11 +449,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("amount_per_month");
 
                     b.Property<string>("BankAccountName")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("bank_account_name");
 
                     b.Property<string>("BankAccountNumber")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("bank_account_number");
 
                     b.Property<int?>("BankId")
@@ -468,7 +476,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("category");
 
                     b.Property<decimal>("CheckAmount")
@@ -480,16 +489,19 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("check_date");
 
                     b.Property<string>("CheckNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("check_no");
 
                     b.Property<string>("CheckVoucherHeaderNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("check_voucher_header_no");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -501,7 +513,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<string>("CvType")
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("cv_type");
 
                     b.Property<DateOnly>("Date")
@@ -565,7 +578,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("number_of_months_created");
 
                     b.Property<string>("OldCvNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("old_cv_no");
 
                     b.Property<string[]>("PONo")
@@ -573,11 +587,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("po_no");
 
                     b.Property<string>("Particulars")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("particulars");
 
                     b.Property<string>("Payee")
-                        .HasColumnType("text")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("payee");
 
                     b.Property<string>("PostedBy")
@@ -593,7 +609,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("rr_no");
 
                     b.Property<string>("Reference")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("reference");
 
                     b.Property<string[]>("SINo")
@@ -606,7 +623,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<int?>("SupplierId")
@@ -614,7 +632,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supplier_id");
 
                     b.Property<string>("SupplierName")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("supplier_name");
 
                     b.Property<string>("SupportingFileSavedFileName")
@@ -627,7 +646,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Tin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tin");
 
                     b.Property<decimal>("Total")
@@ -635,7 +655,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("total");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<string>("VoidedBy")
@@ -672,12 +693,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("account_name");
 
                     b.Property<string>("AccountNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("account_no");
 
                     b.Property<decimal>("Credit")
@@ -694,7 +717,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("TransactionNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("transaction_no");
 
                     b.HasKey("JournalVoucherDetailId")
@@ -738,7 +762,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -772,7 +797,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("jv_reason");
 
                     b.Property<string>("JournalVoucherHeaderNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("journal_voucher_header_no");
 
                     b.Property<string>("Particulars")
@@ -796,11 +822,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<string>("VoidedBy")
@@ -878,7 +906,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -953,11 +982,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("product_name");
 
                     b.Property<string>("PurchaseOrderNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("purchase_order_no");
 
                     b.Property<decimal>("Quantity")
@@ -980,7 +1011,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("SubPoSeries")
@@ -989,7 +1021,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("supplier_address");
 
                     b.Property<int>("SupplierId")
@@ -998,27 +1031,31 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("supplier_name");
 
                     b.Property<string>("SupplierSalesOrderNo")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("supplier_sales_order_no");
 
                     b.Property<string>("SupplierTin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("supplier_tin");
 
                     b.Property<string>("TaxType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tax_type");
 
                     b.Property<string>("Terms")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("terms");
 
                     b.Property<DateOnly>("TriggerDate")
@@ -1026,7 +1063,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("trigger_date");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<decimal>("UnTriggeredQuantity")
@@ -1035,7 +1073,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
@@ -1083,7 +1122,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AuthorityToLoadNo")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("authority_to_load_no");
 
                     b.Property<string>("CanceledBy")
@@ -1104,7 +1143,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -1161,11 +1201,12 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("po_id");
 
                     b.Property<string>("PONo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("po_no");
 
                     b.Property<DateTime>("PaidDate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid_date");
 
                     b.Property<string>("PostedBy")
@@ -1189,7 +1230,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("received_date");
 
                     b.Property<string>("ReceivingReportNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("receiving_report_no");
 
                     b.Property<string>("Remarks")
@@ -1200,12 +1242,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("SupplierDrNo")
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("supplier_dr_no");
 
                     b.Property<DateOnly?>("SupplierInvoiceDate")
@@ -1214,17 +1257,18 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierInvoiceNumber")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("supplier_invoice_number");
 
                     b.Property<string>("TruckOrVessels")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("truck_or_vessels");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<string>("VoidedBy")
@@ -1237,7 +1281,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("WithdrawalCertificate")
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("withdrawal_certificate");
 
                     b.HasKey("ReceivingReportId")
@@ -1262,11 +1306,13 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CollectionReceiptId"));
 
                     b.Property<string>("BankAccountName")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("bank_account_name");
 
                     b.Property<string>("BankAccountNumber")
-                        .HasColumnType("text")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("bank_account_number");
 
                     b.Property<int?>("BankId")
@@ -1295,7 +1341,7 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CheckBranch")
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("check_branch");
 
                     b.Property<DateOnly?>("CheckDate")
@@ -1304,16 +1350,18 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CheckNo")
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("check_no");
 
                     b.Property<string>("CollectionReceiptNo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("collection_receipt_no");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -1341,19 +1389,23 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("edited_date");
 
                     b.Property<string>("F2306FileName")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("f2306file_name");
 
                     b.Property<string>("F2306FilePath")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("f2306file_path");
 
                     b.Property<string>("F2307FileName")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("f2307file_name");
 
                     b.Property<string>("F2307FilePath")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("f2307file_path");
 
                     b.Property<bool>("IsCertificateUpload")
@@ -1369,11 +1421,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("manager_check_amount");
 
                     b.Property<string>("ManagerCheckBank")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("manager_check_bank");
 
                     b.Property<string>("ManagerCheckBranch")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("manager_check_branch");
 
                     b.Property<DateOnly?>("ManagerCheckDate")
@@ -1381,7 +1435,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("manager_check_date");
 
                     b.Property<string>("ManagerCheckNo")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("manager_check_no");
 
                     b.Property<string[]>("MultipleSI")
@@ -1407,12 +1462,12 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("ReferenceNo")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("varchar(50)")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("reference_no");
 
                     b.Property<string>("Remarks")
                         .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("remarks");
 
                     b.Property<decimal[]>("SIMultipleAmount")
@@ -1420,11 +1475,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("si_multiple_amount");
 
                     b.Property<string>("SINo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("si_no");
 
                     b.Property<string>("SVNo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("sv_no");
 
                     b.Property<int?>("SalesInvoiceId")
@@ -1437,7 +1494,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<decimal>("Total")
@@ -1449,7 +1507,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("transaction_date");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<string>("VoidedBy")
@@ -1513,7 +1572,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -1529,7 +1589,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("credit_amount");
 
                     b.Property<string>("CreditMemoNo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("credit_memo_no");
 
                     b.Property<decimal>("CurrentAndPreviousAmount")
@@ -1538,8 +1599,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<string>("EditedBy")
@@ -1585,12 +1646,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Source")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("source");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<DateOnly>("TransactionDate")
@@ -1598,7 +1661,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("transaction_date");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<decimal>("UnearnedAmount")
@@ -1656,7 +1720,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -1676,13 +1741,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("debit_amount");
 
                     b.Property<string>("DebitMemoNo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("debit_memo_no");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<string>("EditedBy")
@@ -1729,12 +1795,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Source")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("source");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<DateOnly>("TransactionDate")
@@ -1742,7 +1810,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("transaction_date");
 
                     b.Property<string>("Type")
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<decimal>("UnearnedAmount")
@@ -1804,7 +1873,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -1817,7 +1887,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_address");
 
                     b.Property<int>("CustomerId")
@@ -1830,7 +1901,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
                     b.Property<int?>("DeliveryReceiptId")
@@ -1867,11 +1939,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("OtherRefNo")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("other_ref_no");
 
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("payment_status");
 
@@ -1906,17 +1980,20 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("remarks");
 
                     b.Property<string>("SalesInvoiceNo")
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("sales_invoice_no");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("Terms")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("terms");
 
                     b.Property<DateOnly>("TransactionDate")
@@ -1925,7 +2002,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<decimal>("UnitPrice")
@@ -1992,7 +2070,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -2009,11 +2088,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_address");
 
                     b.Property<string>("CustomerBusinessStyle")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_business_style");
 
                     b.Property<int>("CustomerId")
@@ -2022,12 +2103,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
                     b.Property<int?>("DeliveryReceiptId")
@@ -2060,7 +2143,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Instructions")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("instructions");
 
                     b.Property<bool>("IsPaid")
@@ -2073,7 +2157,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("payment_status");
 
                     b.Property<DateOnly>("Period")
@@ -2094,21 +2179,24 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ServiceInvoiceNo")
                         .IsRequired()
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("service_invoice_no");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("service_name");
 
                     b.Property<decimal>("ServicePercent")
-                        .HasColumnType("numeric")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("service_percent");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<decimal>("Total")
@@ -2117,7 +2205,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<decimal>("UnearnedAmount")
@@ -2126,7 +2215,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("vat_type");
 
                     b.Property<string>("VoidedBy")
@@ -3010,17 +3100,20 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AuthorityToLoadNo")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("authority_to_load_no");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -3037,11 +3130,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Depot")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("depot");
 
                     b.Property<string>("Driver")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("driver");
 
                     b.Property<decimal>("Freight")
@@ -3049,7 +3144,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("freight");
 
                     b.Property<string>("HaulerName")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("hauler_name");
 
                     b.Property<int>("LoadPortId")
@@ -3057,12 +3153,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("load_port_id");
 
                     b.Property<string>("PlateNo")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("plate_no");
 
                     b.Property<string>("Remarks")
                         .IsRequired()
-                        .HasColumnType("varchar(255)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("remarks");
 
                     b.Property<int>("SupplierId")
@@ -3070,11 +3168,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supplier_id");
 
                     b.Property<string>("SupplierName")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("supplier_name");
 
                     b.Property<string>("UppiAtlNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("uppi_atl_no");
 
                     b.Property<DateOnly>("ValidUntil")
@@ -3145,7 +3245,8 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SequenceId"));
 
                     b.Property<string>("AtlNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("atl_no");
 
                     b.Property<int>("CustomerOrderSlipId")
@@ -3169,7 +3270,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supplier_id");
 
                     b.Property<decimal>("UnreservedQuantity")
-                        .HasColumnType("numeric")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("unreserved_quantity");
 
                     b.Property<decimal>("UnservedQuantity")
@@ -3202,11 +3303,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AccountSpecialist")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("account_specialist");
 
                     b.Property<string>("AuthorityToLoadNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("authority_to_load_no");
 
                     b.Property<decimal>("AvailableCreditLimit")
@@ -3218,15 +3321,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("balance_quantity");
 
                     b.Property<string>("Branch")
-                        .HasColumnType("text")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("branch");
 
                     b.Property<string>("BusinessStyle")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("business_style");
 
                     b.Property<string>("CncApprovedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("cnc_approved_by");
 
                     b.Property<DateTime?>("CncApprovedDate")
@@ -3242,24 +3348,29 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("commissionee_id");
 
                     b.Property<string>("CommissioneeName")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("commissionee_name");
 
                     b.Property<string>("CommissioneeTaxType")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("commissionee_tax_type");
 
                     b.Property<string>("CommissioneeVatType")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("commissionee_vat_type");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -3268,7 +3379,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_address");
 
                     b.Property<int>("CustomerId")
@@ -3277,27 +3389,32 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerOrderSlipNo")
                         .IsRequired()
-                        .HasColumnType("varchar(13)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("customer_order_slip_no");
 
                     b.Property<string>("CustomerPoNo")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("customer_po_no");
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
                     b.Property<string>("CustomerType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_type");
 
                     b.Property<DateOnly>("Date")
@@ -3313,15 +3430,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("delivered_quantity");
 
                     b.Property<string>("DeliveryOption")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("delivery_option");
 
                     b.Property<string>("Depot")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("depot");
 
                     b.Property<string>("DisapprovedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("disapproved_by");
 
                     b.Property<DateTime?>("DisapprovedDate")
@@ -3329,11 +3449,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("disapproved_date");
 
                     b.Property<string>("Driver")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("driver");
 
                     b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("edited_by");
 
                     b.Property<DateTime?>("EditedDate")
@@ -3345,11 +3467,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("expiration_date");
 
                     b.Property<string>("FinanceInstruction")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("finance_instruction");
 
                     b.Property<string>("FmApprovedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("fm_approved_by");
 
                     b.Property<DateTime?>("FmApprovedDate")
@@ -3394,7 +3518,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("OldCosNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("old_cos_no");
 
                     b.Property<decimal>("OldPrice")
@@ -3402,7 +3527,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("old_price");
 
                     b.Property<string>("OmApprovedBy")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("om_approved_by");
 
                     b.Property<DateTime?>("OmApprovedDate")
@@ -3414,12 +3540,14 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("pick_up_point_id");
 
                     b.Property<string>("PlateNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("plate_no");
 
                     b.Property<string>("PriceReference")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("price_reference");
 
                     b.Property<int>("ProductId")
@@ -3428,7 +3556,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("product_name");
 
                     b.Property<int?>("PurchaseOrderId")
@@ -3441,16 +3570,19 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Remarks")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("remarks");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("SubPORemarks")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("sub_po_remarks");
 
                     b.Property<int?>("SupplierId")
@@ -3458,7 +3590,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("supplier_id");
 
                     b.Property<string>("Terms")
-                        .HasColumnType("text")
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("terms");
 
                     b.Property<decimal>("TotalAmount")
@@ -3471,7 +3604,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("vat_type");
 
                     b.HasKey("CustomerOrderSlipId")
@@ -3521,7 +3655,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("authority_to_load_id");
 
                     b.Property<string>("AuthorityToLoadNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("authority_to_load_no");
 
                     b.Property<string>("CanceledBy")
@@ -3554,7 +3689,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
@@ -3567,7 +3703,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_address");
 
                     b.Property<int>("CustomerId")
@@ -3580,7 +3717,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
                     b.Property<DateOnly>("Date")
@@ -3593,11 +3731,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("DeliveryReceiptNo")
                         .IsRequired()
-                        .HasColumnType("varchar(12)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("delivery_receipt_no");
 
                     b.Property<string>("Driver")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("driver");
 
                     b.Property<decimal>("ECC")
@@ -3637,15 +3777,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("hauler_id");
 
                     b.Property<string>("HaulerName")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("hauler_name");
 
                     b.Property<string>("HaulerTaxType")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("hauler_tax_type");
 
                     b.Property<string>("HaulerVatType")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("hauler_vat_type");
 
                     b.Property<bool>("IsCommissionPaid")
@@ -3662,11 +3805,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ManualDrNo")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("manual_dr_no");
 
                     b.Property<string>("PlateNo")
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("plate_no");
 
                     b.Property<string>("PostedBy")
@@ -3687,12 +3832,14 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Remarks")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("remarks");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<decimal>("TotalAmount")
@@ -3751,7 +3898,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("applied_volume");
 
                     b.Property<string>("ApprovedBy")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("approved_by");
 
                     b.Property<DateTime?>("ApprovedDate")
@@ -3798,31 +3946,37 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("account_name");
 
                     b.Property<string>("AccountNo")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("account_no");
 
                     b.Property<string>("Bank")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("bank");
 
                     b.Property<string>("Branch")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("branch");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -3858,19 +4012,23 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("account_name");
 
                     b.Property<string>("AccountNumber")
-                        .HasColumnType("varchar(15)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("account_number");
 
                     b.Property<string>("AccountType")
-                        .HasColumnType("varchar(25)")
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)")
                         .HasColumnName("account_type");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -3878,7 +4036,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("edited_by");
 
                     b.Property<DateTime>("EditedDate")
@@ -3887,7 +4046,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("FinancialStatementType")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("financial_statement_type");
 
                     b.Property<bool>("HasChildren")
@@ -3903,7 +4063,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("level");
 
                     b.Property<string>("NormalBalance")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("normal_balance");
 
                     b.Property<int?>("ParentAccountId")
@@ -3936,7 +4097,8 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CustomerId"));
 
                     b.Property<string>("BusinessStyle")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("business_style");
 
                     b.Property<int?>("ClusterCode")
@@ -3945,11 +4107,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -3966,35 +4130,42 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("CustomerAddress")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("customer_address");
 
                     b.Property<string>("CustomerCode")
-                        .HasColumnType("varchar(7)")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
                         .HasColumnName("customer_code");
 
                     b.Property<string>("CustomerName")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("customer_name");
 
                     b.Property<string>("CustomerTerms")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("customer_terms");
 
                     b.Property<string>("CustomerTin")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_tin");
 
                     b.Property<string>("CustomerType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("customer_type");
 
                     b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("edited_by");
 
                     b.Property<DateTime?>("EditedDate")
@@ -4038,17 +4209,20 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("retention_rate");
 
                     b.Property<string>("StationCode")
-                        .HasColumnType("varchar(3)")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
                         .HasColumnName("station_code");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("varchar(15)")
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)")
                         .HasColumnName("type");
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("vat_type");
 
                     b.Property<bool>("WithHoldingTax")
@@ -4061,7 +4235,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("ZipCode")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("zip_code");
 
                     b.HasKey("CustomerId")
@@ -4087,17 +4262,20 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("BranchAddress")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("branch_address");
 
                     b.Property<string>("BranchName")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("branch_name");
 
                     b.Property<string>("BranchTin")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("branch_tin");
 
                     b.Property<int>("CustomerId")
@@ -4123,7 +4301,8 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EmployeeId"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("varchar(255)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("address");
 
                     b.Property<DateOnly?>("BirthDate")
@@ -4131,7 +4310,8 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("birth_date");
 
                     b.Property<string>("Company")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<DateOnly>("DateHired")
@@ -4143,21 +4323,25 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("date_resigned");
 
                     b.Property<string>("Department")
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("department");
 
                     b.Property<string>("EmployeeNumber")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("employee_number");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
 
                     b.Property<string>("Initial")
-                        .HasColumnType("text")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("initial");
 
                     b.Property<bool>("IsActive")
@@ -4170,28 +4354,34 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("last_name");
 
                     b.Property<string>("MiddleName")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("middle_name");
 
                     b.Property<string>("PagibigNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("pagibig_no");
 
                     b.Property<string>("Paygrade")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("paygrade");
 
                     b.Property<string>("PhilhealthNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("philhealth_no");
 
                     b.Property<string>("Position")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("position");
 
                     b.Property<decimal>("Salary")
@@ -4199,29 +4389,35 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("salary");
 
                     b.Property<string>("SssNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("sss_no");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("varchar(5)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<string>("Suffix")
-                        .HasColumnType("varchar(5)")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("suffix");
 
                     b.Property<string>("Supervisor")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("supervisor");
 
                     b.Property<string>("TelNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tel_no");
 
                     b.Property<string>("TinNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tin_no");
 
                     b.HasKey("EmployeeId")
@@ -4244,21 +4440,24 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
                     b.Property<string>("Depot")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("depot");
 
                     b.Property<bool>("IsBienes")
@@ -4300,11 +4499,13 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -4312,11 +4513,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<string>("CurrentAndPreviousNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("current_and_previous_no");
 
                     b.Property<string>("CurrentAndPreviousTitle")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("current_and_previous_title");
 
                     b.Property<bool>("IsBienes")
@@ -4333,7 +4536,8 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("name");
 
                     b.Property<int>("Percent")
@@ -4341,15 +4545,18 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("percent");
 
                     b.Property<string>("ServiceNo")
-                        .HasColumnType("text")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)")
                         .HasColumnName("service_no");
 
                     b.Property<string>("UnearnedNo")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("unearned_no");
 
                     b.Property<string>("UnearnedTitle")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("unearned_title");
 
                     b.HasKey("ServiceId")
@@ -4368,21 +4575,25 @@ namespace IBS.DataAccess.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SupplierId"));
 
                     b.Property<string>("Branch")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("branch");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("category");
 
                     b.Property<string>("Company")
                         .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("company");
 
                     b.Property<string>("CreatedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
@@ -4390,11 +4601,13 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_date");
 
                     b.Property<string>("DefaultExpenseNumber")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("default_expense_number");
 
                     b.Property<string>("EditedBy")
-                        .HasColumnType("varchar(50)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("edited_by");
 
                     b.Property<DateTime?>("EditedDate")
@@ -4418,23 +4631,28 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("is_mobility");
 
                     b.Property<string>("ProofOfExemptionFileName")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("proof_of_exemption_file_name");
 
                     b.Property<string>("ProofOfExemptionFilePath")
-                        .HasColumnType("varchar(1024)")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
                         .HasColumnName("proof_of_exemption_file_path");
 
                     b.Property<string>("ProofOfRegistrationFileName")
-                        .HasColumnType("text")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("proof_of_registration_file_name");
 
                     b.Property<string>("ProofOfRegistrationFilePath")
-                        .HasColumnType("varchar(1024)")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
                         .HasColumnName("proof_of_registration_file_path");
 
                     b.Property<string>("ReasonOfExemption")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("reason_of_exemption");
 
                     b.Property<bool>("RequiresPriceAdjustment")
@@ -4443,61 +4661,72 @@ namespace IBS.DataAccess.Migrations
 
                     b.Property<string>("SupplierAddress")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("supplier_address");
 
                     b.Property<string>("SupplierCode")
-                        .HasColumnType("varchar(7)")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
                         .HasColumnName("supplier_code");
 
                     b.Property<string>("SupplierName")
                         .IsRequired()
-                        .HasColumnType("varchar(200)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("supplier_name");
 
                     b.Property<string>("SupplierTerms")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("supplier_terms");
 
                     b.Property<string>("SupplierTin")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("supplier_tin");
 
                     b.Property<string>("TaxType")
                         .IsRequired()
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("tax_type");
 
                     b.Property<string>("TradeName")
-                        .HasColumnType("varchar(255)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("trade_name");
 
                     b.Property<string>("Validity")
-                        .HasColumnType("varchar(20)")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("validity");
 
                     b.Property<DateTime?>("ValidityDate")
-                        .HasColumnType("date")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("validity_date");
 
                     b.Property<string>("VatType")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("vat_type");
 
                     b.Property<decimal?>("WithholdingTaxPercent")
-                        .HasColumnType("numeric")
+                        .HasColumnType("numeric(18,4)")
                         .HasColumnName("withholding_tax_percent");
 
                     b.Property<string>("WithholdingTaxtitle")
-                        .HasColumnType("varchar(100)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("withholding_taxtitle");
 
                     b.Property<string>("ZipCode")
                         .IsRequired()
-                        .HasColumnType("varchar(10)")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("zip_code");
 
                     b.HasKey("SupplierId")
@@ -5549,7 +5778,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("createdby");
 
                     b.Property<DateTime>("createddate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("createddate");
 
                     b.Property<string>("description")
@@ -5905,7 +6134,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
                     b.Property<string>("Depot")
@@ -8004,7 +8233,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("createdby");
 
                     b.Property<DateTime>("createddate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("createddate");
 
                     b.Property<string>("driver")
@@ -8447,7 +8676,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("validated_by");
 
                     b.Property<DateTime?>("ValidatedDate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("validated_date");
 
                     b.HasKey("InventoryId")
@@ -9371,7 +9600,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("createdby");
 
                     b.Property<DateTime>("createddate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("createddate");
 
                     b.Property<string>("customercode")
@@ -9748,7 +9977,7 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnName("is_printed");
 
                     b.Property<DateTime>("PaidDate")
-                        .HasColumnType("timestamp without time zone")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid_date");
 
                     b.Property<string>("PostedBy")

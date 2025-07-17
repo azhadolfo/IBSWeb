@@ -114,12 +114,12 @@
             {
                 <div class="form-group mb-3">
                     <label asp-for="QuantityDelivered" class="control-label">Qty Delivered</label>
-                    <input asp-for="QuantityDelivered" class="form-control" readonly tabindex="-1" />
+                    <input asp-for="QuantityDelivered" class="form-control" value="@Model.QuantityDelivered" readonly tabindex="-1" />
                     <input type="hidden" asp-for="QuantityDelivered" />
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="QuantityReceived" class="control-label">Qty Received</label>
-                    <input asp-for="QuantityReceived" class="form-control" readonly tabindex="-1" />
+                    <input asp-for="QuantityReceived" class="form-control" value="@Model.QuantityReceived" readonly tabindex="-1" />
                     <input type="hidden" asp-for="QuantityReceived" />
                 </div>
             }
@@ -127,12 +127,12 @@
             {
                 <div class="form-group mb-3">
                     <label asp-for="QuantityDelivered" class="control-label">Qty Delivered</label>
-                    <input asp-for="QuantityDelivered" class="form-control" />
+                    <input asp-for="QuantityDelivered" value="@Model.QuantityDelivered" class="form-control" />
                     <input type="hidden" asp-for="QuantityDelivered" />
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="QuantityReceived" class="control-label">Qty Received</label>
-                    <input asp-for="QuantityReceived" class="form-control" />
+                    <input asp-for="QuantityReceived" value="@Model.QuantityReceived" class="form-control" />
                     <input type="hidden" asp-for="QuantityReceived" />
                 </div>
             }

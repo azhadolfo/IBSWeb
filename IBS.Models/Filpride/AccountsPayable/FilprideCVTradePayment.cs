@@ -13,6 +13,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int DocumentId { get; set; }
 
+        [StringLength(5)]
         public string DocumentType { get; set; }
 
         public int CheckVoucherId { get; set; }
