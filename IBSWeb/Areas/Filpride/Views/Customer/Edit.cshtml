@@ -57,12 +57,12 @@
                     <span asp-validation-for="CustomerTin" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimit" class="form-control border-0 shadow" placeholder=""/>
+                    <input asp-for="CreditLimit" class="form-control border-0 shadow" value="@Model.CreditLimit" placeholder=""/>
                     <label asp-for="CreditLimit" class="ms-2">Credit Limit</label>
                     <span asp-validation-for="CreditLimit" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" placeholder=""/>
+                    <input asp-for="CreditLimitAsOfToday" class="form-control border-0 shadow" value="@Model.CreditLimitAsOfToday" placeholder=""/>
                     <label asp-for="CreditLimitAsOfToday" class="ms-2">Available Credit Limit As of Today<span class="required">*</span></label>
                     <span asp-validation-for="CreditLimitAsOfToday" class="text-danger"></span>
                 </div>
