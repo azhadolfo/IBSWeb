@@ -12,7 +12,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ServiceInvoiceId { get; set; }
 
-        [Column(TypeName = "varchar(12)")]
+        [StringLength(13)]
         [Display(Name = "SV No")]
         public string ServiceInvoiceNo { get; set; } = string.Empty;
 
@@ -25,12 +25,16 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
+        [StringLength(200)]
         public string CustomerName { get; set; } = string.Empty;
 
+        [StringLength(200)]
         public string CustomerAddress { get; set; } = string.Empty;
 
+        [StringLength(20)]
         public string CustomerTin { get; set; } = string.Empty;
 
+        [StringLength(200)]
         public string? CustomerBusinessStyle { get; set; }
 
         #endregion Customer properties
@@ -42,8 +46,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(ServiceId))]
         public FilprideService? Service { get; set; }
 
+        [StringLength(100)]
         public string ServiceName { get; set; } = string.Empty;
 
+        [Column(TypeName = "numeric(18,4)")]
         public decimal ServicePercent { get; set; }
 
         [Required]
@@ -67,7 +73,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Column(TypeName = "numeric(18,4)")]
         public decimal UnearnedAmount { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string PaymentStatus { get; set; } = nameof(Utility.Enums.Status.Pending);
 
         [Column(TypeName = "numeric(18,4)")]
@@ -87,14 +93,18 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public bool IsPaid { get; set; }
 
+        [StringLength(20)]
         public string Company { get; set; } = string.Empty;
 
         public bool IsPrinted { get; set; }
 
+        [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
+        [StringLength(13)]
         public string Type { get; set; } = string.Empty;
 
+        [StringLength(20)]
         public string VatType { get; set; } = string.Empty;
 
         public bool HasEwt { get; set; }
