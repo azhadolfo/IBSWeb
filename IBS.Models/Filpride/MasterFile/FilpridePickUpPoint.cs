@@ -9,10 +9,10 @@ namespace IBS.Models.Filpride.MasterFile
         [Key]
         public int PickUpPointId { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string Depot { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string CreatedBy { get; set; } = string.Empty;
 
         [Column(TypeName = "timestamp with time zone")]
@@ -23,7 +23,7 @@ namespace IBS.Models.Filpride.MasterFile
         [ForeignKey("SupplierId")]
         public FilprideSupplier? Supplier { get; set; }
 
-        [Column(TypeName = "varchar(50)")]
+        [StringLength(50)]
         public string Company { get; set; }
 
         [NotMapped]
