@@ -1607,7 +1607,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> MultipleCollectionPrint(int id, CancellationToken cancellationToken)
         {
-            var cr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+            var cr = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (cr == null)
+            {
+                return NotFound();
+            }
+
+            var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                .GetAsync(s => s.SalesInvoiceId == cr.MultipleSIId!.First(), cancellationToken);
+
+            cr.SalesInvoice = salesInvoice;
 
             return View(cr);
         }
