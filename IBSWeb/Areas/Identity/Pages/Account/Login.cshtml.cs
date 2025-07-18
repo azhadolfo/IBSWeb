@@ -10,18 +10,19 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using IBS.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace IBSWeb.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
         {
             _signInManager = signInManager;
             _logger = logger;
@@ -152,6 +153,27 @@ namespace IBSWeb.Areas.Identity.Pages.Account
                     }
 
                     await _signInManager.UserManager.AddClaimsAsync(user, newClaims);
+
+                    // Fetch updated claims and roles
+                    var updatedClaims = await _signInManager.UserManager.GetClaimsAsync(user);
+                    var roles = await _signInManager.UserManager.GetRolesAsync(user);
+
+                    var identity = new ClaimsIdentity("Identity.Application");
+                    identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id));
+                    identity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
+                    identity.AddClaim(new Claim(ClaimTypes.GivenName, user.Name));
+                    identity.AddClaims(updatedClaims);
+
+                    // Add role claims
+                    foreach (var role in roles)
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                    }
+
+                    var principal = new ClaimsPrincipal(identity);
+
+                    await HttpContext.SignOutAsync("Identity.Application");
+                    await HttpContext.SignInAsync("Identity.Application", principal);
 
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);

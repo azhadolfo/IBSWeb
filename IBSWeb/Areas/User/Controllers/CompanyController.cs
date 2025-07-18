@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MasterFile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,9 +15,9 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<CompanyController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CompanyController(IUnitOfWork unitOfWork, ILogger<CompanyController> logger, UserManager<IdentityUser> userManager)
+        public CompanyController(IUnitOfWork unitOfWork, ILogger<CompanyController> logger, UserManager<ApplicationUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

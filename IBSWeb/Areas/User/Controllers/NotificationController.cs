@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Utility.Constants;
 using IBSWeb.Hubs;
 using Microsoft.AspNetCore.Authorization;
@@ -16,7 +17,7 @@ namespace IBSWeb.Areas.User.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IHubContext<NotificationHub> _hubContext;
 
@@ -24,7 +25,7 @@ namespace IBSWeb.Areas.User.Controllers
 
         private readonly ILogger<NotificationController> _logger;
 
-        public NotificationController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager,
+        public NotificationController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager,
             IHubContext<NotificationHub> hubContext, ApplicationDbContext dbContext,
             ILogger<NotificationController> logger)
         {

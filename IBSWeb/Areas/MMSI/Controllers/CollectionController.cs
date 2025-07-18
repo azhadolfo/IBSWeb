@@ -24,12 +24,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<CollectionController> _logger;
         private readonly IUserAccessService _userAccessService;
 
         public CollectionController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ILogger<CollectionController> logger,
+            UserManager<ApplicationUser> userManager, ILogger<CollectionController> logger,
             IUserAccessService userAccessService)
         {
             _dbContext = dbContext;

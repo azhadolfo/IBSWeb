@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
@@ -19,11 +20,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ILogger<PickupPointController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

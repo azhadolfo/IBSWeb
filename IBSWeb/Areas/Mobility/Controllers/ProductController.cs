@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Services.Attributes;
@@ -17,11 +18,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ILogger<ProductController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public ProductController(IUnitOfWork unitOfWork, ILogger<ProductController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

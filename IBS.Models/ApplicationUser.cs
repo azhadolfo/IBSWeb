@@ -12,6 +12,6 @@ namespace IBS.Models
 
         public ICollection<UserNotification> UserNotifications { get; set; }
 
-        public string Position { get; set; }
+        public string? Position { get; set; }
     }
 }

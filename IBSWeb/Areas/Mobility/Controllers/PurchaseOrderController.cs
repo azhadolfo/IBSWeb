@@ -25,11 +25,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<PurchaseOrderController> _logger;
 
-        public PurchaseOrderController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ILogger<PurchaseOrderController> logger)
+        public PurchaseOrderController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ILogger<PurchaseOrderController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;

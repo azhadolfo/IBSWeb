@@ -25,7 +25,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -34,7 +34,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly ICloudStorageService _cloudStorageService;
 
         public CollectionReceiptController(ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             ILogger<CollectionReceiptController> logger,
             ICloudStorageService cloudStorageService)

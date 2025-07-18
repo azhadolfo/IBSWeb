@@ -1,6 +1,7 @@
 using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
@@ -26,10 +27,10 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
 
-        public CustomerOrderSlipController(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ICloudStorageService cloudStorageService)
+        public CustomerOrderSlipController(ApplicationDbContext dbContext, IWebHostEnvironment webHostEnvironment, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ICloudStorageService cloudStorageService)
         {
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;

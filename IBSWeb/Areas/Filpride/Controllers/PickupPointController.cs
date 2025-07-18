@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
@@ -18,11 +19,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<CustomerController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public PickupPointController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

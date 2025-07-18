@@ -1,4 +1,5 @@
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Models.Mobility.ViewModels;
@@ -16,9 +17,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ILogger<GeneralLedgerController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public GeneralLedgerController(IUnitOfWork unitOfWork, ILogger<GeneralLedgerController> logger, UserManager<IdentityUser> userManager)
+        public GeneralLedgerController(IUnitOfWork unitOfWork, ILogger<GeneralLedgerController> logger, UserManager<ApplicationUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

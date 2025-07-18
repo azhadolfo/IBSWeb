@@ -25,11 +25,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<ReceivingReportController> _logger;
 
-        public ReceivingReportController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ILogger<ReceivingReportController> logger)
+        public ReceivingReportController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ILogger<ReceivingReportController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;

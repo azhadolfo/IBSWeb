@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
@@ -21,7 +22,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -29,7 +30,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<InventoryController> _logger;
 
-        public InventoryReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<InventoryController> logger)
+        public InventoryReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<InventoryController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

@@ -1,7 +1,6 @@
-﻿@using IBS.Utility.Constants
-@using Microsoft.AspNetCore.Identity
+﻿@using Microsoft.AspNetCore.Identity
 @model IBS.Models.Filpride.ViewModels.DashboardCountViewModel
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     var department = ViewBag.GetUserDepartment;

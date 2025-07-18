@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
@@ -20,11 +21,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<BankAccountController> _logger;
 
-        public BankAccountController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, ILogger<BankAccountController> logger)
+        public BankAccountController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, ILogger<BankAccountController> logger)
         {
             _unitOfWork = unitOfWork;
             _dbContext = dbContext;

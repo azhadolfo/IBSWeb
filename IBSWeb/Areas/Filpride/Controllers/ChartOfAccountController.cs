@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -16,11 +17,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
     public class ChartOfAccountController : Controller
     {
         public readonly ApplicationDbContext _dbContext;
-        public readonly UserManager<IdentityUser> _userManager;
+        public readonly UserManager<ApplicationUser> _userManager;
         public readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<ChartOfAccountController> _logger;
 
-        public ChartOfAccountController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager,
+        public ChartOfAccountController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork, ILogger<ChartOfAccountController> logger)
         {
             _dbContext = dbContext;

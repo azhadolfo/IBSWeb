@@ -26,13 +26,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<JournalVoucherController> _logger;
 
-        public JournalVoucherController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<JournalVoucherController> logger)
+        public JournalVoucherController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<JournalVoucherController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

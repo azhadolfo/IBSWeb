@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MMSI;
 using IBS.Services.Attributes;
 using IBS.Utility.Helpers;
@@ -16,11 +17,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<TariffRateController> _logger;
 
         public TariffRateController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ILogger<TariffRateController> logger)
+            UserManager<ApplicationUser> userManager, ILogger<TariffRateController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;

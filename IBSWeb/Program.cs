@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Services;
 using IBS.Utility;
 using IBSWeb.Hubs;
@@ -66,12 +67,11 @@ else
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddDefaultIdentity<IdentityUser>().AddDefaultTokenProviders()
+builder.Services.AddDefaultIdentity<ApplicationUser>().AddDefaultTokenProviders()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 

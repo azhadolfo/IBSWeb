@@ -25,7 +25,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -33,7 +33,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private const string FilterTypeClaimType = "ReceivingReport.FilterType";
 
-        public ReceivingReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<ReceivingReportController> logger)
+        public ReceivingReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<ReceivingReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

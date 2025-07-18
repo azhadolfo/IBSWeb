@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -13,13 +14,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<EmployeeController> _logger;
 
-        public EmployeeController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<EmployeeController> logger)
+        public EmployeeController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<EmployeeController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

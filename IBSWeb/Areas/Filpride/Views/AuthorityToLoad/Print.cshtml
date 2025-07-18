@@ -1,7 +1,8 @@
-﻿@using IBS.Utility.Constants
+﻿@using IBS.Models
+@using IBS.Utility.Constants
 @using Microsoft.AspNetCore.Identity
 @model FilprideAuthorityToLoad
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     ViewData["Title"] = "Print ATL";

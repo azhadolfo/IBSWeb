@@ -29,7 +29,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
@@ -42,7 +42,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ICloudStorageService _cloudStorageService;
 
         public CustomerOrderSlipController(IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IHubContext<NotificationHub> hubContext,
             ILogger<CustomerOrderSlipController> logger,

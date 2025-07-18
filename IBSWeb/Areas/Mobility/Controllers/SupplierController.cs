@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
@@ -22,14 +23,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<Filpride.Controllers.SupplierController> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly ICloudStorageService _cloudStorageService;
 
         public SupplierController(IUnitOfWork unitOfWork,
             ILogger<Filpride.Controllers.SupplierController> logger,
             IWebHostEnvironment webHostEnvironment,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             ICloudStorageService cloudStorageService)
         {

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -16,13 +17,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<ServiceController> _logger;
 
-        public ServiceController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<ServiceController> logger)
+        public ServiceController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<ServiceController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

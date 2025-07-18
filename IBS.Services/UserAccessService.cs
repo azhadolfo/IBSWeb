@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
@@ -14,12 +15,10 @@ namespace IBS.Services
 
     public class UserAccessService : IUserAccessService
     {
-        private readonly UserManager<IdentityUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
 
-        public UserAccessService(UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public UserAccessService(ApplicationDbContext dbContext)
         {
-            _userManager = userManager;
             _dbContext = dbContext;
         }
 

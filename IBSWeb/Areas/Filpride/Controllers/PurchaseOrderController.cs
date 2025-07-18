@@ -27,7 +27,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -37,7 +37,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private const string FilterTypeClaimType = "PurchaseOrder.FilterType";
 
-        public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext, ILogger<PurchaseOrderController> logger)
+        public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext, ILogger<PurchaseOrderController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

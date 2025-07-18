@@ -17,9 +17,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ILogger<PurchaseController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<IdentityUser> userManager)
+        public PurchaseController(IUnitOfWork unitOfWork, ILogger<PurchaseController> logger, UserManager<ApplicationUser> userManager)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

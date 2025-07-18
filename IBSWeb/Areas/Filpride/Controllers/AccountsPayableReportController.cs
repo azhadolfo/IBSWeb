@@ -14,6 +14,7 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -26,7 +27,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -34,7 +35,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<GeneralLedgerReportController> _logger;
 
-        public AccountsPayableReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
+        public AccountsPayableReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

@@ -25,13 +25,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<DebitMemoController> _logger;
 
-        public DebitMemoController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<DebitMemoController> logger)
+        public DebitMemoController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<DebitMemoController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

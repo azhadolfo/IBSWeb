@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -16,12 +17,12 @@ namespace IBS.Services
 
         private readonly ILogger<CustomerOrderSlipExpiration> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         public CustomerOrderSlipExpiration(ApplicationDbContext dbContext, ILogger<CustomerOrderSlipExpiration> logger,
-            UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+            UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _logger = logger;

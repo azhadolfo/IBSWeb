@@ -1,9 +1,9 @@
-﻿@using IBS.Utility.Constants
+﻿@using IBS.Models
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
-@using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
 @model FilprideSalesInvoice
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     ViewData["Title"] = "Print Sales Invoice";

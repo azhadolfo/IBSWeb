@@ -1,9 +1,8 @@
 ﻿@model IEnumerable<FilprideCashReceiptBook>
+@using IBS.Models
 @using IBS.Utility.Constants
-@using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Cash Receipt Book";
     var dateFrom = ViewBag.DateFrom;

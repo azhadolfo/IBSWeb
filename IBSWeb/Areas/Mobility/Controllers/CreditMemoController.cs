@@ -26,11 +26,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<CreditMemoController> _logger;
 
-        public CreditMemoController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, ILogger<CreditMemoController> logger)
+        public CreditMemoController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, ILogger<CreditMemoController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

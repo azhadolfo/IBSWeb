@@ -1,6 +1,7 @@
 using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -22,7 +23,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -31,7 +32,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ILogger<FinancialReportController> _logger;
 
         public FinancialReportController(ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             IWebHostEnvironment webHostEnvironment,
             ILogger<FinancialReportController> logger)

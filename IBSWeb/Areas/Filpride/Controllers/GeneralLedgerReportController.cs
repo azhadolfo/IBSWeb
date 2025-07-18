@@ -1,6 +1,7 @@
 using System.Text;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -24,7 +25,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -32,7 +33,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ILogger<GeneralLedgerReportController> _logger;
 
-        public GeneralLedgerReportController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
+        public GeneralLedgerReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment, ILogger<GeneralLedgerReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

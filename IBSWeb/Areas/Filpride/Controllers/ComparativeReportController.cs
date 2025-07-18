@@ -1,4 +1,5 @@
 using IBS.DataAccess.Data;
+using IBS.Models;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using Microsoft.AspNetCore.Identity;
@@ -17,14 +18,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ILogger<ComparativeReportController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public ComparativeReportController(ILogger<ComparativeReportController> logger,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment)
         {

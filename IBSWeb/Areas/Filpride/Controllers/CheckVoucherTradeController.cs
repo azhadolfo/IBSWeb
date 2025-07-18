@@ -27,7 +27,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -38,7 +38,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ILogger<CheckVoucherTradeController> _logger;
 
         public CheckVoucherTradeController(IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment,
             ICloudStorageService cloudStorageService,

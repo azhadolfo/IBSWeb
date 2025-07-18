@@ -24,14 +24,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class BillingController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<BillingController> _logger;
         private readonly IUserAccessService _userAccessService;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
-        public BillingController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<IdentityUser> userManager,
+        public BillingController(IUnitOfWork unitOfWork, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
             ILogger<BillingController> logger, IUserAccessService userAccessService)
         {
             _userManager = userManager;

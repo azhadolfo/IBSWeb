@@ -25,13 +25,13 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<PlacementController> _logger;
 
         public PlacementController(IUnitOfWork unitOfWork,
             ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ILogger<PlacementController> logger)
         {
             _unitOfWork = unitOfWork;

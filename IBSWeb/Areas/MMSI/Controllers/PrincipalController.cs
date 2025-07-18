@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -15,11 +16,11 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<PrincipalController> _logger;
 
         public PrincipalController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ILogger<PrincipalController> logger)
+            UserManager<ApplicationUser> userManager, ILogger<PrincipalController> logger)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;

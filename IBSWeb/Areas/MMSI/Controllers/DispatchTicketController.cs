@@ -26,14 +26,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
     {
         public readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
         private readonly IUserAccessService _userAccessService;
         private readonly ILogger<DispatchTicketController> _logger;
         private const string FilterTypeClaimType = "DispatchTicket.FilterType";
 
         public DispatchTicketController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager, ICloudStorageService clousStorageService,
+            UserManager<ApplicationUser> userManager, ICloudStorageService clousStorageService,
             ILogger<DispatchTicketController> logger, IUserAccessService userAccessService)
         {
             _dbContext = dbContext;

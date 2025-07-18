@@ -17,13 +17,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     public class DepositController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<DepositController> _logger;
         private readonly IUnitOfWork _unitOfWork;
 
 
         public DepositController(ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ILogger<DepositController> logger,
             IUnitOfWork unitOfWork)
         {

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -20,11 +21,11 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly ILogger<InventoryController> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext)
+        public InventoryController(IUnitOfWork unitOfWork, ILogger<InventoryController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;

@@ -1,5 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
@@ -14,13 +15,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<StationEmployeeController> _logger;
 
-        public StationEmployeeController(ApplicationDbContext dbContext, UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork, ILogger<StationEmployeeController> logger)
+        public StationEmployeeController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<StationEmployeeController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;

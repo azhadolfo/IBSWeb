@@ -19,12 +19,12 @@ namespace IBS.Services
 
         private readonly ILogger<MonthlyClosureService> _logger;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         public MonthlyClosureService(ApplicationDbContext dbContext, ILogger<MonthlyClosureService> logger,
-            UserManager<IdentityUser> userManager, IUnitOfWork unitOfWork)
+            UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _logger = logger;

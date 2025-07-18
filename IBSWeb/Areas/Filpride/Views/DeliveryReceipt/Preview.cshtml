@@ -1,9 +1,9 @@
-﻿@using IBS.Utility.Constants
+﻿@using IBS.Models
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
 @model FilprideDeliveryReceipt
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 @{
     ViewData["Title"] = "Preview Delivery Receipt";    

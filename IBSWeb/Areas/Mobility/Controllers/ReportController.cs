@@ -1,6 +1,7 @@
 using System.Drawing;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
@@ -21,12 +22,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ILogger<ReportController> _logger;
 
         public ReportController(ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             ILogger<ReportController> logger)
         {

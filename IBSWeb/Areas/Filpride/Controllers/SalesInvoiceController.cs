@@ -24,13 +24,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
         private readonly ILogger<SalesInvoiceController> _logger;
 
-        public SalesInvoiceController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, ApplicationDbContext dbContext, ILogger<SalesInvoiceController> logger)
+        public SalesInvoiceController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, ILogger<SalesInvoiceController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;

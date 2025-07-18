@@ -23,7 +23,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
     [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
     public class CheckVoucherNonTradeInvoiceController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
@@ -36,7 +36,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         private readonly ILogger<CheckVoucherNonTradeInvoiceController> _logger;
 
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment,
             ICloudStorageService cloudStorageService,

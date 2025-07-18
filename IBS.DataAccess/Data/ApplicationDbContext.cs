@@ -18,7 +18,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {

@@ -15,14 +15,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly IUnitOfWork _unitOfWork;
 
         private readonly ILogger<DisbursementController> _logger;
 
         public DisbursementController(ApplicationDbContext dbContext,
-            UserManager<IdentityUser> userManager,
+            UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             ILogger<DisbursementController> logger)
         {
