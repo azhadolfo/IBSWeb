@@ -237,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer branches.");
+                _logger.LogError(ex, "Failed to get suppliers.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
