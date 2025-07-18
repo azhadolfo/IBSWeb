@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -162,6 +163,62 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
             }
             return View(services);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetServicesList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var queried = await _unitOfWork.FilprideService
+                    .GetAllAsync(null, cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(b =>
+                        b.ServiceNo!.ToLower().Contains(searchValue) == true ||
+                        b.Name.ToLower().Contains(searchValue) == true ||
+                        b.Percent.ToString().ToLower().Contains(searchValue) == true ||
+                        b.CreatedBy!.ToLower().Contains(searchValue) == true ||
+                        b.CreatedDate.ToString("MM dd, yyyy").ToLower().Contains(searchValue) == true
+                        ).ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}");
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get services.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
