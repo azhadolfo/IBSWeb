@@ -134,11 +134,10 @@ namespace IBSWeb.Areas.Identity.Pages.Account
 
                     // Remove existing dynamic claims
                     var existingClaims = await _signInManager.UserManager.GetClaimsAsync(user);
-                    var dynamicClaims = existingClaims.Where(c => c.Type == "Company" || c.Type == "StationCode").ToList();
 
-                    if (dynamicClaims.Any())
+                    if (existingClaims.Any())
                     {
-                        await _signInManager.UserManager.RemoveClaimsAsync(user, dynamicClaims);
+                        await _signInManager.UserManager.RemoveClaimsAsync(user, existingClaims);
                     }
 
                     // Add fresh dynamic claims based on user input
