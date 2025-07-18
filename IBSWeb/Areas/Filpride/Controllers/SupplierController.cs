@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -85,7 +86,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View("ExportIndex", suppliers);
             }
 
-            return View(suppliers);
+            return View();
         }
 
         [HttpGet]
@@ -182,6 +183,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
                 return View(model);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSuppliersList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var queried = await _unitOfWork.FilprideSupplier
+                    .GetAllAsync(null, cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(b =>
+                        b.SupplierCode!.ToLower().Contains(searchValue) == true ||
+                        b.SupplierName!.ToLower().Contains(searchValue) == true ||
+                        b.SupplierAddress!.ToLower().Contains(searchValue) == true ||
+                        b.SupplierTin!.ToLower().Contains(searchValue) == true ||
+                        b.SupplierTerms!.ToLower().Contains(searchValue) == true ||
+                        b.Category!.ToLower().Contains(searchValue) == true
+                        ).ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}");
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get customer branches.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
         }
 
