@@ -5,92 +5,179 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">EMPLOYEE MASTER FILE</h2>
-            </div>
-        </div>
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Employee</h2>
+        <a asp-area="Filpride" asp-controller="Employee" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> New Employee
+        </a>
     </div>
-    <div class="card-body p-4 table-responsive">
-        <div class="row pb-3">
-            <div class="col-6">
-            </div>
-            <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="Employee" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New
-                </a>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">Employee Number</th>
+                        <th class="text-start">Initial</th>
+                        <th class="text-start">First Name</th>
+                        <th class="text-start">Last Name</th>
+                        <th class="text-start">Birth Date</th>
+                        <th class="text-start">Tel No.</th>
+                        <th class="text-start">Department</th>
+                        <th class="text-start">Position</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                </table>
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
-            <thead>
-            <tr class="text-nowrap">
-                <th class="text-start">
-                    @Html.DisplayNameFor(model => model.EmployeeNumber)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Initial)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.FirstName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.LastName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.BirthDate)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.TelNo)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Department)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Position)
-                </th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td class="text-start">
-                        @Html.DisplayFor(modelItem => item.EmployeeNumber)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Initial)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.FirstName)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.LastName)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.BirthDate)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.TelNo)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Department)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Position)
-                    </td>
-                    <td>
-                        <div class="w-100 btn-group" role="group">
-                            <a asp-area="Filpride" asp-controller="Employee" asp-action="Edit" asp-route-id="@item.EmployeeId" class="btn btn-primary mx-2">
-                                <i class="bi bi-pencil-square"></i> Edit
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
     </div>
 </div>
+
+@section Scripts{
+    <script>
+        // Event listeners
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Employee", new { area = "Filpride" })';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[0, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [8] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetEmployeesList", "Employee", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {
+                        "data": "employeeNumber",
+                        "name": "EmployeeNumber"
+                    },
+                    {
+                        "data": "initial",
+                        "name": "Initial"
+                    },
+                    {
+                        "data": "firstName",
+                        "name": "FirstName"
+                    },
+                    {
+                        "data": "lastName",
+                        "name": "LastName"
+                    },
+                    {
+                        "data": "birthDate",
+                        "name": "BirthDate",
+                        "render": function (data) {
+                            var date = new Date(data);
+                            return date.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit'
+                            });
+                        }
+                    },
+                    {
+                        "data": "telNo",
+                        "name": "TelNo"
+                    },
+                    {
+                        "data": "department",
+                        "name": "Department"
+                    },
+                    {
+                        "data": "position",
+                        "name": "Position"
+                    },
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
+
+                            actions += `<a class="btn btn-primary col-12" href="${editUrl}?id=${row.employeeId}"><i class="bi bi-eye"></i> Edit</a>`;
+
+                            actions += `</div></div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}
