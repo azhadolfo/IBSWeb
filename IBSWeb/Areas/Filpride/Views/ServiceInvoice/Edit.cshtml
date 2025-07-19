@@ -123,11 +123,8 @@
                         },
                         success: function (data) {
                             $drSelect.empty();
-                            
-                            console.log(data);
 
                             if (data?.length > 0) {
-                                console.log("working");
                                 $.each(data, function (index, dr) {
                                     const isSelected = dr.value === selectedDRId;
                                     const option = new Option(dr.text, dr.value, isSelected, isSelected);

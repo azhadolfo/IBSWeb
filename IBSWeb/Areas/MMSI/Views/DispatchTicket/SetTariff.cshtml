@@ -426,7 +426,6 @@
                 let bafRateVal = $('input[name="BAFRate"]').val();
                 let dispatchRate = parseNumber(dispatchRateVal);
                 let bafRate = parseNumber(bafRateVal);
-                console.log("testing check values");
 
                 const form = document.getElementById("myForm");
 
@@ -439,7 +438,6 @@
                 // checks if values are both zero
                 if ((dispatchRate === 0 || dispatchRate === "" || dispatchRate == null) &&
                     (bafRate === 0 || bafRate === "" || bafRate == null)) {
-                    console.log("error");
                     Swal.fire({
                         icon: "error",
                         title: "Error",

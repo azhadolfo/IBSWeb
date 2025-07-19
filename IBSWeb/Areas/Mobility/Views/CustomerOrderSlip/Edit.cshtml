@@ -134,19 +134,15 @@
 
                     // Check if data is an array and not null
                     if (Array.isArray(data) && data.length > 0) {
-                        console.log("There are customers found for the selected station.");
                         $("#customers").append('<option>');
 
                         // Iterate over the array and append options
                         $.each(data, function (index, item) {
-                            console.log(item.value);
                             $("#customers").append($('<option>', {
                                 value: item.value,   // Use the correct property for value
                                 text: item.text      // Use the correct property for text
                             }));
                         });
-                    } else {
-                        console.log("No customers found for the selected station.");
                     }
                 }
             });

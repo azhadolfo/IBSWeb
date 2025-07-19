@@ -77,7 +77,6 @@
 
             function toggleStationDiv() {
                 const branchDiv = $('#branch-div');
-                console.log("customer val = " + customerField.val());
                 if (customerField.length && customerField.val()) {
                     branchDiv.show();
                     updateWithCustomerDetails(customerField.val());
@@ -89,7 +88,6 @@
             function updateWithCustomerDetails (customerId){
                 const addressField = $('[name="BranchAddress"]');
                 const tinField = $('[name="BranchTin"]');
-                console.log("update customer : " + customerId);
                 $.ajax({
                     url: '@Url.Action("GetCustomerDetails", "CustomerBranch", new { area = "Filpride" })',
                     type: 'POST',

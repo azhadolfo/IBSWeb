@@ -159,7 +159,6 @@
 
         // Update table based on status filter
         function handleStatusChange(status) {
-            console.log("Status filter changed to:", status);
 
             $.ajax({
                 url: '@Url.Action("GetDispatchTicketList", "ServiceRequest")',
@@ -376,10 +375,8 @@
             });
 
             $(document).on("click", "#postSelected", function () {
-                console.log("test");
                 const selectedArray = Array.from(selectedRecords); // Convert Set to Array
                 const queryString = encodeURIComponent(JSON.stringify(selectedArray));
-                console.log(queryString); 
 
                 Swal.fire({
                     title: "Post selected requests?",
@@ -474,13 +471,11 @@
             });
 
             $('#filterForPosting').on('click', function() {
-                console.log("filter for posting");
                 table.columns().search(''); // Clear previous filters
                 table.columns(11).search('For Posting', true, true).draw();
             });
 
             $('#filterCancelled').on('click', function() {
-                console.log("filter cancelled");
                 table.columns().search(''); // Clear previous filters
                 table.columns(11).search('Cancelled', true, true).draw();
             });

@@ -306,7 +306,6 @@
                     var totalAmountPaid = 0;
                     var totalBalance = 0;
 
-                    console.log("start");
                     // Sum up columns
                     data.forEach(function (row) {
                         var amount = row.amount > 0 ? row.amount : row.invoiceAmount;
@@ -314,14 +313,8 @@
                         totalAmount += amount;
                         totalAmountPaid += amountPaid;
                         totalBalance += amount - amountPaid;
-                        
-                        console.log(totalAmount);
-                        console.log(totalAmountPaid);
-                        console.log(totalBalance);
-                        console.log(row.transactionNo);
                     });
-                    console.log("end");
-
+                    
                     // Update footer with totals
                     $(this.api().column(3).footer()).html(formatNumber(totalAmount));
                     $(this.api().column(4).footer()).html(formatNumber(totalAmountPaid));

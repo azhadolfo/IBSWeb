@@ -215,7 +215,6 @@
 
             $('#filterWithTerminated').on('click', function() {
                 table.columns().search(''); // Clear previous filters
-                console.log(table.columns(6).search('Terminated'));
                 table.columns(7).search('Terminated', true, true).draw();
             });
 
