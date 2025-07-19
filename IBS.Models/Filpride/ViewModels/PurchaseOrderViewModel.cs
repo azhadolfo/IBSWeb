@@ -24,15 +24,27 @@ namespace IBS.Models.Filpride.ViewModels
         public string Terms { get; set; }
 
         [Required]
-        [Range(1, double.MaxValue, ErrorMessage = "The quantity should be greater than zero.")]
         public decimal Quantity { get; set; }
 
         [Required]
-        [Range(1, double.MaxValue, ErrorMessage = "The unit cost should be greater than zero.")]
-        public decimal UnitCost { get; set; }
+        public decimal Price { get; set; }
 
+        [Required]
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }
+
+        public string? Type { get; set; }
+
+        public DateOnly TriggerDate { get; set; }
+
+        public string OldPoNo { get; set; }
+
+        public int PickUpPointId { get; set; }
+
+        public List<SelectListItem>? PickUpPoints { get; set; }
+
+        public string? SupplierSalesOrderNo { get; set; }
+
     }
 }

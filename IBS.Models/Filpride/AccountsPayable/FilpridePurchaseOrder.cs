@@ -17,7 +17,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(13)]
         public string? PurchaseOrderNo { get; set; }
 
-        [Required]
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
@@ -110,24 +109,11 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(50)]
         public string Status { get; set; } = nameof(Utility.Enums.Status.Pending);
 
-        #region--Select List Item
-
-        [NotMapped]
-        public List<FilprideReceivingReport>? RrList { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Suppliers { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? Products { get; set; }
-
-        #endregion
-
         #region--SUB PO
 
         public bool IsSubPo { get; set; }
 
-        [Column(TypeName = "varchar(20)")]
+        [StringLength(20)]
         public string? SubPoSeries { get; set; }
 
         public int? CustomerId { get; set; }
@@ -167,9 +153,6 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [StringLength(20)]
         public string TaxType { get; set; } = string.Empty;
-
-        [NotMapped]
-        public List<SelectListItem>? PickUpPoints { get; set; }
 
         public ICollection<FilprideReceivingReport>? ReceivingReports { get; set; }
     }

@@ -6,6 +6,7 @@ using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -197,7 +198,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilpridePurchaseOrder();
+            var viewModel = new PurchaseOrderViewModel();
 
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -206,16 +207,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.FilprideSupplier
+                .GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Products = await _unitOfWork
+                .GetProductListAsyncById(cancellationToken);
 
             return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilpridePurchaseOrder model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -224,11 +227,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            model.Company = companyClaims;
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+                viewModel.SupplierId, cancellationToken);
 
             if (ModelState.IsValid)
             {
@@ -237,36 +241,47 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 try
                 {
                     var supplier = await _dbContext.FilprideSuppliers
-                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
+                        .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     var product = await _dbContext.Products
-                        .FirstOrDefaultAsync(p => p.ProductId == model.ProductId, cancellationToken);
+                        .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
 
-                    if (supplier == null)
+                    if (supplier == null || product == null)
                     {
                         return NotFound();
                     }
 
-                    if (product == null)
+                    var model = new FilpridePurchaseOrder
                     {
-                        return NotFound();
-                    }
+                        PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken),
+                        Date = viewModel.Date,
+                        SupplierId = supplier.SupplierId,
+                        SupplierName = supplier.SupplierName,
+                        SupplierAddress = supplier.SupplierAddress,
+                        SupplierTin = supplier.SupplierTin,
+                        ProductId = product.ProductId,
+                        ProductName = product.ProductName,
+                        Terms = viewModel.Terms,
+                        Quantity = viewModel.Quantity,
+                        Price = viewModel.Price,
+                        Amount = viewModel.Quantity * viewModel.Price,
+                        Remarks = viewModel.Remarks,
+                        CreatedBy = User.Identity!.Name!,
+                        Company = companyClaims,
+                        Type = viewModel.Type,
+                        TriggerDate = viewModel.TriggerDate,
+                        UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : viewModel.Quantity,
+                        PickUpPointId = viewModel.PickUpPointId,
+                        VatType = supplier.VatType,
+                        TaxType = supplier.TaxType,
+                        OldPoNo = viewModel.OldPoNo
+                    };
 
-                    model.PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Amount = model.Quantity * model.Price;
-                    model.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : model.Quantity;
-                    model.SupplierName = supplier.SupplierName;
-                    model.SupplierAddress = supplier.SupplierAddress;
-                    model.SupplierTin = supplier.SupplierTin;
-                    model.ProductName = product.ProductName;
-                    model.VatType = supplier.VatType;
-                    model.TaxType = supplier.TaxType;
                     await _dbContext.AddAsync(model, cancellationToken);
 
                     #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
                     await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
@@ -282,12 +297,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            TempData["warning"] = "The information you submitted is not valid";
+            return View(viewModel);
         }
 
         [HttpGet]
@@ -312,111 +327,131 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            purchaseOrder.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            var viewModel = new PurchaseOrderViewModel
+            {
+                Date = purchaseOrder.Date,
+                PurchaseOrderId = purchaseOrder.PurchaseOrderId,
+                SupplierId = purchaseOrder.SupplierId,
+                Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                ProductId = purchaseOrder.ProductId,
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                PickUpPointId = purchaseOrder.PickUpPointId,
+                PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+                        purchaseOrder.SupplierId, cancellationToken),
+                Terms = purchaseOrder.Terms,
+                Quantity = purchaseOrder.Quantity,
+                Price = purchaseOrder.Price,
+                Remarks = purchaseOrder.Remarks,
+                TriggerDate = purchaseOrder.TriggerDate,
+                OldPoNo = purchaseOrder.OldPoNo,
+                SupplierSalesOrderNo = purchaseOrder.SupplierSalesOrderNo,
+            };
 
-            purchaseOrder.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, purchaseOrder.SupplierId, cancellationToken);
-
-            purchaseOrder.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
-            ViewBag.PurchaseOrders = purchaseOrder.Quantity;
-
-            return View(purchaseOrder);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilpridePurchaseOrder model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingModel = await _dbContext.FilpridePurchaseOrders.FindAsync(model.PurchaseOrderId, cancellationToken);
-
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    if (companyClaims == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    if (existingModel == null)
-                    {
-                        return NotFound();
-                    }
-
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId, cancellationToken);
-
-                    var product = await _dbContext.Products
-                        .FirstOrDefaultAsync(p => p.ProductId == model.ProductId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (product == null)
-                    {
-                        return NotFound();
-                    }
-
-                    model.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
-                    existingModel.Date = model.Date;
-                    existingModel.SupplierId = model.SupplierId;
-                    existingModel.ProductId = model.ProductId;
-                    existingModel.Quantity = model.Quantity;
-                    existingModel.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : existingModel.Quantity;
-                    existingModel.Price = model.Price;
-                    existingModel.Amount = model.Quantity * model.Price;
-                    existingModel.SupplierSalesOrderNo = model.SupplierSalesOrderNo;
-                    existingModel.Remarks = model.Remarks;
-                    existingModel.Terms = model.Terms;
-                    existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingModel.OldPoNo = model.OldPoNo;
-                    existingModel.TriggerDate = model.TriggerDate;
-                    existingModel.PickUpPointId = model.PickUpPointId;
-                    existingModel.SupplierName = supplier.SupplierName;
-                    existingModel.SupplierAddress = supplier.SupplierAddress;
-                    existingModel.SupplierTin = supplier.SupplierTin;
-                    existingModel.ProductName = product.ProductName;
-                    existingModel.VatType = supplier.VatType;
-                    existingModel.TaxType = supplier.TaxType;
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", existingModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Purchase Order updated successfully";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                return BadRequest();
             }
 
-            return View(model);
+            viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+                viewModel.SupplierId, cancellationToken);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information you submitted is not valid";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingModel = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                if (existingModel == null)
+                {
+                    return NotFound();
+                }
+
+                var supplier = await _dbContext.FilprideSuppliers
+                    .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                var product = await _dbContext.Products
+                    .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
+
+                if (supplier == null || product == null)
+                {
+                    return NotFound();
+                }
+
+                existingModel.Date = viewModel.Date;
+                existingModel.SupplierId = viewModel.SupplierId;
+                existingModel.ProductId = viewModel.ProductId;
+                existingModel.Quantity = viewModel.Quantity;
+                existingModel.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : existingModel.Quantity;
+                existingModel.Price = viewModel.Price;
+                existingModel.Amount = viewModel.Quantity * viewModel.Price;
+                existingModel.SupplierSalesOrderNo = viewModel.SupplierSalesOrderNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.Terms = viewModel.Terms;
+                existingModel.OldPoNo = viewModel.OldPoNo;
+                existingModel.TriggerDate = viewModel.TriggerDate;
+                existingModel.PickUpPointId = viewModel.PickUpPointId;
+                existingModel.SupplierName = supplier.SupplierName;
+                existingModel.SupplierAddress = supplier.SupplierAddress;
+                existingModel.SupplierTin = supplier.SupplierTin;
+                existingModel.ProductName = product.ProductName;
+                existingModel.VatType = supplier.VatType;
+                existingModel.TaxType = supplier.TaxType;
+
+                if (!_dbContext.ChangeTracker.HasChanges())
+                {
+                    TempData["warning"] = "No data changes!";
+                    return View(viewModel);
+                }
+
+                existingModel.EditedBy = User.Identity!.Name;
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", existingModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Purchase Order updated successfully";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideReceivingReports == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -437,115 +472,132 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            if (model != null)
+            try
             {
-                if (model.PostedBy == null)
+                var model = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+
+                if (model == null)
                 {
-                    model.PostedBy = _userManager.GetUserName(this.User);
-                    model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Posted);
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Purchase Order has been Posted.";
+                    return NotFound();
                 }
+
+                model.PostedBy = User.Identity!.Name;
+                model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Posted);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!,
+                    $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Purchase Order has been Posted.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to post purchase order. Error: {ErrorMessage}", ex.Message);
                 return RedirectToAction(nameof(Print), new { id });
             }
 
-            return NotFound();
         }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
+            var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var model = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
+                var hasAlreadyBeenUsed =
+                    await _dbContext.FilprideReceivingReports.AnyAsync(
+                        rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
+                        cancellationToken) ||
+                    await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
+                        cv.CvType == "Trade" && cv.PONo!.Contains(model.PurchaseOrderNo) &&
+                        cv.Status != nameof(Status.Voided), cancellationToken);
+
+                if (hasAlreadyBeenUsed)
+                {
+                    TempData["info"] =
+                        "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                }
+
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!,
+                    $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Purchase Order has been Voided.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to void purchase order. Error: {ErrorMessage}", ex.Message);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+        }
+
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
 
             if (model == null)
             {
                 return NotFound();
             }
 
-            var hasAlreadyBeenUsed =
-                await _dbContext.FilprideReceivingReports.AnyAsync(
-                    rr => rr.POId == model.PurchaseOrderId && rr.Status != nameof(Status.Voided),
-                    cancellationToken) ||
-                await _dbContext.FilprideCheckVoucherHeaders.AnyAsync(cv =>
-                    cv.CvType == "Trade" && cv.PONo!.Contains(model.PurchaseOrderNo) && cv.Status != nameof(Status.Voided), cancellationToken);
-
-            if (hasAlreadyBeenUsed)
-            {
-                TempData["info"] = "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
-                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-            }
-
-            if (model != null)
-            {
-                if (model.VoidedBy == null)
-                {
-                    if (model.PostedBy != null)
-                    {
-                        model.PostedBy = null;
-                    }
-
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Voided);
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    TempData["success"] = "Purchase Order has been Voided.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-            }
-
-            return NotFound();
-        }
-
-        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
-        {
-            var model = await _dbContext.FilpridePurchaseOrders.FindAsync(id, cancellationToken);
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
-                {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Purchase Order has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Purchase Order has been Cancelled.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -555,32 +607,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            return NotFound();
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
-            var po = await _unitOfWork.FilpridePurchaseOrder.GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+            var po = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
 
             if (po == null)
             {
                 return NotFound();
             }
 
-            if (!po.IsPrinted)
+            if (po.IsPrinted)
             {
-                #region --Audit Trail Recording
-
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", po.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                po.IsPrinted = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(Print), new { id });
             }
+
+            #region --Audit Trail Recording
+
+            var printedBy = _userManager.GetUserName(User);
+            FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", po.Company);
+            await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            po.IsPrinted = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
             return RedirectToAction(nameof(Print), new { id });
         }
 
@@ -775,53 +828,53 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var existingRecord = await _unitOfWork.FilpridePurchaseOrder
                 .GetAsync(p => p.PurchaseOrderId == id, cancellationToken);
 
-            if (existingRecord != null)
+            if (existingRecord == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var actualPrices = await _dbContext.FilpridePOActualPrices
-                        .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
-
-                    if (actualPrices != null)
-                    {
-                        actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
-                        actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        actualPrices.IsApproved = true;
-
-                        await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
-                    }
-
-                    existingRecord.Status = nameof(Status.Posted);
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                        $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}",
-                        "Purchase Order",
-                        existingRecord.Company);
-
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-
-                    return Ok(new { message = "The Purchase Order has been approved. All associated Receiving Reports (RR) have been updated with the new cost." });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to approve purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    return BadRequest(new { error = ex.Message });
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var actualPrices = await _dbContext.FilpridePOActualPrices
+                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
+
+                if (actualPrices != null)
+                {
+                    actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
+                    actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    actualPrices.IsApproved = true;
+
+                    await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+                }
+
+                existingRecord.Status = nameof(Status.Posted);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}",
+                    "Purchase Order",
+                    existingRecord.Company);
+
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return Ok(new { message = "The Purchase Order has been approved. All associated Receiving Reports (RR) have been updated with the new cost." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to approve purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Approved by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         public async Task<IActionResult> GetPickUpPoints(int supplierId, CancellationToken cancellationToken)
@@ -853,8 +906,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var pickupPoint = await _dbContext.FilpridePickUpPoints
-                    .FindAsync(pickupPointId, cancellationToken);
+                var pickupPoint = await _unitOfWork.FilpridePickUpPoint
+                    .GetAsync(x => x.PickUpPointId == pickupPointId, cancellationToken);
 
                 #region --Audit Trail Recording
 

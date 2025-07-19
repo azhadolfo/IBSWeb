@@ -1,4 +1,5 @@
-﻿@model FilpridePurchaseOrder
+﻿@using IBS.Utility.Constants
+@model PurchaseOrderViewModel
 
 @{
     ViewData["Title"] = "Edit Purchase Order";
@@ -63,22 +64,22 @@
                 <label asp-for="Terms" class="control-label">Term</label>
                 <select asp-for="Terms" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
                     <option value="" selected disabled>Select payment terms</option>
-                    <option value="COD">COD</option>
-                    <option value="PREPAID">PREPAID</option>
-                    <option value="7D">7D</option>
-                    <option value="10D">10D</option>
-                    <option value="15D">15D</option>
-                    <option value="30D">30D</option>
-                    <option value="45D">45D</option>
-                    <option value="60D">60D</option>
-                    <option value="90D">90D</option>
-                    <option value="15PDC">15PDC</option>
-                    <option value="30PDC">30PDC</option>
-                    <option value="45PDC">45PDC</option>
-                    <option value="60PDC">60PDC</option>
-                    <option value="M15">M15</option>
-                    <option value="M29">M29</option>
-                    <option value="M30">M30</option>
+                    <option value="@SD.Terms_Cod">@SD.Terms_Cod</option>
+                    <option value="@SD.Terms_Prepaid">@SD.Terms_Prepaid</option>
+                    <option value="@SD.Terms_7d">@SD.Terms_7d</option>
+                    <option value="@SD.Terms_10d">@SD.Terms_10d</option>
+                    <option value="@SD.Terms_15d">@SD.Terms_15d</option>
+                    <option value="@SD.Terms_30d">@SD.Terms_30d</option>
+                    <option value="@SD.Terms_45d">@SD.Terms_45d</option>
+                    <option value="@SD.Terms_60d">@SD.Terms_60d</option>
+                    <option value="@SD.Terms_90d">@SD.Terms_90d</option>
+                    <option value="@SD.Terms_15pdc">@SD.Terms_15pdc</option>
+                    <option value="@SD.Terms_30pdc">@SD.Terms_30pdc</option>
+                    <option value="@SD.Terms_45pdc">@SD.Terms_45pdc</option>
+                    <option value="@SD.Terms_60pdc">@SD.Terms_60pdc</option>
+                    <option value="@SD.Terms_M15">@SD.Terms_M15</option>
+                    <option value="@SD.Terms_M29">@SD.Terms_M29</option>
+                    <option value="@SD.Terms_M30">@SD.Terms_M30</option>
                 </select>
                 <span asp-validation-for="Terms" class="text-danger"></span>
             </div>
