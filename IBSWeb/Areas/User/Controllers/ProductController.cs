@@ -100,10 +100,10 @@ namespace IBSWeb.Areas.User.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.ProductCode.ToLower().Contains(searchValue) == true ||
-                        b.ProductName.ToLower().Contains(searchValue) == true ||
-                        b.ProductUnit.ToLower().Contains(searchValue) == true
+                    .Where(p =>
+                        p.ProductCode.ToLower().Contains(searchValue) == true ||
+                        p.ProductName.ToLower().Contains(searchValue) == true ||
+                        p.ProductUnit.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 

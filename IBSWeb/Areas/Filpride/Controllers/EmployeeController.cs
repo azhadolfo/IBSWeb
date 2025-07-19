@@ -102,15 +102,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.EmployeeNumber.ToLower().Contains(searchValue) == true ||
-                        b.Initial?.ToLower().Contains(searchValue) == true ||
-                        b.FirstName.ToLower().Contains(searchValue) == true ||
-                        b.LastName.ToLower().Contains(searchValue) == true ||
-                        b.BirthDate?.ToString().Contains(searchValue) == true ||
-                        b.TelNo?.ToLower().Contains(searchValue) == true ||
-                        b.Department?.ToLower().Contains(searchValue) == true ||
-                        b.Position.ToLower().Contains(searchValue) == true
+                    .Where(e =>
+                        e.EmployeeNumber.ToLower().Contains(searchValue) == true ||
+                        e.Initial?.ToLower().Contains(searchValue) == true ||
+                        e.FirstName.ToLower().Contains(searchValue) == true ||
+                        e.LastName.ToLower().Contains(searchValue) == true ||
+                        e.BirthDate?.ToString().Contains(searchValue) == true ||
+                        e.TelNo?.ToLower().Contains(searchValue) == true ||
+                        e.Department?.ToLower().Contains(searchValue) == true ||
+                        e.Position.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 
@@ -141,7 +141,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer.");
+                _logger.LogError(ex, "Failed to get employee.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
