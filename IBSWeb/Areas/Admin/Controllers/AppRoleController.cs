@@ -76,9 +76,9 @@ namespace IBSWeb.Areas.Admin.Controllers
 
                 var totalRecords = queried.Count();
                 var pagedData = queried
-                    .Select(b  => new
+                    .Select(r  => new
                     {
-                        b.Name,
+                        r.Name,
                     })
                     .Skip(parameters.Start)
                     .Take(parameters.Length)

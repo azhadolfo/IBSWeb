@@ -179,12 +179,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.ServiceNo!.ToLower().Contains(searchValue) == true ||
-                        b.Name.ToLower().Contains(searchValue) == true ||
-                        b.Percent.ToString().ToLower().Contains(searchValue) == true ||
-                        b.CreatedBy!.ToLower().Contains(searchValue) == true ||
-                        b.CreatedDate.ToString("MM dd, yyyy").ToLower().Contains(searchValue) == true
+                    .Where(s =>
+                        s.ServiceNo!.ToLower().Contains(searchValue) == true ||
+                        s.Name.ToLower().Contains(searchValue) == true ||
+                        s.Percent.ToString().ToLower().Contains(searchValue) == true ||
+                        s.CreatedBy!.ToLower().Contains(searchValue) == true ||
+                        s.CreatedDate.ToString("MM dd, yyyy").ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 

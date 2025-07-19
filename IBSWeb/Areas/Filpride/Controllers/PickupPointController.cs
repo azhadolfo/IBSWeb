@@ -119,9 +119,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.Depot!.ToLower().Contains(searchValue) == true ||
-                        b.Supplier!.SupplierName.ToLower().Contains(searchValue) == true
+                    .Where(p =>
+                        p.Depot!.ToLower().Contains(searchValue) == true ||
+                        p.Supplier!.SupplierName.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 
@@ -158,7 +158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get customer.");
+                _logger.LogError(ex, "Failed to get pickup points.");
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

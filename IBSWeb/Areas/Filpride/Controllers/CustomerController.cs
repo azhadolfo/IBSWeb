@@ -177,11 +177,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.CustomerCode!.ToLower().Contains(searchValue) == true ||
-                        b.CustomerName.ToLower().Contains(searchValue) == true ||
-                        b.CustomerTerms.ToLower().Contains(searchValue) == true ||
-                        b.VatType.ToLower().Contains(searchValue) == true
+                    .Where(c =>
+                        c.CustomerCode!.ToLower().Contains(searchValue) == true ||
+                        c.CustomerName.ToLower().Contains(searchValue) == true ||
+                        c.CustomerTerms.ToLower().Contains(searchValue) == true ||
+                        c.VatType.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 

@@ -93,11 +93,11 @@ namespace IBSWeb.Areas.User.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.CompanyCode!.ToLower().Contains(searchValue) == true ||
-                        b.CompanyName.ToLower().Contains(searchValue) == true ||
-                        b.CompanyAddress.ToLower().Contains(searchValue) == true ||
-                        b.CompanyTin.ToLower().Contains(searchValue) == true
+                    .Where(c =>
+                        c.CompanyCode!.ToLower().Contains(searchValue) == true ||
+                        c.CompanyName.ToLower().Contains(searchValue) == true ||
+                        c.CompanyAddress.ToLower().Contains(searchValue) == true ||
+                        c.CompanyTin.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 

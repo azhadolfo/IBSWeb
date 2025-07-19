@@ -200,13 +200,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
-                    .Where(b =>
-                        b.SupplierCode!.ToLower().Contains(searchValue) == true ||
-                        b.SupplierName!.ToLower().Contains(searchValue) == true ||
-                        b.SupplierAddress!.ToLower().Contains(searchValue) == true ||
-                        b.SupplierTin!.ToLower().Contains(searchValue) == true ||
-                        b.SupplierTerms!.ToLower().Contains(searchValue) == true ||
-                        b.Category!.ToLower().Contains(searchValue) == true
+                    .Where(s =>
+                        s.SupplierCode!.ToLower().Contains(searchValue) == true ||
+                        s.SupplierName!.ToLower().Contains(searchValue) == true ||
+                        s.SupplierAddress!.ToLower().Contains(searchValue) == true ||
+                        s.SupplierTin!.ToLower().Contains(searchValue) == true ||
+                        s.SupplierTerms!.ToLower().Contains(searchValue) == true ||
+                        s.Category!.ToLower().Contains(searchValue) == true
                         ).ToList();
                 }
 
