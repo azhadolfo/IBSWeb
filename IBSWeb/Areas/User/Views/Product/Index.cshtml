@@ -4,77 +4,155 @@
     ViewData["Title"] = "Product";
 }
 
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">PRODUCT</h2>
-            </div>
-        </div>
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Product</h2>
+        <a asp-area="User" asp-controller="Product" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> Create New Product
+        </a>
     </div>
-    <div class="card-body p-4 table-responsive">
-        <div class="row pb-3">
-            <div class="col-6">
-            </div>
-            <div class="col-6 text-end">
-                <a asp-area="User" asp-controller="Product" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New Product
-                </a>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">Product Code</th>
+                        <th class="text-start">Product Name</th>
+                        <th class="text-start">Product Unit</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                </table>
             </div>
         </div>
-
-        <table id="dataTable" class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.ProductCode)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.ProductName)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.ProductUnit)
-                    </th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var obj in Model.OrderBy(u => u.ProductCode))
-                {
-                    <tr>
-                        <td>
-                            @obj.ProductCode
-                        </td>
-                        <td>
-                            @obj.ProductName
-                        </td>
-                        <td>
-                            @obj.ProductUnit
-                        </td>
-                        <td>
-                            <div class="w-100 btn-group" role="group">
-                                <a asp-area="User" asp-controller="Product" asp-action="Edit" asp-route-id="@obj.ProductId" class="btn btn-primary mx-2">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a>
-                                @if (obj.IsActive)
-                                {
-                                    <a asp-area="User" asp-controller="Product" asp-action="Deactivate" asp-route-id="@obj.ProductId" class="btn btn-danger mx-2">
-                                        <i class="bi bi-person-fill-slash"></i> Deactivate
-                                    </a>
-                                }
-                                else
-                                {
-                                    <a asp-area="User" asp-controller="Product" asp-action="Activate" asp-route-id="@obj.ProductId" class="btn btn-success mx-2">
-                                        <i class="bi bi-person-fill-check"></i> Activate
-                                    </a>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-
-        </table>
-
     </div>
 </div>
+
+@section Scripts{
+    <script>
+        // Event listeners
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "Product", new { area = "User" })';
+            const deactivateUrl = '@Url.Action("Deactivate", "Product", new { area = "User" })';
+            const activateUrl = '@Url.Action("Activate", "Product", new { area = "User" })';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[1, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [3] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetProductList", "Product", new { area = "User" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {
+                        "data": "productCode",
+                        "name": "ProductCode"
+                    },
+                    {
+                        "data": "productName",
+                        "name": "ProductName"
+                    },
+                    {
+                        "data": "productUnit",
+                        "name": "ProductUnit"
+                    },
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="w-100 btn-group" role="group">`;
+
+                            actions += `<a class="btn btn-primary mx-2" href="${editUrl}?id=${row.productId}"><i class="bi bi-pencil-square"></i> Edit</a>`;
+
+                            if(row.isActive){
+                                actions += `<a class="btn btn-danger mx-2" href="${deactivateUrl}?id=${row.productId}"><i class="bi bi-person-fill-slash"></i> Deactivate</a>`;
+                            }
+                            else {
+                                actions += `<a class="btn btn-success mx-2" href="${activateUrl}?id=${row.productId}"><i class="bi bi-person-fill-check"></i> Activate</a>`;
+                            }
+
+                            actions += `</div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}
