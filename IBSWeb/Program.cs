@@ -90,6 +90,7 @@ builder.Services.AddScoped<GoogleDriveImportService>();
 builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
+builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
 builder.Services.AddSignalR();
 
 // Add Quartz services
