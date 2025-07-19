@@ -86,7 +86,7 @@
             const activateUrl = '@Url.Action("Activate", "Supplier", new { area = "Filpride" })';
 
             var table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
+                "order": [[0, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [6] }
                 ],
@@ -124,28 +124,22 @@
                 },
                 "columns": [
                     {
-                        "data": "supplierCode",
-                        "name": "SupplierCode"
+                        "data": "supplierCode"
                     },
                     {
-                        "data": "supplierName",
-                        "name": "SupplierName"
+                        "data": "supplierName"
                     },
                     {
-                        "data": "supplierAddress",
-                        "name": "SupplierAddress"
+                        "data": "supplierAddress"
                     },
                     {
-                        "data": "supplierTin",
-                        "name": "SupplierTin"
+                        "data": "supplierTin"
                     },
                     {
-                        "data": "supplierTerms",
-                        "name": "SupplierTerms"
+                        "data": "supplierTerms"
                     },
                     {
-                        "data": "category",
-                        "name": "Category"
+                        "data": "category"
                     },
                     {
                         "data": "null",

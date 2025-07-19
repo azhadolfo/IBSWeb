@@ -83,7 +83,7 @@
             const activateUrl = '@Url.Action("Activate", "Product", new { area = "User" })';
 
             var table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
+                "order": [[0, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [3] }
                 ],
@@ -121,16 +121,13 @@
                 },
                 "columns": [
                     {
-                        "data": "productCode",
-                        "name": "ProductCode"
+                        "data": "productCode"
                     },
                     {
-                        "data": "productName",
-                        "name": "ProductName"
+                        "data": "productName"
                     },
                     {
-                        "data": "productUnit",
-                        "name": "ProductUnit"
+                        "data": "productUnit"
                     },
                     {
                         "data": "null",
