@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.MasterFile;
@@ -15,6 +16,18 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
+        public override async Task<IEnumerable<FilpridePickUpPoint>> GetAllAsync(Expression<Func<FilpridePickUpPoint, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilpridePickUpPoint> query = dbSet;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query
+                .Include(p => p.Supplier)
+                .ToListAsync(cancellationToken);
+        }
 
         public async Task<List<SelectListItem>> GetPickUpPointListBasedOnSupplier(string companyClaims, int supplierId, CancellationToken cancellationToken = default)
         {

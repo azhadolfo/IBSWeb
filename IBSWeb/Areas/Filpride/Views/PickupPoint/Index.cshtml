@@ -4,58 +4,141 @@
     ViewData["Title"] = "Pickup Point";
 }
 
-<div class="card shadow border-0 mt-4">
-    <div class="card-header bg-secondary bg-gradient ml-0 py-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2 class="text-white py-2">PICKUP POINTS</h2>
-            </div>
-        </div>
+<style>
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Custom styles for professional look */
+    .table th {
+        font-weight: 600;
+        color: #374151;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.025em;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s;
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .table-loading {
+        position: relative;
+        opacity: 0.6;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.8em;
+        font-size: 0.75rem;
+    }
+
+    .actions-dropdown .dropdown-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .actions-dropdown .dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
+        <h2 class="text-white m-0">Pickup Points</h2>
+        <a asp-area="Filpride" asp-controller="PickupPoint" asp-action="Create" class="btn btn-light">
+            <i class="bi bi-plus-circle"></i> New Pickup Point
+        </a>
     </div>
-    <div class="card-body p-4 table-responsive">
-        <div class="row pb-3">
-            <div class="col-6">
-            </div>
-            <div class="col-6 text-end">
-                <a asp-area="Filpride" asp-controller="PickupPoint" asp-action="Create" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Create New Pickup Point
-                </a>
+
+    <div class="card shadow border-0 mt-3">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="max-height: 70vh">
+                <table class="table table-hover mb-0" id="paginatedTable">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="text-start">Depot</th>
+                        <th class="text-start">Supplier</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                </table>
             </div>
         </div>
-        <table class="table table-bordered table-striped" id="dataTable">
-            <thead>
-                <tr class="text-nowrap">
-                    <th>
-                        Depot
-                    </th>
-                    <th>
-                        Supplier
-                    </th>
-                    <th>
-                        Actions
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var obj in Model)
-                {
-                    <tr>
-                        <td>
-                            @obj.Depot
-                        </td>
-                        <td>
-                            @obj.Supplier?.SupplierName
-                        </td>
-                        <td>
-                            <div class="w-100 btn-group" role="group">
-                                <a asp-area="Filpride" asp-controller="PickupPoint" asp-action="Edit" asp-route-id="@obj.PickUpPointId" class="btn btn-primary mx-2">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
     </div>
 </div>
+
+@section Scripts{
+    <script>
+        // Event listeners
+        $(document).ready(function () {
+            const editUrl = '@Url.Action("Edit", "PickupPoint", new { area = "Filpride" })';
+
+            var table = $('#paginatedTable').DataTable({
+                "order": [[0, 'asc']],
+                "columnDefs": [
+                    { "orderable": false, "targets": [2] }
+                ],
+                "processing": true,
+                "serverSide": true,
+                "stateDuration": 86400,
+                "language": {
+                    "processing": `<div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                 </div>`
+                },
+                "ajax": {
+                    "url": "@Url.Action("GetPickupPointsList", "PickupPoint", new { area = "Filpride" })",
+                    "type": "POST",
+                    "data": function (d) {
+                        return $.extend({}, d, {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        });
+                    },
+                    "error": function (xhr, error, thrown) {
+                        console.error('DataTables error:', error);
+                        alert('An error occurred while loading the data');
+                    }
+                },
+                "preDrawCallback": function (settings) {
+                    $('#paginatedTable').addClass('table-loading');
+                },
+                "drawCallback": function (settings) {
+                    $('#paginatedTable').removeClass('table-loading');
+
+                    // Initialize all tooltips
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
+                "columns": [
+                    {
+                        "data": "depot",
+                        "name": "Depot"
+                    },
+                    {
+                        "data": "supplierName",
+                        "name": "Supplier.SupplierName"
+                    },
+                    {
+                        "data": "null",
+                        "orderable": false,
+                        "render": function(data, type, row) {
+                            let actions = `<div class="d-flex justify-content-center"><div style="width:150px;">`;
+
+                            actions += `<a class="btn btn-primary col-12" href="${editUrl}?id=${row.pickUpPointId}"><i class="bi bi-eye"></i> Edit</a>`;
+
+                            actions += `</div></div>`;
+                            return actions;
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+}

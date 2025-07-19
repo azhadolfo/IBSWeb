@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MasterFile;
@@ -83,6 +84,60 @@ namespace IBSWeb.Areas.User.Controllers
 
             ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetProductList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var queried = await _unitOfWork.Product
+                    .GetAllAsync(null, cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(p =>
+                        p.ProductCode.ToLower().Contains(searchValue) == true ||
+                        p.ProductName.ToLower().Contains(searchValue) == true ||
+                        p.ProductUnit.ToLower().Contains(searchValue) == true
+                        ).ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}");
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get products.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]

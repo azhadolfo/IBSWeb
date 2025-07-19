@@ -1,3 +1,4 @@
+using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -102,6 +103,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(model.Company, cancellationToken);
             ModelState.AddModelError("", "Make sure to fill all the required details.");
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetPickupPointsList([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var queried = await _unitOfWork.FilpridePickUpPoint
+                    .GetAllAsync(null, cancellationToken);
+
+                // Global search
+                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                {
+                    var searchValue = parameters.Search.Value.ToLower();
+
+                    queried = queried
+                    .Where(p =>
+                        p.Depot!.ToLower().Contains(searchValue) == true ||
+                        p.Supplier!.SupplierName.ToLower().Contains(searchValue) == true
+                        ).ToList();
+                }
+
+                // Sorting
+                if (parameters.Order != null && parameters.Order.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+                    queried = queried
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}");
+                }
+
+                var totalRecords = queried.Count();
+                var pagedData = queried
+                    .Select(p => new
+                    {
+                        p.PickUpPointId,
+                        p.Depot,
+                        p.Supplier!.SupplierName
+                    })
+                    .Skip(parameters.Start)
+                    .Take(parameters.Length)
+                    .ToList();
+
+                return Json(new
+                {
+                    draw = parameters.Draw,
+                    recordsTotal = totalRecords,
+                    recordsFiltered = totalRecords,
+                    data = pagedData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get pickup points.");
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
