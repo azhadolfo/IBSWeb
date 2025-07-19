@@ -30,6 +30,7 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal Price { get; set; }
 
         [Required]
+        [StringLength(1000)]
         public string Remarks { get; set; }
 
         public string? CurrentUser { get; set; }
@@ -38,12 +39,14 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly TriggerDate { get; set; }
 
+        [StringLength(50)]
         public string OldPoNo { get; set; }
 
         public int PickUpPointId { get; set; }
 
         public List<SelectListItem>? PickUpPoints { get; set; }
 
+        [StringLength(100)]
         public string? SupplierSalesOrderNo { get; set; }
 
     }
