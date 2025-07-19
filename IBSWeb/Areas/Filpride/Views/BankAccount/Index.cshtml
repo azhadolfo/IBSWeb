@@ -86,7 +86,7 @@
             const editUrl = '@Url.Action("Edit", "BankAccount", new { area = "Filpride" })';
 
             var table = $('#paginatedTable').DataTable({
-                "order": [[1, 'asc']],
+                "order": [[0, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [6] }
                 ],
@@ -124,28 +124,22 @@
                 },
                 "columns": [
                     {
-                        "data": "accountNo",
-                        "name": "AccountNo"
+                        "data": "accountNo"
                     },
                     {
-                        "data": "accountName",
-                        "name": "AccountName"
+                        "data": "accountName"
                     },
                     {
-                        "data": "bank",
-                        "name": "Bank"
+                        "data": "bank"
                     },
                     {
-                        "data": "branch",
-                        "name": "Branch"
+                        "data": "branch"
                     },
                     {
-                        "data": "createdBy",
-                        "name": "CreatedBy"
+                        "data": "createdBy"
                     },
                     {
                         "data": "createdDate",
-                        "name": "CreatedDate",
                         "render": function (data) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', {
