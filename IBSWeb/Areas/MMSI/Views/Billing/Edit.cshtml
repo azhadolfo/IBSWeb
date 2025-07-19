@@ -314,7 +314,6 @@
             // Principal checkbox: checked - empty value, update select list, make it appear, enable requirement
             // Principal checkbox: if unchecked, empty value, disappear, disable requirement
             function handleUsePrincipalChange() {
-                console.log("handleUsePrincipalChange");
                 const $checkbox = $("#UsePrincipalCheckbox");
                 const $selectDiv = $("#SelectDiv");
                 const $principal = $("#PrincipalSelect");
@@ -335,7 +334,6 @@
 
             // Principal select: get principal list
             function fetchPrincipals(customerId) {
-                console.log("fetchPrincipals");
                 $.ajax({
                     url: '@Url.Action("GetPrincipalsJSON", "Billing", new { area = "MMSI" })',
                     type: "GET",
@@ -357,7 +355,6 @@
 
             // Customer details: what do if changed
             function handlePrincipalChange() {
-                console.log("handlePrincipalChange");
                 const principalId = $("#PrincipalSelect").val();
                 $.ajax({
                     url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "MMSI" })',
@@ -389,18 +386,14 @@
                     $dispatchSelect.prop("disabled", false); // Tickets select: enable
                     $dispatchSelect.prop("required", true); // Tickets select: enable
                     
-                    // Customer details: replace with selected customer's details
-                    console.log("starting ajax, customerid:" + customerId);
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "Billing", new { area = "MMSI" })',
                         method: "POST",
                         data: { customerId: customerId },
                         success: function (data) {
-                            console.log("inside the first ajax");
                             updateFields(data);
                             $principalDiv.toggleClass("d-none", !data.hasPrincipal);
                             //$vatableCheckBox.prop("checked", data.vatType === "Vatable");
-                            console.log(data.isVatable);
 
                             // Ticket select: update choices
                             $.ajax({
@@ -409,7 +402,6 @@
                                 data: { customerId: customerId,
                                     billingId: billingId },
                                 success: function (data) {
-                                    console.log("inside the second ajax");
                                     $dispatchSelect.empty();
                                     if (Array.isArray(data) && data.length > 0) {
                                         $.each(data, function (index, item) {
@@ -434,7 +426,6 @@
             
             // 2 Customer details: updates based on passed data
             function updateFields(data) {
-                console.log("updateFields");
                 // Creates an array of array containing the id of the field and the value to put
                 const fields = {
                     "#Terms": data?.terms || '',
@@ -450,7 +441,6 @@
 
             // Port select: changes, updates terminal list
             function handlePortChange() {
-                console.log("handlePortChange");
                 const portId = $("#PortSelect").val();
                 $.ajax({
                     url: '@Url.Action("ChangeTerminal", "DispatchTicket", new { area = "MMSI" })',
@@ -474,7 +464,6 @@
 
             // Ticket select: changes, get the tickets
             function handleDispatchTicketsChange() {
-                console.log("handleDispatchTicketsChange");
                 const selectedTickets = $('.js-example-basic-multiple').val();
                 $.ajax({
                     url: '/MMSI/Billing/GetDispatchTickets',
@@ -491,7 +480,6 @@
 
             // Tickets table: updates, amount updates
             function updateDispatchTable(data) {
-                console.log("updateDispatchTable");
                 let totalDispatchAmount = 0;
                 let totalBAFAmount = 0;
 
@@ -535,7 +523,6 @@
             
             // Fills the customer details field based on the received customer or principal
             function fillDataOnStartup () {
-                console.log("fillDataOnStartup");
                 let $principalId = $("#PrincipalSelect").val();
                 let $customerId = $("#CustomerId").val();
 

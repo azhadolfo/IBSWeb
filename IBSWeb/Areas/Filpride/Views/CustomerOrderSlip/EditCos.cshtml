@@ -809,10 +809,8 @@
                 }
 
                 function onPaste(event) {
-                    console.log('onPaste triggered');
                     const clipboardData = event.originalEvent ? event.originalEvent.clipboardData : event.clipboardData;
                     if (!clipboardData) {
-                        console.log('Nothing in clipboard');
                         return;
                     }
 
@@ -824,7 +822,6 @@
 
                     const items = clipboardData.items;
                     if (!items || items.length === 0) {
-                        console.log('Nothing in clipboard');
                         return;
                     }
 
@@ -839,8 +836,6 @@
                     if (files.length > 0) {
                         handleFiles(files);
                         event.preventDefault();
-                    } else {
-                        console.log('No files found in items');
                     }
                 }
 
@@ -871,12 +866,8 @@
                             icon: "error",
                             title: "Uploading is disabled"
                         });
-                        
-                        console.log("uploading is disabled");
                         return;
                     }
-                    
-                    console.log("uploading is enabled!");
 
                     // Convert FileList to array
                     const fileArray = Array.from(files);
@@ -909,14 +900,10 @@
                     fileNames.forEach(fileName => displayFileName({ name: fileName })); // Assuming displayFileName accepts an object
                     $fileUploadArea.data('file', fileNames); // Store array of names instead of single name
                     $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
-
-                    // Debug: Log the assigned files
-                    console.log('Assigned files to uploadedFiles:', $('#UploadedFiles')[0].files);
                 }
 
                 // Create element for new file
                 function displayFileName(file) {
-                    console.log('New file:', file);
 
                     const container = document.createElement('div');
                     container.className = 'file-item d-inline-flex align-items-center me-2 mb-3';
@@ -935,8 +922,6 @@
                     container.appendChild(removeBtn);
 
                     $previewContainer.append(container);
-
-                    console.log('File name element and remove button appended');
                 }
 
                 // Remove the file from array: the elements will be removed when fileInput is changed
@@ -948,8 +933,6 @@
                     uploadedFiles = uploadedFiles.filter(f => f.name !== fileName);
 
                     $(this).closest('.file-item').remove();
-
-                    console.log('Removed file:', fileName);
 
                     $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
 
@@ -965,9 +948,6 @@
 
                     // Assign FileList to file input
                     $fileInput[0].files = dataTransfer.files;
-
-                    // Debug: Log the assigned files
-                    console.log('Assigned files to uploadedFiles:', $('#UploadedFiles')[0].files);
                 }
 
                 function clearUploads() {
@@ -975,7 +955,6 @@
                     $previewContainer.html('');
                     $fileUploadArea.data('file', null);
                     $fileUploadArea.data('allFiles', []);
-                    console.log('Uploads cleared');
                 }
 
                 function onDragEnter(event) {

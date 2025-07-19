@@ -364,14 +364,12 @@
             }
 
             function handlePrincipalChange() {
-                console.log("principal choice: changed");
                 const principalId = $("#PrincipalSelect").val();
                 $.ajax({
                     url: '@Url.Action("GetPrincipalDetails", "Billing", new { area = "MMSI" })',
                     method: "GET",
                     data: { principalId: principalId },
                     success: function (data) {
-                        console.log(data);
                         updateFields(data);
                     }
                 });
@@ -496,7 +494,6 @@
                 const $tbody = $('#dataTable tbody').empty();
 
                 $.each(data, function (index, value) {
-                    console.log('Index:', index, 'Value:', value);
                     totalDispatchAmount += value.dispatchNetRevenue;
                     totalBAFAmount += value.bafNetRevenue;
                     $tbody.append(`

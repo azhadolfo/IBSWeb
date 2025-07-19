@@ -132,11 +132,8 @@
                         },
                         success: function (data) {
                             $drSelect.empty();
-                            
-                            console.log(data);
 
                             if (data?.length > 0) {
-                                console.log("working");
                                 $.each(data, function (index, dr) {
                                     $drSelect.append(new Option(dr.text, dr.value));
                                     drTotalMap[dr.value] = parseFloat(dr.grossTotal);
