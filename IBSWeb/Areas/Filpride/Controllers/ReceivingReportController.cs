@@ -5,6 +5,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -33,7 +34,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private const string FilterTypeClaimType = "ReceivingReport.FilterType";
 
-        public ReceivingReportController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, ILogger<ReceivingReportController> logger)
+        public ReceivingReportController(ApplicationDbContext dbContext,
+            UserManager<ApplicationUser> userManager,
+            IUnitOfWork unitOfWork,
+            ILogger<ReceivingReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
@@ -211,24 +215,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideReceivingReport();
+            var viewModel = new ReceivingReportViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
-                .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null && !po.IsClosed)
-                .Select(po => new SelectListItem
-                {
-                    Value = po.PurchaseOrderId.ToString(),
-                    Text = po.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
 
             return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideReceivingReport model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -237,22 +240,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
-                .Where(po => po.Company == companyClaims && !po.IsReceived && po.PostedBy != null)
-                .Select(po => new SelectListItem
-                {
-                    Value = po.PurchaseOrderId.ToString(),
-                    Text = po.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
+
             if (ModelState.IsValid)
             {
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 try
                 {
                     #region --Retrieve PO
 
                     var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                        .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
 
                     if (existingPo == null)
                     {
@@ -261,22 +261,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Retrieve PO
 
-                    var totalAmountRR = existingPo.Quantity - existingPo.QuantityReceived;
+                    var totalAmountRr = existingPo.Quantity - existingPo.QuantityReceived;
 
-                    if (model.QuantityDelivered > totalAmountRR)
+                    if (viewModel.QuantityDelivered > totalAmountRr)
                     {
                         TempData["info"] = "Input is exceed to remaining quantity delivered";
-                        return View(model);
+                        return View(viewModel);
                     }
 
-                    model.ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-                    model.PONo = existingPo.PurchaseOrderNo;
-                    model.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-                    model.Amount = model.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken);
-                    model.Company = companyClaims;
-                    model.Type = existingPo.Type;
+                    var model = new FilprideReceivingReport
+                    {
+                        ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken),
+                        Date = viewModel.Date,
+                        DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrderId, viewModel.Date, cancellationToken),
+                        POId = existingPo.PurchaseOrderId,
+                        PONo = existingPo.PurchaseOrderNo,
+                        SupplierInvoiceNumber = viewModel.SupplierSiNo,
+                        SupplierInvoiceDate = viewModel.SupplierSiDate,
+                        TruckOrVessels = viewModel.TruckOrVessels,
+                        QuantityReceived = viewModel.QuantityReceived,
+                        QuantityDelivered = viewModel.QuantityDelivered,
+                        GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
+                        Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken),
+                        AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
+                        Remarks = viewModel.Remarks,
+                        CreatedBy = User.Identity!.Name,
+                        Company = companyClaims,
+                        ReceivedDate = viewModel.ReceivedDate,
+                        SupplierDrNo = viewModel.SupplierDrNo,
+                        WithdrawalCertificate = viewModel.WithdrawalCertificate,
+                        Type = existingPo.Type,
+                        OldRRNo = viewModel.OldRRNo,
+                    };
 
                     #region --Audit Trail Recording
 
@@ -288,57 +304,76 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    TempData["success"] = "Receiving Report created successfully";
-
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = $"Receiving Report #{model.ReceivingReportNo} created successfully";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
                 catch (Exception ex)
                 {
+                    await transaction.RollbackAsync(cancellationToken);
                     _logger.LogError(ex, "Failed to create receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            TempData["warning"] = "The information you submitted is not valid";
+            return View(viewModel);
         }
 
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideReceivingReports == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(id, cancellationToken);
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            var receivingReport = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+
             if (receivingReport == null)
             {
                 return NotFound();
             }
 
-            receivingReport.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
-                .Where(rr => rr.Company == companyClaims)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.PurchaseOrderId.ToString(),
-                    Text = s.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
+            var viewModel = new ReceivingReportViewModel
+            {
+                ReceivingReportId = receivingReport.ReceivingReportId,
+                Date = receivingReport.Date,
+                PurchaseOrderId = receivingReport.POId,
+                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                    .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                ReceivedDate = receivingReport.ReceivedDate,
+                SupplierSiNo = receivingReport.SupplierInvoiceNumber,
+                SupplierSiDate = receivingReport.SupplierInvoiceDate,
+                SupplierDrNo = receivingReport.SupplierDrNo,
+                WithdrawalCertificate = receivingReport.WithdrawalCertificate,
+                TruckOrVessels = receivingReport.TruckOrVessels,
+                QuantityDelivered = receivingReport.QuantityDelivered,
+                QuantityReceived = receivingReport.QuantityReceived,
+                AuthorityToLoadNo = receivingReport.AuthorityToLoadNo,
+                Remarks = receivingReport.Remarks,
+                PostedBy = receivingReport.PostedBy,
+            };
 
-            return View(receivingReport);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideReceivingReport model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(ReceivingReportViewModel viewModel, CancellationToken cancellationToken)
         {
-            var existingModel = await _dbContext.FilprideReceivingReports.FindAsync(model.ReceivingReportId, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(x => x.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken);
 
             if (existingModel == null)
             {
@@ -347,14 +382,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var companyClaims = await GetCompanyClaimAsync();
 
-            existingModel.PurchaseOrders = await _dbContext.FilpridePurchaseOrders
-                .Where(s => s.Company == companyClaims)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.PurchaseOrderId.ToString(),
-                    Text = s.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);;
 
             if (ModelState.IsValid)
             {
@@ -365,11 +399,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Retrieve PO
 
-                    var po = await _dbContext
-                                .FilpridePurchaseOrders
-                                .Include(po => po.Supplier)
-                                .Include(po => po.Product)
-                                .FirstOrDefaultAsync(po => po.PurchaseOrderId == model.POId, cancellationToken);
+                    var po = await _unitOfWork.FilpridePurchaseOrder
+                        .GetAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
 
                     if (po == null)
                     {
@@ -378,40 +409,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #endregion --Retrieve PO
 
-                    var rr = _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.Company == companyClaims && rr.PONo == po.PurchaseOrderNo)
-                    .ToList();
+                    var totalAmountRr = po.Quantity - po.QuantityReceived;
 
-                    var totalAmountRR = po.Quantity - po.QuantityReceived;
-
-                    if (model.QuantityDelivered > totalAmountRR && existingModel.PostedBy == null)
+                    if (viewModel.QuantityDelivered > totalAmountRr && existingModel.PostedBy == null)
                     {
                         TempData["info"] = "Input is exceed to remaining quantity delivered";
-                        return View(model);
+                        return View(viewModel);
                     }
 
-                    existingModel.Date = model.Date;
-                    existingModel.POId = model.POId;
-
+                    existingModel.Date = viewModel.Date;
+                    existingModel.POId = po.PurchaseOrderId;
                     existingModel.PONo = po.PurchaseOrderNo;
-                    existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(model.POId, model.Date, cancellationToken);
-                    existingModel.SupplierInvoiceNumber = model.SupplierInvoiceNumber;
-                    existingModel.SupplierInvoiceDate = model.SupplierInvoiceDate;
-                    existingModel.SupplierDrNo = model.SupplierDrNo;
-                    existingModel.WithdrawalCertificate = model.WithdrawalCertificate;
-                    existingModel.TruckOrVessels = model.TruckOrVessels;
-                    existingModel.QuantityDelivered = model.QuantityDelivered;
-                    existingModel.QuantityReceived = model.QuantityReceived;
-                    existingModel.GainOrLoss = model.QuantityReceived - model.QuantityDelivered;
-                    existingModel.AuthorityToLoadNo = model.AuthorityToLoadNo;
-                    existingModel.Remarks = model.Remarks;
-                    existingModel.ReceivedDate = model.ReceivedDate;
-                    existingModel.Amount = model.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
+                    existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(po.PurchaseOrderId, viewModel.Date, cancellationToken);
+                    existingModel.SupplierInvoiceNumber = viewModel.SupplierSiNo;
+                    existingModel.SupplierInvoiceDate = viewModel.SupplierSiDate;
+                    existingModel.SupplierDrNo = viewModel.SupplierDrNo;
+                    existingModel.WithdrawalCertificate = viewModel.WithdrawalCertificate;
+                    existingModel.TruckOrVessels = viewModel.TruckOrVessels;
+                    existingModel.QuantityDelivered = viewModel.QuantityDelivered;
+                    existingModel.QuantityReceived = viewModel.QuantityReceived;
+                    existingModel.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
+                    existingModel.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
+                    existingModel.Remarks = viewModel.Remarks;
+                    existingModel.ReceivedDate = viewModel.ReceivedDate;
+                    existingModel.Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
+                    existingModel.OldRRNo = viewModel.OldRRNo;
 
-                    existingModel.EditedBy = _userManager.GetUserName(User);
+                    if (!_dbContext.ChangeTracker.HasChanges())
+                    {
+                        TempData["warning"] = "No data changes!";
+                        return View(viewModel);
+                    }
+
+                    existingModel.EditedBy = User.Identity!.Name;
                     existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    existingModel.OldRRNo = model.OldRRNo;
 
                     #region --Audit Trail Recording
 
@@ -431,76 +462,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            return View(existingModel);
+            return View(viewModel);
         }
 
         [HttpGet]
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
-            var receivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var receivingReport = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
             if (receivingReport == null)
             {
                 return NotFound();
             }
 
-            receivingReport.PurchaseOrder =
-                await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == receivingReport.POId);
-
             return View(receivingReport);
         }
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var model = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+            var model = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                try
-                {
-                    if (model.ReceivedDate == null)
-                    {
-                        TempData["info"] = "Please indicate the received date.";
-                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                    }
-
-                    if (model.PostedBy == null)
-                    {
-                        model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Posted);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
-
-                        TempData["success"] = "Receiving Report has been Posted.";
-                        return RedirectToAction(nameof(Print), new { id });
-                    }
-                    else
-                    {
-                        return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to post receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model.ReceivedDate == null)
+                {
+                    TempData["info"] = "Please indicate the received date.";
+                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                }
+
+                model.PostedBy = User.Identity!.Name;
+                model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Posted);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.FilprideReceivingReport.PostAsync(model, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Receiving Report has been posted.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to post receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
         }
 
         [Authorize(Roles = "Admin")]
@@ -556,7 +583,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Receiving Report has been Voided.";
+                TempData["success"] = "Receiving Report has been voided.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -566,43 +594,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-            return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideReceivingReports.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(rr => rr.ReceivingReportId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
-                {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
-                        model.QuantityDelivered = 0;
-                        model.QuantityReceived = 0;
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.CanceledQuantity = model.QuantityDelivered < model.QuantityReceived ? model.QuantityDelivered : model.QuantityReceived;
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Receiving Report has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Receiving Report has been canceled.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
@@ -612,8 +636,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            return NotFound();
         }
 
         [HttpGet]
@@ -647,22 +669,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.CanceledBy != null)
                 .ToListAsync(cancellationToken);
 
-            if (po != null)
+            return Json(new
             {
-                return Json(new
-                {
-                    poNo = po.PurchaseOrderNo,
-                    poQuantity = po.Quantity.ToString(SD.Two_Decimal_Format),
-                    rrList = rr,
-                    rrListPostedOnly = rrPostedOnly,
-                    rrListNotPosted = rrNotPosted,
-                    rrListCanceled = rrCanceled
-                });
-            }
-            else
-            {
-                return Json(null);
-            }
+                poNo = po.PurchaseOrderNo,
+                poQuantity = po.Quantity.ToString(SD.Two_Decimal_Format),
+                rrList = rr,
+                rrListPostedOnly = rrPostedOnly,
+                rrListNotPosted = rrNotPosted,
+                rrListCanceled = rrCanceled
+            });
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
@@ -675,19 +690,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (!rr.IsPrinted)
+            if (rr.IsPrinted)
             {
-                #region --Audit Trail Recording
-
-                var printedBy = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
-                rr.IsPrinted = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
+                return RedirectToAction(nameof(Print), new { id });
             }
+
+            #region --Audit Trail Recording
+
+            var printedBy = _userManager.GetUserName(User);
+            FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+            await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            rr.IsPrinted = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
             return RedirectToAction(nameof(Print), new { id });
         }
 

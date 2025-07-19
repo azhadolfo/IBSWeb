@@ -14,7 +14,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(13)]
         public string? ReceivingReportNo { get; set; }
 
-        [Required]
         [Column(TypeName = "date")]
         [Display(Name = "Transaction Date")]
         [DisplayFormat(DataFormatString = "{0:MMM dd, yyyy}")]
@@ -25,14 +24,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         public DateOnly DueDate { get; set; }
 
         [Display(Name = "PO No.")]
-        [Required]
         public int POId { get; set; }
 
         [ForeignKey("POId")]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
-
-        [NotMapped]
-        public List<SelectListItem>? PurchaseOrders { get; set; }
 
         [Display(Name = "PO No")]
         [StringLength(13)]
@@ -52,12 +47,10 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(50)]
         public string? WithdrawalCertificate { get; set; }
 
-        [Required]
         [Display(Name = "Truck/Vessels")]
         [StringLength(100)]
         public string TruckOrVessels { get; set; }
 
-        [Required]
         [Display(Name = "Qty Delivered")]
         [Column(TypeName = "numeric(18,4)")]
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
@@ -82,7 +75,6 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(100)]
         public string? AuthorityToLoadNo { get; set; }
 
-        [Required]
         [StringLength(1000)]
         public string Remarks { get; set; }
 

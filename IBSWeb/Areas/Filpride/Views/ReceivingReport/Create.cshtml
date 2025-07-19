@@ -1,4 +1,4 @@
-﻿@model FilprideReceivingReport
+﻿@model ReceivingReportViewModel
 
 @{
     ViewData["Title"] = "Create Receiving Report";
@@ -51,28 +51,33 @@
                         <span asp-validation-for="Date" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="POId" class="control-label">Suppliers PO No.</label><span class="required">*</span>
-                        <select asp-for="POId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" style="width:100%">
+                        <label asp-for="PurchaseOrderId" class="control-label">Suppliers PO No.</label><span class="required">*</span>
+                        <select asp-for="PurchaseOrderId" class="form-control js-select2" asp-items="@Model.PurchaseOrders" style="width:100%">
                             <option></option>
                         </select>
-                        <span asp-validation-for="POId" class="text-danger"></span>
+                        <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="ReceivedDate" type="date" class="form-control" placeholder=""/>
                         <label asp-for="ReceivedDate" class="control-label">Received Date</label>
                         <span asp-validation-for="ReceivedDate" class="text-danger"></span>
                     </div>
+                    <div class="form-floating mb-3">
+                        <input asp-for="OldRRNo" class="form-control" placeholder=""/>
+                        <label asp-for="OldRRNo" class="control-label">IS RR#</label>
+                        <span asp-validation-for="OldRRNo" class="text-danger"></span>
+                    </div>
                     <fieldset class="border p-2 py-2 mb-3">
                         <legend class="w-auto px-2">Supplier Details</legend>
                         <div class="form-floating py-2 col-12">
-                            <input asp-for="SupplierInvoiceNumber" class="form-control border-0 shadow" placeholder=""/>
-                            <label asp-for="SupplierInvoiceNumber">SI#</label>
-                            <span asp-validation-for="SupplierInvoiceNumber" class="text-danger"></span>
+                            <input asp-for="SupplierSiNo" class="form-control border-0 shadow" placeholder=""/>
+                            <label asp-for="SupplierSiNo">SI#</label>
+                            <span asp-validation-for="SupplierSiNo" class="text-danger"></span>
                         </div>
                         <div class="form-floating py-2 col-12">
-                            <input asp-for="SupplierInvoiceDate" type="date" class="form-control border-0 shadow" placeholder=""/>
-                            <label asp-for="SupplierInvoiceDate">SI Date</label>
-                            <span asp-validation-for="SupplierInvoiceDate" class="text-danger"></span>
+                            <input asp-for="SupplierSiDate" type="date" class="form-control border-0 shadow" placeholder=""/>
+                            <label asp-for="SupplierSiDate">SI Date</label>
+                            <span asp-validation-for="SupplierSiDate" class="text-danger"></span>
                         </div>
                         <div class="form-floating py-2 col-12">
                             <input asp-for="SupplierDrNo" class="form-control border-0 shadow" placeholder=""/>
@@ -136,8 +141,8 @@
     <script>
         // Function to handle invoice change event
         function handlePoChange() {
-            var id = $("#POId").val();
-            if (id != "") {
+            var id = $("#PurchaseOrderId").val();
+            if (id !== "") {
                 $.ajax({
                     url: '@Url.Action("GetLiquidations", "ReceivingReport", new { area = "Filpride" })',
                     type: "GET",
@@ -210,7 +215,7 @@
             handlePoChange();
 
             // Attach event listener to invoice dropdown
-            $("#POId").change(function () {
+            $("#PurchaseOrderId").change(function () {
                 // Call the handleInvoiceChange function when the dropdown changes
                 handlePoChange();
             });

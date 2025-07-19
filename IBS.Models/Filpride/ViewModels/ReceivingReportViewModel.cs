@@ -10,48 +10,36 @@ namespace IBS.Models.Filpride.ViewModels
         [Required]
         public DateOnly Date { get; set; }
 
-        [Required(ErrorMessage = "DR No field is required.")]
-        public int DeliveryReceiptId { get; set; }
+        [Required]
+        public int PurchaseOrderId { get; set; }
 
-        public List<SelectListItem>? DeliveryReceipts { get; set; }
+        public List<SelectListItem>? PurchaseOrders { get; set; }
 
-        [Required(ErrorMessage = "Customer field is required.")]
-        public int CustomerId { get; set; }
+        public DateOnly? ReceivedDate { get; set; }
 
-        public List<SelectListItem>? Customers { get; set; }
+        public string? OldRRNo { get; set; }
 
-        [Display(Name = "Supplier SI#")]
         public string? SupplierSiNo { get; set; }
 
-        [Display(Name = "Supplier SI Date")]
         public DateOnly? SupplierSiDate { get; set; }
 
-        [Display(Name = "Supplier DR#")]
         public string? SupplierDrNo { get; set; }
 
-        [Display(Name = "Supplier DR Date")]
-        public DateOnly? SupplierDrDate { get; set; }
-
-        [Display(Name = "WC No")]
         public string? WithdrawalCertificate { get; set; }
 
-        [Display(Name = "Other Reference")]
-        public string OtherReference { get; set; }
+        [Required]
+        public string TruckOrVessels { get; set; }
 
-        [Display(Name = "Quantity Delivered")]
-        [Range(1, double.MaxValue, ErrorMessage = "The quantity delivered should be greater than zero.")]
+        [Required]
         public decimal QuantityDelivered { get; set; }
 
-        [Display(Name = "Quantity Received")]
-        [Range(1, double.MaxValue, ErrorMessage = "The quantity received should be greater than zero.")]
+        [Required]
         public decimal QuantityReceived { get; set; }
 
-        public decimal Freight { get; set; }
-
-        public decimal TotalFreight { get; set; }
+        public string? AuthorityToLoadNo { get; set; }
 
         public string Remarks { get; set; }
 
-        public string? CurrentUser { get; set; }
+        public string? PostedBy { get; set; }
     }
 }
