@@ -347,12 +347,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --Retrieval of SI
 
-                            var existingSI = await _dbContext
-                                .FilprideSalesInvoices
-                                .Include(c => c.Customer)
-                                .Include(s => s.Product)
-                                .Include(s => s.CustomerOrderSlip)
-                                .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
+                            var existingSI = await _unitOfWork
+                                .FilprideSalesInvoice
+                                .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
                             #endregion --Retrieval of SI
 
@@ -391,7 +388,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.DocumentId = model.SalesInvoiceId;
                             sales.Company = model.Company;
 
-                            await _dbContext.AddAsync(sales, cancellationToken);
+                            await _dbContext.FilprideSalesBooks.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SI)--
 
@@ -522,10 +519,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.ServiceInvoiceId != null)
                         {
-                            var existingSv = await _dbContext.FilprideServiceInvoices
-                                .Include(sv => sv.Customer)
-                                .Include(sv => sv.Service)
-                                .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                                .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
                             #region -- Computation --
 
@@ -699,11 +694,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Posted.";
                     }
