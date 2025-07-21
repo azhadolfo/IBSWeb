@@ -201,106 +201,104 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(sv => sv.Customer)
                         .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region -- checking for unposted DM or CM
-
-                    if (model.SalesInvoiceId != null)
-                    {
-                        var existingSIDMs = _dbContext.FilprideDebitMemos
-                                      .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.DebitMemoId)
-                                      .ToList();
-                        if (existingSIDMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                            return View(model);
-                        }
-
-                        var existingSICMs = _dbContext.FilprideCreditMemos
-                                          .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                          .OrderBy(s => s.CreditMemoId)
-                                          .ToList();
-                        if (existingSICMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                            return View(model);
-                        }
-                    }
-                    else
-                    {
-                        var existingSVDMs = _dbContext.FilprideDebitMemos
-                                      .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.DebitMemoId)
-                                      .ToList();
-                        if (existingSVDMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
-                            return View(model);
-                        }
-
-                        var existingSVCMs = _dbContext.FilprideCreditMemos
-                                          .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                          .OrderBy(s => s.CreditMemoId)
-                                          .ToList();
-                        if (existingSVCMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
-                            return View(model);
-                        }
-                    }
-
-                    #endregion -- checking for unposted DM or CM
-
-
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Company = companyClaims;
-
-                    if (model.Source == "Sales Invoice")
-                    {
-                        model.ServiceInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
-                        model.Type = existingSalesInvoice.Type;
-                        model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
-                    }
-                    else if (model.Source == "Service Invoice")
-                    {
-                        model.SalesInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv!.Type, cancellationToken);
-                        model.Type = existingSv.Type;
-                        model.DebitAmount = model.Amount ?? 0;
-                    }
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Debit memo #{model.DebitMemoNo} created successfully.";
-
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
-            }
-            else
+            if(!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region -- checking for unposted DM or CM
+
+                if (model.SalesInvoiceId != null)
+                {
+                    var existingSIDMs = _dbContext.FilprideDebitMemos
+                                  .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                  .OrderBy(s => s.DebitMemoId)
+                                  .ToList();
+                    if (existingSIDMs.Count > 0)
+                    {
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
+                        return View(model);
+                    }
+
+                    var existingSICMs = _dbContext.FilprideCreditMemos
+                                      .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                      .OrderBy(s => s.CreditMemoId)
+                                      .ToList();
+                    if (existingSICMs.Count > 0)
+                    {
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
+                        return View(model);
+                    }
+                }
+                else
+                {
+                    var existingSVDMs = _dbContext.FilprideDebitMemos
+                                  .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                  .OrderBy(s => s.DebitMemoId)
+                                  .ToList();
+                    if (existingSVDMs.Count > 0)
+                    {
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
+                        return View(model);
+                    }
+
+                    var existingSVCMs = _dbContext.FilprideCreditMemos
+                                      .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
+                                      .OrderBy(s => s.CreditMemoId)
+                                      .ToList();
+                    if (existingSVCMs.Count > 0)
+                    {
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
+                        return View(model);
+                    }
+                }
+
+                #endregion -- checking for unposted DM or CM
+
+
+                model.CreatedBy = _userManager.GetUserName(this.User);
+                model.Company = companyClaims;
+
+                if (model.Source == "Sales Invoice")
+                {
+                    model.ServiceInvoiceId = null;
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
+                    model.Type = existingSalesInvoice.Type;
+                    model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                }
+                else if (model.Source == "Service Invoice")
+                {
+                    model.SalesInvoiceId = null;
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv!.Type, cancellationToken);
+                    model.Type = existingSv.Type;
+                    model.DebitAmount = model.Amount ?? 0;
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Debit memo #{model.DebitMemoNo} created successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
                 return View(model);
             }
         }
