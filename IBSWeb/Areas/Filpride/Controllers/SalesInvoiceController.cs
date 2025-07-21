@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -158,7 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            FilprideSalesInvoice viewModel = new()
+            SalesInvoiceViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
@@ -169,7 +170,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideSalesInvoice model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(SalesInvoiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -186,11 +187,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region Saving Default Entries
 
-                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    model.Amount = model.Quantity * model.UnitPrice;
-                    model.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(model.Terms, model.TransactionDate);
-                    model.Company = companyClaims;
+                    var model = new FilprideSalesInvoice
+                    {
+                        SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                        CustomerId = viewModel.CustomerId,
+                        ProductId = viewModel.ProductId,
+                        OtherRefNo = viewModel.OtherRefNo,
+                        Quantity = viewModel.Quantity,
+                        UnitPrice = viewModel.UnitPrice,
+                        Amount = viewModel.Quantity * viewModel.UnitPrice,
+                        Remarks = viewModel.Remarks,
+                        TransactionDate = viewModel.TransactionDate,
+                        Discount = viewModel.Discount,
+                        DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(viewModel.Terms, viewModel.TransactionDate),
+                        PurchaseOrderId = viewModel.PurchaseOrderId,
+                        CreatedBy = _userManager.GetUserName(User),
+                        Company = companyClaims,
+                        Type = viewModel.Type,
+                        ReceivingReportId = viewModel.ReceivingReportId,
+                        CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
+                        DeliveryReceiptId = viewModel.DeliveryReceiptId,
+                        Terms = viewModel.Terms,
+                        CustomerAddress = viewModel.CustomerAddress,
+                        CustomerTin = viewModel.CustomerTin,
+                    };
 
                     if (model.Amount >= model.Discount)
                     {
@@ -208,10 +228,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction(nameof(Index));
                     }
 
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["warning"] = "Please input below or exact amount based on the Sales Invoice";
-                    return View(model);
+                    return View(viewModel);
 
                     #endregion Saving Default Entries
                 }
@@ -220,17 +240,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to create sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["warning"] = "The submitted information is invalid.";
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpGet]
@@ -279,134 +299,134 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(null);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var companyClaims = await GetCompanyClaimAsync();
-                if (companyClaims == null)
-                {
-                    return BadRequest();
-                }
-                var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+        // [HttpGet]
+        // public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
+        // {
+        //     try
+        //     {
+        //         var companyClaims = await GetCompanyClaimAsync();
+        //         if (companyClaims == null)
+        //         {
+        //             return BadRequest();
+        //         }
+        //         var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+        //
+        //         if (salesInvoice == null)
+        //         {
+        //             return NotFound();
+        //         }
+        //
+        //         salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+        //         salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+        //         salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
+        //         .OrderBy(p => p.PurchaseOrderNo)
+        //         .Where(po => po.Company == companyClaims && po.ProductId == salesInvoice.ProductId && po.QuantityReceived != 0 && po.PostedBy != null)
+        //         .Select(p => new SelectListItem
+        //         {
+        //             Value = p.PurchaseOrderId.ToString(),
+        //             Text = p.PurchaseOrderNo
+        //         })
+        //         .ToListAsync(cancellationToken);
+        //         var receivingReports = await _dbContext.FilprideReceivingReports
+        //             .Where(rr => rr.Company == companyClaims && rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
+        //             .Select(rr => new
+        //             {
+        //                 rr.ReceivingReportId,
+        //                 rr.ReceivingReportNo,
+        //                 rr.ReceivedDate
+        //             })
+        //             .ToListAsync();
+        //
+        //         salesInvoice.RR = receivingReports.Select(rr => new SelectListItem
+        //         {
+        //             Value = rr.ReceivingReportId.ToString(),
+        //             Text = rr.ReceivingReportNo
+        //         }).ToList();
+        //
+        //         return View(salesInvoice);
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         _logger.LogError(ex, "Failed to fetch sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
+        //             ex.Message, ex.StackTrace);
+        //         return StatusCode(500, "An error occurred. Please try again later.");
+        //     }
+        // }
 
-                if (salesInvoice == null)
-                {
-                    return NotFound();
-                }
-
-                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
-                .OrderBy(p => p.PurchaseOrderNo)
-                .Where(po => po.Company == companyClaims && po.ProductId == salesInvoice.ProductId && po.QuantityReceived != 0 && po.PostedBy != null)
-                .Select(p => new SelectListItem
-                {
-                    Value = p.PurchaseOrderId.ToString(),
-                    Text = p.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
-                var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.Company == companyClaims && rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
-                    .Select(rr => new
-                    {
-                        rr.ReceivingReportId,
-                        rr.ReceivingReportNo,
-                        rr.ReceivedDate
-                    })
-                    .ToListAsync();
-
-                salesInvoice.RR = receivingReports.Select(rr => new SelectListItem
-                {
-                    Value = rr.ReceivingReportId.ToString(),
-                    Text = rr.ReceivingReportNo
-                }).ToList();
-
-                return View(salesInvoice);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to fetch sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
-                    ex.Message, ex.StackTrace);
-                return StatusCode(500, "An error occurred. Please try again later.");
-            }
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideSalesInvoice model, CancellationToken cancellationToken)
-        {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-
-                    if (existingRecord == null)
-                    {
-                        return NotFound();
-                    }
-
-                    existingRecord.CustomerId = model.CustomerId;
-                    existingRecord.TransactionDate = model.TransactionDate;
-                    existingRecord.OtherRefNo = model.OtherRefNo;
-                    existingRecord.PurchaseOrderId = model.PurchaseOrderId;
-                    existingRecord.Quantity = model.Quantity;
-                    existingRecord.UnitPrice = model.UnitPrice;
-                    existingRecord.Remarks = model.Remarks;
-                    existingRecord.Discount = model.Discount;
-                    existingRecord.Amount = model.Quantity * model.UnitPrice;
-                    existingRecord.ProductId = model.ProductId;
-                    existingRecord.ReceivingReportId = model.ReceivingReportId;
-                    existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
-                    existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
-                    existingRecord.Terms = model.Terms;
-                    existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
-                    existingRecord.CustomerAddress = model.CustomerAddress;
-                    existingRecord.CustomerTin = model.CustomerTin;
-
-                    existingRecord.EditedBy = _userManager.GetUserName(User);
-                    existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", existingRecord.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Sales invoice updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
-            }
-
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(model);
-        }
+        // [HttpPost]
+        // [ValidateAntiForgeryToken]
+        // public async Task<IActionResult> Edit(FilprideSalesInvoice model, CancellationToken cancellationToken)
+        // {
+        //     var companyClaims = await GetCompanyClaimAsync();
+        //
+        //     if (companyClaims == null)
+        //     {
+        //         return BadRequest();
+        //     }
+        //
+        //     if (ModelState.IsValid)
+        //     {
+        //         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        //
+        //         try
+        //         {
+        //             var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+        //
+        //             if (existingRecord == null)
+        //             {
+        //                 return NotFound();
+        //             }
+        //
+        //             existingRecord.CustomerId = model.CustomerId;
+        //             existingRecord.TransactionDate = model.TransactionDate;
+        //             existingRecord.OtherRefNo = model.OtherRefNo;
+        //             existingRecord.PurchaseOrderId = model.PurchaseOrderId;
+        //             existingRecord.Quantity = model.Quantity;
+        //             existingRecord.UnitPrice = model.UnitPrice;
+        //             existingRecord.Remarks = model.Remarks;
+        //             existingRecord.Discount = model.Discount;
+        //             existingRecord.Amount = model.Quantity * model.UnitPrice;
+        //             existingRecord.ProductId = model.ProductId;
+        //             existingRecord.ReceivingReportId = model.ReceivingReportId;
+        //             existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
+        //             existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
+        //             existingRecord.Terms = model.Terms;
+        //             existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
+        //             existingRecord.CustomerAddress = model.CustomerAddress;
+        //             existingRecord.CustomerTin = model.CustomerTin;
+        //
+        //             existingRecord.EditedBy = _userManager.GetUserName(User);
+        //             existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+        //
+        //             #region --Audit Trail Recording
+        //
+        //             FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", existingRecord.Company);
+        //             await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+        //
+        //             #endregion --Audit Trail Recording
+        //
+        //             await _unitOfWork.SaveAsync(cancellationToken);
+        //             await transaction.CommitAsync(cancellationToken);
+        //             TempData["success"] = "Sales invoice updated successfully";
+        //             return RedirectToAction(nameof(Index));
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             _logger.LogError(ex, "Failed to edit sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+        //                 ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+        //             model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+        //             model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+        //             await transaction.RollbackAsync(cancellationToken);
+        //             TempData["error"] = ex.Message;
+        //             return View(model);
+        //         }
+        //     }
+        //
+        //     model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+        //     model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+        //     TempData["warning"] = "The submitted information is invalid.";
+        //     return View(model);
+        // }
 
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
