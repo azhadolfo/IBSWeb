@@ -141,23 +141,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var viewModel = new FilprideDebitMemo();
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            viewModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             return View(viewModel);
         }
