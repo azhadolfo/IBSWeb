@@ -173,6 +173,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            if(!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
+            }
+
             model.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                 .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
@@ -196,12 +202,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingSv = await _unitOfWork.FilprideServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-            if(!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
-            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
