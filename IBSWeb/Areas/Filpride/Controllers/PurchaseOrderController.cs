@@ -228,17 +228,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, viewModel.SupplierId, cancellationToken);
 
-            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
-                viewModel.SupplierId, cancellationToken);
-
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                TempData["warning"] = "The information you submitted is not valid";
+                return View(viewModel);
+            }
 
-                try
+            try
+            {
+                await _unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
                     var supplier = await _dbContext.FilprideSuppliers
                         .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
@@ -248,7 +249,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (supplier == null || product == null)
                     {
-                        return NotFound();
+                        throw new Exception("Invalid supplier or product.");
                     }
 
                     var model = new FilpridePurchaseOrder
@@ -277,33 +278,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         OldPoNo = viewModel.OldPoNo
                     };
 
-                    await _dbContext.AddAsync(model, cancellationToken);
-
-                    #region --Audit Trail Recording
+                    await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
 
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
                     TempData["success"] = $"Purchase Order #{model.PurchaseOrderNo} created successfully";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
-            }
 
-            TempData["warning"] = "The information you submitted is not valid";
-            return View(viewModel);
+                }, cancellationToken);
+
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
