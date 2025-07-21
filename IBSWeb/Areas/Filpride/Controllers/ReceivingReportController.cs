@@ -243,83 +243,81 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                 .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Retrieve PO
-
-                    var existingPo = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
-
-                    if (existingPo == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve PO
-
-                    var totalAmountRr = existingPo.Quantity - existingPo.QuantityReceived;
-
-                    if (viewModel.QuantityDelivered > totalAmountRr)
-                    {
-                        TempData["info"] = "Input is exceed to remaining quantity delivered";
-                        return View(viewModel);
-                    }
-
-                    var model = new FilprideReceivingReport
-                    {
-                        ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken),
-                        Date = viewModel.Date,
-                        DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrderId, viewModel.Date, cancellationToken),
-                        POId = existingPo.PurchaseOrderId,
-                        PONo = existingPo.PurchaseOrderNo,
-                        SupplierInvoiceNumber = viewModel.SupplierSiNo,
-                        SupplierInvoiceDate = viewModel.SupplierSiDate,
-                        TruckOrVessels = viewModel.TruckOrVessels,
-                        QuantityReceived = viewModel.QuantityReceived,
-                        QuantityDelivered = viewModel.QuantityDelivered,
-                        GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
-                        Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken),
-                        AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
-                        Remarks = viewModel.Remarks,
-                        CreatedBy = User.Identity!.Name,
-                        Company = companyClaims,
-                        ReceivedDate = viewModel.ReceivedDate,
-                        SupplierDrNo = viewModel.SupplierDrNo,
-                        WithdrawalCertificate = viewModel.WithdrawalCertificate,
-                        Type = existingPo.Type,
-                        OldRRNo = viewModel.OldRRNo,
-                    };
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Receiving Report #{model.ReceivingReportNo} created successfully";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to create receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The information you submitted is not valid";
+                return View(viewModel);
             }
 
-            TempData["warning"] = "The information you submitted is not valid";
-            return View(viewModel);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Retrieve PO
+
+                var existingPo = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => po.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                if (existingPo == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieve PO
+
+                var totalAmountRr = existingPo.Quantity - existingPo.QuantityReceived;
+
+                if (viewModel.QuantityDelivered > totalAmountRr)
+                {
+                    TempData["info"] = "Input is exceed to remaining quantity delivered";
+                    return View(viewModel);
+                }
+
+                var model = new FilprideReceivingReport
+                {
+                    ReceivingReportNo = await _unitOfWork.FilprideReceivingReport.GenerateCodeAsync(companyClaims, existingPo.Type!, cancellationToken),
+                    Date = viewModel.Date,
+                    DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(viewModel.PurchaseOrderId, viewModel.Date, cancellationToken),
+                    POId = existingPo.PurchaseOrderId,
+                    PONo = existingPo.PurchaseOrderNo,
+                    SupplierInvoiceNumber = viewModel.SupplierSiNo,
+                    SupplierInvoiceDate = viewModel.SupplierSiDate,
+                    TruckOrVessels = viewModel.TruckOrVessels,
+                    QuantityReceived = viewModel.QuantityReceived,
+                    QuantityDelivered = viewModel.QuantityDelivered,
+                    GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered,
+                    Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(existingPo.PurchaseOrderId, cancellationToken),
+                    AuthorityToLoadNo = viewModel.AuthorityToLoadNo,
+                    Remarks = viewModel.Remarks,
+                    CreatedBy = User.Identity!.Name,
+                    Company = companyClaims,
+                    ReceivedDate = viewModel.ReceivedDate,
+                    SupplierDrNo = viewModel.SupplierDrNo,
+                    WithdrawalCertificate = viewModel.WithdrawalCertificate,
+                    Type = existingPo.Type,
+                    OldRRNo = viewModel.OldRRNo,
+                };
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.FilprideReceivingReport.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Receiving Report #{model.ReceivingReportNo} created successfully";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to create receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         [HttpGet]
@@ -390,83 +388,83 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                 .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);;
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-
-                    #region --Retrieve PO
-
-                    var po = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
-
-                    if (po == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve PO
-
-                    var totalAmountRr = po.Quantity - po.QuantityReceived;
-
-                    if (viewModel.QuantityDelivered > totalAmountRr && existingModel.PostedBy == null)
-                    {
-                        TempData["info"] = "Input is exceed to remaining quantity delivered";
-                        return View(viewModel);
-                    }
-
-                    existingModel.Date = viewModel.Date;
-                    existingModel.POId = po.PurchaseOrderId;
-                    existingModel.PONo = po.PurchaseOrderNo;
-                    existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(po.PurchaseOrderId, viewModel.Date, cancellationToken);
-                    existingModel.SupplierInvoiceNumber = viewModel.SupplierSiNo;
-                    existingModel.SupplierInvoiceDate = viewModel.SupplierSiDate;
-                    existingModel.SupplierDrNo = viewModel.SupplierDrNo;
-                    existingModel.WithdrawalCertificate = viewModel.WithdrawalCertificate;
-                    existingModel.TruckOrVessels = viewModel.TruckOrVessels;
-                    existingModel.QuantityDelivered = viewModel.QuantityDelivered;
-                    existingModel.QuantityReceived = viewModel.QuantityReceived;
-                    existingModel.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
-                    existingModel.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
-                    existingModel.Remarks = viewModel.Remarks;
-                    existingModel.ReceivedDate = viewModel.ReceivedDate;
-                    existingModel.Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
-                    existingModel.OldRRNo = viewModel.OldRRNo;
-
-                    if (!_dbContext.ChangeTracker.HasChanges())
-                    {
-                        TempData["warning"] = "No data changes!";
-                        return View(viewModel);
-                    }
-
-                    existingModel.EditedBy = User.Identity!.Name;
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited receiving report# {existingModel.ReceivingReportNo}", "Receiving Report", existingModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Receiving Report updated successfully";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The information you submitted is not valid";
+                return View(viewModel);
             }
 
-            return View(viewModel);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+
+                #region --Retrieve PO
+
+                var po = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken);
+
+                if (po == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieve PO
+
+                var totalAmountRr = po.Quantity - po.QuantityReceived;
+
+                if (viewModel.QuantityDelivered > totalAmountRr && existingModel.PostedBy == null)
+                {
+                    TempData["info"] = "Input is exceed to remaining quantity delivered";
+                    return View(viewModel);
+                }
+
+                existingModel.Date = viewModel.Date;
+                existingModel.POId = po.PurchaseOrderId;
+                existingModel.PONo = po.PurchaseOrderNo;
+                existingModel.DueDate = await _unitOfWork.FilprideReceivingReport.ComputeDueDateAsync(po.PurchaseOrderId, viewModel.Date, cancellationToken);
+                existingModel.SupplierInvoiceNumber = viewModel.SupplierSiNo;
+                existingModel.SupplierInvoiceDate = viewModel.SupplierSiDate;
+                existingModel.SupplierDrNo = viewModel.SupplierDrNo;
+                existingModel.WithdrawalCertificate = viewModel.WithdrawalCertificate;
+                existingModel.TruckOrVessels = viewModel.TruckOrVessels;
+                existingModel.QuantityDelivered = viewModel.QuantityDelivered;
+                existingModel.QuantityReceived = viewModel.QuantityReceived;
+                existingModel.GainOrLoss = viewModel.QuantityReceived - viewModel.QuantityDelivered;
+                existingModel.AuthorityToLoadNo = viewModel.AuthorityToLoadNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.ReceivedDate = viewModel.ReceivedDate;
+                existingModel.Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
+                existingModel.OldRRNo = viewModel.OldRRNo;
+
+                if (!_dbContext.ChangeTracker.HasChanges())
+                {
+                    TempData["warning"] = "No data changes!";
+                    return View(viewModel);
+                }
+
+                existingModel.EditedBy = User.Identity!.Name;
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited receiving report# {existingModel.ReceivingReportNo}", "Receiving Report", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Receiving Report updated successfully";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit receiving report. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         [HttpGet]
@@ -510,7 +508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -577,11 +575,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Receiving Report has been voided.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -619,11 +616,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled receiving report# {model.ReceivingReportNo}", "Receiving Report", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Receiving Report has been canceled.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -649,31 +645,49 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var rrPostedOnly = await _dbContext
-                .FilprideReceivingReports
-                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.PostedBy != null)
-                .ToListAsync(cancellationToken);
+            var receivingReports = await _unitOfWork
+                .FilprideReceivingReport
+                .GetAllAsync(x => x.Company == po.Company
+                                   && x.PONo == po.PurchaseOrderNo, cancellationToken);
 
-            var rr = await _dbContext
-                .FilprideReceivingReports
-                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo)
-                .ToListAsync(cancellationToken);
+            var rrList = receivingReports
+                .Select(rr => new
+                {
+                    rr.ReceivingReportNo,
+                    rr.QuantityReceived,
+                    rr.QuantityDelivered,
+                    rr.Company,
+                    rr.PONo,
+                    rr.Status
+                })
+                .ToList();
 
-            var rrNotPosted = await _dbContext
-                .FilprideReceivingReports
-                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.PostedBy == null && rr.CanceledBy == null)
-                .ToListAsync(cancellationToken);
+            var rrPostedOnly = rrList
+                .Where(rr => rr.Company == po.Company
+                                   && rr.PONo == po.PurchaseOrderNo
+                                   && rr.Status == nameof(Status.Posted))
+                .ToList();
 
-            var rrCanceled = await _dbContext
-                .FilprideReceivingReports
-                .Where(rr => rr.Company == po.Company && rr.PONo == po.PurchaseOrderNo && rr.CanceledBy != null)
-                .ToListAsync(cancellationToken);
+
+
+            var rrNotPosted = rrList
+                .Where(rr => rr.Company == po.Company
+                                                    && rr.PONo == po.PurchaseOrderNo
+                                                    && rr.Status == nameof(Status.Pending))
+                .ToList();
+
+            var rrCanceled = rrList
+                .Where(rr => rr.Company == po.Company
+                             && rr.PONo == po.PurchaseOrderNo
+                             && (rr.Status == nameof(Status.Canceled)
+                                 || rr.Status == nameof(Status.Voided)))
+                .ToList();
 
             return Json(new
             {
                 poNo = po.PurchaseOrderNo,
                 poQuantity = po.Quantity.ToString(SD.Two_Decimal_Format),
-                rrList = rr,
+                rrList = rrList,
                 rrListPostedOnly = rrPostedOnly,
                 rrListNotPosted = rrNotPosted,
                 rrListCanceled = rrCanceled
@@ -699,7 +713,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var printedBy = _userManager.GetUserName(User);
             FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
-            await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
 
