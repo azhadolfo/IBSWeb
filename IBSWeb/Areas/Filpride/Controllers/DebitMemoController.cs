@@ -303,7 +303,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideDebitMemos == null)
+            if (id == null)
             {
                 return NotFound();
             }
