@@ -6,6 +6,8 @@ namespace IBS.Models.Filpride.ViewModels
 {
     public class DebitMemoViewModel
     {
+        public int DebitMemoId { get; set; }
+
         [StringLength(20)]
         public string Source { get; set; }
 
