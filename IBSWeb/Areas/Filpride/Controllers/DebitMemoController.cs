@@ -819,7 +819,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideServiceInvoices.FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == svId, cancellationToken);
+            var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == svId, cancellationToken);
             if (model != null)
             {
                 return Json(new
