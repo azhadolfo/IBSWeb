@@ -835,12 +835,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideDebitMemos == null)
+            if (id == null)
             {
                 return NotFound();
             }
-
-            var companyClaims = await GetCompanyClaimAsync();
 
             var debitMemo = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
@@ -849,22 +847,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            debitMemo.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
+            var companyClaims = await GetCompanyClaimAsync();
+
+            debitMemo.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
-            debitMemo.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
+                .ToList();
+
+            debitMemo.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             return View(debitMemo);
         }
