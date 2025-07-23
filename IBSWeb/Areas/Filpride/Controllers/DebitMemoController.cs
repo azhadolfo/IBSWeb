@@ -1243,12 +1243,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllDebitMemoIds()
+        public async Task<IActionResult> GetAllDebitMemoIds()
         {
-            var dmIds = _dbContext.FilprideDebitMemos
-                                     .Where(dm => dm.Type == nameof(DocumentType.Documented))
-                                     .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
-                                     .ToList();
+            var dmIds = (await _unitOfWork.FilprideDebitMemo
+                 .GetAllAsync(dm => dm.Type == nameof(DocumentType.Documented)))
+                 .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
+                 .ToList();
 
             return Json(dmIds);
         }
