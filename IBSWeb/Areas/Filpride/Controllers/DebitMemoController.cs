@@ -874,94 +874,89 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideDebitMemo model, CancellationToken cancellationToken)
         {
-            var existingSalesInvoice = await _dbContext
-                        .FilprideSalesInvoices
-                        .Include(c => c.Customer)
-                        .Include(s => s.Product)
-                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
+            var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
-            var existingSv = await _dbContext.FilprideServiceInvoices
-                        .Include(sv => sv.Customer)
-                        .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                        .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingDM = await _dbContext
-                                    .FilprideDebitMemos
-                                    .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
-
-                    if (existingDM == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (model.Source == "Sales Invoice")
-                    {
-                        model.ServiceInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingDM.TransactionDate = model.TransactionDate;
-                        existingDM.SalesInvoiceId = model.SalesInvoiceId;
-                        existingDM.Quantity = model.Quantity;
-                        existingDM.AdjustedPrice = model.AdjustedPrice;
-                        existingDM.Description = model.Description;
-                        existingDM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
-                    }
-                    else if (model.Source == "Service Invoice")
-                    {
-                        model.SalesInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingDM.TransactionDate = model.TransactionDate;
-                        existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
-                        existingDM.Period = model.Period;
-                        existingDM.Amount = model.Amount;
-                        existingDM.Description = model.Description;
-                        existingDM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingDM.DebitAmount = model.Amount ?? 0;
-                    }
-
-                    existingDM.EditedBy = _userManager.GetUserName(User);
-                    existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Debit Memo edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingDM = await _unitOfWork.FilprideDebitMemo
+                    .GetAsync(dm => dm.DebitMemoId == model.DebitMemoId, cancellationToken);
+
+                if (existingDM == null)
+                {
+                    return NotFound();
+                }
+
+                if (model.Source == "Sales Invoice")
+                {
+                    model.ServiceInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingDM.TransactionDate = model.TransactionDate;
+                    existingDM.SalesInvoiceId = model.SalesInvoiceId;
+                    existingDM.Quantity = model.Quantity;
+                    existingDM.AdjustedPrice = model.AdjustedPrice;
+                    existingDM.Description = model.Description;
+                    existingDM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                }
+                else if (model.Source == "Service Invoice")
+                {
+                    model.SalesInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingDM.TransactionDate = model.TransactionDate;
+                    existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
+                    existingDM.Period = model.Period;
+                    existingDM.Amount = model.Amount;
+                    existingDM.Description = model.Description;
+                    existingDM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingDM.DebitAmount = model.Amount ?? 0;
+                }
+
+                existingDM.EditedBy = _userManager.GetUserName(User);
+                existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Debit Memo edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
