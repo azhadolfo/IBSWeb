@@ -35,7 +35,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly TransactionDate { get; set; }
 
-        public int CustomerOrderSlipId { get; set; }
+        public int? CustomerOrderSlipId { get; set; }
 
         public List<SelectListItem>? COS { get; set; }
 
@@ -43,7 +43,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public int ReceivingReportId { get; set; }
 
-        public int DeliveryReceiptId { get; set; }
+        public int? DeliveryReceiptId { get; set; }
 
         public List<SelectListItem>? DR { get; set; }
 
@@ -56,10 +56,14 @@ namespace IBS.Models.Filpride.ViewModels
         public int SalesInvoiceId { get; set; }
 
         [StringLength(13)]
-        public string SalesInvoiceNo { get; set; } = string.Empty;
+        public string? SalesInvoiceNo { get; set; } = string.Empty;
 
-        public string CustomerType { get; set; }
+        public string? CustomerType { get; set; }
 
-        public string BusinessStyle { get; set; } = string.Empty;
+        public string? BusinessStyle { get; set; } = string.Empty;
+
+        public List<SelectListItem>? PO { get; set; }
+
+        public List<SelectListItem>? RR { get; set; }
     }
 }
