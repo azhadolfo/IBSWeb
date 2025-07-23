@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideDebitMemo();
+            var viewModel = new DebitMemoViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
@@ -164,7 +164,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideDebitMemo model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -176,8 +176,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if(!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
+                return View(viewModel);
             }
+
+            var model = new FilprideDebitMemo
+            {
+                Source = viewModel.Source,
+                TransactionDate = viewModel.TransactionDate,
+                SalesInvoiceId = viewModel.SalesInvoiceId,
+                Quantity = viewModel.Quantity,
+                AdjustedPrice = viewModel.AdjustedPrice,
+                ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                Period = viewModel.Period,
+                Amount = viewModel.Amount,
+                Remarks = viewModel.Remarks,
+                Description = viewModel.Description,
+            };
 
             model.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                 .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
@@ -219,7 +233,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSIDMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
 
                     var existingSICMs = (await _unitOfWork.FilprideCreditMemo
@@ -230,7 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSICMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
                 }
                 else
@@ -242,7 +256,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSVDMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
 
                     var existingSVCMs = (await _unitOfWork.FilprideCreditMemo
@@ -252,7 +266,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSVCMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
                 }
 
@@ -296,7 +310,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return View(model);
+                return View(viewModel);
             }
         }
 
