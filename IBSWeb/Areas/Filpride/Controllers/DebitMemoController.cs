@@ -861,9 +861,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var viewModel = new DebitMemoViewModel
+            {
+                DebitMemoId = debitMemo.DebitMemoId,
+                Source = debitMemo.Source,
+                TransactionDate = debitMemo.TransactionDate,
+                SalesInvoiceId = debitMemo.SalesInvoiceId,
+                Quantity = debitMemo.Quantity,
+                AdjustedPrice = debitMemo.AdjustedPrice,
+                ServiceInvoiceId = debitMemo.ServiceInvoiceId,
+                Period = debitMemo.Period,
+                Amount = debitMemo.Amount,
+                Remarks = debitMemo.Remarks,
+                Description = debitMemo.Description,
+            };
+
             var companyClaims = await GetCompanyClaimAsync();
 
-            debitMemo.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
                 .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
@@ -872,7 +887,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToList();
 
-            debitMemo.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
                 .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
@@ -881,24 +896,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToList();
 
-            return View(debitMemo);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideDebitMemo model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(viewModel);
+            }
+
+            var model = new FilprideDebitMemo
+            {
+                DebitMemoId = viewModel.DebitMemoId,
+                Source = viewModel.Source,
+                TransactionDate = viewModel.TransactionDate,
+                SalesInvoiceId = viewModel.SalesInvoiceId,
+                Quantity = viewModel.Quantity,
+                AdjustedPrice = viewModel.AdjustedPrice,
+                ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                Period = viewModel.Period,
+                Amount = viewModel.Amount,
+                Remarks = viewModel.Remarks,
+                Description = viewModel.Description,
+            };
+
             var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
                         .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
             var existingSv = await _unitOfWork.FilprideServiceInvoice
                         .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-            if (!ModelState.IsValid)
-            {
-                ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
-            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -969,7 +999,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return View(model);
+                return View(viewModel);
             }
         }
 
