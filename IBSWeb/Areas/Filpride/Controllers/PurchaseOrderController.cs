@@ -27,15 +27,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
     public class PurchaseOrderController : Controller
     {
         private readonly ApplicationDbContext _dbContext;
-
         private readonly UserManager<ApplicationUser> _userManager;
-
         private readonly IUnitOfWork _unitOfWork;
-
         private readonly IHubContext<NotificationHub> _hubContext;
-
         private readonly ILogger<PurchaseOrderController> _logger;
-
         private const string FilterTypeClaimType = "PurchaseOrder.FilterType";
 
         public PurchaseOrderController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork, IHubContext<NotificationHub> hubContext, ILogger<PurchaseOrderController> logger)
@@ -229,7 +224,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims, viewModel.SupplierId, cancellationToken);
+            viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
+                viewModel.SupplierId, cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -237,61 +233,65 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(viewModel);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                await _unitOfWork.ExecuteInTransactionAsync(async () =>
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                var product = await _unitOfWork.Product
+                    .GetAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
+
+                if (supplier == null || product == null)
                 {
-                    var supplier = await _dbContext.FilprideSuppliers
-                        .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                    return NotFound();
+                }
 
-                    var product = await _dbContext.Products
-                        .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
+                var model = new FilpridePurchaseOrder
+                {
+                    PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken),
+                    Date = viewModel.Date,
+                    SupplierId = supplier.SupplierId,
+                    SupplierName = supplier.SupplierName,
+                    SupplierAddress = supplier.SupplierAddress,
+                    SupplierTin = supplier.SupplierTin,
+                    ProductId = product.ProductId,
+                    ProductName = product.ProductName,
+                    Terms = viewModel.Terms,
+                    Quantity = viewModel.Quantity,
+                    Price = viewModel.Price,
+                    Amount = viewModel.Quantity * viewModel.Price,
+                    Remarks = viewModel.Remarks,
+                    CreatedBy = User.Identity!.Name!,
+                    Company = companyClaims,
+                    Type = viewModel.Type,
+                    TriggerDate = viewModel.TriggerDate,
+                    UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : viewModel.Quantity,
+                    PickUpPointId = viewModel.PickUpPointId,
+                    VatType = supplier.VatType,
+                    TaxType = supplier.TaxType,
+                    OldPoNo = viewModel.OldPoNo
+                };
 
-                    if (supplier == null || product == null)
-                    {
-                        throw new Exception("Invalid supplier or product.");
-                    }
+                await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
 
-                    var model = new FilpridePurchaseOrder
-                    {
-                        PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken),
-                        Date = viewModel.Date,
-                        SupplierId = supplier.SupplierId,
-                        SupplierName = supplier.SupplierName,
-                        SupplierAddress = supplier.SupplierAddress,
-                        SupplierTin = supplier.SupplierTin,
-                        ProductId = product.ProductId,
-                        ProductName = product.ProductName,
-                        Terms = viewModel.Terms,
-                        Quantity = viewModel.Quantity,
-                        Price = viewModel.Price,
-                        Amount = viewModel.Quantity * viewModel.Price,
-                        Remarks = viewModel.Remarks,
-                        CreatedBy = User.Identity!.Name!,
-                        Company = companyClaims,
-                        Type = viewModel.Type,
-                        TriggerDate = viewModel.TriggerDate,
-                        UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : viewModel.Quantity,
-                        PickUpPointId = viewModel.PickUpPointId,
-                        VatType = supplier.VatType,
-                        TaxType = supplier.TaxType,
-                        OldPoNo = viewModel.OldPoNo
-                    };
+                #region --Audit Trail Recording
 
-                    await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy, $"Create new purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-                    TempData["success"] = $"Purchase Order #{model.PurchaseOrderNo} created successfully";
+                #endregion --Audit Trail Recording
 
-                }, cancellationToken);
-
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Purchase Order #{model.PurchaseOrderNo} created successfully";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(viewModel);
             }
@@ -313,7 +313,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder.GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
+            var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
             if (purchaseOrder == null)
             {
@@ -355,9 +356,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
             viewModel.PickUpPoints = await _unitOfWork.FilpridePickUpPoint.GetPickUpPointListBasedOnSupplier(companyClaims,
                 viewModel.SupplierId, cancellationToken);
 
@@ -379,11 +378,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var supplier = await _dbContext.FilprideSuppliers
-                    .FirstOrDefaultAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
 
-                var product = await _dbContext.Products
-                    .FirstOrDefaultAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
+                var product = await _unitOfWork.Product
+                    .GetAsync(p => p.ProductId == viewModel.ProductId, cancellationToken);
 
                 if (supplier == null || product == null)
                 {
@@ -422,11 +421,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited purchase order# {existingModel.PurchaseOrderNo}", "Purchase Order", existingModel.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Purchase Order updated successfully";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -485,11 +483,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(model.PostedBy!,
                     $"Posted purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Purchase Order has been Posted.";
                 return RedirectToAction(nameof(Print), new { id });
@@ -529,8 +526,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasAlreadyBeenUsed)
                 {
-                    TempData["info"] =
-                        "Please note that this record has already been utilized in a receiving report or check voucher. As a result, voiding it is not permitted.";
+                    TempData["info"] = "Please note that this record has already been utilized in a receiving report or check voucher. " +
+                                       "As a result, voiding it is not permitted.";
                     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 }
 
@@ -543,11 +540,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(model.VoidedBy!,
                     $"Voided purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Purchase Order has been Voided.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -583,11 +579,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Purchase Order has been Cancelled.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -621,7 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var printedBy = _userManager.GetUserName(User);
             FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of purchase order# {po.PurchaseOrderNo}", "Purchase Order", po.Company);
-            await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording
 
@@ -792,11 +787,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(currentUser!, $"Update actual price for purchase order# {existingRecord.PurchaseOrderNo}, from {existingRecord.Price:N4} to {price:N4} (gross of VAT).", "Purchase Order", existingRecord.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
 
@@ -831,7 +824,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var actualPrices = await _dbContext.FilpridePOActualPrices
-                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId && !a.IsApproved, cancellationToken);
+                    .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId
+                                              && !a.IsApproved, cancellationToken);
 
                 if (actualPrices != null)
                 {
@@ -846,13 +840,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Approved the actual price of purchase order# {existingRecord.PurchaseOrderNo}",
                     "Purchase Order",
                     existingRecord.Company);
 
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -904,9 +897,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Product transfer for Purchase Order {purchaseOrder.PurchaseOrderNo} from {purchaseOrder.PickUpPoint!.Depot} to {pickupPoint!.Depot}. \nNote: {notes}", "Purchase Order", purchaseOrder.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -949,7 +941,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Update sales order number of purchase order# {purchaseOrder.PurchaseOrderNo}.", "Purchase Order", purchaseOrder.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
