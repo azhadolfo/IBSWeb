@@ -76,7 +76,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var creditMemos = await _unitOfWork.FilprideCreditMemo
-                    .GetAllAsync(cm => cm.Company == companyClaims && cm.Type == nameof(DocumentType.Documented), cancellationToken);
+                    .GetAllAsync(cm => cm.Company == companyClaims, cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -136,7 +136,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideCreditMemo();
+            var viewModel = new CreditMemoViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
@@ -161,13 +161,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideCreditMemo model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(CreditMemoViewModel viewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
+                return View(viewModel);
             }
+            var model = new FilprideCreditMemo
+            {
+                Source = viewModel.Source,
+                TransactionDate = viewModel.TransactionDate,
+                SalesInvoiceId = viewModel.SalesInvoiceId,
+                Quantity = viewModel.Quantity,
+                AdjustedPrice = viewModel.AdjustedPrice,
+                ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                Period = viewModel.Period,
+                Amount = viewModel.Amount,
+                Remarks = viewModel.Remarks,
+                Description = viewModel.Description,
+            };
 
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -214,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSIDMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
 
                     var existingSICMs = (await _unitOfWork.FilprideCreditMemo
@@ -224,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSICMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
                 }
                 else
@@ -236,7 +249,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSOADMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
 
                     var existingSOACMs = (await _unitOfWork.FilprideCreditMemo
@@ -246,7 +259,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (existingSOACMs.Count > 0)
                     {
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
-                        return View(model);
+                        return View(viewModel);
                     }
                 }
 
@@ -291,7 +304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                return View(model);
+                return View(viewModel);
             }
         }
 
