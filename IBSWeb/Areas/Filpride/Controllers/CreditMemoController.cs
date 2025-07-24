@@ -316,22 +316,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            creditMemo.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
+            creditMemo.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
-            creditMemo.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
+                .ToList();
+            creditMemo.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             return View(creditMemo);
         }
