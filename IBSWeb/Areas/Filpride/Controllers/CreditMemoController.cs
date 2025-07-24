@@ -1056,13 +1056,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _dbContext.FilprideCreditMemos
-                .Where(cm => recordIds.Contains(cm.CreditMemoId))
-                .Include(cm => cm.SalesInvoice)
-                .Include(cm => cm.ServiceInvoice)
-                .ThenInclude(sv => sv!.Service)
+            var selectedList = (await _unitOfWork.FilprideCreditMemo
+                .GetAllAsync(cm => recordIds.Contains(cm.CreditMemoId)))
                 .OrderBy(cm => cm.CreditMemoNo)
-                .ToListAsync();
+                .ToList();
 
             // Create the Excel package
             using (var package = new ExcelPackage())
