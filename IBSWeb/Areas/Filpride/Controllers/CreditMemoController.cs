@@ -1030,7 +1030,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", cm.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
