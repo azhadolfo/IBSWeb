@@ -1296,12 +1296,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllCreditMemoIds()
+        public async Task<IActionResult> GetAllCreditMemoIds()
         {
-            var cmIds = _dbContext.FilprideCreditMemos
-                                     .Where(cm => cm.Type == nameof(DocumentType.Documented))
-                                     .Select(cm => cm.CreditMemoId) // Assuming Id is the primary key
-                                     .ToList();
+            var cmIds = (await _unitOfWork.FilprideCreditMemo
+                 .GetAllAsync(cm => cm.Type == nameof(DocumentType.Documented)))
+                 .Select(cm => cm.CreditMemoId) // Assuming Id is the primary key
+                 .ToList();
 
             return Json(cmIds);
         }
