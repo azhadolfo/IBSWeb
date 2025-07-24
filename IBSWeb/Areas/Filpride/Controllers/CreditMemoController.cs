@@ -170,14 +170,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
+            model.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
             model.ServiceInvoices = await _dbContext.FilprideServiceInvoices
                 .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
                 .Select(sv => new SelectListItem
@@ -276,11 +276,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = $"Credit memo #{model.CreditMemoNo} created successfully.";
                     return RedirectToAction(nameof(Index));
