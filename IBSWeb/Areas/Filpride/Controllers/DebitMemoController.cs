@@ -139,6 +139,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new DebitMemoViewModel();
+            await IncludeSelectLists(viewModel, cancellationToken);
+            return View(viewModel);
+        }
+
+        public async Task IncludeSelectLists(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
+        {
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
@@ -158,8 +164,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sv.ServiceInvoiceNo
                 })
                 .ToList();
-
-            return View(viewModel);
         }
 
         [HttpPost]
@@ -175,6 +179,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if(!ModelState.IsValid)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(viewModel);
             }
@@ -192,24 +197,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Remarks = viewModel.Remarks,
                 Description = viewModel.Description,
             };
-
-            model.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToList();
-
-            model.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToList();
 
             var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
                         .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
@@ -232,6 +219,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingSIDMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
                         return View(viewModel);
                     }
@@ -243,6 +231,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingSICMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
                         return View(viewModel);
                     }
@@ -255,6 +244,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   .ToList();
                     if (existingSVDMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
                         return View(viewModel);
                     }
@@ -265,6 +255,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                       .ToList();
                     if (existingSVCMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
                         return View(viewModel);
                     }
@@ -306,6 +297,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
@@ -876,26 +868,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Description = debitMemo.Description,
             };
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToList();
-
-            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToList();
-
+            await IncludeSelectLists(viewModel, cancellationToken);
             return View(viewModel);
         }
 
@@ -905,6 +878,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(viewModel);
             }
@@ -995,6 +969,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
