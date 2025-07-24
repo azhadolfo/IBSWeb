@@ -430,7 +430,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideCreditMemos == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -476,11 +476,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --Retrieval of SI and SOA--
 
-                            var existingSI = await _dbContext.FilprideSalesInvoices
-                                                        .Include(s => s.Customer)
-                                                        .Include(s => s.Product)
-                                                        .Include(s => s.CustomerOrderSlip)
-                                                        .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                            var existingSI = await _unitOfWork.FilprideSalesInvoice
+                                .GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
                             #endregion --Retrieval of SI and SOA--
 
@@ -660,10 +657,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.ServiceInvoiceId != null)
                         {
-                            var existingSv = await _dbContext.FilprideServiceInvoices
-                                                    .Include(sv => sv.Customer)
-                                                    .Include(sv => sv.Service)
-                                                    .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                                .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
                             #region --SV Computation--
 
@@ -880,11 +875,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Credit Memo has been Posted.";
                     }
