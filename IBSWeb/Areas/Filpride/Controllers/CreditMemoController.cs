@@ -134,28 +134,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        public async Task IncludeSelectLists(CreditMemoViewModel viewModel, CancellationToken cancellationToken)
         {
-            var viewModel = new CreditMemoViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
+                    .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
                 .ToList();
+
             viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
+                    .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
                 .ToList();
+        }
 
+        public async Task<IActionResult> Create(CancellationToken cancellationToken)
+        {
+            var viewModel = new CreditMemoViewModel();
+            await IncludeSelectLists(viewModel, cancellationToken);
             return View(viewModel);
         }
 
@@ -165,9 +170,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(viewModel);
             }
+
             var model = new FilprideCreditMemo
             {
                 Source = viewModel.Source,
@@ -189,23 +196,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToList();
-            model.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToList();
-
             var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
                         .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
@@ -226,6 +216,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   .ToList();
                     if (existingSIDMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
                         return View(viewModel);
                     }
@@ -236,6 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                       .ToList();
                     if (existingSICMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
                         return View(viewModel);
                     }
@@ -248,6 +240,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                   .ToList();
                     if (existingSOADMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOADMs.First().DebitMemoNo}");
                         return View(viewModel);
                     }
@@ -258,6 +251,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                       .ToList();
                     if (existingSOACMs.Count > 0)
                     {
+                        await IncludeSelectLists(viewModel, cancellationToken);
                         ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSOACMs.First().CreditMemoNo}");
                         return View(viewModel);
                     }
@@ -300,6 +294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 _logger.LogError(ex, "Failed to create credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
@@ -315,8 +310,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
-
-            var companyClaims = await GetCompanyClaimAsync();
 
             var creditMemo = await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
 
@@ -340,22 +333,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Description = creditMemo.Description,
             };
 
-            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToList();
-            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToList();
+            await IncludeSelectLists(viewModel, cancellationToken);
 
             return View(viewModel);
         }
@@ -366,6 +344,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
                 return View(viewModel);
             }
@@ -443,7 +422,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingCM.EditedBy = _userManager.GetUserName(User);
                 existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy!, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", existingCM.Company);
@@ -458,6 +436,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 _logger.LogError(ex, "Failed to edit credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
