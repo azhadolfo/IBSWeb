@@ -75,7 +75,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         private string _remarks;
 
-        [Column(TypeName = "varchar(20)")]
         [StringLength(20)]
         public string PaymentStatus { get; set; } = "Pending";
 

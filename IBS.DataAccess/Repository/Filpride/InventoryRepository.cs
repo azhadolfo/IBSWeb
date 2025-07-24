@@ -1,4 +1,5 @@
-﻿using IBS.DataAccess.Data;
+﻿using System.Linq.Expressions;
+using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
@@ -522,6 +523,26 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public override async Task<FilprideInventory?> GetAsync(Expression<Func<FilprideInventory, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<FilprideInventory>> GetAllAsync(Expression<Func<FilprideInventory, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideInventory> query = dbSet
+                .Include(i => i.Product);
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }
