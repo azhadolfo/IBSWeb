@@ -902,51 +902,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCreditMemos.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCreditMemo.GetAsync(cm => cm.CreditMemoId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
-                        await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo, cancellationToken);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Credit Memo has been Voided.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void credit memo. Voided by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Voided);
+
+                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.CreditMemoNo, cancellationToken);
+                    await _unitOfWork.FilprideCreditMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CreditMemoNo, cancellationToken);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Credit Memo has been Voided.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                TempData["info"] = "Credit Memo is already Voided.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void credit memo. Voided by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
