@@ -311,7 +311,7 @@
                 <td class="text-center">
                     @if (Model.BankId != null)
                     {
-                        <p style="height: 9px;">@Model.BankAccountName @Model.BankAccountNumber</p>
+                        <p>@Model.BankAccountName @Model.BankAccountNumber</p>
                     }
                     else
                     {
@@ -332,60 +332,6 @@
                     @if (Model.CheckAmount > 0)
                     {
                         <p style="height: 9px;">@Model.CheckAmount.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding-left:20px;">Manager's Check</td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckDate != null)
-                    {
-                        <p style="height: 9px;">@Model.ManagerCheckDate?.ToString(SD.Date_Format)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckNo != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckNo)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckBank != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBank)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckBranch != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBranch)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckAmount > 0)
-                    {
-                        <p style="height: 9px;">@Model.ManagerCheckAmount.ToString(decimalFormat)</p>
                     }
                     else
                     {

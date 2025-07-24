@@ -1,4 +1,4 @@
-﻿@model FilprideCollectionReceipt
+﻿@model CollectionReceiptSingleSiViewModel
 
 @{
     ViewData["Title"] = "Edit Collection Receipt";
@@ -33,7 +33,7 @@ Amount Paid:    <span id="amountPaid"></span>
 Balance:        <span id="balance"></span>
            </pre>
         </div>
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="col-md-4">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -46,26 +46,13 @@ Balance:        <span id="balance"></span>
                     <span asp-validation-for="CustomerId" class="text-danger"></span>
                 </div>
 
-                @if (Model.SINo != null)
-                {
-                    <div class="form-group mb-3">
-                        <label class="control-label">SI NO.</label>
-                        <select asp-for="SalesInvoiceId" id="salesInvoice" asp-items="@Model.SalesInvoices" class="form-select js-select2" style="width:100%">
-                            <option></option>
-                        </select>
-                        <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
-                    </div>
-                }
-                else
-                {
-                    <div class="form-group mb-3">
-                        <label class="control-label">SV NO.</label>
-                        <select asp-for="ServiceInvoiceId" id="serviceInvoice" asp-items="@Model.ServiceInvoices" class="form-select js-select2" style="width:100%">
-                            <option></option>
-                        </select>
-                        <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
-                    </div>
-                }
+                <div class="form-group mb-3">
+                    <label class="control-label">SI NO.</label>
+                    <select asp-for="SalesInvoiceId" id="salesInvoice" asp-items="@Model.SalesInvoices" class="form-select js-select2" style="width:100%">
+                        <option></option>
+                    </select>
+                    <span asp-validation-for="SalesInvoiceId" class="text-danger"></span>
+                </div>
 
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label">Transaction Date</label>
@@ -103,7 +90,7 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="CashAmount" style="border:none" value="@Model.CashAmount" class="form-control moneyInput" /></td>
+                        <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
 
                     <tr>
@@ -117,7 +104,7 @@ Balance:        <span id="balance"></span>
                             </select>
                         </td>
                         <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
-                        <td><input asp-for="CheckAmount" style="border:none" value="@Model.CheckAmount" class="form-control moneyInput" /></td>
+                        <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
 
                     <tr>
@@ -126,7 +113,7 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="EWT" style="border:none" value="@Model.EWT" class="form-control moneyInput" /></td>
+                        <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
                     <tr>
                         <td style="padding-left:20px;">WVAT</td>
@@ -134,22 +121,31 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
-                        <td><input asp-for="WVAT" style="border:none" value="@Model.WVAT" class="form-control moneyInput" /></td>
+                        <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
                 </tbody>
             </table>
 
-            <div class="form-group my-3">
-                <label class="form-label fst-italic">If applicable, upload the certificate.</label>
-                <div class="mb-3">
-                    <label for="bir2306" class="form-label">BIR 2306 Form</label>
-                    <input class="form-control form-control-sm w-25" name="bir2306" type="file">
+            @if (!Model.HasAlready2306 || !Model.HasAlready2307)
+            {
+                <div class="form-group my-3">
+                    <label class="form-label fst-italic">If applicable, upload the certificate.</label>
+                    @if (!Model.HasAlready2306)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="Bir2306" class="form-label">BIR 2306 Form</label>
+                            <input class="form-control form-control-sm w-25" asp-for="Bir2306" type="file">
+                        </div>
+                    }
+                    @if (!Model.HasAlready2307)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="Bir2307" class="form-label">BIR 2307 Form</label>
+                            <input class="form-control form-control-sm w-25" asp-for="Bir2307" type="file">
+                        </div>
+                    }
                 </div>
-                <div class="mb-3">
-                    <label for="bir2307" class="form-label">BIR 2307 Form</label>
-                    <input class="form-control form-control-sm w-25" name="bir2307" type="file">
-                </div>
-            </div>
+            }
 
             @* <hr /> *@
             @* <div class="form-group"> *@
@@ -192,14 +188,7 @@ Balance:        <span id="balance"></span>
                     <button type="submit" class="btn btn-primary form-control">Save</button>
                 </div>
                 <div class="col-6 col-md-3">
-                    @if (Model.SVNo != null)
-                    {
-                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="ServiceInvoiceIndex" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    }
-                    else
-                    {
-                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
-                    }
+                    <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
                 </div>
             </div>
         </form>
@@ -335,45 +324,23 @@ Balance:        <span id="balance"></span>
         // Function to handle invoice change event
         function handleInvoiceChange() {
             var salesInvoice = $("#salesInvoice").val();
-            var serviceInvoice = $("#serviceInvoice").val();
 
-            if (salesInvoice != undefined) {
-                $.ajax({
-                    url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
-                    type: "GET",
-                    data: {
-                        invoiceNo: salesInvoice,
-                        isSales: true,      // or false based on your condition
-                        isServices: false   // or true based on your condition
-                    },
-                    success: function (data) {
-                        document.getElementById("amount").innerHTML = data.amount;
-                        document.getElementById("amountPaid").innerHTML = data.amountPaid;
-                        document.getElementById("balance").innerHTML = data.balance;
-                        document.getElementById("ewt").innerHTML = data.ewt;
-                        document.getElementById("wvat").innerHTML = data.wvat;
-                        document.getElementById("total").innerHTML = data.total;
-                    }
-                });
-            } else {
-                $.ajax({
-                    url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
-                    type: "GET",
-                    data: {
-                        invoiceNo: serviceInvoice,
-                        isSales: false,      // or false based on your condition
-                        isServices: true   // or true based on your condition
-                    },
-                    success: function (data) {
-                        document.getElementById("amount").innerHTML = data.amount;
-                        document.getElementById("amountPaid").innerHTML = data.amountPaid;
-                        document.getElementById("balance").innerHTML = data.balance;
-                        document.getElementById("ewt").innerHTML = data.ewt;
-                        document.getElementById("wvat").innerHTML = data.wvat;
-                        document.getElementById("total").innerHTML = data.total;
-                    }
-                });
-            }
+            $.ajax({
+                url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
+                type: "GET",
+                data: {
+                    invoiceNo: salesInvoice,
+                    isSales: true,      // or false based on your condition
+                },
+                success: function (data) {
+                    document.getElementById("amount").innerHTML = data.amount;
+                    document.getElementById("amountPaid").innerHTML = data.amountPaid;
+                    document.getElementById("balance").innerHTML = data.balance;
+                    document.getElementById("ewt").innerHTML = data.ewt;
+                    document.getElementById("wvat").innerHTML = data.wvat;
+                    document.getElementById("total").innerHTML = data.total;
+                }
+            });
 
         }
 
@@ -383,10 +350,6 @@ Balance:        <span id="balance"></span>
 
             // Attach event listener to invoice dropdown
             $("#salesInvoice").change(function () {
-                // Call the handleInvoiceChange function when the dropdown changes
-                handleInvoiceChange();
-            });
-            $("#serviceInvoice").change(function () {
                 // Call the handleInvoiceChange function when the dropdown changes
                 handleInvoiceChange();
             });
