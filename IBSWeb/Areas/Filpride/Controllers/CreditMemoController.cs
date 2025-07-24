@@ -340,96 +340,91 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideCreditMemo model, CancellationToken cancellationToken)
         {
-            var existingSalesInvoice = await _dbContext
-                        .FilprideSalesInvoices
-                        .Include(c => c.Customer)
-                        .Include(s => s.Product)
-                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
-            var existingSv = await _dbContext.FilprideServiceInvoices
-                        .Include(sv => sv.Customer)
-                        .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+            var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingCM = await _dbContext
-                                    .FilprideCreditMemos
-                                    .FirstOrDefaultAsync(cm => cm.CreditMemoId == model.CreditMemoId, cancellationToken);
-
-                    if (existingCM == null)
-                    {
-                        return NotFound();
-                    }
-
-                    model.EditedBy = _userManager.GetUserName(this.User);
-                    model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    if (model.Source == "Sales Invoice")
-                    {
-                        model.ServiceInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingCM.TransactionDate = model.TransactionDate;
-                        existingCM.SalesInvoiceId = model.SalesInvoiceId;
-                        existingCM.Quantity = model.Quantity;
-                        existingCM.AdjustedPrice = model.AdjustedPrice;
-                        existingCM.Description = model.Description;
-                        existingCM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingCM.CreditAmount = (decimal)(model.Quantity! * -model.AdjustedPrice!);
-                    }
-                    else if (model.Source == "Service Invoice")
-                    {
-                        model.SalesInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingCM.TransactionDate = model.TransactionDate;
-                        existingCM.ServiceInvoiceId = model.ServiceInvoiceId;
-                        existingCM.Period = model.Period;
-                        existingCM.Amount = model.Amount;
-                        existingCM.Description = model.Description;
-                        existingCM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingCM.CreditAmount = -model.Amount ?? 0;
-                    }
-
-                    existingCM.EditedBy = _userManager.GetUserName(User);
-                    existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy!, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", existingCM.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Credit Memo edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingCM = await _unitOfWork.FilprideCreditMemo
+                                .GetAsync(cm => cm.CreditMemoId == model.CreditMemoId, cancellationToken);
+
+                if (existingCM == null)
+                {
+                    return NotFound();
+                }
+
+                model.EditedBy = _userManager.GetUserName(this.User);
+                model.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                if (model.Source == "Sales Invoice")
+                {
+                    model.ServiceInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingCM.TransactionDate = model.TransactionDate;
+                    existingCM.SalesInvoiceId = model.SalesInvoiceId;
+                    existingCM.Quantity = model.Quantity;
+                    existingCM.AdjustedPrice = model.AdjustedPrice;
+                    existingCM.Description = model.Description;
+                    existingCM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingCM.CreditAmount = (decimal)(model.Quantity! * -model.AdjustedPrice!);
+                }
+                else if (model.Source == "Service Invoice")
+                {
+                    model.SalesInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingCM.TransactionDate = model.TransactionDate;
+                    existingCM.ServiceInvoiceId = model.ServiceInvoiceId;
+                    existingCM.Period = model.Period;
+                    existingCM.Amount = model.Amount;
+                    existingCM.Description = model.Description;
+                    existingCM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingCM.CreditAmount = -model.Amount ?? 0;
+                }
+
+                existingCM.EditedBy = _userManager.GetUserName(User);
+                existingCM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingCM.EditedBy!, $"Edited credit memo# {existingCM.CreditMemoNo}", "Credit Memo", existingCM.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Credit Memo edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit credit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         [HttpGet]
