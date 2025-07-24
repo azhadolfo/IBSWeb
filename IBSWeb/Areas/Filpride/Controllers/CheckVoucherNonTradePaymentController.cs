@@ -177,6 +177,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var cv = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
+            if (!cv.IsPrinted)
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                cv.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            return RedirectToAction(nameof(Print), new { id });
+        }
+
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
             var modelHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);

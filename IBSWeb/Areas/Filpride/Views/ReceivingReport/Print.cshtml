@@ -176,7 +176,7 @@
         else
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="ReceivingReport" asp-action="Printed" asp-route-id="@Model.ReceivingReportId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a onclick="confirmPrint(@Model.ReceivingReportId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
     }
@@ -187,54 +187,6 @@
 </div>
 
 @section Scripts {
-    <script>
-        var originalFontSizes = [];
-
-        function printPage() {
-            var printButton = document.getElementById("printButton");
-            var otherButton = document.getElementById("otherButton");
-
-            // Hide the header and footer
-            document.querySelector("header").style.display = "none";
-
-            // Hide the buttons before printing
-            if (printButton) {
-                printButton.style.visibility = "hidden";
-            }
-            if (otherButton) {
-                otherButton.style.visibility = "hidden";
-            }
-
-            // Get all paragraph elements
-            var paragraphs = document.querySelectorAll("p");
-
-            // Store the original font sizes
-            for (var i = 0; i < paragraphs.length; i++) {
-                originalFontSizes[i] = paragraphs[i].style.fontSize;
-                // Set the font size of all paragraph elements to 12px for printing
-                paragraphs[i].style.fontSize = "12px";
-            }
-
-            // Call the print function
-            window.print();
-
-            // Restore the font sizes
-            for (var i = 0; i < paragraphs.length; i++) {
-                paragraphs[i].style.fontSize = originalFontSizes[i];
-            }
-
-            // Restore the buttons' visibility after printing (optional)
-            if (printButton) {
-                printButton.style.visibility = "visible";
-            }
-            if (otherButton) {
-                otherButton.style.visibility = "visible";
-            }
-
-            // Restore the header and footer's visibility after printing (optional)
-            document.querySelector("header").style.display = "";
-        }
-    </script>
     <script>
         function confirmPost(id) {
             Swal.fire({
@@ -254,5 +206,46 @@
             })
         }
     </script>
+    @if (Model.Type == nameof(DocumentType.Documented) && !Model.IsPrinted)
+    {
+        <script>
+        function confirmPrint(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will mark the document as reprinted and can't be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const afterPrintHandler = () => {
+                        window.removeEventListener('afterprint', afterPrintHandler);
+                        var url = `@Url.Action("Printed", "ReceivingReport", new { area = "Filpride" })/${id}`;
+                        window.location.href = url;
+                    };
+
+                    window.addEventListener('afterprint', afterPrintHandler);
+
+                    // Close Swal before printing to avoid blank overlay
+                    Swal.close();
+                    setTimeout(() => {
+                        window.print();
+                    }, 200); // small delay to ensure Swal fully closes before print
+                }
+            });
+        }
+    </script>
+    }
+    else
+    {
+        <script>
+        function confirmPrint(id) {
+            // Call the print function
+            window.print();
+        }
+        </script>
+    }
     <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }
