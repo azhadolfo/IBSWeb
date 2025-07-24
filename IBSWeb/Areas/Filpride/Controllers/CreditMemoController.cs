@@ -954,34 +954,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCreditMemos.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCreditMemo
+                .GetAsync(cm => cm.CreditMemoId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
+                if (model.CanceledBy == null)
                 {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Canceled);
+                    model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                    #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled credit memo# {model.CreditMemoNo}", "Credit Memo", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                    #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Credit Memo has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index));
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Credit Memo has been Cancelled.";
                 }
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -991,8 +995,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
 
