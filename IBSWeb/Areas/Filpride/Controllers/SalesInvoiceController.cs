@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
@@ -158,7 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            FilprideSalesInvoice viewModel = new()
+            SalesInvoiceViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
@@ -169,7 +170,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideSalesInvoice model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(SalesInvoiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -186,18 +187,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     #region Saving Default Entries
 
-                    model.SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, model.Type, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    model.Amount = model.Quantity * model.UnitPrice;
-                    model.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(model.Terms, model.TransactionDate);
-                    model.Company = companyClaims;
+                    var model = new FilprideSalesInvoice
+                    {
+                        SalesInvoiceNo = await _unitOfWork.FilprideSalesInvoice.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                        CustomerId = viewModel.CustomerId,
+                        ProductId = viewModel.ProductId,
+                        OtherRefNo = viewModel.OtherRefNo,
+                        Quantity = viewModel.Quantity,
+                        UnitPrice = viewModel.UnitPrice,
+                        Amount = viewModel.Quantity * viewModel.UnitPrice,
+                        Remarks = viewModel.Remarks,
+                        TransactionDate = viewModel.TransactionDate,
+                        Discount = viewModel.Discount,
+                        DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(viewModel.Terms, viewModel.TransactionDate),
+                        PurchaseOrderId = viewModel.PurchaseOrderId,
+                        CreatedBy = _userManager.GetUserName(User),
+                        Company = companyClaims,
+                        Type = viewModel.Type,
+                        ReceivingReportId = viewModel.ReceivingReportId,
+                        CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
+                        DeliveryReceiptId = viewModel.DeliveryReceiptId,
+                        Terms = viewModel.Terms,
+                        CustomerAddress = viewModel.CustomerAddress,
+                        CustomerTin = viewModel.CustomerTin,
+                    };
 
                     if (model.Amount >= model.Discount)
                     {
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
@@ -208,10 +228,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         return RedirectToAction(nameof(Index));
                     }
 
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["warning"] = "Please input below or exact amount based on the Sales Invoice";
-                    return View(model);
+                    return View(viewModel);
 
                     #endregion Saving Default Entries
                 }
@@ -220,17 +240,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to create sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                     await transaction.RollbackAsync(cancellationToken);
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["warning"] = "The submitted information is invalid.";
-            return View(model);
+            return View(viewModel);
         }
 
         [HttpGet]
@@ -289,41 +309,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return BadRequest();
                 }
-                var salesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+                var existingModel = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
 
-                if (salesInvoice == null)
+                if (existingModel == null)
                 {
                     return NotFound();
                 }
 
-                salesInvoice.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                salesInvoice.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                salesInvoice.PO = await _dbContext.FilpridePurchaseOrders
-                .OrderBy(p => p.PurchaseOrderNo)
-                .Where(po => po.Company == companyClaims && po.ProductId == salesInvoice.ProductId && po.QuantityReceived != 0 && po.PostedBy != null)
-                .Select(p => new SelectListItem
+                var viewModel = new SalesInvoiceViewModel
                 {
-                    Value = p.PurchaseOrderId.ToString(),
-                    Text = p.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
-                var receivingReports = await _dbContext.FilprideReceivingReports
-                    .Where(rr => rr.Company == companyClaims && rr.POId == salesInvoice.PurchaseOrderId && rr.ReceivedDate != null)
-                    .Select(rr => new
-                    {
-                        rr.ReceivingReportId,
-                        rr.ReceivingReportNo,
-                        rr.ReceivedDate
-                    })
-                    .ToListAsync();
+                    SalesInvoiceId = existingModel.SalesInvoiceId,
+                    Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                    Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                    SalesInvoiceNo = existingModel.SalesInvoiceNo,
+                    BusinessStyle = existingModel.CustomerOrderSlip?.BusinessStyle,
+                    CustomerId = existingModel.CustomerId,
+                    ProductId = existingModel.ProductId,
+                    OtherRefNo = existingModel.OtherRefNo,
+                    Quantity = existingModel.Quantity,
+                    UnitPrice = existingModel.UnitPrice,
+                    Remarks = existingModel.Remarks,
+                    TransactionDate = existingModel.TransactionDate,
+                    Discount = existingModel.Discount,
+                    PurchaseOrderId = existingModel.PurchaseOrderId,
+                    Type = existingModel.Type,
+                    ReceivingReportId = existingModel.ReceivingReportId,
+                    CustomerOrderSlipId = existingModel.CustomerOrderSlipId,
+                    DeliveryReceiptId = existingModel.DeliveryReceiptId,
+                    Terms = existingModel.Terms,
+                    CustomerAddress = existingModel.CustomerAddress,
+                    CustomerTin = existingModel.CustomerTin,
+                };
 
-                salesInvoice.RR = receivingReports.Select(rr => new SelectListItem
-                {
-                    Value = rr.ReceivingReportId.ToString(),
-                    Text = rr.ReceivingReportNo
-                }).ToList();
-
-                return View(salesInvoice);
+                return View(viewModel);
             }
             catch (Exception ex)
             {
@@ -335,7 +353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideSalesInvoice model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(SalesInvoiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -350,30 +368,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 try
                 {
-                    var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+                    var existingRecord = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == viewModel.SalesInvoiceId, cancellationToken);
 
                     if (existingRecord == null)
                     {
                         return NotFound();
                     }
 
-                    existingRecord.CustomerId = model.CustomerId;
-                    existingRecord.TransactionDate = model.TransactionDate;
-                    existingRecord.OtherRefNo = model.OtherRefNo;
-                    existingRecord.PurchaseOrderId = model.PurchaseOrderId;
-                    existingRecord.Quantity = model.Quantity;
-                    existingRecord.UnitPrice = model.UnitPrice;
-                    existingRecord.Remarks = model.Remarks;
-                    existingRecord.Discount = model.Discount;
-                    existingRecord.Amount = model.Quantity * model.UnitPrice;
-                    existingRecord.ProductId = model.ProductId;
-                    existingRecord.ReceivingReportId = model.ReceivingReportId;
-                    existingRecord.CustomerOrderSlipId = model.CustomerOrderSlipId;
-                    existingRecord.DeliveryReceiptId = model.DeliveryReceiptId;
-                    existingRecord.Terms = model.Terms;
-                    existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, model.TransactionDate);
-                    existingRecord.CustomerAddress = model.CustomerAddress;
-                    existingRecord.CustomerTin = model.CustomerTin;
+                    existingRecord.CustomerId = viewModel.CustomerId;
+                    existingRecord.TransactionDate = viewModel.TransactionDate;
+                    existingRecord.OtherRefNo = viewModel.OtherRefNo;
+                    existingRecord.PurchaseOrderId = viewModel.PurchaseOrderId;
+                    existingRecord.Quantity = viewModel.Quantity;
+                    existingRecord.UnitPrice = viewModel.UnitPrice;
+                    existingRecord.Remarks = viewModel.Remarks;
+                    existingRecord.Discount = viewModel.Discount;
+                    existingRecord.Amount = viewModel.Quantity * viewModel.UnitPrice;
+                    existingRecord.ProductId = viewModel.ProductId;
+                    existingRecord.ReceivingReportId = viewModel.ReceivingReportId;
+                    existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
+                    existingRecord.DeliveryReceiptId = viewModel.DeliveryReceiptId;
+                    existingRecord.Terms = viewModel.Terms;
+                    existingRecord.DueDate = _unitOfWork.FilprideSalesInvoice.ComputeDueDateAsync(existingRecord.Terms, viewModel.TransactionDate);
+                    existingRecord.CustomerAddress = viewModel.CustomerAddress;
+                    existingRecord.CustomerTin = viewModel.CustomerTin;
 
                     existingRecord.EditedBy = _userManager.GetUserName(User);
                     existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -381,7 +399,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edited sales invoice# {existingRecord.SalesInvoiceNo}", "Sales Invoice", existingRecord.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
@@ -394,18 +412,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     _logger.LogError(ex, "Failed to edit sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
-                    return View(model);
+                    return View(viewModel);
                 }
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             TempData["warning"] = "The submitted information is invalid.";
-            return View(model);
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
@@ -447,11 +465,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Sales Invoice has been Posted.";
                         return RedirectToAction(nameof(Print), new { id });
@@ -480,9 +498,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var existingInventory = await _dbContext.FilprideInventories
-                .Include(i => i.Product)
-                .FirstOrDefaultAsync(i => i.Reference == model.SalesInvoiceNo && i.Company == model.Company);
+            var existingInventory = await _unitOfWork.FilprideInventory
+                .GetAsync(i => i.Reference == model.SalesInvoiceNo && i.Company == model.Company);
 
             if (model != null)
             {
@@ -531,11 +548,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Sales Invoice has been Voided.";
                     }
@@ -575,11 +592,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled sales invoice# {model.SalesInvoiceNo}", "Sales Invoice", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.SaveAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Sales Invoice has been Cancelled.";
                     }
@@ -602,11 +619,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
-                .Where(po => po.Company == companyClaims && po.ProductId == productId && po.QuantityReceived != 0 && po.PostedBy != null)
-                .ToListAsync();
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetAllAsync(po =>
+                    po.Company == companyClaims && po.ProductId == productId && po.QuantityReceived != 0 &&
+                    po.PostedBy != null);
 
-            if (purchaseOrders != null && purchaseOrders.Count > 0)
+            if (purchaseOrders != null && purchaseOrders.Count() > 0)
             {
                 var poList = purchaseOrders.Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
                 return Json(poList);
@@ -630,7 +648,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User);
                 FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -765,10 +783,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public IActionResult GetAllSalesInvoiceIds()
         {
-            var invoiceIds = _dbContext.FilprideSalesInvoices
-                                     .Where(invoice => invoice.Type == nameof(DocumentType.Documented))
-                                     .Select(invoice => invoice.SalesInvoiceId) // Assuming Id is the primary key
-                                     .ToList();
+            var invoiceIds = _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(invoice => invoice.Type == nameof(DocumentType.Documented))
+                .Result
+                .Select(invoice => invoice.SalesInvoiceId);
 
             return Json(invoiceIds);
         }

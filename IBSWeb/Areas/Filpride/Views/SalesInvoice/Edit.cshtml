@@ -1,4 +1,4 @@
-﻿@model FilprideSalesInvoice
+﻿@model SalesInvoiceViewModel
 
 @{
     ViewData["Title"] = "Edit Sales Invoice";
@@ -44,22 +44,22 @@
 
                         <div class="form-group mb-3">
                             <label class="control-label">Tin No</label>
-                            <input asp-for="CustomerTin" id="tinNo" class="form-control" value="@Model.Customer!.CustomerTin" readonly tabindex="-1"/>
+                            <input asp-for="CustomerTin" id="tinNo" class="form-control" value="@Model.CustomerTin" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Customer Type</label>
-                            <input id="customerType" class="form-control" value="@Model.Customer.CustomerType" readonly tabindex="-1"/>
+                            <input id="customerType" class="form-control" value="@Model.CustomerType" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Address</label>
-                            <input asp-for="CustomerAddress" id="address" class="form-control" value="@Model.Customer.CustomerAddress" readonly tabindex="-1"/>
+                            <input asp-for="CustomerAddress" id="address" class="form-control" value="@Model.CustomerAddress" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="control-label">Business Style</label>
-                            <input id="businessStyle" class="form-control" value="@Model.Customer.BusinessStyle" readonly tabindex="-1"/>
+                            <input id="businessStyle" class="form-control" value="@Model.BusinessStyle" readonly tabindex="-1"/>
                         </div>
 
                         <div class="form-group mb-3">

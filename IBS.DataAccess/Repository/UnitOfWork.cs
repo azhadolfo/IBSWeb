@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes;
@@ -19,7 +18,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BankAccountRepository = IBS.DataAccess.Repository.Mobility.BankAccountRepository;
 using ChartOfAccountRepository = IBS.DataAccess.Repository.Mobility.ChartOfAccountRepository;
-using CustomerOrderSlipRepository = IBS.DataAccess.Repository.Mobility.CustomerOrderSlipRepository;
 using CustomerRepository = IBS.DataAccess.Repository.Mobility.CustomerRepository;
 using IBankAccountRepository = IBS.DataAccess.Repository.Mobility.IRepository.IBankAccountRepository;
 using IChartOfAccountRepository = IBS.DataAccess.Repository.Mobility.IRepository.IChartOfAccountRepository;
@@ -27,16 +25,10 @@ using ICustomerOrderSlipRepository = IBS.DataAccess.Repository.Mobility.IReposit
 using ICustomerRepository = IBS.DataAccess.Repository.Mobility.IRepository.ICustomerRepository;
 using IInventoryRepository = IBS.DataAccess.Repository.Mobility.IRepository.IInventoryRepository;
 using InventoryRepository = IBS.DataAccess.Repository.Mobility.InventoryRepository;
-using IPickUpPointRepository = IBS.DataAccess.Repository.Mobility.IRepository.IPickUpPointRepository;
 using IProductRepository = IBS.DataAccess.Repository.MasterFile.IRepository.IProductRepository;
-using IPurchaseOrderRepository = IBS.DataAccess.Repository.Mobility.IRepository.IPurchaseOrderRepository;
-using IReceivingReportRepository = IBS.DataAccess.Repository.Mobility.IRepository.IReceivingReportRepository;
 using IServiceRepository = IBS.DataAccess.Repository.Mobility.IRepository.IServiceRepository;
 using ISupplierRepository = IBS.DataAccess.Repository.Mobility.IRepository.ISupplierRepository;
-using PickUpPointRepository = IBS.DataAccess.Repository.Mobility.PickUpPointRepository;
 using ProductRepository = IBS.DataAccess.Repository.MasterFile.ProductRepository;
-using PurchaseOrderRepository = IBS.DataAccess.Repository.Mobility.PurchaseOrderRepository;
-using ReceivingReportRepository = IBS.DataAccess.Repository.Mobility.ReceivingReportRepository;
 using ServiceRepository = IBS.DataAccess.Repository.Mobility.ServiceRepository;
 using SupplierRepository = IBS.DataAccess.Repository.Mobility.SupplierRepository;
 
@@ -52,6 +44,26 @@ namespace IBS.DataAccess.Repository
         public INotificationRepository Notifications { get; private set; }
 
         #region--Mobility
+
+        public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+        {
+            var strategy = _db.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    await action();
+                    await transaction.CommitAsync(cancellationToken);
+                }
+                catch
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            });
+        }
 
         public IChartOfAccountRepository MobilityChartOfAccount { get; private set; }
         public ISalesHeaderRepository MobilitySalesHeader { get; private set; }

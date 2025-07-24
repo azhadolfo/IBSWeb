@@ -34,6 +34,8 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<List<SelectListItem>> GetCashierListAsyncByStationAsync(CancellationToken cancellationToken = default);
 
+        Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default);
+
         #region--Mobility
 
         Mobility.IRepository.IChartOfAccountRepository MobilityChartOfAccount { get; }
