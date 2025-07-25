@@ -6094,7 +6094,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var cr in collectionReceiptReport)
                 {
-                    currentAmount = (cr.CashAmount + cr.CheckAmount + cr.ManagerCheckAmount);
+                    currentAmount = cr.CashAmount + cr.CheckAmount;
                     worksheet.Cells[row, 1].Value = cr.Customer?.CustomerCode ?? "";
                     worksheet.Cells[row, 2].Value = cr.Customer?.CustomerName ?? "";
                     worksheet.Cells[row, 3].Value = cr.Customer?.CustomerType ?? "";

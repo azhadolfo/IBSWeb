@@ -638,9 +638,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            existingModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
                     && !si.IsPaid
                     && si.CustomerId == existingModel.CustomerId
                     && si.PostedBy != null, cancellationToken))
@@ -652,9 +652,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToList();
 
-            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -2214,11 +2214,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = item.BankAccount?.Bank;
                     worksheet.Cells[row, 8].Value = item.CheckBranch;
                     worksheet.Cells[row, 9].Value = item.CheckAmount;
-                    worksheet.Cells[row, 10].Value = item.ManagerCheckDate?.ToString("yyyy-MM-dd");
-                    worksheet.Cells[row, 11].Value = item.ManagerCheckNo;
-                    worksheet.Cells[row, 12].Value = item.ManagerCheckBank;
-                    worksheet.Cells[row, 13].Value = item.ManagerCheckBranch;
-                    worksheet.Cells[row, 14].Value = item.ManagerCheckAmount;
+                    worksheet.Cells[row, 10].Value = null;
+                    worksheet.Cells[row, 11].Value = null;
+                    worksheet.Cells[row, 12].Value = null;
+                    worksheet.Cells[row, 13].Value = null;
+                    worksheet.Cells[row, 14].Value = null;
                     worksheet.Cells[row, 15].Value = item.EWT;
                     worksheet.Cells[row, 16].Value = item.WVAT;
                     worksheet.Cells[row, 17].Value = item.Total;
