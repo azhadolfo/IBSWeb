@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -13,8 +14,10 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly TransactionDate { get; set; }
 
+        [StringLength(50)]
         public string ReferenceNo { get; set; }
 
+        [StringLength(100)]
         public string? Remarks { get; set; }
 
         public int ServiceInvoiceId { get; set; }
@@ -25,12 +28,14 @@ namespace IBS.Models.Filpride.ViewModels
 
         public DateOnly? CheckDate { get; set; }
 
+        [StringLength(50)]
         public string? CheckNo { get; set; }
 
         public int? BankId { get; set; }
 
         public List<SelectListItem>? BankAccounts { get; set; }
 
+        [StringLength(50)]
         public string? CheckBranch { get; set; }
 
         public decimal CheckAmount { get; set; }
