@@ -138,33 +138,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideDebitMemo();
+            var viewModel = new DebitMemoViewModel();
+            await IncludeSelectLists(viewModel, cancellationToken);
+            return View(viewModel);
+        }
+
+        public async Task IncludeSelectLists(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
+        {
             var companyClaims = await GetCompanyClaimAsync();
 
-            viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims && si.PostedBy != null, cancellationToken))
                 .Select(si => new SelectListItem
                 {
                     Value = si.SalesInvoiceId.ToString(),
                     Text = si.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            viewModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.PostedBy != null, cancellationToken))
                 .Select(sv => new SelectListItem
                 {
                     Value = sv.ServiceInvoiceId.ToString(),
                     Text = sv.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
-
-            return View(viewModel);
+                .ToList();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(FilprideDebitMemo model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Create(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -173,142 +177,139 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-
-            model.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-
-            var existingSalesInvoice = await _dbContext
-                        .FilprideSalesInvoices
-                        .Include(c => c.Customer)
-                        .Include(s => s.Product)
-                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
-
-            var existingSv = await _dbContext.FilprideServiceInvoices
-                        .Include(sv => sv.Customer)
-                        .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-            if (ModelState.IsValid)
+            if(!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region -- checking for unposted DM or CM
-
-                    if (model.SalesInvoiceId != null)
-                    {
-                        var existingSIDMs = _dbContext.FilprideDebitMemos
-                                      .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.DebitMemoId)
-                                      .ToList();
-                        if (existingSIDMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
-                            return View(model);
-                        }
-
-                        var existingSICMs = _dbContext.FilprideCreditMemos
-                                          .Where(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                          .OrderBy(s => s.CreditMemoId)
-                                          .ToList();
-                        if (existingSICMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
-                            return View(model);
-                        }
-                    }
-                    else
-                    {
-                        var existingSVDMs = _dbContext.FilprideDebitMemos
-                                      .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                      .OrderBy(s => s.DebitMemoId)
-                                      .ToList();
-                        if (existingSVDMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
-                            return View(model);
-                        }
-
-                        var existingSVCMs = _dbContext.FilprideCreditMemos
-                                          .Where(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null)
-                                          .OrderBy(s => s.CreditMemoId)
-                                          .ToList();
-                        if (existingSVCMs.Count > 0)
-                        {
-                            ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
-                            return View(model);
-                        }
-                    }
-
-                    #endregion -- checking for unposted DM or CM
-
-
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Company = companyClaims;
-
-                    if (model.Source == "Sales Invoice")
-                    {
-                        model.ServiceInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
-                        model.Type = existingSalesInvoice.Type;
-                        model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
-                    }
-                    else if (model.Source == "Service Invoice")
-                    {
-                        model.SalesInvoiceId = null;
-                        model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv!.Type, cancellationToken);
-                        model.Type = existingSv.Type;
-                        model.DebitAmount = model.Amount ?? 0;
-                    }
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Debit memo #{model.DebitMemoNo} created successfully.";
-
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
-            }
-            else
-            {
+                await IncludeSelectLists(viewModel, cancellationToken);
                 ModelState.AddModelError("", "The information you submitted is not valid!");
-                return View(model);
+                return View(viewModel);
+            }
+
+            var model = new FilprideDebitMemo
+            {
+                Source = viewModel.Source,
+                TransactionDate = viewModel.TransactionDate,
+                SalesInvoiceId = viewModel.SalesInvoiceId,
+                Quantity = viewModel.Quantity,
+                AdjustedPrice = viewModel.AdjustedPrice,
+                ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                Period = viewModel.Period,
+                Amount = viewModel.Amount,
+                Remarks = viewModel.Remarks,
+                Description = viewModel.Description,
+            };
+
+            var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+
+            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                        .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region -- checking for unposted DM or CM
+
+                if (model.SalesInvoiceId != null)
+                {
+                    var existingSIDMs = (await _unitOfWork.FilprideDebitMemo
+                                  .GetAllAsync(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null, cancellationToken))
+                                  .OrderBy(s => s.DebitMemoId)
+                                  .ToList();
+
+                    if (existingSIDMs.Count > 0)
+                    {
+                        await IncludeSelectLists(viewModel, cancellationToken);
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSIDMs.First().DebitMemoNo}");
+                        return View(viewModel);
+                    }
+
+                    var existingSICMs = (await _unitOfWork.FilprideCreditMemo
+                                      .GetAllAsync(si => si.SalesInvoiceId == model.SalesInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null, cancellationToken))
+                                      .OrderBy(s => s.CreditMemoId)
+                                      .ToList();
+
+                    if (existingSICMs.Count > 0)
+                    {
+                        await IncludeSelectLists(viewModel, cancellationToken);
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSICMs.First().CreditMemoNo}");
+                        return View(viewModel);
+                    }
+                }
+                else
+                {
+                    var existingSVDMs = (await _unitOfWork.FilprideDebitMemo
+                                  .GetAllAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null, cancellationToken))
+                                  .OrderBy(s => s.DebitMemoId)
+                                  .ToList();
+                    if (existingSVDMs.Count > 0)
+                    {
+                        await IncludeSelectLists(viewModel, cancellationToken);
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVDMs.First().DebitMemoNo}");
+                        return View(viewModel);
+                    }
+
+                    var existingSVCMs = (await _unitOfWork.FilprideCreditMemo
+                                      .GetAllAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId && si.PostedBy != null && si.CanceledBy != null && si.VoidedBy != null, cancellationToken))
+                                      .OrderBy(s => s.CreditMemoId)
+                                      .ToList();
+                    if (existingSVCMs.Count > 0)
+                    {
+                        await IncludeSelectLists(viewModel, cancellationToken);
+                        ModelState.AddModelError("", $"Can’t proceed to create you have unposted DM/CM. {existingSVCMs.First().CreditMemoNo}");
+                        return View(viewModel);
+                    }
+                }
+
+                #endregion -- checking for unposted DM or CM
+
+
+                model.CreatedBy = _userManager.GetUserName(this.User);
+                model.Company = companyClaims;
+
+                if (model.Source == "Sales Invoice")
+                {
+                    model.ServiceInvoiceId = null;
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSalesInvoice!.Type, cancellationToken);
+                    model.Type = existingSalesInvoice.Type;
+                    model.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                }
+                else if (model.Source == "Service Invoice")
+                {
+                    model.SalesInvoiceId = null;
+                    model.DebitMemoNo = await _unitOfWork.FilprideDebitMemo.GenerateCodeAsync(companyClaims, existingSv!.Type, cancellationToken);
+                    model.Type = existingSv.Type;
+                    model.DebitAmount = model.Amount ?? 0;
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.FilprideDebitMemo.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Debit memo #{model.DebitMemoNo} created successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await IncludeSelectLists(viewModel, cancellationToken);
+                _logger.LogError(ex, "Failed to create debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideDebitMemos == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -352,12 +353,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region --Retrieval of SI
 
-                            var existingSI = await _dbContext
-                                .FilprideSalesInvoices
-                                .Include(c => c.Customer)
-                                .Include(s => s.Product)
-                                .Include(s => s.CustomerOrderSlip)
-                                .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
+                            var existingSI = await _unitOfWork
+                                .FilprideSalesInvoice
+                                .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
                             #endregion --Retrieval of SI
 
@@ -396,7 +394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             sales.DocumentId = model.SalesInvoiceId;
                             sales.Company = model.Company;
 
-                            await _dbContext.AddAsync(sales, cancellationToken);
+                            await _dbContext.FilprideSalesBooks.AddAsync(sales, cancellationToken);
 
                             #endregion --Sales Book Recording(SI)--
 
@@ -527,10 +525,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         if (model.ServiceInvoiceId != null)
                         {
-                            var existingSv = await _dbContext.FilprideServiceInvoices
-                                .Include(sv => sv.Customer)
-                                .Include(sv => sv.Service)
-                                .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+                            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                                .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
 
                             #region -- Computation --
 
@@ -704,11 +700,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Debit Memo has been Posted.";
                     }
@@ -730,84 +725,92 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideDebitMemos.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo);
-                        await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Debit Memo has been Voided.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
-
-            return NotFound();
-        }
-
-        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
-        {
-            var model = await _dbContext.FilprideDebitMemos.FindAsync(id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
+                if (model.VoidedBy == null)
                 {
-                    if (model.CanceledBy == null)
+                    if (model.PostedBy != null)
                     {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.CancellationRemarks = cancellationRemarks;
-                        model.Status = nameof(Status.Canceled);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Debit Memo has been Cancelled.";
+                        model.PostedBy = null;
                     }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Voided);
+
+                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideSalesBook>(crb => crb.SerialNo == model.DebitMemoNo, cancellationToken);
+                    await _unitOfWork.FilprideDebitMemo.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.DebitMemoNo, cancellationToken);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Debit Memo has been Voided.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                TempData["info"] = "Debit Memo is already Voided.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model.CanceledBy == null)
+                {
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.CancellationRemarks = cancellationRemarks;
+                    model.Status = nameof(Status.Canceled);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled debit memo# {model.DebitMemoNo}", "Debit Memo", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await _unitOfWork.SaveAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Debit Memo has been Cancelled.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                TempData["info"] = "Debit Memo is already Cancelled.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -817,14 +820,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         [HttpGet]
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideServiceInvoices.FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == svId, cancellationToken);
+            var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == svId, cancellationToken);
             if (model != null)
             {
                 return Json(new
@@ -840,12 +841,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideDebitMemos == null)
+            if (id == null)
             {
                 return NotFound();
             }
-
-            var companyClaims = await GetCompanyClaimAsync();
 
             var debitMemo = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
@@ -854,118 +853,129 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            debitMemo.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && si.PostedBy != null)
-                .Select(si => new SelectListItem
-                {
-                    Value = si.SalesInvoiceId.ToString(),
-                    Text = si.SalesInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-            debitMemo.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(sv => sv.Company == companyClaims && sv.PostedBy != null)
-                .Select(sv => new SelectListItem
-                {
-                    Value = sv.ServiceInvoiceId.ToString(),
-                    Text = sv.ServiceInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
+            var viewModel = new DebitMemoViewModel
+            {
+                DebitMemoId = debitMemo.DebitMemoId,
+                Source = debitMemo.Source,
+                TransactionDate = debitMemo.TransactionDate,
+                SalesInvoiceId = debitMemo.SalesInvoiceId,
+                Quantity = debitMemo.Quantity,
+                AdjustedPrice = debitMemo.AdjustedPrice,
+                ServiceInvoiceId = debitMemo.ServiceInvoiceId,
+                Period = debitMemo.Period,
+                Amount = debitMemo.Amount,
+                Remarks = debitMemo.Remarks,
+                Description = debitMemo.Description,
+            };
 
-            return View(debitMemo);
+            await IncludeSelectLists(viewModel, cancellationToken);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideDebitMemo model, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(DebitMemoViewModel viewModel, CancellationToken cancellationToken)
         {
-            var existingSalesInvoice = await _dbContext
-                        .FilprideSalesInvoices
-                        .Include(c => c.Customer)
-                        .Include(s => s.Product)
-                        .FirstOrDefaultAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId);
-
-            var existingSv = await _dbContext.FilprideServiceInvoices
-                        .Include(sv => sv.Customer)
-                        .FirstOrDefaultAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingDM = await _dbContext
-                                    .FilprideDebitMemos
-                                    .FirstOrDefaultAsync(dm => dm.DebitMemoId == model.DebitMemoId);
-
-                    if (existingDM == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (model.Source == "Sales Invoice")
-                    {
-                        model.ServiceInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingDM.TransactionDate = model.TransactionDate;
-                        existingDM.SalesInvoiceId = model.SalesInvoiceId;
-                        existingDM.Quantity = model.Quantity;
-                        existingDM.AdjustedPrice = model.AdjustedPrice;
-                        existingDM.Description = model.Description;
-                        existingDM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
-                    }
-                    else if (model.Source == "Service Invoice")
-                    {
-                        model.SalesInvoiceId = null;
-
-                        #region -- Saving Default Enries --
-
-                        existingDM.TransactionDate = model.TransactionDate;
-                        existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
-                        existingDM.Period = model.Period;
-                        existingDM.Amount = model.Amount;
-                        existingDM.Description = model.Description;
-                        existingDM.Remarks = model.Remarks;
-
-                        #endregion -- Saving Default Enries --
-
-                        existingDM.DebitAmount = model.Amount ?? 0;
-                    }
-
-                    existingDM.EditedBy = _userManager.GetUserName(User);
-                    existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Debit Memo edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                await IncludeSelectLists(viewModel, cancellationToken);
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(viewModel);
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            var model = new FilprideDebitMemo
+            {
+                DebitMemoId = viewModel.DebitMemoId,
+                Source = viewModel.Source,
+                TransactionDate = viewModel.TransactionDate,
+                SalesInvoiceId = viewModel.SalesInvoiceId,
+                Quantity = viewModel.Quantity,
+                AdjustedPrice = viewModel.AdjustedPrice,
+                ServiceInvoiceId = viewModel.ServiceInvoiceId,
+                Period = viewModel.Period,
+                Amount = viewModel.Amount,
+                Remarks = viewModel.Remarks,
+                Description = viewModel.Description,
+            };
+
+            var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
+
+            var existingSv = await _unitOfWork.FilprideServiceInvoice
+                        .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingDM = await _unitOfWork.FilprideDebitMemo
+                    .GetAsync(dm => dm.DebitMemoId == model.DebitMemoId, cancellationToken);
+
+                if (existingDM == null)
+                {
+                    return NotFound();
+                }
+
+                if (model.Source == "Sales Invoice")
+                {
+                    model.ServiceInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingDM.TransactionDate = model.TransactionDate;
+                    existingDM.SalesInvoiceId = model.SalesInvoiceId;
+                    existingDM.Quantity = model.Quantity;
+                    existingDM.AdjustedPrice = model.AdjustedPrice;
+                    existingDM.Description = model.Description;
+                    existingDM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                }
+                else if (model.Source == "Service Invoice")
+                {
+                    model.SalesInvoiceId = null;
+
+                    #region -- Saving Default Enries --
+
+                    existingDM.TransactionDate = model.TransactionDate;
+                    existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
+                    existingDM.Period = model.Period;
+                    existingDM.Amount = model.Amount;
+                    existingDM.Description = model.Description;
+                    existingDM.Remarks = model.Remarks;
+
+                    #endregion -- Saving Default Enries --
+
+                    existingDM.DebitAmount = model.Amount ?? 0;
+                }
+
+                existingDM.EditedBy = _userManager.GetUserName(User);
+                existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Debit Memo edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await IncludeSelectLists(viewModel, cancellationToken);
+                _logger.LogError(ex, "Failed to edit debit memo. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
@@ -984,7 +994,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of debit memo# {dm.DebitMemoNo}", "Debit Memo", dm.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -1010,13 +1020,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _dbContext.FilprideDebitMemos
-                .Where(dm => recordIds.Contains(dm.DebitMemoId))
-                .Include(dm => dm.SalesInvoice)
-                .Include(dm => dm.ServiceInvoice)
-                .ThenInclude(sv => sv!.Service)
-                .OrderBy(dm => dm.DebitMemoNo)
-                .ToListAsync();
+            var selectedList = (await _unitOfWork.FilprideDebitMemo
+                    .GetAllAsync(dm => recordIds.Contains(dm.DebitMemoId)))
+                    .OrderBy(dm => dm.DebitMemoNo)
+                    .ToList();
 
             // Create the Excel package
             using (var package = new ExcelPackage())
@@ -1252,12 +1259,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllDebitMemoIds()
+        public async Task<IActionResult> GetAllDebitMemoIds()
         {
-            var dmIds = _dbContext.FilprideDebitMemos
-                                     .Where(dm => dm.Type == nameof(DocumentType.Documented))
-                                     .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
-                                     .ToList();
+            var dmIds = (await _unitOfWork.FilprideDebitMemo
+                 .GetAllAsync(dm => dm.Type == nameof(DocumentType.Documented)))
+                 .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
+                 .ToList();
 
             return Json(dmIds);
         }
