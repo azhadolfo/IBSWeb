@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
@@ -62,7 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
@@ -71,17 +70,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            if (view == nameof(DynamicView.CollectionReceipt))
+            if (view != nameof(DynamicView.CollectionReceipt))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", collectionReceipts);
+                return View();
             }
 
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
+
+            return View("ExportIndex", collectionReceipts);
+
         }
 
         public IActionResult ServiceInvoiceIndex()
@@ -120,7 +120,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -139,7 +139,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -208,15 +208,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == viewModel.CustomerId && si.PostedBy != null)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == viewModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -225,7 +227,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
-                TempData["warning"] = "Please input atleast one type form of payment";
+                TempData["warning"] = "Please input at least one type form of payment";
                 return View(viewModel);
             }
 
@@ -388,18 +390,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims
-                             && !si.IsPaid
-                             && si.CustomerId == viewModel.CustomerId
-                             && si.PostedBy != null)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == viewModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -583,15 +584,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ReferenceNo = existingModel.ReferenceNo,
                 Remarks = existingModel.Remarks,
                 MultipleSIId = existingModel.MultipleSIId!,
-                SalesInvoices = await _dbContext.FilprideSalesInvoices
-                    .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
-                    .OrderBy(si => si.SalesInvoiceId)
+                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                                           && !si.IsPaid
+                                           && si.CustomerId == existingModel.CustomerId
+                                           && si.PostedBy != null, cancellationToken))
+                    .OrderBy(s => s.SalesInvoiceId)
                     .Select(s => new SelectListItem
                     {
                         Value = s.SalesInvoiceId.ToString(),
                         Text = s.SalesInvoiceNo
                     })
-                    .ToListAsync(cancellationToken),
+                    .ToList(),
                 CashAmount = existingModel.CashAmount,
                 CheckBranch = existingModel.CheckBranch,
                 CheckNo = existingModel.CheckNo,
@@ -637,15 +640,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
-                .OrderBy(si => si.SalesInvoiceId)
+            existingModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == existingModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -871,15 +876,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            viewModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == viewModel.CustomerId && si.PostedBy != null)
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && !si.IsPaid
+                                   && si.CustomerId == viewModel.CustomerId
+                                   && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.ServiceInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.ServiceInvoiceId.ToString(),
                     Text = s.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -1027,11 +1035,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var invoices = await _dbContext
-                .FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == customerNo && si.PostedBy != null)
+            var invoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && !si.IsPaid
+                                   && si.CustomerId == customerNo
+                                   && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.SalesInvoiceId)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
@@ -1047,11 +1057,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var invoices = await _dbContext
-                .FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
+            var invoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && si.CustomerId == customerNo
+                                   && !si.IsPaid
+                                   && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.ServiceInvoiceId)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
@@ -1131,6 +1143,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
                 });
             }
+
             return Json(null);
         }
 
@@ -1165,8 +1178,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     Amount = netDiscount,
-                    AmountPaid = si.AmountPaid,
-                    Balance = si.Balance,
+                    si.AmountPaid,
+                    si.Balance,
                     WithholdingTax = withHoldingTaxAmount,
                     WithholdingVat = withHoldingVatAmount,
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
@@ -1190,8 +1203,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     Amount = netDiscount,
-                    AmountPaid = sv.AmountPaid,
-                    Balance = sv.Balance,
+                    sv.AmountPaid,
+                    sv.Balance,
                     WithholdingTax = withHoldingTaxAmount,
                     WithholdingVat = withHoldingVatAmount,
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
@@ -1230,15 +1243,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ReferenceNo = existingModel.ReferenceNo,
                 Remarks = existingModel.Remarks,
                 SalesInvoiceId = existingModel.SalesInvoiceId ?? 0,
-                SalesInvoices = await _dbContext.FilprideSalesInvoices
-                    .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
-                    .OrderBy(si => si.SalesInvoiceId)
+                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                        && !si.IsPaid
+                        && si.CustomerId == existingModel.CustomerId
+                        && si.PostedBy != null, cancellationToken))
+                    .OrderBy(s => s.SalesInvoiceId)
                     .Select(s => new SelectListItem
                     {
                         Value = s.SalesInvoiceId.ToString(),
                         Text = s.SalesInvoiceNo
                     })
-                    .ToListAsync(cancellationToken),
+                    .ToList(),
                 CashAmount = existingModel.CashAmount,
                 CheckDate = existingModel.CheckDate,
                 CheckNo = existingModel.CheckNo,
@@ -1284,15 +1299,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == viewModel.CustomerId)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == existingModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -1461,12 +1478,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 TempData["success"] = "Collection receipt successfully updated.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
@@ -1511,18 +1527,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ReferenceNo = existingModel.ReferenceNo,
                 Remarks = existingModel.Remarks,
                 ServiceInvoiceId = existingModel.ServiceInvoiceId ?? 0,
-                ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                    .Where(si => si.Company == companyClaims
+                ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(si => si.Company == companyClaims
                                  && !si.IsPaid
                                  && si.CustomerId == existingModel.CustomerId
-                                 && si.PostedBy != null)
+                                 && si.PostedBy != null, cancellationToken))
                     .OrderBy(si => si.ServiceInvoiceId)
                     .Select(s => new SelectListItem
                     {
                         Value = s.ServiceInvoiceId.ToString(),
                         Text = s.ServiceInvoiceNo
                     })
-                    .ToListAsync(cancellationToken),
+                    .ToList(),
                 CashAmount = existingModel.CashAmount,
                 CheckDate = existingModel.CheckDate,
                 CheckNo = existingModel.CheckNo,
@@ -1568,18 +1584,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims
-                             && !si.IsPaid
-                             && si.CustomerId == existingModel.CustomerId
-                             && si.PostedBy != null)
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(si => si.Company == companyClaims
+                                       && !si.IsPaid
+                                       && si.CustomerId == existingModel.CustomerId
+                                       && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.ServiceInvoiceId)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.CustomerId.ToString(),
+                    Value = s.ServiceInvoiceId.ToString(),
                     Text = s.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
@@ -1748,12 +1764,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 TempData["success"] = "Collection receipt successfully updated.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(ServiceInvoiceIndex));
             }
@@ -1772,72 +1787,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var model = await _unitOfWork.FilprideCollectionReceipt
                 .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.PostedBy == null)
-                    {
-                        model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Posted);
-
-                        List<FilprideOffsettings>? offset = new List<FilprideOffsettings>();
-                        var offsetAmount = 0m;
-
-                        if (model.SalesInvoiceId != null)
-                        {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
-                            offsetAmount = offset.Sum(o => o.Amount);
-                        }
-                        else
-                        {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
-                            offsetAmount = offset.Sum(o => o.Amount);
-                        }
-
-                        await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
-
-                        if (model.SalesInvoiceId != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
-                        }
-                        else if (model.MultipleSIId != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
-                        }
-                        else
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
-                        }
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Posted.";
-                    }
-
-                    return RedirectToAction(nameof(Print), new { id });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Posted);
+                bool isMultipleSi = false;
+
+                List<FilprideOffsettings>? offset;
+
+                decimal offsetAmount;
+                if (model.SalesInvoiceId != null)
+                {
+                    offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
+                }
+                else
+                {
+                    offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
+
+                if (model.SalesInvoiceId != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
+                else if (model.MultipleSIId != null)
+                {
+                    isMultipleSi = true;
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
+                }
+                else
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Posted.";
+
+                return RedirectToAction(isMultipleSi ? nameof(MultipleCollectionPrint) : nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
         }
 
         [Authorize(Roles = "Admin")]
@@ -1845,105 +1859,97 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                if (model.VoidedBy == null)
-                {
-                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                    try
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-                        var series = model.SINo != null ? model.SINo : model.SVNo;
-
-                        var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
-
-                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
-                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
-
-                        if (findOffsetting.Any())
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
-                        }
-                        if (model.SINo != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else if (model.SVNo != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else if (model.MultipleSI != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else
-                        {
-                            TempData["info"] = "No series number found";
-                            return RedirectToAction(nameof(Index));
-                        }
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Voided.";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to void collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                            ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                        await transaction.RollbackAsync(cancellationToken);
-                        TempData["error"] = ex.Message;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+                var series = model.SINo ?? model.SVNo;
+
+                var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
+
+                await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
+                await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
+
+                if (findOffsetting.Any())
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
+                }
+                if (model.SINo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.SVNo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.MultipleSI != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else
+                {
+                    TempData["info"] = "No series number found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Voided.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+            }
+            return RedirectToAction(nameof(Index));
+
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
-                {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index));
-                }
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Cancelled.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -1953,8 +1959,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
@@ -1969,16 +1973,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!cr.IsPrinted)
             {
+                cr.IsPrinted = true;
+
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
-
-                cr.IsPrinted = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
         }
@@ -2045,16 +2048,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (findIdOfCR != null && !findIdOfCR.IsPrinted)
             {
+                findIdOfCR.IsPrinted = true;
+
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", findIdOfCR.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                findIdOfCR.IsPrinted = true;
-                await _dbContext.SaveChangesAsync(cancellationToken);
             }
             return RedirectToAction(nameof(MultipleCollectionPrint), new { id });
         }
@@ -2075,12 +2078,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _dbContext.FilprideCollectionReceipts
-                .Where(cr => recordIds.Contains(cr.CollectionReceiptId))
-                .Include(cr => cr.SalesInvoice)
-                .Include(cr => cr.ServiceInvoice)
-                .OrderBy(cr => cr.CollectionReceiptNo)
-                .ToListAsync();
+            var selectedList = await _unitOfWork.FilprideCollectionReceipt
+                .GetAllAsync(cr => recordIds.Contains(cr.CollectionReceiptId));
 
             using (var package = new ExcelPackage())
             {
@@ -2342,7 +2341,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Collection Receipt Export (Multiple SI)--
 
-                List<FilprideSalesInvoice> getSalesInvoice = new List<FilprideSalesInvoice>();
+                List<FilprideSalesInvoice> getSalesInvoice;
 
                 getSalesInvoice = _dbContext.FilprideSalesInvoices
                     .AsEnumerable()
@@ -2427,13 +2426,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllCollectionReceiptIds()
+        public async Task<IActionResult> GetAllCollectionReceiptIds()
         {
-            var crIds = _dbContext.FilprideCollectionReceipts
-                                     .Where(cr => cr.Type == nameof(DocumentType.Documented))
-                                     .Select(cr => cr.CollectionReceiptId) // Assuming Id is the primary key
+            var crIds = (await _unitOfWork.FilprideCollectionReceipt
+                                     .GetAllAsync(cr => cr.Type == nameof(DocumentType.Documented)))
+                                     .Select(cr => cr.CollectionReceiptId)
                                      .ToList();
-
             return Json(crIds);
         }
     }
