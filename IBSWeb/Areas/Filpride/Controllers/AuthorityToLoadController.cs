@@ -238,7 +238,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 TempData["success"] = $"ATL# {model.AuthorityToLoadNo} booked successfully.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
                 return RedirectToAction(nameof(Index));
@@ -361,7 +360,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(existingAtl.CreatedBy, $"Update validity date of atl# {existingAtl.AuthorityToLoadNo}", "Authority To Load", companyClaims);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
                 return Json(new { success = true });
