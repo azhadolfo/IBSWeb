@@ -1,5 +1,4 @@
-﻿@using IBS.Utility.Helpers
-@model FilprideCollectionReceipt
+﻿@model CollectionReceiptMultipleSiViewModel
 
 @{
     ViewData["Title"] = "Create Multiple Collection For Sales";
@@ -165,12 +164,12 @@
                 <div class="form-group my-3">
                     <label class="form-label fst-italic">If applicable, upload the certificate.</label>
                     <div class="mb-3">
-                        <label for="bir2306" class="form-label">BIR 2306 Form</label>
-                        <input class="form-control form-control-sm w-25" name="bir2306" type="file">
+                        <label asp-for="Bir2306" class="form-label">BIR 2306 Form</label>
+                        <input class="form-control form-control-sm w-25" asp-for="Bir2306" type="file">
                     </div>
                     <div class="mb-3">
-                        <label for="bir2307" class="form-label">BIR 2307 Form</label>
-                        <input class="form-control form-control-sm w-25" name="bir2307" type="file">
+                        <label asp-for="Bir2307" class="form-label">BIR 2307 Form</label>
+                        <input class="form-control form-control-sm w-25" asp-for="Bir2307" type="file">
                     </div>
                 </div>
 

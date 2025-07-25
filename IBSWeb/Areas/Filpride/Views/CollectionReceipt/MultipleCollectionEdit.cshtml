@@ -1,8 +1,8 @@
-﻿@model FilprideCollectionReceipt
+﻿@model CollectionReceiptMultipleSiViewModel
 
 @{
-    ViewData["Title"] = "Edit Multiple Collection For Sales";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["Title"] = "Edit Multiple Collection For Sales";
+Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -20,27 +20,27 @@
         </div>
     </div>
     <div class="card-body p-4">
-        <form asp-action="MultipleCollectionEdit" method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="CollectionReceiptId" />
             <div class="row">
                 <div class="col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <input type="hidden" asp-for="CollectionReceiptId" />
                     <div class="form-group mb-3">
-                        <label class="control-label">Customers</label>
+                        <label class="control-label">Customers<span class="required">*</span></label>
                         <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2" style="width:100%" required>
                             <option></option>
                         </select>
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label asp-for="TransactionDate" class="control-label">Transaction Date</label>
+                        <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
                         <input asp-for="TransactionDate" type="Date" class="form-control" />
                         <span asp-validation-for="TransactionDate" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <input asp-for="ReferenceNo" id="floatingInput" type="text" class="form-control" placeholder="Reference #" />
-                        <label for="floatingInput" class="control-label">Reference #</label>
+                        <label for="floatingInput" class="control-label">Reference# (Manual CR#)<span class="required">*</span></label>
                         <span asp-validation-for="ReferenceNo" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
@@ -49,7 +49,7 @@
                         <span asp-validation-for="Remarks" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-3">
-                        <label class="control-label">SI NO.</label>
+                        <label class="control-label">SI NO.<span class="required">*</span></label>
                         <select asp-for="MultipleSIId" id="invoices" asp-items="@Model.SalesInvoices" class="form-select js-multiple siNo" multiple="multiple" style="width:100%">
                             <option></option>
                         </select>
@@ -57,162 +57,130 @@
                     </div>
                     <table class="table">
                         <thead>
-                            <tr>
-                                <th class="w-100">SI List</th>
-                                <th class="w-20">Amount</th>
-                            </tr>
+                        <tr>
+                            <th class="w-100">SI List</th>
+                            <th class="w-20">Amount</th>
+                        </tr>
                         </thead>
                         <tbody class="siList">
                         </tbody>
                     </table>
                 </div>
+
                 <div class="col-8">
                     <div class="row mb-3">
                         <table style="border:dotted 1px;">
                             <thead class="m-2">
-                                <tr>
-                                    <th colspan="6" class="text-center py-4">Invoice Details</th>
-                                </tr>
+                            <tr>
+                                <th colspan="6" class="text-center py-4">Invoice Details</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <th style="width:14%; padding-left:20px;">SI No's</th>
-                                    <th class="text-end" style="width:14%;">Invoice Amount</th>
-                                    <th class="text-end" style="width:14%;">WVat</th>
-                                    <th class="text-end" style="width:14%;">EWT</th>
-                                    <th class="text-end" style="width:14%; padding-left:20px;">Less EWT/WVat</th>
-                                    <th class="text-end" style="width:14%;">Amount Paid</th>
-                                    <th class="text-end" style="width:14%; padding-right:20px;">Balance</th>
-                                </tr>
+                            <tr>
+                                <th style="width:14%; padding-left:20px;">SI No's</th>
+                                <th class="text-end" style="width:14%;">Invoice Amount</th>
+                                <th class="text-end" style="width:14%;">WVat</th>
+                                <th class="text-end" style="width:14%;">EWT</th>
+                                <th class="text-end" style="width:14%; padding-left:20px;">Less EWT/WVat</th>
+                                <th class="text-end" style="width:14%;">Amount Paid</th>
+                                <th class="text-end" style="width:14%; padding-right:20px;">Balance</th>
+                            </tr>
                             </tbody>
                             <tbody class="siAmount">
                             </tbody>
                             <tbody>
-                                <tr style="border-bottom:double;">
-                                    <td class="pt-1"></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end fw-bold p-3">Grand Total:</td>
-                                    <td class="text-end" id="grandTotalRRAmount">0.000</td>
-                                    <td class="text-end" id="grandTotalVatAmount">0.000</td>
-                                    <td class="text-end" id="grandTotalEWTAmount">0.000</td>
-                                    <td class="text-end" id="grandTotalNetOfEWT" style="width:14%; padding-left:20px;">0.000</td>
-                                    <td class="text-end" id="grandTotalAmountPaid">0.000</td>
-                                    <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.000</td>
-                                </tr>
+                            <tr style="border-bottom:double;">
+                                <td class="pt-1"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-end fw-bold p-3">Grand Total:</td>
+                                <td class="text-end" id="grandTotalRRAmount">0.000</td>
+                                <td class="text-end" id="grandTotalVatAmount">0.000</td>
+                                <td class="text-end" id="grandTotalEWTAmount">0.000</td>
+                                <td class="text-end" id="grandTotalNetOfEWT" style="padding-left:20px;">0.000</td>
+                                <td class="text-end" id="grandTotalAmountPaid">0.000</td>
+                                <td class="text-end" id="grandTotalBalance" style="padding-right:20px;">0.000</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
                 <table class="table-bordered w-100">
                     <tbody>
-                        <tr>
-                            <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT</td>
-                        </tr>
-                        <tr>
-                            <td class="text-center" style="width:25%"></td>
-                            <td class="text-center" style="width:15%">DATE</td>
-                            <td class="text-center" style="width:15%">CHK #</td>
-                            <td class="text-center" style="width:15%">BANK</td>
-                            <td class="text-center" style="width:15%">BRANCH</td>
-                            <td class="text-center" style="width:15%">AMOUNT</td>
-                        </tr>
+                    <tr>
+                        <td colspan="6" style="padding-left:20px;">FORM OF PAYMENT<span class="required">*</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-center" style="width:25%"></td>
+                        <td class="text-center" style="width:15%">DATE</td>
+                        <td class="text-center" style="width:15%">CHK #</td>
+                        <td class="text-center" style="width:15%">BANK</td>
+                        <td class="text-center" style="width:15%">BRANCH</td>
+                        <td class="text-center" style="width:15%">AMOUNT</td>
+                    </tr>
 
-                        <tr>
-                            <td style="padding-left:20px;">Cash</td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input asp-for="CashAmount" style="border:none" value="@Model.CashAmount" class="form-control moneyInput" /></td>
-                        </tr>
+                    <tr>
+                        <td style="padding-left:20px;">Cash</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="CashAmount" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
 
-                        <tr>
-                            <td style="padding-left:20px;">Check</td>
-                            <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
-                            <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
-                            <td>
-                                <select asp-for="BankId" asp-items="@Model.BankAccounts" 
-                                        class="form-select js-select2">
-                                    <option></option>
-                                </select>
-                            </td>
-                            <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
-                            <td><input asp-for="CheckAmount" style="border:none" value="@Model.CheckAmount" class="form-control moneyInput" /></td>
-                        </tr>
+                    <tr>
+                        <td style="padding-left:20px;">Check</td>
+                        <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
+                        <td>
+                            <select asp-for="BankId" asp-items="@Model.BankAccounts"
+                                    class="form-select js-select2">
+                                <option></option>
+                            </select>
+                        </td>
+                        <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
 
-                        <tr>
-                            <td style="padding-left:20px;">EWT</td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input asp-for="EWT" style="border:none" value="@Model.EWT" class="form-control moneyInput" /></td>
-                        </tr>
-                        <tr>
-                            <td style="padding-left:20px;">WVAT</td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input style="border:none" class="form-control" disabled /></td>
-                            <td><input asp-for="WVAT" style="border:none" value="@Model.WVAT" class="form-control moneyInput" /></td>
-                        </tr>
+                    <tr>
+                        <td style="padding-left:20px;">EWT</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left:20px;">WVAT</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
                     </tbody>
                 </table>
 
                 <div class="form-group my-3">
                     <label class="form-label fst-italic">If applicable, upload the certificate.</label>
                     <div class="mb-3">
-                        <label for="bir2306" class="form-label">BIR 2306 Form</label>
-                        <input class="form-control form-control-sm w-25" name="bir2306" type="file">
+                        <label asp-for="Bir2306" class="form-label">BIR 2306 Form @(!Model.HasAlready2306 ? "" : "(Replace existing file)")</label>
+                        <input class="form-control form-control-sm w-25" asp-for="Bir2306" type="file">
                     </div>
                     <div class="mb-3">
-                        <label for="bir2307" class="form-label">BIR 2307 Form</label>
-                        <input class="form-control form-control-sm w-25" name="bir2307" type="file">
+                        <label asp-for="Bir2307" class="form-label">BIR 2307 Form @(!Model.HasAlready2307 ? "" : "(Replace existing file)")</label>
+                        <input class="form-control form-control-sm w-25" asp-for="Bir2307" type="file">
                     </div>
                 </div>
-
-                @* <div class="form-group"> *@
-                @*     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry"> *@
-                @*         Add Entry *@
-                @*     </button> *@
-                @*     <table class="table"> *@
-                @*         <thead> *@
-                @*             <tr> *@
-                @*                 <th class="w-100">Account Title</th> *@
-                @*                 <th class="w-20"> *@
-                @*                     Amount *@
-                @*                 </th> *@
-                @*                 <th></th> *@
-                @*             </tr> *@
-                @*         </thead> *@
-                @*         <tbody id="accountingEntriesBody"> *@
-                @*             @for (int i = 0; i < ViewBag.Offsettings.Count; i++) *@
-                @*             { *@
-                @*                 <tr> *@
-                @*                     <td> *@
-                @*                         <input type="hidden" name="accountTitle" value="@ViewBag.Offsettings[i].AccountNo" /> *@
-                @*                         <input type="text" name="accountTitleText" value="@ViewBag.Offsettings[i].AccountNo  @ViewBag.Offsettings[i].AccountTitle" style="border:none; width: 70%" readonly /> *@
-                @*                     </td> *@
-                @*                     <td> *@
-                @*                         <input type="text" name="accountAmount" value="@ViewBag.Offsettings[i].Amount" style="border:none" readonly /> *@
-                @*                     </td> *@
-                @*                     <td> *@
-                @*                         <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">Remove</button> *@
-                @*                     </td> *@
-                @*                 </tr> *@
-                @*             } *@
-                @*         </tbody> *@
-                @*     </table> *@
-                @* </div> *@
 
                 <br />
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="submit" class="btn btn-primary form-control">Save</button>
+                        <button type="submit" class="btn btn-primary form-control">Update</button>
                     </div>
                     <div class="col-6 col-md-3">
-                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
+                        <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border form-control">Back to List</a>
                     </div>
                 </div>
             </div>
@@ -253,153 +221,150 @@
     </div>
 </div>
 
-
-
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-    <script>
-        $(document).ready(function () {
-            $("#CustomerId").change(function () {
-                var customerNo = $(this).val();
+@{
+await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
 
-                $.ajax({
-                    url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
-                    type: "GET",
-                    data: { customerNo: customerNo },
-                    success: function (data) {
+<script>
+    // Store existing selected invoices for edit mode
+    var existingSelectedInvoices = @Html.Raw(Json.Serialize(Model.MultipleSIId));
+    var existingSIAmounts = @Html.Raw(Json.Serialize(Model.SIMultipleAmount));
+</script>
 
-                        $("#invoices").empty();
+<script>
+    $(document).ready(function () {
+        // Initialize customer change handler
+        $("#CustomerId").change(function () {
+            var customerNo = $(this).val();
 
-                        // Check if data is an array and not null
-                        if (Array.isArray(data) && data.length > 0) {
+            $.ajax({
+                url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
+                type: "GET",
+                data: { customerNo: customerNo },
+                success: function (data) {
+                    $("#invoices").empty();
 
-                            $("#invoices").append('<option>');
+                    if (Array.isArray(data) && data.length > 0) {
+                        $("#invoices").append('<option>');
 
-                            // Iterate over the array and append options
-                            $.each(data, function (index, item) {
-                                $("#invoices").append($('<option>', {
-                                    value: item.value,   // Use the correct property for value
-                                    text: item.text      // Use the correct property for text
-                                }));
-                            });
-                        } else {
-                            // Handle the case where data is null or empty
-                            console.log("No sales invoices found for the selected customer.");
+                        $.each(data, function (index, item) {
+                            $("#invoices").append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+
+                        // Re-select existing invoices after populating options
+                        if (existingSelectedInvoices && existingSelectedInvoices.length > 0) {
+                            $("#invoices").val(existingSelectedInvoices).trigger('change');
                         }
+                    } else {
+                        console.log("No sales invoices found for the selected customer.");
                     }
-                });
+                }
             });
         });
-    </script>
 
-    <script>
-        function saveAccountingEntry() {
-            // Get the values from the modal inputs
-            var accountTitle = $("#AccountTitle").val();
-            var accountTitleText = $("#AccountTitle option:selected").text();
-            var accountAmount = parseNumber($("#AccountAmount").val());
+        // Trigger customer change on page load to populate invoices
+        if ($("#CustomerId").val()) {
+            $("#CustomerId").trigger('change');
+        }
+    });
+</script>
 
-            if (accountAmount === 0) {
-                event.preventDefault();
-                alert('Please input amount');
-                return;
-            } else if (accountTitleText === "") {
-                event.preventDefault();
-                alert('Please select Account No.!');
-                return;
-            }
+<script>
+    function saveAccountingEntry() {
+        var accountTitle = $("#AccountTitle").val();
+        var accountTitleText = $("#AccountTitle option:selected").text();
+        var accountAmount = parseNumber($("#AccountAmount").val());
 
-            // Format debit and credit values with commas and two decimal places
-            var formattedAmount = formatNumber(accountAmount);
-
-            // Create a new row with the text only and a hidden input for the value
-            var newRow = `<tr>
-                                                                                        <td>
-                                                                                            <input type='hidden' name='accountTitle' value='${accountTitle}' />
-                                                                                            <input type='text' name='accountTitleText' value='${accountTitleText}' style='border:none' readonly />
-                                                                                        </td>
-                                                                                                    <td><input type='text' name='accountAmount' value='${formattedAmount}' style='border:none' readonly /></td>
-                                                                                        <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
-                                                                                     </tr>`;
-
-            // Append the new row to the table body
-            $("#accountingEntriesBody").append(newRow);
-
-            // Close the modal
-            $("#AddAccEntry").modal("hide");
-
-            // Clear the modal inputs
-            $("#AccountTitle").val(""); // Reset the select to its default state
-            $("#AccountTitle").trigger("change"); // Trigger change event for the select
-            $("#AccountAmount").val("");
+        if (accountAmount === 0) {
+            event.preventDefault();
+            alert('Please input amount');
+            return;
+        } else if (accountTitleText === "") {
+            event.preventDefault();
+            alert('Please select Account No.!');
+            return;
         }
 
+        var formattedAmount = formatNumber(accountAmount);
 
-        // Function to remove the corresponding row
-        function removeRow(button) {
-            // Get the reference to the button's parent row and remove it
-            $(button).closest("tr").remove();
-        }
+        var newRow = `<tr>
+                                <td>
+                                    <input type='hidden' name='accountTitle' value='${accountTitle}' />
+                                    <input type='text' name='accountTitleText' value='${accountTitleText}' style='border:none' readonly />
+                                </td>
+                                <td><input type='text' name='accountAmount' value='${formattedAmount}' style='border:none' readonly /></td>
+                                <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
+                             </tr>`;
 
-    </script>
-    <script>
-    $(function () {
+        $("#accountingEntriesBody").append(newRow);
+        $("#AddAccEntry").modal("hide");
+        $("#AccountTitle").val("");
+        $("#AccountTitle").trigger("change");
+        $("#AccountAmount").val("");
+    }
+
+    function removeRow(button) {
+        $(button).closest("tr").remove();
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
         const $invoices = $("#invoices");
         const $siList = $(".siList");
         const $siAmount = $(".siAmount");
-        const amounts = @Html.Raw(Json.Serialize(Model.SIMultipleAmount));
-        const siNos = @Html.Raw(Json.Serialize(Model.MultipleSIId));
-
-        handleInvoiceSelection($invoices.val());
 
         $invoices.change(function () {
-            handleInvoiceSelection($invoices.val());
-        });
-
-        function handleInvoiceSelection(selectedSIs) {
+            const selectedInvoices = $invoices.val() || [];
             $siList.empty();
             $siAmount.empty();
 
-            (selectedSIs || []).forEach((siNo, index) => {
+            selectedInvoices.forEach(siNo => {
                 const siText = $invoices.find(`option[value='${siNo}']`).text();
-                const amount = amounts[index] ?? 0;
 
-                appendSIListRow(siNo, siText, amount);
+                appendSIListRow(siNo, siText);
                 appendSIAmountRow(siNo, siText);
 
-                if (siNo) fetchInvoiceBalance(siNo);
+                if (siNo) {
+                    fetchInvoiceBalance(siNo);
+                }
             });
 
             calculateGrandTotalRRAmount();
-        }
+        });
 
-        function appendSIListRow(siNo, siText, amount) {
+        function appendSIListRow(siNo, siText) {
+            // Get existing amount if available
+            var existingAmount = existingSIAmounts[siNo] || '';
+
             $siList.append(`
-                <tr>
-                    <td>
-                        <input type='hidden' value='${siNo}' />
-                        <input type='text' value='${siText}' style='border:none' readonly />
-                    </td>
-                    <td><input type='text' name='SIMultipleAmount' class='inputAmount money' value='${amount}'/></td>
-                </tr>`);
+                    <tr>
+                        <td>
+                            <input type='hidden' value='${siNo}' />
+                            <input type='text' value='${siText}' style='border:none' readonly />
+                        </td>
+                        <td><input type='text' name='SIMultipleAmount' class='inputAmount money paymentAmount_${siNo}' value='${existingAmount}'/></td>
+                    </tr>`);
         }
 
         function appendSIAmountRow(siNo, siText) {
             $siAmount.append(`
-                <tr id='row_${siNo}'>
-                    <td style='padding-left:20px;'>
-                        <input type='hidden' value='${siNo}' />
-                        <input type='text' value='${siText}' style='border:none' readonly />
-                    </td>
-                    <td class="text-end" id='amount_${siNo}'>0.000</td>
-                    <td class="text-end" id='vatAmount_${siNo}'>0.000</td>
-                    <td class="text-end" id='ewtAmount_${siNo}'>0.000</td>
-                    <td class="text-end" id='siAmountNetOfEWT_${siNo}' style="padding-left:20px;">0.000</td>
-                    <td class="text-end" id='amountPaid_${siNo}'>0.000</td>
-                    <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.000</td>
-                </tr>`);
+                    <tr id='row_${siNo}'>
+                        <td style='padding-left:20px;'>
+                            <input type='hidden' value='${siNo}' />
+                            <input type='text' value='${siText}' style='border:none' readonly />
+                        </td>
+                        <td class="text-end" id='amount_${siNo}'>0.000</td>
+                        <td class="text-end" id='vatAmount_${siNo}'>0.000</td>
+                        <td class="text-end" id='ewtAmount_${siNo}'>0.000</td>
+                        <td class="text-end" id='siAmountNetOfEWT_${siNo}' style="padding-left:20px;">0.000</td>
+                        <td class="text-end" id='amountPaid_${siNo}'>0.000</td>
+                        <td class="text-end" id='balance_${siNo}' style="padding-right:20px;">0.000</td>
+                    </tr>`);
         }
 
         function fetchInvoiceBalance(siNo) {
@@ -426,6 +391,11 @@
                     $(`#amountPaid_${siNo}`).text(formatNumber(amountPaid));
                     $(`#balance_${siNo}`).text(formatNumber(balance));
 
+                    // Only set balance if no existing amount
+                    if (!existingSIAmounts[siNo]) {
+                        $(`.paymentAmount_${siNo}`).val(formatNumber(balance));
+                    }
+
                     calculateGrandTotalRRAmount();
                 },
                 error: function (xhr, status, error) {
@@ -435,39 +405,40 @@
         }
 
         function calculateGrandTotalRRAmount() {
-            let totalRR = 0,
-                totalNet = 0,
-                totalVAT = 0,
-                totalEWT = 0,
-                totalNetOfEWT = 0,
-                totalPaid = 0,
-                totalBalance = 0;
+            let grandTotalRRAmount = 0,
+                grandTotalNetAmount = 0,
+                grandTotalVatAmount = 0,
+                grandTotalEWTAmount = 0,
+                grandTotalNetOfEWT = 0,
+                grandTotalAmountPaid = 0,
+                grandTotalBalance = 0;
 
             $(".siAmount tr").each(function () {
                 const $row = $(this);
-                totalRR += parseNumber($row.find("[id^='amount_']").text());
-                totalNet += parseNumber($row.find("[id^='netAmount_']").text());
-                totalVAT += parseNumber($row.find("[id^='vatAmount_']").text());
-                totalEWT += parseNumber($row.find("[id^='ewtAmount_']").text());
-                totalNetOfEWT += parseNumber($row.find("[id^='siAmountNetOfEWT_']").text());
-                totalPaid += parseNumber($row.find("[id^='amountPaid_']").text());
-                totalBalance += parseNumber($row.find("[id^='balance_']").text());
+
+                grandTotalRRAmount += parseNumber($row.find("[id^='amount_']").text());
+                grandTotalNetAmount += parseNumber($row.find("[id^='netAmount_']").text());
+                grandTotalVatAmount += parseNumber($row.find("[id^='vatAmount_']").text());
+                grandTotalEWTAmount += parseNumber($row.find("[id^='ewtAmount_']").text());
+                grandTotalNetOfEWT += parseNumber($row.find("[id^='siAmountNetOfEWT_']").text());
+                grandTotalAmountPaid += parseNumber($row.find("[id^='amountPaid_']").text());
+                grandTotalBalance += parseNumber($row.find("[id^='balance_']").text());
             });
 
-            $("#grandTotalRRAmount").text(formatNumber(totalRR));
-            $("#grandTotalNetAmount").text(formatNumber(totalNet));
-            $("#grandTotalVatAmount").text(formatNumber(totalVAT));
-            $("#grandTotalEWTAmount").text(formatNumber(totalEWT));
-            $("#grandTotalNetOfEWT").text(formatNumber(totalNetOfEWT));
-            $("#grandTotalAmountPaid").text(formatNumber(totalPaid));
-            $("#grandTotalBalance").text(formatNumber(totalBalance));
+            $("#grandTotalRRAmount").text(formatNumber(grandTotalRRAmount));
+            $("#grandTotalNetAmount").text(formatNumber(grandTotalNetAmount));
+            $("#grandTotalVatAmount").text(formatNumber(grandTotalVatAmount));
+            $("#grandTotalEWTAmount").text(formatNumber(grandTotalEWTAmount));
+            $("#grandTotalNetOfEWT").text(formatNumber(grandTotalNetOfEWT));
+            $("#grandTotalAmountPaid").text(formatNumber(grandTotalAmountPaid));
+            $("#grandTotalBalance").text(formatNumber(grandTotalBalance));
         }
     });
 </script>
 
-    <script>
-        $('#AccountTitle').select2({
-            dropdownParent: $('#AddAccEntry')
-        });
-    </script>
+<script>
+    $('#AccountTitle').select2({
+        dropdownParent: $('#AddAccEntry')
+    });
+</script>
 }
