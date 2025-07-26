@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
-using IBS.Models.Filpride.MasterFile;
+using IBS.Models.Filpride.ViewModels;
 using IBS.Services;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
@@ -61,7 +61,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
@@ -70,17 +70,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
-            if (view == nameof(DynamicView.CollectionReceipt))
+            if (view != nameof(DynamicView.CollectionReceipt))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
-                    .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", collectionReceipts);
+                return View();
             }
 
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var collectionReceipts = await _unitOfWork.FilprideCollectionReceipt
+                .GetAllAsync(sv => sv.Company == companyClaims && sv.Type == nameof(DocumentType.Documented), cancellationToken);
+
+            return View("ExportIndex", collectionReceipts);
+
         }
 
         public IActionResult ServiceInvoiceIndex()
@@ -119,7 +120,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -138,7 +139,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -177,7 +178,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> SingleCollectionCreateForSales(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideCollectionReceipt();
+            var viewModel = new CollectionReceiptSingleSiViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -187,15 +188,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.ChartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -204,7 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SingleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
+        public async Task<IActionResult> SingleCollectionCreateForSales(CollectionReceiptSingleSiViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -213,140 +206,161 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            model.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == viewModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Saving default value
-
-                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["warning"] = "Please input atleast one type form of payment";
-                        return View(model);
-                    }
-                    var existingSalesInvoice = await _dbContext.FilprideSalesInvoices
-                                                   .FirstOrDefaultAsync(si => si.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-
-                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
-
-                    if (existingSalesInvoice == null)
-                    {
-                        return NotFound();
-                    }
-
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken);
-
-                    model.SINo = existingSalesInvoice.SalesInvoiceNo;
-                    model.CollectionReceiptNo = generateCRNo;
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Total = computeTotalInModelIfZero;
-                    model.Company = companyClaims;
-                    model.Type = existingSalesInvoice.Type;
-                    model.BankAccountName = bankAccount!.AccountName;
-                    model.BankAccountNumber = bankAccount.AccountNo;
-
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-
-                    decimal offsetAmount = 0;
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var offsettings = new List<FilprideOffsettings>();
-
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        offsettings.Add(
-                            new FilprideOffsettings
-                            {
-                                AccountNo = accountTitle[i],
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = model.CollectionReceiptNo,
-                                Reference = model.SINo,
-                                Amount = currentAccountAmount,
-                                Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
-                            }
-                        );
-                    }
-
-                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                    #endregion --Offsetting function
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create sales invoice single collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["warning"] = "Please input at least one type form of payment";
+                return View(viewModel);
             }
-            else
+
+            if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
-                return View(model);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Saving default value
+
+                var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAsync(si => si.SalesInvoiceId == viewModel.SalesInvoiceId, cancellationToken);
+
+                if (existingSalesInvoice == null)
+                {
+                    return NotFound();
+                }
+
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                var model = new FilprideCollectionReceipt
+                {
+                    CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
+                        .GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken),
+                    SalesInvoiceId = existingSalesInvoice.SalesInvoiceId,
+                    SINo = existingSalesInvoice.SalesInvoiceNo,
+                    CustomerId = viewModel.CustomerId,
+                    TransactionDate = viewModel.TransactionDate,
+                    ReferenceNo = viewModel.ReferenceNo,
+                    Remarks = viewModel.Remarks,
+                    CashAmount = viewModel.CashAmount,
+                    CheckNo = viewModel.CheckNo,
+                    CheckBranch = viewModel.CheckBranch,
+                    CheckDate = viewModel.CheckDate,
+                    CheckAmount = viewModel.CheckAmount,
+                    EWT = viewModel.EWT,
+                    WVAT = viewModel.WVAT,
+                    Total = total,
+                    CreatedBy = User.Identity!.Name,
+                    Company = companyClaims,
+                    Type = existingSalesInvoice.Type,
+                    BankId = bankAccount?.BankAccountId,
+                    BankAccountName = bankAccount?.AccountName,
+                    BankAccountNumber = bankAccount?.AccountNo
+                };
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    model.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    model.F2306FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, model.F2306FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    model.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    model.F2307FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, model.F2307FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                #endregion --Saving default value
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                //
+                // var offsettings = new List<FilprideOffsettings>();
+                //
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     offsettings.Add(
+                //         new FilprideOffsettings
+                //         {
+                //             AccountNo = accountTitle[i],
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = viewModel.CollectionReceiptNo,
+                //             Reference = viewModel.SINo,
+                //             Amount = currentAccountAmount,
+                //             Company = viewModel.Company,
+                //             CreatedBy = viewModel.CreatedBy,
+                //             CreatedDate = viewModel.CreatedDate
+                //         }
+                //     );
+                // }
+                //
+                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+                //
+                // #endregion --Offsetting function
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt",
+                    model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to create sales invoice single collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> MultipleCollectionCreateForSales(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideCollectionReceipt();
+            var viewModel = new CollectionReceiptMultipleSiViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -365,7 +379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MultipleCollectionCreateForSales(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
+        public async Task<IActionResult> MultipleCollectionCreateForSales(CollectionReceiptMultipleSiViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -374,134 +388,168 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            model.BankAccountName = bankAccount!.AccountName;
-            model.BankAccountNumber = bankAccount.AccountNo;
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.Company = companyClaims;
-
-            model.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == viewModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Saving default value
-
-                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["warning"] = "Please input atleast one type form of payment";
-                        return View(model);
-                    }
-
-                    model.MultipleSI = new string[model.MultipleSIId!.Length];
-                    model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
-                    var salesInvoice = new FilprideSalesInvoice();
-                    for (int i = 0; i < model.MultipleSIId.Length; i++)
-                    {
-                        var siId = model.MultipleSIId[i];
-                        salesInvoice = await _dbContext.FilprideSalesInvoices
-                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
-
-                        if (salesInvoice != null)
-                        {
-                            model.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
-                            model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
-                            model.Type = salesInvoice.Type;
-                        }
-                    }
-
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeForSIAsync(companyClaims, model.Type!, cancellationToken);
-
-                    model.CollectionReceiptNo = generateCRNo;
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Total = computeTotalInModelIfZero;
-
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-
-                    decimal offsetAmount = 0;
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var offsettings = new List<FilprideOffsettings>();
-
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        offsettings.Add(
-                            new FilprideOffsettings
-                            {
-                                AccountNo = accountTitle[i],
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = model.CollectionReceiptNo,
-                                Reference = model.SINo,
-                                Amount = currentAccountAmount,
-                                Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
-                            }
-                        );
-                    }
-
-                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                    #endregion --Offsetting function
-
-                    TempData["success"] = "Multilple collection receipt successfully created!";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["warning"] = "Please input at least one type form of payment";
+                return View(viewModel);
             }
-            else
+
+            if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
-                return View(model);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                #region --Saving default value
+
+                var model = new FilprideCollectionReceipt
+                {
+                    TransactionDate = viewModel.TransactionDate,
+                    CustomerId = viewModel.CustomerId,
+                    ReferenceNo = viewModel.ReferenceNo,
+                    Remarks = viewModel.Remarks,
+                    CashAmount = viewModel.CashAmount,
+                    CheckAmount = viewModel.CheckAmount,
+                    CheckNo = viewModel.CheckNo,
+                    CheckBranch = viewModel.CheckBranch,
+                    CheckDate = viewModel.CheckDate,
+                    EWT = viewModel.EWT,
+                    WVAT = viewModel.WVAT,
+                    Total = total,
+                    CreatedBy = User.Identity!.Name,
+                    Company = companyClaims,
+                    BankId = viewModel.BankId,
+                    BankAccountName = bankAccount?.AccountName,
+                    BankAccountNumber = bankAccount?.AccountNo,
+                    MultipleSIId = viewModel.MultipleSIId,
+                    SIMultipleAmount = viewModel.SIMultipleAmount,
+                };
+
+                model.MultipleSI = new string[model.MultipleSIId.Length];
+                model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
+
+                for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
+                {
+                    var siId = viewModel.MultipleSIId[i];
+                    var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(si => si.SalesInvoiceId == siId, cancellationToken);
+
+                    if (salesInvoice == null)
+                    {
+                        throw new InvalidOperationException("Sales Invoice not found");
+                    }
+
+                    model.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
+                    model.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
+
+                    if (model.Type == null)
+                    {
+                        model.Type = salesInvoice.Type;
+                    }
+                }
+
+                model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
+                    .GenerateCodeForSIAsync(companyClaims, model.Type!, cancellationToken);
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    model.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    model.F2306FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, model.F2306FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    model.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    model.F2307FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, model.F2307FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                #endregion --Saving default value
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                // var offsettings = new List<FilprideOffsettings>();
+                //
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     offsettings.Add(
+                //         new FilprideOffsettings
+                //         {
+                //             AccountNo = accountTitle[i],
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = viewModel.CollectionReceiptNo,
+                //             Reference = viewModel.SINo,
+                //             Amount = currentAccountAmount,
+                //             Company = viewModel.Company,
+                //             CreatedBy = viewModel.CreatedBy,
+                //             CreatedDate = viewModel.CreatedDate
+                //         }
+                //     );
+                // }
+                //
+                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+                //
+                // #endregion --Offsetting function
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt",
+                    model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to create sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
             }
         }
 
@@ -519,48 +567,64 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
-            var existingModel = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
 
             if (existingModel == null)
             {
                 return NotFound();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-
-            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
-                .OrderBy(si => si.SalesInvoiceId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SalesInvoiceId.ToString(),
-                    Text = s.SalesInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-
-            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-
-            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-            var findCustomers = await _dbContext.FilprideCustomers
-                .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
+            var viewModel = new CollectionReceiptMultipleSiViewModel
+            {
+                CollectionReceiptId = existingModel.CollectionReceiptId,
+                CustomerId = existingModel.CustomerId,
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                TransactionDate = existingModel.TransactionDate,
+                ReferenceNo = existingModel.ReferenceNo,
+                Remarks = existingModel.Remarks,
+                MultipleSIId = existingModel.MultipleSIId!,
+                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                                           && !si.IsPaid
+                                           && si.CustomerId == existingModel.CustomerId
+                                           && si.PostedBy != null, cancellationToken))
+                    .OrderBy(s => s.SalesInvoiceId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.SalesInvoiceId.ToString(),
+                        Text = s.SalesInvoiceNo
+                    })
+                    .ToList(),
+                CashAmount = existingModel.CashAmount,
+                CheckBranch = existingModel.CheckBranch,
+                CheckNo = existingModel.CheckNo,
+                CheckDate = existingModel.CheckDate,
+                CheckAmount = existingModel.CheckAmount,
+                BankId = existingModel.BankId,
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                EWT = existingModel.EWT,
+                WVAT = existingModel.WVAT,
+                HasAlready2306 = existingModel.F2306FilePath != null,
+                HasAlready2307 = existingModel.F2307FilePath != null,
+                ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                SIMultipleAmount = existingModel.SIMultipleAmount!,
+            };
 
             var offsettings = await _dbContext.FilprideOffsettings
                 .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
                 .ToListAsync(cancellationToken);
 
-            ViewBag.CustomerName = findCustomers?.CustomerName;
             ViewBag.Offsettings = offsettings;
 
-            return View(existingModel);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MultipleCollectionEdit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
+        public async Task<IActionResult> MultipleCollectionEdit(CollectionReceiptMultipleSiViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideCollectionReceipt
-                .GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+                .GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
 
             if (existingModel == null)
             {
@@ -574,201 +638,216 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => !si.IsPaid && si.CustomerId == existingModel.CustomerId && si.Company == companyClaims)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == existingModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Saving default value
-
-                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
-                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["error"] = "Please input atleast one type form of payment";
-                        return View(model);
-                    }
-
-                    existingModel.MultipleSIId = new int[model.MultipleSIId!.Length];
-                    existingModel.MultipleSI = new string[model.MultipleSIId.Length];
-                    existingModel.SIMultipleAmount = new decimal[model.MultipleSIId.Length];
-                    existingModel.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
-                    var salesInvoice = new FilprideSalesInvoice();
-                    for (int i = 0; i < model.MultipleSIId.Length; i++)
-                    {
-                        var siId = model.MultipleSIId[i];
-                        salesInvoice = await _dbContext.FilprideSalesInvoices
-                                    .FirstOrDefaultAsync(si => si.SalesInvoiceId == siId);
-
-                        if (salesInvoice != null)
-                        {
-                            existingModel.MultipleSIId[i] = model.MultipleSIId[i];
-                            existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
-                            existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
-                            existingModel.SIMultipleAmount[i] = model.SIMultipleAmount![i];
-                        }
-                    }
-
-                    existingModel.TransactionDate = model.TransactionDate;
-                    existingModel.ReferenceNo = model.ReferenceNo;
-                    existingModel.Remarks = model.Remarks;
-                    existingModel.CheckDate = model.CheckDate;
-                    existingModel.CheckNo = model.CheckNo;
-                    existingModel.BankId = model.BankId;
-                    existingModel.BankAccountName = bankAccount!.AccountName;
-                    existingModel.BankAccountNumber = bankAccount.AccountNo;
-                    existingModel.CheckBranch = model.CheckBranch;
-                    existingModel.CashAmount = model.CashAmount;
-                    existingModel.CheckAmount = model.CheckAmount;
-                    existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
-                    existingModel.EWT = model.EWT;
-                    existingModel.WVAT = model.WVAT;
-                    existingModel.Total = computeTotalInModelIfZero;
-
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    decimal offsetAmount = 0;
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var findOffsettings = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
-                    .ToListAsync(cancellationToken);
-
-                    var accountTitleSet = new HashSet<string>(accountTitle);
-
-                    // Remove records not in accountTitle
-                    foreach (var offsetting in findOffsettings)
-                    {
-                        if (!accountTitleSet.Contains(offsetting.AccountNo))
-                        {
-                            _dbContext.FilprideOffsettings.Remove(offsetting);
-                        }
-                    }
-
-                    // Dictionary to keep track of AccountNo and their ids for comparison
-                    var accountTitleDict = new Dictionary<string, List<int>>();
-                    foreach (var offsetting in findOffsettings)
-                    {
-                        if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                        {
-                            accountTitleDict[offsetting.AccountNo] = new List<int>();
-                        }
-                        accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                    }
-
-                    // Add or update records
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var accountNo = accountTitle[i];
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                        {
-                            // Update the first matching record and remove it from the list
-                            var offsettingId = ids.First();
-                            ids.RemoveAt(0);
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-
-                            offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                            offsetting.Amount = currentAccountAmount;
-                            offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                            offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                            if (ids.Count == 0)
-                            {
-                                accountTitleDict.Remove(accountNo);
-                            }
-                        }
-                        else
-                        {
-                            // Add new record
-                            var newOffsetting = new FilprideOffsettings
-                            {
-                                AccountNo = accountNo,
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo!,
-                                Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                                Amount = currentAccountAmount,
-                                CreatedBy = _userManager.GetUserName(this.User),
-                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                            };
-                            _dbContext.FilprideOffsettings.Add(newOffsetting);
-                        }
-                    }
-
-                    // Remove remaining records that were duplicates
-                    foreach (var ids in accountTitleDict.Values)
-                    {
-                        foreach (var id in ids)
-                        {
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                            _dbContext.FilprideOffsettings.Remove(offsetting);
-                        }
-                    }
-
-                    #endregion --Offsetting function
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Collection Receipt edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["error"] = "Please input at least one type form of payment";
+                return View(viewModel);
             }
-            else
+
+            if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
-                return View(model);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Saving default value
+
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                existingModel.CustomerId = viewModel.CustomerId;
+                existingModel.TransactionDate = viewModel.TransactionDate;
+                existingModel.ReferenceNo = viewModel.ReferenceNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.CashAmount = viewModel.CashAmount;
+                existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.CheckNo = viewModel.CheckNo;
+                existingModel.CheckBranch = viewModel.CheckBranch;
+                existingModel.CheckDate = viewModel.CheckDate;
+                existingModel.EWT = viewModel.EWT;
+                existingModel.WVAT = viewModel.WVAT;
+                existingModel.Total = total;
+                existingModel.BankId = bankAccount?.BankAccountId;
+                existingModel.BankAccountName = bankAccount?.AccountName;
+                existingModel.BankAccountNumber = bankAccount?.AccountName;
+                existingModel.MultipleSIId = new int[viewModel.MultipleSIId.Length];
+                existingModel.MultipleSI = new string[viewModel.MultipleSIId.Length];
+                existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
+                existingModel.MultipleTransactionDate = new DateOnly[viewModel.MultipleSIId.Length];
+
+                for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
+                {
+                    var siId = viewModel.MultipleSIId[i];
+                    var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                        .GetAsync(si => si.SalesInvoiceId == siId, cancellationToken);
+
+                    if (salesInvoice == null)
+                    {
+                        throw new InvalidOperationException("Sales Invoice not found");
+                    }
+
+                    existingModel.MultipleSIId[i] = viewModel.MultipleSIId[i];
+                    existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
+                    existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
+                    existingModel.SIMultipleAmount[i] = viewModel.SIMultipleAmount[i];
+                }
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    existingModel.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    existingModel.F2306FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, existingModel.F2306FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    existingModel.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    existingModel.F2307FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, existingModel.F2307FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                #endregion --Saving default value
+
+                if (!_dbContext.ChangeTracker.HasChanges())
+                {
+                    TempData["warning"] = "No data changes!";
+                    return View(viewModel);
+                }
+
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                //
+                // var findOffsettings = await _dbContext.FilprideOffsettings
+                // .Where(offset => offset.Source == existingModel.CollectionReceiptNo)
+                // .ToListAsync(cancellationToken);
+                //
+                // var accountTitleSet = new HashSet<string>(accountTitle);
+                //
+                // // Remove records not in accountTitle
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
+                //     {
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // // Dictionary to keep track of AccountNo and their ids for comparison
+                // var accountTitleDict = new Dictionary<string, List<int>>();
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                //     {
+                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
+                //     }
+                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                // }
+                //
+                // // Add or update records
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var accountNo = accountTitle[i];
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                //     {
+                //         // Update the first matching record and remove it from the list
+                //         var offsettingId = ids.First();
+                //         ids.RemoveAt(0);
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+                //
+                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                //         offsetting.Amount = currentAccountAmount;
+                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                //
+                //         if (ids.Count == 0)
+                //         {
+                //             accountTitleDict.Remove(accountNo);
+                //         }
+                //     }
+                //     else
+                //     {
+                //         // Add new record
+                //         var newOffsetting = new FilprideOffsettings
+                //         {
+                //             AccountNo = accountNo,
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = existingModel.CollectionReceiptNo!,
+                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
+                //             Amount = currentAccountAmount,
+                //             CreatedBy = _userManager.GetUserName(this.User),
+                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                //         };
+                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
+                //     }
+                // }
+                //
+                // // Remove remaining records that were duplicates
+                // foreach (var ids in accountTitleDict.Values)
+                // {
+                //     foreach (var id in ids)
+                //     {
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // #endregion --Offsetting function
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to update sales invoice multiple collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
             }
         }
 
         [HttpGet]
         public async Task<IActionResult> CreateForService(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideCollectionReceipt();
+            var viewModel = new CollectionReceiptServiceViewModel();
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -785,7 +864,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateForService(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateForService(CollectionReceiptServiceViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
@@ -794,131 +873,154 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            model.SalesInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == model.CustomerId && si.PostedBy != null)
-                .OrderBy(si => si.ServiceId)
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && !si.IsPaid
+                                   && si.CustomerId == viewModel.CustomerId
+                                   && si.PostedBy != null, cancellationToken))
+                .OrderBy(si => si.ServiceInvoiceId)
                 .Select(s => new SelectListItem
                 {
-                    Value = s.CustomerId.ToString(),
+                    Value = s.ServiceInvoiceId.ToString(),
                     Text = s.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            model.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            if (ModelState.IsValid)
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Saving default value
-
-                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["error"] = "Please input atleast one type form of payment";
-                        return View(model);
-                    }
-                    var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
-                                                   .FirstOrDefaultAsync(si => si.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
-
-                    if (existingServiceInvoice == null)
-                    {
-                        return NotFound();
-                    }
-
-                    var generateCRNo = await _unitOfWork.FilprideCollectionReceipt.GenerateCodeAsync(companyClaims, existingServiceInvoice.Type, cancellationToken);
-
-                    model.SVNo = existingServiceInvoice.ServiceInvoiceNo;
-                    model.CollectionReceiptNo = generateCRNo;
-                    model.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Total = computeTotalInModelIfZero;
-                    model.Company = companyClaims;
-                    model.Type = existingServiceInvoice.Type;
-                    model.BankAccountName = bankAccount!.AccountName;
-                    model.BankAccountNumber = bankAccount.AccountNo;
-
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-
-                    decimal offsetAmount = 0;
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var offsettings = new List<FilprideOffsettings>();
-
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        offsettings.Add(
-                            new FilprideOffsettings
-                            {
-                                AccountNo = accountTitle[i],
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = model.CollectionReceiptNo,
-                                Reference = model.SVNo,
-                                Amount = currentAccountAmount,
-                                Company = model.Company,
-                                CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
-                            }
-                        );
-                    }
-
-                    await _dbContext.AddRangeAsync(offsettings, cancellationToken);
-
-                    #endregion --Offsetting function
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
-                    return RedirectToAction(nameof(ServiceInvoiceIndex));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit service invoice collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["warning"] = "Please input at least one type form of payment";
+                return View(viewModel);
             }
-            else
+
+            if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information you submitted is not valid!";
-                return View(model);
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Saving default value
+
+                var existingServiceInvoice = await _dbContext.FilprideServiceInvoices
+                    .FirstOrDefaultAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId,
+                        cancellationToken);
+
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                if (existingServiceInvoice == null)
+                {
+                    return NotFound();
+                }
+
+                var model = new FilprideCollectionReceipt
+                {
+                    CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
+                        .GenerateCodeForSIAsync(companyClaims, existingServiceInvoice.Type, cancellationToken),
+                    ServiceInvoiceId = existingServiceInvoice.ServiceInvoiceId,
+                    SVNo = existingServiceInvoice.ServiceInvoiceNo,
+                    CustomerId = viewModel.CustomerId,
+                    TransactionDate = viewModel.TransactionDate,
+                    ReferenceNo = viewModel.ReferenceNo,
+                    Remarks = viewModel.Remarks,
+                    CashAmount = viewModel.CashAmount,
+                    CheckNo = viewModel.CheckNo,
+                    CheckBranch = viewModel.CheckBranch,
+                    CheckDate = viewModel.CheckDate,
+                    CheckAmount = viewModel.CheckAmount,
+                    EWT = viewModel.EWT,
+                    WVAT = viewModel.WVAT,
+                    Total = total,
+                    CreatedBy = User.Identity!.Name,
+                    Company = companyClaims,
+                    Type = existingServiceInvoice.Type,
+                    BankId = bankAccount?.BankAccountId,
+                    BankAccountName = bankAccount?.AccountName,
+                    BankAccountNumber = bankAccount?.AccountNo
+                };
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    model.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    model.F2306FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, model.F2306FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    model.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    model.F2307FilePath =
+                        await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, model.F2307FileName!);
+                    model.IsCertificateUpload = true;
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                #endregion --Saving default value
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                // var offsettings = new List<FilprideOffsettings>();
+                //
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     offsettings.Add(
+                //         new FilprideOffsettings
+                //         {
+                //             AccountNo = accountTitle[i],
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = viewModel.CollectionReceiptNo,
+                //             Reference = viewModel.SVNo,
+                //             Amount = currentAccountAmount,
+                //             Company = viewModel.Company,
+                //             CreatedBy = viewModel.CreatedBy,
+                //             CreatedDate = viewModel.CreatedDate
+                //         }
+                //     );
+                // }
+                //
+                // await _dbContext.AddRangeAsync(offsettings, cancellationToken);
+                //
+                // #endregion --Offsetting function
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new collection receipt# {model.CollectionReceiptNo}", "Collection Receipt",
+                    model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Collection receipt #{model.CollectionReceiptNo} created successfully.";
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to create service invoice collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
             }
         }
 
@@ -933,11 +1035,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var invoices = await _dbContext
-                .FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == customerNo && si.PostedBy != null)
+            var invoices = (await _unitOfWork.FilprideSalesInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && !si.IsPaid
+                                   && si.CustomerId == customerNo
+                                   && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.SalesInvoiceId)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
@@ -953,11 +1057,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var invoices = await _dbContext
-                .FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && si.CustomerId == customerNo && !si.IsPaid && si.PostedBy != null)
+            var invoices = (await _unitOfWork.FilprideServiceInvoice
+                .GetAllAsync(si => si.Company == companyClaims
+                                   && si.CustomerId == customerNo
+                                   && !si.IsPaid
+                                   && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.ServiceInvoiceId)
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
@@ -973,17 +1079,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (isSales && !isServices)
             {
-                var si = await _unitOfWork.FilprideSalesInvoice.GetAsync(s => s.SalesInvoiceId == invoiceNo, cancellationToken);
+                var si = await _unitOfWork.FilprideSalesInvoice
+                    .GetAsync(s => s.SalesInvoiceId == invoiceNo, cancellationToken);
 
                 if (si == null)
                 {
                     return NotFound();
                 }
 
-                decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.CustomerOrderSlip!.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.CustomerOrderSlip!.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                var vatType = si.CustomerOrderSlip?.VatType ?? si.Customer!.VatType;
+                var hasEwt = si.CustomerOrderSlip?.HasEWT ?? si.Customer!.WithHoldingTax;
+                var hasWvat = si.CustomerOrderSlip?.HasWVAT ?? si.Customer!.WithHoldingVat;
+
+                var netDiscount = si.Amount - si.Discount;
+                var netOfVatAmount = vatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount)
+                    : netDiscount;
+                var withHoldingTaxAmount = hasEwt
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    : 0;
+                var withHoldingVatAmount = hasWvat
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    : 0;
 
                 return Json(new
                 {
@@ -1006,9 +1123,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                decimal netOfVatAmount = sv.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Total) - sv.Discount : sv.Total - sv.Discount;
-                decimal withHoldingTaxAmount = sv.HasEwt ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = sv.HasWvat ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                var netOfVatAmount = sv.VatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(sv.Total) - sv.Discount
+                    : sv.Total - sv.Discount;
+                var withHoldingTaxAmount = sv.HasEwt
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    : 0;
+                var withHoldingVatAmount = sv.HasWvat
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    : 0;
 
                 return Json(new
                 {
@@ -1020,6 +1143,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
                 });
             }
+
             return Json(null);
         }
 
@@ -1028,26 +1152,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (isSales)
             {
-                var si = await _dbContext
-                    .FilprideSalesInvoices
-                    .Include(filprideSalesInvoice => filprideSalesInvoice.Customer)
-                    .FirstOrDefaultAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
+                var si = await _unitOfWork.FilprideSalesInvoice
+                    .GetAsync(si => siNo.Contains(si.SalesInvoiceId), cancellationToken);
 
                 if (si == null)
                 {
                     return Json(null);
                 }
 
-                decimal netDiscount = si.Amount - si.Discount;
-                decimal netOfVatAmount = si.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount) : netDiscount;
-                decimal withHoldingTaxAmount = si.CustomerOrderSlip.HasEWT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
-                decimal withHoldingVatAmount = si.CustomerOrderSlip.HasWVAT ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
+                var vatType = si.CustomerOrderSlip?.VatType ?? si.Customer!.VatType;
+                var hasEwt = si.CustomerOrderSlip?.HasEWT ?? si.Customer!.WithHoldingTax;
+                var hasWvat = si.CustomerOrderSlip?.HasWVAT ?? si.Customer!.WithHoldingVat;
+
+                var netDiscount = si.Amount - si.Discount;
+                var netOfVatAmount = vatType == SD.VatType_Vatable
+                    ? _unitOfWork.FilprideServiceInvoice.ComputeNetOfVat(netDiscount)
+                    : netDiscount;
+                var withHoldingTaxAmount = hasEwt
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                    : 0;
+                var withHoldingVatAmount = hasWvat
+                    ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
+                    : 0;
 
                 return Json(new
                 {
                     Amount = netDiscount,
-                    AmountPaid = si.AmountPaid,
-                    Balance = si.Balance,
+                    si.AmountPaid,
+                    si.Balance,
                     WithholdingTax = withHoldingTaxAmount,
                     WithholdingVat = withHoldingVatAmount,
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
@@ -1055,10 +1187,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             else
             {
-                var sv = await _dbContext
-                    .FilprideServiceInvoices
-                    .Include(sv => sv.Customer)
-                    .FirstOrDefaultAsync(sv => siNo.Contains(sv.ServiceInvoiceId), cancellationToken);
+                var sv = await _unitOfWork.FilprideServiceInvoice
+                    .GetAsync(sv => siNo.Contains(sv.ServiceInvoiceId), cancellationToken);
 
                 if (sv == null)
                 {
@@ -1073,8 +1203,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new
                 {
                     Amount = netDiscount,
-                    AmountPaid = sv.AmountPaid,
-                    Balance = sv.Balance,
+                    sv.AmountPaid,
+                    sv.Balance,
                     WithholdingTax = withHoldingTaxAmount,
                     WithholdingVat = withHoldingVatAmount,
                     Total = netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)
@@ -1083,13 +1213,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditForSales(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var existingModel = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
 
             if (existingModel == null)
             {
@@ -1103,51 +1234,56 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-
-            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
-                .OrderBy(si => si.SalesInvoiceId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.SalesInvoiceId.ToString(),
-                    Text = s.SalesInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-
-            existingModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
-                .OrderBy(si => si.ServiceInvoiceId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.ServiceInvoiceId.ToString(),
-                    Text = s.ServiceInvoiceNo
-                })
-                .ToListAsync(cancellationToken);
-
-            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-
-            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-            var findCustomers = await _dbContext.FilprideCustomers
-                .FirstOrDefaultAsync(c => c.CustomerId == existingModel.CustomerId, cancellationToken);
+            var viewModel = new CollectionReceiptSingleSiViewModel
+            {
+                CollectionReceiptId = existingModel.CollectionReceiptId,
+                CustomerId = existingModel.CustomerId,
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                TransactionDate = existingModel.TransactionDate,
+                ReferenceNo = existingModel.ReferenceNo,
+                Remarks = existingModel.Remarks,
+                SalesInvoiceId = existingModel.SalesInvoiceId ?? 0,
+                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                        && !si.IsPaid
+                        && si.CustomerId == existingModel.CustomerId
+                        && si.PostedBy != null, cancellationToken))
+                    .OrderBy(s => s.SalesInvoiceId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.SalesInvoiceId.ToString(),
+                        Text = s.SalesInvoiceNo
+                    })
+                    .ToList(),
+                CashAmount = existingModel.CashAmount,
+                CheckDate = existingModel.CheckDate,
+                CheckNo = existingModel.CheckNo,
+                BankId = existingModel.BankId,
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                CheckBranch = existingModel.CheckBranch,
+                CheckAmount = existingModel.CheckAmount,
+                EWT = existingModel.EWT,
+                WVAT = existingModel.WVAT,
+                ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                HasAlready2306 = existingModel.F2306FilePath != null,
+                HasAlready2307 = existingModel.F2307FileName != null
+            };
 
             var offsettings = await _dbContext.FilprideOffsettings
-                .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
+                .Where(offset => offset.Company == companyClaims
+                                 && offset.Source == existingModel.CollectionReceiptNo)
                 .ToListAsync(cancellationToken);
 
-            ViewBag.CustomerName = findCustomers?.CustomerName;
             ViewBag.Offsettings = offsettings;
 
-            return View(existingModel);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(FilprideCollectionReceipt model, string[] accountTitleText, decimal[] accountAmount, string[] accountTitle, IFormFile? bir2306, IFormFile? bir2307, CancellationToken cancellationToken)
+        public async Task<IActionResult> EditForSales(CollectionReceiptSingleSiViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingModel = await _unitOfWork.FilprideCollectionReceipt
-                .GetAsync(cr => cr.CollectionReceiptId == model.CollectionReceiptId, cancellationToken);
+                .GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
 
             if (existingModel == null)
             {
@@ -1161,193 +1297,489 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            existingModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
 
-            existingModel.SalesInvoices = await _dbContext.FilprideSalesInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
-                .OrderBy(si => si.SalesInvoiceId)
+            viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
+                    && !si.IsPaid
+                    && si.CustomerId == existingModel.CustomerId
+                    && si.PostedBy != null, cancellationToken))
+                .OrderBy(s => s.SalesInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.SalesInvoiceId.ToString(),
                     Text = s.SalesInvoiceNo
                 })
+                .ToList();
+
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
+            {
+                TempData["warning"] = "Please input at least one type form of payment";
+                return View(viewModel);
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Saving default value
+
+                var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAsync(si => si.SalesInvoiceId == viewModel.SalesInvoiceId, cancellationToken);
+
+                if (existingSalesInvoice == null)
+                {
+                    return NotFound();
+                }
+
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                existingModel.SalesInvoiceId = existingSalesInvoice.SalesInvoiceId;
+                existingModel.SINo = existingSalesInvoice.SalesInvoiceNo;
+                existingModel.CustomerId = viewModel.CustomerId;
+                existingModel.TransactionDate = viewModel.TransactionDate;
+                existingModel.ReferenceNo = viewModel.ReferenceNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.CheckDate = viewModel.CheckDate;
+                existingModel.CheckNo = viewModel.CheckNo;
+                existingModel.BankId = viewModel.BankId;
+                existingModel.BankAccountName = bankAccount?.AccountName;
+                existingModel.BankAccountNumber = bankAccount?.AccountNo;
+                existingModel.CheckBranch = viewModel.CheckBranch;
+                existingModel.CashAmount = viewModel.CashAmount;
+                existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.EWT = viewModel.EWT;
+                existingModel.WVAT = viewModel.WVAT;
+                existingModel.Total = total;
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    existingModel.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    existingModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, existingModel.F2306FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    existingModel.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    existingModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, existingModel.F2307FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                if (!_dbContext.ChangeTracker.HasChanges())
+                {
+                    TempData["warning"] = "No data changes!";
+                    return View(viewModel);
+                }
+
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #endregion --Saving default value
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                //
+                // var findOffsettings = await _dbContext.FilprideOffsettings
+                // .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
+                // .ToListAsync(cancellationToken);
+                //
+                // var accountTitleSet = new HashSet<string>(accountTitle);
+                //
+                // // Remove records not in accountTitle
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
+                //     {
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // // Dictionary to keep track of AccountNo and their ids for comparison
+                // var accountTitleDict = new Dictionary<string, List<int>>();
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                //     {
+                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
+                //     }
+                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                // }
+                //
+                // // Add or update records
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var accountNo = accountTitle[i];
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                //     {
+                //         // Update the first matching record and remove it from the list
+                //         var offsettingId = ids.First();
+                //         ids.RemoveAt(0);
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+                //
+                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                //         offsetting.Amount = currentAccountAmount;
+                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                //         offsetting.Company = companyClaims;
+                //
+                //         if (ids.Count == 0)
+                //         {
+                //             accountTitleDict.Remove(accountNo);
+                //         }
+                //     }
+                //     else
+                //     {
+                //         // Add new record
+                //         var newOffsetting = new FilprideOffsettings
+                //         {
+                //             AccountNo = accountNo,
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = existingModel.CollectionReceiptNo!,
+                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
+                //             Amount = currentAccountAmount,
+                //             CreatedBy = _userManager.GetUserName(this.User),
+                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                //         };
+                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
+                //     }
+                // }
+                //
+                // // Remove remaining records that were duplicates
+                // foreach (var ids in accountTitleDict.Values)
+                // {
+                //     foreach (var id in ids)
+                //     {
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // #endregion --Offsetting function
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = "Collection receipt successfully updated.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditForService(int? id, CancellationToken cancellationToken)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            var viewModel = new CollectionReceiptServiceViewModel
+            {
+                CollectionReceiptId = existingModel.CollectionReceiptId,
+                CustomerId = existingModel.CustomerId,
+                Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
+                TransactionDate = existingModel.TransactionDate,
+                ReferenceNo = existingModel.ReferenceNo,
+                Remarks = existingModel.Remarks,
+                ServiceInvoiceId = existingModel.ServiceInvoiceId ?? 0,
+                ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(si => si.Company == companyClaims
+                                 && !si.IsPaid
+                                 && si.CustomerId == existingModel.CustomerId
+                                 && si.PostedBy != null, cancellationToken))
+                    .OrderBy(si => si.ServiceInvoiceId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.ServiceInvoiceId.ToString(),
+                        Text = s.ServiceInvoiceNo
+                    })
+                    .ToList(),
+                CashAmount = existingModel.CashAmount,
+                CheckDate = existingModel.CheckDate,
+                CheckNo = existingModel.CheckNo,
+                BankId = existingModel.BankId,
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                CheckBranch = existingModel.CheckBranch,
+                CheckAmount = existingModel.CheckAmount,
+                EWT = existingModel.EWT,
+                WVAT = existingModel.WVAT,
+                ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
+                HasAlready2306 = existingModel.F2306FilePath != null,
+                HasAlready2307 = existingModel.F2307FileName != null
+            };
+
+            var offsettings = await _dbContext.FilprideOffsettings
+                .Where(offset => offset.Company == companyClaims
+                                 && offset.Source == existingModel.CollectionReceiptNo)
                 .ToListAsync(cancellationToken);
 
-            existingModel.ServiceInvoices = await _dbContext.FilprideServiceInvoices
-                .Where(si => si.Company == companyClaims && !si.IsPaid && si.CustomerId == existingModel.CustomerId)
+            ViewBag.Offsettings = offsettings;
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditForService(CollectionReceiptServiceViewModel viewModel, CancellationToken cancellationToken)
+        {
+            var existingModel = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == viewModel.CollectionReceiptId, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+
+            viewModel.ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
+                    .GetAllAsync(si => si.Company == companyClaims
+                                       && !si.IsPaid
+                                       && si.CustomerId == existingModel.CustomerId
+                                       && si.PostedBy != null, cancellationToken))
                 .OrderBy(si => si.ServiceInvoiceId)
                 .Select(s => new SelectListItem
                 {
                     Value = s.ServiceInvoiceId.ToString(),
                     Text = s.ServiceInvoiceNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            existingModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            existingModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            if (total == 0)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --Saving default value
-
-                    var bankAccount = await _unitOfWork.FilprideBankAccount.GetAsync(b => b.BankAccountId == model.BankId, cancellationToken);
-                    var computeTotalInModelIfZero = model.CashAmount + model.CheckAmount + model.ManagerCheckAmount + model.EWT + model.WVAT;
-                    if (computeTotalInModelIfZero == 0)
-                    {
-                        TempData["warning"] = "Please input atleast one type form of payment";
-                        return View(model);
-                    }
-
-                    existingModel.TransactionDate = model.TransactionDate;
-                    existingModel.ReferenceNo = model.ReferenceNo;
-                    existingModel.Remarks = model.Remarks;
-                    existingModel.CheckDate = model.CheckDate;
-                    existingModel.CheckNo = model.CheckNo;
-                    existingModel.BankId = model.BankId;
-                    existingModel.BankAccountName = bankAccount!.AccountName;
-                    existingModel.BankAccountNumber = bankAccount.AccountNo;
-                    existingModel.CheckBranch = model.CheckBranch;
-                    existingModel.CashAmount = model.CashAmount;
-                    existingModel.CheckAmount = model.CheckAmount;
-                    existingModel.ManagerCheckAmount = model.ManagerCheckAmount;
-                    existingModel.EWT = model.EWT;
-                    existingModel.WVAT = model.WVAT;
-                    existingModel.Total = computeTotalInModelIfZero;
-                    existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    if (bir2306 != null && bir2306.Length > 0)
-                    {
-                        model.F2306FileName = GenerateFileNameToSave(bir2306.FileName);
-                        model.F2306FilePath = await _cloudStorageService.UploadFileAsync(bir2306, model.F2306FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    if (bir2307 != null && bir2307.Length > 0)
-                    {
-                        model.F2307FileName = GenerateFileNameToSave(bir2307.FileName);
-                        model.F2307FilePath = await _cloudStorageService.UploadFileAsync(bir2307, model.F2307FileName!);
-                        model.IsCertificateUpload = true;
-                    }
-
-                    decimal offsetAmount = 0;
-
-                    #endregion --Saving default value
-
-                    #region --Offsetting function
-
-                    var findOffsettings = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
-                    .ToListAsync(cancellationToken);
-
-                    var accountTitleSet = new HashSet<string>(accountTitle);
-
-                    // Remove records not in accountTitle
-                    foreach (var offsetting in findOffsettings)
-                    {
-                        if (!accountTitleSet.Contains(offsetting.AccountNo))
-                        {
-                            _dbContext.FilprideOffsettings.Remove(offsetting);
-                        }
-                    }
-
-                    // Dictionary to keep track of AccountNo and their ids for comparison
-                    var accountTitleDict = new Dictionary<string, List<int>>();
-                    foreach (var offsetting in findOffsettings)
-                    {
-                        if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
-                        {
-                            accountTitleDict[offsetting.AccountNo] = new List<int>();
-                        }
-                        accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
-                    }
-
-                    // Add or update records
-                    for (int i = 0; i < accountTitle.Length; i++)
-                    {
-                        var accountNo = accountTitle[i];
-                        var currentAccountTitle = accountTitleText[i];
-                        var currentAccountAmount = accountAmount[i];
-                        offsetAmount += accountAmount[i];
-
-                        var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
-
-                        if (accountTitleDict.TryGetValue(accountNo, out var ids))
-                        {
-                            // Update the first matching record and remove it from the list
-                            var offsettingId = ids.First();
-                            ids.RemoveAt(0);
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
-
-                            offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
-                            offsetting.Amount = currentAccountAmount;
-                            offsetting.CreatedBy = _userManager.GetUserName(this.User);
-                            offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                            offsetting.Company = companyClaims;
-
-                            if (ids.Count == 0)
-                            {
-                                accountTitleDict.Remove(accountNo);
-                            }
-                        }
-                        else
-                        {
-                            // Add new record
-                            var newOffsetting = new FilprideOffsettings
-                            {
-                                AccountNo = accountNo,
-                                AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
-                                Source = existingModel.CollectionReceiptNo!,
-                                Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
-                                Amount = currentAccountAmount,
-                                CreatedBy = _userManager.GetUserName(this.User),
-                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
-                            };
-                            _dbContext.FilprideOffsettings.Add(newOffsetting);
-                        }
-                    }
-
-                    // Remove remaining records that were duplicates
-                    foreach (var ids in accountTitleDict.Values)
-                    {
-                        foreach (var id in ids)
-                        {
-                            var offsetting = findOffsettings.First(o => o.OffSettingId == id);
-                            _dbContext.FilprideOffsettings.Remove(offsetting);
-                        }
-                    }
-
-                    #endregion --Offsetting function
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = "Collection receipt successfully updated.";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["warning"] = "Please input at least one type form of payment";
+                return View(viewModel);
             }
 
-            TempData["warning"] = "The information you submitted is not valid!";
-            return View(model);
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Saving default value
+
+                var existingServiceInvoice = await _unitOfWork.FilprideServiceInvoice
+                    .GetAsync(si => si.ServiceInvoiceId == viewModel.ServiceInvoiceId, cancellationToken);
+
+                if (existingServiceInvoice == null)
+                {
+                    return NotFound();
+                }
+
+                var bankAccount = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                existingModel.ServiceInvoiceId = existingServiceInvoice.ServiceInvoiceId;
+                existingModel.SVNo = existingServiceInvoice.ServiceInvoiceNo;
+                existingModel.CustomerId = viewModel.CustomerId;
+                existingModel.TransactionDate = viewModel.TransactionDate;
+                existingModel.ReferenceNo = viewModel.ReferenceNo;
+                existingModel.Remarks = viewModel.Remarks;
+                existingModel.CheckDate = viewModel.CheckDate;
+                existingModel.CheckNo = viewModel.CheckNo;
+                existingModel.BankId = viewModel.BankId;
+                existingModel.BankAccountName = bankAccount?.AccountName;
+                existingModel.BankAccountNumber = bankAccount?.AccountNo;
+                existingModel.CheckBranch = viewModel.CheckBranch;
+                existingModel.CashAmount = viewModel.CashAmount;
+                existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.EWT = viewModel.EWT;
+                existingModel.WVAT = viewModel.WVAT;
+                existingModel.Total = total;
+
+                if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
+                {
+                    existingModel.F2306FileName = GenerateFileNameToSave(viewModel.Bir2306.FileName);
+                    existingModel.F2306FilePath = await _cloudStorageService.UploadFileAsync(viewModel.Bir2306, existingModel.F2306FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                if (viewModel.Bir2307 != null && viewModel.Bir2307.Length > 0)
+                {
+                    existingModel.F2307FileName = GenerateFileNameToSave(viewModel.Bir2307.FileName);
+                    existingModel.F2307FilePath = await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, existingModel.F2307FileName!);
+                    existingModel.IsCertificateUpload = true;
+                }
+
+                if (!_dbContext.ChangeTracker.HasChanges())
+                {
+                    TempData["warning"] = "No data changes!";
+                    return View(viewModel);
+                }
+
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #endregion --Saving default value
+
+                // #region --Offsetting function
+                //
+                // decimal offsetAmount = 0;
+                //
+                // var findOffsettings = await _dbContext.FilprideOffsettings
+                // .Where(offset => offset.Company == companyClaims && offset.Source == existingModel.CollectionReceiptNo)
+                // .ToListAsync(cancellationToken);
+                //
+                // var accountTitleSet = new HashSet<string>(accountTitle);
+                //
+                // // Remove records not in accountTitle
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleSet.Contains(offsetting.AccountNo))
+                //     {
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // // Dictionary to keep track of AccountNo and their ids for comparison
+                // var accountTitleDict = new Dictionary<string, List<int>>();
+                // foreach (var offsetting in findOffsettings)
+                // {
+                //     if (!accountTitleDict.ContainsKey(offsetting.AccountNo))
+                //     {
+                //         accountTitleDict[offsetting.AccountNo] = new List<int>();
+                //     }
+                //     accountTitleDict[offsetting.AccountNo].Add(offsetting.OffSettingId);
+                // }
+                //
+                // // Add or update records
+                // for (int i = 0; i < accountTitle.Length; i++)
+                // {
+                //     var accountNo = accountTitle[i];
+                //     var currentAccountTitle = accountTitleText[i];
+                //     var currentAccountAmount = accountAmount[i];
+                //     offsetAmount += accountAmount[i];
+                //
+                //     var splitAccountTitle = currentAccountTitle.Split(new[] { ' ' }, 2);
+                //
+                //     if (accountTitleDict.TryGetValue(accountNo, out var ids))
+                //     {
+                //         // Update the first matching record and remove it from the list
+                //         var offsettingId = ids.First();
+                //         ids.RemoveAt(0);
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == offsettingId);
+                //
+                //         offsetting.AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0];
+                //         offsetting.Amount = currentAccountAmount;
+                //         offsetting.CreatedBy = _userManager.GetUserName(this.User);
+                //         offsetting.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                //         offsetting.Company = companyClaims;
+                //
+                //         if (ids.Count == 0)
+                //         {
+                //             accountTitleDict.Remove(accountNo);
+                //         }
+                //     }
+                //     else
+                //     {
+                //         // Add new record
+                //         var newOffsetting = new FilprideOffsettings
+                //         {
+                //             AccountNo = accountNo,
+                //             AccountTitle = splitAccountTitle.Length > 1 ? splitAccountTitle[1] : splitAccountTitle[0],
+                //             Source = existingModel.CollectionReceiptNo!,
+                //             Reference = existingModel.SINo != null ? existingModel.SINo : existingModel.SVNo,
+                //             Amount = currentAccountAmount,
+                //             CreatedBy = _userManager.GetUserName(this.User),
+                //             CreatedDate = DateTimeHelper.GetCurrentPhilippineTime()
+                //         };
+                //         _dbContext.FilprideOffsettings.Add(newOffsetting);
+                //     }
+                // }
+                //
+                // // Remove remaining records that were duplicates
+                // foreach (var ids in accountTitleDict.Values)
+                // {
+                //     foreach (var id in ids)
+                //     {
+                //         var offsetting = findOffsettings.First(o => o.OffSettingId == id);
+                //         _dbContext.FilprideOffsettings.Remove(offsetting);
+                //     }
+                // }
+                //
+                // #endregion --Offsetting function
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited collection receipt# {existingModel.CollectionReceiptNo}", "Collection Receipt", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = "Collection receipt successfully updated.";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
@@ -1355,72 +1787,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var model = await _unitOfWork.FilprideCollectionReceipt
                 .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.PostedBy == null)
-                    {
-                        model.PostedBy = _userManager.GetUserName(this.User);
-                        model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Posted);
-
-                        List<FilprideOffsettings>? offset = new List<FilprideOffsettings>();
-                        var offsetAmount = 0m;
-
-                        if (model.SalesInvoiceId != null)
-                        {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
-                            offsetAmount = offset.Sum(o => o.Amount);
-                        }
-                        else
-                        {
-                            offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
-                            offsetAmount = offset.Sum(o => o.Amount);
-                        }
-
-                        await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
-
-                        if (model.SalesInvoiceId != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
-                        }
-                        else if (model.MultipleSIId != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
-                        }
-                        else
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
-                        }
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Posted.";
-                    }
-
-                    return RedirectToAction(nameof(Print), new { id });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Posted);
+                bool isMultipleSi = false;
+
+                List<FilprideOffsettings>? offset;
+
+                decimal offsetAmount;
+                if (model.SalesInvoiceId != null)
+                {
+                    offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
+                }
+                else
+                {
+                    offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
+
+                if (model.SalesInvoiceId != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
+                else if (model.MultipleSIId != null)
+                {
+                    isMultipleSi = true;
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
+                }
+                else
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Posted.";
+
+                return RedirectToAction(isMultipleSi ? nameof(MultipleCollectionPrint) : nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to post collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+
         }
 
         [Authorize(Roles = "Admin")]
@@ -1428,105 +1859,97 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                if (model.VoidedBy == null)
-                {
-                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                    try
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-                        var series = model.SINo != null ? model.SINo : model.SVNo;
-
-                        var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
-
-                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
-                        await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
-
-                        if (findOffsetting.Any())
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
-                        }
-                        if (model.SINo != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else if (model.SVNo != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else if (model.MultipleSI != null)
-                        {
-                            await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                        }
-                        else
-                        {
-                            TempData["info"] = "No series number found";
-                            return RedirectToAction(nameof(Index));
-                        }
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Voided.";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to void collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                            ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                        await transaction.RollbackAsync(cancellationToken);
-                        TempData["error"] = ex.Message;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+                var series = model.SINo ?? model.SVNo;
+
+                var findOffsetting = await _dbContext.FilprideOffsettings.Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series).ToListAsync(cancellationToken);
+
+                await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideCashReceiptBook>(crb => crb.RefNo == model.CollectionReceiptNo, cancellationToken);
+                await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CollectionReceiptNo, cancellationToken);
+
+                if (findOffsetting.Any())
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
+                }
+                if (model.SINo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.SVNo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.MultipleSI != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else
+                {
+                    TempData["info"] = "No series number found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Voided.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void collection receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+            }
+            return RedirectToAction(nameof(Index));
+
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCollectionReceipts.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(x => x.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
-                {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled collection receipt# {model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Collection Receipt has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index));
-                }
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt has been Cancelled.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -1536,8 +1959,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
@@ -1552,16 +1973,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!cr.IsPrinted)
             {
+                cr.IsPrinted = true;
+
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {cr.CollectionReceiptNo}", "Collection Receipt", cr.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
-
-                cr.IsPrinted = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
             }
             return RedirectToAction(nameof(Print), new { id });
         }
@@ -1576,19 +1996,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
+            var vatType = salesInvoice.CustomerOrderSlip?.VatType ?? salesInvoice.Customer!.VatType;
+            var hasEwt = salesInvoice.CustomerOrderSlip?.HasEWT ?? salesInvoice.Customer!.WithHoldingTax;
+            var hasWvat = salesInvoice.CustomerOrderSlip?.HasWVAT ?? salesInvoice.Customer!.WithHoldingVat;
+
             var amount = salesInvoice.Amount;
             var amountPaid = salesInvoice.AmountPaid;
             var netDiscount = salesInvoice.Amount - salesInvoice.Discount;
-            var netOfVatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable
+            var netOfVatAmount = vatType == SD.VatType_Vatable
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeNetOfVat(netDiscount)
                 : netDiscount;
-            var vatAmount = salesInvoice.CustomerOrderSlip!.VatType == SD.VatType_Vatable
+            var vatAmount = vatType == SD.VatType_Vatable
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeVatAmount(netOfVatAmount)
                 : 0m;
-            var ewtAmount = salesInvoice.CustomerOrderSlip.HasEWT
+            var ewtAmount = hasEwt
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.01m)
                 : 0m;
-            var wvatAmount = salesInvoice.CustomerOrderSlip.HasWVAT
+            var wvatAmount = hasWvat
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
                 : 0m;
             var balance = amount - amountPaid;
@@ -1615,11 +2039,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                .GetAsync(s => s.SalesInvoiceId == cr.MultipleSIId!.First(), cancellationToken);
-
-            cr.SalesInvoice = salesInvoice;
-
             return View(cr);
         }
 
@@ -1629,16 +2048,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (findIdOfCR != null && !findIdOfCR.IsPrinted)
             {
+                findIdOfCR.IsPrinted = true;
+
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", findIdOfCR.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                findIdOfCR.IsPrinted = true;
-                await _dbContext.SaveChangesAsync(cancellationToken);
             }
             return RedirectToAction(nameof(MultipleCollectionPrint), new { id });
         }
@@ -1659,12 +2078,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
             // Retrieve the selected invoices from the database
-            var selectedList = await _dbContext.FilprideCollectionReceipts
-                .Where(cr => recordIds.Contains(cr.CollectionReceiptId))
-                .Include(cr => cr.SalesInvoice)
-                .Include(cr => cr.ServiceInvoice)
-                .OrderBy(cr => cr.CollectionReceiptNo)
-                .ToListAsync();
+            var selectedList = await _unitOfWork.FilprideCollectionReceipt
+                .GetAllAsync(cr => recordIds.Contains(cr.CollectionReceiptId));
 
             using (var package = new ExcelPackage())
             {
@@ -1799,11 +2214,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 7].Value = item.BankAccount?.Bank;
                     worksheet.Cells[row, 8].Value = item.CheckBranch;
                     worksheet.Cells[row, 9].Value = item.CheckAmount;
-                    worksheet.Cells[row, 10].Value = item.ManagerCheckDate?.ToString("yyyy-MM-dd");
-                    worksheet.Cells[row, 11].Value = item.ManagerCheckNo;
-                    worksheet.Cells[row, 12].Value = item.ManagerCheckBank;
-                    worksheet.Cells[row, 13].Value = item.ManagerCheckBranch;
-                    worksheet.Cells[row, 14].Value = item.ManagerCheckAmount;
+                    worksheet.Cells[row, 10].Value = null;
+                    worksheet.Cells[row, 11].Value = null;
+                    worksheet.Cells[row, 12].Value = null;
+                    worksheet.Cells[row, 13].Value = null;
+                    worksheet.Cells[row, 14].Value = null;
                     worksheet.Cells[row, 15].Value = item.EWT;
                     worksheet.Cells[row, 16].Value = item.WVAT;
                     worksheet.Cells[row, 17].Value = item.Total;
@@ -1926,7 +2341,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Collection Receipt Export (Multiple SI)--
 
-                List<FilprideSalesInvoice> getSalesInvoice = new List<FilprideSalesInvoice>();
+                List<FilprideSalesInvoice> getSalesInvoice;
 
                 getSalesInvoice = _dbContext.FilprideSalesInvoices
                     .AsEnumerable()
@@ -2011,13 +2426,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllCollectionReceiptIds()
+        public async Task<IActionResult> GetAllCollectionReceiptIds()
         {
-            var crIds = _dbContext.FilprideCollectionReceipts
-                                     .Where(cr => cr.Type == nameof(DocumentType.Documented))
-                                     .Select(cr => cr.CollectionReceiptId) // Assuming Id is the primary key
+            var crIds = (await _unitOfWork.FilprideCollectionReceipt
+                                     .GetAllAsync(cr => cr.Type == nameof(DocumentType.Documented)))
+                                     .Select(cr => cr.CollectionReceiptId)
                                      .ToList();
-
             return Json(crIds);
         }
     }

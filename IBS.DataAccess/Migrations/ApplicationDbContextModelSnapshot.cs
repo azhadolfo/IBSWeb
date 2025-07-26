@@ -1515,29 +1515,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
 
-                    b.Property<decimal>("ManagerCheckAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("manager_check_amount");
-
-                    b.Property<string>("ManagerCheckBank")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("manager_check_bank");
-
-                    b.Property<string>("ManagerCheckBranch")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("manager_check_branch");
-
-                    b.Property<DateOnly?>("ManagerCheckDate")
-                        .HasColumnType("date")
-                        .HasColumnName("manager_check_date");
-
-                    b.Property<string>("ManagerCheckNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("manager_check_no");
-
                     b.Property<string[]>("MultipleSI")
                         .HasColumnType("text[]")
                         .HasColumnName("multiple_si");
@@ -2045,7 +2022,7 @@ namespace IBS.DataAccess.Migrations
                     b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("varchar(20)")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("payment_status");
 
                     b.Property<string>("PostedBy")

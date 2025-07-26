@@ -2825,7 +2825,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 foreach (var record in collectionReceiptReport)
                                 {
-                                    currentAmount = (record.CashAmount + record.CheckAmount + record.ManagerCheckAmount);
+                                    currentAmount = record.CashAmount + record.CheckAmount;
 
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
@@ -2952,7 +2952,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var cr in collectionReceiptReport)
                     {
-                        currentAmount = (cr.CashAmount + cr.CheckAmount + cr.ManagerCheckAmount);
+                        currentAmount = cr.CashAmount + cr.CheckAmount;
                         worksheet.Cells[row, 1].Value = cr.Customer?.CustomerCode ?? "";
                         worksheet.Cells[row, 2].Value = cr.Customer?.CustomerName ?? "";
                         worksheet.Cells[row, 3].Value = cr.Customer?.CustomerType ?? "";

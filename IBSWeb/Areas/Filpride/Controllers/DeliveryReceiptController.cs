@@ -145,7 +145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -167,7 +167,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
@@ -262,153 +262,151 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                    var hauler = await _unitOfWork.FilprideSupplier
-                        .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
-
-                    if (customerOrderSlip == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    FilprideDeliveryReceipt model = new()
-                    {
-                        DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, cancellationToken),
-                        Date = viewModel.Date,
-                        CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
-                        CustomerId = viewModel.CustomerId,
-                        Remarks = viewModel.Remarks,
-                        Quantity = viewModel.Volume,
-                        TotalAmount = viewModel.TotalAmount,
-                        Company = companyClaims,
-                        CreatedBy = _userManager.GetUserName(User),
-                        ManualDrNo = viewModel.ManualDrNo,
-                        Freight = viewModel.Freight,
-                        FreightAmount = viewModel.Volume * (viewModel.Freight + viewModel.ECC),
-                        ECC = viewModel.ECC,
-                        Driver = viewModel.Driver,
-                        PlateNo = viewModel.PlateNo,
-                        HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
-                        AuthorityToLoadId = viewModel.ATLId,
-                        AuthorityToLoadNo = viewModel.ATLNo,
-                        CommissioneeId = customerOrderSlip.CommissioneeId,
-                        CommissionRate = customerOrderSlip.CommissionRate,
-                        CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
-                        CustomerAddress = customerOrderSlip.CustomerAddress,
-                        CustomerTin = customerOrderSlip.CustomerTin,
-                        HaulerName = hauler?.SupplierName,
-                        HaulerVatType = hauler?.VatType,
-                        HaulerTaxType = hauler?.TaxType,
-                        PurchaseOrderId = viewModel.PurchaseOrderId,
-                    };
-
-                    customerOrderSlip.DeliveredQuantity += model.Quantity;
-                    customerOrderSlip.BalanceQuantity -= model.Quantity;
-
-                    if (customerOrderSlip.BalanceQuantity <= 0)
-                    {
-                        customerOrderSlip.Status = nameof(CosStatus.Completed);
-                    }
-
-                    await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(model);
-
-                    await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    if (viewModel.Freight != customerOrderSlip.Freight || viewModel.IsECCEdited)
-                    {
-                        var operationManager = await _dbContext.ApplicationUsers
-                            .Where(a => a.Position == SD.Position_OperationManager)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var po = await _dbContext.FilpridePurchaseOrders
-                            .Include(x => x.ActualPrices)
-                            .FirstOrDefaultAsync(x => x.PurchaseOrderId == model.PurchaseOrderId, cancellationToken)
-                            ?? throw new NullReferenceException($"{model.PurchaseOrderId} not found");
-
-                        var grossMargin = ComputeGrossMargin(customerOrderSlip, po);
-
-                        var freightDifference = viewModel.Freight + viewModel.ECC - (decimal)customerOrderSlip.Freight!;
-
-                        freightDifference = hauler?.VatType == SD.VatType_Vatable
-                            ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
-                            : freightDifference;
-
-                        var updatedGrossMargin = grossMargin + freightDifference;
-
-                        var message = $"Delivery Receipt ({model.DeliveryReceiptNo}) has been successfully generated. " +
-                                      $"The Freight and/or ECC values have been modified by {model.CreatedBy!.ToUpper()}. " +
-                                      $"Please review and approve the adjustment in freight charges, which changed from {customerOrderSlip.Freight:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
-                                      $"Note that this change will impact the approved gross margin, updating it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => operationManager.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-
-                        model.Status = nameof(DRStatus.ForApprovalOfOM);
-                    }
-
-                    var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
-                        .GetAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId, cancellationToken)
-                        ?? throw new NullReferenceException("Authority to load not found");
-
-                    authorityToLoad.HaulerName = hauler?.SupplierName;
-                    authorityToLoad.Freight = viewModel.Freight;
-                    authorityToLoad.Driver = viewModel.Driver;
-                    authorityToLoad.PlateNo = viewModel.PlateNo;
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    await transaction.CommitAsync(cancellationToken);
-
-                    TempData["success"] = $"Delivery receipt #{model.DeliveryReceiptNo} created successfully.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to create delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
-                }
-            }
-
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                var hauler = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+
+                if (customerOrderSlip == null)
+                {
+                    return BadRequest();
+                }
+
+                FilprideDeliveryReceipt model = new()
+                {
+                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, cancellationToken),
+                    Date = viewModel.Date,
+                    CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
+                    CustomerId = viewModel.CustomerId,
+                    Remarks = viewModel.Remarks,
+                    Quantity = viewModel.Volume,
+                    TotalAmount = viewModel.TotalAmount,
+                    Company = companyClaims,
+                    CreatedBy = _userManager.GetUserName(User),
+                    ManualDrNo = viewModel.ManualDrNo,
+                    Freight = viewModel.Freight,
+                    FreightAmount = viewModel.Volume * (viewModel.Freight + viewModel.ECC),
+                    ECC = viewModel.ECC,
+                    Driver = viewModel.Driver,
+                    PlateNo = viewModel.PlateNo,
+                    HaulerId = viewModel.HaulerId ?? customerOrderSlip.HaulerId,
+                    AuthorityToLoadId = viewModel.ATLId,
+                    AuthorityToLoadNo = viewModel.ATLNo,
+                    CommissioneeId = customerOrderSlip.CommissioneeId,
+                    CommissionRate = customerOrderSlip.CommissionRate,
+                    CommissionAmount = viewModel.Volume * customerOrderSlip.CommissionRate,
+                    CustomerAddress = customerOrderSlip.CustomerAddress,
+                    CustomerTin = customerOrderSlip.CustomerTin,
+                    HaulerName = hauler?.SupplierName,
+                    HaulerVatType = hauler?.VatType,
+                    HaulerTaxType = hauler?.TaxType,
+                    PurchaseOrderId = viewModel.PurchaseOrderId,
+                };
+
+                customerOrderSlip.DeliveredQuantity += model.Quantity;
+                customerOrderSlip.BalanceQuantity -= model.Quantity;
+
+                if (customerOrderSlip.BalanceQuantity <= 0)
+                {
+                    customerOrderSlip.Status = nameof(CosStatus.Completed);
+                }
+
+                await _unitOfWork.FilprideDeliveryReceipt.AssignNewPurchaseOrderAsync(model);
+
+                await _unitOfWork.FilprideDeliveryReceipt.AddAsync(model, cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new delivery receipt# {model.DeliveryReceiptNo}", "Delivery Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                if (viewModel.Freight != customerOrderSlip.Freight || viewModel.IsECCEdited)
+                {
+                    var operationManager = await _dbContext.ApplicationUsers
+                        .Where(a => a.Position == SD.Position_OperationManager)
+                        .Select(u => u.Id)
+                        .ToListAsync(cancellationToken);
+
+                    var po = await _dbContext.FilpridePurchaseOrders
+                                 .Include(x => x.ActualPrices)
+                                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == model.PurchaseOrderId, cancellationToken)
+                             ?? throw new NullReferenceException($"{model.PurchaseOrderId} not found");
+
+                    var grossMargin = ComputeGrossMargin(customerOrderSlip, po);
+
+                    var freightDifference = viewModel.Freight + viewModel.ECC - (decimal)customerOrderSlip.Freight!;
+
+                    freightDifference = hauler?.VatType == SD.VatType_Vatable
+                        ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
+                        : freightDifference;
+
+                    var updatedGrossMargin = grossMargin + freightDifference;
+
+                    var message = $"Delivery Receipt ({model.DeliveryReceiptNo}) has been successfully generated. " +
+                                  $"The Freight and/or ECC values have been modified by {model.CreatedBy!.ToUpper()}. " +
+                                  $"Please review and approve the adjustment in freight charges, which changed from {customerOrderSlip.Freight:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
+                                  $"Note that this change will impact the approved gross margin, updating it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
+
+                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                    var usernames = await _dbContext.ApplicationUsers
+                        .Where(a => operationManager.Contains(a.Id))
+                        .Select(u => u.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var username in usernames)
+                    {
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == username)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
+                    }
+
+                    model.Status = nameof(DRStatus.ForApprovalOfOM);
+                }
+
+                var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
+                                          .GetAsync(x => x.AuthorityToLoadId == model.AuthorityToLoadId, cancellationToken)
+                                      ?? throw new NullReferenceException("Authority to load not found");
+
+                authorityToLoad.HaulerName = hauler?.SupplierName;
+                authorityToLoad.Freight = viewModel.Freight;
+                authorityToLoad.Driver = viewModel.Driver;
+                authorityToLoad.PlateNo = viewModel.PlateNo;
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = $"Delivery receipt #{model.DeliveryReceiptNo} created successfully.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to create delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         [DepartmentAuthorize(SD.Department_Logistics, SD.Department_RCD)]
@@ -511,111 +509,112 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
-
-                    var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
-                            .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
-
-                    if (existingRecord == null)
-                    {
-                        return NotFound();
-                    }
-
-                    if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
-                    {
-                        var hauler = await _unitOfWork.FilprideSupplier
-                            .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
-
-                        var operationManager = await _dbContext.ApplicationUsers
-                            .Where(a => a.Position == SD.Position_OperationManager)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var po = await _dbContext.FilpridePurchaseOrders
-                                     .Include(x => x.ActualPrices)
-                                     .FirstOrDefaultAsync(x => x.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken)
-                                 ?? throw new NullReferenceException($"{existingRecord.PurchaseOrderId} not found");
-
-                        var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, po, (viewModel.Freight + viewModel.ECC));
-
-                        var freightDifference = viewModel.Freight + viewModel.ECC - existingRecord.Freight;
-
-                        freightDifference = hauler!.VatType == SD.VatType_Vatable
-                            ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
-                            : freightDifference;
-
-                        var updatedGrossMargin = grossMargin + freightDifference;
-
-                        var message = $"Delivery Receipt ({existingRecord.DeliveryReceiptNo}) has been updated by {existingRecord.CreatedBy!.ToUpper()}. " +
-                                      $"The Freight and/or ECC values have been modified. Please review and approve the updated freight charges, " +
-                                      $"which changed from {existingRecord.Freight + existingRecord.ECC:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
-                                      $"This update will affect the approved gross margin, changing it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => operationManager.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-
-                        existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
-                    }
-
-                    await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
-
-                    var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
-                                              .GetAsync(x => x.AuthorityToLoadId == existingRecord.AuthorityToLoadId, cancellationToken)
-                                          ?? throw new NullReferenceException("Authority to load not found");
-
-                    authorityToLoad.HaulerName = existingRecord.HaulerName;
-                    authorityToLoad.Freight = existingRecord.Freight;
-                    authorityToLoad.Driver = existingRecord.Driver;
-                    authorityToLoad.PlateNo = existingRecord.PlateNo;
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    await transaction.CommitAsync(cancellationToken);
-
-                    TempData["success"] = "Delivery receipt updated successfully.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
-                    viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to edit delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
-                }
-            }
-
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+                if (existingRecord == null)
+                {
+                    return NotFound();
+                }
+
+                if (viewModel.Freight != existingRecord.Freight || viewModel.IsECCEdited)
+                {
+                    var hauler = await _unitOfWork.FilprideSupplier
+                        .GetAsync(x => x.SupplierId == viewModel.HaulerId, cancellationToken);
+
+                    var operationManager = await _dbContext.ApplicationUsers
+                        .Where(a => a.Position == SD.Position_OperationManager)
+                        .Select(u => u.Id)
+                        .ToListAsync(cancellationToken);
+
+                    var po = await _dbContext.FilpridePurchaseOrders
+                                 .Include(x => x.ActualPrices)
+                                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == existingRecord.PurchaseOrderId, cancellationToken)
+                             ?? throw new NullReferenceException($"{existingRecord.PurchaseOrderId} not found");
+
+                    var grossMargin = ComputeGrossMargin(existingRecord.CustomerOrderSlip!, po, (viewModel.Freight + viewModel.ECC));
+
+                    var freightDifference = viewModel.Freight + viewModel.ECC - existingRecord.Freight;
+
+                    freightDifference = hauler!.VatType == SD.VatType_Vatable
+                        ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(freightDifference)
+                        : freightDifference;
+
+                    var updatedGrossMargin = grossMargin + freightDifference;
+
+                    var message = $"Delivery Receipt ({existingRecord.DeliveryReceiptNo}) has been updated by {existingRecord.CreatedBy!.ToUpper()}. " +
+                                  $"The Freight and/or ECC values have been modified. Please review and approve the updated freight charges, " +
+                                  $"which changed from {existingRecord.Freight + existingRecord.ECC:N4} to {viewModel.Freight + viewModel.ECC:N4}. " +
+                                  $"This update will affect the approved gross margin, changing it from {grossMargin:N4} to {updatedGrossMargin:N4}.";
+
+                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(operationManager, message);
+
+                    var usernames = await _dbContext.ApplicationUsers
+                        .Where(a => operationManager.Contains(a.Id))
+                        .Select(u => u.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var username in usernames)
+                    {
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == username)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
+                    }
+
+                    existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
+                }
+
+                await _unitOfWork.FilprideDeliveryReceipt.UpdateAsync(viewModel, cancellationToken);
+
+                var authorityToLoad = await _unitOfWork.FilprideAuthorityToLoad
+                                          .GetAsync(x => x.AuthorityToLoadId == existingRecord.AuthorityToLoadId, cancellationToken)
+                                      ?? throw new NullReferenceException("Authority to load not found");
+
+                authorityToLoad.HaulerName = existingRecord.HaulerName;
+                authorityToLoad.Freight = existingRecord.Freight;
+                authorityToLoad.Driver = existingRecord.Driver;
+                authorityToLoad.PlateNo = existingRecord.PlateNo;
+
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = "Delivery receipt updated successfully.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to edit delivery receipt. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
@@ -664,11 +663,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                if (!existingRecord.IsPrinted)
+                if (existingRecord.IsPrinted)
                 {
-                    existingRecord.IsPrinted = true;
-                    await _unitOfWork.SaveAsync(cancellationToken);
+                    return RedirectToAction(nameof(Preview), new { id });
                 }
+
+                existingRecord.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 return RedirectToAction(nameof(Preview), new { id });
             }
@@ -742,14 +743,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetCustomerOrderSlipList(int customerId, int? deliveryReceiptId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
-            var orderSlips = _dbContext.FilprideCustomerOrderSlips
+            var orderSlips = (await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAllAsync(cos => (!cos.IsDelivered &&
+                                         cos.Status == nameof(CosStatus.Completed)
+                                         && cos.Company == companyClaims ||
+                                         cos.Status == nameof(CosStatus.ForDR)) &&
+                                        cos.BalanceQuantity > 0 &&
+                                        cos.CustomerId == customerId && cos.Company == companyClaims, cancellationToken))
                 .OrderBy(cos => cos.CustomerOrderSlipId)
-                .Where(cos => (!cos.IsDelivered &&
-                                cos.Status == nameof(CosStatus.Completed)
-                               && cos.Company == companyClaims ||
-                               cos.Status == nameof(CosStatus.ForDR)) &&
-                              cos.BalanceQuantity > 0 &&
-                              cos.CustomerId == customerId && cos.Company == companyClaims)
                 .Select(cos => new SelectListItem
                 {
                     Value = cos.CustomerOrderSlipId.ToString(),
@@ -758,9 +759,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (deliveryReceiptId != null)
             {
-                var existingCos = _dbContext.FilprideDeliveryReceipts
-                    .Include(dr => dr.CustomerOrderSlip)
-                    .Where(dr => dr.DeliveryReceiptId == deliveryReceiptId && dr.Company == companyClaims)
+                var existingCos = (await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => dr.DeliveryReceiptId == deliveryReceiptId
+                                       && dr.Company == companyClaims, cancellationToken))
                     .Select(dr => new SelectListItem
                     {
                         Value = dr.CustomerOrderSlipId.ToString(),
@@ -770,7 +771,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 orderSlips = orderSlips.Union(existingCos);
             }
 
-            var result = await orderSlips.ToListAsync(cancellationToken);
+            var result = orderSlips.ToList();
 
 
             return Json(result);
@@ -787,12 +788,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(x => x.Header)
                 .Include(x => x.CustomerOrderSlip)
                 .Include(x => x.AppointedSupplier!)
-                .ThenInclude(x => x.PurchaseOrder!)
-                .ThenInclude(x => x.Supplier)
+                    .ThenInclude(x => x.PurchaseOrder!)
+                        .ThenInclude(x => x.Supplier)
                 .Where(x => x.CustomerOrderSlipId == id)
                 .ToListAsync();
 
-            if (!cosAtlDetails.Any())
+            if (cosAtlDetails.Count == 0)
             {
                 return Json(null);
             }
@@ -919,10 +920,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var connectedReceivingReport = await _dbContext.FilprideReceivingReports
-                    .FirstOrDefaultAsync(
-                        rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted),
-                        cancellationToken);
+                var connectedReceivingReport = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
+                                    && rr.Status == nameof(Status.Posted), cancellationToken);
 
                 if (connectedReceivingReport != null)
                 {
@@ -946,7 +946,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
-                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Delivery Receipt has been canceled.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -993,8 +992,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideInventory.VoidInventory(existingInventory, cancellationToken);
                 }
 
-                var connectedReceivingReport = await _dbContext.FilprideReceivingReports
-                    .FirstOrDefaultAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId && rr.Status == nameof(Status.Posted), cancellationToken);
+                var connectedReceivingReport = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(rr => rr.DeliveryReceiptId == model.DeliveryReceiptId
+                                    && rr.Status == nameof(Status.Posted), cancellationToken);
 
                 if (connectedReceivingReport != null)
                 {
@@ -1029,41 +1029,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GenerateExcel(int id)
         {
-            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt.GetAsync(dr => dr.DeliveryReceiptId == id);
+            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(dr => dr.DeliveryReceiptId == id);
 
             if (deliveryReceipt == null)
             {
                 return NotFound();
             }
 
-            var receivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId);
+            var receivingReport = await _unitOfWork.FilprideReceivingReport
+                .GetAsync(rr => rr.DeliveryReceiptId == deliveryReceipt.DeliveryReceiptId);
 
             // Get the full path to the template in the wwwroot folder
             var templatePath = Path.Combine(_webHostEnvironment.WebRootPath, "templates", "DR Format.xlsx");
-            byte[] fileBytes = System.IO.File.ReadAllBytes(templatePath);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
-            using (var package = new ExcelPackage(new MemoryStream(fileBytes)))
-            {
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
+            using var package = new ExcelPackage(new MemoryStream(fileBytes));
+            var worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
 
-                worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
-                worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
-                worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
-                worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
-                worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip!.OldCosNo;
-                worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint!.Depot.ToUpper();
-                worksheet.Cells["C12"].Value = deliveryReceipt.Customer!.CustomerName.ToUpper();
-                worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
-                worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product!.ProductName;
-                worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
-                worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
+            worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
+            worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
+            worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
+            worksheet.Cells["H10"].Value = deliveryReceipt.Date.ToString("dd-MMM-yy");
+            worksheet.Cells["H12"].Value = deliveryReceipt.CustomerOrderSlip!.OldCosNo;
+            worksheet.Cells["B11"].Value = deliveryReceipt.CustomerOrderSlip.PickUpPoint!.Depot.ToUpper();
+            worksheet.Cells["C12"].Value = deliveryReceipt.Customer!.CustomerName.ToUpper();
+            worksheet.Cells["C13"].Value = deliveryReceipt.Customer.CustomerAddress.ToUpper();
+            worksheet.Cells["B17"].Value = deliveryReceipt.CustomerOrderSlip.Product!.ProductName;
+            worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
+            worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
 
-                var stream = new MemoryStream();
-                package.SaveAs(stream);
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
 
-                var content = stream.ToArray();
-                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
-            }
+            var content = stream.ToArray();
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
         }
 
         [HttpGet]
@@ -1071,12 +1071,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             if (drId.HasValue)
             {
-                var existingManualDrNo = await _dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.DeliveryReceiptId == drId)
-                    .Select(dr => dr.ManualDrNo)
-                    .FirstOrDefaultAsync();
+                var existingDr = await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAsync(dr => dr.DeliveryReceiptId == drId);
 
-                if (manualDrNo == existingManualDrNo)
+                if (manualDrNo == existingDr?.ManualDrNo)
                 {
                     return Json(false);
                 }
@@ -1143,7 +1141,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? _unitOfWork.FilprideDeliveryReceipt.ComputeNetOfVat(cos.CommissionRate)
                 : cos.CommissionRate;
 
-            var freight = 0m;
+            decimal freight;
 
             if (drFreight == 0)
             {
@@ -1160,7 +1158,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     : drFreight;
             }
 
-            bool hasActualPrice = po.ActualPrices != null && po.ActualPrices.Any(x => x.IsApproved);
+            var hasActualPrice = po.ActualPrices != null && po.ActualPrices.Any(x => x.IsApproved);
 
             var productCost = hasActualPrice
                 ? po.ActualPrices!.First().TriggeredPrice
