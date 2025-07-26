@@ -1027,7 +1027,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.Employee)
                 .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
-            var supplierName = (await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == supplierId, cancellationToken))!.SupplierName;
+            var supplierName = (await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == supplierId, cancellationToken))?.SupplierName;
 
             if (modelHeader != null)
             {
@@ -1096,7 +1096,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     Date = modelHeader.Date,
                                     CVNo = modelHeader.CheckVoucherHeaderNo!,
-                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : supplierName!,
+                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
                                     Amount = modelHeader.Total,
                                     Particulars = modelHeader.Particulars!,
                                     Bank = bank != null ? bank.Branch : "N/A",
@@ -1242,7 +1242,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
         {
-            var cvHeader = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+            var cvHeader = await _dbContext.FilprideCheckVoucherHeaders
+                .Include(cv => cv.Details)
+                .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
             if (cvHeader == null)
             {
                 throw new NullReferenceException("CV Header not found.");
