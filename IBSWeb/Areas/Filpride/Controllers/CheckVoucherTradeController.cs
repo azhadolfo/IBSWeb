@@ -435,11 +435,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var query = await _unitOfWork.FilprideReceivingReport
-                .GetAllAsync(rr => rr.Company == companyClaims
-                             && !rr.IsPaid
-                             && poNumber.Contains(rr.PONo)
-                             && rr.PostedBy != null, cancellationToken);
+            var query = _dbContext.FilprideReceivingReports
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -453,7 +450,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var receivingReports = await query
-                .AsQueryable()
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(rr => rr!.Supplier)
                 .OrderBy(rr => rr.ReceivingReportNo)
@@ -897,7 +893,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToListAsync(cancellationToken);
 
             var supplierName = (await _unitOfWork.FilprideSupplier
-                .GetAsync(s => s.SupplierId == supplierId, cancellationToken))!.SupplierName;
+                .GetAsync(s => s.SupplierId == supplierId, cancellationToken))?.SupplierName;
 
             if (modelHeader != null)
             {
@@ -1014,7 +1010,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 {
                                     Date = modelHeader.Date,
                                     CVNo = modelHeader.CheckVoucherHeaderNo!,
-                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : supplierName!,
+                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
                                     Amount = modelHeader.Total,
                                     Particulars = modelHeader.Particulars!,
                                     Bank = bank != null ? bank.Branch : "N/A",
@@ -2394,12 +2390,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var query = (await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(dr => dr.Company == companyClaims
-                             && commissioneeId == dr.CommissioneeId
-                             && dr.CommissionAmount != 0
-                             && !dr.IsCommissionPaid
-                             && dr.PostedBy != null, cancellationToken)).AsQueryable();
+            var query = _dbContext.FilprideDeliveryReceipts
+                .Where(dr => dr.Company == companyClaims && commissioneeId == dr.CommissioneeId && dr.CommissionAmount != 0
+                             && !dr.IsCommissionPaid && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2448,12 +2441,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var query = (await _unitOfWork.FilprideDeliveryReceipt
-                .GetAllAsync(dr => dr.Company == companyClaims
-                             && dr.HaulerId == haulerId
-                             && dr.FreightAmount != 0
-                             && !dr.IsFreightPaid
-                             && dr.PostedBy != null, cancellationToken));
+            var query = _dbContext.FilprideDeliveryReceipts
+                .Where(dr => dr.Company == companyClaims && dr.HaulerId == haulerId && dr.FreightAmount != 0
+                             && !dr.IsFreightPaid && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2467,7 +2457,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var deliverReceipt = await query
-                .AsQueryable()
                 .Include(dr => dr.Hauler)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
