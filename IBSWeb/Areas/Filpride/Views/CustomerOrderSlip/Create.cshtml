@@ -1,4 +1,5 @@
 ﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @model CustomerOrderSlipViewModel
 
 @{
@@ -220,10 +221,10 @@
                     <label asp-for="AccountSpecialist" class="control-label">Account Specialist<span class="required">*</span></label>
                     <select asp-for="AccountSpecialist" class="form-select js-select2 border-0 shadow" style="width:100%">
                         <option value="" selected>Select Account Specialist</option>
-                        <option value="MJ">MJ</option>
-                        <option value="ELENA">ELENA</option>
-                        <option value="MARLU">MARLU</option>
-                        <option value="SMG">SMG</option>
+                        @foreach (var accountSpecialist in Enum.GetValues<AccountSpecialistEnum>())
+                        {
+                            <option value="@accountSpecialist">@accountSpecialist.ToString()</option>
+                        }
                     </select>
                     <span asp-validation-for="AccountSpecialist" class="text-danger"></span>
                 </div>
