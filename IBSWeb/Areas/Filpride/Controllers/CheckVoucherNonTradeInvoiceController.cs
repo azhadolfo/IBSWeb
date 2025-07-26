@@ -766,7 +766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ToListAsync(cancellationToken);
 
                     _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var checkVoucherDetails = new List<FilprideCheckVoucherDetail>();
 
