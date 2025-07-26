@@ -276,7 +276,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var disbursement = new List<FilprideDisbursementBook>();
                     foreach (var details in modelDetails)
                     {
-                        var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
+                        var bank = await _unitOfWork.FilprideBankAccount.GetAsync(model => model.BankAccountId == modelHeader.BankId, cancellationToken);
                         disbursement.Add(
                                 new FilprideDisbursementBook
                                 {
@@ -394,7 +394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy!, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
@@ -577,9 +577,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var existingHeaderModel = await _dbContext.FilprideCheckVoucherHeaders
-                .Include(cvh => cvh.Supplier)
-                .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
             if (existingHeaderModel == null)
             {
@@ -1709,7 +1708,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToListAsync(cancellationToken);
 
                     _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
                     var advancesToOfficerTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020400") ?? throw new ArgumentException($"Account title '101020400' not found.");
