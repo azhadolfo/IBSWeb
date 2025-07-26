@@ -183,7 +183,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
@@ -273,121 +273,119 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var customer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
-
-                    var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
-
-                    var commissionee = await _unitOfWork.FilprideSupplier
-                        .GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
-
-                    if (customer == null || product == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    FilprideCustomerOrderSlip model = new()
-                    {
-                        CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
-                        Date = viewModel.Date,
-                        CustomerId = viewModel.CustomerId,
-                        CustomerAddress = viewModel.CustomerAddress!,
-                        CustomerTin = viewModel.TinNo!,
-                        CustomerPoNo = viewModel.CustomerPoNo,
-                        Quantity = viewModel.Quantity,
-                        BalanceQuantity = viewModel.Quantity,
-                        DeliveredPrice = viewModel.DeliveredPrice,
-                        TotalAmount = viewModel.TotalAmount,
-                        AccountSpecialist = viewModel.AccountSpecialist,
-                        Remarks = viewModel.Remarks,
-                        Company = companyClaims,
-                        CreatedBy = _userManager.GetUserName(User),
-                        ProductId = viewModel.ProductId,
-                        Status = nameof(CosStatus.Created),
-                        OldCosNo = viewModel.OtcCosNo,
-                        Terms = viewModel.Terms,
-                        Branch = viewModel.SelectedBranch,
-                        CustomerType = viewModel.CustomerType!,
-                        OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
-                        Freight = viewModel.Freight,
-                        CustomerName = customer.CustomerName,
-                        ProductName = product.ProductName,
-                        VatType = customer.VatType,
-                        HasEWT = customer.WithHoldingTax,
-                        HasWVAT = customer.WithHoldingVat,
-                        CommissioneeName = commissionee?.SupplierName,
-                        CommissioneeVatType = commissionee?.VatType,
-                        CommissioneeTaxType = commissionee?.TaxType,
-                        BusinessStyle = customer.BusinessStyle,
-                        AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
-                            .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
-                    };
-
-                    // Upload files if there is existing
-                    if (viewModel.UploadedFiles != null)
-                    {
-                        var uploadUrls = new List<string>();
-
-                        foreach (var file in viewModel.UploadedFiles)
-                        {
-                            string fileName = GenerateFileNameToSave(file.FileName)!;
-                            await _cloudStorageService.UploadFileAsync(file, fileName);
-                            uploadUrls.Add(fileName);
-                        }
-
-                        model.UploadedFiles = uploadUrls.ToArray();
-                    }
-
-                    if (model.Branch != null)
-                    {
-                        var branch = await _dbContext.FilprideCustomerBranches
-                            .Where(b => b.BranchName == model.Branch)
-                            .FirstOrDefaultAsync(cancellationToken);
-
-                        model.CustomerAddress = branch!.BranchAddress;
-                        model.CustomerTin = branch.BranchTin;
-                    }
-
-                    if (viewModel.HasCommission)
-                    {
-                        model.HasCommission = viewModel.HasCommission;
-                        model.CommissioneeId = viewModel.CommissioneeId;
-                        model.CommissionRate = viewModel.CommissionRate;
-                    }
-
-                    await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Customer order slip created successfully. Series#: {model.CustomerOrderSlipNo}";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to create customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
-                }
-            }
-
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
+
+                var commissionee = await _unitOfWork.FilprideSupplier
+                    .GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
+
+                if (customer == null || product == null)
+                {
+                    return BadRequest();
+                }
+
+                FilprideCustomerOrderSlip model = new()
+                {
+                    CustomerOrderSlipNo = await _unitOfWork.FilprideCustomerOrderSlip.GenerateCodeAsync(companyClaims, cancellationToken),
+                    Date = viewModel.Date,
+                    CustomerId = viewModel.CustomerId,
+                    CustomerAddress = viewModel.CustomerAddress!,
+                    CustomerTin = viewModel.TinNo!,
+                    CustomerPoNo = viewModel.CustomerPoNo,
+                    Quantity = viewModel.Quantity,
+                    BalanceQuantity = viewModel.Quantity,
+                    DeliveredPrice = viewModel.DeliveredPrice,
+                    TotalAmount = viewModel.TotalAmount,
+                    AccountSpecialist = viewModel.AccountSpecialist,
+                    Remarks = viewModel.Remarks,
+                    Company = companyClaims,
+                    CreatedBy = _userManager.GetUserName(User),
+                    ProductId = viewModel.ProductId,
+                    Status = nameof(CosStatus.Created),
+                    OldCosNo = viewModel.OtcCosNo,
+                    Terms = viewModel.Terms,
+                    Branch = viewModel.SelectedBranch,
+                    CustomerType = viewModel.CustomerType!,
+                    OldPrice = !customer.RequiresPriceAdjustment ? viewModel.DeliveredPrice : 0,
+                    Freight = viewModel.Freight,
+                    CustomerName = customer.CustomerName,
+                    ProductName = product.ProductName,
+                    VatType = customer.VatType,
+                    HasEWT = customer.WithHoldingTax,
+                    HasWVAT = customer.WithHoldingVat,
+                    CommissioneeName = commissionee?.SupplierName,
+                    CommissioneeVatType = commissionee?.VatType,
+                    CommissioneeTaxType = commissionee?.TaxType,
+                    BusinessStyle = customer.BusinessStyle,
+                    AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
+                        .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
+                };
+
+                // Upload files if there is existing
+                if (viewModel.UploadedFiles != null)
+                {
+                    var uploadUrls = new List<string>();
+
+                    foreach (var file in viewModel.UploadedFiles)
+                    {
+                        var fileName = GenerateFileNameToSave(file.FileName)!;
+                        await _cloudStorageService.UploadFileAsync(file, fileName);
+                        uploadUrls.Add(fileName);
+                    }
+
+                    model.UploadedFiles = uploadUrls.ToArray();
+                }
+
+                if (model.Branch != null)
+                {
+                    var branch = await _dbContext.FilprideCustomerBranches
+                        .Where(b => b.BranchName == model.Branch)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    model.CustomerAddress = branch!.BranchAddress;
+                    model.CustomerTin = branch.BranchTin;
+                }
+
+                if (viewModel.HasCommission)
+                {
+                    model.HasCommission = viewModel.HasCommission;
+                    model.CommissioneeId = viewModel.CommissioneeId;
+                    model.CommissionRate = viewModel.CommissionRate;
+                }
+
+                await _unitOfWork.FilprideCustomerOrderSlip.AddAsync(model, cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Customer order slip created successfully. Series#: {model.CustomerOrderSlipNo}";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to create customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
@@ -409,64 +407,66 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var exisitingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
-                if (exisitingRecord == null)
+                if (existingRecord == null)
                 {
                     return BadRequest();
                 }
 
                 var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
-                    .GetAsync(p => p.PurchaseOrderNo == exisitingRecord.CustomerPoNo, cancellationToken);
+                    .GetAsync(p => p.PurchaseOrderNo == existingRecord.CustomerPoNo, cancellationToken);
 
                 CustomerOrderSlipViewModel viewModel = new()
                 {
-                    CustomerOrderSlipId = exisitingRecord.CustomerOrderSlipId,
-                    Date = exisitingRecord.Date,
-                    CustomerId = exisitingRecord.CustomerId,
-                    CustomerAddress = exisitingRecord.CustomerAddress,
-                    TinNo = exisitingRecord.CustomerTin,
+                    CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
+                    Date = existingRecord.Date,
+                    CustomerId = existingRecord.CustomerId,
+                    CustomerAddress = existingRecord.CustomerAddress,
+                    TinNo = existingRecord.CustomerTin,
                     Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
-                    HasCommission = exisitingRecord.HasCommission,
-                    CommissioneeId = exisitingRecord.CommissioneeId,
+                    HasCommission = existingRecord.HasCommission,
+                    CommissioneeId = existingRecord.CommissioneeId,
                     Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                    CommissionRate = exisitingRecord.CommissionRate,
-                    CustomerPoNo = exisitingRecord.CustomerPoNo,
-                    Quantity = exisitingRecord.Quantity,
-                    DeliveredPrice = exisitingRecord.DeliveredPrice,
-                    Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((exisitingRecord.TotalAmount / 1.12m)),
-                    TotalAmount = exisitingRecord.TotalAmount,
-                    ProductId = exisitingRecord.ProductId,
+                    CommissionRate = existingRecord.CommissionRate,
+                    CustomerPoNo = existingRecord.CustomerPoNo,
+                    Quantity = existingRecord.Quantity,
+                    DeliveredPrice = existingRecord.DeliveredPrice,
+                    Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m)),
+                    TotalAmount = existingRecord.TotalAmount,
+                    ProductId = existingRecord.ProductId,
                     Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
-                    AccountSpecialist = exisitingRecord.AccountSpecialist,
-                    Remarks = exisitingRecord.Remarks,
-                    OtcCosNo = exisitingRecord.OldCosNo,
-                    Status = exisitingRecord.Status,
-                    Terms = exisitingRecord.Terms,
+                    AccountSpecialist = existingRecord.AccountSpecialist,
+                    Remarks = existingRecord.Remarks,
+                    OtcCosNo = existingRecord.OldCosNo,
+                    Status = existingRecord.Status,
+                    Terms = existingRecord.Terms,
                     Branches = await _unitOfWork.FilprideCustomer
-                        .GetCustomerBranchesSelectListAsync(exisitingRecord.CustomerId, cancellationToken),
-                    SelectedBranch = exisitingRecord.Branch,
-                    CustomerType = exisitingRecord.CustomerType,
+                        .GetCustomerBranchesSelectListAsync(existingRecord.CustomerId, cancellationToken),
+                    SelectedBranch = existingRecord.Branch,
+                    CustomerType = existingRecord.CustomerType,
                     StationCode = getPurchaseOrder?.StationCode,
-                    Freight = exisitingRecord.Freight ?? 0,
+                    Freight = existingRecord.Freight ?? 0,
                 };
 
                 // If there is uploaded, get signed URL
-                if (exisitingRecord.UploadedFiles != null)
+                if (existingRecord.UploadedFiles == null)
                 {
-                    var fileInfos = new List<COSFileInfo>();
-
-                    foreach (var file in exisitingRecord.UploadedFiles)
-                    {
-                        var fileInfo = new COSFileInfo();
-                        fileInfo.FileName = file;
-                        fileInfo.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file);
-                        fileInfos.Add(fileInfo);
-                    }
-
-                    viewModel.FileInfos = fileInfos;
+                    return View(viewModel);
                 }
+
+                var fileInfos = new List<COSFileInfo>();
+
+                foreach (var file in existingRecord.UploadedFiles)
+                {
+                    var fileInfo = new COSFileInfo();
+                    fileInfo.FileName = file;
+                    fileInfo.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file);
+                    fileInfos.Add(fileInfo);
+                }
+
+                viewModel.FileInfos = fileInfos;
 
                 return View(viewModel);
             }
@@ -490,220 +490,226 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
 
-                try
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                if (existingRecord == null)
                 {
-                    var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+                    return NotFound();
+                }
 
-                    if (existingRecord == null)
+                // If there is new upload...
+                if (viewModel.UploadedFiles != null)
+                {
+                    // Delete old files
+                    if (existingRecord.UploadedFiles != null)
+                    {
+                        foreach (var oldFiles in existingRecord.UploadedFiles)
+                        {
+                            await _cloudStorageService.DeleteFileAsync(oldFiles);
+                        }
+                    }
+
+                    // And upload new files
+                    var uploadUrls = new List<string>();
+
+                    foreach (var file in viewModel.UploadedFiles)
+                    {
+                        var fileName = GenerateFileNameToSave(file.FileName)!;
+                        await _cloudStorageService.UploadFileAsync(file, fileName);
+                        uploadUrls.Add(fileName);
+                    }
+
+                    // Replace the old array with new array
+                    existingRecord.UploadedFiles = uploadUrls.ToArray();
+                }
+
+                viewModel.CurrentUser = _userManager.GetUserName(User);
+
+                if (string.IsNullOrEmpty(viewModel.Terms))
+                {
+                    var customer = await _unitOfWork.FilprideCustomer
+                        .GetAsync(cos => cos.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                    if (customer == null)
                     {
                         return NotFound();
                     }
 
-                    // If there is new upload...
-                    if (viewModel.UploadedFiles != null)
-                    {
-                        // Delete old files
-                        if (existingRecord.UploadedFiles != null)
-                        {
-                            foreach (var oldFiles in existingRecord.UploadedFiles)
-                            {
-                                await _cloudStorageService.DeleteFileAsync(oldFiles);
-                            }
-                        }
-
-                        // And upload new files
-                        var uploadUrls = new List<string>();
-
-                        foreach (var file in viewModel.UploadedFiles)
-                        {
-                            var fileName = GenerateFileNameToSave(file.FileName)!;
-                            await _cloudStorageService.UploadFileAsync(file, fileName);
-                            uploadUrls.Add(fileName);
-                        }
-
-                        // Replace the old array with new array
-                        existingRecord.UploadedFiles = uploadUrls.ToArray();
-                    }
-
-                    viewModel.CurrentUser = _userManager.GetUserName(User);
-
-                    if (string.IsNullOrEmpty(viewModel.Terms))
-                    {
-                        var customer = await _unitOfWork.FilprideCustomer
-                            .GetAsync(cos => cos.CustomerId == viewModel.CustomerId, cancellationToken);
-
-                        if (customer == null)
-                        {
-                            return NotFound();
-                        }
-
-                        viewModel.Terms = customer.CustomerTerms;
-                    }
-
-                    var changes = new List<string>();
-
-                    if (existingRecord.Date != viewModel.Date)
-                    {
-                        changes.Add("Order Date was updated.");
-                    }
-
-                    if (existingRecord.ProductId != viewModel.ProductId)
-                    {
-                        changes.Add("Product was updated.");
-                    }
-
-                    if (existingRecord.Quantity != viewModel.Quantity)
-                    {
-                        changes.Add("Quantity was updated.");
-                    }
-
-                    if (existingRecord.OldCosNo != viewModel.OtcCosNo)
-                    {
-                        changes.Add("OTC COS# was updated.");
-                    }
-                    if (existingRecord.CustomerId != viewModel.CustomerId)
-                    {
-                        changes.Add("Customer was updated.");
-                    }
-                    if (existingRecord.DeliveredPrice != viewModel.DeliveredPrice)
-                    {
-                        changes.Add("Delivered Price was updated.");
-                    }
-                    if (existingRecord.CustomerPoNo != viewModel.CustomerPoNo)
-                    {
-                        changes.Add("Customer PO# was updated.");
-                    }
-                    if (existingRecord.HasCommission != viewModel.HasCommission)
-                    {
-                        changes.Add("Commission status was updated.");
-                    }
-                    if (existingRecord.CommissioneeId != viewModel.CommissioneeId)
-                    {
-                        changes.Add("Commissionee was updated.");
-                    }
-                    if (existingRecord.CommissionRate != viewModel.CommissionRate)
-                    {
-                        changes.Add("Commission Rate was updated.");
-                    }
-                    if (existingRecord.AccountSpecialist != viewModel.AccountSpecialist)
-                    {
-                        changes.Add("Account Specialist was updated.");
-                    }
-                    if (existingRecord.Remarks != viewModel.Remarks)
-                    {
-                        changes.Add("Remarks were updated.");
-                    }
-                    if (existingRecord.Branch != viewModel.SelectedBranch)
-                    {
-                        changes.Add("Branch was updated.");
-                    }
-                    if (existingRecord.Terms != viewModel.Terms)
-                    {
-                        changes.Add("Terms was updated.");
-                    }
-                    if (existingRecord.Freight != viewModel.Freight)
-                    {
-                        changes.Add("Freight was updated.");
-                    }
-
-                    await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
-
-                    if (changes.Count > 0 && existingRecord.Status != nameof(CosStatus.Created))
-                    {
-                        var users = await _dbContext.ApplicationUsers
-                            .Where(a => a.Department == SD.Department_TradeAndSupply
-                                        || a.Department == SD.Department_CreditAndCollection
-                                        || a.Department == SD.Department_Finance)
-                            .Select(u => u.Id)
-                            .ToListAsync(cancellationToken);
-
-                        var message = $"{viewModel.CurrentUser!.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}." +
-                                      $" Updates include:\n{string.Join("\n", changes)}";
-
-                        if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
-                        {
-                            message += "\nFor TNS kindly reappoint the supplier.";
-                            existingRecord.Status = nameof(CosStatus.Created);
-                            existingRecord.PickUpPointId = null;
-                            existingRecord.Depot = string.Empty;
-                            existingRecord.OmApprovedBy = null;
-                            existingRecord.OmApprovedDate = null;
-                            existingRecord.FmApprovedBy = null;
-                            existingRecord.FmApprovedDate = null;
-                            existingRecord.CncApprovedBy = null;
-                            existingRecord.CncApprovedDate = null;
-                            existingRecord.FinanceInstruction = null;
-                            existingRecord.OMReason = null;
-                            existingRecord.ExpirationDate = null;
-
-                            await _dbContext.FilprideCOSAppointedSuppliers
-                                .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
-                                .ExecuteDeleteAsync(cancellationToken);
-                        }
-
-                        await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
-
-                        var usernames = await _dbContext.ApplicationUsers
-                            .Where(a => users.Contains(a.Id))
-                            .Select(u => u.UserName)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var username in usernames)
-                        {
-                            var hubConnections = await _dbContext.HubConnections
-                                .Where(h => h.UserName == username)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var hubConnection in hubConnections)
-                            {
-                                await _hubContext.Clients.Client(hubConnection.ConnectionId)
-                                    .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
-                            }
-                        }
-                    }
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Customer order slip updated successfully.";
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                    viewModel.Terms = customer.CustomerTerms;
                 }
-                catch (Exception ex)
+
+                var changes = new List<string>();
+
+                if (existingRecord.Date != viewModel.Date)
                 {
-                    viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-                    viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to edit customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
+                    changes.Add("Order Date was updated.");
                 }
-            }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+                if (existingRecord.ProductId != viewModel.ProductId)
+                {
+                    changes.Add("Product was updated.");
+                }
+
+                if (existingRecord.Quantity != viewModel.Quantity)
+                {
+                    changes.Add("Quantity was updated.");
+                }
+
+                if (existingRecord.OldCosNo != viewModel.OtcCosNo)
+                {
+                    changes.Add("OTC COS# was updated.");
+                }
+                if (existingRecord.CustomerId != viewModel.CustomerId)
+                {
+                    changes.Add("Customer was updated.");
+                }
+                if (existingRecord.DeliveredPrice != viewModel.DeliveredPrice)
+                {
+                    changes.Add("Delivered Price was updated.");
+                }
+                if (existingRecord.CustomerPoNo != viewModel.CustomerPoNo)
+                {
+                    changes.Add("Customer PO# was updated.");
+                }
+                if (existingRecord.HasCommission != viewModel.HasCommission)
+                {
+                    changes.Add("Commission status was updated.");
+                }
+                if (existingRecord.CommissioneeId != viewModel.CommissioneeId)
+                {
+                    changes.Add("Commissionee was updated.");
+                }
+                if (existingRecord.CommissionRate != viewModel.CommissionRate)
+                {
+                    changes.Add("Commission Rate was updated.");
+                }
+                if (existingRecord.AccountSpecialist != viewModel.AccountSpecialist)
+                {
+                    changes.Add("Account Specialist was updated.");
+                }
+                if (existingRecord.Remarks != viewModel.Remarks)
+                {
+                    changes.Add("Remarks were updated.");
+                }
+                if (existingRecord.Branch != viewModel.SelectedBranch)
+                {
+                    changes.Add("Branch was updated.");
+                }
+                if (existingRecord.Terms != viewModel.Terms)
+                {
+                    changes.Add("Terms was updated.");
+                }
+                if (existingRecord.Freight != viewModel.Freight)
+                {
+                    changes.Add("Freight was updated.");
+                }
+
+                await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
+
+                if (changes.Count > 0 && existingRecord.Status != nameof(CosStatus.Created))
+                {
+                    var users = await _dbContext.ApplicationUsers
+                        .Where(a => a.Department == SD.Department_TradeAndSupply
+                                    || a.Department == SD.Department_CreditAndCollection
+                                    || a.Department == SD.Department_Finance)
+                        .Select(u => u.Id)
+                        .ToListAsync(cancellationToken);
+
+                    var message = $"{viewModel.CurrentUser!.ToUpper()} has modified {existingRecord.CustomerOrderSlipNo}." +
+                                  $" Updates include:\n{string.Join("\n", changes)}";
+
+                    if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
+                    {
+                        message += "\nFor TNS kindly reappoint the supplier.";
+                        existingRecord.Status = nameof(CosStatus.Created);
+                        existingRecord.PickUpPointId = null;
+                        existingRecord.Depot = string.Empty;
+                        existingRecord.OmApprovedBy = null;
+                        existingRecord.OmApprovedDate = null;
+                        existingRecord.FmApprovedBy = null;
+                        existingRecord.FmApprovedDate = null;
+                        existingRecord.CncApprovedBy = null;
+                        existingRecord.CncApprovedDate = null;
+                        existingRecord.FinanceInstruction = null;
+                        existingRecord.OMReason = null;
+                        existingRecord.ExpirationDate = null;
+
+                        await _dbContext.FilprideCOSAppointedSuppliers
+                            .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                            .ExecuteDeleteAsync(cancellationToken);
+                    }
+
+                    await _unitOfWork.Notifications.AddNotificationToMultipleUsersAsync(users, message);
+
+                    var usernames = await _dbContext.ApplicationUsers
+                        .Where(a => users.Contains(a.Id))
+                        .Select(u => u.UserName)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var username in usernames)
+                    {
+                        var hubConnections = await _dbContext.HubConnections
+                            .Where(h => h.UserName == username)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var hubConnection in hubConnections)
+                        {
+                            await _hubContext.Clients.Client(hubConnection.ConnectionId)
+                                .SendAsync("ReceivedNotification", "You have a new message.", cancellationToken);
+                        }
+                    }
+                }
+
+                FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer order slip updated successfully.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to edit customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
+            {
                 return NotFound();
+            }
 
             try
             {
                 ViewBag.FilterType = await GetCurrentFilterType();
+
                 var customerOrderSlip = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == id, cancellationToken);
 
                 if (customerOrderSlip == null)
+                {
                     return BadRequest();
+                }
 
                 // Create the view model with basic information
                 var model = CreateBaseViewModel(customerOrderSlip);
@@ -797,13 +803,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(a => a.CustomerOrderSlipId == customerOrderSlipId)
                 .ToListAsync(cancellationToken);
 
-            decimal totalPoAmount = 0;
-            decimal totalQuantity = appointedSuppliers.Sum(a => a.Quantity);
+            var totalPoAmount = 0m;
+            var totalQuantity = appointedSuppliers.Sum(a => a.Quantity);
 
             foreach (var supplier in appointedSuppliers)
             {
                 var po = supplier.PurchaseOrder;
-                bool hasTriggeredPrices = po!.UnTriggeredQuantity != po.Quantity &&
+                var hasTriggeredPrices = po!.UnTriggeredQuantity != po.Quantity &&
                                          po.ActualPrices!.Any(p => p.IsApproved);
 
                 if (hasTriggeredPrices)
@@ -826,23 +832,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private decimal CalculateWeightedCost(FilpridePurchaseOrder po, decimal requiredQuantity)
         {
-            decimal weightedCostTotal = 0m;
-            decimal totalCOSVolume = 0m;
+            var weightedCostTotal = 0m;
+            var totalCosVolume = 0m;
 
             foreach (var price in po.ActualPrices!.Where(p => p.IsApproved).OrderBy(p => p.TriggeredDate))
             {
-                var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCOSVolume);
+                var effectiveVolume = Math.Min(price.TriggeredVolume, requiredQuantity - totalCosVolume);
 
                 weightedCostTotal += effectiveVolume * price.TriggeredPrice;
-                totalCOSVolume += effectiveVolume;
+                totalCosVolume += effectiveVolume;
 
-                if (totalCOSVolume >= requiredQuantity)
+                if (totalCosVolume >= requiredQuantity)
                     break;
             }
 
-            if (totalCOSVolume > 0)
+            if (totalCosVolume > 0)
             {
-                var weightedAvgPrice = weightedCostTotal / totalCOSVolume;
+                var weightedAvgPrice = weightedCostTotal / totalCosVolume;
                 var finalWeightedAvgPrice = po.VatType == SD.VatType_Vatable
                         ?_unitOfWork.FilprideCustomerOrderSlip.ComputeNetOfVat(weightedAvgPrice)
                         : weightedAvgPrice;
@@ -867,6 +873,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+            var message = string.Empty;
+
             try
             {
                 var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
@@ -876,8 +884,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return NotFound();
                 }
-
-                string message = string.Empty;
 
                 if (existingRecord.OmApprovedBy == null)
                 {
@@ -889,14 +895,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                     {
-                        var multiplePO = await _dbContext.FilprideCOSAppointedSuppliers
+                        var multiplePo = await _dbContext.FilprideCOSAppointedSuppliers
                             .Include(a => a.PurchaseOrder)
                             .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
                             .ToListAsync(cancellationToken);
 
                         var poNumbers = new List<string>();
 
-                        foreach (var item in multiplePO)
+                        foreach (var item in multiplePo)
                         {
                             var existingPo = item.PurchaseOrder;
 
@@ -945,13 +951,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 "Purchase Order",
                                 subPoModel.Company);
 
-                            await _dbContext.AddAsync(auditTrailCreate, cancellationToken);
-                            await _dbContext.AddAsync(auditTrailPost, cancellationToken);
+                            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailCreate, cancellationToken);
+                            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailPost, cancellationToken);
 
                             #endregion --Audit Trail Recording
 
                             await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
-                            await _unitOfWork.SaveAsync(cancellationToken);
                         }
 
                         message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
@@ -1047,17 +1052,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                if (existingRecord.DisapprovedBy == null)
-                {
-                    existingRecord.DisapprovedBy = _userManager.GetUserName(User);
-                    existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Status = nameof(CosStatus.Disapproved);
+                existingRecord.DisapprovedBy = _userManager.GetUserName(User);
+                existingRecord.DisapprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.Status = nameof(CosStatus.Disapproved);
 
-                    FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy!, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(existingRecord.DisapprovedBy!, $"Disapproved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                }
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 TempData["success"] = "Customer order slip disapproved successfully.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -1071,15 +1073,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> GetCustomerDetails(int? id)
+        public async Task<IActionResult> GetCustomerDetails(int? id, CancellationToken cancellationToken)
         {
             if (id == null)
             {
                 return Json(null);
             }
 
-            var customer = await _dbContext.FilprideCustomers
-                .FirstOrDefaultAsync(c => c.CustomerId == id);
+            var customer = await _unitOfWork.FilprideCustomer
+                .GetAsync(c => c.CustomerId == id, cancellationToken);
 
             if (customer == null)
             {
@@ -1088,13 +1090,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return Json(new
             {
-                StationCode = customer.StationCode,
+                customer.StationCode,
                 Address = customer.CustomerAddress,
                 TinNo = customer.CustomerTin,
                 Terms = customer.CustomerTerms,
                 customer.CustomerType,
                 Branches = !customer.HasBranch ? null : await _unitOfWork.FilprideCustomer
-                    .GetCustomerBranchesSelectListAsync(customer.CustomerId),
+                    .GetCustomerBranchesSelectListAsync(customer.CustomerId, cancellationToken),
                 customer.HasMultipleTerms
             });
         }
@@ -1104,6 +1106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> AppointSupplier(int? id, CancellationToken cancellationToken)
         {
             ViewBag.FilterType = await GetCurrentFilterType();
+
             if (id == null)
             {
                 return NotFound();
@@ -1149,84 +1152,85 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CurrentUser = _userManager.GetUserName(User);
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    ViewBag.FilterType = await GetCurrentFilterType();
-                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                    var depo = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
-
-                    if (existingCos == null || depo == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Depot = depo.Depot;
-                    existingCos.Status = nameof(CosStatus.ForAtlBooking);
-
-                    switch (viewModel.DeliveryOption)
-                    {
-                        case SD.DeliveryOption_DirectDelivery:
-                            existingCos.Freight = viewModel.Freight;
-                            existingCos.SubPORemarks = viewModel.SubPoRemarks;
-                            break;
-                        case SD.DeliveryOption_ForPickUpByClient:
-                            existingCos.Hauler = null;
-                            existingCos.Freight = 0;
-                            break;
-                    }
-
-                    existingCos.DeliveryOption = viewModel.DeliveryOption;
-
-                    var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
-
-                    foreach (var po in viewModel.PurchaseOrderQuantities)
-                    {
-                        appointedSuppliers.Add(new FilprideCOSAppointedSupplier
-                        {
-                            SupplierId = po.SupplierId,
-                            CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                            PurchaseOrderId = po.PurchaseOrderId,
-                            Quantity = po.Quantity,
-                            UnservedQuantity = po.Quantity,
-                            UnreservedQuantity = po.Quantity,
-                        });
-                    }
-
-                    await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
-
-                    TempData["success"] = "Appointed supplier successfully.";
-
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
-                }
-            }
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-            TempData["error"] = "The submitted information is invalid.";
-            return View(viewModel);
+            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                ViewBag.FilterType = await GetCurrentFilterType();
+                var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                var depo = await _dbContext.FilpridePickUpPoints
+                    .FindAsync(viewModel.PickUpPointId, cancellationToken);
+
+                if (existingCos == null || depo == null)
+                {
+                    return BadRequest();
+                }
+
+                existingCos.PickUpPointId = viewModel.PickUpPointId;
+                existingCos.Depot = depo.Depot;
+                existingCos.Status = nameof(CosStatus.ForAtlBooking);
+
+                switch (viewModel.DeliveryOption)
+                {
+                    case SD.DeliveryOption_DirectDelivery:
+                        existingCos.Freight = viewModel.Freight;
+                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                        break;
+                    case SD.DeliveryOption_ForPickUpByClient:
+                        existingCos.Hauler = null;
+                        existingCos.Freight = 0;
+                        break;
+                }
+
+                existingCos.DeliveryOption = viewModel.DeliveryOption;
+
+                var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
+
+                foreach (var po in viewModel.PurchaseOrderQuantities)
+                {
+                    appointedSuppliers.Add(new FilprideCOSAppointedSupplier
+                    {
+                        SupplierId = po.SupplierId,
+                        CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                        PurchaseOrderId = po.PurchaseOrderId,
+                        Quantity = po.Quantity,
+                        UnservedQuantity = po.Quantity,
+                        UnreservedQuantity = po.Quantity,
+                    });
+                }
+
+                await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
+
+                TempData["success"] = "Appointed supplier successfully.";
+
+                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Appoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
@@ -1312,104 +1316,104 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.CurrentUser = _userManager.GetUserName(User);
-
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
-                        .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                    if (existingCos == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    var depot = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
-
-                    if (depot == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    existingCos.PickUpPointId = viewModel.PickUpPointId;
-                    existingCos.Depot = depot.Depot;
-                    existingCos.Status = nameof(CosStatus.ForAtlBooking);
-                    existingCos.OmApprovedBy = null;
-                    existingCos.OmApprovedDate = null;
-                    existingCos.FmApprovedBy = null;
-                    existingCos.FmApprovedDate = null;
-                    existingCos.CncApprovedBy = null;
-                    existingCos.CncApprovedDate = null;
-                    existingCos.FinanceInstruction = null;
-                    existingCos.OMReason = null;
-                    existingCos.ExpirationDate = null;
-
-                    switch (viewModel.DeliveryOption)
-                    {
-                        case SD.DeliveryOption_DirectDelivery:
-                            existingCos.Freight = viewModel.Freight;
-                            existingCos.SubPORemarks = viewModel.SubPoRemarks;
-                            break;
-                        case SD.DeliveryOption_ForPickUpByClient:
-                            existingCos.Hauler = null;
-                            existingCos.Freight = 0;
-                            break;
-                    }
-
-                    existingCos.DeliveryOption = viewModel.DeliveryOption;
-
-                    var existingAppointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
-                        .Where(a => a.CustomerOrderSlipId == existingCos.CustomerOrderSlipId)
-                        .ToListAsync(cancellationToken);
-
-                    _dbContext.RemoveRange(existingAppointedSuppliers);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
-
-                    foreach (var po in viewModel.PurchaseOrderQuantities)
-                    {
-                        appointedSuppliers.Add(new FilprideCOSAppointedSupplier
-                        {
-                            SupplierId = po.SupplierId,
-                            CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
-                            PurchaseOrderId = po.PurchaseOrderId,
-                            Quantity = po.Quantity,
-                            UnservedQuantity = po.Quantity,
-                            UnreservedQuantity = po.Quantity,
-                        });
-                    }
-
-                    await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
-
-                    TempData["success"] = "Reappointed supplier successfully.";
-
-                    FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
-                }
-                catch (Exception ex)
-                {
-                    viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-                    viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    _logger.LogError(ex, "Failed to re-appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    return View(viewModel);
-                }
-            }
             viewModel.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+            viewModel.PickUpPoints = await _unitOfWork.GetDistinctFilpridePickupPointListById(companyClaims, cancellationToken);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
+                    .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+                if (existingCos == null)
+                {
+                    return BadRequest();
+                }
+
+                var depot = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
+
+                if (depot == null)
+                {
+                    return BadRequest();
+                }
+
+                existingCos.PickUpPointId = viewModel.PickUpPointId;
+                existingCos.Depot = depot.Depot;
+                existingCos.Status = nameof(CosStatus.ForAtlBooking);
+                existingCos.OmApprovedBy = null;
+                existingCos.OmApprovedDate = null;
+                existingCos.FmApprovedBy = null;
+                existingCos.FmApprovedDate = null;
+                existingCos.CncApprovedBy = null;
+                existingCos.CncApprovedDate = null;
+                existingCos.FinanceInstruction = null;
+                existingCos.OMReason = null;
+                existingCos.ExpirationDate = null;
+
+                switch (viewModel.DeliveryOption)
+                {
+                    case SD.DeliveryOption_DirectDelivery:
+                        existingCos.Freight = viewModel.Freight;
+                        existingCos.SubPORemarks = viewModel.SubPoRemarks;
+                        break;
+                    case SD.DeliveryOption_ForPickUpByClient:
+                        existingCos.Hauler = null;
+                        existingCos.Freight = 0;
+                        break;
+                }
+
+                existingCos.DeliveryOption = viewModel.DeliveryOption;
+
+                var existingAppointedSuppliers = await _dbContext.FilprideCOSAppointedSuppliers
+                    .Where(a => a.CustomerOrderSlipId == existingCos.CustomerOrderSlipId)
+                    .ToListAsync(cancellationToken);
+
+                _dbContext.RemoveRange(existingAppointedSuppliers);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                var appointedSuppliers = new List<FilprideCOSAppointedSupplier>();
+
+                foreach (var po in viewModel.PurchaseOrderQuantities)
+                {
+                    appointedSuppliers.Add(new FilprideCOSAppointedSupplier
+                    {
+                        SupplierId = po.SupplierId,
+                        CustomerOrderSlipId = existingCos.CustomerOrderSlipId,
+                        PurchaseOrderId = po.PurchaseOrderId,
+                        Quantity = po.Quantity,
+                        UnservedQuantity = po.Quantity,
+                        UnreservedQuantity = po.Quantity,
+                    });
+                }
+
+                await _dbContext.FilprideCOSAppointedSuppliers.AddRangeAsync(appointedSuppliers, cancellationToken);
+
+                TempData["success"] = "Reappointed supplier successfully.";
+
+                FilprideAuditTrail auditTrailBook = new(viewModel.CurrentUser!, $"Reappoint supplier in customer order slip# {existingCos.CustomerOrderSlipNo}", "Customer Order Slip", existingCos.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to re-appoint supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Appointed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> GetPurchaseOrders(string supplierIds, string depot, int? productId, int? cosId, CancellationToken cancellationToken)
@@ -1434,7 +1438,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Quantity = a.Quantity
                     })
                     .ToListAsync(cancellationToken)
-                : new List<PurchaseOrderQuantityInfo>();
+                : [];
 
 
             var purchaseOrders = await _dbContext.FilpridePurchaseOrders
@@ -1738,23 +1742,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            var filprideProduct = await _dbContext.Products.FindAsync(productId);
-            var mobilityProduct = await _dbContext.MobilityProducts.FirstOrDefaultAsync(p => p.ProductCode == filprideProduct!.ProductCode, cancellationToken);
-            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
-                .Where(p => p.ProductId == mobilityProduct!.ProductId && p.StationCode == stationCode && p.PostedBy != null && !p.IsReceived)
+            var filprideProduct = await _unitOfWork.Product.GetAsync(x => x.ProductId == productId, cancellationToken);
+            var mobilityProduct = await _unitOfWork.MobilityProduct.GetAsync(p => p.ProductCode == filprideProduct!.ProductCode, cancellationToken);
+
+            var purchaseOrder = (await _unitOfWork.MobilityPurchaseOrder
+                .GetAllAsync(p => p.ProductId == mobilityProduct!.ProductId
+                            && p.StationCode == stationCode
+                            && p.PostedBy != null
+                            && !p.IsReceived, cancellationToken))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderId.ToString(),
                     Text = po.PurchaseOrderNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
-            if (!purchaseOrder.Any())
-            {
-                return Json(null);
-            }
-
-            return Json(purchaseOrder);
+            return Json(purchaseOrder.Count == 0 ? null : purchaseOrder);
         }
         public async Task<IActionResult> GetPurchaseOrder(string? customerPoNo, CancellationToken cancellationToken)
         {
@@ -1763,8 +1766,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(null);
             }
 
-            var purchaseOrder = await _dbContext.MobilityPurchaseOrders
-                .FirstOrDefaultAsync(p => p.PurchaseOrderNo == customerPoNo.TrimStart().TrimEnd(), cancellationToken);
+            var purchaseOrder = await _unitOfWork.MobilityPurchaseOrder
+                .GetAsync(p => p.PurchaseOrderNo == customerPoNo.Trim(), cancellationToken);
 
             if (purchaseOrder == null)
             {
@@ -1861,7 +1864,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);

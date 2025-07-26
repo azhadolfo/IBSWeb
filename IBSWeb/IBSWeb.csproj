@@ -58,5 +58,9 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\Dispatch_Ticket_Uploads\test.mp4" />
+  </ItemGroup>
+
 
 </Project>

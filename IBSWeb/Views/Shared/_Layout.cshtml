@@ -23,7 +23,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - IBSWeb</title>
-    <link href="~/img/ibs-logo.svg" rel="shortcut icon" type="image/svg" />
+    <link id="favicon-light" href="/svg/ibs-icon-black.svg" rel="shortcut icon" type="image/svg+xml" />
+    <link id="favicon-dark" href="/svg/ibs-icon-white.svg" rel="shortcut icon" type="image/svg+xml" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css">
     <link rel="stylesheet" href="~/IBSWeb.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -39,7 +40,7 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-primary border-bottom box-shadow mb-3 fixed-top">
             <div class="container-fluid px-4">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/img/ibs.png" class="ms-4" alt="IBSWeb" width="45" height="45"/>
+                    <img src="~/svg/ibs-logo-white.svg" class="ms-4" alt="IBSWeb" width="45" height="45"/>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -1130,5 +1131,27 @@
     });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+        function updateFavicon(e) {
+            const faviconLight = document.getElementById('favicon-light');
+            const faviconDark = document.getElementById('favicon-dark');
+    
+            if (e.matches) {
+                faviconDark.rel = 'shortcut icon';
+                faviconLight.rel = '';
+            } else {
+                faviconDark.rel = '';
+                faviconLight.rel = 'shortcut icon';
+            }
+        }
+    
+        // Initial check
+        updateFavicon(darkModeMediaQuery);
+    
+        // Listen for changes
+        darkModeMediaQuery.addEventListener('change', updateFavicon);
+    </script>
 </body>
 </html>

@@ -228,28 +228,14 @@
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
                             if (row.postedBy == null) {
-                                if (row.multipleSIId != null) {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("MultipleCollectionEdit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
-                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-                                } else {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("Edit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
+                                dropdownHtml += `
+                                        <li><a href="@Url.Action("EditForService", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
                                         <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-                                }
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                             } else {
-                                if (row.multipleSIId != null) {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
-
-                                } else {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
-                                }
+                                dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                             }
-
                             dropdownHtml += `</ul></div>`;
                             return dropdownHtml;
                         }

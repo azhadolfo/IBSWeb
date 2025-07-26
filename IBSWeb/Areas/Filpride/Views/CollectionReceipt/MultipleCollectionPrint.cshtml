@@ -3,7 +3,6 @@
 @using IBS.Models
 @using IBS.Utility.Constants
 @using IBS.Utility.Enums
-@using IBS.Utility.Helpers
 @using Microsoft.AspNetCore.Identity
 @model FilprideCollectionReceipt
 @inject SignInManager<ApplicationUser> SignInManager
@@ -19,8 +18,13 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
     
-    var customerType = Model.Customer!.CustomerType;
+    var customerType = Model.SalesInvoice?.CustomerOrderSlip?.CustomerType ?? Model.Customer!.CustomerType;
+    var customerName = Model.SalesInvoice?.CustomerOrderSlip?.CustomerName ?? Model.Customer!.CustomerName;
+    var customerAddress = Model.SalesInvoice?.CustomerOrderSlip?.CustomerAddress ?? Model.Customer!.CustomerAddress;
+    var customerTin = Model.SalesInvoice?.CustomerOrderSlip?.CustomerTin ?? Model.Customer!.CustomerTin;
+    var customerBusinessStyle = Model.SalesInvoice?.CustomerOrderSlip?.BusinessStyle ?? Model.Customer!.BusinessStyle;
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+}
     
 }
 
@@ -54,23 +58,23 @@
             <tr>
                 <td colspan="2" style="padding-left:10px;">
                     Received from: &nbsp;
-                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerName)
+                    @customerName
                 </td>
             </tr>
             <tr>
                 <td colspan="2" class="w-50" style="padding-left:10px;">
                     Address: &nbsp;
-                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerAddress)
+                    @customerAddress
                 </td>
             </tr>
             <tr>
                 <td style="padding-left:10px;">
                     TIN: &nbsp;
-                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerTin)
+                    @customerTin
                 </td>
                 <td style="padding-left:10px;">
                     Buss. Style: &nbsp;
-                    @Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.BusinessStyle)
+                    @customerBusinessStyle
                 </td>
             </tr>
             @{
@@ -223,7 +227,7 @@
                 <td class="text-center">
                     @if (Model.BankId != null)
                     {
-                        <p style="height: 9px;">@Model.BankAccount?.Bank @Model.BankAccountNumber</p>
+                        <p>@Model.BankAccount?.Bank @Model.BankAccountNumber</p>
                     }
                     else
                     {
@@ -244,60 +248,6 @@
                     @if (Model.CheckAmount > 0)
                     {
                         <p style="height: 9px;">@Model.CheckAmount.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding-left:20px;">Manager's Check</td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckDate != null)
-                    {
-                        <p style="height: 9px;">@Model.ManagerCheckDate?.ToString(SD.Date_Format)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckNo != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckNo)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckBank != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBank)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckBranch != null)
-                    {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.ManagerCheckBranch)</p>
-                    }
-                    else
-                    {
-                        <p></p>
-                    }
-                </td>
-                <td class="text-center">
-                    @if (Model.ManagerCheckAmount > 0)
-                    {
-                        <p style="height: 9px;">@Model.ManagerCheckAmount.ToString(decimalFormat)</p>
                     }
                     else
                     {

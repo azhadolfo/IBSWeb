@@ -30,10 +30,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey(nameof(SalesInvoiceId))]
         public FilprideSalesInvoice? SalesInvoice { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? SalesInvoices { get; set; }
-
-        //Service Invoice Property
         public int? ServiceInvoiceId { get; set; }
 
         [Display(Name = "Sales Invoice No.")]
@@ -43,23 +39,11 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [ForeignKey("ServiceInvoiceId")]
         public FilprideServiceInvoice? ServiceInvoice { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? ServiceInvoices { get; set; }
-
-        //Customer Property
         [ForeignKey(nameof(CustomerId))]
         public FilprideCustomer? Customer { get; set; }
 
-        [NotMapped]
-        public List<SelectListItem>? Customers { get; set; }
-
         [Required(ErrorMessage = "Customer is required.")]
         public int CustomerId { get; set; }
-
-        //COA Property
-
-        [NotMapped]
-        public List<SelectListItem>? ChartOfAccounts { get; set; }
 
         [Required]
         [Display(Name = "Transaction Date")]
@@ -116,9 +100,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         private string? _checkBranch;
 
-        [NotMapped]
-        public List<SelectListItem>? BankAccounts { get; set; }
-
         [ForeignKey(nameof(BankId))]
         public FilprideBankAccount? BankAccount { get; set; }
 
@@ -131,23 +112,6 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
-
-        //Manager's Check
-        [Column(TypeName = "date")]
-        public DateOnly? ManagerCheckDate { get; set; }
-
-        [StringLength(50)]
-        public string? ManagerCheckNo { get; set; }
-
-        [StringLength(50)]
-        public string? ManagerCheckBank { get; set; }
-
-        [StringLength(50)]
-        public string? ManagerCheckBranch { get; set; }
-
-        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
-        [Column(TypeName = "numeric(18,4)")]
-        public decimal ManagerCheckAmount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
