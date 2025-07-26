@@ -203,49 +203,48 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
                     {
-                        var cv = await _dbContext
-                        .FilprideCheckVoucherHeaders
-                        .Where(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId)
-                        .ToListAsync(cancellationToken);
+                        var cv = await _unitOfWork.FilprideCheckVoucher
+                        .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+
                         if (cv.Any())
                         {
-                            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
+                            viewModel.COA = (await _unitOfWork.FilprideChartOfAccount
+                                .GetAllAsync(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren, cancellationToken))
                                 .Select(s => new SelectListItem
                                 {
                                     Value = s.AccountNumber,
                                     Text = s.AccountNumber + " " + s.AccountName
                                 })
-                                .ToListAsync(cancellationToken);
+                                .ToList();
 
-                            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
+                            viewModel.Suppliers = (await _unitOfWork.FilprideSupplier
+                                .GetAllAsync(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade", cancellationToken))
                                 .Select(sup => new SelectListItem
                                 {
                                     Value = sup.SupplierId.ToString(),
                                     Text = sup.SupplierName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
-                            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
-                                .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
+                            viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
                                 .Select(po => new SelectListItem
                                 {
                                     Value = po.PurchaseOrderNo!.ToString(),
                                     Text = po.PurchaseOrderNo
                                 })
-                                .ToListAsync(cancellationToken);
+                                .ToList();
 
-                            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
+                            viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
+                                .GetAllAsync(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility), cancellationToken))
                                 .Select(ba => new SelectListItem
                                 {
                                     Value = ba.BankAccountId.ToString(),
                                     Text = ba.AccountNo + " " + ba.AccountName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
-                            TempData["info"] = "Check No. Is already exist";
+                            TempData["info"] = "Check No. already exists";
                             return View(viewModel);
                         }
                     }
@@ -254,9 +253,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get PO --
 
-                    var getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
-                                                    .Where(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo))
-                                                    .FirstOrDefaultAsync(cancellationToken);
+                    var getPurchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                        .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
 
                     if (getPurchaseOrder == null)
                     {
@@ -272,9 +270,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -321,8 +318,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         OldCvNo = viewModel.OldCVNo
                     };
 
-                    await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
 
                     #endregion --Saving the default entries
 
@@ -365,12 +361,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                     FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
                     TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
@@ -385,14 +380,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-                    viewModel.PONo = await _dbContext.FilpridePurchaseOrders
-                                .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
+                    viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
                                 .Select(po => new SelectListItem
                                 {
                                     Value = po.PurchaseOrderNo!.ToString(),
                                     Text = po.PurchaseOrderNo
                                 })
-                                .ToListAsync(cancellationToken);
+                                .ToList();
 
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["error"] = ex.Message;
@@ -404,14 +399,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            viewModel.PONo = await _dbContext.FilpridePurchaseOrders
-                .Where(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null)
+            viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
                 .Select(po => new SelectListItem
                 {
                     Value = po.PurchaseOrderNo!.ToString(),
                     Text = po.PurchaseOrderNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             TempData["warning"] = "The information provided was invalid.";
             return View(viewModel);
@@ -441,10 +436,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims
-                             && !rr.IsPaid
-                             && poNumber.Contains(rr.PONo)
-                             && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -498,8 +490,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (supplierId != null)
             {
-                var supplier = await _dbContext.FilprideSuppliers
-                    .FirstOrDefaultAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
 
                 if (supplier != null)
                 {
@@ -587,15 +579,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.PONo = await _dbContext.FilpridePurchaseOrders
-                .Where(p => !p.IsSubPo && p.Company == companyClaims)
+            model.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                .GetAllAsync(p => !p.IsSubPo && p.Company == companyClaims, cancellationToken))
                 .OrderBy(s => s.PurchaseOrderNo)
                 .Select(s => new SelectListItem
                 {
                     Value = s.PurchaseOrderNo,
                     Text = s.PurchaseOrderNo
                 })
-                .ToListAsync(cancellationToken);
+                .ToList();
 
             model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -609,6 +601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (ModelState.IsValid)
             {
                 await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
                 var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
                     .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId,
                         cancellationToken);
@@ -632,7 +625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
 
                     _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var details = new List<FilprideCheckVoucherDetail>();
 
@@ -662,9 +655,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -714,7 +706,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var item in getCheckVoucherTradePayment)
                     {
-                        var recevingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                        var recevingReport = await _unitOfWork.FilprideReceivingReport
+                            .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
                         if (recevingReport == null)
                         {
@@ -725,12 +718,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                     foreach (var item in viewModel.RRs)
                     {
-                        var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                        var getReceivingReport = await _unitOfWork.FilprideReceivingReport
+                            .GetAsync(rr => rr.ReceivingReportId == item.Id, cancellationToken);
 
                         if (getReceivingReport == null)
                         {
@@ -750,7 +744,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     #endregion -- Partial payment of RR's
 
@@ -765,11 +759,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Trade edited successfully";
                     return RedirectToAction(nameof(Index));
@@ -781,15 +774,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     _logger.LogError(ex, "Failed to edit check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                         ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                    viewModel.PONo = await _dbContext.FilpridePurchaseOrders
-                        .Where(p => !p.IsSubPo && p.Company == companyClaims)
+                    viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                        .GetAllAsync(p => !p.IsSubPo && p.Company == companyClaims, cancellationToken))
                         .OrderBy(s => s.PurchaseOrderNo)
                         .Select(s => new SelectListItem
                         {
                             Value = s.PurchaseOrderNo,
                             Text = s.PurchaseOrderNo
                         })
-                        .ToListAsync(cancellationToken);
+                        .ToList();
 
                     viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -827,8 +820,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
-            var getSupplier = await _dbContext.FilprideSuppliers
-                .FirstOrDefaultAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility), cancellationToken);
+            var getSupplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility), cancellationToken);
 
             if (header.Category == "Trade" && header.RRNo != null)
             {
@@ -837,8 +830,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     var rrValue = header.RRNo[i];
 
-                    var rr = await _dbContext.FilprideReceivingReports
-                                .FirstOrDefaultAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue);
+                    var rr = await _unitOfWork.FilprideReceivingReport
+                                .GetAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue, cancellationToken);
 
                     if (rr != null)
                     {
@@ -875,7 +868,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var printedBy = _userManager.GetUserName(User)!;
                 FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
@@ -898,7 +891,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.Supplier)
                 .Include(cvd => cvd.BankAccount)
                 .ToListAsync(cancellationToken);
-            var supplierName = await _dbContext.FilprideSuppliers.Where(s => s.SupplierId == supplierId).Select(s => s.SupplierName).FirstOrDefaultAsync(cancellationToken);
+
+            var supplierName = (await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId, cancellationToken))?.SupplierName;
 
             if (modelHeader != null)
             {
@@ -921,14 +916,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         if (item.DocumentType == "RR")
                         {
-                            var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                            var receivingReport = await _unitOfWork.FilprideReceivingReport
+                                .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
                             receivingReport!.IsPaid = true;
                             receivingReport.PaidDate = DateTimeHelper.GetCurrentPhilippineTime();
                         }
                         if (item.DocumentType == "DR")
                         {
-                            var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                                .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
                             if (item.CV.CvType == "Commission")
                             {
@@ -1007,13 +1004,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var disbursement = new List<FilprideDisbursementBook>();
                     foreach (var details in modelDetails)
                     {
-                        var bank = _dbContext.FilprideBankAccounts.FirstOrDefault(model => model.BankAccountId == modelHeader.BankId);
+                        var bank = await _unitOfWork.FilprideBankAccount.GetAsync(model => model.BankAccountId == modelHeader.BankId, cancellationToken);
                         disbursement.Add(
                                 new FilprideDisbursementBook
                                 {
                                     Date = modelHeader.Date,
                                     CVNo = modelHeader.CheckVoucherHeaderNo!,
-                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : supplierName!,
+                                    Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
                                     Amount = modelHeader.Total,
                                     Particulars = modelHeader.Particulars!,
                                     Bank = bank != null ? bank.Branch : "N/A",
@@ -1036,11 +1033,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", modelHeader.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Check Voucher has been Posted.";
                     return RedirectToAction(nameof(Print), new { id, supplierId });
@@ -1061,7 +1057,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -1087,14 +1084,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             if (item.DocumentType == "RR")
                             {
-                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                                var receivingReport = await _unitOfWork.FilprideReceivingReport
+                                    .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
                                 receivingReport!.IsPaid = false;
                                 receivingReport.AmountPaid -= item.AmountPaid;
                             }
                             if (item.DocumentType == "DR")
                             {
-                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                                var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                                    .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
+
                                 if (item.CV.CvType == "Commission")
                                 {
                                     deliveryReceipt!.IsCommissionPaid = false;
@@ -1133,11 +1133,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
 
                         TempData["success"] = "Check Voucher has been Cancelled.";
@@ -1161,7 +1160,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideCheckVoucherHeaders.FindAsync(id, cancellationToken);
+            var model = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
             if (model != null)
             {
@@ -1180,8 +1179,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                         model.Status = nameof(Status.Voided);
 
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo);
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo);
+                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
+                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
 
                         #region -- Recalculate payment of RR's or DR's
 
@@ -1194,14 +1193,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             if (item.DocumentType == "RR")
                             {
-                                var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                                var receivingReport = await _unitOfWork.FilprideReceivingReport
+                                    .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
                                 receivingReport!.IsPaid = false;
                                 receivingReport.AmountPaid -= item.AmountPaid;
                             }
                             if (item.DocumentType == "DR")
                             {
-                                var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                                var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                                    .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
+
                                 if (item.CV.CvType == "Commission")
                                 {
                                     deliveryReceipt!.IsCommissionPaid = false;
@@ -1240,11 +1242,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
                         await transaction.CommitAsync(cancellationToken);
                         TempData["success"] = "Check Voucher has been Voided.";
 
@@ -1294,8 +1295,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cvHeader.PostedBy = null;
                 cvHeader.Status = nameof(CheckVoucherPaymentStatus.ForPosting);
 
-                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo);
-                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(d => d.CVNo == cvHeader.CheckVoucherHeaderNo);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == cvHeader.CheckVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(d => d.CVNo == cvHeader.CheckVoucherHeaderNo, cancellationToken);
 
                 #region -- Revert the tagging of RR's or DR's
 
@@ -1308,13 +1309,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     if (item.DocumentType == "RR")
                     {
-                        var receivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.DocumentId, cancellationToken);
+                        var receivingReport = await _unitOfWork.FilprideReceivingReport
+                            .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
 
                         receivingReport!.IsPaid = false;
                     }
                     if (item.DocumentType == "DR")
                     {
-                        var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                        var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
                         if (item.CV.CvType == "Commission")
                         {
                             deliveryReceipt!.IsCommissionPaid = false;
@@ -1351,11 +1354,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Check Voucher has been Unposted.";
                 return RedirectToAction(nameof(Print), new { id });
@@ -1613,9 +1615,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var cvNos = selectedList.Select(item => item.CheckVoucherHeaderNo).ToList();
 
-                    var checkVoucherPayment = await _dbContext.FilprideCheckVoucherHeaders
-                        .Where(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference))
-                        .ToListAsync();
+                    var checkVoucherPayment = await _unitOfWork.FilprideCheckVoucher
+                        .GetAllAsync(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference));
 
                     foreach (var item in checkVoucherPayment)
                     {
@@ -1761,9 +1762,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     var rrIds = cvTradePaymentList.Select(item => item.DocumentId).ToList();
 
-                    getReceivingReport = await _dbContext.FilprideReceivingReports
-                        .Where(rr => rrIds.Contains(rr.ReceivingReportId))
-                        .ToListAsync();
+                    getReceivingReport = (await _unitOfWork.FilprideReceivingReport
+                        .GetAllAsync(rr => rrIds.Contains(rr.ReceivingReportId))).ToList();
 
                     int rrRow = 2;
                     var currentRR = "";
@@ -1810,10 +1810,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     List<FilpridePurchaseOrder> getPurchaseOrder = new List<FilpridePurchaseOrder>();
 
-                    getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
-                        .Where(po => getReceivingReport.Select(item => item.POId).Contains(po.PurchaseOrderId))
+                    getPurchaseOrder = (await _unitOfWork.FilpridePurchaseOrder
+                        .GetAllAsync(po => getReceivingReport.Select(item => item.POId).Contains(po.PurchaseOrderId)))
                         .OrderBy(po => po.PurchaseOrderNo)
-                        .ToListAsync();
+                        .ToList();
 
                     int poRow = 2;
                     var currentPO = "";
@@ -1877,12 +1877,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion -- export xlsx record --
 
         [HttpGet]
-        public IActionResult GetAllCheckVoucherIds()
+        public async Task<IActionResult> GetAllCheckVoucherIds()
         {
-            var cvIds = _dbContext.FilprideCheckVoucherHeaders
-                                     .Where(cv => cv.Type == nameof(DocumentType.Documented))
-                                     .Select(cv => cv.CheckVoucherHeaderId) // Assuming Id is the primary key
-                                     .ToList();
+            var cvIds = (await _unitOfWork.FilprideCheckVoucher
+                 .GetAllAsync(cv => cv.Type == nameof(DocumentType.Documented)))
+                 .Select(cv => cv.CheckVoucherHeaderId) // Assuming Id is the primary key
+                 .ToList();
 
             return Json(cvIds);
         }
@@ -1927,38 +1927,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
                     {
-                        var cv = await _dbContext
-                        .FilprideCheckVoucherHeaders
-                        .Where(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId)
-                        .ToListAsync(cancellationToken);
+                        var cv = await _unitOfWork.FilprideCheckVoucher
+                            .GetAllAsync(cv =>
+                                cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo &&
+                                cv.BankId == viewModel.BankId, cancellationToken);
+
                         if (cv.Any())
                         {
-                            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
+                            viewModel.COA = (await _unitOfWork.FilprideChartOfAccount
+                                .GetAllAsync(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren, cancellationToken))
                                 .Select(s => new SelectListItem
                                 {
                                     Value = s.AccountNumber,
                                     Text = s.AccountNumber + " " + s.AccountName
                                 })
-                                .ToListAsync(cancellationToken);
+                                .ToList();
 
-                            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
+                            viewModel.Suppliers = (await _unitOfWork.FilprideSupplier
+                                .GetAllAsync(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade", cancellationToken))
                                 .Select(sup => new SelectListItem
                                 {
                                     Value = sup.SupplierId.ToString(),
                                     Text = sup.SupplierName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
-                            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
+                            viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
+                                .GetAllAsync(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility), cancellationToken))
                                 .Select(ba => new SelectListItem
                                 {
                                     Value = ba.BankAccountId.ToString(),
                                     Text = ba.AccountNo + " " + ba.AccountName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
                             TempData["info"] = "Check No. Is already exist";
                             return View(viewModel);
@@ -1969,10 +1970,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get DR --
 
-                    var getDeliveryReceipt = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => dr.DeliveryReceiptId == viewModel.DRs.Select(dr => dr.Id).FirstOrDefault() && dr.Company == companyClaims)
-                        .Include(dr => dr.PurchaseOrder)
-                        .FirstOrDefaultAsync(cancellationToken);
+                    var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(
+                            dr => dr.DeliveryReceiptId == viewModel.DRs.Select(dr => dr.Id).FirstOrDefault() &&
+                                  dr.Company == companyClaims, cancellationToken);
 
                     if (getDeliveryReceipt == null)
                     {
@@ -1988,9 +1989,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -2034,8 +2034,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         BankAccountNumber = bank.AccountNo
                     };
 
-                    await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
 
                     #endregion --Saving the default entries
 
@@ -2070,7 +2069,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var cVTradePaymentModel = new List<FilprideCVTradePayment>();
                     foreach (var item in viewModel.DRs)
                     {
-                        var getDeliveryReceipts = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
+                        var getDeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
 
                         if (getDeliveryReceipts == null)
                         {
@@ -2105,12 +2105,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
                     TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
@@ -2179,38 +2178,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
                     {
-                        var cv = await _dbContext
-                        .FilprideCheckVoucherHeaders
-                        .Where(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId)
-                        .ToListAsync(cancellationToken);
+                        var cv = await _unitOfWork.FilprideCheckVoucher
+                            .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
+
                         if (cv.Any())
                         {
-                            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                                .Where(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren)
+                            viewModel.COA = (await _unitOfWork.FilprideChartOfAccount
+                                .GetAllAsync(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren, cancellationToken))
                                 .Select(s => new SelectListItem
                                 {
                                     Value = s.AccountNumber,
                                     Text = s.AccountNumber + " " + s.AccountName
                                 })
-                                .ToListAsync(cancellationToken);
+                                .ToList();
 
-                            viewModel.Suppliers = await _dbContext.FilprideSuppliers
-                                .Where(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade")
+                            viewModel.Suppliers = (await _unitOfWork.FilprideSupplier
+                                .GetAllAsync(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade", cancellationToken))
                                 .Select(sup => new SelectListItem
                                 {
                                     Value = sup.SupplierId.ToString(),
                                     Text = sup.SupplierName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
-                            viewModel.BankAccounts = await _dbContext.FilprideBankAccounts
-                                .Where(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility))
+                            viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
+                                .GetAllAsync(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility), cancellationToken))
                                 .Select(ba => new SelectListItem
                                 {
                                     Value = ba.BankAccountId.ToString(),
                                     Text = ba.AccountNo + " " + ba.AccountName
                                 })
-                                .ToListAsync();
+                                .ToList();
 
                             TempData["info"] = "Check No. Is already exist";
                             return View(viewModel);
@@ -2221,10 +2219,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get DR --
 
-                    var getDeliveryReceipt = await _dbContext.FilprideDeliveryReceipts
-                        .Where(dr => dr.DeliveryReceiptId == viewModel.DRs.Select(dr => dr.Id).FirstOrDefault() && dr.Company == companyClaims)
-                        .Include(dr => dr.PurchaseOrder)
-                        .FirstOrDefaultAsync(cancellationToken);
+                    var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(dr => dr.DeliveryReceiptId == viewModel.DRs.Select(dr => dr.Id).FirstOrDefault() && dr.Company == companyClaims, cancellationToken);
 
                     if (getDeliveryReceipt == null)
                     {
@@ -2240,9 +2236,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -2287,8 +2282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         BankAccountNumber = bank.AccountNo
                     };
 
-                    await _dbContext.FilprideCheckVoucherHeaders.AddAsync(cvh, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
 
                     #endregion --Saving the default entries
 
@@ -2323,7 +2317,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var cVTradePaymentModel = new List<FilprideCVTradePayment>();
                     foreach (var item in viewModel.DRs)
                     {
-                        var getDeliveryReceipts = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
+                        var getDeliveryReceipts = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
 
                         if (getDeliveryReceipts == null)
                         {
@@ -2358,12 +2353,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
                     TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
 
@@ -2397,11 +2391,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
-                .Where(dr => dr.Company == companyClaims
-                             && commissioneeId == dr.CommissioneeId
-                             && dr.CommissionAmount != 0
-                             && !dr.IsCommissionPaid
-                             && dr.PostedBy != null);
+                .Where(dr => dr.Company == companyClaims && commissioneeId == dr.CommissioneeId && dr.CommissionAmount != 0
+                             && !dr.IsCommissionPaid && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2410,14 +2401,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
-                query = query.Union(_dbContext.FilprideDeliveryReceipts
-                    .Where(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
+                query = query.Union(await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId), cancellationToken));
             }
 
             var deliverReceipt = await query
                 .Include(dr => dr.Commissionee)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             if (query.Any())
             {
@@ -2451,11 +2442,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
-                .Where(dr => dr.Company == companyClaims
-                             && dr.HaulerId == haulerId
-                             && dr.FreightAmount != 0
-                             && !dr.IsFreightPaid
-                             && dr.PostedBy != null);
+                .Where(dr => dr.Company == companyClaims && dr.HaulerId == haulerId && dr.FreightAmount != 0
+                             && !dr.IsFreightPaid && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2464,14 +2452,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
-                query = query.Union(_dbContext.FilprideDeliveryReceipts
-                    .Where(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId)));
+                query = query.Union(await _unitOfWork.FilprideDeliveryReceipt
+                    .GetAllAsync(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId), cancellationToken));
             }
 
             var deliverReceipt = await query
                 .Include(dr => dr.Hauler)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             if (query.Any())
             {
@@ -2598,7 +2586,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
 
                     _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var details = new List<FilprideCheckVoucherDetail>();
 
@@ -2628,9 +2616,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -2678,7 +2665,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var item in getCheckVoucherTradePayment)
                     {
-                        var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                        var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
                         if (deliveryReceipt == null)
                         {
@@ -2689,12 +2677,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                     foreach (var item in viewModel.DRs)
                     {
-                        var getDeliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
+                        var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
 
                         if (getDeliveryReceipt == null)
                         {
@@ -2714,7 +2703,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     #endregion -- Partial payment of RR's
 
@@ -2854,7 +2843,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
 
                     _dbContext.RemoveRange(existingDetailsModel);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var details = new List<FilprideCheckVoucherDetail>();
 
@@ -2884,9 +2873,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Get Supplier
 
-                    var supplier = await _dbContext
-                        .FilprideSuppliers
-                        .FirstOrDefaultAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+                    var supplier = await _unitOfWork.FilprideSupplier
+                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
 
                     if (supplier == null)
                     {
@@ -2934,7 +2922,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var item in getCheckVoucherTradePayment)
                     {
-                        var deliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.DocumentId, cancellationToken);
+                        var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
                         if (deliveryReceipt == null)
                         {
@@ -2945,12 +2934,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                     foreach (var item in viewModel.DRs)
                     {
-                        var getDeliveryReceipt = await _dbContext.FilprideDeliveryReceipts.FindAsync(item.Id, cancellationToken);
+                        var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                            .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
 
                         if (getDeliveryReceipt == null)
                         {
@@ -2970,7 +2960,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
 
                     #endregion -- Partial payment of RR's
 
@@ -2985,11 +2975,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Trade edited successfully";
                     return RedirectToAction(nameof(Index));
@@ -3025,8 +3014,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var poNumber in poNumbers)
             {
-                var po = await _dbContext.FilpridePurchaseOrders
-                    .FirstOrDefaultAsync(p => p.PurchaseOrderNo == poNumber && p.Company == companyClaims, cancellationToken);
+                var po = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(p => p.PurchaseOrderNo == poNumber && p.Company == companyClaims, cancellationToken);
 
                 if (po != null && (po.Terms == SD.Terms_Cod || po.Terms == SD.Terms_Prepaid) && advanceAmount == 0)
                 {
