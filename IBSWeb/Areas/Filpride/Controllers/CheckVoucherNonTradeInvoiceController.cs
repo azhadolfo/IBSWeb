@@ -235,254 +235,252 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region -- Saving the default entries --
-
-                    #region --Retrieve Supplier
-
-                    var supplier = await _unitOfWork.FilprideSupplier
-                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve Supplier
-
-                    FilprideCheckVoucherHeader checkVoucherHeader = new()
-                    {
-                        CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
-                        Date = viewModel.TransactionDate,
-                        Payee = viewModel.SupplierName,
-                        Address = viewModel.SupplierAddress!,
-                        Tin = viewModel.SupplierTinNo!,
-                        PONo = [viewModel.PoNo ?? string.Empty],
-                        SINo = [viewModel.SiNo ?? string.Empty],
-                        SupplierId = viewModel.SupplierId,
-                        Particulars = viewModel.Particulars,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Category = "Non-Trade",
-                        CvType = nameof(CVType.Invoicing),
-                        Company = companyClaims,
-                        Type = viewModel.Type,
-                        Total = viewModel.Total,
-                        SupplierName = supplier.SupplierName
-                    };
-
-                    await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
-
-                    #endregion -- Saving the default entries --
-
-                    #region -- cv invoiving details entry --
-
-                    List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
-
-                    decimal apNontradeAmount = 0;
-                    decimal vatAmount = 0;
-                    decimal ewtOnePercentAmount = 0;
-                    decimal ewtTwoPercentAmount = 0;
-                    decimal ewtFivePercentAmount = 0;
-                    decimal ewtTenPercentAmount = 0;
-
-                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
-                    var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
-                    var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-                    var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
-                    var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
-                    var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
-
-                    foreach (var accountEntry in viewModel.AccountingEntries!)
-                    {
-                        var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
-                        var accountNo = parts[0];
-                        var accountName = parts[1];
-
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = accountNo,
-                            AccountName = accountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = accountEntry.NetOfVatAmount,
-                            Credit = 0,
-                            IsVatable = accountEntry.VatAmount > 0,
-                            EwtPercent = accountEntry.TaxPercentage,
-                            IsUserSelected = true,
-                            BankId = accountEntry.BankMasterFileId,
-                            CompanyId = accountEntry.CompanyMasterFileId,
-                            EmployeeId = accountEntry.EmployeeMasterFileId,
-                            CustomerId = accountEntry.CustomerMasterFileId,
-                            SupplierId = accountEntry.SupplierMasterFileId,
-                        });
-
-                        if (accountEntry.VatAmount > 0)
-                        {
-                            vatAmount += accountEntry.VatAmount;
-                        }
-
-                        // Check EWT percentage
-                        switch (accountEntry.TaxPercentage)
-                        {
-                            case 0.01m:
-                                ewtOnePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.02m:
-                                ewtTwoPercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.05m:
-                                ewtFivePercentAmount += accountEntry.TaxAmount;
-                                break;
-                            case 0.10m:
-                                ewtTenPercentAmount += accountEntry.TaxAmount;
-                                break;
-                        }
-
-                        apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
-
-                    }
-
-                    checkVoucherHeader.InvoiceAmount = apNontradeAmount;
-
-                    if (vatAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = vatInputTitle.AccountNumber,
-                            AccountName = vatInputTitle.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = vatAmount,
-                            Credit = 0,
-                        });
-                    }
-
-                    if (apNontradeAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = apNonTradeTitle.AccountNumber,
-                            AccountName = apNonTradeTitle.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = apNontradeAmount,
-                            SupplierId = checkVoucherHeader.SupplierId
-                        });
-                    }
-
-                    if (ewtOnePercentAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = ewtOnePercent.AccountNumber,
-                            AccountName = ewtOnePercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtOnePercentAmount,
-                            Amount = ewtOnePercentAmount,
-                            SupplierId = 133
-                        });
-                    }
-
-                    if (ewtTwoPercentAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = ewtTwoPercent.AccountNumber,
-                            AccountName = ewtTwoPercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTwoPercentAmount,
-                            Amount = ewtTwoPercentAmount,
-                            SupplierId = 133
-                        });
-                    }
-
-                    if (ewtFivePercentAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = ewtFivePercent.AccountNumber,
-                            AccountName = ewtFivePercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtFivePercentAmount,
-                            Amount = ewtFivePercentAmount,
-                            SupplierId = 133
-                        });
-                    }
-
-                    if (ewtTenPercentAmount > 0)
-                    {
-                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                        {
-                            AccountNo = ewtTenPercent.AccountNumber,
-                            AccountName = ewtTenPercent.AccountName,
-                            TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
-                            CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
-                            Debit = 0,
-                            Credit = ewtTenPercentAmount,
-                            Amount = ewtTenPercentAmount,
-                            SupplierId = 133
-                        });
-                    }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
-
-                    #endregion -- cv invoiving details entry --
-
-                    #region -- Uploading file --
-
-                    if (file != null && file.Length > 0)
-                    {
-                        checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
-                    }
-
-                    #endregion -- Uploading file --
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", checkVoucherHeader.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Check voucher invoicing #{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-
-                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
-
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                TempData["error"] = "The information provided was invalid.";
+                return View(viewModel);
             }
 
-            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            try
+            {
+                #region -- Saving the default entries --
 
-            TempData["error"] = "The information provided was invalid.";
-            return View(viewModel);
+                #region --Retrieve Supplier
+
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieve Supplier
+
+                FilprideCheckVoucherHeader checkVoucherHeader = new()
+                {
+                    CheckVoucherHeaderNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeMultipleInvoiceAsync(companyClaims, viewModel.Type!, cancellationToken),
+                    Date = viewModel.TransactionDate,
+                    Payee = viewModel.SupplierName,
+                    Address = viewModel.SupplierAddress!,
+                    Tin = viewModel.SupplierTinNo!,
+                    PONo = [viewModel.PoNo ?? string.Empty],
+                    SINo = [viewModel.SiNo ?? string.Empty],
+                    SupplierId = viewModel.SupplierId,
+                    Particulars = viewModel.Particulars,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    Category = "Non-Trade",
+                    CvType = nameof(CVType.Invoicing),
+                    Company = companyClaims,
+                    Type = viewModel.Type,
+                    Total = viewModel.Total,
+                    SupplierName = supplier.SupplierName
+                };
+
+                await _unitOfWork.FilprideCheckVoucher.AddAsync(checkVoucherHeader, cancellationToken);
+
+                #endregion -- Saving the default entries --
+
+                #region -- cv invoiving details entry --
+
+                List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
+
+                decimal apNontradeAmount = 0;
+                decimal vatAmount = 0;
+                decimal ewtOnePercentAmount = 0;
+                decimal ewtTwoPercentAmount = 0;
+                decimal ewtFivePercentAmount = 0;
+                decimal ewtTenPercentAmount = 0;
+
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var apNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010200") ?? throw new ArgumentException("Account title '202010200' not found.");
+                var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+                var ewtOnePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+                var ewtTwoPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030220") ?? throw new ArgumentException("Account title '201030220' not found.");
+                var ewtFivePercent = accountTitlesDto.Find(c => c.AccountNumber == "201030230") ?? throw new ArgumentException("Account title '201030230' not found.");
+                var ewtTenPercent = accountTitlesDto.Find(c => c.AccountNumber == "201030240") ?? throw new ArgumentException("Account title '201030240' not found.");
+
+                foreach (var accountEntry in viewModel.AccountingEntries!)
+                {
+                    var parts = accountEntry.AccountTitle.Split(' ', 2); // Split into at most two parts
+                    var accountNo = parts[0];
+                    var accountName = parts[1];
+
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = accountNo,
+                        AccountName = accountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = accountEntry.NetOfVatAmount,
+                        Credit = 0,
+                        IsVatable = accountEntry.VatAmount > 0,
+                        EwtPercent = accountEntry.TaxPercentage,
+                        IsUserSelected = true,
+                        BankId = accountEntry.BankMasterFileId,
+                        CompanyId = accountEntry.CompanyMasterFileId,
+                        EmployeeId = accountEntry.EmployeeMasterFileId,
+                        CustomerId = accountEntry.CustomerMasterFileId,
+                        SupplierId = accountEntry.SupplierMasterFileId,
+                    });
+
+                    if (accountEntry.VatAmount > 0)
+                    {
+                        vatAmount += accountEntry.VatAmount;
+                    }
+
+                    // Check EWT percentage
+                    switch (accountEntry.TaxPercentage)
+                    {
+                        case 0.01m:
+                            ewtOnePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.02m:
+                            ewtTwoPercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.05m:
+                            ewtFivePercentAmount += accountEntry.TaxAmount;
+                            break;
+                        case 0.10m:
+                            ewtTenPercentAmount += accountEntry.TaxAmount;
+                            break;
+                    }
+
+                    apNontradeAmount += accountEntry.Amount - accountEntry.TaxAmount;
+
+                }
+
+                checkVoucherHeader.InvoiceAmount = apNontradeAmount;
+
+                if (vatAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = vatInputTitle.AccountNumber,
+                        AccountName = vatInputTitle.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = vatAmount,
+                        Credit = 0,
+                    });
+                }
+
+                if (apNontradeAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = apNonTradeTitle.AccountNumber,
+                        AccountName = apNonTradeTitle.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = apNontradeAmount,
+                        SupplierId = checkVoucherHeader.SupplierId
+                    });
+                }
+
+                if (ewtOnePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = ewtOnePercent.AccountNumber,
+                        AccountName = ewtOnePercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtOnePercentAmount,
+                        Amount = ewtOnePercentAmount,
+                        SupplierId = 133
+                    });
+                }
+
+                if (ewtTwoPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = ewtTwoPercent.AccountNumber,
+                        AccountName = ewtTwoPercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTwoPercentAmount,
+                        Amount = ewtTwoPercentAmount,
+                        SupplierId = 133
+                    });
+                }
+
+                if (ewtFivePercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = ewtFivePercent.AccountNumber,
+                        AccountName = ewtFivePercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtFivePercentAmount,
+                        Amount = ewtFivePercentAmount,
+                        SupplierId = 133
+                    });
+                }
+
+                if (ewtTenPercentAmount > 0)
+                {
+                    checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = ewtTenPercent.AccountNumber,
+                        AccountName = ewtTenPercent.AccountName,
+                        TransactionNo = checkVoucherHeader.CheckVoucherHeaderNo,
+                        CheckVoucherHeaderId = checkVoucherHeader.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtTenPercentAmount,
+                        Amount = ewtTenPercentAmount,
+                        SupplierId = 133
+                    });
+                }
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+
+                #endregion -- cv invoiving details entry --
+
+                #region -- Uploading file --
+
+                if (file != null && file.Length > 0)
+                {
+                    checkVoucherHeader.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    checkVoucherHeader.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, checkVoucherHeader.SupportingFileSavedFileName!);
+                }
+
+                #endregion -- Uploading file --
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(checkVoucherHeader.CreatedBy!, $"Created new check voucher# {checkVoucherHeader.CheckVoucherHeaderNo}", "Check Voucher", checkVoucherHeader.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Check voucher invoicing #{checkVoucherHeader.CheckVoucherHeaderNo} created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
+
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         [HttpGet]
