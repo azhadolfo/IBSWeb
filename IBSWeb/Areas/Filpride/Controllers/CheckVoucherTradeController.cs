@@ -423,16 +423,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
                 .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy != null && po.Company == companyClaims);
 
-            if (purchaseOrders != null && purchaseOrders.Any())
+            if (purchaseOrders == null || !purchaseOrders.Any())
             {
-                var poList = purchaseOrders.Where(p => !p.IsSubPo)
-                                        .OrderBy(po => po.PurchaseOrderNo)
-                                        .Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo })
-                                        .ToList();
-                return Json(poList);
+                return Json(null);
             }
 
-            return Json(null);
+            var poList = purchaseOrders.Where(p => !p.IsSubPo)
+                .OrderBy(po => po.PurchaseOrderNo)
+                .Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo })
+                .ToList();
+            return Json(poList);
         }
 
         public async Task<IActionResult> GetRRs(string[] poNumber, int? cvId, CancellationToken cancellationToken)
