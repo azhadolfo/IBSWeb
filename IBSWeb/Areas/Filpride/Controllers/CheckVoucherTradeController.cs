@@ -493,29 +493,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            if (supplierId != null)
+            if (supplierId == null)
             {
-                var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
-
-                if (supplier != null)
-                {
-                    return Json(new
-                    {
-                        Name = supplier.SupplierName,
-                        Address = supplier.SupplierAddress,
-                        TinNo = supplier.SupplierTin,
-                        TaxType = supplier.TaxType,
-                        Category = supplier.Category,
-                        TaxPercent = supplier.WithholdingTaxPercent,
-                        VatType = supplier.VatType,
-                        DefaultExpense = supplier.DefaultExpenseNumber,
-                        WithholdingTax = supplier.WithholdingTaxtitle
-                    });
-                }
                 return Json(null);
             }
-            return Json(null);
+
+            var supplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
+
+            if (supplier == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                Name = supplier.SupplierName,
+                Address = supplier.SupplierAddress,
+                TinNo = supplier.SupplierTin,
+                TaxType = supplier.TaxType,
+                Category = supplier.Category,
+                TaxPercent = supplier.WithholdingTaxPercent,
+                VatType = supplier.VatType,
+                DefaultExpense = supplier.DefaultExpenseNumber,
+                WithholdingTax = supplier.WithholdingTaxtitle
+            });
         }
 
         [HttpGet]
