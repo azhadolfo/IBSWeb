@@ -253,99 +253,99 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
-
-                    using var package = new ExcelPackage();
-                    var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
-
-                    // Setting header
-                    worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
-                    worksheet.Cells["A2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
-                    worksheet.Cells["A1:L1"].Merge = true;
-                    worksheet.Cells["A1:L1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    worksheet.Cells["A1:L1"].Style.Font.Bold = true;
-
-                    // Define table headers
-                    var headers = new[]
-                    {
-                        "COS Date", "Customer", "Product", "P.O. No.",
-                        "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS", "OTC COS No."
-                    };
-
-                    for (int i = 0; i < headers.Length; i++)
-                    {
-                        worksheet.Cells[3, i + 1].Value = headers[i];
-                        worksheet.Cells[3, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        worksheet.Cells[3, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
-                        worksheet.Cells[3, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                        worksheet.Cells[3, i + 1].Style.Font.Bold = true;
-                    }
-
-                    // Populate data rows
-                    int row = 4;
-                    string currencyFormat = "#,##0.0000";
-                    string currencyFormatTwoDecimal = "#,##0.00";
-
-                    var totalUnservedVolume = 0m;
-                    var totalAmount = 0m;
-
-                    foreach (var item in cosSummary)
-                    {
-                        var unservedVolume = item.Quantity - item.DeliveredQuantity;
-
-                        worksheet.Cells[row, 1].Value = item.Date;
-                        worksheet.Cells[row, 2].Value = item.Customer!.CustomerName;
-                        worksheet.Cells[row, 3].Value = item.Product!.ProductName;
-                        worksheet.Cells[row, 4].Value = item.CustomerPoNo;
-                        worksheet.Cells[row, 5].Value = item.CustomerOrderSlipNo;
-                        worksheet.Cells[row, 6].Value = item.DeliveredPrice;
-                        worksheet.Cells[row, 7].Value = unservedVolume;
-                        worksheet.Cells[row, 8].Value = item.TotalAmount;
-                        worksheet.Cells[row, 9].Value = "APPROVED";
-                        worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
-                        worksheet.Cells[row, 11].Value = item.OldCosNo;
-
-                        worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
-                        worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        row++;
-
-                        totalUnservedVolume += unservedVolume;
-                        totalAmount += item.TotalAmount;
-                    }
-
-                    // Add total row
-                    worksheet.Cells[row, 6].Value = "TOTAL";
-                    worksheet.Cells[row, 7].Value = totalUnservedVolume;
-                    worksheet.Cells[row, 8].Value = totalAmount;
-                    worksheet.Cells[row, 6, row, 8].Style.Font.Bold = true;
-                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                    // Auto-fit columns for readability
-                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-
-                    // Return as Excel file
-                    var stream = new MemoryStream();
-                    package.SaveAs(stream);
-                    stream.Position = 0;
-                    var fileName = $"COS_Unserved_Volume_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
-                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-                }
-                catch (Exception ex)
-                {
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(COSUnservedVolume));
-                }
+                TempData["warning"] = "Please input date from";
+                return RedirectToAction(nameof(COSUnservedVolume));
             }
 
-            TempData["warning"] = "Please input date from";
-            return RedirectToAction(nameof(COSUnservedVolume));
+            try
+            {
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("COS Unserved Volume");
+
+                // Setting header
+                worksheet.Cells["A1"].Value = "SUMMARY OF BOOKED SALES";
+                worksheet.Cells["A2"].Value = $"{ViewBag.DateFrom} - {ViewBag.DateTo}";
+                worksheet.Cells["A1:L1"].Merge = true;
+                worksheet.Cells["A1:L1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells["A1:L1"].Style.Font.Bold = true;
+
+                // Define table headers
+                var headers = new[]
+                {
+                    "COS Date", "Customer", "Product", "P.O. No.",
+                    "COS No.", "Price", "Unserved Volume", "Amount", "COS Status", "Exp of COS", "OTC COS No."
+                };
+
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cells[3, i + 1].Value = headers[i];
+                    worksheet.Cells[3, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[3, i + 1].Style.Fill.BackgroundColor.SetColor(System.Drawing.ColorTranslator.FromHtml("#9966ff"));
+                    worksheet.Cells[3, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[3, i + 1].Style.Font.Bold = true;
+                }
+
+                // Populate data rows
+                int row = 4;
+                string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var totalUnservedVolume = 0m;
+                var totalAmount = 0m;
+
+                foreach (var item in cosSummary)
+                {
+                    var unservedVolume = item.Quantity - item.DeliveredQuantity;
+
+                    worksheet.Cells[row, 1].Value = item.Date;
+                    worksheet.Cells[row, 2].Value = item.Customer!.CustomerName;
+                    worksheet.Cells[row, 3].Value = item.Product!.ProductName;
+                    worksheet.Cells[row, 4].Value = item.CustomerPoNo;
+                    worksheet.Cells[row, 5].Value = item.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 6].Value = item.DeliveredPrice;
+                    worksheet.Cells[row, 7].Value = unservedVolume;
+                    worksheet.Cells[row, 8].Value = item.TotalAmount;
+                    worksheet.Cells[row, 9].Value = "APPROVED";
+                    worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
+                    worksheet.Cells[row, 11].Value = item.OldCosNo;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    row++;
+
+                    totalUnservedVolume += unservedVolume;
+                    totalAmount += item.TotalAmount;
+                }
+
+                // Add total row
+                worksheet.Cells[row, 6].Value = "TOTAL";
+                worksheet.Cells[row, 7].Value = totalUnservedVolume;
+                worksheet.Cells[row, 8].Value = totalAmount;
+                worksheet.Cells[row, 6, row, 8].Style.Font.Bold = true;
+                worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                // Auto-fit columns for readability
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                // Return as Excel file
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+                var fileName = $"COS_Unserved_Volume_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(COSUnservedVolume));
+            }
         }
 
         #endregion
