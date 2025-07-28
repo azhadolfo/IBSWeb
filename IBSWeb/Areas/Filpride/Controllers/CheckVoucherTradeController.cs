@@ -459,33 +459,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(rr => rr.ReceivingReportNo)
                 .ToListAsync(cancellationToken);
 
-            if (receivingReports.Any())
+            if (!receivingReports.Any())
             {
-                var rrList = receivingReports
-                    .Select(rr =>
-                    {
-                        var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount);
-
-                        var ewtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m)
-                            : 0.0000m;
-
-                        var netOfEwtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
-                            : netOfVatAmount;
-
-                        return new
-                        {
-                            Id = rr.ReceivingReportId,
-                            ReceivingReportNo = rr.ReceivingReportNo,
-                            AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
-                        };
-                    }).ToList();
-                return Json(rrList);
+                return Json(null);
             }
 
-            return Json(null);
+            var rrList = receivingReports
+                .Select(rr =>
+                {
+                    var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount);
+
+                    var ewtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m)
+                        : 0.0000m;
+
+                    var netOfEwtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
+                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
+                        : netOfVatAmount;
+
+                    return new
+                    {
+                        Id = rr.ReceivingReportId,
+                        ReceivingReportNo = rr.ReceivingReportNo,
+                        AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                    };
+                }).ToList();
+
+            return Json(rrList);
         }
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
