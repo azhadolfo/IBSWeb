@@ -1367,13 +1367,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var details = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .Include(s => s.Supplier)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             var getSupplierId = await _dbContext.FilprideCheckVoucherDetails
                 .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
                 .OrderBy(s => s.CheckVoucherDetailId)
                 .Select(s => s.SupplierId)
-                .ToArrayAsync();
+                .ToArrayAsync(cancellationToken);
 
             CheckVoucherNonTradeInvoicingViewModel model = new()
             {
@@ -1409,177 +1409,179 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region -- Saving the default entries --
-
-                    var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                        .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
-
-                    if (existingHeaderModel == null)
-                    {
-                        return NotFound();
-                    }
-
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.PONo = [viewModel.PoNo ?? string.Empty];
-                    existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.Total = viewModel.Total;
-
-                    #endregion -- Saving the default entries --
-
-                    #region -- Get Supplier --
-
-                    var supplier = await _unitOfWork.FilprideSupplier
-                        .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion -- Get Supplier --
-
-                    #region -- Automatic entry --
-
-                    if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
-                    {
-                        existingHeaderModel.StartDate = viewModel.StartDate;
-                        existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
-                        existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
-
-                        // Identify the account with a number that starts with '10201'
-                        decimal? amount = null;
-                        for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                        {
-                            if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
-                            {
-                                continue;
-                            }
-
-                            if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
-                            {
-                                amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
-                            }
-                        }
-
-                        if (amount.HasValue)
-                        {
-                            existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
-                        }
-                    }
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    #endregion -- Automatic entry --
-
-                    #region -- cv invoiving details entry --
-
-                    var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
-
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
-
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
-                        {
-                            checkVoucherDetails.Add(new FilprideCheckVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                                CheckVoucherHeaderId = viewModel.CVId,
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                Amount = viewModel.Credit[i],
-                                SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
-                            });
-                        }
-                    }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
-
-                    #endregion -- cv invoiving details entry --
-
-                    #region -- Uploading file --
-
-                    if (file != null && file.Length > 0)
-                    {
-                        existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
-                    }
-
-                    #endregion -- Uploading file --
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CreatedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check voucher invoicing edited successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit payroll invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-
-                    viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
             }
 
-            viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-            viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+            try
+            {
+                #region -- Saving the default entries --
+
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CVId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.PONo = [viewModel.PoNo ?? string.Empty];
+                existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.Total = viewModel.Total;
+
+                #endregion -- Saving the default entries --
+
+                #region -- Get Supplier --
+
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(s => s.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion -- Get Supplier --
+
+                #region -- Automatic entry --
+
+                if (viewModel.StartDate != null && viewModel.NumberOfYears != 0)
+                {
+                    existingHeaderModel.StartDate = viewModel.StartDate;
+                    existingHeaderModel.EndDate = existingHeaderModel.StartDate.Value.AddYears(viewModel.NumberOfYears);
+                    existingHeaderModel.NumberOfMonths = (viewModel.NumberOfYears * 12);
+
+                    // Identify the account with a number that starts with '10201'
+                    decimal? amount = null;
+                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                    {
+                        if (supplier.TaxType == "Exempt" && (i == 2 || i == 3))
+                        {
+                            continue;
+                        }
+
+                        if (viewModel.AccountNumber[i].StartsWith("10201") || viewModel.AccountNumber[i].StartsWith("10105"))
+                        {
+                            amount = viewModel.Debit[i] != 0 ? viewModel.Debit[i] : viewModel.Credit[i];
+                        }
+                    }
+
+                    if (amount.HasValue)
+                    {
+                        existingHeaderModel.AmountPerMonth = (amount.Value / viewModel.NumberOfYears) / 12;
+                    }
+                }
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #endregion -- Automatic entry --
+
+                #region -- cv invoiving details entry --
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                List<FilprideCheckVoucherDetail> checkVoucherDetails = new();
+
+                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
+                    {
+                        checkVoucherDetails.Add(new FilprideCheckVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                            CheckVoucherHeaderId = viewModel.CVId,
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            Amount = viewModel.Credit[i],
+                            SupplierId = viewModel.MultipleSupplierId![i] != 0 ? viewModel.MultipleSupplierId[i] : null
+                        });
+                    }
+                }
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(checkVoucherDetails, cancellationToken);
+
+                #endregion -- cv invoiving details entry --
+
+                #region -- Uploading file --
+
+                if (file != null && file.Length > 0)
+                {
+                    existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
+                }
+
+                #endregion -- Uploading file --
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CreatedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check voucher invoicing edited successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit payroll invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
         {
-            if (supplierId != null)
+            if (supplierId == null)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-                var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
-
-                if (supplier != null)
-                {
-                    return Json(new
-                    {
-                        Name = supplier.SupplierName,
-                        Address = supplier.SupplierAddress,
-                        TinNo = supplier.SupplierTin,
-                        supplier.TaxType,
-                        supplier.Category,
-                        TaxPercent = supplier.WithholdingTaxPercent,
-                        supplier.VatType,
-                        DefaultExpense = supplier.DefaultExpenseNumber,
-                        WithholdingTax = supplier.WithholdingTaxtitle,
-                        Vatable = supplier.VatType == SD.VatType_Vatable
-                    });
-                }
                 return Json(null);
             }
-            return Json(null);
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var supplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
+
+            if (supplier == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                Name = supplier.SupplierName,
+                Address = supplier.SupplierAddress,
+                TinNo = supplier.SupplierTin,
+                supplier.TaxType,
+                supplier.Category,
+                TaxPercent = supplier.WithholdingTaxPercent,
+                supplier.VatType,
+                DefaultExpense = supplier.DefaultExpenseNumber,
+                WithholdingTax = supplier.WithholdingTaxtitle,
+                Vatable = supplier.VatType == SD.VatType_Vatable
+            });
         }
 
         [HttpGet]
