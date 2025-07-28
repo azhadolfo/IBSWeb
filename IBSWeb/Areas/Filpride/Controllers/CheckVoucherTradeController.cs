@@ -2573,191 +2573,191 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCommissionPayment(CommissionPaymentViewModel viewModel, IFormFile? file, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
+            }
 
-                if (existingHeaderModel == null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            try
+            {
+                #region --CV Details Entry
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var details = new List<FilprideCheckVoucherDetail>();
+
+                var cashInBank = 0m;
+                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                {
+                    cashInBank = viewModel.Credit[1];
+
+                    details.Add(new FilprideCheckVoucherDetail
+                    {
+                        AccountNo = viewModel.AccountNumber[i],
+                        AccountName = viewModel.AccountTitle[i],
+                        Debit = viewModel.Debit[i],
+                        Credit = viewModel.Credit[i],
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = viewModel.CvId,
+                        SupplierId = i == 0 ? viewModel.SupplierId : null,
+                        BankId = i == 2 ? viewModel.BankId : null,
+                    });
+                }
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
+
+                #endregion --CV Details Entry
+
+                #region --Saving the default entries
+
+                #region -- Get Supplier
+
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
                 {
                     return NotFound();
                 }
 
-                var companyClaims = await GetCompanyClaimAsync();
+                #endregion --Retrieve Supplier
 
-                if (companyClaims == null)
+                #region  -- Get bank account
+
+                var bank = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                if (bank == null)
                 {
-                    return BadRequest();
+                    return NotFound();
                 }
 
-                try
+                #endregion
+
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.SupplierId = viewModel.SupplierId;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.BankId = viewModel.BankId;
+                existingHeaderModel.CheckNo = viewModel.CheckNo;
+                existingHeaderModel.Category = "Trade";
+                existingHeaderModel.Payee = viewModel.Payee;
+                existingHeaderModel.CheckDate = viewModel.CheckDate;
+                existingHeaderModel.Total = cashInBank;
+                existingHeaderModel.EditedBy = _userManager.GetUserName(User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.SupplierName = supplier.SupplierName;
+                existingHeaderModel.Address = viewModel.SupplierAddress;
+                existingHeaderModel.Tin = viewModel.SupplierTinNo;
+                existingHeaderModel.BankAccountName = bank.AccountName;
+                existingHeaderModel.BankAccountNumber = bank.AccountNo;
+
+                #endregion --Saving the default entries
+
+                #region -- Partial payment
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "DR")
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
                 {
-                    #region --CV Details Entry
+                    var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
 
-                    var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
-
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    var details = new List<FilprideCheckVoucherDetail>();
-
-                    var cashInBank = 0m;
-                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                    if (deliveryReceipt == null)
                     {
-                        cashInBank = viewModel.Credit[1];
+                        return NotFound();
+                    }
 
-                        details.Add(new FilprideCheckVoucherDetail
+                    deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                }
+
+                _dbContext.RemoveRange(getCheckVoucherTradePayment);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                foreach (var item in viewModel.DRs)
+                {
+                    var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
+
+                    if (getDeliveryReceipt == null)
+                    {
+                        return NotFound();
+                    }
+
+                    getDeliveryReceipt.CommissionAmountPaid += item.Amount;
+
+                    cvTradePaymentModel.Add(
+                        new FilprideCVTradePayment
                         {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
-                            Debit = viewModel.Debit[i],
-                            Credit = viewModel.Credit[i],
-                            TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                            CheckVoucherHeaderId = viewModel.CvId,
-                            SupplierId = i == 0 ? viewModel.SupplierId : null,
-                            BankId = i == 2 ? viewModel.BankId : null,
+                            DocumentId = getDeliveryReceipt.DeliveryReceiptId,
+                            DocumentType = "DR",
+                            CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
                         });
-                    }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(details, cancellationToken);
-
-                    #endregion --CV Details Entry
-
-                    #region --Saving the default entries
-
-                    #region -- Get Supplier
-
-                    var supplier = await _unitOfWork.FilprideSupplier
-                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve Supplier
-
-                    #region  -- Get bank account
-
-                    var bank = await _unitOfWork.FilprideBankAccount
-                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
-                    if (bank == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion
-
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.SupplierId = viewModel.SupplierId;
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.BankId = viewModel.BankId;
-                    existingHeaderModel.CheckNo = viewModel.CheckNo;
-                    existingHeaderModel.Category = "Trade";
-                    existingHeaderModel.Payee = viewModel.Payee;
-                    existingHeaderModel.CheckDate = viewModel.CheckDate;
-                    existingHeaderModel.Total = cashInBank;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.SupplierName = supplier.SupplierName;
-                    existingHeaderModel.Address = viewModel.SupplierAddress;
-                    existingHeaderModel.Tin = viewModel.SupplierTinNo;
-                    existingHeaderModel.BankAccountName = bank.AccountName;
-                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
-
-                    #endregion --Saving the default entries
-
-                    #region -- Partial payment
-
-                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                        .Where(cv => cv.CheckVoucherId == existingHeaderModel.CheckVoucherHeaderId && cv.DocumentType == "DR")
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var item in getCheckVoucherTradePayment)
-                    {
-                        var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                            .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
-
-                        if (deliveryReceipt == null)
-                        {
-                            return NotFound();
-                        }
-
-                        deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                    }
-
-                    _dbContext.RemoveRange(getCheckVoucherTradePayment);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    var cvTradePaymentModel = new List<FilprideCVTradePayment>();
-                    foreach (var item in viewModel.DRs)
-                    {
-                        var getDeliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                            .GetAsync(dr => dr.DeliveryReceiptId == item.Id, cancellationToken);
-
-                        if (getDeliveryReceipt == null)
-                        {
-                            return NotFound();
-                        }
-
-                        getDeliveryReceipt.CommissionAmountPaid += item.Amount;
-
-                        cvTradePaymentModel.Add(
-                            new FilprideCVTradePayment
-                            {
-                                DocumentId = getDeliveryReceipt.DeliveryReceiptId,
-                                DocumentType = "DR",
-                                CheckVoucherId = existingHeaderModel.CheckVoucherHeaderId,
-                                AmountPaid = item.Amount
-                            });
-                    }
-
-                    await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    #endregion -- Partial payment of RR's
-
-                    #region -- Uploading file --
-
-                    if (file != null && file.Length > 0)
-                    {
-                        existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
-                    }
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Trade edited successfully";
-                    return RedirectToAction(nameof(Index));
-
-                    #endregion -- Uploading file --
                 }
-                catch (Exception ex)
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #endregion -- Partial payment of RR's
+
+                #region -- Uploading file --
+
+                if (file != null && file.Length > 0)
                 {
-                    _logger.LogError(ex, "Failed to edit commission payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
+                    existingHeaderModel.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    existingHeaderModel.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, existingHeaderModel.SupportingFileSavedFileName!);
                 }
-            }
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Trade edited successfully";
+                return RedirectToAction(nameof(Index));
+
+                #endregion -- Uploading file --
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit commission payment. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+                viewModel.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         [HttpGet]
