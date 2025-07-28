@@ -198,17 +198,6 @@ namespace IBS.DataAccess.Repository.Filpride
             return test;
         }
 
-        public async Task OperationManagerApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
-        {
-            customerOrderSlip.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
-
-            customerOrderSlip.TotalAmount = customerOrderSlip.Quantity * customerOrderSlip.DeliveredPrice;
-
-            customerOrderSlip.Status = nameof(CosStatus.ForApprovalOfFM);
-
-            await _db.SaveChangesAsync(cancellationToken);
-        }
-
         public async Task<decimal> GetCustomerCreditBalance(int customerId, CancellationToken cancellationToken = default)
         {
             //Beginning Balance to be discussed
@@ -230,13 +219,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
 
             return availableCreditLimit - (drForTheMonth + outstandingCos);
-        }
-
-        public async Task FinanceApproved(FilprideCustomerOrderSlip customerOrderSlip, CancellationToken cancellationToken = default)
-        {
-            customerOrderSlip.Status = nameof(CosStatus.ForDR);
-
-            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }
