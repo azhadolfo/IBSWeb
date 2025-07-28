@@ -2473,33 +2473,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
-            if (query.Any())
+            if (!query.Any())
             {
-                var drList = deliverReceipt
-                    .Select(dr =>
-                    {
-                        var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount);
-
-                        var ewtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
-                            : 0.0000m;
-
-                        var netOfEwtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
-                            : netOfVatAmount;
-
-                        return new
-                        {
-                            Id = dr.DeliveryReceiptId,
-                            DeliveryReceiptNo = dr.DeliveryReceiptNo,
-                            AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
-                        };
-                    }).ToList();
-                return Json(drList);
+                return Json(null);
             }
 
-            return Json(null);
+            var drList = deliverReceipt
+                .Select(dr =>
+                {
+                    var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount);
+
+                    var ewtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                        ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
+                        : 0.0000m;
+
+                    var netOfEwtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
+                        : netOfVatAmount;
+
+                    return new
+                    {
+                        Id = dr.DeliveryReceiptId,
+                        DeliveryReceiptNo = dr.DeliveryReceiptNo,
+                        AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                    };
+                }).ToList();
+            return Json(drList);
         }
 
         [HttpGet]
