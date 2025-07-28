@@ -79,56 +79,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideBankAccount model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (await _unitOfWork.FilprideBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
-                    {
-                        ModelState.AddModelError("AccountNo", "Bank account no already exist!");
-                        return View(model);
-                    }
-
-                    if (await _unitOfWork.FilprideBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
-                    {
-                        ModelState.AddModelError("AccountName", "Bank account name already exist!");
-                        return View(model);
-                    }
-
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    if (companyClaims == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    model.Company = companyClaims;
-
-                    model.CreatedBy = _userManager.GetUserName(User);
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", model.Company);
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = $"Bank #{model.AccountNo} created successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create bank account. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
-            }
-            else
+            if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (await _unitOfWork.FilprideBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
+                {
+                    ModelState.AddModelError("AccountNo", "Bank account no already exist!");
+                    return View(model);
+                }
+
+                if (await _unitOfWork.FilprideBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
+                {
+                    ModelState.AddModelError("AccountName", "Bank account name already exist!");
+                    return View(model);
+                }
+
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                model.Company = companyClaims;
+
+                model.CreatedBy = _userManager.GetUserName(User);
+
+                await _dbContext.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", model.Company);
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = $"Bank #{model.AccountNo} created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create bank account. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
                 return View(model);
             }
         }
@@ -210,39 +208,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    existingModel.AccountNo = model.AccountNo;
-                    existingModel.AccountName = model.AccountName;
-                    existingModel.Bank = model.Bank;
-                    existingModel.Branch = model.Branch;
-                    existingModel.IsFilpride = model.IsFilpride;
-                    existingModel.IsMobility = model.IsMobility;
-                    existingModel.IsBienes = model.IsBienes;
-
-                    TempData["success"] = "Bank edited successfully.";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", existingModel.Company);
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit bank account. Edited by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(existingModel);
-                }
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(existingModel);
             }
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(existingModel);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                existingModel.AccountNo = model.AccountNo;
+                existingModel.AccountName = model.AccountName;
+                existingModel.Bank = model.Bank;
+                existingModel.Branch = model.Branch;
+                existingModel.IsFilpride = model.IsFilpride;
+                existingModel.IsMobility = model.IsMobility;
+                existingModel.IsBienes = model.IsBienes;
+
+                TempData["success"] = "Bank edited successfully.";
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", existingModel.Company);
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit bank account. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(existingModel);
+            }
         }
 
         //Download as .xlsx file.(Export)
@@ -310,8 +309,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllBankAccountIds()
         {
             var bankIds = _dbContext.FilprideBankAccounts
-                                     .Select(b => b.BankAccountId) // Assuming Id is the primary key
-                                     .ToList();
+                .Select(b => b.BankAccountId) // Assuming Id is the primary key
+                .ToList();
 
             return Json(bankIds);
         }
