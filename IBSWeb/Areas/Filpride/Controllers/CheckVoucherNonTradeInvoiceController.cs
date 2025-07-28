@@ -1554,31 +1554,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId)
         {
-            if (supplierId != null)
+            if (supplierId == null)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-                var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
-
-                if (supplier != null)
-                {
-                    return Json(new
-                    {
-                        Name = supplier.SupplierName,
-                        Address = supplier.SupplierAddress,
-                        TinNo = supplier.SupplierTin,
-                        supplier.TaxType,
-                        supplier.Category,
-                        TaxPercent = supplier.WithholdingTaxPercent,
-                        supplier.VatType,
-                        DefaultExpense = supplier.DefaultExpenseNumber,
-                        WithholdingTax = supplier.WithholdingTaxtitle,
-                        Vatable = supplier.VatType == SD.VatType_Vatable
-                    });
-                }
                 return Json(null);
             }
-            return Json(null);
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var supplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility));
+
+            if (supplier == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                Name = supplier.SupplierName,
+                Address = supplier.SupplierAddress,
+                TinNo = supplier.SupplierTin,
+                supplier.TaxType,
+                supplier.Category,
+                TaxPercent = supplier.WithholdingTaxPercent,
+                supplier.VatType,
+                DefaultExpense = supplier.DefaultExpenseNumber,
+                WithholdingTax = supplier.WithholdingTaxtitle,
+                Vatable = supplier.VatType == SD.VatType_Vatable
+            });
         }
 
         [HttpGet]
