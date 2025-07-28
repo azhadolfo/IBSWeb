@@ -29,7 +29,7 @@
                     <label class="control-label">Type<span class="required">*</span></label>
                     <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%; max-height: 200px;">
                         <option value="" selected disabled>Select Customer Document Type</option>
-                        @foreach (DocumentType customerDocumentType in Enum.GetValues<DocumentType>())
+                        @foreach (var customerDocumentType in Enum.GetValues<DocumentType>())
                         {
                             <option value="@customerDocumentType">@customerDocumentType.ToString()</option>
                         }
