@@ -425,79 +425,79 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(x => x.Details)
                 .FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
-            if (existingHeaderModel != null)
+            if (existingHeaderModel == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
-                                                                            && existingHeaderModel.SupplierId != 133); //BIR
-
-                    var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
-                        .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
-                        .Include(cvp => cvp.CheckVoucherHeaderInvoice)
-                        .Include(cvp => cvp.CheckVoucherHeaderPayment)
-                        .ToListAsync(cancellationToken);
-
-                    if (isForTheBir)
-                    {
-                        foreach (var cv in getCVs)
-                        {
-                            var existingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
-                                            d.SupplierId == existingHeaderModel.SupplierId)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var existingDetail in existingDetails)
-                            {
-                                existingDetail.AmountPaid = 0;
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        foreach (var cv in getCVs)
-                        {
-                            cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                            cv.CheckVoucherHeaderInvoice.IsPaid = false;
-                            cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
-                        }
-                    }
-
-                    existingHeaderModel.PostedBy = null;
-                    existingHeaderModel.VoidedBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
-
-
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy!, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Voided.";
-
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
+                                                                        && existingHeaderModel.SupplierId != 133); //BIR
+
+                var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Include(cvp => cvp.CheckVoucherHeaderInvoice)
+                    .Include(cvp => cvp.CheckVoucherHeaderPayment)
+                    .ToListAsync(cancellationToken);
+
+                if (isForTheBir)
+                {
+                    foreach (var cv in getCVs)
+                    {
+                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                        d.SupplierId == existingHeaderModel.SupplierId)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var existingDetail in existingDetails)
+                        {
+                            existingDetail.AmountPaid = 0;
+                        }
+
+                    }
+                }
+                else
+                {
+                    foreach (var cv in getCVs)
+                    {
+                        cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
+                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                        cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                    }
+                }
+
+                existingHeaderModel.PostedBy = null;
+                existingHeaderModel.VoidedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Voided);
+
+
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == existingHeaderModel.CheckVoucherHeaderNo, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.VoidedBy!, $"Voided check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Voided.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
