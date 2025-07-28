@@ -1185,53 +1185,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
-
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
-
-                        //re-compute amount paid in trade and payment voucher
-
-                        #region --Audit Trail Recording
-
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Check Voucher has been Voided.";
-
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
+
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
+
+                    //re-compute amount paid in trade and payment voucher
+
+                    #region --Audit Trail Recording
+
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Voided.";
+
+                }
+                else
+                {
+                    TempData["info"] = "Check Voucher already Voided.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void invoice check vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
