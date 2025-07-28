@@ -69,52 +69,53 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideCustomer model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var companyClaims = await GetCompanyClaimAsync();
-
-                    if (companyClaims == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
-
-                    bool isTinExist = false;
-
-                    if (!isTinExist)
-                    {
-                        model.Company = companyClaims;
-                        model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
-                        model.CreatedBy = _userManager.GetUserName(User);
-                        await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
-                        await _unitOfWork.SaveAsync(cancellationToken);
-
-                        FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer {model.CustomerCode}", "Customer", model.Company);
-                        await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Customer created successfully";
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    ModelState.AddModelError("CustomerTin", "Tin No already exist.");
-                    return View(model);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
             }
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            return View(model);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                //bool IsTinExist = await _unitOfWork.FilprideCustomer.IsTinNoExistAsync(model.CustomerTin, companyClaims, cancellationToken);
+
+                bool isTinExist = false;
+
+                if (!isTinExist)
+                {
+                    model.Company = companyClaims;
+                    model.CustomerCode = await _unitOfWork.FilprideCustomer.GenerateCodeAsync(model.CustomerType, cancellationToken);
+                    model.CreatedBy = _userManager.GetUserName(User);
+                    await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
+                    await _unitOfWork.SaveAsync(cancellationToken);
+
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer {model.CustomerCode}", "Customer", model.Company);
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Customer created successfully";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                ModelState.AddModelError("CustomerTin", "Tin No already exist.");
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -139,28 +140,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideCustomer model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.FilprideCustomer.UpdateAsync(model, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Customer updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to edit customer master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.FilprideCustomer.UpdateAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to edit customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
 
         [HttpPost]
@@ -230,12 +231,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
-            if (customer != null)
+            if (customer == null)
             {
-                return View(customer);
+                return NotFound();
             }
 
-            return NotFound();
+            return View(customer);
         }
 
         [HttpPost, ActionName("Activate")]
@@ -250,15 +251,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
-            if (customer != null)
+            if (customer == null)
             {
-                customer.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Customer has been activated";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            customer.IsActive = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
+            TempData["success"] = "Customer has been activated";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -293,15 +294,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
-            if (customer != null)
+            if (customer == null)
             {
-                customer.IsActive = false;
-                await _unitOfWork.SaveAsync();
-                TempData["success"] = "Customer has been deactivated";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            customer.IsActive = false;
+            await _unitOfWork.SaveAsync();
+            TempData["success"] = "Customer has been deactivated";
+            return RedirectToAction(nameof(Index));
         }
 
         //Download as .xlsx file.(Export)
@@ -379,8 +380,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllCustomerIds()
         {
             var customerIds = _dbContext.FilprideCustomers
-                                     .Select(c => c.CustomerId) // Assuming Id is the primary key
-                                     .ToList();
+                .Select(c => c.CustomerId) // Assuming Id is the primary key
+                .ToList();
 
             return Json(customerIds);
         }
