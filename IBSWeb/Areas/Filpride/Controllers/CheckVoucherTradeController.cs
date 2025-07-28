@@ -105,7 +105,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var checkVoucherHeaders = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Category == "Trade");
+                    .GetAllAsync(cv => cv.Company == companyClaims && cv.Category == "Trade", cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -193,143 +193,164 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                viewModel.Suppliers =
+                    await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-                try
-                {
-                    #region --Check if duplicate record
+                viewModel.BankAccounts =
+                    await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-                    if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
+                viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                        .GetAllAsync(
+                            po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId &&
+                                  po.PostedBy != null, cancellationToken))
+                    .Select(po => new SelectListItem
                     {
-                        var cv = await _unitOfWork.FilprideCheckVoucher
+                        Value = po.PurchaseOrderNo!.ToString(),
+                        Text = po.PurchaseOrderNo
+                    })
+                    .ToList();
+
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Check if duplicate record
+
+                if (viewModel.CheckNo != null && !viewModel.CheckNo.Contains("DM"))
+                {
+                    var cv = await _unitOfWork.FilprideCheckVoucher
                         .GetAllAsync(cv => cv.Company == companyClaims && cv.CheckNo == viewModel.CheckNo && cv.BankId == viewModel.BankId, cancellationToken);
 
-                        if (cv.Any())
-                        {
-                            viewModel.COA = (await _unitOfWork.FilprideChartOfAccount
+                    if (cv.Any())
+                    {
+                        viewModel.COA = (await _unitOfWork.FilprideChartOfAccount
                                 .GetAllAsync(coa => !new[] { "202010200", "202010100", "101010100" }.Any(excludedNumber => coa.AccountNumber!.Contains(excludedNumber)) && !coa.HasChildren, cancellationToken))
-                                .Select(s => new SelectListItem
-                                {
-                                    Value = s.AccountNumber,
-                                    Text = s.AccountNumber + " " + s.AccountName
-                                })
-                                .ToList();
+                            .Select(s => new SelectListItem
+                            {
+                                Value = s.AccountNumber,
+                                Text = s.AccountNumber + " " + s.AccountName
+                            })
+                            .ToList();
 
-                            viewModel.Suppliers = (await _unitOfWork.FilprideSupplier
+                        viewModel.Suppliers = (await _unitOfWork.FilprideSupplier
                                 .GetAllAsync(supp => (companyClaims == nameof(Filpride) ? supp.IsFilpride : supp.IsMobility) && supp.Category == "Trade", cancellationToken))
-                                .Select(sup => new SelectListItem
-                                {
-                                    Value = sup.SupplierId.ToString(),
-                                    Text = sup.SupplierName
-                                })
-                                .ToList();
+                            .Select(sup => new SelectListItem
+                            {
+                                Value = sup.SupplierId.ToString(),
+                                Text = sup.SupplierName
+                            })
+                            .ToList();
 
-                            viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                        viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
                                 .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
-                                .Select(po => new SelectListItem
-                                {
-                                    Value = po.PurchaseOrderNo!.ToString(),
-                                    Text = po.PurchaseOrderNo
-                                })
-                                .ToList();
+                            .Select(po => new SelectListItem
+                            {
+                                Value = po.PurchaseOrderNo!.ToString(),
+                                Text = po.PurchaseOrderNo
+                            })
+                            .ToList();
 
-                            viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
+                        viewModel.BankAccounts = (await _unitOfWork.FilprideBankAccount
                                 .GetAllAsync(b => (companyClaims == nameof(Filpride) ? b.IsFilpride : b.IsMobility), cancellationToken))
-                                .Select(ba => new SelectListItem
-                                {
-                                    Value = ba.BankAccountId.ToString(),
-                                    Text = ba.AccountNo + " " + ba.AccountName
-                                })
-                                .ToList();
+                            .Select(ba => new SelectListItem
+                            {
+                                Value = ba.BankAccountId.ToString(),
+                                Text = ba.AccountNo + " " + ba.AccountName
+                            })
+                            .ToList();
 
-                            TempData["info"] = "Check No. already exists";
-                            return View(viewModel);
-                        }
+                        TempData["info"] = "Check No. already exists";
+                        return View(viewModel);
                     }
+                }
 
-                    #endregion --Check if duplicate record
+                #endregion --Check if duplicate record
 
-                    #region -- Get PO --
+                #region -- Get PO --
 
-                    var getPurchaseOrder = await _unitOfWork.FilpridePurchaseOrder
-                        .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
+                var getPurchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => viewModel.POSeries!.Contains(po.PurchaseOrderNo), cancellationToken);
 
-                    if (getPurchaseOrder == null)
+                if (getPurchaseOrder == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion -- Get PO --
+
+                #region --Saving the default entries
+
+                var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type!, cancellationToken);
+                var cashInBank = viewModel.Credit[1];
+
+                #region -- Get Supplier
+
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieve Supplier
+
+                #region  -- Get bank account
+
+                var bank = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                if (bank == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion
+
+                var cvh = new FilprideCheckVoucherHeader
+                {
+                    CheckVoucherHeaderNo = generateCVNo,
+                    Date = viewModel.TransactionDate,
+                    PONo = viewModel.POSeries,
+                    SupplierId = viewModel.SupplierId,
+                    SupplierName = supplier.SupplierName,
+                    Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
+                    Reference = viewModel.AdvancesCVNo,
+                    BankId = viewModel.BankId,
+                    BankAccountName = bank.AccountName,
+                    BankAccountNumber = bank.AccountNo,
+                    CheckNo = viewModel.CheckNo,
+                    Category = "Trade",
+                    Payee = viewModel.Payee,
+                    CheckDate = viewModel.CheckDate,
+                    Total = cashInBank,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    Company = companyClaims,
+                    Type = getPurchaseOrder.Type,
+                    CvType = "Supplier",
+                    Address = supplier.SupplierAddress,
+                    Tin = supplier.SupplierTin,
+                    OldCvNo = viewModel.OldCVNo
+                };
+
+                await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
+
+                #endregion --Saving the default entries
+
+                #region --CV Details Entry
+
+                var cvDetails = new List<FilprideCheckVoucherDetail>();
+                for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+                {
+                    if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
                     {
-                        return NotFound();
-                    }
-
-                    #endregion -- Get PO --
-
-                    #region --Saving the default entries
-
-                    var generateCVNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type!, cancellationToken);
-                    var cashInBank = viewModel.Credit[1];
-
-                    #region -- Get Supplier
-
-                    var supplier = await _unitOfWork.FilprideSupplier
-                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve Supplier
-
-                    #region  -- Get bank account
-
-                    var bank = await _unitOfWork.FilprideBankAccount
-                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
-                    if (bank == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion
-
-                    var cvh = new FilprideCheckVoucherHeader
-                    {
-                        CheckVoucherHeaderNo = generateCVNo,
-                        Date = viewModel.TransactionDate,
-                        PONo = viewModel.POSeries,
-                        SupplierId = viewModel.SupplierId,
-                        SupplierName = supplier.SupplierName,
-                        Particulars = $"{viewModel.Particulars} {(viewModel.AdvancesCVNo != null ? "Advances#" + viewModel.AdvancesCVNo : "")}.",
-                        Reference = viewModel.AdvancesCVNo,
-                        BankId = viewModel.BankId,
-                        BankAccountName = bank.AccountName,
-                        BankAccountNumber = bank.AccountNo,
-                        CheckNo = viewModel.CheckNo,
-                        Category = "Trade",
-                        Payee = viewModel.Payee,
-                        CheckDate = viewModel.CheckDate,
-                        Total = cashInBank,
-                        CreatedBy = _userManager.GetUserName(this.User),
-                        Company = companyClaims,
-                        Type = getPurchaseOrder.Type,
-                        CvType = "Supplier",
-                        Address = supplier.SupplierAddress,
-                        Tin = supplier.SupplierTin,
-                        OldCvNo = viewModel.OldCVNo
-                    };
-
-                    await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
-
-                    #endregion --Saving the default entries
-
-                    #region --CV Details Entry
-
-                    var cvDetails = new List<FilprideCheckVoucherDetail>();
-                    for (int i = 0; i < viewModel.AccountNumber.Length; i++)
-                    {
-                        if (viewModel.Debit[i] != 0 || viewModel.Credit[i] != 0)
-                        {
-                            cvDetails.Add(
+                        cvDetails.Add(
                             new FilprideCheckVoucherDetail
                             {
                                 AccountNo = viewModel.AccountNumber[i],
@@ -341,75 +362,58 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 SupplierId = i == 0 ? viewModel.SupplierId : null,
                                 BankId = i == 2 ? viewModel.BankId : null,
                             });
-                        }
                     }
-
-                    await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
-
-                    #endregion --CV Details Entry
-
-                    #region -- Uploading file --
-
-                    if (file != null && file.Length > 0)
-                    {
-                        cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
-                        cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
-                    }
-
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-
-                    #endregion -- Uploading file --
                 }
-                catch (Exception ex)
+
+                await _dbContext.FilprideCheckVoucherDetails.AddRangeAsync(cvDetails, cancellationToken);
+
+                #endregion --CV Details Entry
+
+                #region -- Uploading file --
+
+                if (file != null && file.Length > 0)
                 {
-                    _logger.LogError(ex, "Failed to create check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-                    viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-                    viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
-                                .Select(po => new SelectListItem
-                                {
-                                    Value = po.PurchaseOrderNo!.ToString(),
-                                    Text = po.PurchaseOrderNo
-                                })
-                                .ToList();
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
+                    cvh.SupportingFileSavedFileName = GenerateFileNameToSave(file.FileName);
+                    cvh.SupportingFileSavedUrl = await _cloudStorageService.UploadFileAsync(file, cvh.SupportingFileSavedFileName!);
                 }
+
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(cvh.CreatedBy!, $"Created new check voucher# {cvh.CheckVoucherHeaderNo}", "Check Voucher", cvh.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = $"Check voucher trade #{cvh.CheckVoucherHeaderNo} created successfully";
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+
+                #endregion -- Uploading file --
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-            viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
-                .Select(po => new SelectListItem
-                {
-                    Value = po.PurchaseOrderNo!.ToString(),
-                    Text = po.PurchaseOrderNo
-                })
-                .ToList();
+                viewModel.PONo = (await _unitOfWork.FilpridePurchaseOrder
+                        .GetAllAsync(po => po.Company == companyClaims && po.SupplierId == viewModel.SupplierId && po.PostedBy != null, cancellationToken))
+                    .Select(po => new SelectListItem
+                    {
+                        Value = po.PurchaseOrderNo!.ToString(),
+                        Text = po.PurchaseOrderNo
+                    })
+                    .ToList();
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> GetPOs(int supplierId)
