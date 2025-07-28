@@ -1013,19 +1013,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var invoice = await _unitOfWork.FilprideCheckVoucher
                 .GetAsync(i => i.CheckVoucherHeaderId == invoiceId, cancellationToken);
 
-            if (invoice != null)
+            if (invoice == null)
             {
-                return Json(new
-                {
-                    Payee = invoice.Supplier!.SupplierName,
-                    PayeeAddress = invoice.Supplier.SupplierAddress,
-                    PayeeTin = invoice.Supplier.SupplierTin,
-                    invoice.Particulars,
-                    Total = invoice.InvoiceAmount
-                });
+                return Json(null);
             }
 
-            return Json(null);
+            return Json(new
+            {
+                Payee = invoice.Supplier!.SupplierName,
+                PayeeAddress = invoice.Supplier.SupplierAddress,
+                PayeeTin = invoice.Supplier.SupplierTin,
+                invoice.Particulars,
+                Total = invoice.InvoiceAmount
+            });
         }
 
         [HttpGet]
