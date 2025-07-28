@@ -1168,107 +1168,110 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
-                        await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
-
-                        #region -- Recalculate payment of RR's or DR's
-
-                        var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                            .Where(cv => cv.CheckVoucherId == id)
-                            .Include(cv => cv.CV)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var item in getCheckVoucherTradePayment)
-                        {
-                            if (item.DocumentType == "RR")
-                            {
-                                var receivingReport = await _unitOfWork.FilprideReceivingReport
-                                    .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
-
-                                receivingReport!.IsPaid = false;
-                                receivingReport.AmountPaid -= item.AmountPaid;
-                            }
-                            if (item.DocumentType == "DR")
-                            {
-                                var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                                    .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
-
-                                if (item.CV.CvType == "Commission")
-                                {
-                                    deliveryReceipt!.IsCommissionPaid = false;
-                                    deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
-                                }
-                                if (item.CV.CvType == "Hauler")
-                                {
-                                    deliveryReceipt!.IsFreightPaid = false;
-                                    deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
-                                }
-                            }
-                        }
-
-                        #endregion -- Recalculate payment of RR's or DR's
-
-                        #region -- Revert the amount paid of advances
-
-                        if (model.Reference != null)
-                        {
-                            var advances = await _unitOfWork.FilprideCheckVoucher
-                                .GetAsync(cv =>
-                                        cv.CheckVoucherHeaderNo == model.Reference &&
-                                        cv.Company == model.Company,
-                                    cancellationToken);
-
-                            if (advances == null)
-                            {
-                                return NotFound();
-                            }
-
-                            advances.AmountPaid -= advances.AmountPaid;
-                        }
-
-                        #endregion
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Check Voucher has been Voided.";
-
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (model.VoidedBy == null)
+                {
+                    if (model.PostedBy != null)
+                    {
+                        model.PostedBy = null;
+                    }
+
+                    model.VoidedBy = _userManager.GetUserName(this.User);
+                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Voided);
+
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
+                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
+
+                    #region -- Recalculate payment of RR's or DR's
+
+                    var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                        .Where(cv => cv.CheckVoucherId == id)
+                        .Include(cv => cv.CV)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var item in getCheckVoucherTradePayment)
+                    {
+                        if (item.DocumentType == "RR")
+                        {
+                            var receivingReport = await _unitOfWork.FilprideReceivingReport
+                                .GetAsync(rr => rr.ReceivingReportId == item.DocumentId, cancellationToken);
+
+                            receivingReport!.IsPaid = false;
+                            receivingReport.AmountPaid -= item.AmountPaid;
+                        }
+                        if (item.DocumentType == "DR")
+                        {
+                            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                                .GetAsync(dr => dr.DeliveryReceiptId == item.DocumentId, cancellationToken);
+
+                            if (item.CV.CvType == "Commission")
+                            {
+                                deliveryReceipt!.IsCommissionPaid = false;
+                                deliveryReceipt.CommissionAmountPaid -= item.AmountPaid;
+                            }
+                            if (item.CV.CvType == "Hauler")
+                            {
+                                deliveryReceipt!.IsFreightPaid = false;
+                                deliveryReceipt.FreightAmountPaid -= item.AmountPaid;
+                            }
+                        }
+                    }
+
+                    #endregion -- Recalculate payment of RR's or DR's
+
+                    #region -- Revert the amount paid of advances
+
+                    if (model.Reference != null)
+                    {
+                        var advances = await _unitOfWork.FilprideCheckVoucher
+                            .GetAsync(cv =>
+                                    cv.CheckVoucherHeaderNo == model.Reference &&
+                                    cv.Company == model.Company,
+                                cancellationToken);
+
+                        if (advances == null)
+                        {
+                            return NotFound();
+                        }
+
+                        advances.AmountPaid -= advances.AmountPaid;
+                    }
+
+                    #endregion
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Voided.";
+                }
+                else
+                {
+                    TempData["info"] = "Check Voucher already Voided.";
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void check voucher. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
