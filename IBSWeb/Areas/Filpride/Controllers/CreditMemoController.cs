@@ -1020,16 +1020,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<JsonResult> GetSVDetails(int svId, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(sv => sv.ServiceInvoiceId == svId, cancellationToken);
-            if (model != null)
+            if (model == null)
             {
-                return Json(new
-                {
-                    model.Period,
-                    model.Total
-                });
+                return Json(null);
             }
 
-            return Json(null);
+            return Json(new
+            {
+                model.Period,
+                model.Total
+            });
+
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
