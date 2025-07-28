@@ -1278,28 +1278,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetSupplierDetails(int? supplierId, CancellationToken cancellationToken = default)
         {
-            if (supplierId != null)
+            if (supplierId == null)
             {
-                var supplier = await _unitOfWork.FilprideSupplier
-                    .GetAsync(s => s.SupplierId == supplierId, cancellationToken);
-
-                if (supplier != null)
-                {
-                    return Json(new
-                    {
-                        Name = supplier.SupplierName,
-                        Address = supplier.SupplierAddress,
-                        TinNo = supplier.SupplierTin,
-                        TaxType = supplier.TaxType,
-                        Category = supplier.Category,
-                        TaxPercent = supplier.WithholdingTaxPercent,
-                        VatType = supplier.VatType,
-                        DefaultExpense = supplier.DefaultExpenseNumber,
-                        WithholdingTax = supplier.WithholdingTaxtitle
-                    });
-                }
+                return Json(null);
             }
-            return Json(null);
+
+            var supplier = await _unitOfWork.FilprideSupplier
+                .GetAsync(s => s.SupplierId == supplierId, cancellationToken);
+
+            if (supplier == null)
+            {
+                return Json(null);
+            }
+
+            return Json(new
+            {
+                Name = supplier.SupplierName,
+                Address = supplier.SupplierAddress,
+                TinNo = supplier.SupplierTin,
+                TaxType = supplier.TaxType,
+                Category = supplier.Category,
+                TaxPercent = supplier.WithholdingTaxPercent,
+                VatType = supplier.VatType,
+                DefaultExpense = supplier.DefaultExpenseNumber,
+                WithholdingTax = supplier.WithholdingTaxtitle
+            });
         }
 
         public async Task<IActionResult> GetCVs(int supplierId, int? paymentId, CancellationToken cancellationToken)
