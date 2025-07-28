@@ -1143,32 +1143,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var model = await _unitOfWork.FilprideCheckVoucher
                 .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
 
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
+                if (model.CanceledBy == null)
                 {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
+                    model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                    #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                    #endregion --Audit Trail Recording
 
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Check Voucher has been Cancelled.";
-                    }
-
-                    return RedirectToAction(nameof(Index));
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Check Voucher has been Cancelled.";
                 }
+                else
+                {
+                    TempData["info"] = "Check Voucher already Cancelled.";
+                }
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -1178,8 +1184,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         [Authorize(Roles = "Admin")]
