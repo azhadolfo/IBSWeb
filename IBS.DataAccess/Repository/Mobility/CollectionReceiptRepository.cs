@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
-using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Mobility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class CollectionReceiptRepository : Repository<MobilityCollectionReceipt>, ICollectionReceiptRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CollectionReceiptRepository(ApplicationDbContext db) : base(db)
         {
@@ -23,54 +22,50 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityCollectionReceipt? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCollectionReceipts
                 .Where(c => c.StationCode == stationCode && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.CollectionReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CollectionReceiptNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CR0000000001";
             }
+
+            var lastSeries = lastCv.CollectionReceiptNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityCollectionReceipt? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCollectionReceipts
                 .Where(c => c.StationCode == stationCode && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.CollectionReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CollectionReceiptNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CRU000000001";
             }
+
+            var lastSeries = lastCv.CollectionReceiptNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public async Task<List<MobilityOffsettings>> GetOffsettings(string source, string reference, string stationCode, CancellationToken cancellationToken = default)
@@ -80,14 +75,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 .Where(o => o.StationCode == stationCode && o.Source == source && o.Reference == reference)
                 .ToListAsync(cancellationToken);
 
-            if (result != null)
-            {
-                return result;
-            }
-            else
-            {
-                throw new ArgumentException("Invalid id value. The id must be greater than 0.");
-            }
+            return result;
         }
 
         public async Task UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
@@ -129,7 +117,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 sv.AmountPaid -= total;
                 sv.Balance += total;
 
-                if (sv.IsPaid == true && sv.PaymentStatus == "Paid" || sv.IsPaid == true && sv.PaymentStatus == "OverPaid")
+                if (sv.IsPaid && sv.PaymentStatus == "Paid" || sv.IsPaid && sv.PaymentStatus == "OverPaid")
                 {
                     sv.IsPaid = false;
                     sv.PaymentStatus = "Pending";

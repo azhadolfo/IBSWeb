@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class OfflineRepository : Repository<MobilityOffline>, IOfflineRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public OfflineRepository(ApplicationDbContext db) : base(db)
         {
@@ -42,7 +41,8 @@ namespace IBS.DataAccess.Repository.Mobility
             var offlineList = await _db.MobilityOfflines
                 .ToListAsync(cancellationToken);
 
-            var selectedOffline = offlineList.Find(o => o.OfflineId == model.SelectedOfflineId) ?? throw new NullReferenceException("Selected offline not found.");
+            var selectedOffline = offlineList.Find(o => o.OfflineId == model.SelectedOfflineId)
+                                  ?? throw new NullReferenceException("Selected offline not found.");
 
             var salesHeader = await _db.MobilitySalesHeaders
                 .FirstOrDefaultAsync(s => s.SalesNo == model.AffectedDSRNo && s.StationCode == selectedOffline.StationCode, cancellationToken);

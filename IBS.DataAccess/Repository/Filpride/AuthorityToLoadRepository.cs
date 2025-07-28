@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class AuthorityToLoadRepository : Repository<FilprideAuthorityToLoad>, IAuthorityToLoadRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public AuthorityToLoadRepository(ApplicationDbContext db) : base(db)
         {
@@ -18,7 +18,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateAtlNo(string company, CancellationToken cancellationToken)
         {
-            FilprideAuthorityToLoad? lastAtl = await _db
+            var lastAtl = await _db
                 .FilprideAuthorityToLoads
                 .OrderBy(c => c.AuthorityToLoadId)
                 .ThenBy(c => c.AuthorityToLoadNo)

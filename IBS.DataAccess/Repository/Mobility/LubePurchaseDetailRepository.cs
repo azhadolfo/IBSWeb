@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class LubePurchaseDetailRepository : Repository<MobilityLubePurchaseDetail>, ILubePurchaseDetailRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public LubePurchaseDetailRepository(ApplicationDbContext db) : base(db)
         {

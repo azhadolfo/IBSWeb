@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class ProductRepository : Repository<MobilityProduct>, IProductRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ProductRepository(ApplicationDbContext db) : base(db)
         {
@@ -24,9 +24,10 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilityProduct model, CancellationToken cancellationToken = default)
         {
-            MobilityProduct existingProduct = await _db
+            var existingProduct = await _db
                 .MobilityProducts
-                .FindAsync(model.ProductId, cancellationToken) ?? throw new InvalidOperationException($"Product with id '{model.ProductId}' not found.");
+                .FirstOrDefaultAsync(x => x.ProductId == model.ProductId, cancellationToken)
+                                  ?? throw new InvalidOperationException($"Product with id '{model.ProductId}' not found.");
 
             existingProduct.ProductCode = model.ProductCode;
             existingProduct.ProductName = model.ProductName;

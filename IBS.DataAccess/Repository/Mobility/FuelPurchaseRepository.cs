@@ -2,10 +2,8 @@ using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
-using IBS.DTOs;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -14,7 +12,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class FuelPurchaseRepository : Repository<MobilityFuelPurchase>, IFuelPurchaseRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public FuelPurchaseRepository(ApplicationDbContext db) : base(db)
         {
@@ -44,7 +42,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             try
             {
-                MobilityFuelPurchase fuelPurchase = await _db
+                var fuelPurchase = await _db
                     .MobilityFuelPurchase
                     .FirstOrDefaultAsync(f => f.FuelPurchaseNo == id && f.StationCode == stationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{id}' not found.");
 
@@ -63,7 +61,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {fuelPurchaselist[0].FuelPurchaseNo}");
                 }
 
-                ProductDto product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
+                var product = await MapProductToDTO(fuelPurchase.ProductCode, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{fuelPurchase.ProductCode}' not found.");
 
                 var sortedInventory = await _db
                         .MobilityInventories
@@ -135,10 +133,10 @@ namespace IBS.DataAccess.Repository.Mobility
                     JournalReference = nameof(JournalType.Purchase)
                 });
 
-                decimal totalCost = fuelPurchase.Quantity * netOfVatPrice;
-                decimal runningCost = previousInventory!.RunningCost + totalCost;
-                decimal inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
-                decimal unitCostAverage = runningCost / inventoryBalance;
+                var totalCost = fuelPurchase.Quantity * netOfVatPrice;
+                var runningCost = previousInventory!.RunningCost + totalCost;
+                var inventoryBalance = previousInventory.InventoryBalance + fuelPurchase.Quantity;
+                var unitCostAverage = runningCost / inventoryBalance;
 
                 var inventory = new MobilityInventory
                 {
@@ -196,19 +194,23 @@ namespace IBS.DataAccess.Repository.Mobility
                         {
                             if (journal.Debit != 0)
                             {
-                                if (journal.Debit != transaction.CostOfGoodsSold)
+                                if (journal.Debit == transaction.CostOfGoodsSold)
                                 {
-                                    journal.Debit = transaction.CostOfGoodsSold;
-                                    journal.Credit = 0;
+                                    continue;
                                 }
+
+                                journal.Debit = transaction.CostOfGoodsSold;
+                                journal.Credit = 0;
                             }
                             else
                             {
-                                if (journal.Credit != transaction.CostOfGoodsSold)
+                                if (journal.Credit == transaction.CostOfGoodsSold)
                                 {
-                                    journal.Credit = transaction.CostOfGoodsSold;
-                                    journal.Debit = 0;
+                                    continue;
                                 }
+
+                                journal.Credit = transaction.CostOfGoodsSold;
+                                journal.Debit = 0;
                             }
                         }
                     }
@@ -237,7 +239,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<int> ProcessFuelDelivery(string file, CancellationToken cancellationToken = default)
         {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -250,18 +252,17 @@ namespace IBS.DataAccess.Repository.Mobility
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.pagenumber == record.pagenumber && existingRecord.shiftnumber == record.shiftnumber && existingRecord.shiftdate == record.shiftdate && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
 
-            if (recordsToInsert.Count != 0)
-            {
-                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-                await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
-
-                return recordsToInsert.Count;
-            }
-            else
+            if (recordsToInsert.Count == 0)
             {
                 return 0;
             }
+
+            await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
+
+            return recordsToInsert.Count;
+
         }
 
         public async Task<int> ProcessFuelDeliveryGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
@@ -279,18 +280,17 @@ namespace IBS.DataAccess.Repository.Mobility
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.pagenumber == record.pagenumber && existingRecord.shiftnumber == record.shiftnumber && existingRecord.shiftdate == record.shiftdate && existingRecord.stncode == record.stncode && existingRecord.productcode == record.productcode)).ToList();
 
-            if (recordsToInsert.Count != 0)
-            {
-                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-                await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
-
-                return recordsToInsert.Count;
-            }
-            else
+            if (recordsToInsert.Count == 0)
             {
                 return 0;
             }
+
+            await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
+
+            return recordsToInsert.Count;
+
         }
 
         public async Task RecordTheDeliveryToPurchase(IEnumerable<MobilityFuelDelivery> fuelDeliveries, CancellationToken cancellationToken = default)
@@ -339,7 +339,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilityFuelPurchase model, CancellationToken cancellationToken = default)
         {
-            MobilityFuelPurchase existingFuelPurchase = await _db
+            var existingFuelPurchase = await _db
                 .MobilityFuelPurchase
                 .FirstOrDefaultAsync(f => f.FuelPurchaseId == model.FuelPurchaseId && f.StationCode == model.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Fuel purchase with id '{model.FuelPurchaseId}' not found.");
 
@@ -364,18 +364,16 @@ namespace IBS.DataAccess.Repository.Mobility
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();
 
-            if (lastCashierReport != null)
-            {
-                string lastSeries = lastCashierReport.FuelPurchaseNo;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCashierReport == null)
             {
                 return "FD0000000001";
             }
+
+            var lastSeries = lastCashierReport.FuelPurchaseNo;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
     }
 }

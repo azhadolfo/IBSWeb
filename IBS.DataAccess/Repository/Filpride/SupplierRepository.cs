@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class SupplierRepository : Repository<FilprideSupplier>, ISupplierRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public SupplierRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,26 +20,24 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(CancellationToken cancellationToken = default)
         {
-            FilprideSupplier? lastSupplier = await _db
+            var lastSupplier = await _db
                 .FilprideSuppliers
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastSupplier != null)
-            {
-                string lastCode = lastSupplier.SupplierCode!;
-                string numericPart = lastCode.Substring(1);
-
-                // Parse the numeric part and increment it by one
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                // Format the incremented number with leading zeros and concatenate with the letter part
-                return $"{lastCode[0]}{incrementedNumber:D6}"; //e.g S000002
-            }
-            else
+            if (lastSupplier == null)
             {
                 return "S000001";
             }
+
+            var lastCode = lastSupplier.SupplierCode!;
+            var numericPart = lastCode.Substring(1);
+
+            // Parse the numeric part and increment it by one
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            // Format the incremented number with leading zeros and concatenate with the letter part
+            return $"{lastCode[0]}{incrementedNumber:D6}"; //e.g S000002
         }
 
         public async Task<bool> IsSupplierExistAsync(string supplierName, string category, string company, CancellationToken cancellationToken = default)
@@ -61,21 +59,20 @@ namespace IBS.DataAccess.Repository.Filpride
                 Directory.CreateDirectory(localPath);
             }
 
-            string fileName = Path.GetFileName(file.FileName);
-            string fileSavePath = Path.Combine(localPath, fileName);
+            var fileName = Path.GetFileName(file.FileName);
+            var fileSavePath = Path.Combine(localPath, fileName);
 
-            await using (FileStream stream = new(fileSavePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream, cancellationToken);
-            }
+            await using FileStream stream = new(fileSavePath, FileMode.Create);
+            await file.CopyToAsync(stream, cancellationToken);
 
             return fileSavePath;
         }
 
         public async Task UpdateAsync(FilprideSupplier model, CancellationToken cancellationToken = default)
         {
-            FilprideSupplier existingSupplier = await _db.FilprideSuppliers
-                .FindAsync(model.SupplierId, cancellationToken) ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
+            var existingSupplier = await _db.FilprideSuppliers
+                .FirstOrDefaultAsync(x => x.SupplierId == model.SupplierId, cancellationToken)
+                                   ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
 
             existingSupplier.Category = model.Category;
             existingSupplier.SupplierName = model.SupplierName;

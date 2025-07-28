@@ -8,6 +8,5 @@ namespace IBS.DataAccess.Repository.MMSI.IRepository
 {
     public interface ITugboatOwnerRepository : IRepository<MMSITugboatOwner>
     {
-        Task SaveAsync(CancellationToken cancellationToken);
     }
 }

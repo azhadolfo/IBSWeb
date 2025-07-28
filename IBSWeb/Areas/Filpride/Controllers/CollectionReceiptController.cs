@@ -257,7 +257,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var model = new FilprideCollectionReceipt
                 {
                     CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
-                        .GenerateCodeForSIAsync(companyClaims, existingSalesInvoice.Type, cancellationToken),
+                        .GenerateCodeAsync(companyClaims, existingSalesInvoice.Type, cancellationToken),
                     SalesInvoiceId = existingSalesInvoice.SalesInvoiceId,
                     SINo = existingSalesInvoice.SalesInvoiceNo,
                     CustomerId = viewModel.CustomerId,
@@ -475,7 +475,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
-                    .GenerateCodeForSIAsync(companyClaims, model.Type!, cancellationToken);
+                    .GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -925,7 +925,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var model = new FilprideCollectionReceipt
                 {
                     CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
-                        .GenerateCodeForSIAsync(companyClaims, existingServiceInvoice.Type, cancellationToken),
+                        .GenerateCodeAsync(companyClaims, existingServiceInvoice.Type, cancellationToken),
                     ServiceInvoiceId = existingServiceInvoice.ServiceInvoiceId,
                     SVNo = existingServiceInvoice.ServiceInvoiceNo,
                     CustomerId = viewModel.CustomerId,
@@ -1824,7 +1824,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 else if (model.MultipleSIId != null)
                 {
                     isMultipleSi = true;
-                    await _unitOfWork.FilprideCollectionReceipt.UpdateMutipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
                 }
                 else
                 {

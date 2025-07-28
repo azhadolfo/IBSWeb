@@ -2,19 +2,17 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Integrated;
-using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
-using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
     public class PurchaseOrderRepository : Repository<FilpridePurchaseOrder>, IPurchaseOrderRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public PurchaseOrderRepository(ApplicationDbContext db) : base(db)
         {
@@ -27,54 +25,49 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken)
         {
-            FilpridePurchaseOrder? lastPo = await _db
+            var lastPo = await _db
                 .FilpridePurchaseOrders
                 .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastPo != null)
-            {
-                string lastSeries = lastPo.PurchaseOrderNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastPo == null)
             {
                 return "PO0000000001";
             }
+
+            var lastSeries = lastPo.PurchaseOrderNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken)
         {
-            FilpridePurchaseOrder? lastPo = await _db
+            var lastPo = await _db
                 .FilpridePurchaseOrders
                 .Where(c => c.Company == company && !c.PurchaseOrderNo!.StartsWith("POBEG") && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastPo != null)
-            {
-                string lastSeries = lastPo.PurchaseOrderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastPo == null)
             {
                 return "POU000000001";
             }
+
+            var lastSeries = lastPo.PurchaseOrderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<FilpridePurchaseOrder?> GetAsync(Expression<Func<FilpridePurchaseOrder, bool>> filter, CancellationToken cancellationToken = default)
@@ -161,7 +154,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Select(po => po.SubPoSeries)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            char nextLetter = 'A';
+            var nextLetter = 'A';
             if (!string.IsNullOrEmpty(latestSubPoCode))
             {
                 nextLetter = (char)(latestSubPoCode[^1] + 1);
@@ -186,7 +179,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (receivingReports.Count > 0)
             {
-                for (int i = 0; i < receivingReports.Count; i++)
+                for (var i = 0; i < receivingReports.Count; i++)
                 {
 
                     var isSupplierVatable = receivingReports[i].PurchaseOrder!.VatType == SD.VatType_Vatable;
@@ -240,8 +233,10 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         #region Update RR General Ledger
 
+                        var index = i;
                         var journalEntries = await _db.FilprideGeneralLedgerBooks
-                            .Where(g => g.Company == receivingReports[i].Company && g.Reference == receivingReports[i].ReceivingReportNo)
+                            .Where(g => g.Company == receivingReports[index].Company
+                                        && g.Reference == receivingReports[index].ReceivingReportNo)
                             .OrderBy(g => g.GeneralLedgerBookId)
                             .ToListAsync(cancellationToken);
 
@@ -261,14 +256,9 @@ namespace IBS.DataAccess.Repository.Filpride
                             }
                             else
                             {
-                                if (purchaseBook.WhtAmount > 0)
-                                {
-                                    journalEntry.Credit = ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount);
-                                }
-                                else
-                                {
-                                    journalEntry.Credit = purchaseBook.Amount;
-                                }
+                                journalEntry.Credit = purchaseBook.WhtAmount > 0
+                                    ? ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount)
+                                    : purchaseBook.Amount;
                             }
                         }
 
@@ -282,7 +272,10 @@ namespace IBS.DataAccess.Repository.Filpride
 
                     // Break the loop if TriggeredQuantity is met
                     if (model.AppliedVolume >= model.TriggeredVolume)
+                    {
                         break;
+                    }
+
                 }
 
                 #region ReCalculate Inventory
@@ -304,12 +297,9 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(x => x.PurchaseOrderId == purchaseOrderId, cancellationToken)
                                 ?? throw new NullReferenceException("PurchaseOrder not found");
 
-            if (purchaseOrder.ActualPrices!.Count != 0)
-            {
-                return purchaseOrder.ActualPrices!.First().TriggeredPrice;
-            }
-
-            return purchaseOrder.Price;
+            return purchaseOrder.ActualPrices!.Count != 0
+                ? purchaseOrder.ActualPrices!.First().TriggeredPrice
+                : purchaseOrder.Price;
         }
     }
 }

@@ -4,11 +4,8 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using Google.Apis.Drive.v3.Data;
-using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Utility;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -19,7 +16,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class ReceivingReportRepository : Repository<MobilityReceivingReport>, IReceivingReportRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ReceivingReportRepository(ApplicationDbContext db) : base(db)
         {
@@ -32,13 +29,11 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
-        public async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
             MobilityReceivingReport? lastRr = await _db
                 .MobilityReceivingReports
@@ -46,40 +41,37 @@ namespace IBS.DataAccess.Repository.Mobility
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastRr != null)
+            if (lastRr == null)
             {
-                string lastSeries = lastRr.ReceivingReportNo;
-                string numericPart = lastSeries.Substring(6);
-                int incrementedNumber = int.Parse(numericPart) + 1;
+                return $"{stationCode}-RR000000001";
+            }
 
-                return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
-            }
-            else
-            {
-                return $"{stationCode}-RR000000001"; //S07-RR000000001
-            }
+            var lastSeries = lastRr.ReceivingReportNo;
+            var numericPart = lastSeries.Substring(6);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken)
         {
-            MobilityReceivingReport? lastRr = await _db
+            var lastRr = await _db
                 .MobilityReceivingReports
                 .Where(r => r.StationCode == stationCode && r.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastRr != null)
-            {
-                string lastSeries = lastRr.ReceivingReportNo;
-                string numericPart = lastSeries.Substring(7);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
-            }
-            else
+            if (lastRr == null)
             {
                 return $"{stationCode}-RRU00000001"; //S07-RRU00000001
             }
+
+            var lastSeries = lastRr.ReceivingReportNo;
+            var numericPart = lastSeries.Substring(7);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
         }
 
         public override async Task<IEnumerable<MobilityReceivingReport>> GetAllAsync(Expression<Func<MobilityReceivingReport, bool>>? filter, CancellationToken cancellationToken = default)
@@ -108,9 +100,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task PostAsync(MobilityReceivingReport receivingReport, CancellationToken cancellationToken = default)
         {
-            //PENDING process the method here
-
-            await UpdatePOAsync(receivingReport.PurchaseOrder!.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
+            await UpdatePoAsync(receivingReport.PurchaseOrder!.PurchaseOrderId, receivingReport.QuantityReceived, cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -118,7 +108,8 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task UpdateAsync(ReceivingReportViewModel viewModel, string stationCodeClaim, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.MobilityReceivingReports
-                .FindAsync(viewModel.ReceivingReportId, cancellationToken) ?? throw new NullReferenceException("Receiving report not found");
+                .FirstOrDefaultAsync(x => x.ReceivingReportId == viewModel.ReceivingReportId, cancellationToken)
+                                 ?? throw new NullReferenceException("Receiving report not found");
 
             #region --Retrieve PO
 
@@ -130,9 +121,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #endregion --Retrieve PO
 
-            var totalAmountRR = existingPo!.Quantity - existingPo.QuantityReceived;
+            var totalAmountRr = existingPo!.Quantity - existingPo.QuantityReceived;
 
-            if (viewModel.QuantityDelivered > totalAmountRR)
+            if (viewModel.QuantityDelivered > totalAmountRr)
             {
                 viewModel.DrList = await _db.FilprideDeliveryReceipts
                     .OrderBy(dr => dr.DeliveryReceiptId)
@@ -206,98 +197,95 @@ namespace IBS.DataAccess.Repository.Mobility
                 .MobilityPurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
 
-            if (po != null)
-            {
-                DateOnly dueDate;
-
-                switch (po.Terms)
-                {
-                    case "7D":
-                        return dueDate = rrDate.AddDays(7);
-
-                    case "10D":
-                        return dueDate = rrDate.AddDays(7);
-
-                    case "15D":
-                        return dueDate = rrDate.AddDays(15);
-
-                    case "30D":
-                        return dueDate = rrDate.AddDays(30);
-
-                    case "45D":
-                    case "45PDC":
-                        return dueDate = rrDate.AddDays(45);
-
-                    case "60D":
-                    case "60PDC":
-                        return dueDate = rrDate.AddDays(60);
-
-                    case "90D":
-                        return dueDate = rrDate.AddDays(90);
-
-                    case "M15":
-                        return dueDate = rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
-
-                    case "M30":
-                        if (rrDate.Month == 1)
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                        }
-                        else
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                            if (dueDate.Day == 31)
-                            {
-                                dueDate = dueDate.AddDays(-1);
-                            }
-                        }
-                        return dueDate;
-
-                    case "M29":
-                        if (rrDate.Month == 1)
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                        }
-                        else
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                            if (dueDate.Day == 31)
-                            {
-                                dueDate = dueDate.AddDays(-2);
-                            }
-                            else if (dueDate.Day == 30)
-                            {
-                                dueDate = dueDate.AddDays(-1);
-                            }
-                        }
-                        return dueDate;
-
-                    default:
-                        return dueDate = rrDate;
-                }
-            }
-            else
+            if (po == null)
             {
                 throw new ArgumentException("No record found.");
+            }
+
+            DateOnly dueDate;
+
+            switch (po.Terms)
+            {
+                case "7D":
+                case "10D":
+                    return rrDate.AddDays(7);
+
+                case "15D":
+                    return rrDate.AddDays(15);
+
+                case "30D":
+                    return rrDate.AddDays(30);
+
+                case "45D":
+                case "45PDC":
+                    return rrDate.AddDays(45);
+
+                case "60D":
+                case "60PDC":
+                    return rrDate.AddDays(60);
+
+                case "90D":
+                    return rrDate.AddDays(90);
+
+                case "M15":
+                    return rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
+
+                case "M30":
+                    if (rrDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        if (dueDate.Day == 31)
+                        {
+                            dueDate = dueDate.AddDays(-1);
+                        }
+                    }
+                    return dueDate;
+
+                case "M29":
+                    if (rrDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        switch (dueDate.Day)
+                        {
+                            case 31:
+                                dueDate = dueDate.AddDays(-2);
+                                break;
+                            case 30:
+                                dueDate = dueDate.AddDays(-1);
+                                break;
+                        }
+                    }
+                    return dueDate;
+
+                default:
+                    return rrDate;
             }
         }
 
         public async Task AutoGenerateReceivingReport(FilprideDeliveryReceipt deliveryReceipt, DateOnly deliveredDate, CancellationToken cancellationToken = default)
         {
-            var getPurchasOrder = await _db.MobilityPurchaseOrders
+            var getPurchaseOrder = await _db.MobilityPurchaseOrders
                 .Include(p => p.PickUpPoint)
                 .FirstOrDefaultAsync(p => p.PurchaseOrderNo == deliveryReceipt.CustomerOrderSlip!.CustomerPoNo, cancellationToken);
 
             MobilityReceivingReport model = new()
             {
                 Date = deliveredDate,
-                PurchaseOrderId = getPurchasOrder!.PurchaseOrderId,
-                PurchaseOrderNo = getPurchasOrder.PurchaseOrderNo,
+                PurchaseOrderId = getPurchaseOrder!.PurchaseOrderId,
+                PurchaseOrderNo = getPurchaseOrder.PurchaseOrderNo,
                 QuantityDelivered = deliveryReceipt.Quantity,
                 QuantityReceived = deliveryReceipt.Quantity,
-                TruckOrVessels = getPurchasOrder.PickUpPoint!.Depot,
+                TruckOrVessels = getPurchaseOrder.PickUpPoint!.Depot,
                 AuthorityToLoadNo = deliveryReceipt.AuthorityToLoadNo,
                 Remarks = "PENDING",
                 CreatedBy = "SYSTEM GENERATED",
@@ -305,14 +293,14 @@ namespace IBS.DataAccess.Repository.Mobility
                 PostedBy = "SYSTEM GENERATED",
                 PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
                 Status = nameof(Status.Posted),
-                Type = getPurchasOrder.Type,
-                StationCode = getPurchasOrder.StationCode,
+                Type = getPurchaseOrder.Type,
+                StationCode = getPurchaseOrder.StationCode,
             };
 
-            if (model.QuantityDelivered > getPurchasOrder.Quantity - getPurchasOrder.QuantityReceived)
+            if (model.QuantityDelivered > getPurchaseOrder.Quantity - getPurchaseOrder.QuantityReceived)
             {
                 throw new ArgumentException($"The inputted quantity exceeds the remaining delivered quantity for Purchase Order: " +
-                                            $"{getPurchasOrder.PurchaseOrderNo}. " +
+                                            $"{getPurchaseOrder.PurchaseOrderNo}. " +
                                             "Please contact the TNS department to verify the appointed supplier.");
             }
 
@@ -324,7 +312,7 @@ namespace IBS.DataAccess.Repository.Mobility
             model.ReceivingReportNo = await GenerateCodeAsync(model.StationCode, model.Type, cancellationToken);
             model.DueDate = await ComputeDueDateAsync(model.PurchaseOrderId, model.Date, cancellationToken);
             model.GainOrLoss = model.QuantityDelivered - model.QuantityReceived;
-            model.Amount = model.QuantityReceived * (getPurchasOrder.UnitPrice + freight);
+            model.Amount = model.QuantityReceived * (getPurchaseOrder.UnitPrice + freight);
 
             #region --Audit Trail Recording
 
@@ -343,7 +331,6 @@ namespace IBS.DataAccess.Repository.Mobility
 
             #endregion --Audit Trail Recording
 
-
             await _db.AddAsync(model, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
 
@@ -355,29 +342,28 @@ namespace IBS.DataAccess.Repository.Mobility
             var po = await _db.MobilityPurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
 
-            if (po != null)
-            {
-                po.QuantityReceived -= quantityReceived;
-
-                if (po.IsReceived)
-                {
-                    po.IsReceived = false;
-                    po.ReceivedDate = DateTime.MaxValue;
-                }
-                if (po.QuantityReceived > po.Quantity)
-                {
-                    throw new ArgumentException("Input is exceed to remaining quantity received");
-                }
-
-                return await _db.SaveChangesAsync(cancellationToken);
-            }
-            else
+            if (po == null)
             {
                 throw new ArgumentException("No record found.");
             }
+
+            po.QuantityReceived -= quantityReceived;
+
+            if (po.IsReceived)
+            {
+                po.IsReceived = false;
+                po.ReceivedDate = DateTime.MaxValue;
+            }
+            if (po.QuantityReceived > po.Quantity)
+            {
+                throw new ArgumentException("Input is exceed to remaining quantity received");
+            }
+
+            return await _db.SaveChangesAsync(cancellationToken);
+
         }
 
-        public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        private async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.MobilityPurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);

@@ -1,8 +1,5 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride;
-using IBS.Models.Filpride.AccountsPayable;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -12,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class DebitMemoRepository : Repository<FilprideDebitMemo>, IDebitMemoRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public DebitMemoRepository(ApplicationDbContext db) : base(db)
         {
@@ -25,54 +22,49 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideDebitMemo? lastDm = await _db
+            var lastDm = await _db
                 .FilprideDebitMemos
                 .Where(dm => dm.Company == company && dm.Type == nameof(DocumentType.Documented))
                 .OrderBy(dm => dm.DebitMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastDm != null)
-            {
-                string lastSeries = lastDm.DebitMemoNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastDm == null)
             {
                 return "DM0000000001";
             }
+
+            var lastSeries = lastDm.DebitMemoNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideDebitMemo? lastDm = await _db
+            var lastDm = await _db
                 .FilprideDebitMemos
                 .Where(dm => dm.Company == company && dm.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(dm => dm.DebitMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastDm != null)
-            {
-                string lastSeries = lastDm.DebitMemoNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastDm == null)
             {
                 return "DMU000000001";
             }
+
+            var lastSeries = lastDm.DebitMemoNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<FilprideDebitMemo?> GetAsync(Expression<Func<FilprideDebitMemo, bool>> filter, CancellationToken cancellationToken = default)
@@ -86,7 +78,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .ThenInclude(sv => sv!.Customer)
                 .Include(c => c.ServiceInvoice)
                 .ThenInclude(sv => sv!.Service)
-                .Include(si => si!.SalesInvoice)
+                .Include(si => si.SalesInvoice)
                 .ThenInclude(cos => cos!.CustomerOrderSlip)
                 .FirstOrDefaultAsync(cancellationToken);
         }

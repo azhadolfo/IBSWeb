@@ -36,7 +36,7 @@ namespace IBS.DataAccess.Repository
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public IProductRepository Product { get; private set; }
         public ICompanyRepository Company { get; private set; }
@@ -421,15 +421,13 @@ namespace IBS.DataAccess.Repository
 
         public async Task<string> GetMobilityStationNameAsync(string stationCodeClaims, CancellationToken cancellationToken)
         {
-            string stationString;
-
             var station = await _db.MobilityStations
                 .Where(station => station.StationCode == stationCodeClaims)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            string stationName = station?.StationName ?? "Unknown Station";
-            string fullStationName = stationName + " STATION";
-            stationString = fullStationName;
+            var stationName = station?.StationName ?? "Unknown Station";
+            var fullStationName = stationName + " STATION";
+            var stationString = fullStationName;
 
             return stationString;
         }

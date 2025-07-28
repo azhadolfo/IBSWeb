@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class PickUpPointRepository : Repository<FilpridePickUpPoint>, IPickUpPointRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public PickUpPointRepository(ApplicationDbContext db) : base(db)
         {

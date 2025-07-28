@@ -1,9 +1,6 @@
-using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
-using IBS.Models.MMSI;
 using IBS.Models.MMSI.MasterFile;
-using IBS.Models.MMSI.ViewModels;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,21 +8,21 @@ namespace IBS.DataAccess.Repository.MMSI
 {
     public class VesselRepository : Repository<MMSIVessel>, IVesselRepository
     {
-        public readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _db;
 
-        public VesselRepository(ApplicationDbContext dbContext) : base(dbContext)
+        public VesselRepository(ApplicationDbContext db) : base(db)
         {
-            _dbContext = dbContext;
+            _db = db;
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIVesselsSelectList(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
+            var vessels = await _db.MMSIVessels.OrderBy(s => s.VesselName).Select(s => new SelectListItem
             {
                 Value = s.VesselId.ToString(),
                 Text = s.VesselName

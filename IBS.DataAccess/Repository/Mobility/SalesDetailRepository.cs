@@ -1,14 +1,13 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
     public class SalesDetailRepository : Repository<MobilitySalesDetail>, ISalesDetailRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public SalesDetailRepository(ApplicationDbContext db) : base(db)
         {

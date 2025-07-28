@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class FreightRepository : Repository<FilprideFreight>, IFreightRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public FreightRepository(ApplicationDbContext db) : base(db)
         {

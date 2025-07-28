@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DTOs;
 using IBS.Models.Filpride.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class ChartOfAccountRepository : Repository<FilprideChartOfAccount>, IChartOfAccountRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ChartOfAccountRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,7 +19,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<FilprideChartOfAccount> GenerateAccount(FilprideChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
         {
-            FilprideChartOfAccount existingCoa = await _db.FilprideChartOfAccounts
+            var existingCoa = await _db.FilprideChartOfAccounts
                 .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken) ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
 
             model.AccountType = existingCoa.AccountType;
@@ -102,8 +101,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateAsync(FilprideChartOfAccount model, CancellationToken cancellationToken = default)
         {
-            FilprideChartOfAccount existingAccount = await _db.FilprideChartOfAccounts
-                .FindAsync(model.AccountId, cancellationToken) ?? throw new InvalidOperationException($"Account with id '{model.AccountId}' not found.");
+            var existingAccount = await _db.FilprideChartOfAccounts
+                .FirstOrDefaultAsync(x => x.AccountId == model.AccountId, cancellationToken)
+                                  ?? throw new InvalidOperationException($"Account with id '{model.AccountId}' not found.");
 
             existingAccount.AccountName = model.AccountName;
 
@@ -121,7 +121,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         private async Task<string> GenerateNumberAsync(string parent, CancellationToken cancellationToken = default)
         {
-            FilprideChartOfAccount? lastAccount = await _db.FilprideChartOfAccounts
+            var lastAccount = await _db.FilprideChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 //.LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
                 .LastOrDefaultAsync(cancellationToken);

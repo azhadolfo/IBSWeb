@@ -106,7 +106,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.TugboatOwnerNumber = model.TugboatOwnerNumber;
                 currentModel.TugboatOwnerName = model.TugboatOwnerName;
                 currentModel.FixedRate = model.FixedRate;
-                await _unitOfWork.TugboatOwner.SaveAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));

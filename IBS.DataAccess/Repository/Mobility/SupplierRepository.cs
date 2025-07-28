@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class SupplierRepository : Repository<MobilitySupplier>, ISupplierRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public SupplierRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,33 +19,32 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<string> GenerateCodeAsync(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
-            MobilitySupplier? lastSupplier = await _db
+            var lastSupplier = await _db
                 .MobilitySuppliers
                 .Where(s => s.StationCode == stationCodeClaims)
                 .OrderBy(s => s.SupplierId)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastSupplier != null)
-            {
-                string lastCode = lastSupplier.SupplierCode!;
-                string numericPart = lastCode.Substring(1);
-
-                // Parse the numeric part and increment it by one
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                // Format the incremented number with leading zeros and concatenate with the letter part
-                return $"{lastCode[0]}{incrementedNumber:D6}"; //e.g S000002
-            }
-            else
+            if (lastSupplier == null)
             {
                 return "S000001";
             }
+
+            var lastCode = lastSupplier.SupplierCode!;
+            var numericPart = lastCode.Substring(1);
+
+            // Parse the numeric part and increment it by one
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            // Format the incremented number with leading zeros and concatenate with the letter part
+            return $"{lastCode[0]}{incrementedNumber:D6}"; //e.g S000002
         }
 
         public async Task UpdateAsync(MobilitySupplier model, CancellationToken cancellationToken = default)
         {
-            MobilitySupplier existingSupplier = await _db.MobilitySuppliers
-                .FindAsync(model.SupplierId, cancellationToken) ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
+            var existingSupplier = await _db.MobilitySuppliers
+                .FirstOrDefaultAsync(x => x.SupplierId == model.SupplierId, cancellationToken)
+                                   ?? throw new InvalidOperationException($"Supplier with id '{model.SupplierId}' not found.");
 
             existingSupplier.TradeName = model.TradeName;
             existingSupplier.Category = model.Category;

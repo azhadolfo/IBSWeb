@@ -8,7 +8,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class BankAccountRepository : Repository<FilprideBankAccount>, IBankAccountRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public BankAccountRepository(ApplicationDbContext db) : base(db)
         {
@@ -30,13 +30,13 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<bool> IsBankAccountNameExist(string accountName, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
-                .AnyAsync(b => b.AccountName == accountName);
+                .AnyAsync(b => b.AccountName == accountName, cancellationToken);
         }
 
         public async Task<bool> IsBankAccountNoExist(string accountNo, CancellationToken cancellationToken = default)
         {
             return await _db.FilprideBankAccounts
-                .AnyAsync(b => b.AccountNo == accountNo);
+                .AnyAsync(b => b.AccountNo == accountNo, cancellationToken);
         }
     }
 }

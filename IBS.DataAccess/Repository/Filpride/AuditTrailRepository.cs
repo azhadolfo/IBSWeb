@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class AuditTrailRepository : Repository<FilprideAuditTrail>, IAuditTrailRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public AuditTrailRepository(ApplicationDbContext db) : base(db)
         {

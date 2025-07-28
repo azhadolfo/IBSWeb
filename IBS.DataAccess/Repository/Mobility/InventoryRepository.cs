@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class InventoryRepository : Repository<MobilityInventory>, IInventoryRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public InventoryRepository(ApplicationDbContext db) : base(db)
         {
@@ -92,10 +91,10 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task CalculateTheActualSounding(MobilityInventory model, ActualSoundingViewModel viewModel, CancellationToken cancellationToken = default)
         {
-            decimal totalCost = viewModel.Variance * model.UnitCostAverage;
-            decimal runningCost = model.RunningCost + totalCost;
-            decimal inventoryBalance = model.InventoryBalance + viewModel.Variance;
-            decimal unitCostAverage = runningCost / inventoryBalance;
+            var totalCost = viewModel.Variance * model.UnitCostAverage;
+            var runningCost = model.RunningCost + totalCost;
+            var inventoryBalance = model.InventoryBalance + viewModel.Variance;
+            var unitCostAverage = runningCost / inventoryBalance;
 
             var particular = model.ProductCode.Contains("PET") ? "Sounding" : "Count";
 

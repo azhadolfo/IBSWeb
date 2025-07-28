@@ -11,7 +11,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class CustomerRepository : Repository<FilprideCustomer>, ICustomerRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CustomerRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,7 +20,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string customerType, CancellationToken cancellationToken = default)
         {
-            FilprideCustomer? lastCustomer = await _db
+            var lastCustomer = await _db
                 .FilprideCustomers
                 .Where(c => c.CustomerType == customerType)
                 .OrderBy(c => c.CustomerId)
@@ -28,32 +28,23 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (lastCustomer != null)
             {
-                string lastCode = lastCustomer.CustomerCode!;
-                string numericPart = lastCode.Substring(3);
+                var lastCode = lastCustomer.CustomerCode!;
+                var numericPart = lastCode.Substring(3);
 
                 // Parse the numeric part and increment it by one
-                int incrementedNumber = int.Parse(numericPart) + 1;
+                var incrementedNumber = int.Parse(numericPart) + 1;
 
                 // Format the incremented number with leading zeros and concatenate with the letter part
                 return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
             }
 
-            if (customerType == nameof(CustomerType.Retail))
+            return customerType switch
             {
-                return "RET0001";
-            }
-            else if (customerType == nameof(CustomerType.Industrial))
-            {
-                return "IND0001";
-            }
-            else if (customerType == nameof(CustomerType.Reseller))
-            {
-                return "RES0001";
-            }
-            else
-            {
-                return "GOV0001";
-            }
+                nameof(CustomerType.Retail) => "RET0001",
+                nameof(CustomerType.Industrial) => "IND0001",
+                nameof(CustomerType.Reseller) => "RES0001",
+                _ => "GOV0001"
+            };
         }
 
         public async Task<bool> IsTinNoExistAsync(string tin, string company, CancellationToken cancellationToken = default)
@@ -64,8 +55,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateAsync(FilprideCustomer model, CancellationToken cancellationToken = default)
         {
-            FilprideCustomer existingCustomer = await _db.FilprideCustomers
-                .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
+            var existingCustomer = await _db.FilprideCustomers
+                .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken)
+                                   ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
 
             existingCustomer.CustomerName = model.CustomerName;
             existingCustomer.CustomerAddress = model.CustomerAddress;

@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Models.Filpride.Books;
@@ -13,7 +12,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class CollectionReceiptRepository : Repository<FilprideCollectionReceipt>, ICollectionReceiptRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CollectionReceiptRepository(ApplicationDbContext db) : base(db)
         {
@@ -26,66 +25,50 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
-        }
 
-        public async Task<string> GenerateCodeForSIAsync(string company, string type, CancellationToken cancellationToken = default)
-        {
-            if (type == nameof(DocumentType.Documented))
-            {
-                return await GenerateCodeForDocumented(company, cancellationToken);
-            }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideCollectionReceipt? lastCv = await _db
+            var lastCv = await _db
                 .FilprideCollectionReceipts
                 .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.CollectionReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CollectionReceiptNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CR0000000001";
             }
+
+            var lastSeries = lastCv.CollectionReceiptNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideCollectionReceipt? lastCv = await _db
+            var lastCv = await _db
                 .FilprideCollectionReceipts
                 .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.CollectionReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CollectionReceiptNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CRU000000001";
             }
+
+            var lastSeries = lastCv.CollectionReceiptNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public async Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, string company, CancellationToken cancellationToken = default)
@@ -95,14 +78,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(o => o.Company == company && o.Source == source && o.Reference == reference)
                 .ToListAsync(cancellationToken);
 
-            if (result != null)
-            {
-                return result;
-            }
-            else
-            {
-                throw new ArgumentException("Invalid id value. The id must be greater than 0.");
-            }
+            return result;
         }
 
         public async Task PostAsync(FilprideCollectionReceipt collectionReceipt, List<FilprideOffsettings> offsettings, CancellationToken cancellationToken = default)
@@ -270,10 +246,9 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #region Cash Receipt Book Recording
 
-            var crb = new List<FilprideCashReceiptBook>();
-
-            crb.Add(
-                new FilprideCashReceiptBook
+            var crb = new List<FilprideCashReceiptBook>
+            {
+                new()
                 {
                     Date = collectionReceipt.TransactionDate,
                     RefNo = collectionReceipt.CollectionReceiptNo!,
@@ -288,8 +263,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = collectionReceipt.PostedBy,
                     CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 }
-
-            );
+            };
 
             if (collectionReceipt.EWT > 0)
             {
@@ -436,7 +410,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 si.AmountPaid -= total;
                 si.Balance += total;
 
-                if (si.IsPaid == true && si.PaymentStatus == "Paid" || si.IsPaid == true && si.PaymentStatus == "OverPaid")
+                if (si.IsPaid && si.PaymentStatus == "Paid" || si.IsPaid && si.PaymentStatus == "OverPaid")
                 {
                     si.IsPaid = false;
                     si.PaymentStatus = "Pending";
@@ -475,23 +449,23 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(si => id.Contains(si.SalesInvoiceId))
                 .ToListAsync(cancellationToken);
 
-            if (salesInvoices != null)
+            for (var i = 0; i < paidAmount.Length; i++)
             {
-                for (int i = 0; i < paidAmount.Length; i++)
-                {
-                    var total = paidAmount[i] + offsetAmount;
-                    salesInvoices[i].AmountPaid -= total;
-                    salesInvoices[i].Balance += total;
+                var total = paidAmount[i] + offsetAmount;
+                salesInvoices[i].AmountPaid -= total;
+                salesInvoices[i].Balance += total;
 
-                    if (salesInvoices[i].IsPaid == true && salesInvoices[i].PaymentStatus == "Paid" || salesInvoices[i].IsPaid == true && salesInvoices[i].PaymentStatus == "OverPaid")
-                    {
-                        salesInvoices[i].IsPaid = false;
-                        salesInvoices[i].PaymentStatus = "Pending";
-                    }
+                if ((!salesInvoices[i].IsPaid || salesInvoices[i].PaymentStatus != "Paid") &&
+                    (!salesInvoices[i].IsPaid || salesInvoices[i].PaymentStatus != "OverPaid"))
+                {
+                    continue;
                 }
 
-                await _db.SaveChangesAsync(cancellationToken);
+                salesInvoices[i].IsPaid = false;
+                salesInvoices[i].PaymentStatus = "Pending";
             }
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
@@ -502,7 +476,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (si != null)
             {
-                decimal netDiscount = si.Amount - si.Discount;
+                var netDiscount = si.Amount - si.Discount;
 
                 var total = paidAmount + offsetAmount;
                 si.AmountPaid += total;
@@ -523,50 +497,47 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
-        public async Task UpdateMutipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
+        public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
-            if (siNo != null)
+            for (var i = 0; i < siNo.Length; i++)
             {
-                var salesInvoice = new FilprideSalesInvoice();
-                for (int i = 0; i < siNo.Length; i++)
+                var siValue = siNo[i];
+                var salesInvoice = await _db.FilprideSalesInvoices
+                    .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken)
+                                   ?? throw new NullReferenceException("SalesInvoice not found");
+
+                var amountPaid = salesInvoice.AmountPaid + paidAmount[i] + offsetAmount;
+
+                if (!salesInvoice.IsPaid)
                 {
-                    var siValue = siNo[i];
-                    salesInvoice = await _db.FilprideSalesInvoices
-                                .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken) ?? throw new NullReferenceException("SalesInvoice not found");
+                    decimal netDiscount = salesInvoice.Amount - salesInvoice.Discount;
 
-                    var amountPaid = salesInvoice.AmountPaid + paidAmount[i] + offsetAmount;
+                    salesInvoice.AmountPaid += salesInvoice.Amount >= amountPaid ? paidAmount[i] + offsetAmount : paidAmount[i];
 
-                    if (!salesInvoice.IsPaid)
+                    salesInvoice.Balance = netDiscount - salesInvoice.AmountPaid;
+
+                    if (salesInvoice.Balance == 0 && salesInvoice.AmountPaid == netDiscount)
                     {
-                        decimal netDiscount = salesInvoice.Amount - salesInvoice.Discount;
-
-                        salesInvoice.AmountPaid += salesInvoice.Amount >= amountPaid ? paidAmount[i] + offsetAmount : paidAmount[i];
-
-                        salesInvoice.Balance = netDiscount - salesInvoice.AmountPaid;
-
-                        if (salesInvoice.Balance == 0 && salesInvoice.AmountPaid == netDiscount)
-                        {
-                            salesInvoice.IsPaid = true;
-                            salesInvoice.PaymentStatus = "Paid";
-                        }
-                        else if (salesInvoice.AmountPaid > netDiscount)
-                        {
-                            salesInvoice.IsPaid = true;
-                            salesInvoice.PaymentStatus = "OverPaid";
-                        }
+                        salesInvoice.IsPaid = true;
+                        salesInvoice.PaymentStatus = "Paid";
                     }
-                    else
+                    else if (salesInvoice.AmountPaid > netDiscount)
                     {
-                        continue;
-                    }
-                    if (salesInvoice.Amount >= amountPaid)
-                    {
-                        offsetAmount = 0;
+                        salesInvoice.IsPaid = true;
+                        salesInvoice.PaymentStatus = "OverPaid";
                     }
                 }
-
-                await _db.SaveChangesAsync(cancellationToken);
+                else
+                {
+                    continue;
+                }
+                if (salesInvoice.Amount >= amountPaid)
+                {
+                    offsetAmount = 0;
+                }
             }
+
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)

@@ -1,5 +1,4 @@
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
@@ -11,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class CustomerRepository : Repository<MobilityCustomer>, ICustomerRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CustomerRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,8 +19,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilityCustomer model, CancellationToken cancellationToken = default)
         {
-            MobilityCustomer existingCustomer = await _db.MobilityCustomers
-                .FindAsync(model.CustomerId, cancellationToken) ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
+            var existingCustomer = await _db.MobilityCustomers
+                .FirstOrDefaultAsync(x => x.CustomerId == model.CustomerId, cancellationToken)
+                                   ?? throw new InvalidOperationException($"Customer with id '{model.CustomerId}' not found.");
 
             existingCustomer.CustomerName = model.CustomerName;
             existingCustomer.CustomerCodeName = model.CustomerCodeName;
@@ -60,40 +60,32 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<string> GenerateCodeAsync(string customerType, string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityCustomer? lastCustomer = await _db
+            var lastCustomer = await _db
                 .MobilityCustomers
                 .Where(c => c.CustomerType == customerType && c.StationCode == stationCode)
                 .OrderBy(c => c.CustomerId)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCustomer != null)
+            if (lastCustomer == null)
             {
-                string lastCode = lastCustomer.CustomerCode!;
-                string numericPart = lastCode.Substring(3);
-
-                // Parse the numeric part and increment it by one
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                // Format the incremented number with leading zeros and concatenate with the letter part
-                return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
+                return customerType switch
+                {
+                    nameof(CustomerType.Retail) => "RET0001",
+                    nameof(CustomerType.Industrial) => "IND0001",
+                    nameof(CustomerType.Reseller) => "RES0001",
+                    _ => "GOV0001"
+                };
             }
 
-            if (customerType == nameof(CustomerType.Retail))
-            {
-                return "RET0001";
-            }
-            else if (customerType == nameof(CustomerType.Industrial))
-            {
-                return "IND0001";
-            }
-            else if (customerType == nameof(CustomerType.Reseller))
-            {
-                return "RES0001";
-            }
-            else
-            {
-                return "GOV0001";
-            }
+            var lastCode = lastCustomer.CustomerCode!;
+            var numericPart = lastCode.Substring(3);
+
+            // Parse the numeric part and increment it by one
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            // Format the incremented number with leading zeros and concatenate with the letter part
+            return lastCode.Substring(0, 3) + incrementedNumber.ToString("D4");
+
         }
     }
 }

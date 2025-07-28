@@ -1,4 +1,3 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
@@ -10,21 +9,21 @@ namespace IBS.DataAccess.Repository.MMSI
 {
     public class TugboatRepository : Repository<MMSITugboat>, ITugboatRepository
     {
-        public readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _db;
 
-        public TugboatRepository(ApplicationDbContext dbContext) : base(dbContext)
+        public TugboatRepository(ApplicationDbContext db) : base(db)
         {
-            _dbContext = dbContext;
+            _db = db;
         }
 
         public async Task SaveAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<List<SelectListItem>> GetMMSIActivitiesServicesById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> activitiesServices = await _dbContext.MMSIServices
+            var activitiesServices = await _db.MMSIServices
                 .OrderBy(s => s.ServiceNumber)
                 .Select(s => new SelectListItem
                 {
@@ -37,7 +36,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIPortsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> ports = await _dbContext.MMSIPorts
+            var ports = await _db.MMSIPorts
                 .OrderBy(s => s.PortNumber)
                 .Select(s => new SelectListItem
                 {
@@ -50,11 +49,11 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITerminalsById(MMSIDispatchTicket model, CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> terminals = new List<SelectListItem>();
+            List<SelectListItem> terminals;
 
             if (model.Terminal?.Port?.PortId != null)
             {
-                terminals = await _dbContext.MMSITerminals
+                terminals = await _db.MMSITerminals
                 .Where(t => t.PortId == model.Terminal.Port.PortId)
                 .OrderBy(s => s.TerminalNumber)
                 .Select(s => new SelectListItem
@@ -65,7 +64,7 @@ namespace IBS.DataAccess.Repository.MMSI
             }
             else
             {
-                terminals = await _dbContext.MMSITerminals
+                terminals = await _db.MMSITerminals
                 .OrderBy(s => s.TerminalNumber)
                 .Select(s => new SelectListItem
                 {
@@ -79,7 +78,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIAllTerminalsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> terminals = await _dbContext.MMSITerminals
+            var terminals = await _db.MMSITerminals
                 .OrderBy(s => s.TerminalNumber)
                 .Select(s => new SelectListItem
                 {
@@ -92,7 +91,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITugboatsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> tugBoats = await _dbContext.MMSITugboats.OrderBy(s => s.TugboatNumber).Select(s => new SelectListItem
+            var tugBoats = await _db.MMSITugboats.OrderBy(s => s.TugboatNumber).Select(s => new SelectListItem
             {
                 Value = s.TugboatId.ToString(),
                 Text = s.TugboatNumber + " " + s.TugboatName
@@ -103,7 +102,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSITugMastersById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> tugMasters = await _dbContext.MMSITugMasters.OrderBy(s => s.TugMasterNumber).Select(s => new SelectListItem
+            var tugMasters = await _db.MMSITugMasters.OrderBy(s => s.TugMasterNumber).Select(s => new SelectListItem
             {
                 Value = s.TugMasterId.ToString(),
                 Text = s.TugMasterNumber + " " + s.TugMasterName
@@ -114,7 +113,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSIVesselsById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> vessels = await _dbContext.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
+            var vessels = await _db.MMSIVessels.OrderBy(s => s.VesselNumber).Select(s => new SelectListItem
             {
                 Value = s.VesselId.ToString(),
                 Text = s.VesselNumber + " " + s.VesselName + " " + s.VesselType
@@ -125,7 +124,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSICustomersById(CancellationToken cancellationToken = default)
         {
-            return await _dbContext.FilprideCustomers
+            return await _db.FilprideCustomers
                 .Where(c => c.IsMMSI == true)
                 .OrderBy(s => s.CustomerName)
                 .Select(s => new SelectListItem
@@ -137,7 +136,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
         public async Task<List<SelectListItem>> GetMMSICompanyOwnerSelectListById(CancellationToken cancellationToken = default)
         {
-            List<SelectListItem> companyOwnerList = await _dbContext.MMSITugboatOwners
+            var companyOwnerList = await _db.MMSITugboatOwners
                 .OrderBy(dt => dt.TugboatOwnerNumber).Select(s => new SelectListItem
                 {
                     Value = s.TugboatOwnerId.ToString(),

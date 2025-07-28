@@ -4,8 +4,6 @@ using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using IBS.Models.Filpride.AccountsPayable;
-using IBS.Utility;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -13,7 +11,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class PurchaseOrderRepository : Repository<MobilityPurchaseOrder>, IPurchaseOrderRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public PurchaseOrderRepository(ApplicationDbContext db) : base(db)
         {
@@ -26,59 +24,54 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken)
         {
-            MobilityPurchaseOrder? lastPo = await _db
+            var lastPo = await _db
                 .MobilityPurchaseOrders
                 .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastPo != null)
+            if (lastPo == null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo;
-                string numericPart = lastSeries.Substring(6);
-                int incrementedNumber = int.Parse(numericPart) + 1;
+                return $"{stationCode}-PO000000001";
+            }
 
-                return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
-            }
-            else
-            {
-                return $"{stationCode}-PO000000001"; //S07-PO000000001
-            }
+            var lastSeries = lastPo.PurchaseOrderNo;
+            var numericPart = lastSeries.Substring(6);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return $"{lastSeries.Substring(0, 6) + incrementedNumber.ToString("D9")}";
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken)
         {
-            MobilityPurchaseOrder? lastPo = await _db
+            var lastPo = await _db
                 .MobilityPurchaseOrders
                 .Where(s => s.StationCode == stationCode && s.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.PurchaseOrderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastPo != null)
+            if (lastPo == null)
             {
-                string lastSeries = lastPo.PurchaseOrderNo;
-                string numericPart = lastSeries.Substring(7);
-                int incrementedNumber = int.Parse(numericPart) + 1;
+                return $"{stationCode}-POU00000001";
+            }
 
-                return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
-            }
-            else
-            {
-                return $"{stationCode}-POU00000001"; //S07-PO0000000001
-            }
+            var lastSeries = lastPo.PurchaseOrderNo;
+            var numericPart = lastSeries.Substring(7);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return $"{lastSeries.Substring(0, 7) + incrementedNumber.ToString("D8")}";
         }
 
         public async Task PostAsync(MobilityPurchaseOrder purchaseOrder, CancellationToken cancellationToken = default)
         {
-            //PENDING process the method here
+            ///TODO PENDING process the method here
 
             await _db.SaveChangesAsync(cancellationToken);
         }
@@ -110,7 +103,8 @@ namespace IBS.DataAccess.Repository.Mobility
         public async Task UpdateAsync(PurchaseOrderViewModel viewModel, CancellationToken cancellationToken)
         {
             var existingRecord = await _db.MobilityPurchaseOrders
-                .FindAsync(viewModel.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
+                .FirstOrDefaultAsync(x => x.PurchaseOrderId == viewModel.PurchaseOrderId, cancellationToken)
+                                 ?? throw new NullReferenceException("Purchase order not found");
 
             existingRecord.Date = viewModel.Date;
             existingRecord.SupplierId = viewModel.SupplierId;

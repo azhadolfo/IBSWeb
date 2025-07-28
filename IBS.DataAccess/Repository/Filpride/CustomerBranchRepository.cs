@@ -8,16 +8,17 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class CustomerBranchRepository : Repository<FilprideCustomerBranch>, ICustomerBranchRepository
     {
-        private ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _db;
 
-        public CustomerBranchRepository(ApplicationDbContext dbContext) : base(dbContext)
+        public CustomerBranchRepository(ApplicationDbContext db) : base(db)
         {
-            _dbContext = dbContext;
+            _db = db;
         }
 
         public async Task UpdateAsync(FilprideCustomerBranch model, CancellationToken cancellationToken)
         {
-            var currentModel = await _dbContext.FilprideCustomerBranches.FindAsync(model.Id, cancellationToken);
+            var currentModel = await _db
+                .FilprideCustomerBranches.FirstOrDefaultAsync(x => x.Id == model.Id, cancellationToken);
 
             if (currentModel == null)
             {
@@ -29,7 +30,7 @@ namespace IBS.DataAccess.Repository.Filpride
             currentModel.BranchAddress = model.BranchAddress;
             currentModel.BranchTin = model.BranchTin;
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public override async Task<IEnumerable<FilprideCustomerBranch>> GetAllAsync(Expression<Func<FilprideCustomerBranch, bool>>? filter, CancellationToken cancellationToken = default)

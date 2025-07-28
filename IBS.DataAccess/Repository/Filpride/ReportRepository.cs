@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
@@ -8,13 +7,12 @@ using IBS.Models.Filpride.Integrated;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
-using NuGet.Packaging;
 
 namespace IBS.DataAccess.Repository.Filpride
 {
     public class ReportRepository : Repository<FilprideGeneralLedgerBook>, IReportRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ReportRepository(ApplicationDbContext db) : base(db)
         {
@@ -124,11 +122,6 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            if (dateFrom > dateTo)
-            {
-                throw new ArgumentException("Date From must be greater than Date To !");
-            }
-
             var inventoryBooks = _db
              .FilprideInventories
              .Include(i => i.Product)
@@ -165,17 +158,18 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             var receivingReportRepo = new ReceivingReportRepository(_db);
-            List<FilprideReceivingReport> receivingReport = new List<FilprideReceivingReport>();
+            var receivingReport = new List<FilprideReceivingReport>();
 
-            if (selectedFiltering == "UnpostedRR")
+            switch (selectedFiltering)
             {
-                receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
-                    .GetAllAsync(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.PostedBy == null);
-            }
-            else if (selectedFiltering == "POLiquidation")
-            {
-                receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
-                    .GetAllAsync(rr => rr.Company == company && rr.DueDate >= dateFrom && rr.DueDate <= dateTo && rr.PostedBy != null);
+                case "UnpostedRR":
+                    receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
+                        .GetAllAsync(rr => rr.Company == company && rr.Date >= dateFrom && rr.Date <= dateTo && rr.PostedBy == null, cancellationToken);
+                    break;
+                case "POLiquidation":
+                    receivingReport = (List<FilprideReceivingReport>)await receivingReportRepo
+                        .GetAllAsync(rr => rr.Company == company && rr.DueDate >= dateFrom && rr.DueDate <= dateTo && rr.PostedBy != null, cancellationToken);
+                    break;
             }
 
             return receivingReport;
@@ -184,7 +178,7 @@ namespace IBS.DataAccess.Repository.Filpride
         public List<FilprideSalesBook> GetSalesBooks(DateOnly dateFrom, DateOnly dateTo, string? selectedDocument, string company)
         {
             Func<FilprideSalesBook, object>? orderBy = null;
-            Func<FilprideSalesBook, bool>? query = null;
+            Func<FilprideSalesBook, bool>? query;
 
             switch (selectedDocument)
             {
@@ -435,6 +429,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.PurchaseOrder).ThenInclude(po => po!.Product)
                 .ToListAsync(cancellationToken);
 
+            /// TODO Call this if needs to implement the in-transit purchases
             var allReports = receivingReports
                 .Concat(additionalDeliveryReceipts.Select(dr => new FilprideReceivingReport
                 {
@@ -445,7 +440,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     QuantityReceived = dr.Quantity,
                     QuantityDelivered = dr.Quantity
                 }))
-                .ToList(); // Call this if needs to implement the in-transit purchases
+                .ToList();
 
             return receivingReports.OrderBy(rr => rr.Date).ToList();
         }

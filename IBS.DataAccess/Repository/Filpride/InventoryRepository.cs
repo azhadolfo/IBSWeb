@@ -13,7 +13,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class InventoryRepository : Repository<FilprideInventory>, IInventoryRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public InventoryRepository(ApplicationDbContext db) : base(db)
         {
@@ -51,7 +51,7 @@ namespace IBS.DataAccess.Repository.Filpride
             #region -- General Book Entry --
 
             var ledger = new List<FilprideGeneralLedgerBook>();
-            for (int i = 0; i < viewModel.AccountNumber.Length; i++)
+            for (var i = 0; i < viewModel.AccountNumber.Length; i++)
             {
                 ledger.Add(
                     new FilprideGeneralLedgerBook
@@ -115,13 +115,13 @@ namespace IBS.DataAccess.Repository.Filpride
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
 
             // Calculate initial values
-            decimal total = receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable
+            var total = receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable
                 ? ComputeNetOfVat(receivingReport.Amount)
                 : receivingReport.Amount;
-            decimal inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
-            decimal totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
+            var inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
+            var totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
 
-            decimal averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
+            var averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
                 ? total / receivingReport.QuantityReceived
                 : totalBalance / inventoryBalance;
 
@@ -205,7 +205,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            if (subsequentTransactions.Any())
+            if (subsequentTransactions.Count != 0)
             {
                 _db.FilprideInventories.UpdateRange(subsequentTransactions);
             }
@@ -251,11 +251,11 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Calculate initial values for new inventory entry
-            decimal total = deliveryReceipt.Quantity * cost;
-            decimal inventoryBalance = previousInventory?.InventoryBalance - deliveryReceipt.Quantity ?? 0 - deliveryReceipt.Quantity;
-            decimal totalBalance = previousInventory?.TotalBalance - total ?? 0 - total;
+            var total = deliveryReceipt.Quantity * cost;
+            var inventoryBalance = previousInventory?.InventoryBalance - deliveryReceipt.Quantity ?? 0 - deliveryReceipt.Quantity;
+            var totalBalance = previousInventory?.TotalBalance - total ?? 0 - total;
 
-            decimal averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
+            var averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
                 ? cost
                 : totalBalance / inventoryBalance;
 
@@ -319,7 +319,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            if (subsequentTransactions.Any())
+            if (subsequentTransactions.Count != 0)
             {
                 _db.FilprideInventories.UpdateRange(subsequentTransactions);
             }
@@ -349,7 +349,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            if (journalEntries.Any())
+            if (journalEntries.Count != 0)
             {
                 _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
             }
@@ -375,16 +375,14 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var previousInventory = sortedInventory.FirstOrDefault();
 
-                decimal total = previousInventory!.Total;
-                decimal inventoryBalance = previousInventory.InventoryBalance;
-                decimal totalBalance = previousInventory.TotalBalance;
-                decimal averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
+                var inventoryBalance = previousInventory!.InventoryBalance;
+                var totalBalance = previousInventory.TotalBalance;
+                var averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
                     ? previousInventory.AverageCost
                     : totalBalance / inventoryBalance;
 
                 foreach (var transaction in sortedInventory.Skip(1))
                 {
-                    var costOfGoodsSold = 0m;
                     if (transaction.Particular == "Sales")
                     {
                         transaction.Cost = averageCost;
@@ -392,7 +390,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         transaction.TotalBalance = totalBalance != 0 ? totalBalance - transaction.Total : transaction.Total;
                         transaction.InventoryBalance = inventoryBalance != 0 ? inventoryBalance - transaction.Quantity : transaction.Quantity;
                         transaction.AverageCost = transaction.TotalBalance == 0 || transaction.InventoryBalance == 0 ? previousInventory.AverageCost : transaction.TotalBalance / transaction.InventoryBalance;
-                        costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
+                        var costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
 
                         averageCost = transaction.AverageCost;
                         totalBalance = transaction.TotalBalance;
@@ -409,19 +407,23 @@ namespace IBS.DataAccess.Repository.Filpride
                             {
                                 if (journal.Debit != 0)
                                 {
-                                    if (journal.Debit != costOfGoodsSold)
+                                    if (journal.Debit == costOfGoodsSold)
                                     {
-                                        journal.Debit = costOfGoodsSold;
-                                        journal.Credit = 0;
+                                        continue;
                                     }
+
+                                    journal.Debit = costOfGoodsSold;
+                                    journal.Credit = 0;
                                 }
                                 else
                                 {
-                                    if (journal.Credit != costOfGoodsSold)
+                                    if (journal.Credit == costOfGoodsSold)
                                     {
-                                        journal.Credit = costOfGoodsSold;
-                                        journal.Debit = 0;
+                                        continue;
                                     }
+
+                                    journal.Credit = costOfGoodsSold;
+                                    journal.Debit = 0;
                                 }
                             }
                         }
@@ -453,16 +455,14 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var previousInventory = inventories.FirstOrDefault();
 
-            decimal total = previousInventory!.Total;
-            decimal inventoryBalance = previousInventory.InventoryBalance;
-            decimal totalBalance = previousInventory.TotalBalance;
-            decimal averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
+            var inventoryBalance = previousInventory!.InventoryBalance;
+            var totalBalance = previousInventory.TotalBalance;
+            var averageCost = Math.Round(inventoryBalance, 4) == 0 || Math.Round(totalBalance, 4) == 0
                 ? previousInventory.AverageCost
                 : totalBalance / inventoryBalance;
 
             foreach (var transaction in inventories.Skip(1))
             {
-                var costOfGoodsSold = 0m;
                 if (transaction.Particular == "Sales")
                 {
                     transaction.Cost = averageCost;
@@ -472,7 +472,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     transaction.AverageCost = Math.Round(transaction.TotalBalance, 4) == 0 || Math.Round(transaction.InventoryBalance, 4) == 0
                         ? previousInventory.AverageCost
                         : transaction.TotalBalance / transaction.InventoryBalance;
-                    costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
+                    var costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
 
                     averageCost = transaction.AverageCost;
                     totalBalance = transaction.TotalBalance;
@@ -489,19 +489,23 @@ namespace IBS.DataAccess.Repository.Filpride
                         {
                             if (journal.Debit != 0)
                             {
-                                if (journal.Debit != costOfGoodsSold)
+                                if (journal.Debit == costOfGoodsSold)
                                 {
-                                    journal.Debit = costOfGoodsSold;
-                                    journal.Credit = 0;
+                                    continue;
                                 }
+
+                                journal.Debit = costOfGoodsSold;
+                                journal.Credit = 0;
                             }
                             else
                             {
-                                if (journal.Credit != costOfGoodsSold)
+                                if (journal.Credit == costOfGoodsSold)
                                 {
-                                    journal.Credit = costOfGoodsSold;
-                                    journal.Debit = 0;
+                                    continue;
                                 }
+
+                                journal.Credit = costOfGoodsSold;
+                                journal.Debit = 0;
                             }
                         }
                     }
