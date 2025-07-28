@@ -2047,160 +2047,161 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                viewModel.Suppliers =
+                    await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
 
-                try
-                {
-                    var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                        .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
+                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-                    if (existingHeaderModel == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #region Update Record
-
-                    #region Header
-
-                    #region -- Get Supplier
-
-                    var supplier = await _unitOfWork.FilprideSupplier
-                        .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
-
-                    if (supplier == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieve Supplier
-
-                    #region  -- Get bank account
-
-                    var bank = await _unitOfWork.FilprideBankAccount
-                        .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
-
-                    if (bank == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion
-
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.Total = viewModel.Total;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.BankId = viewModel.BankId;
-                    existingHeaderModel.Payee = viewModel.Payee;
-                    existingHeaderModel.Address = viewModel.PayeeAddress;
-                    existingHeaderModel.Tin = viewModel.PayeeTin;
-                    existingHeaderModel.CheckNo = viewModel.CheckNo;
-                    existingHeaderModel.CheckDate = viewModel.CheckDate;
-                    existingHeaderModel.CheckAmount = viewModel.Total;
-                    existingHeaderModel.SupplierId = viewModel.SupplierId;
-                    existingHeaderModel.SupplierName = supplier.SupplierName;
-                    existingHeaderModel.BankAccountName = bank.AccountName;
-                    existingHeaderModel.BankAccountNumber = bank.AccountNo;
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    #endregion Header
-
-                    #region Details
-
-                    var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                        .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                        .ToListAsync(cancellationToken);
-
-                    _dbContext.RemoveRange(existingDetailsModel);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-
-                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
-                    var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
-                    var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
-
-                    var grossAmount = viewModel.Total;
-                    var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
-                    var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
-
-                    var checkVoucherDetails = new List<FilprideCheckVoucherDetail>
-                   {
-                       new()
-                       {
-                           AccountNo = advancesToSupplierTitle.AccountNumber,
-                           AccountName = advancesToSupplierTitle.AccountName,
-                           TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                           CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                           Debit = grossAmount,
-                           Credit = 0,
-                           SupplierId = viewModel.SupplierId,
-                       },
-
-                       new()
-                       {
-                           AccountNo = ewtTitle.AccountNumber,
-                           AccountName = ewtTitle.AccountName,
-                           TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                           CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                           Debit = 0,
-                           Credit = ewtAmount,
-                       },
-
-                       new()
-                       {
-                           AccountNo = cashInBankTitle.AccountNumber,
-                           AccountName = cashInBankTitle.AccountName,
-                           TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
-                           CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
-                           Debit = 0,
-                           Credit = netOfEwtAmount,
-                           BankId = viewModel.BankId,
-                       },
-                   };
-
-                    await _dbContext.AddRangeAsync(checkVoucherDetails, cancellationToken);
-
-                    #endregion Details
-
-                    #endregion Update Record
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check voucher payment edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit advances to supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-
-                    viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-                    viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
             }
 
-            viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            try
+            {
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == viewModel.CvId, cancellationToken);
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                #region Update Record
+
+                #region Header
+
+                #region -- Get Supplier
+
+                var supplier = await _unitOfWork.FilprideSupplier
+                    .GetAsync(po => po.SupplierId == viewModel.SupplierId, cancellationToken);
+
+                if (supplier == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieve Supplier
+
+                #region  -- Get bank account
+
+                var bank = await _unitOfWork.FilprideBankAccount
+                    .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
+
+                if (bank == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion
+
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.Total = viewModel.Total;
+                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.BankId = viewModel.BankId;
+                existingHeaderModel.Payee = viewModel.Payee;
+                existingHeaderModel.Address = viewModel.PayeeAddress;
+                existingHeaderModel.Tin = viewModel.PayeeTin;
+                existingHeaderModel.CheckNo = viewModel.CheckNo;
+                existingHeaderModel.CheckDate = viewModel.CheckDate;
+                existingHeaderModel.CheckAmount = viewModel.Total;
+                existingHeaderModel.SupplierId = viewModel.SupplierId;
+                existingHeaderModel.SupplierName = supplier.SupplierName;
+                existingHeaderModel.BankAccountName = bank.AccountName;
+                existingHeaderModel.BankAccountNumber = bank.AccountNo;
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #endregion Header
+
+                #region Details
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                _dbContext.RemoveRange(existingDetailsModel);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var advancesToSupplierTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060100") ?? throw new ArgumentException("Account title '101060100' not found.");
+                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+
+                var grossAmount = viewModel.Total;
+                var ewtAmount = _unitOfWork.FilprideCheckVoucher.ComputeEwtAmount(grossAmount, 0.01m);
+                var netOfEwtAmount = _unitOfWork.FilprideCheckVoucher.ComputeNetOfEwt(grossAmount, ewtAmount);
+
+                var checkVoucherDetails = new List<FilprideCheckVoucherDetail>
+                {
+                    new()
+                    {
+                        AccountNo = advancesToSupplierTitle.AccountNumber,
+                        AccountName = advancesToSupplierTitle.AccountName,
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                        Debit = grossAmount,
+                        Credit = 0,
+                        SupplierId = viewModel.SupplierId,
+                    },
+
+                    new()
+                    {
+                        AccountNo = ewtTitle.AccountNumber,
+                        AccountName = ewtTitle.AccountName,
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = ewtAmount,
+                    },
+
+                    new()
+                    {
+                        AccountNo = cashInBankTitle.AccountNumber,
+                        AccountName = cashInBankTitle.AccountName,
+                        TransactionNo = existingHeaderModel.CheckVoucherHeaderNo!,
+                        CheckVoucherHeaderId = existingHeaderModel.CheckVoucherHeaderId,
+                        Debit = 0,
+                        Credit = netOfEwtAmount,
+                        BankId = viewModel.BankId,
+                    },
+                };
+
+                await _dbContext.AddRangeAsync(checkVoucherDetails, cancellationToken);
+
+                #endregion Details
+
+                #endregion Update Record
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check voucher payment edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit advances to supplier. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
     }
