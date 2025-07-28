@@ -345,65 +345,68 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(x => x.Details)
                 .FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
+
+            if (existingHeaderModel == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (existingHeaderModel != null)
+                existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
+                existingHeaderModel.CancellationRemarks = cancellationRemarks;
+
+                var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
+                                                                        && existingHeaderModel.SupplierId != 133); //BIR
+
+                var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Include(cvp => cvp.CheckVoucherHeaderInvoice)
+                    .Include(cvp => cvp.CheckVoucherHeaderPayment)
+                    .ToListAsync(cancellationToken);
+
+                if (isForTheBir)
                 {
-                    existingHeaderModel.CanceledBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
-                    existingHeaderModel.CancellationRemarks = cancellationRemarks;
-
-                    var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
-                                                                           && existingHeaderModel.SupplierId != 133); //BIR
-
-                    var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
-                        .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
-                        .Include(cvp => cvp.CheckVoucherHeaderInvoice)
-                        .Include(cvp => cvp.CheckVoucherHeaderPayment)
-                        .ToListAsync(cancellationToken);
-
-                    if (isForTheBir)
+                    foreach (var cv in getCVs)
                     {
-                        foreach (var cv in getCVs)
+                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                        d.SupplierId == existingHeaderModel.SupplierId)
+                            .ToListAsync(cancellationToken);
+
+                        foreach (var existingDetail in existingDetails)
                         {
-                            var existingDetails = await _dbContext.FilprideCheckVoucherDetails
-                                .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
-                                            d.SupplierId == existingHeaderModel.SupplierId)
-                                .ToListAsync(cancellationToken);
-
-                            foreach (var existingDetail in existingDetails)
-                            {
-                                existingDetail.AmountPaid = 0;
-                            }
-
+                            existingDetail.AmountPaid = 0;
                         }
+
                     }
-                    else
-                    {
-                        foreach (var cv in getCVs)
-                        {
-                            cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                            cv.CheckVoucherHeaderInvoice.IsPaid = false;
-                        }
-                    }
-
-                    #region --Audit Trail Recording
-
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy!, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Cancelled.";
-
-                    return RedirectToAction(nameof(Index));
                 }
+                else
+                {
+                    foreach (var cv in getCVs)
+                    {
+                        cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
+                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                    }
+                }
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.CanceledBy!, $"Canceled check voucher# {existingHeaderModel.CheckVoucherHeaderNo}", "Check Voucher", existingHeaderModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Cancelled.";
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -413,8 +416,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         [Authorize(Roles = "Admin")]
