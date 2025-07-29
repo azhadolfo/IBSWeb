@@ -9,29 +9,24 @@
 
 @{
     ViewData["Title"] = "Print Credit Memo";
-
-    decimal netOfVatAmount = 0m;
-    decimal vatAmount = 0m;
     
-    if ( Model.SalesInvoice != null) 
-    {
-        netOfVatAmount = Model.SalesInvoice!.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? (Model.CreditAmount / 1.12m) : Model.CreditAmount;
-        vatAmount = Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Vatable ? (netOfVatAmount * 0.12m) : 0m;
-    }
-    else 
-    {
-        netOfVatAmount = Model.ServiceInvoice!.VatType == SD.VatType_Vatable ? Model.CreditAmount / 1.12m : Model.CreditAmount;
-        vatAmount = Model.ServiceInvoice.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0m;
-    }
-        
+    var customerType = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerType ?? Model.SalesInvoice?.Customer?.CustomerType) ?? Model.ServiceInvoice!.Customer!.CustomerType;
+    var customerName = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerName ?? Model.SalesInvoice?.Customer?.CustomerName) ?? Model.ServiceInvoice!.CustomerName;
+    var customerAddress = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerAddress ?? Model.SalesInvoice?.Customer?.CustomerAddress) ?? Model.ServiceInvoice!.CustomerAddress;
+    var customerTin = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerTin ?? Model.SalesInvoice?.Customer?.CustomerTin) ?? Model.ServiceInvoice!.CustomerTin;
+    var customerBusinessStyle = (Model.SalesInvoice?.CustomerOrderSlip?.BusinessStyle ?? Model.SalesInvoice?.Customer?.BusinessStyle) ?? Model.ServiceInvoice?.CustomerBusinessStyle;
+    var customerVatType = (Model.SalesInvoice?.CustomerOrderSlip?.VatType ?? Model.SalesInvoice?.Customer?.VatType) ?? Model.ServiceInvoice!.VatType;
+
+    var netOfVatAmount = customerVatType == SD.VatType_Vatable ? Model.CreditAmount / 1.12m : Model.CreditAmount;
+    var vatAmount = customerVatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0m;
+
     var selectedCompany = string.Empty;
 
     if (SignInManager.IsSignedIn(User))
     {
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
-
-    var customerType = Model.SalesInvoice?.Customer?.CustomerType ?? Model.ServiceInvoice!.Customer!.CustomerType;
+    
     var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
@@ -71,24 +66,22 @@
     </div>
 </div>
 <br />
-@if (Model.Source == "Sales Invoice")
-{
-    <div class="table-responsive">
+<div class="table-responsive">
         <table class="w-100" style="margin-top:20px;">
             <tbody>
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.CustomerName) &nbsp;<br />
+                        &nbsp;@customerName &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.SalesInvoice!.CustomerAddress) &nbsp;<br />
+                        &nbsp;@customerAddress &nbsp;<br />
 
                         <span><b>TIN:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.SalesInvoice!.CustomerTin) &nbsp;<br />
+                        &nbsp;@customerTin &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.BusinessStyle) &nbsp;
+                        &nbsp;@customerBusinessStyle &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -146,7 +139,7 @@
                                     </tr>
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.SalesInvoice.CustomerOrderSlip!.VatType == SD.VatType_ZeroRated)
+                                        @if (customerVatType == SD.VatType_ZeroRated)
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
@@ -158,7 +151,7 @@
                                     <tr>
                                         <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
 
-                                        @if (Model.SalesInvoice.CustomerOrderSlip.VatType == SD.VatType_Exempt)
+                                        @if (customerVatType == SD.VatType_Exempt)
                                         {
                                             <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
                                         }
@@ -191,136 +184,6 @@
             </tbody>
         </table>
     </div>
-}
-else if (Model.Source == "Service Invoice")
-{
-    <div class="table-responsive">
-        <table class="w-100" style="margin-top:20px;">
-            <tbody>
-                <tr>
-                    <td>
-                        <span><b>Sold to:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerName) &nbsp;<br />
-
-                        <span><b>Address:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerAddress) &nbsp;<br />
-
-                        <span><b>TIN:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerTin) &nbsp;<br />
-
-                        <span><b>Business Style:</b></span>
-                        &nbsp;@Html.DisplayFor(model => model.ServiceInvoice!.CustomerBusinessStyle) &nbsp;
-                    </td>
-
-                    <td class="w-25 text-nowrap">
-
-                        <b>Date :</b> @Model.TransactionDate.ToString(SD.Date_Format)
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="table-responsive" style="margin-top:20px;">
-        <table class="table-bordered w-100 text-center">
-            <thead>
-                <tr>
-                    <th>SOA NO.</th>
-                    <th>SOA DATE</th>
-                    <th>SERVICE</th>
-                    <th>DESCRIPTION</th>
-                    <th>AMOUNT</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="height:80px;">
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceInvoiceNo)</td>
-                    <td class="pt-2">
-                        <p style="line-height:15px">
-                            @Model.Period.ToString("MMMM yyyy")
-                        </p>
-                    </td>
-                    <td>@Html.DisplayFor(model => model.ServiceInvoice!.ServiceName)</td>
-                    <td>@Html.DisplayFor(model => model.Description)</td>
-                    <td class="pt-2">
-                        <p style="line-height:15px">
-                            @Math.Abs(Model.Amount ?? 0).ToString(decimalFormat)
-                        </p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div style="margin-top:20px;">
-        <table class="w-100">
-            <tbody>
-                <tr>
-                    <td>
-                    </td>
-                    <td style="width:40%;">
-                        <div>
-                            <table class="w-100">
-                                <tbody class="text-nowrap">
-                                    <tr>
-                                        <td class="w-50"><p style="height: 9px; margin-left:8%;"><b>Vatable Sales: </b></p></td>
-                                        @if (netOfVatAmount != 0)
-                                        {
-                                            <td class="text-end">@Math.Abs(netOfVatAmount).ToString(decimalFormat)</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="text-end"></td>
-                                        }
-                                    </tr>
-                                    <tr>
-                                        <td><p style="height: 9px; margin-left:8%;"><b>Zero-Rated Sales: </b></p></td>
-                                        @if (Model.ServiceInvoice!.VatType == SD.VatType_ZeroRated)
-                                        {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="text-end"></td>
-                                        }
-                                    </tr>
-                                    <tr>
-                                        <td><p style="height: 9px; margin-left:8%;"><b>VAT-Exempt Sales: </b></p></td>
-
-                                        @if (Model.ServiceInvoice.VatType == SD.VatType_Exempt)
-                                        {
-                                            <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="text-end"></td>
-                                        }
-                                    </tr>
-                                    <tr>
-                                        <td><p style="height: 9px; margin-left:8%;"><b>VAT Amount: </b></p></td>
-
-                                        @if (vatAmount != 0)
-                                        {
-                                            <td class="text-end">@Math.Abs(vatAmount).ToString(decimalFormat)</td>
-                                        }
-                                        else
-                                        {
-                                            <td class="text-end"></td>
-                                        }
-                                    </tr>
-                                    <tr>
-                                        <td><p style="height: 9px; margin-left:8%;"><b>TOTAL SALES: </b></p></td>
-                                        <td class="text-end">@Math.Abs(Model.CreditAmount).ToString(decimalFormat)</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-}
 
 @if (Model.Type == nameof(DocumentType.Documented))
 {
