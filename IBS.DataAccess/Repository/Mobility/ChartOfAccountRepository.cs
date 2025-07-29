@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.DTOs;
 using IBS.Models.Mobility.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class ChartOfAccountRepository : Repository<MobilityChartOfAccount>, IChartOfAccountRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ChartOfAccountRepository(ApplicationDbContext db) : base(db)
         {
@@ -20,8 +19,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<MobilityChartOfAccount> GenerateAccount(MobilityChartOfAccount model, string thirdLevel, CancellationToken cancellationToken = default)
         {
-            MobilityChartOfAccount existingCoa = await _db.MobilityChartOfAccounts
-                .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken) ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
+            var existingCoa = await _db.MobilityChartOfAccounts
+                .FirstOrDefaultAsync(coa => coa.AccountNumber == thirdLevel, cancellationToken)
+                              ?? throw new InvalidOperationException($"Chart of account with number '{thirdLevel}' not found.");
 
             model.AccountType = existingCoa.AccountType;
             model.NormalBalance = existingCoa.NormalBalance;
@@ -103,8 +103,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilityChartOfAccount model, CancellationToken cancellationToken = default)
         {
-            MobilityChartOfAccount existingAccount = await _db.MobilityChartOfAccounts
-                .FindAsync(model.AccountId, cancellationToken) ?? throw new InvalidOperationException($"Account with id '{model.AccountId}' not found.");
+            var existingAccount = await _db.MobilityChartOfAccounts
+                .FirstOrDefaultAsync(x => x.AccountId == model.AccountId, cancellationToken)
+                                  ?? throw new InvalidOperationException($"Account with id '{model.AccountId}' not found.");
 
             existingAccount.AccountName = model.AccountName;
 
@@ -122,21 +123,20 @@ namespace IBS.DataAccess.Repository.Mobility
 
         private async Task<string> GenerateNumberAsync(string parent, CancellationToken cancellationToken = default)
         {
-            MobilityChartOfAccount? lastAccount = await _db.MobilityChartOfAccounts
+            var lastAccount = await _db.MobilityChartOfAccounts
                 .OrderBy(c => c.AccountNumber)
                 .LastOrDefaultAsync(coa => coa.Parent == parent, cancellationToken);
 
-            if (lastAccount != null)
-            {
-                var accountNo = int.Parse(lastAccount.AccountNumber!);
-                var generatedNo = accountNo + 1;
-
-                return generatedNo.ToString();
-            }
-            else
+            if (lastAccount == null)
             {
                 return parent + "01";
             }
+
+            var accountNo = int.Parse(lastAccount.AccountNumber!);
+            var generatedNo = accountNo + 1;
+
+            return generatedNo.ToString();
+
         }
     }
 }

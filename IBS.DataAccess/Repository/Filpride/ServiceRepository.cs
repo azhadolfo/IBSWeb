@@ -7,7 +7,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class ServiceRepository : Repository<FilprideService>, IServiceRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ServiceRepository(ApplicationDbContext db) : base(db)
         {
@@ -21,14 +21,13 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderByDescending(s => s.ServiceId)
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (lastNumber != null && int.TryParse(lastNumber.ServiceNo, out int serviceNo))
-            {
-                return (serviceNo + 1).ToString();
-            }
-            else
+            if (lastNumber == null || !int.TryParse(lastNumber.ServiceNo, out var serviceNo))
             {
                 return "2001";
             }
+
+            return (serviceNo + 1).ToString();
+
         }
 
         public async Task<bool> IsServicesExist(string serviceName, string company, CancellationToken cancellationToken = default)

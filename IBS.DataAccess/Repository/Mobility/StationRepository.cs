@@ -1,7 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
-using IBS.Utility;
 using IBS.Utility.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +8,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class StationRepository : Repository<MobilityStation>, IStationRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public StationRepository(ApplicationDbContext db) : base(db)
         {
@@ -18,7 +17,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public string GenerateFolderPath(string stationName)
         {
-            string formattedStationName = stationName.ToUpper().Replace(" ", "_");
+            var formattedStationName = stationName.ToUpper().Replace(" ", "_");
             return $"D:\\FlowMeter\\Stations\\{formattedStationName}";
         }
 
@@ -42,8 +41,9 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task UpdateAsync(MobilityStation model, CancellationToken cancellationToken = default)
         {
-            MobilityStation existingStation = await _db.MobilityStations
-                .FindAsync(model.StationId, cancellationToken) ?? throw new InvalidOperationException($"Station with id '{model.StationId}' not found.");
+            var existingStation = await _db.MobilityStations
+                .FirstOrDefaultAsync(x => x.StationId == model.StationId, cancellationToken)
+                                  ?? throw new InvalidOperationException($"Station with id '{model.StationId}' not found.");
 
             existingStation.PosCode = model.PosCode;
             existingStation.StationCode = model.StationCode;

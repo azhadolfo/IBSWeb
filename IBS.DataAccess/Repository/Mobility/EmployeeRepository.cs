@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class EmployeeRepository : Repository<MobilityStationEmployee>, IEmployeeRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public EmployeeRepository(ApplicationDbContext db) : base(db)
         {

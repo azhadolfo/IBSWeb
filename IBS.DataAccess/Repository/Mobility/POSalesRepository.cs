@@ -10,7 +10,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class POSalesRepository : Repository<MobilityPOSales>, IPOSalesRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public POSalesRepository(ApplicationDbContext db) : base(db)
         {
@@ -19,7 +19,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<int> ProcessPOSales(string file, CancellationToken cancellationToken = default)
         {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -32,18 +32,17 @@ namespace IBS.DataAccess.Repository.Mobility
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.tripticket == record.tripticket)).ToList();
 
-            if (recordsToInsert.Count != 0)
-            {
-                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-                await RecordThePurchaseOrder(recordsToInsert, cancellationToken);
-
-                return recordsToInsert.Count;
-            }
-            else
+            if (recordsToInsert.Count == 0)
             {
                 return 0;
             }
+
+            await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            await RecordThePurchaseOrder(recordsToInsert, cancellationToken);
+
+            return recordsToInsert.Count;
+
         }
 
         public async Task<int> ProcessPOSalesGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
@@ -61,18 +60,17 @@ namespace IBS.DataAccess.Repository.Mobility
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftrecid == record.shiftrecid && existingRecord.stncode == record.stncode && existingRecord.tripticket == record.tripticket)).ToList();
 
-            if (recordsToInsert.Count != 0)
-            {
-                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-                await RecordThePurchaseOrder(recordsToInsert, cancellationToken);
-
-                return recordsToInsert.Count;
-            }
-            else
+            if (recordsToInsert.Count == 0)
             {
                 return 0;
             }
+
+            await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            await RecordThePurchaseOrder(recordsToInsert, cancellationToken);
+
+            return recordsToInsert.Count;
+
         }
 
         public async Task RecordThePurchaseOrder(IEnumerable<MobilityPoSalesRaw> poSales, CancellationToken cancellationToken = default)

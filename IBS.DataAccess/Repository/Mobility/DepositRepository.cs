@@ -6,7 +6,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class DepositRepository : Repository<MobilityFMSDeposit>, IDepositRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public DepositRepository(ApplicationDbContext db) : base(db)
         {

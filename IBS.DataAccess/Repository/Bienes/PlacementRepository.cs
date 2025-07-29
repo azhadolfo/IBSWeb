@@ -12,7 +12,7 @@ namespace IBS.DataAccess.Repository.Bienes
 {
     public class PlacementRepository : Repository<BienesPlacement>, IPlacementRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public PlacementRepository(ApplicationDbContext db) : base(db)
         {
@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository.Bienes
 
         public async Task<string> GenerateControlNumberAsync(int companyId, CancellationToken cancellationToken = default)
         {
-            var company = await _db.Companies.FindAsync(companyId, cancellationToken)
+            var company = await _db.Companies.FirstOrDefaultAsync(x => x.CompanyId == companyId, cancellationToken)
                           ?? throw new NullReferenceException("Company not found.");
 
             var lastRecord = await _db.BienesPlacements
@@ -34,9 +34,9 @@ namespace IBS.DataAccess.Repository.Bienes
                 return $"{company.CompanyName.ToUpper()}-000001";
             }
 
-            string lastSeries = lastRecord.ControlNumber;
-            string numericPart = lastSeries.Substring(company.CompanyName.Length + 1);
-            int incrementedNumber = int.Parse(numericPart) + 1;
+            var lastSeries = lastRecord.ControlNumber;
+            var numericPart = lastSeries.Substring(company.CompanyName.Length + 1);
+            var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, company.CompanyName.Length) + "-" + incrementedNumber.ToString("D6");
         }

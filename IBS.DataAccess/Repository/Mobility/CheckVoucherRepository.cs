@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
-using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Mobility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class CheckVoucherRepository : Repository<MobilityCheckVoucherHeader>, ICheckVoucherRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CheckVoucherRepository(ApplicationDbContext db) : base(db)
         {
@@ -23,64 +22,65 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
                 .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Documented) && x.Category == "Trade"
                             && x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CV0000000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
-                .Where(x => x.StationCode == stationCode && x.Type == nameof(DocumentType.Undocumented) && x.Category == "Trade"
+                .Where(x => x.StationCode == stationCode
+                            && x.Type == nameof(DocumentType.Undocumented)
+                            && x.Category == "Trade"
                             && x.CheckVoucherHeaderNo!.Contains("CV"))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CVU000000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
 
 
         public async Task UpdateInvoicingVoucher(decimal paymentAmount, int invoiceVoucherId, CancellationToken cancellationToken = default)
         {
-            var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken) ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
+            var invoiceVoucher = await GetAsync(i => i.CheckVoucherHeaderId == invoiceVoucherId, cancellationToken)
+                                 ?? throw new InvalidOperationException($"Check voucher with id '{invoiceVoucherId}' not found.");
 
-            var detailsVoucher = await _db.MobilityCheckVoucherDetails.Where(cvd => cvd.TransactionNo == invoiceVoucher.CheckVoucherHeaderNo && cvd.AccountNo == "202010200").Select(cvd => cvd.Credit).FirstOrDefaultAsync();
+            var detailsVoucher = await _db.MobilityCheckVoucherDetails
+                .Where(cvd => cvd.TransactionNo == invoiceVoucher.CheckVoucherHeaderNo && cvd.AccountNo == "202010200")
+                .Select(cvd => cvd.Credit)
+                .FirstOrDefaultAsync(cancellationToken);
 
             invoiceVoucher.AmountPaid += paymentAmount;
 
@@ -133,54 +133,49 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeMultipleInvoiceForDocumented(stationCodeClaims, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeMultipleInvoiceForUnDocumented(stationCodeClaims, cancellationToken);
-            }
+
+            return await GenerateCodeMultipleInvoiceForUnDocumented(stationCodeClaims, cancellationToken);
         }
 
         private async Task<string> GenerateCodeMultipleInvoiceForDocumented(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
                 .Where(x => x.StationCode == stationCodeClaims && x.Type == nameof(DocumentType.Documented) && x.CvType == nameof(CVType.Invoicing))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCv == null)
             {
                 return "INV000000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         private async Task<string> GenerateCodeMultipleInvoiceForUnDocumented(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
                 .Where(x => x.StationCode == stationCodeClaims && x.Type == nameof(DocumentType.Undocumented) && x.CvType == nameof(CVType.Invoicing))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(4);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
-            }
-            else
+            if (lastCv == null)
             {
                 return "INVU00000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(4);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
         }
 
         public async Task<string> GenerateCodeMultiplePaymentAsync(string stationCodeClaims, string type, CancellationToken cancellationToken = default)
@@ -189,54 +184,49 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeMultiplePaymentForDocumented(stationCodeClaims, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeMultiplePaymentForUnDocumented(stationCodeClaims, cancellationToken);
-            }
+
+            return await GenerateCodeMultiplePaymentForUnDocumented(stationCodeClaims, cancellationToken);
         }
 
         private async Task<string> GenerateCodeMultiplePaymentForDocumented(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
                 .Where(x => x.StationCode == stationCodeClaims && x.Type == nameof(DocumentType.Documented) && x.CvType == nameof(CVType.Payment))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CVN000000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         private async Task<string> GenerateCodeMultiplePaymentForUnDocumented(string stationCodeClaims, CancellationToken cancellationToken = default)
         {
-            MobilityCheckVoucherHeader? lastCv = await _db
+            var lastCv = await _db
                 .MobilityCheckVoucherHeaders
                 .Where(x => x.StationCode == stationCodeClaims && x.Type == nameof(DocumentType.Undocumented) && x.CvType == nameof(CVType.Payment))
                 .OrderBy(c => c.CheckVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCv != null)
-            {
-                string lastSeries = lastCv.CheckVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(4);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
-            }
-            else
+            if (lastCv == null)
             {
                 return "CVNU00000001";
             }
+
+            var lastSeries = lastCv.CheckVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(4);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 4) + incrementedNumber.ToString("D8");
         }
     }
 }

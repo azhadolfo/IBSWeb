@@ -21,7 +21,7 @@ namespace IBS.DataAccess.Repository
         public Repository(ApplicationDbContext db)
         {
             _db = db;
-            this.dbSet = _db.Set<T>();
+            dbSet = _db.Set<T>();
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken = default)
@@ -50,8 +50,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                decimal totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
-                decimal totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
+                var totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
+                var totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
 
                 return totalDebit == totalCredit;
             }
@@ -65,8 +65,8 @@ namespace IBS.DataAccess.Repository
         {
             try
             {
-                decimal totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
-                decimal totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
+                var totalDebit = Math.Round(journals.Sum(j => j.Debit), 4);
+                var totalCredit = Math.Round(journals.Sum(j => j.Credit), 4);
 
                 return totalDebit == totalCredit;
             }

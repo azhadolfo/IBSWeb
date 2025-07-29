@@ -1,26 +1,25 @@
 using IBS.DataAccess.Data;
 using IBS.Models.Mobility;
-using IBS.Models.Mobility.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.Mobility
 {
     public class CustomerOrderSlipRepository : Repository<MobilityCustomerOrderSlip>, IRepository.ICustomerOrderSlipRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CustomerOrderSlipRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
 
-        public async Task UpdateCustomerCreditLimitAsync(int customerId, decimal quantity, decimal oldQuantity = default, CancellationToken cancellationToken = default)
+        public async Task UpdateCustomerCreditLimitAsync(int customerId, decimal quantity, decimal oldQuantity = 0, CancellationToken cancellationToken = default)
         {
             var customer = await _db.MobilityCustomers
                 .FirstOrDefaultAsync(c => c.CustomerId == customerId, cancellationToken)
                 ?? throw new ArgumentException("Customer not found!", nameof(customerId));
 
-            if (oldQuantity != default)
+            if (oldQuantity != 0)
             {
                 customer.QuantityLimit += oldQuantity;
             }

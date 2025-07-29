@@ -1,7 +1,6 @@
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
-using IBS.Models.Filpride;
 using IBS.Models.Mobility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class DebitMemoRepository : Repository<MobilityDebitMemo>, IDebitMemoRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public DebitMemoRepository(ApplicationDbContext db) : base(db)
         {
@@ -23,54 +22,50 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityDebitMemo? lastDm = await _db
+            var lastDm = await _db
                 .MobilityDebitMemos
                 .Where(cm => cm.StationCode == stationCode && cm.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.DebitMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastDm != null)
-            {
-                string lastSeries = lastDm.DebitMemoNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastDm == null)
             {
                 return "DM0000000001";
             }
+
+            var lastSeries = lastDm.DebitMemoNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityDebitMemo? lastDm = await _db
+            var lastDm = await _db
                 .MobilityDebitMemos
                 .Where(cm => cm.StationCode == stationCode && cm.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.DebitMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastDm != null)
-            {
-                string lastSeries = lastDm.DebitMemoNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastDm == null)
             {
                 return "DMU000000001";
             }
+
+            var lastSeries = lastDm.DebitMemoNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<MobilityDebitMemo?> GetAsync(Expression<Func<MobilityDebitMemo, bool>> filter, CancellationToken cancellationToken = default)

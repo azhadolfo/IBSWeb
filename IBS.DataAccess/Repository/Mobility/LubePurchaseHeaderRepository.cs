@@ -2,11 +2,9 @@ using CsvHelper.Configuration;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
-using IBS.DTOs;
 using IBS.Models.Mobility.ViewModels;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -15,7 +13,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class LubePurchaseHeaderRepository : Repository<MobilityLubePurchaseHeader>, ILubePurchaseHeaderRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public LubePurchaseHeaderRepository(ApplicationDbContext db) : base(db)
         {
@@ -63,7 +61,7 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {lubePurchaseList[0].LubePurchaseHeaderNo}");
                 }
 
-                SupplierDto supplier = await MapSupplierToDTO(lubes.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubes.SupplierCode}' not found.");
+                var supplier = await MapSupplierToDTO(lubes.SupplierCode, cancellationToken) ?? throw new InvalidOperationException($"Supplier with code '{lubes.SupplierCode}' not found.");
 
                 lubes.PostedBy = postedBy;
                 lubes.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
@@ -193,19 +191,23 @@ namespace IBS.DataAccess.Repository.Mobility
                             {
                                 if (journal.Debit != 0)
                                 {
-                                    if (journal.Debit != transaction.CostOfGoodsSold)
+                                    if (journal.Debit == transaction.CostOfGoodsSold)
                                     {
-                                        journal.Debit = transaction.CostOfGoodsSold;
-                                        journal.Credit = 0;
+                                        continue;
                                     }
+
+                                    journal.Debit = transaction.CostOfGoodsSold;
+                                    journal.Credit = 0;
                                 }
                                 else
                                 {
-                                    if (journal.Credit != transaction.CostOfGoodsSold)
+                                    if (journal.Credit == transaction.CostOfGoodsSold)
                                     {
-                                        journal.Credit = transaction.CostOfGoodsSold;
-                                        journal.Debit = 0;
+                                        continue;
                                     }
+
+                                    journal.Credit = transaction.CostOfGoodsSold;
+                                    journal.Debit = 0;
                                 }
                             }
                         }
@@ -235,7 +237,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task<int> ProcessLubeDelivery(string file, CancellationToken cancellationToken = default)
         {
-            using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
+            await using var stream = new FileStream(file, FileMode.Open, FileAccess.Read);
             using var reader = new StreamReader(stream);
             using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -248,18 +250,17 @@ namespace IBS.DataAccess.Repository.Mobility
             var recordsToInsert = records.Where(record => !existingRecords.Exists(existingRecord =>
                 existingRecord.shiftdate == record.shiftdate && existingRecord.pagenumber == record.pagenumber && existingRecord.stncode == record.stncode && existingRecord.shiftnumber == record.shiftnumber)).ToList();
 
-            if (recordsToInsert.Count != 0)
-            {
-                await _db.AddRangeAsync(recordsToInsert, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
-                await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
-
-                return recordsToInsert.Count;
-            }
-            else
+            if (recordsToInsert.Count == 0)
             {
                 return 0;
             }
+
+            await _db.AddRangeAsync(recordsToInsert, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+            await RecordTheDeliveryToPurchase(recordsToInsert, cancellationToken);
+
+            return recordsToInsert.Count;
+
         }
 
         public async Task<int> ProcessLubeDeliveryGoogleDrive(GoogleDriveFileViewModel file, CancellationToken cancellationToken = default)
@@ -362,18 +363,17 @@ namespace IBS.DataAccess.Repository.Mobility
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();
 
-            if (lastCashierReport != null)
-            {
-                string lastSeries = lastCashierReport.LubePurchaseHeaderNo;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCashierReport == null)
             {
                 return "LD0000000001";
             }
+
+            var lastSeries = lastCashierReport.LubePurchaseHeaderNo;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         public override async Task<MobilityLubePurchaseHeader?> GetAsync(Expression<Func<MobilityLubePurchaseHeader, bool>> filter, CancellationToken cancellationToken = default)

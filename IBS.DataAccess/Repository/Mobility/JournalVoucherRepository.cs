@@ -1,8 +1,6 @@
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
-using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Mobility;
 using IBS.Utility.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +9,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class JournalVoucherRepository : Repository<MobilityJournalVoucherHeader>, IJournalVoucherRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public JournalVoucherRepository(ApplicationDbContext db) : base(db)
         {
@@ -24,54 +22,49 @@ namespace IBS.DataAccess.Repository.Mobility
             {
                 return await GenerateCodeForDocumented(stationCode, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(stationCode, cancellationToken);
         }
 
-        public async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityJournalVoucherHeader? lastJv = await _db
+            var lastJv = await _db
                 .MobilityJournalVoucherHeaders
                 .Where(c => c.StationCode == stationCode && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.JournalVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastJv != null)
-            {
-                string lastSeries = lastJv.JournalVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastJv == null)
             {
                 return "JV0000000001";
             }
+
+            var lastSeries = lastJv.JournalVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
-        public async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForUnDocumented(string stationCode, CancellationToken cancellationToken = default)
         {
-            MobilityJournalVoucherHeader? lastJv = await _db
+            var lastJv = await _db
                 .MobilityJournalVoucherHeaders
                 .Where(c => c.StationCode == stationCode && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.JournalVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastJv != null)
-            {
-                string lastSeries = lastJv.JournalVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastJv == null)
             {
                 return "JVU000000001";
             }
+
+            var lastSeries = lastJv.JournalVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<MobilityJournalVoucherHeader?> GetAsync(Expression<Func<MobilityJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)

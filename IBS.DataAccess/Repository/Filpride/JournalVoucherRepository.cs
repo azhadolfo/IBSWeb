@@ -9,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class JournalVoucherRepository : Repository<FilprideJournalVoucherHeader>, IJournalVoucherRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public JournalVoucherRepository(ApplicationDbContext db) : base(db)
         {
@@ -22,54 +22,50 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
-        public async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideJournalVoucherHeader? lastJv = await _db
+            var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .Where(c => c.Company == company && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.JournalVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastJv != null)
-            {
-                string lastSeries = lastJv.JournalVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastJv == null)
             {
                 return "JV0000000001";
             }
+
+            var lastSeries = lastJv.JournalVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
-        public async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
+        private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideJournalVoucherHeader? lastJv = await _db
+            var lastJv = await _db
                 .FilprideJournalVoucherHeaders
                 .Where(c => c.Company == company && c.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.JournalVoucherHeaderNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastJv != null)
-            {
-                string lastSeries = lastJv.JournalVoucherHeaderNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastJv == null)
             {
                 return "JVU000000001";
             }
+
+            var lastSeries = lastJv.JournalVoucherHeaderNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<FilprideJournalVoucherHeader?> GetAsync(Expression<Func<FilprideJournalVoucherHeader, bool>> filter, CancellationToken cancellationToken = default)

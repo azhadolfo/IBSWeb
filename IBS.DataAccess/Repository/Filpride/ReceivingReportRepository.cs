@@ -3,8 +3,6 @@ using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
-using IBS.Utility;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Utility.Constants;
@@ -15,7 +13,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class ReceivingReportRepository : Repository<FilprideReceivingReport>, IReceivingReportRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public ReceivingReportRepository(ApplicationDbContext db) : base(db)
         {
@@ -28,81 +26,78 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FilpridePurchaseOrders
                 .FirstOrDefaultAsync(po => po.PurchaseOrderId == poId, cancellationToken);
 
-            if (po != null)
-            {
-                DateOnly dueDate;
-
-                switch (po.Terms)
-                {
-                    case "7D":
-                        return dueDate = rrDate.AddDays(7);
-
-                    case "10D":
-                        return dueDate = rrDate.AddDays(7);
-
-                    case "15D":
-                        return dueDate = rrDate.AddDays(15);
-
-                    case "30D":
-                        return dueDate = rrDate.AddDays(30);
-
-                    case "45D":
-                    case "45PDC":
-                        return dueDate = rrDate.AddDays(45);
-
-                    case "60D":
-                    case "60PDC":
-                        return dueDate = rrDate.AddDays(60);
-
-                    case "90D":
-                        return dueDate = rrDate.AddDays(90);
-
-                    case "M15":
-                        return dueDate = rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
-
-                    case "M30":
-                        if (rrDate.Month == 1)
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                        }
-                        else
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                            if (dueDate.Day == 31)
-                            {
-                                dueDate = dueDate.AddDays(-1);
-                            }
-                        }
-                        return dueDate;
-
-                    case "M29":
-                        if (rrDate.Month == 1)
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-                        }
-                        else
-                        {
-                            dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
-
-                            if (dueDate.Day == 31)
-                            {
-                                dueDate = dueDate.AddDays(-2);
-                            }
-                            else if (dueDate.Day == 30)
-                            {
-                                dueDate = dueDate.AddDays(-1);
-                            }
-                        }
-                        return dueDate;
-
-                    default:
-                        return dueDate = rrDate;
-                }
-            }
-            else
+            if (po == null)
             {
                 throw new ArgumentException("No record found.");
+            }
+
+            DateOnly dueDate;
+
+            switch (po.Terms)
+            {
+                case "7D":
+                case "10D":
+                    return rrDate.AddDays(7);
+
+                case "15D":
+                    return rrDate.AddDays(15);
+
+                case "30D":
+                    return rrDate.AddDays(30);
+
+                case "45D":
+                case "45PDC":
+                    return rrDate.AddDays(45);
+
+                case "60D":
+                case "60PDC":
+                    return rrDate.AddDays(60);
+
+                case "90D":
+                    return rrDate.AddDays(90);
+
+                case "M15":
+                    return rrDate.AddMonths(1).AddDays(15 - rrDate.Day);
+
+                case "M30":
+                    if (rrDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        if (dueDate.Day == 31)
+                        {
+                            dueDate = dueDate.AddDays(-1);
+                        }
+                    }
+                    return dueDate;
+
+                case "M29":
+                    if (rrDate.Month == 1)
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+                    }
+                    else
+                    {
+                        dueDate = new DateOnly(rrDate.Year, rrDate.Month, 1).AddMonths(2).AddDays(-1);
+
+                        switch (dueDate.Day)
+                        {
+                            case 31:
+                                dueDate = dueDate.AddDays(-2);
+                                break;
+                            case 30:
+                                dueDate = dueDate.AddDays(-1);
+                                break;
+                        }
+                    }
+                    return dueDate;
+
+                default:
+                    return rrDate;
             }
         }
 
@@ -112,72 +107,49 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideReceivingReport? lastRr = await _db
+            var lastRr = await _db
                 .FilprideReceivingReports
                 .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastRr != null)
-            {
-                string lastSeries = lastRr.ReceivingReportNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastRr == null)
             {
                 return "RR0000000001";
             }
+
+            var lastSeries = lastRr.ReceivingReportNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideReceivingReport? lastRr = await _db
+            var lastRr = await _db
                 .FilprideReceivingReports
                 .Where(rr => rr.Company == company && !rr.ReceivingReportNo!.StartsWith("RRBEG") && rr.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.ReceivingReportNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastRr != null)
-            {
-                string lastSeries = lastRr.ReceivingReportNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastRr == null)
             {
                 return "RRU000000001";
             }
-        }
 
-        public async Task<List<SelectListItem>> GetReceivingReportListAsync(string[] rrNos, string company, CancellationToken cancellationToken = default)
-        {
-            var rrNoHashSet = new HashSet<string>(rrNos);
+            var lastSeries = lastRr.ReceivingReportNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
 
-            var rrList = await _db.FilprideReceivingReports
-                .OrderBy(rr => rrNoHashSet.Contains(rr.ReceivingReportNo!) ? Array.IndexOf(rrNos, rr.ReceivingReportNo) : int.MaxValue) // Order by index in rrNos array if present in HashSet
-                .ThenBy(rr => rr.ReceivingReportId) // Secondary ordering by Id
-                .Where(rr => rr.Company == company)
-                .Select(rr => new SelectListItem
-                {
-                    Value = rr.ReceivingReportNo,
-                    Text = rr.ReceivingReportNo
-                })
-                .ToListAsync(cancellationToken);
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
 
-            return rrList;
         }
 
         public async Task<int> RemoveQuantityReceived(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
@@ -199,15 +171,16 @@ namespace IBS.DataAccess.Repository.Filpride
                 po.ReceivedDate = DateTime.MaxValue;
             }
 
-            if (po.ActualPrices!.Count > 0)
+            if (po.ActualPrices!.Count <= 0)
             {
-                po.ActualPrices.FirstOrDefault()!.AppliedVolume -= quantityReceived;;
+                return await _db.SaveChangesAsync(cancellationToken);
             }
 
+            po.ActualPrices.FirstOrDefault()!.AppliedVolume -= quantityReceived;;
             return await _db.SaveChangesAsync(cancellationToken);
         }
 
-        public async Task UpdatePOAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
+        private async Task UpdatePoAsync(int id, decimal quantityReceived, CancellationToken cancellationToken = default)
         {
             var po = await _db.FilpridePurchaseOrders
                     .FirstOrDefaultAsync(po => po.PurchaseOrderId == id, cancellationToken);
@@ -487,7 +460,7 @@ namespace IBS.DataAccess.Repository.Filpride
 
             #endregion
 
-            await UpdatePOAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
+            await UpdatePoAsync(model.PurchaseOrder.PurchaseOrderId, model.QuantityReceived, cancellationToken);
 
             #region --Purchase Book Recording
 

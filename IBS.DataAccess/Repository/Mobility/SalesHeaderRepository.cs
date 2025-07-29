@@ -3,13 +3,11 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq.Expressions;
 using CsvHelper;
-using IBS.DTOs;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
@@ -18,7 +16,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class SalesHeaderRepository : Repository<MobilitySalesHeader>, ISalesHeaderRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public SalesHeaderRepository(ApplicationDbContext db) : base(db)
         {
@@ -76,14 +74,14 @@ namespace IBS.DataAccess.Repository.Mobility
                             .Concat(lubePoSales
                                 .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate)
                                 .Select(l => l.Amount))
-                            .ToArray() : new decimal[0],
+                            .ToArray() : [],
                         Customers = hasPoSales ? fuelPoSales
                             .Where(s => s.xONAME == fuel.xONAME && s.Shift == fuel.Shift && s.BusinessDate == fuel.BusinessDate)
                             .Select(s => s.cust)
                             .Concat(lubePoSales
                                 .Where(l => l.Cashier == fuel.xONAME && l.Shift == fuel.Shift && l.BusinessDate == fuel.BusinessDate)
                                 .Select(l => l.cust))
-                            .ToArray() : new string[0],
+                            .ToArray() : [],
                         TimeIn = fuel.TimeIn,
                         TimeOut = fuel.TimeOut
                     })
@@ -93,14 +91,14 @@ namespace IBS.DataAccess.Repository.Mobility
                         Date = g.Key.Date,
                         Cashier = g.Key.Cashier,
                         Shift = g.Key.Shift,
-                        FuelSalesTotalAmount = g.Sum(g => g.FuelSalesTotalAmount),
+                        FuelSalesTotalAmount = g.Sum(group => group.FuelSalesTotalAmount),
                         LubesTotalAmount = g.Key.LubesTotalAmount,
                         SafeDropTotalAmount = g.Key.SafeDropTotalAmount,
                         POSalesTotalAmount = g.Key.POSalesTotalAmount,
                         POSalesAmount = g.Select(s => s.POSalesAmount).First(),
                         Customers = g.Select(s => s.Customers).First(),
-                        TotalSales = g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount - g.Key.POSalesTotalAmount,
-                        GainOrLoss = g.Key.SafeDropTotalAmount - (g.Sum(g => g.FuelSalesTotalAmount) + g.Key.LubesTotalAmount - g.Key.POSalesTotalAmount),
+                        TotalSales = g.Sum(group => group.FuelSalesTotalAmount) + g.Key.LubesTotalAmount - g.Key.POSalesTotalAmount,
+                        GainOrLoss = g.Key.SafeDropTotalAmount - (g.Sum(group => group.FuelSalesTotalAmount) + g.Key.LubesTotalAmount - g.Key.POSalesTotalAmount),
                         CreatedBy = g.Key.CreatedBy,
                         TimeIn = g.Min(s => s.TimeIn),
                         TimeOut = g.Max(s => s.TimeOut),
@@ -124,7 +122,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 {
                     foreach (var fuel in group)
                     {
-                        MobilitySalesHeader? salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
+                        var salesHeader = salesHeaders.Find(s => s.Cashier == fuel.xONAME && s.Shift == fuel.Shift && s.Date == fuel.BusinessDate) ?? throw new InvalidOperationException($"Sales Header with {fuel.xONAME} shift#{fuel.Shift} on {fuel.BusinessDate} not found!");
 
                         var salesDetail = new MobilitySalesDetail
                         {
@@ -254,6 +252,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
         public async Task PostAsync(string id, string postedBy, string stationCode, CancellationToken cancellationToken = default)
         {
+            var journals = new List<MobilityGeneralLedger>();
             try
             {
                 SalesVM salesVm = new()
@@ -282,15 +281,13 @@ namespace IBS.DataAccess.Repository.Mobility
                     throw new InvalidOperationException($"Can't proceed to post, you have unposted {salesList.First().SalesNo}");
                 }
 
-                StationDto station = await MapStationToDTO(salesVm.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVm.Header.StationCode} not found.");
+                var station = await MapStationToDTO(salesVm.Header.StationCode, cancellationToken) ?? throw new InvalidOperationException($"Station with code {salesVm.Header.StationCode} not found.");
 
                 salesVm.Header.PostedBy = postedBy;
                 salesVm.Header.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                var journals = new List<MobilityGeneralLedger>();
                 var inventories = new List<MobilityInventory>();
                 var cogsJournals = new List<MobilityGeneralLedger>();
-                var journalEntriesToUpdate = new List<MobilityGeneralLedger>();
 
                 journals.Add(new MobilityGeneralLedger
                 {
@@ -308,7 +305,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 if (salesVm.Header.POSalesTotalAmount > 0)
                 {
-                    for (int i = 0; i < salesVm.Header.Customers.Length; i++)
+                    for (var i = 0; i < salesVm.Header.Customers.Length; i++)
                     {
                         journals.Add(new MobilityGeneralLedger
                         {
@@ -329,7 +326,7 @@ namespace IBS.DataAccess.Repository.Mobility
 
                 foreach (var product in salesVm.Details.GroupBy(d => d.Product))
                 {
-                    ProductDto productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
+                    var productDetails = await MapProductToDTO(product.Key, cancellationToken) ?? throw new InvalidOperationException($"Product with code '{product.Key}' not found.");
 
                     var (salesAcctNo, salesAcctTitle) = MobilityGetSalesAccountTitle(product.Key);
                     var (cogsAcctNo, cogsAcctTitle) = MobilityGetCogsAccountTitle(product.Key);
@@ -383,18 +380,18 @@ namespace IBS.DataAccess.Repository.Mobility
 
                     var previousInventory = sortedInventory.FirstOrDefault();
 
-                    decimal quantity = product.Sum(p => p.Liters - p.Calibration);
+                    var quantity = product.Sum(p => p.Liters - p.Calibration);
 
                     if (quantity > previousInventory!.InventoryBalance)
                     {
                         throw new InvalidOperationException("The quantity exceeds the available inventory.");
                     }
 
-                    decimal totalCost = quantity * previousInventory.UnitCostAverage;
-                    decimal runningCost = previousInventory.RunningCost - totalCost;
-                    decimal inventoryBalance = previousInventory.InventoryBalance - quantity;
-                    decimal unitCostAverage = runningCost / inventoryBalance;
-                    decimal cogs = unitCostAverage * quantity;
+                    var totalCost = quantity * previousInventory.UnitCostAverage;
+                    var runningCost = previousInventory.RunningCost - totalCost;
+                    var inventoryBalance = previousInventory.InventoryBalance - quantity;
+                    var unitCostAverage = runningCost / inventoryBalance;
+                    var cogs = unitCostAverage * quantity;
 
                     inventories.Add(new MobilityInventory
                     {
@@ -474,7 +471,7 @@ namespace IBS.DataAccess.Repository.Mobility
                             inventoryBalance = transaction.InventoryBalance;
                         }
 
-                        journalEntriesToUpdate = await _db.MobilityGeneralLedgers
+                        var journalEntriesToUpdate = await _db.MobilityGeneralLedgers
                             .Where(j => j.Particular == nameof(JournalType.Sales) && j.Reference == transaction.TransactionNo && j.ProductCode == transaction.ProductCode &&
                                         (j.AccountNumber.StartsWith("50101") || j.AccountNumber.StartsWith("10104")))
                             .ToListAsync(cancellationToken);
@@ -485,19 +482,23 @@ namespace IBS.DataAccess.Repository.Mobility
                             {
                                 if (journal.Debit != 0)
                                 {
-                                    if (journal.Debit != transaction.CostOfGoodsSold)
+                                    if (journal.Debit == transaction.CostOfGoodsSold)
                                     {
-                                        journal.Debit = transaction.CostOfGoodsSold;
-                                        journal.Credit = 0;
+                                        continue;
                                     }
+
+                                    journal.Debit = transaction.CostOfGoodsSold;
+                                    journal.Credit = 0;
                                 }
                                 else
                                 {
-                                    if (journal.Credit != transaction.CostOfGoodsSold)
+                                    if (journal.Credit == transaction.CostOfGoodsSold)
                                     {
-                                        journal.Credit = transaction.CostOfGoodsSold;
-                                        journal.Debit = 0;
+                                        continue;
                                     }
+
+                                    journal.Credit = transaction.CostOfGoodsSold;
+                                    journal.Debit = 0;
                                 }
                             }
                         }
@@ -553,9 +554,9 @@ namespace IBS.DataAccess.Repository.Mobility
                 .OrderBy(sd => sd.SalesDetailId)
                 .ToList();
 
-            bool headerModified = false;
+            var headerModified = false;
 
-            for (int i = 0; i < existingSalesDetails.Count; i++)
+            for (var i = 0; i < existingSalesDetails.Count; i++)
             {
                 var existingDetail = existingSalesDetails[i];
                 var updatedDetail = model.SalesDetails[i];
@@ -587,16 +588,18 @@ namespace IBS.DataAccess.Repository.Mobility
                     existingDetail.Price = updatedDetail.Price;
                 }
 
-                if (changes.Any())
+                if (changes.Count == 0)
                 {
-                    var salesDetailRepo = new SalesDetailRepository(_db);
-                    await salesDetailRepo.LogChangesAsync(existingDetail.SalesDetailId, changes, model.EditedBy!, cancellationToken);
-
-                    headerModified = true;
-                    existingSalesHeader.IsModified = true;
-                    existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
-                    existingDetail.Value = existingDetail.Calibration == 0 ? existingDetail.Liters * existingDetail.Price : (existingDetail.Liters - existingDetail.Calibration) * existingDetail.Price;
+                    continue;
                 }
+
+                var salesDetailRepo = new SalesDetailRepository(_db);
+                await salesDetailRepo.LogChangesAsync(existingDetail.SalesDetailId, changes, model.EditedBy!, cancellationToken);
+
+                headerModified = true;
+                existingSalesHeader.IsModified = true;
+                existingDetail.Liters = existingDetail.Closing - existingDetail.Opening;
+                existingDetail.Value = existingDetail.Calibration == 0 ? existingDetail.Liters * existingDetail.Price : (existingDetail.Liters - existingDetail.Calibration) * existingDetail.Price;
             }
 
             var headerChanges = new Dictionary<string, (string OriginalValue, string NewValue)>();
@@ -620,7 +623,7 @@ namespace IBS.DataAccess.Repository.Mobility
                 existingSalesHeader.Date = model.Date;
             }
 
-            if (headerChanges.Any())
+            if (headerChanges.Count != 0)
             {
                 await LogChangesAsync(existingSalesHeader.SalesHeaderId, headerChanges, model.EditedBy!, cancellationToken);
                 headerModified = true;
@@ -652,16 +655,17 @@ namespace IBS.DataAccess.Repository.Mobility
                 .Where(s => s.StationCode == stationCode)
                 .LastOrDefaultAsync();
 
-            if (lastCashierReport != null)
+            if (lastCashierReport == null)
             {
-                string lastSeries = lastCashierReport.SalesNo;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+                return "POS0000000001";
             }
 
-            return "POS0000000001";
+            var lastSeries = lastCashierReport.SalesNo;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+
         }
 
         private async Task<int> GenerateOfflineNo(string stationCode)
@@ -732,7 +736,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             using var stream = new MemoryStream(fileContent);
             using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HeaderValidated = null,
                 MissingFieldFound = null,
@@ -753,57 +757,58 @@ namespace IBS.DataAccess.Repository.Mobility
             var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
             DateOnly date = new();
-            int shift = 0;
+            var shift = 0;
             decimal price = 0;
-            int pump = 0;
-            string itemCode = string.Empty;
-            int detailCount = 0;
-            bool hasPoSales = false;
-            int fuelsCount = 0;
-            string xTicketId = string.Empty;
+            var pump = 0;
+            var itemCode = string.Empty;
+            var detailCount = 0;
+            var hasPoSales = false;
 
             foreach (var record in records)
             {
-                if (!existingNozdownSet.Contains(record.nozdown))
+                if (existingNozdownSet.Contains(record.nozdown))
                 {
-                    hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
-
-                    xTicketId = record.xTicketID;
-
-                    if (record.xTicketID == xTicketId && record.INV_DATE == date && date != default)
-                    {
-                        record.BusinessDate = date;
-                    }
-                    else
-                    {
-                        record.BusinessDate = record.INV_DATE;
-                    }
-
-                    if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
-                    {
-                        record.DetailGroup = detailCount;
-                    }
-                    else
-                    {
-                        detailCount++;
-                        record.DetailGroup = detailCount;
-                        date = record.BusinessDate;
-                        shift = record.Shift;
-                        price = record.Price;
-                        pump = record.xPUMP;
-                        itemCode = record.ItemCode;
-                    }
-
-                    newRecords.Add(record);
-                    fuelsCount++;
+                    continue;
                 }
+
+                hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
+
+                var xTicketId = record.xTicketID;
+
+                if (record.xTicketID == xTicketId && record.INV_DATE == date && date != default)
+                {
+                    record.BusinessDate = date;
+                }
+                else
+                {
+                    record.BusinessDate = record.INV_DATE;
+                }
+
+                if (record.BusinessDate == date && record.Shift == shift && record.Price == price && record.xPUMP == pump && record.ItemCode == itemCode)
+                {
+                    record.DetailGroup = detailCount;
+                }
+                else
+                {
+                    detailCount++;
+                    record.DetailGroup = detailCount;
+                    date = record.BusinessDate;
+                    shift = record.Shift;
+                    price = record.Price;
+                    pump = record.xPUMP;
+                    itemCode = record.ItemCode;
+                }
+
+                newRecords.Add(record);
             }
 
-            if (newRecords.Count != 0)
+            if (newRecords.Count == 0)
             {
-                await _db.AddRangeAsync(newRecords, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return (newRecords, hasPoSales);
             }
+
+            await _db.AddRangeAsync(newRecords, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return (newRecords, hasPoSales);
         }
@@ -819,7 +824,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             using var stream = new MemoryStream(fileContent);
             using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HeaderValidated = null,
                 MissingFieldFound = null,
@@ -835,28 +840,30 @@ namespace IBS.DataAccess.Repository.Mobility
             var existingNozdownSet = new HashSet<string>(existingNozdownList);
 
             bool hasPoSales = false;
-            int lubesCount = 0;
 
             foreach (var record in records)
             {
-                if (!existingNozdownSet.Contains(record.xStamp))
+                if (existingNozdownSet.Contains(record.xStamp))
                 {
-                    hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
-
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
-                        ? record.INV_DATE.AddDays(-1)
-                        : record.INV_DATE;
-
-                    newRecords.Add(record);
-                    lubesCount++;
+                    continue;
                 }
+
+                hasPoSales |= !string.IsNullOrEmpty(record.cust) && !string.IsNullOrEmpty(record.plateno) && !string.IsNullOrEmpty(record.pono);
+
+                record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
+                    ? record.INV_DATE.AddDays(-1)
+                    : record.INV_DATE;
+
+                newRecords.Add(record);
             }
 
-            if (newRecords.Count != 0)
+            if (newRecords.Count == 0)
             {
-                await _db.AddRangeAsync(newRecords, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return (newRecords, hasPoSales);
             }
+
+            await _db.AddRangeAsync(newRecords, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return (newRecords, hasPoSales);
         }
@@ -872,7 +879,7 @@ namespace IBS.DataAccess.Repository.Mobility
         {
             using var stream = new MemoryStream(file);
             using var reader = new StreamReader(stream);
-            using var csv = new CsvHelper.CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HeaderValidated = null,
                 MissingFieldFound = null,
@@ -889,21 +896,25 @@ namespace IBS.DataAccess.Repository.Mobility
 
             foreach (var record in records)
             {
-                if (!existingNozdownSet.Contains(record.xSTAMP))
+                if (existingNozdownSet.Contains(record.xSTAMP))
                 {
-                    record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
-                        ? record.INV_DATE.AddDays(-1)
-                        : record.INV_DATE;
-
-                    newRecords.Add(record);
+                    continue;
                 }
+
+                record.BusinessDate = record.INV_DATE == DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime())
+                    ? record.INV_DATE.AddDays(-1)
+                    : record.INV_DATE;
+
+                newRecords.Add(record);
             }
 
-            if (newRecords.Count != 0)
+            if (newRecords.Count == 0)
             {
-                await _db.AddRangeAsync(newRecords, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return newRecords;
             }
+
+            await _db.AddRangeAsync(newRecords, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return newRecords;
         }
@@ -993,34 +1004,37 @@ namespace IBS.DataAccess.Repository.Mobility
                 if (viewModel.IncludePo)
                 {
                     var updatedCustomers = new List<string>(existingSalesHeader.Customers!);
-                    var updatedPOSalesAmount = new List<decimal>(existingSalesHeader.POSalesAmount);
+                    var updatedPoSalesAmount = new List<decimal>(existingSalesHeader.POSalesAmount);
 
-                    for (int i = 0; i < viewModel.CustomerPos.Count; i++)
+                    foreach (var customerPo in viewModel.CustomerPos)
                     {
-                        string customerCodeName = viewModel.CustomerPos[i].CustomerCodeName;
-                        decimal poAmount = viewModel.CustomerPos[i].PoAmount;
+                        var customerCodeName = customerPo.CustomerCodeName;
+                        var poAmount = customerPo.PoAmount;
 
-                        if (!updatedCustomers.Contains(customerCodeName))
+                        if (updatedCustomers.Contains(customerCodeName))
                         {
-                            updatedCustomers.Add(customerCodeName);
-                            updatedPOSalesAmount.Add(poAmount);
-                            existingSalesHeader.POSalesTotalAmount += poAmount;
-
-                            changes[$"Customers[{updatedCustomers.Count - 1}]"] = (string.Empty, customerCodeName);
-                            changes[$"POSalesAmount[{updatedPOSalesAmount.Count - 1}]"] = ("0", poAmount.ToString());
+                            continue;
                         }
+
+                        updatedCustomers.Add(customerCodeName);
+                        updatedPoSalesAmount.Add(poAmount);
+                        existingSalesHeader.POSalesTotalAmount += poAmount;
+
+                        changes[$"Customers[{updatedCustomers.Count - 1}]"] = (string.Empty, customerCodeName);
+                        changes[$"POSalesAmount[{updatedPoSalesAmount.Count - 1}]"] = ("0", poAmount.ToString());
                     }
 
                     existingSalesHeader.Customers = updatedCustomers.ToArray();
-                    existingSalesHeader.POSalesAmount = updatedPOSalesAmount.ToArray();
+                    existingSalesHeader.POSalesAmount = updatedPoSalesAmount.ToArray();
                 }
 
                 if (viewModel.IncludeLubes)
                 {
                     decimal totalLubeSales = 0;
-                    for (int i = 0; i < viewModel.ProductDetails.Count; i++)
+                    for (var i = 0; i < viewModel.ProductDetails.Count; i++)
                     {
-                        var product = await _db.Products.FindAsync(viewModel.ProductDetails[i].LubesId, cancellationToken);
+                        var product = await _db.Products
+                            .FirstOrDefaultAsync(x => x.ProductId == viewModel.ProductDetails[i].LubesId, cancellationToken);
 
                         var totalAmount = viewModel.ProductDetails[i].Quantity * viewModel.ProductDetails[i].Price;
 
@@ -1045,9 +1059,6 @@ namespace IBS.DataAccess.Repository.Mobility
                     changes[$"LubesTotalAmount"] = (existingSalesHeader.LubesTotalAmount.ToString(SD.Four_Decimal_Format), totalLubeSales.ToString(SD.Four_Decimal_Format));
                     existingSalesHeader.LubesTotalAmount = totalLubeSales;
                 }
-
-                var originalTotalSales = existingSalesHeader.TotalSales;
-                var originalGainOrLoss = existingSalesHeader.GainOrLoss;
 
                 existingSalesHeader.TotalSales = existingSalesHeader.FuelSalesTotalAmount + existingSalesHeader.LubesTotalAmount - existingSalesHeader.POSalesTotalAmount;
                 existingSalesHeader.GainOrLoss = (existingSalesHeader.ActualCashOnHand > 0 ? existingSalesHeader.ActualCashOnHand : existingSalesHeader.SafeDropTotalAmount) - existingSalesHeader.TotalSales;
@@ -1079,11 +1090,15 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.shiftrecid))
+                {
                     continue;
+                }
 
                 fuelSales.Add(new MobilityFMSFuelSales
                 {
@@ -1100,11 +1115,13 @@ namespace IBS.DataAccess.Repository.Mobility
                 });
             }
 
-            if (fuelSales.Count > 0)
+            if (fuelSales.Count <= 0)
             {
-                await _db.MobilityFMSFuelSales.AddRangeAsync(fuelSales, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return fuelSales.Count;
             }
+
+            await _db.MobilityFMSFuelSales.AddRangeAsync(fuelSales, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return fuelSales.Count;
         }
@@ -1127,11 +1144,15 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.shiftrecid))
+                {
                     continue;
+                }
 
                 lubesSales.Add(new MobilityFMSLubeSales
                 {
@@ -1148,11 +1169,13 @@ namespace IBS.DataAccess.Repository.Mobility
                 });
             }
 
-            if (lubesSales.Count > 0)
+            if (lubesSales.Count <= 0)
             {
-                await _db.MobilityFMSLubeSales.AddRangeAsync(lubesSales, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return lubesSales.Count;
             }
+
+            await _db.MobilityFMSLubeSales.AddRangeAsync(lubesSales, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return lubesSales.Count;
         }
@@ -1175,11 +1198,15 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.shiftrecid))
+                {
                     continue;
+                }
 
                 calibrations.Add(new MobilityFMSCalibration
                 {
@@ -1220,11 +1247,16 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
+
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.recid))
+                {
                     continue;
+                }
 
                 cashiers.Add(new MobilityFMSCashierShift
                 {
@@ -1270,7 +1302,9 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.shiftrecid))
@@ -1322,11 +1356,15 @@ namespace IBS.DataAccess.Repository.Mobility
             foreach (var record in records)
             {
                 if (cancellationToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 // Skip if the ShiftRecordId already exists
                 if (existingShiftRecordIds.Contains(record.shiftrecid))
+                {
                     continue;
+                }
 
                 deposits.Add(new MobilityFMSDeposit
                 {
@@ -1341,11 +1379,13 @@ namespace IBS.DataAccess.Repository.Mobility
                 });
             }
 
-            if (deposits.Count > 0)
+            if (deposits.Count <= 0)
             {
-                await _db.MobilityFmsDeposits.AddRangeAsync(deposits, cancellationToken);
-                await _db.SaveChangesAsync(cancellationToken);
+                return deposits.Count;
             }
+
+            await _db.MobilityFmsDeposits.AddRangeAsync(deposits, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
 
             return deposits.Count;
         }
@@ -1507,16 +1547,17 @@ namespace IBS.DataAccess.Repository.Mobility
                 .Where(s => s.StationCode == stationCode && s.Source == "FMS")
                 .LastOrDefaultAsync();
 
-            if (lastCashierReport != null)
+            if (lastCashierReport == null)
             {
-                string lastSeries = lastCashierReport.SalesNo;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+                return "DSR0000000001";
             }
 
-            return "DSR0000000001";
+            var lastSeries = lastCashierReport.SalesNo;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D10");
+
         }
     }
 }

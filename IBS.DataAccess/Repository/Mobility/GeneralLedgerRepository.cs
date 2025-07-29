@@ -2,7 +2,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility;
 using IBS.Models.Mobility.ViewModels;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -13,7 +12,7 @@ namespace IBS.DataAccess.Repository.Mobility
 {
     public class GeneralLedgerRepository : Repository<MobilityGeneralLedger>, IGeneralLedgerRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public GeneralLedgerRepository(ApplicationDbContext db) : base(db)
         {
@@ -72,11 +71,11 @@ namespace IBS.DataAccess.Repository.Mobility
             }
 
             // Populate the data rows
-            int row = 8;
-            decimal balance = 0;
-            string currencyFormat = "#,##0.0000";
-            decimal debit = 0;
-            decimal credit = 0;
+            var row = 8;
+            decimal balance;
+            var currencyFormat = "#,##0.0000";
+            decimal debit;
+            decimal credit;
             foreach (var journals in ledgers.OrderBy(j => j.AccountNumber).GroupBy(j => j.AccountTitle))
             {
                 balance = 0;

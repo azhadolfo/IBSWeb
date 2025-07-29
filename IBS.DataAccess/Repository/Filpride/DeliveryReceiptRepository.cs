@@ -14,7 +14,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class DeliveryReceiptRepository : Repository<FilprideDeliveryReceipt>, IDeliveryReceiptRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public DeliveryReceiptRepository(ApplicationDbContext db) : base(db)
         {
@@ -23,24 +23,23 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
-            FilprideDeliveryReceipt? lastDr = await _db
+            var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .Where(c => c.Company == companyClaims)
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastDr != null)
-            {
-                string lastSeries = lastDr.DeliveryReceiptNo;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastDr == null)
             {
                 return "DR0000000001";
             }
+
+            var lastSeries = lastDr.DeliveryReceiptNo;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+
         }
 
         public override async Task<IEnumerable<FilprideDeliveryReceipt>> GetAllAsync(Expression<Func<FilprideDeliveryReceipt, bool>>? filter, CancellationToken cancellationToken = default)
@@ -853,32 +852,29 @@ namespace IBS.DataAccess.Repository.Filpride
                                                           && x.VoidedBy == null
                                                           && x.CanceledBy == null, cancellationToken);
 
-            if (deliveryReceipts.Any())
+            foreach (var deliveryReceipt in deliveryReceipts)
             {
-                foreach (var deliveryReceipt in deliveryReceipts)
+                deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
+
+                if (deliveryReceipt.DeliveredDate == null)
                 {
-                    deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
-
-                    if (deliveryReceipt.DeliveredDate == null)
-                    {
-                        continue;
-                    }
-
-                    await _db.FilprideGeneralLedgerBooks
-                        .Where(x => x.Company == deliveryReceipt.Company
-                                    && x.Reference == deliveryReceipt.DeliveryReceiptNo)
-                        .ExecuteDeleteAsync(cancellationToken);
-
-                    var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
-                        .AnyAsync(x => x.Year == deliveryReceipt.Date.Year
-                                       && x.Month == deliveryReceipt.Date.Month, cancellationToken);
-
-                    if (!isNibitForThisPeriodLocked)
-                    {
-                        await PostAsync(deliveryReceipt, cancellationToken);
-                    }
-
+                    continue;
                 }
+
+                await _db.FilprideGeneralLedgerBooks
+                    .Where(x => x.Company == deliveryReceipt.Company
+                                && x.Reference == deliveryReceipt.DeliveryReceiptNo)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
+                    .AnyAsync(x => x.Year == deliveryReceipt.Date.Year
+                                   && x.Month == deliveryReceipt.Date.Month, cancellationToken);
+
+                if (!isNibitForThisPeriodLocked)
+                {
+                    await PostAsync(deliveryReceipt, cancellationToken);
+                }
+
             }
         }
     }

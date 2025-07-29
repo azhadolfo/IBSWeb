@@ -1,19 +1,17 @@
-using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.Models.MMSI;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace IBS.DataAccess.Repository.MMSI
 {
     public class MMSIReportRepository : IMMSIReportRepository
     {
-        public readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _db;
 
-        public MMSIReportRepository(ApplicationDbContext dbContext)
+        public MMSIReportRepository(ApplicationDbContext db)
         {
-            _dbContext = dbContext;
+            _db = db;
         }
 
         public async Task<List<MMSIDispatchTicket>> GetSalesReport(DateOnly dateFrom, DateOnly dateTo, CancellationToken cancellationToken = default)
@@ -23,7 +21,7 @@ namespace IBS.DataAccess.Repository.MMSI
                 throw new ArgumentException("Date From must be greater than Date To !");
             }
 
-            var dispatchTickets = await _dbContext.MMSIDispatchTickets
+            var dispatchTickets = await _db.MMSIDispatchTickets
                 .Where(dt => dt.Date >= dateFrom
                              && dt.Date <= dateTo
                              && dt.Status != "For Posting"
@@ -42,7 +40,7 @@ namespace IBS.DataAccess.Repository.MMSI
             {
                 if (dispatchTicket.BillingId != null)
                 {
-                    dispatchTicket.Billing = await _dbContext.MMSIBillings
+                    dispatchTicket.Billing = await _db.MMSIBillings
                         .Where(b => b.MMSIBillingId == int.Parse(dispatchTicket.BillingId))
                         .Include(b => b.Customer)
                         .Include(b => b.Principal)
@@ -50,7 +48,7 @@ namespace IBS.DataAccess.Repository.MMSI
 
                     if (dispatchTicket.Billing?.CollectionId != null)
                     {
-                        dispatchTicket.Billing.Collection = await _dbContext.MMSICollections
+                        dispatchTicket.Billing.Collection = await _db.MMSICollections
                             .Where(c => c.MMSICollectionId == dispatchTicket.Billing.CollectionId)
                             .FirstOrDefaultAsync(cancellationToken);
                     }

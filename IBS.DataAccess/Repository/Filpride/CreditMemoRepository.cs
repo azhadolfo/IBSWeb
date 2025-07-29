@@ -1,8 +1,6 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
-using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.AccountsReceivable;
-using IBS.Utility;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using IBS.Utility.Enums;
@@ -11,7 +9,7 @@ namespace IBS.DataAccess.Repository.Filpride
 {
     public class CreditMemoRepository : Repository<FilprideCreditMemo>, ICreditMemoRepository
     {
-        private ApplicationDbContext _db;
+        private readonly ApplicationDbContext _db;
 
         public CreditMemoRepository(ApplicationDbContext db) : base(db)
         {
@@ -24,10 +22,8 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 return await GenerateCodeForDocumented(company, cancellationToken);
             }
-            else
-            {
-                return await GenerateCodeForUnDocumented(company, cancellationToken);
-            }
+
+            return await GenerateCodeForUnDocumented(company, cancellationToken);
         }
 
         private async Task<string> GenerateCodeForDocumented(string company, CancellationToken cancellationToken = default)
@@ -38,40 +34,37 @@ namespace IBS.DataAccess.Repository.Filpride
                 .OrderBy(c => c.CreditMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCm != null)
-            {
-                string lastSeries = lastCm.CreditMemoNo!;
-                string numericPart = lastSeries.Substring(2);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
-            }
-            else
+            if (lastCm == null)
             {
                 return "CM0000000001";
             }
+
+            var lastSeries = lastCm.CreditMemoNo!;
+            var numericPart = lastSeries.Substring(2);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
         }
 
         private async Task<string> GenerateCodeForUnDocumented(string company, CancellationToken cancellationToken = default)
         {
-            FilprideCreditMemo? lastCm = await _db
+            var lastCm = await _db
                 .FilprideCreditMemos
                 .Where(cm => cm.Company == company && cm.Type == nameof(DocumentType.Undocumented))
                 .OrderBy(c => c.CreditMemoNo)
                 .LastOrDefaultAsync(cancellationToken);
 
-            if (lastCm != null)
-            {
-                string lastSeries = lastCm.CreditMemoNo!;
-                string numericPart = lastSeries.Substring(3);
-                int incrementedNumber = int.Parse(numericPart) + 1;
-
-                return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
-            }
-            else
+            if (lastCm == null)
             {
                 return "CMU000000001";
             }
+
+            var lastSeries = lastCm.CreditMemoNo!;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
+
         }
 
         public override async Task<FilprideCreditMemo?> GetAsync(Expression<Func<FilprideCreditMemo, bool>> filter, CancellationToken cancellationToken = default)
