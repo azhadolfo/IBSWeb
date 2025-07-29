@@ -82,51 +82,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-                try
-                {
-                    var hasBeginningInventory = await _unitOfWork.FilprideInventory.HasAlreadyBeginningInventory(viewModel.ProductId, viewModel.POId, companyClaims, cancellationToken);
-
-                    if (hasBeginningInventory)
+                viewModel.PO = await _dbContext.FilpridePurchaseOrders
+                    .OrderBy(p => p.PurchaseOrderNo)
+                    .Where(p => p.Company == companyClaims)
+                    .Select(p => new SelectListItem
                     {
-                        viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                        Value = p.PurchaseOrderId.ToString(),
+                        Text = p.PurchaseOrderNo
+                    })
+                    .ToListAsync(cancellationToken);
 
-                        TempData["info"] = "Beginning Inventory for this product already exists. Please contact MIS if you think this was a mistake.";
-                        return View(viewModel);
-                    }
-
-                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
-                    await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Beginning balance created successfully";
-                    return RedirectToAction(nameof(BeginningInventory));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create beginning inventory. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View();
-                }
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(viewModel);
             }
 
-            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            viewModel.PO = await _dbContext.FilpridePurchaseOrders
-                .OrderBy(p => p.PurchaseOrderNo)
-                .Where(p => p.Company == companyClaims)
-                .Select(p => new SelectListItem
+            try
+            {
+                var hasBeginningInventory = await _unitOfWork.FilprideInventory.HasAlreadyBeginningInventory(viewModel.ProductId, viewModel.POId, companyClaims, cancellationToken);
+
+                if (hasBeginningInventory)
                 {
-                    Value = p.PurchaseOrderId.ToString(),
-                    Text = p.PurchaseOrderNo
-                })
-                .ToListAsync(cancellationToken);
+                    viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            TempData["warning"] = "The information you submitted is not valid!";
-            return View(viewModel);
+                    TempData["info"] = "Beginning Inventory for this product already exists. Please contact MIS if you think this was a mistake.";
+                    return View(viewModel);
+                }
+
+                viewModel.CurrentUser = _userManager.GetUserName(User)!;
+                await _unitOfWork.FilprideInventory.AddBeginningInventory(viewModel, companyClaims, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Beginning balance created successfully";
+                return RedirectToAction(nameof(BeginningInventory));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create beginning inventory. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View();
+            }
         }
 
         public async Task<IActionResult> InventoryReport(CancellationToken cancellationToken)
@@ -152,53 +152,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> DisplayInventory(InventoryReportViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var endingBalance = await _dbContext.FilprideInventories
-                    .OrderBy(e => e.Date)
-                    .ThenBy(e => e.InventoryId)
-                    .Where(e => e.Company == companyClaims)
-                    .LastOrDefaultAsync(e =>
-                        (viewModel.POId == null || e.POId == viewModel.POId) &&
-                        (e.Date.Month - 1 == viewModel.DateTo.Month), cancellationToken)
-                    ?? await _dbContext.FilprideInventories
-                    .OrderBy(e => e.Date)
-                    .ThenBy(e => e.InventoryId)
-                    .Where(e => e.Company == companyClaims)
-                    .LastOrDefaultAsync(e =>
-                        viewModel.POId == null || e.POId == viewModel.POId, cancellationToken);
-
-                List<FilprideInventory> inventories = new List<FilprideInventory>();
-                if (endingBalance != null)
-                {
-                    inventories = await _dbContext.FilprideInventories
-                        .OrderBy(e => e.Date)
-                        .ThenBy(e => e.InventoryId)
-                        .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
-                        .ToListAsync(cancellationToken);
-                }
-                else
-                {
-                    inventories = await _dbContext.FilprideInventories
-                        .OrderBy(e => e.Date)
-                        .ThenBy(e => e.InventoryId)
-                        .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
-                        .ToListAsync(cancellationToken);
-                }
-
-                var product = await _dbContext.Products
-                    .FindAsync(viewModel.ProductId, cancellationToken);
-
-                ViewData["Product"] = product!.ProductName;
-                ViewBag.ProductId = viewModel.ProductId;
-                ViewBag.POId = viewModel.POId;
-
-                return View(inventories);
+                return RedirectToAction(nameof(InventoryReport));
             }
 
-            return RedirectToAction(nameof(InventoryReport));
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var endingBalance = await _dbContext.FilprideInventories
+                                    .OrderBy(e => e.Date)
+                                    .ThenBy(e => e.InventoryId)
+                                    .Where(e => e.Company == companyClaims)
+                                    .LastOrDefaultAsync(e =>
+                                        (viewModel.POId == null || e.POId == viewModel.POId) &&
+                                        (e.Date.Month - 1 == viewModel.DateTo.Month), cancellationToken)
+                                ?? await _dbContext.FilprideInventories
+                                    .OrderBy(e => e.Date)
+                                    .ThenBy(e => e.InventoryId)
+                                    .Where(e => e.Company == companyClaims)
+                                    .LastOrDefaultAsync(e =>
+                                        viewModel.POId == null || e.POId == viewModel.POId, cancellationToken);
+
+            List<FilprideInventory> inventories = new List<FilprideInventory>();
+            if (endingBalance != null)
+            {
+                inventories = await _dbContext.FilprideInventories
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.InventoryId)
+                    .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId) || i.InventoryId == endingBalance.InventoryId)
+                    .ToListAsync(cancellationToken);
+            }
+            else
+            {
+                inventories = await _dbContext.FilprideInventories
+                    .OrderBy(e => e.Date)
+                    .ThenBy(e => e.InventoryId)
+                    .Where(i => i.Date >= viewModel.DateTo && i.Date <= viewModel.DateTo.AddMonths(1).AddDays(-1) && i.Company == companyClaims && i.ProductId == viewModel.ProductId && (viewModel.POId == null || i.POId == viewModel.POId))
+                    .ToListAsync(cancellationToken);
+            }
+
+            var product = await _dbContext.Products
+                .FindAsync(viewModel.ProductId, cancellationToken);
+
+            ViewData["Product"] = product!.ProductName;
+            ViewBag.ProductId = viewModel.ProductId;
+            ViewBag.POId = viewModel.POId;
+
+            return View(inventories);
+
         }
 
         [HttpGet]
@@ -225,41 +226,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> ConsolidatedPO(InventoryReportViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var companyClaims = await GetCompanyClaimAsync();
-                var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
-                List<FilprideInventory> inventories = new List<FilprideInventory>();
-                if (viewModel.POId == null)
-                {
-                    inventories = await _dbContext.FilprideInventories
-                        .Include(i => i.PurchaseOrder)
-                        .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId)
-                        .OrderBy(i => i.Date)
-                        .ThenBy(i => i.InventoryId)
-                        .ToListAsync(cancellationToken);
-                }
-                else
-                {
-                    inventories = await _dbContext.FilprideInventories
-                        .Include(i => i.PurchaseOrder)
-                        .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && i.POId == viewModel.POId)
-                        .OrderBy(i => i.Date)
-                        .ThenBy(i => i.InventoryId)
-                        .ToListAsync(cancellationToken);
-                }
-
-                var product = await _dbContext.Products
-                    .FindAsync(viewModel.ProductId, cancellationToken);
-
-                ViewData["Product"] = product!.ProductName;
-                ViewBag.ProductId = viewModel.ProductId;
-                ViewBag.POId = viewModel.POId;
-
-                return View(inventories);
+                return RedirectToAction(nameof(InventoryReport));
             }
 
-            return RedirectToAction(nameof(InventoryReport));
+            var companyClaims = await GetCompanyClaimAsync();
+            var dateFrom = viewModel.DateTo.AddDays(-viewModel.DateTo.Day + 1);
+            List<FilprideInventory> inventories = new List<FilprideInventory>();
+            if (viewModel.POId == null)
+            {
+                inventories = await _dbContext.FilprideInventories
+                    .Include(i => i.PurchaseOrder)
+                    .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId)
+                    .OrderBy(i => i.Date)
+                    .ThenBy(i => i.InventoryId)
+                    .ToListAsync(cancellationToken);
+            }
+            else
+            {
+                inventories = await _dbContext.FilprideInventories
+                    .Include(i => i.PurchaseOrder)
+                    .Where(i => i.Company == companyClaims && i.Date >= dateFrom && i.Date <= viewModel.DateTo && i.ProductId == viewModel.ProductId && i.POId == viewModel.POId)
+                    .OrderBy(i => i.Date)
+                    .ThenBy(i => i.InventoryId)
+                    .ToListAsync(cancellationToken);
+            }
+
+            var product = await _dbContext.Products
+                .FindAsync(viewModel.ProductId, cancellationToken);
+
+            ViewData["Product"] = product!.ProductName;
+            ViewBag.ProductId = viewModel.ProductId;
+            ViewBag.POId = viewModel.POId;
+
+            return View(inventories);
+
         }
 
         [HttpGet]
@@ -293,21 +295,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public IActionResult GetProducts(int poId, int id, DateOnly dateTo)
         {
-            if (id != 0)
+            if (id == 0)
             {
-                var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
-
-                var getPerBook = _dbContext.FilprideInventories
-                    .Where(i => i.Date >= dateFrom && i.Date <= dateTo && i.ProductId == id && i.POId == poId)
-                    .OrderByDescending(model => model.InventoryId)
-                    .FirstOrDefault();
-
-                if (getPerBook != null)
-                {
-                    return Json(new { InventoryBalance = getPerBook.InventoryBalance, AverageCost = getPerBook.AverageCost, TotalBalance = getPerBook.TotalBalance });
-                }
+                return Json(new { InventoryBalance = 0.000, AverageCost = 0.000, TotalBalance = 0.000 });
             }
-            return Json(new { InventoryBalance = 0.000, AverageCost = 0.000, TotalBalance = 0.000 });
+
+            var dateFrom = dateTo.AddDays(-dateTo.Day + 1);
+
+            var getPerBook = _dbContext.FilprideInventories
+                .Where(i => i.Date >= dateFrom && i.Date <= dateTo && i.ProductId == id && i.POId == poId)
+                .OrderByDescending(model => model.InventoryId)
+                .FirstOrDefault();
+
+            if (getPerBook == null)
+            {
+                return Json(new { InventoryBalance = 0.000, AverageCost = 0.000, TotalBalance = 0.000 });
+            }
+
+            return Json(new { InventoryBalance = getPerBook.InventoryBalance, AverageCost = getPerBook.AverageCost, TotalBalance = getPerBook.TotalBalance });
         }
 
         [HttpPost]
@@ -320,67 +325,67 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-                try
-                {
-                    viewModel.CurrentUser = _userManager.GetUserName(User)!;
-                    await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Actual inventory created successfully";
-                    return RedirectToAction(nameof(ActualInventory));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create actual inventory. Created by: {UserName}", _userManager.GetUserName(User));
-                    viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                viewModel.COA = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.Level == 4 &&
+                                  (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
+                                   coa.AccountName.StartsWith("Cost of Goods Sold") ||
+                                   coa.AccountNumber!.StartsWith("6010103")))
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken);
 
-                    viewModel.PO = await _dbContext.FilpridePurchaseOrders
-                        .OrderBy(p => p.PurchaseOrderNo)
-                        .Where(p => p.Company == companyClaims)
-                        .Select(p => new SelectListItem
-                        {
-                            Value = p.PurchaseOrderId.ToString(),
-                            Text = p.PurchaseOrderNo
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                        .Where(coa => coa.Level == 4 &&
-                                      (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
-                                       coa.AccountName.StartsWith("Cost of Goods Sold") ||
-                                       coa.AccountNumber!.StartsWith("6010103")))
-                        .Select(s => new SelectListItem
-                        {
-                            Value = s.AccountNumber,
-                            Text = s.AccountNumber + " " + s.AccountName
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
             }
 
-            viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            viewModel.COA = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 &&
-                              (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
-                               coa.AccountName.StartsWith("Cost of Goods Sold") ||
-                               coa.AccountNumber!.StartsWith("6010103")))
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            try
+            {
+                viewModel.CurrentUser = _userManager.GetUserName(User)!;
+                await _unitOfWork.FilprideInventory.AddActualInventory(viewModel, companyClaims, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Actual inventory created successfully";
+                return RedirectToAction(nameof(ActualInventory));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create actual inventory. Created by: {UserName}", _userManager.GetUserName(User));
+                viewModel.ProductList = await _unitOfWork.GetProductListAsyncById(cancellationToken);
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+                viewModel.PO = await _dbContext.FilpridePurchaseOrders
+                    .OrderBy(p => p.PurchaseOrderNo)
+                    .Where(p => p.Company == companyClaims)
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.PurchaseOrderId.ToString(),
+                        Text = p.PurchaseOrderNo
+                    })
+                    .ToListAsync(cancellationToken);
+
+                viewModel.COA = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.Level == 4 &&
+                                  (coa.AccountName.StartsWith("AR-Non Trade Receivable") ||
+                                   coa.AccountName.StartsWith("Cost of Goods Sold") ||
+                                   coa.AccountNumber!.StartsWith("6010103")))
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken);
+
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
     }
 }
