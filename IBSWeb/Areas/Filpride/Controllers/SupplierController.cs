@@ -120,68 +120,73 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                var companyClaims = await GetCompanyClaimAsync();
-
-                if (companyClaims == null)
-                {
-                    return BadRequest();
-                }
-
-                if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category, companyClaims, cancellationToken))
-                {
-                    ModelState.AddModelError("SupplierName", "Supplier already exist.");
-                    return View(model);
-                }
-
-                if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch!, model.Category, companyClaims, cancellationToken))
-                {
-                    ModelState.AddModelError("SupplierTin", "Tin number already exist.");
-                    return View(model);
-                }
-
-                try
-                {
-                    if (registration != null && registration.Length > 0)
-                    {
-                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
-                    }
-
-                    if (document != null && document.Length > 0)
-                    {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
-                    }
-
-                    model.SupplierCode = await _unitOfWork.FilprideSupplier
-                        .GenerateCodeAsync(cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    model.Company = companyClaims;
-                    await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new supplier {model.SupplierCode}", "Supplier", model.Company);
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Supplier created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
-            }
-            else
+            if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            if (await _unitOfWork.FilprideSupplier.IsSupplierExistAsync(model.SupplierName, model.Category,
+                    companyClaims, cancellationToken))
+            {
+                ModelState.AddModelError("SupplierName", "Supplier already exist.");
+                return View(model);
+            }
+
+            if (await _unitOfWork.FilprideSupplier.IsTinNoExistAsync(model.SupplierTin, model.Branch!,
+                    model.Category, companyClaims, cancellationToken))
+            {
+                ModelState.AddModelError("SupplierTin", "Tin number already exist.");
+                return View(model);
+            }
+
+            try
+            {
+                if (registration != null && registration.Length > 0)
+                {
+                    model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                    model.ProofOfRegistrationFilePath =
+                        await _cloudStorageService.UploadFileAsync(registration,
+                            model.ProofOfRegistrationFileName!);
+                }
+
+                if (document != null && document.Length > 0)
+                {
+                    model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                    model.ProofOfExemptionFilePath =
+                        await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
+                }
+
+                model.SupplierCode = await _unitOfWork.FilprideSupplier
+                    .GenerateCodeAsync(cancellationToken);
+                model.CreatedBy = _userManager.GetUserName(User);
+                model.Company = companyClaims;
+                await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new supplier {model.SupplierCode}", "Supplier", model.Company);
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier created successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}",
+                    _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
             }
         }
@@ -253,9 +258,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                supplier.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
+                return NotFound();
+            }
+
+            supplier.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
                 .Where(coa => coa.Level == 4 || coa.Level == 5)
                 .Select(s => new SelectListItem
                 {
@@ -264,59 +272,55 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-                supplier.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
-                    .Select(s => new SelectListItem
-                    {
-                        Value = s.AccountNumber + " " + s.AccountName,
-                        Text = s.AccountNumber + " " + s.AccountName
-                    })
-                    .ToListAsync(cancellationToken);
-                return View(supplier);
-            }
-
-            return NotFound();
+            supplier.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
+                .Where(coa => coa.AccountNumber == "2010302" || coa.AccountNumber == "2010303")
+                .Select(s => new SelectListItem
+                {
+                    Value = s.AccountNumber + " " + s.AccountName,
+                    Text = s.AccountNumber + " " + s.AccountName
+                })
+                .ToListAsync(cancellationToken);
+            return View(supplier);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FilprideSupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-
-                    if (registration != null && registration.Length > 0)
-                    {
-                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
-                    }
-
-                    if (document != null && document.Length > 0)
-                    {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
-                    }
-
-                    model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Supplier updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (registration != null && registration.Length > 0)
+                {
+                    model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                    model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
+                }
+
+                if (document != null && document.Length > 0)
+                {
+                    model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                    model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
+                }
+
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -331,12 +335,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                return View(supplier);
+                return NotFound();
             }
 
-            return NotFound();
+            return View(supplier);
+
         }
 
         [HttpPost, ActionName("Activate")]
@@ -351,15 +356,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                supplier.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Supplier activated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            supplier.IsActive = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
+            TempData["success"] = "Supplier activated successfully";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -374,12 +379,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                return View(supplier);
+                return NotFound();
             }
 
-            return NotFound();
+            return View(supplier);
+
         }
 
         [HttpPost, ActionName("Deactivate")]
@@ -394,15 +400,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                supplier.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Supplier deactivated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            supplier.IsActive = false;
+            await _unitOfWork.SaveAsync(cancellationToken);
+            TempData["success"] = "Supplier deactivated successfully";
+            return RedirectToAction(nameof(Index));
+
         }
 
         //Download as .xlsx file.(Export)
@@ -498,8 +505,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllSupplierIds()
         {
             var supplierIds = _dbContext.FilprideSuppliers
-                                     .Select(s => s.SupplierId) // Assuming Id is the primary key
-                                     .ToList();
+                 .Select(s => s.SupplierId) // Assuming Id is the primary key
+                 .ToList();
 
             return Json(supplierIds);
         }
