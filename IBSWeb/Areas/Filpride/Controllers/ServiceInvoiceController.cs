@@ -167,88 +167,87 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
             viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-
-                    #region --Retrieval of Customer/Service
-
-                    var customer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-
-                    var service = await _unitOfWork.FilprideService
-                        .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
-
-                    if (customer == null || service == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #endregion --Retrieval of Customer/Service
-
-                    var model = new FilprideServiceInvoice
-                    {
-                        ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
-                        ServiceId = service.ServiceId,
-                        ServiceName = service.Name,
-                        ServicePercent = service.Percent,
-                        CustomerId = customer.CustomerId,
-                        CustomerName = customer.CustomerName,
-                        CustomerAddress = customer.CustomerAddress,
-                        CustomerBusinessStyle = customer.BusinessStyle,
-                        CustomerTin = customer.CustomerTin,
-                        VatType = customer.VatType,
-                        HasEwt = customer.WithHoldingTax,
-                        HasWvat = customer.WithHoldingVat,
-                        CreatedBy = User.Identity!.Name,
-                        Total = viewModel.Total,
-                        Balance = viewModel.Total,
-                        Company = companyClaims,
-                        Period = viewModel.Period,
-                        Instructions = viewModel.Instructions,
-                        DueDate = viewModel.DueDate,
-                        Discount = viewModel.Discount,
-                        Type = viewModel.Type,
-                    };
-
-                    #region --Additional procedure for Transaction Fee
-
-                    if (viewModel.DeliveryReceiptId != null)
-                    {
-                        model.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
-                    }
-
-                    #endregion
-
-                    await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = $"Service invoice #{model.ServiceInvoiceNo} created successfully.";
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
             }
 
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --Retrieval of Customer/Service
+
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                var service = await _unitOfWork.FilprideService
+                    .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
+
+                if (customer == null || service == null)
+                {
+                    return NotFound();
+                }
+
+                #endregion --Retrieval of Customer/Service
+
+                var model = new FilprideServiceInvoice
+                {
+                    ServiceInvoiceNo = await _unitOfWork.FilprideServiceInvoice.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                    ServiceId = service.ServiceId,
+                    ServiceName = service.Name,
+                    ServicePercent = service.Percent,
+                    CustomerId = customer.CustomerId,
+                    CustomerName = customer.CustomerName,
+                    CustomerAddress = customer.CustomerAddress,
+                    CustomerBusinessStyle = customer.BusinessStyle,
+                    CustomerTin = customer.CustomerTin,
+                    VatType = customer.VatType,
+                    HasEwt = customer.WithHoldingTax,
+                    HasWvat = customer.WithHoldingVat,
+                    CreatedBy = User.Identity!.Name,
+                    Total = viewModel.Total,
+                    Balance = viewModel.Total,
+                    Company = companyClaims,
+                    Period = viewModel.Period,
+                    Instructions = viewModel.Instructions,
+                    DueDate = viewModel.DueDate,
+                    Discount = viewModel.Discount,
+                    Type = viewModel.Type,
+                };
+
+                #region --Additional procedure for Transaction Fee
+
+                if (viewModel.DeliveryReceiptId != null)
+                {
+                    model.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                }
+
+                #endregion
+
+                await _unitOfWork.FilprideServiceInvoice.AddAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                TempData["success"] = $"Service invoice #{model.ServiceInvoiceNo} created successfully.";
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
@@ -268,209 +267,211 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model != null)
+                if (model == null)
                 {
-                    model.PostedBy = _userManager.GetUserName(this.User);
-                    model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Posted);
-
-                    #region --SV Date Computation--
-
-                    var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period
-                        ? DateOnly.FromDateTime(model.CreatedDate)
-                        : model.Period.AddMonths(1).AddDays(-1);
-
-                    #endregion --SV Date Computation--
-
-                    #region --Sales Book Recording
-
-                    decimal withHoldingTaxAmount = 0;
-                    decimal withHoldingVatAmount = 0;
-                    decimal netOfVatAmount = 0;
-                    decimal vatAmount = 0;
-
-                    if (model.VatType == SD.VatType_Vatable)
-                    {
-                        netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.Total);
-                        vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
-                    }
-                    else
-                    {
-                        netOfVatAmount = model.Total;
-                    }
-
-                    if (model.HasEwt)
-                    {
-                        withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
-                    }
-
-                    if (model.HasWvat)
-                    {
-                        withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
-                    }
-
-                    var sales = new FilprideSalesBook
-                    {
-                        TransactionDate = postedDate,
-                        SerialNo = model.ServiceInvoiceNo,
-                        SoldTo = model.CustomerName,
-                        TinNo = model.CustomerTin,
-                        Address = model.CustomerAddress,
-                        Description = model.ServiceName,
-                        Amount = model.Total,
-                        VatAmount = vatAmount,
-                        VatableSales = netOfVatAmount,
-                        Discount = model.Discount,
-                        NetSales = netOfVatAmount,
-                        CreatedBy = model.CreatedBy,
-                        CreatedDate = model.CreatedDate,
-                        DueDate = model.DueDate,
-                        DocumentId = model.ServiceInvoiceId,
-                        Company = model.Company,
-                    };
-
-                    switch (model.VatType)
-                    {
-                        case SD.VatType_Vatable:
-                            sales.VatAmount = vatAmount;
-                            sales.VatableSales = netOfVatAmount;
-                            break;
-                        case SD.VatType_Exempt:
-                            sales.VatExemptSales = model.Total;
-                            break;
-                        default:
-                            sales.ZeroRated = model.Total;
-                            break;
-                    }
-
-                    await _dbContext.AddAsync(sales, cancellationToken);
-
-                    #endregion --Sales Book Recording
-
-                    #region --General Ledger Book Recording
-
-                    var ledgers = new List<FilprideGeneralLedgerBook>();
-                    var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
-                    var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
-                    var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
-                    var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
-                    var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
-
-                    ///TODO waiting for Ma'am LSA journal entries
-                    ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = postedDate,
-                                Reference = model.ServiceInvoiceNo,
-                                Description = model.ServiceName,
-                                AccountId = arNonTradeTitle.AccountId,
-                                AccountNo = arNonTradeTitle.AccountNumber,
-                                AccountTitle = arNonTradeTitle.AccountName,
-                                Debit = model.Total - (withHoldingTaxAmount + withHoldingVatAmount),
-                                Credit = 0,
-                                Company = model.Company,
-                                CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                CustomerId = model.CustomerId,
-                                CustomerName = model.CustomerName
-                            }
-                        );
-                    if (withHoldingTaxAmount > 0)
-                    {
-                        ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = postedDate,
-                                Reference = model.ServiceInvoiceNo,
-                                Description = model.ServiceName,
-                                AccountId = arTradeCwt.AccountId,
-                                AccountNo = arTradeCwt.AccountNumber,
-                                AccountTitle = arTradeCwt.AccountName,
-                                Debit = withHoldingTaxAmount,
-                                Credit = 0,
-                                Company = model.Company,
-                                CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                            }
-                        );
-                    }
-                    if (withHoldingVatAmount > 0)
-                    {
-                        ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = postedDate,
-                                Reference = model.ServiceInvoiceNo,
-                                Description = model.ServiceName,
-                                AccountId = arTradeCwv.AccountId,
-                                AccountNo = arTradeCwv.AccountNumber,
-                                AccountTitle = arTradeCwv.AccountName,
-                                Debit = withHoldingVatAmount,
-                                Credit = 0,
-                                Company = model.Company,
-                                CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                            }
-                        );
-                    }
-
-                    ledgers.Add(
-                           new FilprideGeneralLedgerBook
-                           {
-                               Date = postedDate,
-                               Reference = model.ServiceInvoiceNo,
-                               Description = model.ServiceName,
-                               AccountNo = model.Service!.CurrentAndPreviousNo!,
-                               AccountTitle = model.Service!.CurrentAndPreviousTitle!,
-                               Debit = 0,
-                               Credit = netOfVatAmount,
-                               Company = model.Company,
-                               CreatedBy = model.PostedBy,
-                               CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                           }
-                       );
-
-                    if (vatAmount > 0)
-                    {
-                        ledgers.Add(
-                            new FilprideGeneralLedgerBook
-                            {
-                                Date = postedDate,
-                                Reference = model.ServiceInvoiceNo,
-                                Description = model.ServiceName,
-                                AccountId = vatOutputTitle.AccountId,
-                                AccountNo = vatOutputTitle.AccountNumber,
-                                AccountTitle = vatOutputTitle.AccountName,
-                                Debit = 0,
-                                Credit = vatAmount,
-                                Company = model.Company,
-                                CreatedBy = model.PostedBy,
-                                CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                            }
-                        );
-                    }
-
-                    if (!_unitOfWork.FilprideServiceInvoice.IsJournalEntriesBalanced(ledgers))
-                    {
-                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                    }
-
-                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                    #endregion --General Ledger Book Recording
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Service invoice has been posted.";
-                    return RedirectToAction(nameof(Print), new { id });
+                    return NotFound();
                 }
+
+                model.PostedBy = _userManager.GetUserName(this.User);
+                model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Posted);
+
+                #region --SV Date Computation--
+
+                var postedDate = DateOnly.FromDateTime(model.CreatedDate) >= model.Period
+                    ? DateOnly.FromDateTime(model.CreatedDate)
+                    : model.Period.AddMonths(1).AddDays(-1);
+
+                #endregion --SV Date Computation--
+
+                #region --Sales Book Recording
+
+                decimal withHoldingTaxAmount = 0;
+                decimal withHoldingVatAmount = 0;
+                decimal netOfVatAmount = 0;
+                decimal vatAmount = 0;
+
+                if (model.VatType == SD.VatType_Vatable)
+                {
+                    netOfVatAmount = _unitOfWork.FilprideCreditMemo.ComputeNetOfVat(model.Total);
+                    vatAmount = _unitOfWork.FilprideCreditMemo.ComputeVatAmount(netOfVatAmount);
+                }
+                else
+                {
+                    netOfVatAmount = model.Total;
+                }
+
+                if (model.HasEwt)
+                {
+                    withHoldingTaxAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.01m);
+                }
+
+                if (model.HasWvat)
+                {
+                    withHoldingVatAmount = _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m);
+                }
+
+                var sales = new FilprideSalesBook
+                {
+                    TransactionDate = postedDate,
+                    SerialNo = model.ServiceInvoiceNo,
+                    SoldTo = model.CustomerName,
+                    TinNo = model.CustomerTin,
+                    Address = model.CustomerAddress,
+                    Description = model.ServiceName,
+                    Amount = model.Total,
+                    VatAmount = vatAmount,
+                    VatableSales = netOfVatAmount,
+                    Discount = model.Discount,
+                    NetSales = netOfVatAmount,
+                    CreatedBy = model.CreatedBy,
+                    CreatedDate = model.CreatedDate,
+                    DueDate = model.DueDate,
+                    DocumentId = model.ServiceInvoiceId,
+                    Company = model.Company,
+                };
+
+                switch (model.VatType)
+                {
+                    case SD.VatType_Vatable:
+                        sales.VatAmount = vatAmount;
+                        sales.VatableSales = netOfVatAmount;
+                        break;
+                    case SD.VatType_Exempt:
+                        sales.VatExemptSales = model.Total;
+                        break;
+                    default:
+                        sales.ZeroRated = model.Total;
+                        break;
+                }
+
+                await _dbContext.AddAsync(sales, cancellationToken);
+
+                #endregion --Sales Book Recording
+
+                #region --General Ledger Book Recording
+
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+                var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
+                var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
+                var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+
+                ///TODO waiting for Ma'am LSA journal entries
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = postedDate,
+                        Reference = model.ServiceInvoiceNo,
+                        Description = model.ServiceName,
+                        AccountId = arNonTradeTitle.AccountId,
+                        AccountNo = arNonTradeTitle.AccountNumber,
+                        AccountTitle = arNonTradeTitle.AccountName,
+                        Debit = model.Total - (withHoldingTaxAmount + withHoldingVatAmount),
+                        Credit = 0,
+                        Company = model.Company,
+                        CreatedBy = model.PostedBy,
+                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        CustomerId = model.CustomerId,
+                        CustomerName = model.CustomerName
+                    }
+                );
+                if (withHoldingTaxAmount > 0)
+                {
+                    ledgers.Add(
+                        new FilprideGeneralLedgerBook
+                        {
+                            Date = postedDate,
+                            Reference = model.ServiceInvoiceNo,
+                            Description = model.ServiceName,
+                            AccountId = arTradeCwt.AccountId,
+                            AccountNo = arTradeCwt.AccountNumber,
+                            AccountTitle = arTradeCwt.AccountName,
+                            Debit = withHoldingTaxAmount,
+                            Credit = 0,
+                            Company = model.Company,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        }
+                    );
+                }
+                if (withHoldingVatAmount > 0)
+                {
+                    ledgers.Add(
+                        new FilprideGeneralLedgerBook
+                        {
+                            Date = postedDate,
+                            Reference = model.ServiceInvoiceNo,
+                            Description = model.ServiceName,
+                            AccountId = arTradeCwv.AccountId,
+                            AccountNo = arTradeCwv.AccountNumber,
+                            AccountTitle = arTradeCwv.AccountName,
+                            Debit = withHoldingVatAmount,
+                            Credit = 0,
+                            Company = model.Company,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        }
+                    );
+                }
+
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = postedDate,
+                        Reference = model.ServiceInvoiceNo,
+                        Description = model.ServiceName,
+                        AccountNo = model.Service!.CurrentAndPreviousNo!,
+                        AccountTitle = model.Service!.CurrentAndPreviousTitle!,
+                        Debit = 0,
+                        Credit = netOfVatAmount,
+                        Company = model.Company,
+                        CreatedBy = model.PostedBy,
+                        CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    }
+                );
+
+                if (vatAmount > 0)
+                {
+                    ledgers.Add(
+                        new FilprideGeneralLedgerBook
+                        {
+                            Date = postedDate,
+                            Reference = model.ServiceInvoiceNo,
+                            Description = model.ServiceName,
+                            AccountId = vatOutputTitle.AccountId,
+                            AccountNo = vatOutputTitle.AccountNumber,
+                            AccountTitle = vatOutputTitle.AccountName,
+                            Debit = 0,
+                            Credit = vatAmount,
+                            Company = model.Company,
+                            CreatedBy = model.PostedBy,
+                            CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        }
+                    );
+                }
+
+                if (!_unitOfWork.FilprideServiceInvoice.IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                #endregion --General Ledger Book Recording
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.PostedBy!, $"Posted service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Service invoice has been posted.";
+                return RedirectToAction(nameof(Print), new { id });
             }
             catch (Exception ex)
             {
@@ -480,45 +481,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
 
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (model != null)
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
+
+                if (model.DeliveryReceiptId != null)
                 {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
-
-                        if (model.DeliveryReceiptId != null)
-                        {
-                            await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
-                        }
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _unitOfWork.SaveAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Service invoice has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index));
+                    await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
                 }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Service invoice has been Cancelled.";
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -528,8 +527,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         [Authorize(Roles = "Admin")]
@@ -537,67 +534,60 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _unitOfWork.FilprideServiceInvoice.GetAsync(x => x.ServiceInvoiceId == id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                var hasAlreadyBeenUsed =
-                    await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
-                    await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
-                    await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
-
-                if (hasAlreadyBeenUsed)
-                {
-                    TempData["info"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                if (model.VoidedBy == null)
-                {
-                    await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                    try
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        if (model.DeliveryReceiptId != null)
-                        {
-                            await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
-                        }
-
-                        await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
-                        await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
-
-                        #region --Audit Trail Recording
-
-                        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
-                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _unitOfWork.SaveAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Service invoice has been voided.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to void service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
-                            ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                        await transaction.RollbackAsync(cancellationToken);
-                        TempData["error"] = ex.Message;
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            var hasAlreadyBeenUsed =
+                await _dbContext.FilprideCollectionReceipts.AnyAsync(cr => cr.ServiceInvoiceId == model.ServiceInvoiceId && cr.Status != nameof(Status.Voided), cancellationToken) ||
+                await _dbContext.FilprideDebitMemos.AnyAsync(dm => dm.ServiceInvoiceId == model.ServiceInvoiceId && dm.Status != nameof(Status.Voided), cancellationToken) ||
+                await _dbContext.FilprideCreditMemos.AnyAsync(cm => cm.ServiceInvoiceId == model.ServiceInvoiceId && cm.Status != nameof(Status.Voided), cancellationToken);
+
+            if (hasAlreadyBeenUsed)
+            {
+                TempData["info"] = "Please note that this record has already been utilized in a collection receipts, debit or credit memo. As a result, voiding it is not permitted.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+
+                if (model.DeliveryReceiptId != null)
+                {
+                    await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
+                }
+
+                await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
+                await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.ServiceInvoiceNo, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Service invoice has been voided.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Voided by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpGet]
@@ -650,86 +640,86 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(existingModel.Company, cancellationToken);
             viewModel.Services = await _unitOfWork.GetFilprideServiceListById(existingModel.Company, cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var customer = await _unitOfWork.FilprideCustomer
-                        .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
-
-                    var service = await _unitOfWork.FilprideService
-                        .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
-
-                    if (customer == null || service == null)
-                    {
-                        return NotFound();
-                    }
-
-                    #region --Saving the default properties
-
-                    existingModel.Discount = viewModel.Discount;
-                    existingModel.Total = viewModel.Total;
-                    existingModel.Balance = viewModel.Total;
-                    existingModel.Period = viewModel.Period;
-                    existingModel.DueDate = viewModel.DueDate;
-                    existingModel.Instructions = viewModel.Instructions;
-                    existingModel.EditedBy = _userManager.GetUserName(User);
-                    existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingModel.Total = viewModel.Total;
-                    existingModel.CustomerId = viewModel.CustomerId;
-                    existingModel.ServiceId = viewModel.ServiceId;
-                    existingModel.ServiceName = service.Name;
-                    existingModel.ServicePercent = service.Percent;
-                    existingModel.CustomerName = customer.CustomerName;
-                    existingModel.CustomerBusinessStyle = customer.BusinessStyle;
-                    existingModel.CustomerAddress = customer.CustomerAddress;
-                    existingModel.CustomerTin = customer.CustomerTin;
-                    existingModel.VatType = customer.VatType;
-                    existingModel.HasEwt = customer.WithHoldingTax;
-                    existingModel.HasWvat = customer.WithHoldingVat;
-
-                    #endregion --Saving the default properties
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", existingModel.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    #region --Additional procedure for Transaction Fee
-
-                    if (existingModel.DeliveryReceiptId != viewModel.DeliveryReceiptId && existingModel.DeliveryReceipt != null)
-                    {
-                        await ReverseTheProcessedDr(existingModel.DeliveryReceiptId, cancellationToken);
-                    }
-
-                    if (viewModel.DeliveryReceiptId != null)
-                    {
-                        existingModel.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
-                    }
-
-                    #endregion
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Service invoice updated successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The submitted information is invalid.";
+                return View(viewModel);
             }
 
-            TempData["warning"] = "The submitted information is invalid.";
-            return View(viewModel);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
+
+                var service = await _unitOfWork.FilprideService
+                    .GetAsync(c => c.ServiceId == viewModel.ServiceId, cancellationToken);
+
+                if (customer == null || service == null)
+                {
+                    return NotFound();
+                }
+
+                #region --Saving the default properties
+
+                existingModel.Discount = viewModel.Discount;
+                existingModel.Total = viewModel.Total;
+                existingModel.Balance = viewModel.Total;
+                existingModel.Period = viewModel.Period;
+                existingModel.DueDate = viewModel.DueDate;
+                existingModel.Instructions = viewModel.Instructions;
+                existingModel.EditedBy = _userManager.GetUserName(User);
+                existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingModel.Total = viewModel.Total;
+                existingModel.CustomerId = viewModel.CustomerId;
+                existingModel.ServiceId = viewModel.ServiceId;
+                existingModel.ServiceName = service.Name;
+                existingModel.ServicePercent = service.Percent;
+                existingModel.CustomerName = customer.CustomerName;
+                existingModel.CustomerBusinessStyle = customer.BusinessStyle;
+                existingModel.CustomerAddress = customer.CustomerAddress;
+                existingModel.CustomerTin = customer.CustomerTin;
+                existingModel.VatType = customer.VatType;
+                existingModel.HasEwt = customer.WithHoldingTax;
+                existingModel.HasWvat = customer.WithHoldingVat;
+
+                #endregion --Saving the default properties
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingModel.EditedBy!, $"Edited service invoice# {existingModel.ServiceInvoiceNo}", "Service Invoice", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                #region --Additional procedure for Transaction Fee
+
+                if (existingModel.DeliveryReceiptId != viewModel.DeliveryReceiptId && existingModel.DeliveryReceipt != null)
+                {
+                    await ReverseTheProcessedDr(existingModel.DeliveryReceiptId, cancellationToken);
+                }
+
+                if (viewModel.DeliveryReceiptId != null)
+                {
+                    existingModel.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                }
+
+                #endregion
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Service invoice updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit service invoice. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
