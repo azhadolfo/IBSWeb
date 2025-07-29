@@ -7,11 +7,21 @@
 
 @{
     ViewData["Title"] = "Print Sales Invoice";
+    
+    var customerType = Model.CustomerOrderSlip?.CustomerType ?? Model.Customer!.CustomerType;
+    var customerName = Model.CustomerOrderSlip?.CustomerName ?? Model.Customer!.CustomerName;
+    var customerAddress = Model.CustomerOrderSlip?.CustomerAddress ?? Model.Customer!.CustomerAddress;
+    var customerTin = Model.CustomerOrderSlip?.CustomerTin ?? Model.Customer!.CustomerTin;
+    var customerBusinessStyle = Model.CustomerOrderSlip?.BusinessStyle ?? Model.Customer!.BusinessStyle;
+    var customerVatType = Model.CustomerOrderSlip?.VatType ?? Model.Customer!.VatType;
+    var hasEwt = Model.CustomerOrderSlip?.HasEWT ?? Model.Customer!.WithHoldingTax;
+    var hasWvat = Model.CustomerOrderSlip?.HasWVAT ?? Model.Customer!.WithHoldingVat;
+    
     decimal netDiscount = Model.Amount - Model.Discount;
-    decimal netOfVatAmount = Model.CustomerOrderSlip!.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
-    decimal vatAmount = Model.CustomerOrderSlip.VatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
-    decimal withHoldingTaxAmount = Model.CustomerOrderSlip.HasEWT ? (netDiscount / 1.12m) * 0.01m : 0;
-    decimal withHoldingVatAmount = Model.CustomerOrderSlip.HasWVAT ? (netDiscount / 1.12m) * 0.05m : 0;
+    decimal netOfVatAmount = customerVatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
+    decimal vatAmount = customerVatType == SD.VatType_Vatable ? netOfVatAmount * 0.12m : 0;
+    decimal withHoldingTaxAmount = hasEwt ? (netDiscount / 1.12m) * 0.01m : 0;
+    decimal withHoldingVatAmount = hasWvat ? (netDiscount / 1.12m) * 0.05m : 0;
     
     var selectedCompany = string.Empty;
 
@@ -20,7 +30,7 @@
         selectedCompany = User.Claims.FirstOrDefault(c => c.Type == "Company")?.Value;
     }
 
-    var decimalFormat = Model.CustomerOrderSlip.CustomerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
+    var decimalFormat = customerType != nameof(CustomerType.Government) ? SD.Two_Decimal_Format : SD.Four_Decimal_Format;
 }
 
 <br class="br-top" />
@@ -73,16 +83,16 @@
             <tr>
                 <td>
                     <span><b>Sold to:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip!.CustomerName) &nbsp;<br />
+                    &nbsp; @customerName &nbsp;<br />
 
                     <span><b>Address:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip!.CustomerAddress) &nbsp;<br />
+                    &nbsp; @customerAddress &nbsp;<br />
 
                     <span><b>TIN:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip!.CustomerTin) &nbsp;<br />
+                    &nbsp; @customerTin &nbsp;<br />
 
                     <span><b>Business Style:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerOrderSlip!.BusinessStyle) &nbsp;
+                    &nbsp; @customerBusinessStyle &nbsp;
                 </td>
 
                 <td class="w-25 text-nowrap">
@@ -122,23 +132,23 @@
     </table>
 </div>
 @{
-    if (Model.CustomerOrderSlip.VatType == SD.VatType_Vatable)
+    if (customerVatType == SD.VatType_Vatable)
     {
-        if (Model.CustomerOrderSlip.HasEWT && !Model.CustomerOrderSlip.HasWVAT)
+        if (hasEwt && !hasWvat)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2307 to your payment if you deducted Expanded Withholding Tax.
             </p>
         }
-        else if (Model.CustomerOrderSlip.HasWVAT && !Model.CustomerOrderSlip.HasEWT)
+        else if (hasWvat && !hasEwt)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Vat with the amount of <b>@withHoldingVatAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 to your payment if you deducted Expanded Withholding Vat.
             </p>
         }
-        else if (Model.CustomerOrderSlip.HasEWT && Model.CustomerOrderSlip.HasWVAT)
+        else if (hasEwt && hasWvat)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
@@ -149,21 +159,21 @@
     }
     else
     {
-        if (Model.CustomerOrderSlip.HasEWT && !Model.CustomerOrderSlip.HasWVAT)
+        if (hasEwt && !hasWvat)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2307 to your payment if you deducted Expanded Withholding Tax.
             </p>
         }
-        else if (Model.CustomerOrderSlip.HasWVAT && !Model.CustomerOrderSlip.HasEWT)
+        else if (hasWvat && !hasEwt)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Vat with the amount of <b>@withHoldingVatAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
                 Please attach BIR Form 2306 to your payment if you deducted Expanded Withholding Vat.
             </p>
         }
-        else if (Model.CustomerOrderSlip.HasEWT && Model.CustomerOrderSlip.HasWVAT)
+        else if (hasEwt && hasWvat)
         {
             <p style="line-height: 1; margin-top:20px;">
                 Creditable Withholding Tax with the amount of <b>@withHoldingTaxAmount.ToString(decimalFormat)</b> is computed for this invoice.<br />
@@ -228,7 +238,7 @@
                     <tbody class="text-nowrap table-font-bold">
                         <tr style="padding-left: 8%;">
                             <td style="padding-left: 0.5rem;"><b>Vatable Sales: </b></td>
-                            @if (Model.CustomerOrderSlip.VatType == SD.VatType_Vatable)
+                            @if (customerVatType == SD.VatType_Vatable)
                             {
                                 <td class="text-end px-2">@netOfVatAmount.ToString(decimalFormat)</td>
                             }
@@ -239,7 +249,7 @@
                         </tr>
                         <tr style="padding-left: 8%;">
                             <td style="padding-left: 0.5rem;"><b>Zero-Rated Sales: </b></td>
-                            @if (Model.CustomerOrderSlip.VatType == SD.VatType_ZeroRated)
+                            @if (customerVatType == SD.VatType_ZeroRated)
                             {
                                 <td class="text-end px-2">@netOfVatAmount.ToString(decimalFormat)</td>
                             }
@@ -250,7 +260,7 @@
                         </tr>
                         <tr style="padding-left: 8%;">
                             <td style="padding-left: 0.5rem;"><b>VAT-Exempt Sales: </b></td>
-                            @if (Model.CustomerOrderSlip.VatType == SD.VatType_Exempt)
+                            @if (customerVatType == SD.VatType_Exempt)
                             {
                                 <td class="text-end px-2">@netOfVatAmount.ToString(decimalFormat)</td>
                             }
@@ -261,7 +271,7 @@
                         </tr>
                         <tr style="padding-left: 8%;">
                             <td style="padding-left: 0.5rem;"><b>VAT Amount: </b></td>
-                            @if (Model.CustomerOrderSlip.VatType == SD.VatType_Vatable)
+                            @if (customerVatType == SD.VatType_Vatable)
                             {
                                 <td class="text-end px-2"> @vatAmount.ToString(decimalFormat)</td>
                             }
@@ -283,14 +293,7 @@
                         </tr>
                         <tr style="padding-left: 8%;">
                             <td style="padding-left: 0.5rem;"><b>TOTAL SALES: </b></td>
-                            @if (Model.Customer?.VatType == "Vatable")
-                            {
-                                <td class="text-end px-2">@Model.Amount.ToString(decimalFormat)</td>
-                            }
-                            else
-                            {
-                                <td class="text-end px-2"></td>
-                            }
+                            <td class="text-end px-2">@Model.Amount.ToString(decimalFormat)</td>
                         </tr>
                     </tbody>
                 </table>
