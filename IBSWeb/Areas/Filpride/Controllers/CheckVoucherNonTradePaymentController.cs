@@ -345,7 +345,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(x => x.Details)
                 .FirstOrDefaultAsync(x => x.CheckVoucherHeaderId == id, cancellationToken);
 
-
             if (existingHeaderModel == null)
             {
                 return NotFound();

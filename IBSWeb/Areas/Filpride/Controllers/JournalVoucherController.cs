@@ -376,11 +376,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (modelHeader.PostedBy != null)
-                {
-                    return RedirectToAction(nameof(Print), new { id });
-                }
-
                 modelHeader.PostedBy = _userManager.GetUserName(this.User);
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
@@ -524,24 +519,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.CanceledBy == null)
-                {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(Status.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                    #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Journal Voucher has been Cancelled.";
-                }
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher has been Cancelled.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
