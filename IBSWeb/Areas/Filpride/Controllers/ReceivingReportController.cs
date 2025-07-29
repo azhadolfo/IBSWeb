@@ -81,26 +81,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private async Task<string?> GetCurrentFilterType()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user != null)
+            if (user == null)
             {
-                var claims = await _userManager.GetClaimsAsync(user);
-                return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
+                return null;
             }
-            return null;
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == FilterTypeClaimType)?.Value;
         }
 
         public async Task<IActionResult> Index(string? view, string filterType, CancellationToken cancellationToken)
         {
             await UpdateFilterTypeClaim(filterType);
-            if (view == nameof(DynamicView.ReceivingReport))
+            if (view != nameof(DynamicView.ReceivingReport))
             {
-                var companyClaims = await GetCompanyClaimAsync();
-
-                var receivingReports = await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
-
-                return View("ExportIndex", receivingReports);
+                return View();
             }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            var receivingReports = await _unitOfWork.FilprideReceivingReport
+                .GetAllAsync(rr => rr.Company == companyClaims && rr.Type == nameof(DocumentType.Documented), cancellationToken);
+
+            return View("ExportIndex", receivingReports);
 
             //For the function of correcting the journal entries
             // var receivingReportss = await _unitOfWork.FilprideReceivingReport
@@ -113,7 +116,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // }
 
 
-            return View();
         }
 
         [HttpPost]
