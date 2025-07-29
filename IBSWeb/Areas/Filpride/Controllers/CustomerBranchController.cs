@@ -56,30 +56,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Customer branch created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-                    return View(model);
-                }
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                model.CustomerSelectList =
+                    await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
+                return View(model);
             }
 
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer branch created successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create customer branch master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                model.CustomerSelectList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -108,32 +109,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Customer branch updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    model.CustomerSelectList =
-                        await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-                    return View(model);
-                }
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                model.CustomerSelectList =
+                    await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
+                return View(model);
             }
 
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            model.CustomerSelectList =
-                await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer branch updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                model.CustomerSelectList =
+                    await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
+                return View(model);
+            }
         }
 
         private async Task<string?> GetCompanyClaimAsync()

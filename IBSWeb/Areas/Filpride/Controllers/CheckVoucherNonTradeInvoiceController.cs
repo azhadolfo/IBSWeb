@@ -1028,97 +1028,94 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (modelHeader.PostedBy == null)
+                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+
+                #region --General Ledger Book Recording(CV)--
+
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+                foreach (var details in modelDetails)
                 {
-                    modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                    modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    modelHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
-
-                    #region --General Ledger Book Recording(CV)--
-
-                    var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                    var ledgers = new List<FilprideGeneralLedgerBook>();
-                    foreach (var details in modelDetails)
-                    {
-                        var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                        ledgers.Add(
-                                new FilprideGeneralLedgerBook
-                                {
-                                    Date = modelHeader.Date,
-                                    Reference = modelHeader.CheckVoucherHeaderNo!,
-                                    Description = modelHeader.Particulars!,
-                                    AccountId = account.AccountId,
-                                    AccountNo = account.AccountNumber,
-                                    AccountTitle = account.AccountName,
-                                    Debit = details.Debit,
-                                    Credit = details.Credit,
-                                    Company = modelHeader.Company,
-                                    CreatedBy = modelHeader.PostedBy,
-                                    CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                                    BankAccountId = details.BankId,
-                                    BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccountNumber} {modelHeader.BankAccountName}" : null,
-                                    SupplierId = details.SupplierId,
-                                    SupplierName = modelHeader.SupplierName,
-                                    CustomerId = details.CustomerId,
-                                    CustomerName = details.Customer?.CustomerName,
-                                    CompanyId = details.CompanyId,
-                                    CompanyName = details.Company?.CompanyName,
-                                    EmployeeId = details.EmployeeId,
-                                    EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null
-                                }
-                            );
-                    }
-
-                    if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
-                    {
-                        throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                    }
-
-                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                    #endregion --General Ledger Book Recording(CV)--
-
-                    #region --Disbursement Book Recording(CV)--
-
-                    var disbursement = new List<FilprideDisbursementBook>();
-                    foreach (var details in modelDetails)
-                    {
-                        var bank = await _unitOfWork.FilprideBankAccount.GetAsync(model => model.BankAccountId == modelHeader.BankId, cancellationToken);
-                        disbursement.Add(
-                            new FilprideDisbursementBook
+                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+                    ledgers.Add(
+                            new FilprideGeneralLedgerBook
                             {
                                 Date = modelHeader.Date,
-                                CVNo = modelHeader.CheckVoucherHeaderNo!,
-                                Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
-                                Amount = modelHeader.Total,
-                                Particulars = modelHeader.Particulars!,
-                                Bank = bank != null ? bank.Branch : "N/A",
-                                CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
-                                CheckDate = modelHeader.CheckDate?.ToString("MM/dd/yyyy") ?? "N/A",
-                                ChartOfAccount = details.AccountNo + " " + details.AccountName,
+                                Reference = modelHeader.CheckVoucherHeaderNo!,
+                                Description = modelHeader.Particulars!,
+                                AccountId = account.AccountId,
+                                AccountNo = account.AccountNumber,
+                                AccountTitle = account.AccountName,
                                 Debit = details.Debit,
                                 Credit = details.Credit,
                                 Company = modelHeader.Company,
-                                CreatedBy = modelHeader.CreatedBy,
-                                CreatedDate = modelHeader.CreatedDate
+                                CreatedBy = modelHeader.PostedBy,
+                                CreatedDate = modelHeader.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                BankAccountId = details.BankId,
+                                BankAccountName = modelHeader.BankId.HasValue ? $"{modelHeader.BankAccountNumber} {modelHeader.BankAccountName}" : null,
+                                SupplierId = details.SupplierId,
+                                SupplierName = modelHeader.SupplierName,
+                                CustomerId = details.CustomerId,
+                                CustomerName = details.Customer?.CustomerName,
+                                CompanyId = details.CompanyId,
+                                CompanyName = details.Company?.CompanyName,
+                                EmployeeId = details.EmployeeId,
+                                EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null
                             }
                         );
-                    }
-
-                    await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
-
-                    #endregion --Disbursement Book Recording(CV)--
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", modelHeader.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Posted.";
                 }
+
+                if (!_unitOfWork.FilprideCheckVoucher.IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                #endregion --General Ledger Book Recording(CV)--
+
+                #region --Disbursement Book Recording(CV)--
+
+                var disbursement = new List<FilprideDisbursementBook>();
+                foreach (var details in modelDetails)
+                {
+                    var bank = await _unitOfWork.FilprideBankAccount.GetAsync(model => model.BankAccountId == modelHeader.BankId, cancellationToken);
+                    disbursement.Add(
+                        new FilprideDisbursementBook
+                        {
+                            Date = modelHeader.Date,
+                            CVNo = modelHeader.CheckVoucherHeaderNo!,
+                            Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
+                            Amount = modelHeader.Total,
+                            Particulars = modelHeader.Particulars!,
+                            Bank = bank != null ? bank.Branch : "N/A",
+                            CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
+                            CheckDate = modelHeader.CheckDate?.ToString("MM/dd/yyyy") ?? "N/A",
+                            ChartOfAccount = details.AccountNo + " " + details.AccountName,
+                            Debit = details.Debit,
+                            Credit = details.Credit,
+                            Company = modelHeader.Company,
+                            CreatedBy = modelHeader.CreatedBy,
+                            CreatedDate = modelHeader.CreatedDate
+                        }
+                    );
+                }
+
+                await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
+
+                #endregion --Disbursement Book Recording(CV)--
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", modelHeader.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Posted.";
                 return RedirectToAction(nameof(Print), new { id, supplierId });
             }
             catch (Exception ex)
@@ -1146,28 +1143,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.CanceledBy == null)
-                {
-                    model.CanceledBy = _userManager.GetUserName(this.User);
-                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
-                    model.CancellationRemarks = cancellationRemarks;
+                model.CanceledBy = _userManager.GetUserName(this.User);
+                model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(CheckVoucherInvoiceStatus.Canceled);
+                model.CancellationRemarks = cancellationRemarks;
 
-                    #region --Audit Trail Recording
+                #region --Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion --Audit Trail Recording
+                #endregion --Audit Trail Recording
 
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Cancelled.";
-                }
-                else
-                {
-                    TempData["info"] = "Check Voucher already Cancelled.";
-                }
-
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Cancelled.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -1194,39 +1183,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                if (model.VoidedBy == null)
-                {
-                    if (model.PostedBy != null)
-                    {
-                        model.PostedBy = null;
-                    }
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
 
-                    model.VoidedBy = _userManager.GetUserName(this.User);
-                    model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    model.Status = nameof(CheckVoucherInvoiceStatus.Voided);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
 
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideDisbursementBook>(db => db.CVNo == model.CheckVoucherHeaderNo, cancellationToken);
-                    await _unitOfWork.FilprideCheckVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.CheckVoucherHeaderNo, cancellationToken);
+                //re-compute amount paid in trade and payment voucher
 
-                    //re-compute amount paid in trade and payment voucher
+                #region --Audit Trail Recording
 
-                    #region --Audit Trail Recording
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                    FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                #endregion --Audit Trail Recording
 
-                    #endregion --Audit Trail Recording
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Check Voucher has been Voided.";
-
-                }
-                else
-                {
-                    TempData["info"] = "Check Voucher already Voided.";
-                }
-
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Check Voucher has been Voided.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
