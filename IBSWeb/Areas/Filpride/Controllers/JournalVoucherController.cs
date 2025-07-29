@@ -186,88 +186,88 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --CV Details Entry
-
-                    var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
-                    var cvDetails = new List<FilprideJournalVoucherDetail>();
-
-                    var totalDebit = 0m;
-                    var totalCredit = 0m;
-                    if (totalDebit != totalCredit)
-                    {
-                        TempData["warning"] = "The debit and credit should be equal!";
-                        return View(model);
-                    }
-
-                    #endregion --CV Details Entry
-
-                    #region --Saving the default entries
-
-                    //JV Header Entry
-                    model.Header.JournalVoucherHeaderNo = generateJVNo;
-                    model.Header.CreatedBy = _userManager.GetUserName(this.User);
-                    model.Header.Company = companyClaims;
-
-                    #endregion --Saving the default entries
-
-                    await _dbContext.AddAsync(model.Header, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    for (int i = 0; i < accountNumber.Length; i++)
-                    {
-                        var currentAccountNumber = accountNumber[i];
-                        var accountTitle = await _dbContext.FilprideChartOfAccounts
-                            .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
-                        var currentDebit = debit![i];
-                        var currentCredit = credit![i];
-                        totalDebit += debit[i];
-                        totalCredit += credit[i];
-
-                        cvDetails.Add(
-                            new FilprideJournalVoucherDetail
-                            {
-                                AccountNo = currentAccountNumber,
-                                AccountName = accountTitle!.AccountName,
-                                TransactionNo = generateJVNo,
-                                JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
-                                Debit = currentDebit,
-                                Credit = currentCredit
-                            }
-                        );
-                    }
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(model.Header.CreatedBy!, $"Created new journal voucher# {model.Header.JournalVoucherHeaderNo}", "Journal Voucher", model.Header.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Journal voucher created successfully";
-
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                TempData["warning"] = "The information you submitted is not valid!";
+                return View(model);
             }
 
-            TempData["warning"] = "The information you submitted is not valid!";
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --CV Details Entry
+
+                var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
+                var cvDetails = new List<FilprideJournalVoucherDetail>();
+
+                var totalDebit = 0m;
+                var totalCredit = 0m;
+                if (totalDebit != totalCredit)
+                {
+                    TempData["warning"] = "The debit and credit should be equal!";
+                    return View(model);
+                }
+
+                #endregion --CV Details Entry
+
+                #region --Saving the default entries
+
+                //JV Header Entry
+                model.Header.JournalVoucherHeaderNo = generateJVNo;
+                model.Header.CreatedBy = _userManager.GetUserName(this.User);
+                model.Header.Company = companyClaims;
+
+                #endregion --Saving the default entries
+
+                await _dbContext.AddAsync(model.Header, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                for (int i = 0; i < accountNumber.Length; i++)
+                {
+                    var currentAccountNumber = accountNumber[i];
+                    var accountTitle = await _dbContext.FilprideChartOfAccounts
+                        .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
+                    var currentDebit = debit![i];
+                    var currentCredit = credit![i];
+                    totalDebit += debit[i];
+                    totalCredit += credit[i];
+
+                    cvDetails.Add(
+                        new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = currentAccountNumber,
+                            AccountName = accountTitle!.AccountName,
+                            TransactionNo = generateJVNo,
+                            JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
+                            Debit = currentDebit,
+                            Credit = currentCredit
+                        }
+                    );
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.Header.CreatedBy!, $"Created new journal voucher# {model.Header.JournalVoucherHeaderNo}", "Journal Voucher", model.Header.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.AddRangeAsync(cvDetails, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal voucher created successfully";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> GetCV(int id)
@@ -292,42 +292,42 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Details = details
             };
 
-            if (viewModel != null)
+            if (viewModel == null)
             {
-                var cvNo = viewModel.Header.CheckVoucherHeaderNo;
-                var date = viewModel.Header.Date;
-                var name = viewModel.Header.Payee;
-                var address = viewModel.Header.Address;
-                var tinNo = viewModel.Header.Tin;
-                var poNo = viewModel.Header.PONo;
-                var siNo = viewModel.Header.SINo;
-                var payee = viewModel.Header.Payee;
-                var amount = viewModel.Header.Total;
-                var particulars = viewModel.Header.Particulars;
-                var checkNo = viewModel.Header.CheckNo;
-                var totalDebit = viewModel.Details.Select(cvd => cvd.Debit).Sum();
-                var totalCredit = viewModel.Details.Select(cvd => cvd.Credit).Sum();
-
-                return Json(new
-                {
-                    CVNo = cvNo,
-                    Date = date,
-                    Name = name,
-                    Address = address,
-                    TinNo = tinNo,
-                    PONo = poNo,
-                    SINo = siNo,
-                    Payee = payee,
-                    Amount = amount,
-                    Particulars = particulars,
-                    CheckNo = checkNo,
-                    ViewModel = viewModel,
-                    TotalDebit = totalDebit,
-                    TotalCredit = totalCredit,
-                });
+                return Json(null);
             }
 
-            return Json(null);
+            var cvNo = viewModel.Header.CheckVoucherHeaderNo;
+            var date = viewModel.Header.Date;
+            var name = viewModel.Header.Payee;
+            var address = viewModel.Header.Address;
+            var tinNo = viewModel.Header.Tin;
+            var poNo = viewModel.Header.PONo;
+            var siNo = viewModel.Header.SINo;
+            var payee = viewModel.Header.Payee;
+            var amount = viewModel.Header.Total;
+            var particulars = viewModel.Header.Particulars;
+            var checkNo = viewModel.Header.CheckNo;
+            var totalDebit = viewModel.Details.Select(cvd => cvd.Debit).Sum();
+            var totalCredit = viewModel.Details.Select(cvd => cvd.Credit).Sum();
+
+            return Json(new
+            {
+                CVNo = cvNo,
+                Date = date,
+                Name = name,
+                Address = address,
+                TinNo = tinNo,
+                PONo = poNo,
+                SINo = siNo,
+                Payee = payee,
+                Amount = amount,
+                Particulars = particulars,
+                CheckNo = checkNo,
+                ViewModel = viewModel,
+                TotalDebit = totalDebit,
+                TotalCredit = totalCredit,
+            });
         }
 
         [HttpGet]
@@ -372,101 +372,99 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var modelDetails = await _dbContext.FilprideJournalVoucherDetails.Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId).ToListAsync();
 
-            if (modelHeader != null)
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
+                if (modelHeader.PostedBy != null)
                 {
-                    if (modelHeader.PostedBy == null)
-                    {
-                        modelHeader.PostedBy = _userManager.GetUserName(this.User);
-                        modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        modelHeader.Status = nameof(Status.Posted);
-
-                        #region --General Ledger Book Recording(GL)--
-
-                        var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
-                        var ledgers = new List<FilprideGeneralLedgerBook>();
-                        foreach (var details in modelDetails)
-                        {
-                            var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
-                            ledgers.Add(
-                                    new FilprideGeneralLedgerBook
-                                    {
-                                        Date = modelHeader.Date,
-                                        Reference = modelHeader.JournalVoucherHeaderNo!,
-                                        Description = modelHeader.Particulars,
-                                        AccountId = account.AccountId,
-                                        AccountNo = account.AccountNumber,
-                                        AccountTitle = account.AccountName,
-                                        Debit = details.Debit,
-                                        Credit = details.Credit,
-                                        Company = modelHeader.Company,
-                                        CreatedBy = modelHeader.CreatedBy,
-                                        CreatedDate = modelHeader.CreatedDate
-                                    }
-                                );
-                        }
-
-                        if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
-                        {
-                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                        }
-
-                        await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
-
-                        #endregion --General Ledger Book Recording(GL)--
-
-                        #region --Journal Book Recording(JV)--
-
-                        var journalBook = new List<FilprideJournalBook>();
-                        foreach (var details in modelDetails)
-                        {
-                            journalBook.Add(
-                                    new FilprideJournalBook
-                                    {
-                                        Date = modelHeader.Date,
-                                        Reference = modelHeader.JournalVoucherHeaderNo!,
-                                        Description = modelHeader.Particulars,
-                                        AccountTitle = details.AccountNo + " " + details.AccountName,
-                                        Debit = details.Debit,
-                                        Credit = details.Credit,
-                                        Company = modelHeader.Company,
-                                        CreatedBy = modelHeader.CreatedBy,
-                                        CreatedDate = modelHeader.CreatedDate
-                                    }
-                                );
-                        }
-
-                        await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBook, cancellationToken);
-
-                        #endregion --Journal Book Recording(JV)--
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", modelHeader.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Journal Voucher has been Posted.";
-                    }
                     return RedirectToAction(nameof(Print), new { id });
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to post journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
-            }
 
-            return NotFound();
+                modelHeader.PostedBy = _userManager.GetUserName(this.User);
+                modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                modelHeader.Status = nameof(Status.Posted);
+
+                #region --General Ledger Book Recording(GL)--
+
+                var accountTitlesDto = await _unitOfWork.FilprideCheckVoucher.GetListOfAccountTitleDto(cancellationToken);
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+
+                foreach (var details in modelDetails)
+                {
+                    var account = accountTitlesDto.Find(c => c.AccountNumber == details.AccountNo) ?? throw new ArgumentException($"Account title '{details.AccountNo}' not found.");
+                    ledgers.Add(
+                        new FilprideGeneralLedgerBook
+                        {
+                            Date = modelHeader.Date,
+                            Reference = modelHeader.JournalVoucherHeaderNo!,
+                            Description = modelHeader.Particulars,
+                            AccountId = account.AccountId,
+                            AccountNo = account.AccountNumber,
+                            AccountTitle = account.AccountName,
+                            Debit = details.Debit,
+                            Credit = details.Credit,
+                            Company = modelHeader.Company,
+                            CreatedBy = modelHeader.CreatedBy,
+                            CreatedDate = modelHeader.CreatedDate
+                        }
+                    );
+                }
+
+                if (!_unitOfWork.FilprideJournalVoucher.IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                #endregion --General Ledger Book Recording(GL)--
+
+                #region --Journal Book Recording(JV)--
+
+                var journalBook = new List<FilprideJournalBook>();
+                foreach (var details in modelDetails)
+                {
+                    journalBook.Add(
+                        new FilprideJournalBook
+                        {
+                            Date = modelHeader.Date,
+                            Reference = modelHeader.JournalVoucherHeaderNo!,
+                            Description = modelHeader.Particulars,
+                            AccountTitle = details.AccountNo + " " + details.AccountName,
+                            Debit = details.Debit,
+                            Credit = details.Credit,
+                            Company = modelHeader.Company,
+                            CreatedBy = modelHeader.CreatedBy,
+                            CreatedDate = modelHeader.CreatedDate
+                        }
+                    );
+                }
+
+                await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBook, cancellationToken);
+
+                #endregion --Journal Book Recording(JV)--
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted journal voucher# {modelHeader.JournalVoucherHeaderNo}", "Journal Voucher", modelHeader.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher has been Posted.";
+                return RedirectToAction(nameof(Print), new { id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to post journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Posted by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [Authorize(Roles = "Admin")]
@@ -474,50 +472,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
 
-            if (model != null)
+            if (model == null)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (model.VoidedBy == null)
-                    {
-                        if (model.PostedBy != null)
-                        {
-                            model.PostedBy = null;
-                        }
-
-                        model.VoidedBy = _userManager.GetUserName(this.User);
-                        model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Voided);
-
-                        await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo);
-                        await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo);
-
-                        #region --Audit Trail Recording
-
-                        FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                        #endregion --Audit Trail Recording
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Journal Voucher has been Voided.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to void journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return RedirectToAction(nameof(Index));
-                }
+                return NotFound();
             }
 
-            return NotFound();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.PostedBy = null;
+                model.VoidedBy = _userManager.GetUserName(this.User);
+                model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                model.Status = nameof(Status.Voided);
+
+                await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideJournalBook>(crb => crb.Reference == model.JournalVoucherHeaderNo, cancellationToken);
+                await _unitOfWork.FilprideJournalVoucher.RemoveRecords<FilprideGeneralLedgerBook>(gl => gl.Reference == model.JournalVoucherHeaderNo, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher has been Voided.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to void journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
@@ -526,30 +517,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             try
             {
-                if (model != null)
+                if (model.CanceledBy == null)
                 {
-                    if (model.CanceledBy == null)
-                    {
-                        model.CanceledBy = _userManager.GetUserName(this.User);
-                        model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
-                        model.Status = nameof(Status.Canceled);
-                        model.CancellationRemarks = cancellationRemarks;
+                    model.CanceledBy = _userManager.GetUserName(this.User);
+                    model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
+                    model.Status = nameof(Status.Canceled);
+                    model.CancellationRemarks = cancellationRemarks;
 
-                        #region --Audit Trail Recording
+                    #region --Audit Trail Recording
 
-                        FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
-                        await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                    FilprideAuditTrail auditTrailBook = new(model.CanceledBy!, $"Canceled journal voucher# {model.JournalVoucherHeaderNo}", "Journal Voucher", model.Company);
+                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
 
-                        #endregion --Audit Trail Recording
+                    #endregion --Audit Trail Recording
 
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                        await transaction.CommitAsync(cancellationToken);
-                        TempData["success"] = "Journal Voucher has been Cancelled.";
-                    }
-                    return RedirectToAction(nameof(Index));
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    TempData["success"] = "Journal Voucher has been Cancelled.";
                 }
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -559,8 +552,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
         }
 
         [HttpGet]
@@ -579,7 +570,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
                 .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             if (existingHeaderModel == null || existingDetailsModel == null)
             {
@@ -627,124 +618,124 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(JournalVoucherViewModel viewModel, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region --CV Details Entry
-
-                    var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(viewModel.JVId, cancellationToken);
-
-                    if (existingHeaderModel == null)
-                    {
-                        return NotFound();
-                    }
-
-                    var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
-                        .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
-                        .ToListAsync(cancellationToken);
-
-                    // Dictionary to keep track of AccountNo and their ids for comparison
-                    var accountTitleDict = new Dictionary<string, List<int>>();
-                    foreach (var details in existingDetailsModel)
-                    {
-                        if (!accountTitleDict.ContainsKey(details.AccountNo))
-                        {
-                            accountTitleDict[details.AccountNo] = new List<int>();
-                        }
-                        accountTitleDict[details.AccountNo].Add(details.JournalVoucherDetailId);
-                    }
-
-                    // Add or update records
-                    for (int i = 0; i < viewModel.AccountTitle.Length; i++)
-                    {
-                        if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
-                        {
-                            // Update the first matching record and remove it from the list
-                            var detailsId = ids.First();
-                            ids.RemoveAt(0);
-                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
-
-                            details.AccountNo = viewModel.AccountNumber[i];
-                            details.AccountName = viewModel.AccountTitle[i];
-                            details.Debit = viewModel.Debit[i];
-                            details.Credit = viewModel.Credit[i];
-                            details.TransactionNo = viewModel.JVNo!;
-                            details.JournalVoucherHeaderId = viewModel.JVId;
-
-                            if (ids.Count == 0)
-                            {
-                                accountTitleDict.Remove(viewModel.AccountNumber[i]);
-                            }
-                        }
-                        else
-                        {
-                            // Add new record
-                            var newDetails = new FilprideJournalVoucherDetail
-                            {
-                                AccountNo = viewModel.AccountNumber[i],
-                                AccountName = viewModel.AccountTitle[i],
-                                Debit = viewModel.Debit[i],
-                                Credit = viewModel.Credit[i],
-                                TransactionNo = viewModel.JVNo!,
-                                JournalVoucherHeaderId = viewModel.JVId
-                            };
-                            _dbContext.Add(newDetails);
-                        }
-                    }
-
-                    // Remove remaining records that were duplicates
-                    foreach (var ids in accountTitleDict.Values)
-                    {
-                        foreach (var id in ids)
-                        {
-                            var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == id);
-                            _dbContext.Remove(details);
-                        }
-                    }
-
-                    #endregion --CV Details Entry
-
-                    #region --Saving the default entries
-
-                    existingHeaderModel.JournalVoucherHeaderNo = viewModel.JVNo;
-                    existingHeaderModel.Date = viewModel.TransactionDate;
-                    existingHeaderModel.References = viewModel.References;
-                    existingHeaderModel.CVId = viewModel.CVId;
-                    existingHeaderModel.Particulars = viewModel.Particulars;
-                    existingHeaderModel.CRNo = viewModel.CRNo;
-                    existingHeaderModel.JVReason = viewModel.JVReason;
-                    existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
-                    existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    #endregion --Saving the default entries
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", existingHeaderModel.Company);
-                    await _dbContext.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Journal Voucher edited successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                        ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(viewModel);
-                }
+                TempData["warning"] = "The information provided was invalid.";
+                return View(viewModel);
             }
 
-            TempData["warning"] = "The information provided was invalid.";
-            return View(viewModel);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region --CV Details Entry
+
+                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(viewModel.JVId, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var existingDetailsModel = await _dbContext.FilprideJournalVoucherDetails
+                    .Where(d => d.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                // Dictionary to keep track of AccountNo and their ids for comparison
+                var accountTitleDict = new Dictionary<string, List<int>>();
+                foreach (var details in existingDetailsModel)
+                {
+                    if (!accountTitleDict.ContainsKey(details.AccountNo))
+                    {
+                        accountTitleDict[details.AccountNo] = new List<int>();
+                    }
+                    accountTitleDict[details.AccountNo].Add(details.JournalVoucherDetailId);
+                }
+
+                // Add or update records
+                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                {
+                    if (accountTitleDict.TryGetValue(viewModel.AccountNumber[i], out var ids))
+                    {
+                        // Update the first matching record and remove it from the list
+                        var detailsId = ids.First();
+                        ids.RemoveAt(0);
+                        var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
+
+                        details.AccountNo = viewModel.AccountNumber[i];
+                        details.AccountName = viewModel.AccountTitle[i];
+                        details.Debit = viewModel.Debit[i];
+                        details.Credit = viewModel.Credit[i];
+                        details.TransactionNo = viewModel.JVNo!;
+                        details.JournalVoucherHeaderId = viewModel.JVId;
+
+                        if (ids.Count == 0)
+                        {
+                            accountTitleDict.Remove(viewModel.AccountNumber[i]);
+                        }
+                    }
+                    else
+                    {
+                        // Add new record
+                        var newDetails = new FilprideJournalVoucherDetail
+                        {
+                            AccountNo = viewModel.AccountNumber[i],
+                            AccountName = viewModel.AccountTitle[i],
+                            Debit = viewModel.Debit[i],
+                            Credit = viewModel.Credit[i],
+                            TransactionNo = viewModel.JVNo!,
+                            JournalVoucherHeaderId = viewModel.JVId
+                        };
+                        _dbContext.Add(newDetails);
+                    }
+                }
+
+                // Remove remaining records that were duplicates
+                foreach (var ids in accountTitleDict.Values)
+                {
+                    foreach (var id in ids)
+                    {
+                        var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == id);
+                        _dbContext.Remove(details);
+                    }
+                }
+
+                #endregion --CV Details Entry
+
+                #region --Saving the default entries
+
+                existingHeaderModel.JournalVoucherHeaderNo = viewModel.JVNo;
+                existingHeaderModel.Date = viewModel.TransactionDate;
+                existingHeaderModel.References = viewModel.References;
+                existingHeaderModel.CVId = viewModel.CVId;
+                existingHeaderModel.Particulars = viewModel.Particulars;
+                existingHeaderModel.CRNo = viewModel.CRNo;
+                existingHeaderModel.JVReason = viewModel.JVReason;
+                existingHeaderModel.EditedBy = _userManager.GetUserName(this.User);
+                existingHeaderModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                #endregion --Saving the default entries
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(existingHeaderModel.EditedBy!, $"Edited journal voucher# {existingHeaderModel.JournalVoucherHeaderNo}", "Journal Voucher", existingHeaderModel.Company);
+                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _dbContext.SaveChangesAsync(cancellationToken);  // await the SaveChangesAsync method
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Journal Voucher edited successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit journal vouchers. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(viewModel);
+            }
         }
 
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
@@ -1295,9 +1286,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllJournalVoucherIds()
         {
             var jvIds = _dbContext.FilprideJournalVoucherHeaders
-                                     .Where(jv => jv.Type == nameof(DocumentType.Documented))
-                                     .Select(jv => jv.JournalVoucherHeaderId) // Assuming Id is the primary key
-                                     .ToList();
+                .Where(jv => jv.Type == nameof(DocumentType.Documented))
+                .Select(jv => jv.JournalVoucherHeaderId) // Assuming Id is the primary key
+                .ToList();
 
             return Json(jvIds);
         }
