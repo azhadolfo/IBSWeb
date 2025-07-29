@@ -118,51 +118,53 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                try
+                return View(services);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
                 {
-                    if (await _unitOfWork.FilprideService.IsServicesExist(services.Name, companyClaims, cancellationToken))
-                    {
-                        ModelState.AddModelError("Name", "Services already exist!");
-                        return View(services);
-                    }
-
-                    var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
-                        .FindAsync(services.CurrentAndPreviousId, cancellationToken);
-
-                    var unearned = await _dbContext.FilprideChartOfAccounts
-                        .FindAsync(services.UnearnedId, cancellationToken);
-
-                    services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
-                    services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
-
-                    services.UnearnedNo = unearned!.AccountNumber;
-                    services.UnearnedTitle = unearned.AccountName;
-
-                    services.Company = companyClaims;
-
-                    services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
-
-                    services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
-
-                    TempData["success"] = "Services created successfully";
-
-                    await _dbContext.AddAsync(services, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
+                    ModelState.AddModelError("Name", "Services already exist!");
                     return View(services);
                 }
+
+                var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
+                    .FindAsync(services.CurrentAndPreviousId, cancellationToken);
+
+                var unearned = await _dbContext.FilprideChartOfAccounts
+                    .FindAsync(services.UnearnedId, cancellationToken);
+
+                services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
+                services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
+
+                services.UnearnedNo = unearned!.AccountNumber;
+                services.UnearnedTitle = unearned.AccountName;
+
+                services.Company = companyClaims;
+
+                services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
+
+                services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
+
+                TempData["success"] = "Services created successfully";
+
+                await _dbContext.AddAsync(services, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
             }
-            return View(services);
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(services);
+            }
         }
 
         [HttpPost]
@@ -246,39 +248,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
-                    if (existingModel != null)
-                    {
-                        existingModel.Name = services.Name;
-                        existingModel.Percent = services.Percent;
-                        existingModel.IsFilpride = services.IsFilpride;
-                        existingModel.IsMobility = services.IsMobility;
-                        existingModel.IsBienes = services.IsBienes;
-                        TempData["success"] = "Services updated successfully";
-
-                        await _dbContext.SaveChangesAsync(cancellationToken);
-                    }
-
-                }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
-                    if (!ServicesExists(services.ServiceId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return View(services);
             }
-            return View(services);
+
+            var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
+
+            if (existingModel == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                existingModel.Name = services.Name;
+                existingModel.Percent = services.Percent;
+                existingModel.IsFilpride = services.IsFilpride;
+                existingModel.IsMobility = services.IsMobility;
+                existingModel.IsBienes = services.IsBienes;
+                TempData["success"] = "Services updated successfully";
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                if (!ServicesExists(services.ServiceId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         private bool ServicesExists(int id)
@@ -355,8 +361,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllServiceIds()
         {
             var serviceIds = _dbContext.FilprideServices
-                                     .Select(s => s.ServiceId) // Assuming Id is the primary key
-                                     .ToList();
+                .Select(s => s.ServiceId) // Assuming Id is the primary key
+                .ToList();
 
             return Json(serviceIds);
         }
