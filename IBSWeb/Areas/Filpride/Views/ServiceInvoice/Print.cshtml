@@ -81,16 +81,16 @@
             <tr>
                 <td>
                     <span><b>Billed To:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerName) &nbsp;<br />
+                    &nbsp; @Model.CustomerName.ToUpper() &nbsp;<br />
 
                     <span><b>Address:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerAddress) &nbsp;<br />
+                    &nbsp; @Model.CustomerAddress.ToUpper() &nbsp;<br />
 
                     <span><b>TIN:</b></span>
                     &nbsp; @Html.DisplayFor(model => model.CustomerTin) &nbsp;<br />
 
                     <span><b>Business Style:</b></span>
-                    &nbsp; @Html.DisplayFor(model => model.CustomerBusinessStyle) &nbsp;
+                    &nbsp; @Model.CustomerBusinessStyle?.ToUpper() &nbsp;
                 </td>
 
                 <td class="w-25 text-nowrap">
@@ -142,7 +142,7 @@
         <tbody>
             <tr>
                 <td style="width:33%; vertical-align: top;" class="border-1">
-                    <p class="mb-0" style="margin:10px;">INSTRUCTIONS: <br />@Html.DisplayFor(model => model.Instructions)</p>
+                    <p class="mb-0" style="margin:10px;">INSTRUCTIONS: <br />@Model.Instructions.ToUpper()</p>
                 </td>
                 <td style="width:33%;">
                     <table class="table-bordered w-100">

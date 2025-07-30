@@ -83,16 +83,16 @@
             <tr>
                 <td>
                     <span><b>Sold to:</b></span>
-                    &nbsp; @customerName &nbsp;<br />
+                    &nbsp; @customerName.ToUpper() &nbsp;<br />
 
                     <span><b>Address:</b></span>
-                    &nbsp; @customerAddress &nbsp;<br />
+                    &nbsp; @customerAddress.ToUpper() &nbsp;<br />
 
                     <span><b>TIN:</b></span>
-                    &nbsp; @customerTin &nbsp;<br />
+                    &nbsp; @customerTin.ToUpper() &nbsp;<br />
 
                     <span><b>Business Style:</b></span>
-                    &nbsp; @customerBusinessStyle &nbsp;
+                    &nbsp; @customerBusinessStyle?.ToUpper() &nbsp;
                 </td>
 
                 <td class="w-25 text-nowrap">
@@ -103,7 +103,7 @@
                     <b>Terms:</b>&nbsp;<span>@Html.DisplayFor(model => model.Terms)</span>&nbsp;<br />
                     <b>Due Date:</b>&nbsp; <span>@Model.DueDate.ToString(SD.Date_Format)</span><br />
 
-                    <b>Other Ref No.:</b>&nbsp; @Html.DisplayFor(model => model.OtherRefNo) &nbsp;
+                    <b>Other Ref No.:</b>&nbsp; @Model.OtherRefNo.ToUpper() &nbsp;
                 </td>
             </tr>
         </tbody>
@@ -197,7 +197,7 @@
                                 <div style="margin-top: 4px;">
                                     @if (!string.IsNullOrEmpty(Model.Remarks))
                                     {
-                                        @Html.Raw(Html.Encode(Model.Remarks).Replace("\n", "<br />"))
+                                        @Html.Raw(Html.Encode(Model.Remarks).Replace("\n", "<br />").ToUpper())
                                     }
                                 </div>
                             </div>
@@ -226,7 +226,7 @@
                             <td colspan="2">
                                 <div style="margin-left:20px;">
                                     HAULER/DRIVER
-                                    <span style="display: inline-block; width:90%;" class="underline  text-center">@Model.DeliveryReceipt?.Hauler?.SupplierName / @Model.DeliveryReceipt?.Driver</span>
+                                    <span style="display: inline-block; width:90%;" class="underline  text-center">@Model.DeliveryReceipt?.Hauler?.SupplierName.ToUpper() / @Model.DeliveryReceipt?.Driver?.ToUpper()</span>
                                 </div>
                             </td>
                         </tr>

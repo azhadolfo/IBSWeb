@@ -75,16 +75,16 @@
                     <td class="text-end"><b>Date:</b> @Model.CustomerOrderSlip.Date.ToString(SD.Date_Format)</td>
                 </tr>
                 <tr>
-                    <td><b>Customer Name:</b> @Model.CustomerOrderSlip.CustomerName</td>
+                    <td><b>Customer Name:</b> @Model.CustomerOrderSlip.CustomerName?.ToUpper()</td>
                     <td class="text-end"><b>Exp Date:</b> @Model.CustomerOrderSlip.ExpirationDate?.ToString(SD.Date_Format)</td>
                 </tr>
                 <tr>
                     <td><b>Terms:</b> @Model.CustomerOrderSlip.Terms</td>
-                    <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo</td>
+                    <td class="text-end"><b>Customer PO#:</b> @Model.CustomerOrderSlip.CustomerPoNo.ToUpper()</td>
                 </tr>
                 <tr>
                     <td><b>Branch:</b> @Model.CustomerOrderSlip.Branch</td>
-                    <td class="text-end"><b>@Model.CustomerOrderSlip.DeliveryOption</b></td>
+                    <td class="text-end"><b>@Model.CustomerOrderSlip.DeliveryOption?.ToUpper()</b></td>
                 </tr>
             </tbody>
         </table>
@@ -118,7 +118,7 @@
     <div class="table-responsive">
         <table class="table table-bordered">
             <tr>
-                <td><b>REMARKS:</b> @Html.DisplayFor(model => model.CustomerOrderSlip!.Remarks)</td>
+                <td><b>REMARKS:</b> @Model.CustomerOrderSlip.Remarks.ToUpper()</td>
             </tr>
         </table>
     </div>

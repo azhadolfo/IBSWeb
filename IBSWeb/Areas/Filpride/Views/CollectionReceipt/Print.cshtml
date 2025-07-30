@@ -88,13 +88,13 @@
             <tr>
                 <td colspan="2" style="padding-left:10px;">
                     Received from: &nbsp;
-                    @customerName
+                    @customerName.ToUpper()
                 </td>
             </tr>
             <tr>
                 <td colspan="2" class="w-50" style="padding-left:10px;">
                     Address: &nbsp;
-                    @customerAddress
+                    @customerAddress.ToUpper()
                 </td>
             </tr>
             <tr>
@@ -104,7 +104,7 @@
                 </td>
                 <td style="padding-left:10px;">
                     Buss. Style: &nbsp;
-                    @customerBusinessStyle
+                    @customerBusinessStyle?.ToUpper()
                 </td>
             </tr>
             @{
@@ -169,7 +169,7 @@
                 <td colspan="2">&nbsp;</td>
             </tr>
             <tr>
-                <td colspan="2" style="padding-left:10px;">Reference Receipt No.&nbsp; @Html.DisplayFor(model => model.ReferenceNo)</td>
+                <td colspan="2" style="padding-left:10px;">Reference Receipt No.&nbsp; @Model.ReferenceNo.ToUpper()</td>
             </tr>
         </tbody>
     </table>

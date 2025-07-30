@@ -71,12 +71,12 @@
         <tbody>
             <tr>
                 <td style="width:10%; padding-left:20px;">Name :</td>
-                <td>@Html.DisplayFor(model => model.Header!.Payee)</td>
+                <td>@Model.Header!.Payee!.ToUpper()</td>
                 <td style="width:50%;" colspan="2" class="text-nowrap">Other References</td>
             </tr>
             <tr>
                 <td style="padding-left:20px;">Address :</td>
-                <td>@Html.DisplayFor(model => model.Header!.Address)</td>
+                <td>@Model.Header!.Address.ToUpper()</td>
                 <td style="width:5%;">PO # :</td>
                 <td>
                     @if (Model.Header.PONo != null)
@@ -132,7 +132,7 @@
         <tbody>
             <tr>
                 <td style="width:20%; padding-left:20px;">Payee :</td>
-                <td>@Html.DisplayFor(model => model.Header!.Payee)</td>
+                <td>@Model.Header!.Payee!.ToUpper()</td>
                 <td class="text-end">@Model.Header.Total.ToString(SD.Two_Decimal_Format)</td>
             </tr>
             <tr>
@@ -187,7 +187,7 @@
             </tr>
             <tr>
                 <td style="padding-left:20px;">Particulars :</td>
-                <td><p style="margin: 0; padding: 0; text-align: justify">@Html.DisplayFor(model => model.Header!.Particulars)</p></td>
+                <td><p style="margin: 0; padding: 0; text-align: justify">@Model.Header!.Particulars!.ToUpper()</p></td>
                 <td></td>
             </tr>
             <tr>
@@ -253,7 +253,7 @@
             <tr>
                 <td style="width:33%;">
                     <br />
-                    <span class="underline" style="display: inline-block; width:60%;">&nbsp;</span> <br />
+                    <span class="underline" style="display: inline-block; width:60%;">@Model.Header.CreatedBy?.ToUpper()</span> <br />
                 </td>
                 <td style="width:33%;">
                     <br />

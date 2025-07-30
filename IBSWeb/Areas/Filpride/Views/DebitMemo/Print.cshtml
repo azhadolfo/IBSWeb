@@ -71,16 +71,16 @@
                 <tr>
                     <td>
                         <span><b>Sold to:</b></span>
-                        &nbsp; @customerName &nbsp;<br />
+                        &nbsp; @customerName.ToUpper() &nbsp;<br />
 
                         <span><b>Address:</b></span>
-                        &nbsp; @customerAddress &nbsp;<br />
+                        &nbsp; @customerAddress.ToUpper() &nbsp;<br />
 
                         <span><b>TIN:</b></span>
                         &nbsp; @customerTin &nbsp;<br />
 
                         <span><b>Business Style:</b></span>
-                        &nbsp; @customerBusinessStyle &nbsp;
+                        &nbsp; @customerBusinessStyle?.ToUpper() &nbsp;
                     </td>
 
                     <td class="w-25 text-nowrap">
@@ -114,7 +114,7 @@
                     <td>@Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)</td>
                     <td>@Model.SalesInvoice!.TransactionDate.ToString(SD.Date_Format)</td>
                     <td>@Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.ProductName)</td>
-                    <td>@Html.DisplayFor(model => model.Description)</td>
+                    <td>@Model.Description.ToUpper()</td>
                     <td>@Model.DebitAmount.ToString(decimalFormat)</td>
                 </tr>
             </tbody>

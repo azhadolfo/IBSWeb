@@ -118,11 +118,11 @@
     <table class="w-100">
         <tbody>
             <tr style="padding-left:10px;">
-                <td class="w-75">Supplier: &nbsp;@Html.DisplayFor(model => model.SupplierName)</td>
+                <td class="w-75">Supplier: &nbsp;@Model.SupplierName.ToUpper()</td>
                 <td class="w-25 text-end">Date: &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr style="padding-left:10px;">
-                <td>Address: &nbsp;@Html.DisplayFor(model => model.SupplierAddress)</td>
+                <td>Address: &nbsp;@Model.SupplierAddress.ToUpper()</td>
                 <td></td>
             </tr>
             <tr style="padding-left:10px;">
@@ -166,7 +166,7 @@
         </thead>
         <tbody>
             <tr>
-                <td class="w-25" colspan="4"><pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+                <td class="w-25" colspan="4"><pre style="margin: 0; padding: 0">@Model.Remarks.ToUpper()</pre></td>
             </tr>
         </tbody>
     </table>

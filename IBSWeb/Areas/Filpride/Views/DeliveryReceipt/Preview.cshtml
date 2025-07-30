@@ -92,7 +92,7 @@
         </thead>
         <tbody>
             <tr>
-                <td scope="row">@Model.CustomerOrderSlip.Product?.ProductName.ToUpper()</td>
+                <td>@Model.CustomerOrderSlip.Product?.ProductName.ToUpper()</td>
                 <td>@Model.CustomerOrderSlip.Product?.ProductUnit</td>
                 <td>@Model.Quantity.ToString(decimalFormat)</td>
             </tr>
@@ -110,7 +110,7 @@
         </thead>
         <tbody>
             <tr>
-                <td class="p-4 w-50" style="padding-left:20px;" scope="row">@Html.DisplayFor(model => model.Remarks)</td>
+                <td class="p-4 w-50" style="padding-left:20px;">@Model.Remarks.ToUpper()</td>
                 <td class="p-4 w-50" style="padding-left:20px;">
                     <b>Hauler:</b> &nbsp; @Model.Hauler?.SupplierName.ToUpper()<br />
                     <b>Load Port:</b> &nbsp; @Model.CustomerOrderSlip.PickUpPoint?.Depot.ToUpper()<br />

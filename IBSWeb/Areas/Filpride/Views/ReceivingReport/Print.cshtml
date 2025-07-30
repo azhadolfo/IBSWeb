@@ -63,7 +63,7 @@
     <table class="table-bordered w-100">
         <tbody>
             <tr>
-                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Html.DisplayFor(model => model.PurchaseOrder!.SupplierName)</td>
+                <td colspan="2" style="padding-left:10px;">Supplier: &nbsp; @Model.PurchaseOrder!.SupplierName.ToUpper()</td>
             </tr>
         </tbody>
     </table>
@@ -87,7 +87,7 @@
             <tr>
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PONo)</td>
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.SupplierInvoiceNumber)</td>
-                <td class="text-center p-lg-4">@Html.DisplayFor(model => model.TruckOrVessels)</td>
+                <td class="text-center p-lg-4">@Model.TruckOrVessels.ToUpper()</td>
                 <td class="text-center p-lg-4">@Html.DisplayFor(model => model.PurchaseOrder!.ProductName)</td>
                 <td class="text-center p-lg-4">@Model.QuantityDelivered.ToString(SD.Two_Decimal_Format)</td>
                 <td class="text-center p-lg-4">@Model.QuantityReceived.ToString(SD.Two_Decimal_Format)</td>
@@ -111,7 +111,7 @@
     <table class="table-bordered w-100">
         <tbody>
             <tr>
-                <td class="p-lg-4" colspan="6" style="padding-left:20px;">REMARKS : <pre style="margin: 0; padding: 0">@Html.DisplayFor(model => model.Remarks)</pre></td>
+                <td class="p-lg-4" colspan="6" style="padding-left:20px;">REMARKS : <pre style="margin: 0; padding: 0">@Model.Remarks.ToUpper()</pre></td>
             </tr>
         </tbody>
     </table>
