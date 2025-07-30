@@ -214,12 +214,12 @@
                             <td>
                                 Prepared by
                                 <br />
-                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline ">@Html.DisplayFor(model => model.CreatedBy)</span></p>
+                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline ">@Model.CreatedBy?.ToUpper()</span></p>
                             </td>
                             <td>
                                 Approved by
                                 <br />
-                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline">IVP / MSA</span></p>
+                                <p style="margin-top:20px;"><span style="display: inline-block; width:110px;" class="underline">@(Model.CustomerOrderSlip?.CncApprovedBy?.ToUpper() ?? "IVP / MSA")</span></p>
                             </td>
                         </tr>
                         <tr class="align-text-top">
