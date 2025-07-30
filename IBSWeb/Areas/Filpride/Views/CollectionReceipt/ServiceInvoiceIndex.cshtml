@@ -1,8 +1,7 @@
 @model IEnumerable<FilprideCollectionReceipt>
 @using IBS.Utility.Enums
 @{
-    ViewData["Title"] = "Collection Receipt";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Collection Receipt for Service Invoice";
     var model = new FilprideCollectionReceipt();
 }
 
@@ -52,7 +51,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Collection Receipt for Service Invoice</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-2">
             <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="CreateForService"
                class="btn btn-light d-flex align-items-center gap-2">
@@ -233,7 +232,7 @@
                                         <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                             } else {
-                                dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Print</a></li>`;
+                                dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                             }
                             dropdownHtml += `</ul></div>`;

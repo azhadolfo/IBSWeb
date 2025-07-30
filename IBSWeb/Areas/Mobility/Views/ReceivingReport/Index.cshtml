@@ -2,7 +2,6 @@
 @using IBS.Utility.Enums
 @{
     ViewData["Title"] = "Receiving Report";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
@@ -51,7 +50,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Receiving Report</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
     </div>
 
     <div class="card shadow border-0 mt-3">
@@ -210,7 +209,7 @@
                                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
                                                     ` : `
                                                         <li><a class="dropdown-item" href="@Url.Action("Edit", "ReceivingReport", new { area = "Mobility" })/${data}">Edit</a></li>
-                                                        <li><a class="dropdown-item" href="@Url.Action("Print", "ReceivingReport", new { area = "Mobility" })/${data}">Print</a></li>
+                                                        <li><a class="dropdown-item" href="@Url.Action("Print", "ReceivingReport", new { area = "Mobility" })/${data}">Preview</a></li>
                                                     `}
                                                 </ul>
                                             </div>`;

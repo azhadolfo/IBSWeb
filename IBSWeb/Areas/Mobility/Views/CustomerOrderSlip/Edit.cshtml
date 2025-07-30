@@ -1,7 +1,7 @@
 ﻿@model MobilityCustomerOrderSlip
 
 @{
-    ViewData["Title"] = "Edit Customer Order Slip";
+    ViewData["Title"] = "Customer Order Slip - Edit";
     var stationCode = ViewData["CurrentStationCode"] as string;
     var currentStationName = ViewData["CurrentStationName"] as string;
 }
@@ -10,7 +10,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">EDIT CUSTOMER ORDER SLIP: <u>@currentStationName</u></h2>
+                <h2 class="text-white py-2">@ViewData["Title"]: <u>@currentStationName</u></h2>
             </div>
         </div>
     </div>

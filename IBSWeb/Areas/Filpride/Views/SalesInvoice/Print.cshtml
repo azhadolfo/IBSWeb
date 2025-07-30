@@ -6,7 +6,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 
 @{
-    ViewData["Title"] = "Print Sales Invoice";
+    ViewData["Title"] = "Sales Invoice - Preview";
     
     var customerType = Model.CustomerOrderSlip?.CustomerType ?? Model.Customer!.CustomerType;
     var customerName = Model.CustomerOrderSlip?.CustomerName ?? Model.Customer!.CustomerName;

@@ -1,9 +1,7 @@
 @model CreateCollectionViewModel
 
 @{
-    ViewData["Title"] = "Create";
-
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Collection - Create";
 }
 
 <style>
@@ -24,7 +22,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2 class="py-2"> CREATE COLLECTION</h2>
+            <h2 class="py-2">@ViewData["Title"]</h2>
         </div>
     </div>
 

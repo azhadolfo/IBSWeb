@@ -2,8 +2,7 @@
 @model MobilityStationEmployee
 
 @{
-ViewData["Title"] = "Edit Station Employee";
-Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["Title"] = "Station Employee - Edit";
 }
 <div class="loader-container">
     <div class="loader"></div>
@@ -13,7 +12,7 @@ Layout = "~/Views/Shared/_Layout.cshtml";
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Station Employee</h2>
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
             </div>
         </div>
     </div>

@@ -2,7 +2,7 @@
 @model MobilitySalesHeader
 
 @{
-    ViewData["Title"] = "Edit Cashier Report";
+    ViewData["Title"] = "Cashier Report - Edit";
     Model.SalesDetails = Model.SalesDetails
         .OrderBy(x => x.Product)
         .ThenBy(x => x.PumpNumber)
@@ -15,7 +15,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Edit Cashier Report</h2>
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
             </div>
         </div>
     </div>

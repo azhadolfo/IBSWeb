@@ -1,8 +1,7 @@
 ﻿@using IBS.Utility.Enums
 @model IEnumerable<FilprideCheckVoucherDetail>
 @{
-    ViewData["Title"] = "Check Voucher Non Trade Invoice";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Check Voucher Non-Trade Invoice";
 }
 
 <style>
@@ -51,7 +50,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Check Voucher Non-Trade Invoice</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-2">
             <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create"
                class="btn btn-light d-flex align-items-center gap-2">
@@ -286,7 +285,7 @@
                                             <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
                                             <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                         ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Print</a></li>
+                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
                                             ${!row.isPaid ? `
                                                 <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
                                             ` : `

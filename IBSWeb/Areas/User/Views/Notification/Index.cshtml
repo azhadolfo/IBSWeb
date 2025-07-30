@@ -1,6 +1,9 @@
 ﻿@model List<UserNotification>
+@{
+    ViewData["Title"] = "Notifications";
+}
 
-<h2 class="text-center mt-3">Notifications</h2>
+<h2 class="text-center mt-3">@ViewData["Title"]</h2>
 
 @if (Model.Any())
 {

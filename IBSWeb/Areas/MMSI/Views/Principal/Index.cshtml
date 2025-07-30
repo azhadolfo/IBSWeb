@@ -1,9 +1,7 @@
 @model IEnumerable<IBS.Models.MMSI.MasterFile.MMSIPrincipal>
 
 @{
-    ViewData["Title"] = "Index";
-    
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Principal";
 }
 
 <div class="loader-container">
@@ -15,7 +13,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center text-white">
-            <h2>MMSI PRINCIPALS</h2>
+            <h2>@ViewData["Title"]</h2>
         </div>
     </div>
     

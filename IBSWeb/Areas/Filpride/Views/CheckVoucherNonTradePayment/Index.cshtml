@@ -1,8 +1,7 @@
 ﻿@model IEnumerable<FilprideCheckVoucherDetail>
 @using IBS.Utility.Enums
 @{
-    ViewData["Title"] = "Check Voucher";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Check Voucher Non-Trade Payment";
 }
 
 <style>
@@ -51,7 +50,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Check Voucher Non-Trade Payment</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-2">
             <button id="newAdvancesBtn" class="btn btn-light">
                 <i class="bi bi-plus-circle"></i> New Advances
@@ -247,7 +246,7 @@
                                                    <a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a>
                                                  </li>` :
                                                                             `<li>
-                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Print</a>
+                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a>
                                                  </li>
                                                  <li>
                                                    <a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a>
