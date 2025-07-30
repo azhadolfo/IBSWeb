@@ -3,7 +3,7 @@
 @model DeliveryReceiptViewModel
 
 @{
-    ViewData["Title"] = "Create Delivery Receipt";
+    ViewData["Title"] = "Delivery Receipt - Create";
     DateTime today = DateTimeHelper.GetCurrentPhilippineTime();
     DateTime maxDate = Model.IsTheCreationLockForTheMonth ? new DateTime(today.Year, today.Month, 1).AddDays(-1) : DateTime.MaxValue;
 }
@@ -18,7 +18,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">Create Delivery Receipt</h2>
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
             </div>
         </div>
     </div>

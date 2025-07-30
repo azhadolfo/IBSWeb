@@ -3,7 +3,7 @@
 @model BienesPlacement
 
 @{
-    ViewData["Title"] = "Placement Details";
+    ViewData["Title"] = "Placement - Preview";
 
     var trustFeeRate = Model.TrustFeeRate * 100;
     var ewtRate = Model.EWTRate * 100;
@@ -94,7 +94,7 @@
 <div class="container mt-4">
     <div class="row mb-3">
         <div class="col-12 text-center">
-            <h3 class="page-title">Placement Details</h3>
+            <h3 class="page-title">@ViewData["Title"]</h3>
         </div>
     </div>
 

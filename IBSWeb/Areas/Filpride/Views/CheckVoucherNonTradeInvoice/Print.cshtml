@@ -9,7 +9,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    ViewData["Title"] = "Print Check Voucher";
+    ViewData["Title"] = "Check Voucher Non-Trade Invoice - Preview";
     int supplierId = Model.Header?.SupplierId == null ? Model.Supplier!.SupplierId : 0;
         
     var selectedCompany = string.Empty;

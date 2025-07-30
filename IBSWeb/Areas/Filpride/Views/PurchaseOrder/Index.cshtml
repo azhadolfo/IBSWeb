@@ -2,7 +2,6 @@
 @using IBS.Utility.Enums
 @{
     ViewData["Title"] = "Purchase Order";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <style>
@@ -51,7 +50,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Purchase Order</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
         <a asp-area="Filpride" asp-controller="PurchaseOrder" asp-action="Create" class="btn btn-light">
             <i class="bi bi-plus-circle"></i> New Order
         </a>
@@ -317,7 +316,7 @@
                                 dropdownContent = '';
 
                                 dropdownContent += `
-                                <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Print</a></li>
+                                <li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Preview</a></li>
                                  `;
 
                                 // Validate unTriggeredQuantity before showing Update Price

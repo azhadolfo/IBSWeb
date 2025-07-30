@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<FilprideCustomer>
 
 @{
-    ViewData["Title"] = "Export Customer";
+    ViewData["Title"] = "Customer - Export";
 }
 <style>
     .container {
@@ -50,7 +50,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">CUSTOMER MASTER FILE</h2>
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
             </div>
         </div>
     </div>

@@ -7,7 +7,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    ViewData["Title"] = "Print Credit Memo";
+    ViewData["Title"] = "Credit Memo - Preview";
     decimal netOfVatAmount = Model.CreditAmount / 1.12m;
     decimal vatAmount = netOfVatAmount * 0.12m;
 
