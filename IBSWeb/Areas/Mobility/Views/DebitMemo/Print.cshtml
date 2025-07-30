@@ -7,7 +7,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    ViewData["Title"] = "Print Debit Memo";
+    ViewData["Title"] = "Debit Memo - Print";
     decimal netOfVatAmount = Model.DebitAmount / 1.12m;
     decimal vatAmount = netOfVatAmount * 0.12m;
 

@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Collection";
 
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -50,7 +50,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
-        <h2 class="text-white m-0">Collection</h2>
+        <h2 class="text-white m-0">@ViewData["Title"]</h2>
         <a asp-area="MMSI" asp-controller="Collection" asp-action="Create" class="btn btn-light">
             <i class="bi bi-plus-circle"></i> Create Collection
         </a>

@@ -8,7 +8,7 @@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
-    ViewData["Title"] = "Print Credit Memo";
+    ViewData["Title"] = "Credit Memo - Print";
     
     var customerType = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerType ?? Model.SalesInvoice?.Customer?.CustomerType) ?? Model.ServiceInvoice!.Customer!.CustomerType;
     var customerName = (Model.SalesInvoice?.CustomerOrderSlip?.CustomerName ?? Model.SalesInvoice?.Customer?.CustomerName) ?? Model.ServiceInvoice!.CustomerName;

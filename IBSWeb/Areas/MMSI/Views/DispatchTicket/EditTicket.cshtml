@@ -1,7 +1,7 @@
 @model ServiceRequestViewModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Dispatch Ticket - Edit";
 
     var portId = ViewData["PortId"] as int?;
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -12,7 +12,7 @@
 
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="col-12 text-center">
-            <h2 class="text-white py-2">EDIT DISPATCH TICKET</h2>
+            <h2 class="text-white py-2">@ViewData["Title"]</h2>
         </div>
     </div>
     

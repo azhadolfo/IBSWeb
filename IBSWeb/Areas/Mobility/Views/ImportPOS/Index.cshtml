@@ -1,7 +1,7 @@
 @model IEnumerable<IBS.Models.LogMessage>
 
 @{
-    ViewData["Title"] = "Cashier Report";
+    ViewData["Title"] = "Import POS CSV";
     var lastManualImport = ViewData["LastManualImport"] as string;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -38,7 +38,7 @@
     <div class="card-header bg-secondary bg-gradient ml-0 py-3">
         <div class="row">
             <div class="col-12 text-center">
-                <h2 class="text-white py-2">IMPORT POS CSV</h2>
+                <h2 class="text-white py-2">@ViewData["Title"]</h2>
             </div>
         </div>
     </div>
