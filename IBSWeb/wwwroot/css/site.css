@@ -1,13 +1,13 @@
 /* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+
 /* Debugging purpose */
 
-/** {
-    border: 1px solid red;
-}*/
-
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+/** {*/
+/*    border: 1px solid red;*/
+/*}*/
 
 main {
     margin-bottom: 4rem !important;

@@ -62,16 +62,11 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td class="w-25 text-end">Date : @Model.Header!.Date.ToString(SD.Date_Format)</td>
+                <td class="w-25 text-end"><div>Date : @Model.Header!.Date.ToString(SD.Date_Format)</div></td>
             </tr>
             <tr>
-                <td>CATEGORY : </td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Model.Header!.CheckVoucherHeader!.Category.ToUpper()
-                    }
-                </td>
+                <td><div>CATEGORY :</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader!.Category.ToUpper()</div></td>
                 <td></td>
                 <td></td>
             </tr>
@@ -82,65 +77,32 @@
                 <td></td>
             </tr>
             <tr>
-                <td>CV # :</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckVoucherHeaderNo)
-                    }
-                </td>
-                <td>CR # :</td>
+                <td><div>CV # :</div></td>
+                <td><div>@Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckVoucherHeaderNo)</div></td>
+                <td><div>CR # :</div> </td>
                 <td></td>
             </tr>
             <tr>
-                <td>CHECK # :</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckNo)
-                    }
-                </td>
-                <td>AMOUNT :</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Model.Header.CheckVoucherHeader.Total.ToString(SD.Two_Decimal_Format)
-                    }
-                </td>
+                <td><div>CHECK # :</div></td>
+                <td><div>@Html.DisplayFor(model => model.Header!.CheckVoucherHeader!.CheckNo)</div></td>
+                <td><div>AMOUNT :</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader.Total.ToString(SD.Two_Decimal_Format)</div></td>
             </tr>
             <tr>
-                <td>CV DATE</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Model.Header.CheckVoucherHeader.Date.ToString(SD.Date_Format)
-                    }
-                </td>
-                <td>DATE :</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Model.Header.CheckVoucherHeader.CheckDate?.ToString(SD.Date_Format)
-                    }
-                </td>
+                <td><div>CV DATE :</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader.Date.ToString(SD.Date_Format)</div></td>
+                <td><div>DATE :</div></td>
+                <td><div>@Model.Header.CheckVoucherHeader.CheckDate?.ToString(SD.Date_Format)</div></td>
             </tr>
             <tr>
-                <td>PAYEE</td>
-                <td>
-                    @if (Model.Header.CheckVoucherHeader != null)
-                    {
-                        @Model.Header!.CheckVoucherHeader!.Payee!.ToUpper()
-                    }
-                </td>
-                <td>JV Reason :</td>
-                <td>@Model.Header!.JVReason?.ToUpper()</td>
+                <td><div>PAYEE :</div></td>
+                <td><div>@Model.Header!.CheckVoucherHeader!.Payee!.ToUpper()</div></td>
+                <td><div>JV Reason :</div></td>
+                <td><div>@Model.Header!.JVReason.ToUpper()</div></td>
             </tr>
-
             <tr>
-                <td>PARTICULARS:</td>
-                <td><pre style="margin: 0; padding: 0">@Model.Header!.Particulars!.ToUpper()</pre></td>
-                <td></td>
-                <td></td>
+                <td><div class="pt-2 text-nowrap">PARTICULARS :</div></td>
+                <td colspan="3" class="pt-2"><div>@Model.Header!.Particulars.ToUpper()</div></td>
             </tr>
         </tbody>
     </table>
