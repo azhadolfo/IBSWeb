@@ -3,7 +3,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -22,9 +21,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<IActionResult> Index(CancellationToken cancallationToken)
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            var tugMaster = await _unitOfWork.TugMaster.GetAllAsync(null, cancallationToken);
+            var tugMaster = await _unitOfWork.TugMaster.GetAllAsync(null, cancellationToken);
             return View(tugMaster);
         }
 

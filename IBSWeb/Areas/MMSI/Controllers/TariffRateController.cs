@@ -7,7 +7,6 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
@@ -187,8 +186,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
         public async Task<MMSITariffRate> GetSelectLists(MMSITariffRate model, CancellationToken cancellationToken = default)
         {
-            var companyCLaims = await GetCompanyClaimAsync();
-            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyCLaims!, cancellationToken);
+            var companyClaims = await GetCompanyClaimAsync();
+            model.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
             model.Ports = await _unitOfWork.Port.GetMMSIPortsSelectList(cancellationToken);
             model.Services = await _unitOfWork.Service.GetMMSIActivitiesServicesById(cancellationToken);
             if (model.TerminalId == 0) return model;

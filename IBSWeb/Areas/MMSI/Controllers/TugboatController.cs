@@ -3,8 +3,6 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {
