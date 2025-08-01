@@ -1,5 +1,6 @@
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
+using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -41,7 +42,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ICloudStorageService _cloudStorageService;
 
-        public CustomerOrderSlipController(IUnitOfWork unitOfWork,
+        public CustomerOrderSlipController (IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IHubContext<NotificationHub> hubContext,
@@ -163,7 +164,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -345,7 +346,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var file in viewModel.UploadedFiles)
                     {
-                        var fileName = GenerateFileNameToSave(file.FileName)!;
+                        var fileName = GenerateFileNameToSave(file.FileName);
                         await _cloudStorageService.UploadFileAsync(file, fileName);
                         uploadUrls.Add(fileName);
                     }
@@ -461,9 +462,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var file in existingRecord.UploadedFiles)
                 {
-                    var fileInfo = new COSFileInfo();
-                    fileInfo.FileName = file;
-                    fileInfo.SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file);
+                    var fileInfo = new COSFileInfo
+                    {
+                        FileName = file,
+                        SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file)
+                    };
                     fileInfos.Add(fileInfo);
                 }
 
@@ -513,30 +516,68 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                // If there is new upload...
-                if (viewModel.UploadedFiles != null)
+                // If the new array has value
+                if (viewModel.ArrayOfFileNames != "[]")
                 {
-                    // Delete old files
-                    if (existingRecord.UploadedFiles != null)
+                    var arrayOfFileNames = JsonSerializer.Deserialize<string[]>(viewModel.ArrayOfFileNames!);
+
+                    if (existingRecord.UploadedFiles?.Length != 0) // If the old record has value
                     {
-                        foreach (var oldFiles in existingRecord.UploadedFiles)
+                        foreach (var existingFile in existingRecord.UploadedFiles!) // Filter out the files that does not exist in the new array
                         {
-                            await _cloudStorageService.DeleteFileAsync(oldFiles);
+                            if (arrayOfFileNames!.Any(x =>
+                                    x.Equals(existingFile, StringComparison.OrdinalIgnoreCase))) // If the old value is in the new array, keep it; else delete it and its file
+                            {
+                                continue;
+                            }
+
+                            await _cloudStorageService.DeleteFileAsync(existingFile);
+                            existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray();
+                        }
+
+                    }
+                    // But if the old record is empty,
+                    else
+                    {
+
+                    }
+                    // After this, the uploadedFiles only has the old fileNames that are retained
+
+                    // If there is new file uploads detected
+                    if (viewModel.UploadedFiles != null)
+                    {
+                        // Loop through all of the names
+                        foreach (var newFile in arrayOfFileNames!)
+                        {
+                            // If the name is not in the old array: it is a new file. So rename it, upload it, and add it to old array
+                            if (!existingRecord.UploadedFiles!.Any(x =>
+                                    x.Equals(newFile, StringComparison.Ordinal)))
+                            {
+                                // Get the new file
+                                var file = viewModel.UploadedFiles.FirstOrDefault(x => x.FileName == newFile);
+                                // Generate new fileName
+                                var fileName = GenerateFileNameToSave(file!.FileName);
+                                // Upload the new file
+                                await _cloudStorageService.UploadFileAsync(file, fileName);
+                                // Add the new file into the old array
+                                var tempList = existingRecord.UploadedFiles?.ToList(); // Convert array to list
+                                tempList?.Add(fileName); // Add new file name
+                                existingRecord.UploadedFiles = tempList?.ToArray();
+                            }
                         }
                     }
-
-                    // And upload new files
-                    var uploadUrls = new List<string>();
-
-                    foreach (var file in viewModel.UploadedFiles)
+                }
+                else
+                {
+                    // If the new array is empty but the previous existing has value, it means the user deleted all
+                    if (existingRecord.UploadedFiles?.Length != 0)
                     {
-                        var fileName = GenerateFileNameToSave(file.FileName)!;
-                        await _cloudStorageService.UploadFileAsync(file, fileName);
-                        uploadUrls.Add(fileName);
+                        foreach (var existingFile in existingRecord.UploadedFiles!)
+                        {
+                            await _cloudStorageService.DeleteFileAsync(existingFile);
+                            existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray();
+                        }
                     }
-
-                    // Replace the old array with new array
-                    existingRecord.UploadedFiles = uploadUrls.ToArray();
                 }
 
                 viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -1171,8 +1212,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
-                var depo = await _dbContext.FilpridePickUpPoints
-                    .FindAsync(viewModel.PickUpPointId, cancellationToken);
+                var depo = await _unitOfWork.FilpridePickUpPoint
+                    .GetAsync(p => p.PickUpPointId == viewModel.PickUpPointId, cancellationToken);
 
                 if (existingCos == null || depo == null)
                 {
@@ -1339,7 +1380,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var depot = await _dbContext.FilpridePickUpPoints.FindAsync(viewModel.PickUpPointId, cancellationToken);
+                var depot = await _unitOfWork.FilpridePickUpPoint
+                    .GetAsync(p => p.PickUpPointId == viewModel.PickUpPointId, cancellationToken);
 
                 if (depot == null)
                 {
