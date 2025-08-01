@@ -90,7 +90,7 @@
             const previewUrl = '@Url.Action("Preview", "Billing")';
             const editUrl = '@Url.Action("Edit", "Billing")';
 
-            var table = $('#paginatedTable').DataTable({
+            let table = $('#paginatedTable').DataTable({
                 "order": [[1, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [7] }
@@ -113,15 +113,15 @@
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
                     },
-                    "error": function (xhr, error, thrown) {
+                    "error": function (xhr, error) {
                         console.error('DataTables error:', error);
                         alert('An error occurred while loading the data');
                     }
                 },
-                "preDrawCallback": function (settings) {
+                "preDrawCallback": function () {
                     $('#paginatedTable').addClass('table-loading');
                 },
-                "drawCallback": function (settings) {
+                "drawCallback": function () {
                     $('#paginatedTable').removeClass('table-loading');
 
                     // Initialize all tooltips

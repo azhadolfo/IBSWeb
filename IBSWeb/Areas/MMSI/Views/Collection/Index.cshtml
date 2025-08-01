@@ -82,7 +82,7 @@
             const previewUrl = '@Url.Action("Preview", "Collection")';
             const editUrl = '@Url.Action("Edit", "Collection")';
 
-            var table = $('#paginatedTable').DataTable({
+            let table = $('#paginatedTable').DataTable({
                 "order": [[1, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [6] }
@@ -105,15 +105,15 @@
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
                     },
-                    "error": function (xhr, error, thrown) {
+                    "error": function (xhr, error) {
                         console.error('DataTables error:', error);
                         alert('An error occurred while loading the data');
                     }
                 },
-                "preDrawCallback": function (settings) {
+                "preDrawCallback": function () {
                     $('#paginatedTable').addClass('table-loading');
                 },
-                "drawCallback": function (settings) {
+                "drawCallback": function () {
                     $('#paginatedTable').removeClass('table-loading');
 
                     // Initialize all tooltips
@@ -126,7 +126,7 @@
                     {"data": "depositDate"},
                     {
                         "data": "amount",
-                        "render": function (data, type, row) {
+                        "render": function (data) {
                             return parseFloat(data).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         }
                     },

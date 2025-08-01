@@ -81,15 +81,15 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" readonly="">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MBTC" readonly>
                                     <label class="ms-2">Bank</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" readonly="">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="167-7-16753668-5" readonly>
                                     <label class="ms-2">Account Number</label>
                                 </div>
                                 <div class="form-floating col-4">
-                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." readonly="">
+                                    <input type="text" class="form-control border-0 shadow" placeholder="#" value="MALAYAN MARITIME SERVICES INC." readonly>
                                     <label class="ms-2">Account Name</label>
                                 </div>
                             </div>
@@ -178,10 +178,11 @@
 
             // Initialize DataTable
             function initializeDataTable() {
+                table = $('#dataTable');
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
-                    $('#dataTable').DataTable().clear().destroy();
+                    table.DataTable().clear().destroy();
                 }
-                table = $('#dataTable').DataTable({
+                table.DataTable({
                     paging: false,
                     info: false,
                     order: [[0, 'asc']],
@@ -330,7 +331,7 @@
                                 
                                 table.row.add([
                                     value.mmsiBillingNumber,
-                                    `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    `₱ ${formatNumber(value.amount)}`
                                 ]);
                                 undeductedTotalAmount += value.amount;
                                 totalAmount += tempAmount;
