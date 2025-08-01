@@ -1207,16 +1207,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingCos = await _unitOfWork.FilprideCustomerOrderSlip
                     .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
 
-                var depo = await _unitOfWork.FilpridePickUpPoint
+                var depot = await _unitOfWork.FilpridePickUpPoint
                     .GetAsync(p => p.PickUpPointId == viewModel.PickUpPointId, cancellationToken);
 
-                if (existingCos == null || depo == null)
+                if (existingCos == null || depot == null)
                 {
                     return BadRequest();
                 }
 
                 existingCos.PickUpPointId = viewModel.PickUpPointId;
-                existingCos.Depot = depo.Depot;
+                existingCos.Depot = depot.Depot;
                 existingCos.Status = nameof(CosStatus.ForAtlBooking);
 
                 switch (viewModel.DeliveryOption)
