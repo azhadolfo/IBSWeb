@@ -22,21 +22,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<SupplierController> _logger;
-        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly ICloudStorageService _cloudStorageService;
 
         public SupplierController(IUnitOfWork unitOfWork,
             ILogger<SupplierController> logger,
-            IWebHostEnvironment webHostEnvironment,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
-            _webHostEnvironment = webHostEnvironment;
             _userManager = userManager;
             _dbContext = dbContext;
             _cloudStorageService = cloudStorageService;
@@ -55,25 +52,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
-        }
-
-        private async Task GenerateSignedUrl(FilprideSupplier model)
-        {
-            // Get Signed URL only when Saved File Name is available.
-            if (!string.IsNullOrWhiteSpace(model.ProofOfExemptionFileName))
-            {
-                model.ProofOfExemptionFilePath = await _cloudStorageService.GetSignedUrlAsync(model.ProofOfExemptionFileName);
-            }
-
-            if (!string.IsNullOrWhiteSpace(model.ProofOfRegistrationFileName))
-            {
-                model.ProofOfRegistrationFilePath = await _cloudStorageService.GetSignedUrlAsync(model.ProofOfRegistrationFileName);
-            }
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
@@ -92,26 +75,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            FilprideSupplier model = new();
-
-            model.DefaultExpenses = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => !coa.HasChildren)
-                .OrderBy(coa => coa.AccountNumber)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            model.WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.AccountNumber!.Contains("2010302"))
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountNumber + " " + s.AccountName,
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            FilprideSupplier model = new()
+            {
+                DefaultExpenses = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => !coa.HasChildren)
+                    .OrderBy(coa => coa.AccountNumber)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken),
+                WithholdingTaxList = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.AccountNumber!.Contains("2010302"))
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountNumber + " " + s.AccountName,
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken)
+            };
 
             return View(model);
         }
@@ -200,23 +183,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
                     .Where(s =>
-                        s.SupplierCode!.ToLower().Contains(searchValue) == true ||
-                        s.SupplierName!.ToLower().Contains(searchValue) == true ||
-                        s.SupplierAddress!.ToLower().Contains(searchValue) == true ||
-                        s.SupplierTin!.ToLower().Contains(searchValue) == true ||
-                        s.SupplierTerms!.ToLower().Contains(searchValue) == true ||
-                        s.Category!.ToLower().Contains(searchValue) == true
+                        s.SupplierCode!.ToLower().Contains(searchValue) ||
+                        s.SupplierName.ToLower().Contains(searchValue) ||
+                        s.SupplierAddress.ToLower().Contains(searchValue) ||
+                        s.SupplierTin.ToLower().Contains(searchValue) ||
+                        s.SupplierTerms.ToLower().Contains(searchValue) ||
+                        s.Category.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -505,7 +488,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllSupplierIds()
         {
             var supplierIds = _dbContext.FilprideSuppliers
-                 .Select(s => s.SupplierId) // Assuming Id is the primary key
+                 .Select(s => s.SupplierId)
                  .ToList();
 
             return Json(supplierIds);

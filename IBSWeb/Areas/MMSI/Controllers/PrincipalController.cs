@@ -5,8 +5,6 @@ using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QuestPDF.Infrastructure;
 
 namespace IBSWeb.Areas.MMSI.Controllers
 {

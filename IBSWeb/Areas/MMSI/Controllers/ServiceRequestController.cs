@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -16,7 +15,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -25,7 +23,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class ServiceRequestController : Controller
     {
-        public readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
@@ -129,7 +127,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["warning"] = "Can't create entry, please review your input.";
-                ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
 
@@ -137,7 +135,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var model = ServiceRequestVmToDispatchTicketModel(viewModel);
             model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
             model.Terminal!.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
-            DateTime timeStamp = default;
 
             try
             {
@@ -146,7 +143,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
                     model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                    timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
+                    var timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CreatedDate = timeStamp;
 
                     // upload file if something is submitted
@@ -219,7 +216,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                     viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                     TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
-                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                    ViewData["PortId"] = model.Terminal?.Port?.PortId;
                     return View(viewModel);
                 }
             }
@@ -231,7 +228,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(await GetCompanyClaimAsync() ?? throw new InvalidOperationException(), cancellationToken);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"{ex.Message}";
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = model.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
         }
@@ -281,7 +278,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel.VideoSignedUrl = await GenerateSignedUrl(viewModel.VideoName);
             }
 
-            ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
+            ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(viewModel);
         }

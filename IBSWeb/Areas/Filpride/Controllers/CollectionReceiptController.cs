@@ -2044,21 +2044,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> PrintedMultipleCR(int id, CancellationToken cancellationToken)
         {
-            var findIdOfCR = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+            var findIdOfCr = await _unitOfWork.FilprideCollectionReceipt.GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
 
-            if (findIdOfCR != null && !findIdOfCR.IsPrinted)
+            if (findIdOfCr == null || findIdOfCr.IsPrinted)
             {
-                findIdOfCR.IsPrinted = true;
-
-                #region --Audit Trail Recording
-
-                var printedBy = _userManager.GetUserName(User)!;
-                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCR.CollectionReceiptNo}", "Collection Receipt", findIdOfCR.Company);
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
+                return RedirectToAction(nameof(MultipleCollectionPrint), new { id });
             }
+
+            findIdOfCr.IsPrinted = true;
+
+            #region --Audit Trail Recording
+
+            var printedBy = _userManager.GetUserName(User)!;
+            FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed original copy of collection receipt# {findIdOfCr.CollectionReceiptNo}", "Collection Receipt", findIdOfCr.Company);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
             return RedirectToAction(nameof(MultipleCollectionPrint), new { id });
         }
 
@@ -2232,7 +2233,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         worksheet.Cells[row, 24].Value = string.Join(", ", item.MultipleSI!.Select(si => si.ToString()));
                         worksheet.Cells[row, 25].Value = string.Join(", ", item.MultipleSIId.Select(siId => siId.ToString()));
-                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount!.Select(multipleSI => multipleSI.ToString(SD.Two_Decimal_Format)));
+                        worksheet.Cells[row, 26].Value = string.Join(" ", item.SIMultipleAmount!.Select(multipleSi => multipleSi.ToString(SD.Two_Decimal_Format)));
                         worksheet.Cells[row, 27].Value = string.Join(", ", item.MultipleTransactionDate!.Select(multipleTransactionDate => multipleTransactionDate.ToString("yyyy-MM-dd")));
                     }
                     worksheet.Cells[row, 28].Value = item.CustomerId;
@@ -2251,7 +2252,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region Sales Invoice Export --
 
                 int siRow = 2;
-                var currentSI = "";
+                var currentSi = "";
 
                 foreach (var item in selectedList)
                 {
@@ -2259,12 +2260,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
-                    if (item.SalesInvoice.SalesInvoiceNo == currentSI)
+                    if (item.SalesInvoice.SalesInvoiceNo == currentSi)
                     {
                         continue;
                     }
 
-                    currentSI = item.SalesInvoice.SalesInvoiceNo;
+                    currentSi = item.SalesInvoice.SalesInvoiceNo;
                     worksheet3.Cells[siRow, 1].Value = item.SalesInvoice.OtherRefNo;
                     worksheet3.Cells[siRow, 2].Value = item.SalesInvoice.Quantity;
                     worksheet3.Cells[siRow, 3].Value = item.SalesInvoice.UnitPrice;
@@ -2298,7 +2299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Service Invoice Export --
 
                 int svRow = 2;
-                var currentSV = "";
+                var currentSv = "";
 
                 foreach (var item in selectedList)
                 {
@@ -2306,12 +2307,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
-                    if (item.ServiceInvoice.ServiceInvoiceNo == currentSV)
+                    if (item.ServiceInvoice.ServiceInvoiceNo == currentSv)
                     {
                         continue;
                     }
 
-                    currentSV = item.ServiceInvoice.ServiceInvoiceNo;
+                    currentSv = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet4.Cells[svRow, 1].Value = item.ServiceInvoice.DueDate.ToString("yyyy-MM-dd");
                     worksheet4.Cells[svRow, 2].Value = item.ServiceInvoice.Period.ToString("yyyy-MM-dd");
                     worksheet4.Cells[svRow, 3].Value = item.ServiceInvoice.Total;
@@ -2341,11 +2342,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Collection Receipt Export (Multiple SI)--
 
-                List<FilprideSalesInvoice> getSalesInvoice;
-
-                getSalesInvoice = _dbContext.FilprideSalesInvoices
+                var getSalesInvoice = _dbContext.FilprideSalesInvoices
                     .AsEnumerable()
-                    .Where(s => selectedList?.Select(item => item?.MultipleSI).Any(si => si?.Contains(s.SalesInvoiceNo) == true) == true)
+                    .Where(s => selectedList
+                        .Select(item => item.MultipleSI)
+                        .Any(si => si?
+                            .Contains(s.SalesInvoiceNo) == true))
                     .OrderBy(si => si.SalesInvoiceNo)
                     .ToList();
 

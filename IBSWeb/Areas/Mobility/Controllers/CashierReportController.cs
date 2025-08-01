@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 var salesHeaderWithStationName = _unitOfWork.MobilitySalesHeader.GetSalesHeaderJoin(salesHeaders, cancellationToken).ToList();
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
                     salesHeaderWithStationName = salesHeaderWithStationName
@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;

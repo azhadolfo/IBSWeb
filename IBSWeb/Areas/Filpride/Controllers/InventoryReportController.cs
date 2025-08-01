@@ -1,11 +1,9 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -97,10 +95,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GroupBy(x => x.POId)
                     .ToListAsync(cancellationToken);
 
-                var product = await _dbContext.Products
-                    .FindAsync(viewModel.ProductId, cancellationToken);
+                var product = await _unitOfWork.Product
+                    .GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
 
-                if (!inventories.Any())
+                if (inventories.Count == 0)
                 {
                     TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(InventoryReport));
@@ -194,7 +192,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             #region -- Loop to Show Records
 
                                 var grandTotalInventoryBalance = 0m;
-                                var grandTotalAverageCost = 0m;
                                 var grandTotalTotalBalance = 0m;
 
                                 foreach (var group in inventories)
@@ -237,7 +234,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     grandTotalTotalBalance += subTotalTotalBalance;
                                 }
 
-                                grandTotalAverageCost = grandTotalInventoryBalance != 0 && grandTotalTotalBalance != 0 ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
+                                var grandTotalAverageCost = grandTotalInventoryBalance != 0 && grandTotalTotalBalance != 0 ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
 
                                 table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Grand Total").SemiBold();

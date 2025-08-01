@@ -14,7 +14,6 @@ using IBS.Services.Attributes;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
-using IBS.Models.Filpride;
 using Microsoft.AspNetCore.Authorization;
 
 namespace IBSWeb.Areas.Filpride.Controllers
@@ -80,7 +79,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(jv => jv.Company == companyClaims, cancellationToken);
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -90,7 +89,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.References?.Contains(searchValue) == true ||
                         s.CheckVoucherHeader?.CheckVoucherHeaderNo!.Contains(searchValue) == true ||
-                        s.Particulars.ToLower().Contains(searchValue) == true ||
+                        s.Particulars.ToLower().Contains(searchValue) ||
                         s.CRNo?.ToLower().Contains(searchValue) == true ||
                         s.JVReason.ToLower().ToString().Contains(searchValue) ||
                         s.CreatedBy!.ToLower().Contains(searchValue)
@@ -99,7 +98,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -198,7 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --CV Details Entry
 
-                var generateJVNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
+                var generateJvNo = await _unitOfWork.FilprideJournalVoucher.GenerateCodeAsync(companyClaims, model.Header.Type, cancellationToken);
                 var cvDetails = new List<FilprideJournalVoucherDetail>();
 
                 var totalDebit = 0m;
@@ -214,7 +213,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Saving the default entries
 
                 //JV Header Entry
-                model.Header.JournalVoucherHeaderNo = generateJVNo;
+                model.Header.JournalVoucherHeaderNo = generateJvNo;
                 model.Header.CreatedBy = _userManager.GetUserName(this.User);
                 model.Header.Company = companyClaims;
 
@@ -226,8 +225,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 for (int i = 0; i < accountNumber.Length; i++)
                 {
                     var currentAccountNumber = accountNumber[i];
-                    var accountTitle = await _dbContext.FilprideChartOfAccounts
-                        .FirstOrDefaultAsync(coa => coa.AccountNumber == currentAccountNumber);
+                    var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                        .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
                     var currentDebit = debit![i];
                     var currentCredit = credit![i];
                     totalDebit += debit[i];
@@ -238,7 +237,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             AccountNo = currentAccountNumber,
                             AccountName = accountTitle!.AccountName,
-                            TransactionNo = generateJVNo,
+                            TransactionNo = generateJvNo,
                             JournalVoucherHeaderId = model.Header.JournalVoucherHeaderId,
                             Debit = currentDebit,
                             Credit = currentCredit
@@ -291,11 +290,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Header = header,
                 Details = details
             };
-
-            if (viewModel == null)
-            {
-                return Json(null);
-            }
 
             var cvNo = viewModel.Header.CheckVoucherHeaderNo;
             var date = viewModel.Header.Date;
@@ -363,14 +357,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Post(int id, CancellationToken cancellationToken)
         {
-            var modelHeader = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
+            var modelHeader = await _dbContext.FilprideJournalVoucherHeaders
+                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
 
             if (modelHeader == null)
             {
                 return NotFound();
             }
 
-            var modelDetails = await _dbContext.FilprideJournalVoucherDetails.Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId).ToListAsync();
+            var modelDetails = await _dbContext.FilprideJournalVoucherDetails
+                .Where(jvd => jvd.JournalVoucherHeaderId == modelHeader.JournalVoucherHeaderId)
+                .ToListAsync(cancellationToken: cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -465,7 +462,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Void(int id, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
+            var model = await _dbContext.FilprideJournalVoucherHeaders
+                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
 
             if (model == null)
             {
@@ -508,7 +506,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Cancel(int id, string? cancellationRemarks, CancellationToken cancellationToken)
         {
-            var model = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(id, cancellationToken);
+            var model = await _dbContext.FilprideJournalVoucherHeaders
+                .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -564,11 +563,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Where(cvd => cvd.JournalVoucherHeaderId == existingHeaderModel.JournalVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
-            if (existingHeaderModel == null || existingDetailsModel == null)
-            {
-                return NotFound();
-            }
-
             var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
             var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
             var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
@@ -622,7 +616,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --CV Details Entry
 
-                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders.FindAsync(viewModel.JVId, cancellationToken);
+                var existingHeaderModel = await _dbContext.FilprideJournalVoucherHeaders
+                    .FirstOrDefaultAsync(x => x.JournalVoucherHeaderId == viewModel.JVId, cancellationToken);
 
                 if (existingHeaderModel == null)
                 {
@@ -949,7 +944,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Check Vocher Header Export (Trade and Invoicing) --
 
                 int cvhRow = 2;
-                var currentCVTradeAndInvoicing = "";
+                var currentCvTradeAndInvoicing = "";
 
                 foreach (var item in selectedList)
                 {
@@ -957,12 +952,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
-                    if (item.CheckVoucherHeader.CheckVoucherHeaderNo == currentCVTradeAndInvoicing)
+                    if (item.CheckVoucherHeader.CheckVoucherHeaderNo == currentCvTradeAndInvoicing)
                     {
                         continue;
                     }
 
-                    currentCVTradeAndInvoicing = item.CheckVoucherHeader.CheckVoucherHeaderNo;
+                    currentCvTradeAndInvoicing = item.CheckVoucherHeader.CheckVoucherHeaderNo;
                     worksheet5.Cells[cvhRow, 1].Value = item.CheckVoucherHeader.Date.ToString("yyyy-MM-dd");
                     if (item.CheckVoucherHeader.RRNo != null && !item.CheckVoucherHeader.RRNo.Contains(null))
                     {
@@ -1018,7 +1013,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Check Vocher Header Export (Payment) --
 
                 var cvNos = selectedList.Select(item => item.CheckVoucherHeader!.CheckVoucherHeaderNo).ToList();
-                var currentCVPayment = "";
+                var currentCvPayment = "";
 
                 var checkVoucherPayment = await _dbContext.FilprideCheckVoucherHeaders
                     .Where(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference))
@@ -1026,12 +1021,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var item in checkVoucherPayment)
                 {
-                    if (item.CheckVoucherHeaderNo == currentCVPayment)
+                    if (item.CheckVoucherHeaderNo == currentCvPayment)
                     {
                         continue;
                     }
 
-                    currentCVPayment = item.CheckVoucherHeaderNo;
+                    currentCvPayment = item.CheckVoucherHeaderNo;
                     worksheet5.Cells[cvhRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     if (item.RRNo != null && !item.RRNo.Contains(null))
                     {
@@ -1088,14 +1083,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var jvNos = selectedList.Select(item => item.JournalVoucherHeaderNo).ToList();
 
-                var getJVDetails = await _dbContext.FilprideJournalVoucherDetails
+                var getJvDetails = await _dbContext.FilprideJournalVoucherDetails
                     .Where(jvd => jvNos.Contains(jvd.TransactionNo))
                     .OrderBy(jvd => jvd.JournalVoucherDetailId)
                     .ToListAsync();
 
                 int jvdRow = 2;
 
-                foreach (var item in getJVDetails)
+                foreach (var item in getJvDetails)
                 {
                     worksheet2.Cells[jvdRow, 1].Value = item.AccountNo;
                     worksheet2.Cells[jvdRow, 2].Value = item.AccountName;
@@ -1112,16 +1107,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Check Voucher Details Export (Trade and Invoicing) --
 
-                List<FilprideCheckVoucherDetail> getCVDetails = new();
-
-                getCVDetails = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => selectedList.Select(jvh => jvh.CheckVoucherHeader!.CheckVoucherHeaderNo).Contains(cvd.TransactionNo))
+                var getCvDetails = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(cvd => selectedList
+                        .Select(jvh => jvh.CheckVoucherHeader!.CheckVoucherHeaderNo)
+                        .Contains(cvd.TransactionNo))
                     .OrderBy(cvd => cvd.CheckVoucherHeaderId)
                     .ToListAsync();
 
                 int cvdRow = 2;
 
-                foreach (var item in getCVDetails)
+                foreach (var item in getCvDetails)
                 {
                     worksheet6.Cells[cvdRow, 1].Value = item.AccountNo;
                     worksheet6.Cells[cvdRow, 2].Value = item.AccountName;
@@ -1138,9 +1133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Check Voucher Details Export (Payment) --
 
-                List<FilprideCheckVoucherDetail> getCvPaymentDetails = new();
-
-                getCvPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
+                var getCvPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => checkVoucherPayment.Select(cvh => cvh.CheckVoucherHeaderNo).Contains(cvd.TransactionNo))
                     .OrderBy(cvd => cvd.CheckVoucherHeaderId)
                     .ToListAsync();
@@ -1162,25 +1155,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Receving Report Export --
 
-                List<FilprideReceivingReport> getReceivingReport = new List<FilprideReceivingReport>();
-
-                getReceivingReport = _dbContext.FilprideReceivingReports
+                var getReceivingReport = _dbContext.FilprideReceivingReports
                     .AsEnumerable()
-                    .Where(rr => selectedList?.Select(item => item?.CheckVoucherHeader?.RRNo).Any(rrs => rrs?.Contains(rr.ReceivingReportNo) == true) == true)
+                    .Where(rr => selectedList
+                        .Select(item => item.CheckVoucherHeader?.RRNo)
+                        .Any(rrs => rrs?.Contains(rr.ReceivingReportNo) == true))
                     .OrderBy(rr => rr.ReceivingReportNo)
                     .ToList();
 
                 int rrRow = 2;
-                var currentRR = "";
+                var currentRr = "";
 
                 foreach (var item in getReceivingReport)
                 {
-                    if (item.ReceivingReportNo == currentRR)
+                    if (item.ReceivingReportNo == currentRr)
                     {
                         continue;
                     }
 
-                    currentRR = item.ReceivingReportNo;
+                    currentRr = item.ReceivingReportNo;
                     worksheet4.Cells[rrRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     worksheet4.Cells[rrRow, 2].Value = item.DueDate.ToString("yyyy-MM-dd");
                     worksheet4.Cells[rrRow, 3].Value = item.SupplierInvoiceNumber;
@@ -1213,24 +1206,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Purchase Order Export --
 
-                List<FilpridePurchaseOrder> getPurchaseOrder = new List<FilpridePurchaseOrder>();
-
-                getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
+                var getPurchaseOrder = await _dbContext.FilpridePurchaseOrders
                     .Where(po => getReceivingReport.Select(item => item.POId).Contains(po.PurchaseOrderId))
                     .OrderBy(po => po.PurchaseOrderNo)
                     .ToListAsync();
 
                 int poRow = 2;
-                var currentPO = "";
+                var currentPo = "";
 
                 foreach (var item in getPurchaseOrder)
                 {
-                    if (item.PurchaseOrderNo == currentPO)
+                    if (item.PurchaseOrderNo == currentPo)
                     {
                         continue;
                     }
 
-                    currentPO = item.PurchaseOrderNo;
+                    currentPo = item.PurchaseOrderNo;
                     worksheet3.Cells[poRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     worksheet3.Cells[poRow, 2].Value = item.Terms;
                     worksheet3.Cells[poRow, 3].Value = item.Quantity;
@@ -1239,7 +1230,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet3.Cells[poRow, 6].Value = item.FinalPrice;
                     worksheet3.Cells[poRow, 7].Value = item.QuantityReceived;
                     worksheet3.Cells[poRow, 8].Value = item.IsReceived;
-                    worksheet3.Cells[poRow, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                    worksheet3.Cells[poRow, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : null;
                     worksheet3.Cells[poRow, 10].Value = item.Remarks;
                     worksheet3.Cells[poRow, 11].Value = item.CreatedBy;
                     worksheet3.Cells[poRow, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
@@ -1279,7 +1270,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var jvIds = _dbContext.FilprideJournalVoucherHeaders
                 .Where(jv => jv.Type == nameof(DocumentType.Documented))
-                .Select(jv => jv.JournalVoucherHeaderId) // Assuming Id is the primary key
+                .Select(jv => jv.JournalVoucherHeaderId)
                 .ToList();
 
             return Json(jvIds);

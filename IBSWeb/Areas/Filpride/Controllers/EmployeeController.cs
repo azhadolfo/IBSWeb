@@ -71,9 +71,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.Company = companyClaims;
-                await _dbContext.FilprideEmployees.AddAsync(model, cancellationToken);
-
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideEmployee.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Employee {model.EmployeeNumber} created successfully";
                 return RedirectToAction(nameof(Index));
@@ -97,25 +95,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
                     queried = queried
                     .Where(e =>
-                        e.EmployeeNumber.ToLower().Contains(searchValue) == true ||
+                        e.EmployeeNumber.ToLower().Contains(searchValue) ||
                         e.Initial?.ToLower().Contains(searchValue) == true ||
-                        e.FirstName.ToLower().Contains(searchValue) == true ||
-                        e.LastName.ToLower().Contains(searchValue) == true ||
+                        e.FirstName.ToLower().Contains(searchValue) ||
+                        e.LastName.ToLower().Contains(searchValue) ||
                         e.BirthDate?.ToString().Contains(searchValue) == true ||
                         e.TelNo?.ToLower().Contains(searchValue) == true ||
                         e.Department?.ToLower().Contains(searchValue) == true ||
-                        e.Position.ToLower().Contains(searchValue) == true
+                        e.Position.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -150,7 +148,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var existingEmployee = await _dbContext.FilprideEmployees.FindAsync(id, cancellationToken);
+            var existingEmployee = await _unitOfWork.FilprideEmployee
+                .GetAsync(x => x.EmployeeId == id, cancellationToken);
+
             return View(existingEmployee);
         }
 
@@ -165,7 +165,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            var existingModel = await _dbContext.FilprideEmployees.FindAsync(model.EmployeeId, cancellationToken);
+            var existingModel = await _unitOfWork.FilprideEmployee
+                .GetAsync(x => x.EmployeeId == model.EmployeeId, cancellationToken);
 
             if (existingModel == null)
             {

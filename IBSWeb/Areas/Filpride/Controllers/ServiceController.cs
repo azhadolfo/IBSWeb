@@ -62,27 +62,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
-            var viewModel = new FilprideService();
-
-            viewModel.CurrentAndPreviousTitles = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountId.ToString(),
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
-
-            viewModel.UnearnedTitles = await _dbContext.FilprideChartOfAccounts
-                .Where(coa => coa.Level == 4 || coa.Level == 5)
-                .OrderBy(coa => coa.AccountId)
-                .Select(s => new SelectListItem
-                {
-                    Value = s.AccountId.ToString(),
-                    Text = s.AccountNumber + " " + s.AccountName
-                })
-                .ToListAsync(cancellationToken);
+            var viewModel = new FilprideService
+            {
+                CurrentAndPreviousTitles = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.Level == 4 || coa.Level == 5)
+                    .OrderBy(coa => coa.AccountId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountId.ToString(),
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken),
+                UnearnedTitles = await _dbContext.FilprideChartOfAccounts
+                    .Where(coa => coa.Level == 4 || coa.Level == 5)
+                    .OrderBy(coa => coa.AccountId)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.AccountId.ToString(),
+                        Text = s.AccountNumber + " " + s.AccountName
+                    })
+                    .ToListAsync(cancellationToken)
+            };
 
             return View(viewModel);
         }
@@ -133,11 +133,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return View(services);
                 }
 
-                var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
-                    .FindAsync(services.CurrentAndPreviousId, cancellationToken);
+                var currentAndPrevious = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(x => x.AccountId == services.CurrentAndPreviousId, cancellationToken);
 
-                var unearned = await _dbContext.FilprideChartOfAccounts
-                    .FindAsync(services.UnearnedId, cancellationToken);
+                var unearned = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(x => x.AccountId == services.UnearnedId, cancellationToken);
 
                 services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
                 services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
@@ -153,8 +153,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 TempData["success"] = "Services created successfully";
 
-                await _dbContext.AddAsync(services, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
@@ -172,37 +171,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.FilprideService
+                var query = await _unitOfWork.FilprideService
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
+                    query = query
                     .Where(s =>
-                        s.ServiceNo!.ToLower().Contains(searchValue) == true ||
-                        s.Name.ToLower().Contains(searchValue) == true ||
-                        s.Percent.ToString().ToLower().Contains(searchValue) == true ||
-                        s.CreatedBy!.ToLower().Contains(searchValue) == true ||
-                        s.CreatedDate.ToString("MM dd, yyyy").ToLower().Contains(searchValue) == true
+                        s.ServiceNo!.ToLower().Contains(searchValue) ||
+                        s.Name.ToLower().Contains(searchValue) ||
+                        s.Percent.ToString().ToLower().Contains(searchValue) ||
+                        s.CreatedBy!.ToLower().Contains(searchValue) ||
+                        s.CreatedDate.ToString("MM dd, yyyy").ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
+                    query = query
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = queried.Count();
-                var pagedData = queried
+                var totalRecords = query.Count();
+                var pagedData = query
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
@@ -226,12 +225,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.FilprideServices == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var services = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
+            var services = await _unitOfWork.FilprideService
+                .GetAsync(x => x.ServiceId == id, cancellationToken);
+
             if (services == null)
             {
                 return NotFound();
@@ -253,7 +254,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(services);
             }
 
-            var existingModel = await _dbContext.FilprideServices.FindAsync(id, cancellationToken);
+            var existingModel =  await _unitOfWork.FilprideService
+                .GetAsync(x => x.ServiceId == id, cancellationToken);
 
             if (existingModel == null)
             {
@@ -270,26 +272,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = "Services updated successfully";
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
-                if (!ServicesExists(services.ServiceId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
             }
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool ServicesExists(int id)
-        {
-            return (_dbContext.FilprideServices?.Any(e => e.ServiceId == id)).GetValueOrDefault();
         }
 
         //Download as .xlsx file.(Export)
@@ -361,7 +351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllServiceIds()
         {
             var serviceIds = _dbContext.FilprideServices
-                .Select(s => s.ServiceId) // Assuming Id is the primary key
+                .Select(s => s.ServiceId)
                 .ToList();
 
             return Json(serviceIds);

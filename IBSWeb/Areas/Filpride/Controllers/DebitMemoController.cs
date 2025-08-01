@@ -1,13 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
 using IBS.Models.Filpride.AccountsReceivable;
@@ -80,7 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(dm => dm.Company == companyClaims, cancellationToken);
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -99,7 +97,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -322,7 +320,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(debitMemo);
         }
 
-        public async Task<IActionResult> Post(int id, ViewModelDMCM viewModelDMCM, CancellationToken cancellationToken)
+        public async Task<IActionResult> Post(int id, ViewModelDMCM viewModelDmcm, CancellationToken cancellationToken)
         {
             var model = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
 
@@ -354,7 +352,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Retrieval of SI
 
-                    var existingSI = await _unitOfWork
+                    var existingSi = await _unitOfWork
                         .FilprideSalesInvoice
                         .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
 
@@ -362,15 +360,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Sales Book Recording(SI)--
 
-                    var sales = new FilprideSalesBook();
-
-                    sales.TransactionDate = model.TransactionDate;
-                    sales.SerialNo = model.DebitMemoNo!;
-                    sales.SoldTo = model.SalesInvoice.CustomerOrderSlip!.CustomerName;
-                    sales.TinNo = model.SalesInvoice.CustomerOrderSlip!.CustomerTin;
-                    sales.Address = model.SalesInvoice.CustomerOrderSlip!.CustomerAddress;
-                    sales.Description = model.SalesInvoice.CustomerOrderSlip!.ProductName;
-                    sales.Amount = model.DebitAmount;
+                    var sales = new FilprideSalesBook
+                    {
+                        TransactionDate = model.TransactionDate,
+                        SerialNo = model.DebitMemoNo!,
+                        SoldTo = model.SalesInvoice.CustomerOrderSlip!.CustomerName,
+                        TinNo = model.SalesInvoice.CustomerOrderSlip!.CustomerTin,
+                        Address = model.SalesInvoice.CustomerOrderSlip!.CustomerAddress,
+                        Description = model.SalesInvoice.CustomerOrderSlip!.ProductName,
+                        Amount = model.DebitAmount
+                    };
 
                     switch (model.SalesInvoice.CustomerOrderSlip?.VatType)
                     {
@@ -391,7 +390,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     sales.CreatedBy = model.CreatedBy;
                     sales.CreatedDate = model.CreatedDate;
-                    sales.DueDate = existingSI!.DueDate;
+                    sales.DueDate = existingSi!.DueDate;
                     sales.DocumentId = model.SalesInvoiceId;
                     sales.Company = model.Company;
 
@@ -417,10 +416,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         ? _unitOfWork.FilprideCreditMemo.ComputeEwtAmount(netOfVatAmount, 0.05m)
                         : 0m;
 
-                    var ledgers = new List<FilprideGeneralLedgerBook>();
-
-                    ledgers.Add(
-                        new FilprideGeneralLedgerBook
+                    var ledgers = new List<FilprideGeneralLedgerBook>
+                    {
+                        new()
                         {
                             Date = model.TransactionDate,
                             Reference = model.DebitMemoNo!,
@@ -436,7 +434,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
                             CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName
                         }
-                    );
+                    };
 
                     if (withHoldingTaxAmount > 0)
                     {
@@ -531,7 +529,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Computation --
 
-                    viewModelDMCM.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
+                    viewModelDmcm.Period = DateOnly.FromDateTime(model.CreatedDate) >= model.Period ? DateOnly.FromDateTime(model.CreatedDate) : model.Period.AddMonths(1).AddDays(-1);
 
                     var netDiscount = model.Amount ?? 0 - existingSv!.Discount;
                     var netOfVatAmount = model.ServiceInvoice!.VatType == SD.VatType_Vatable
@@ -552,16 +550,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --Sales Book Recording(SV)--
 
-                    var sales = new FilprideSalesBook();
-
-                    sales.TransactionDate = model.TransactionDate;
-                    sales.SerialNo = model.DebitMemoNo!;
-                    sales.SoldTo = model.ServiceInvoice.CustomerName;
-                    sales.TinNo = model.ServiceInvoice.CustomerTin;
-                    sales.Address = model.ServiceInvoice.CustomerAddress;
-                    sales.Description = model.ServiceInvoice.ServiceName;
-                    sales.Amount = model.DebitAmount;
-                    //sales.Discount = model.Discount;
+                    var sales = new FilprideSalesBook
+                    {
+                        TransactionDate = model.TransactionDate,
+                        SerialNo = model.DebitMemoNo!,
+                        SoldTo = model.ServiceInvoice.CustomerName,
+                        TinNo = model.ServiceInvoice.CustomerTin,
+                        Address = model.ServiceInvoice.CustomerAddress,
+                        Description = model.ServiceInvoice.ServiceName,
+                        Amount = model.DebitAmount
+                    };
 
                     switch (model.ServiceInvoice.VatType)
                     {
@@ -592,10 +590,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region --General Ledger Book Recording(SV)--
 
-                    var ledgers = new List<FilprideGeneralLedgerBook>();
-
-                    ledgers.Add(
-                        new FilprideGeneralLedgerBook
+                    var ledgers = new List<FilprideGeneralLedgerBook>
+                    {
+                        new()
                         {
                             Date = model.TransactionDate,
                             Reference = model.DebitMemoNo!,
@@ -611,7 +608,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CustomerId = model.ServiceInvoice.CustomerId,
                             CustomerName = model.ServiceInvoice.CustomerName
                         }
-                    );
+                    };
+
                     if (ewt > 0)
                     {
                         ledgers.Add(
@@ -879,66 +877,60 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Description = viewModel.Description,
             };
 
-            var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
-                        .GetAsync(invoice => invoice.SalesInvoiceId == model.SalesInvoiceId, cancellationToken);
-
-            var existingSv = await _unitOfWork.FilprideServiceInvoice
-                        .GetAsync(sv => sv.ServiceInvoiceId == model.ServiceInvoiceId, cancellationToken);
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existingDM = await _unitOfWork.FilprideDebitMemo
+                var existingDm = await _unitOfWork.FilprideDebitMemo
                     .GetAsync(dm => dm.DebitMemoId == model.DebitMemoId, cancellationToken);
 
-                if (existingDM == null)
+                if (existingDm == null)
                 {
                     return NotFound();
                 }
 
-                if (model.Source == "Sales Invoice")
+                switch (model.Source)
                 {
-                    model.ServiceInvoiceId = null;
+                    case "Sales Invoice":
+                        model.ServiceInvoiceId = null;
 
-                    #region -- Saving Default Enries --
+                        #region -- Saving Default Enries --
 
-                    existingDM.TransactionDate = model.TransactionDate;
-                    existingDM.SalesInvoiceId = model.SalesInvoiceId;
-                    existingDM.Quantity = model.Quantity;
-                    existingDM.AdjustedPrice = model.AdjustedPrice;
-                    existingDM.Description = model.Description;
-                    existingDM.Remarks = model.Remarks;
+                        existingDm.TransactionDate = model.TransactionDate;
+                        existingDm.SalesInvoiceId = model.SalesInvoiceId;
+                        existingDm.Quantity = model.Quantity;
+                        existingDm.AdjustedPrice = model.AdjustedPrice;
+                        existingDm.Description = model.Description;
+                        existingDm.Remarks = model.Remarks;
 
-                    #endregion -- Saving Default Enries --
+                        #endregion -- Saving Default Enries --
 
-                    existingDM.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                        existingDm.DebitAmount = (decimal)(model.Quantity! * model.AdjustedPrice!);
+                        break;
+                    case "Service Invoice":
+                        model.SalesInvoiceId = null;
+
+                        #region -- Saving Default Enries --
+
+                        existingDm.TransactionDate = model.TransactionDate;
+                        existingDm.ServiceInvoiceId = model.ServiceInvoiceId;
+                        existingDm.Period = model.Period;
+                        existingDm.Amount = model.Amount;
+                        existingDm.Description = model.Description;
+                        existingDm.Remarks = model.Remarks;
+
+                        #endregion -- Saving Default Enries --
+
+                        existingDm.DebitAmount = model.Amount ?? 0;
+                        break;
                 }
-                else if (model.Source == "Service Invoice")
-                {
-                    model.SalesInvoiceId = null;
 
-                    #region -- Saving Default Enries --
-
-                    existingDM.TransactionDate = model.TransactionDate;
-                    existingDM.ServiceInvoiceId = model.ServiceInvoiceId;
-                    existingDM.Period = model.Period;
-                    existingDM.Amount = model.Amount;
-                    existingDM.Description = model.Description;
-                    existingDM.Remarks = model.Remarks;
-
-                    #endregion -- Saving Default Enries --
-
-                    existingDM.DebitAmount = model.Amount ?? 0;
-                }
-
-                existingDM.EditedBy = _userManager.GetUserName(User);
-                existingDM.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingDm.EditedBy = _userManager.GetUserName(User);
+                existingDm.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-                FilprideAuditTrail auditTrailBook = new(existingDM.EditedBy!, $"Edited debit memo# {existingDM.DebitMemoNo}", "Debit Memo", existingDM.Company);
+                FilprideAuditTrail auditTrailBook = new(existingDm.EditedBy!, $"Edited debit memo# {existingDm.DebitMemoNo}", "Debit Memo", existingDm.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -1133,7 +1125,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Sales Invcoie Export --
 
                 int siRow = 2;
-                var currentSI = "";
+                var currentSi = "";
 
                 foreach (var item in selectedList)
                 {
@@ -1141,12 +1133,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
-                    if (item.SalesInvoice.SalesInvoiceNo == currentSI)
+                    if (item.SalesInvoice.SalesInvoiceNo == currentSi)
                     {
                         continue;
                     }
 
-                    currentSI = item.SalesInvoice.SalesInvoiceNo;
+                    currentSi = item.SalesInvoice.SalesInvoiceNo;
                     worksheet2.Cells[siRow, 1].Value = item.SalesInvoice.OtherRefNo;
                     worksheet2.Cells[siRow, 2].Value = item.SalesInvoice.Quantity;
                     worksheet2.Cells[siRow, 3].Value = item.SalesInvoice.UnitPrice;
@@ -1180,7 +1172,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Service Invoice Export --
 
                 int svRow = 2;
-                var currentSV = "";
+                var currentSv = "";
 
                 foreach (var item in selectedList)
                 {
@@ -1188,12 +1180,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         continue;
                     }
-                    if (item.ServiceInvoice.ServiceInvoiceNo == currentSV)
+                    if (item.ServiceInvoice.ServiceInvoiceNo == currentSv)
                     {
                         continue;
                     }
 
-                    currentSV = item.ServiceInvoice.ServiceInvoiceNo;
+                    currentSv = item.ServiceInvoice.ServiceInvoiceNo;
                     worksheet3.Cells[svRow, 1].Value = item.ServiceInvoice.DueDate.ToString("yyyy-MM-dd");
                     worksheet3.Cells[svRow, 2].Value = item.ServiceInvoice.Period.ToString("yyyy-MM-dd");
                     worksheet3.Cells[svRow, 3].Value = item.ServiceInvoice.Total;
@@ -1244,7 +1236,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dmIds = (await _unitOfWork.FilprideDebitMemo
                  .GetAllAsync(dm => dm.Type == nameof(DocumentType.Documented)))
-                 .Select(dm => dm.DebitMemoId) // Assuming Id is the primary key
+                 .Select(dm => dm.DebitMemoId)
                  .ToList();
 
             return Json(dmIds);

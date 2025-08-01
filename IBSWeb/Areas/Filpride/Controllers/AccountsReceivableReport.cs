@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
@@ -12,12 +11,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 using IBS.Models;
-using IBS.Models.Filpride.AccountsPayable;
-using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Integrated;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -84,7 +79,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims!);
 
-                if (!cosSummary.Any())
+                if (cosSummary.Count == 0)
                 {
                     TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(COSUnservedVolume));
@@ -243,7 +238,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #region -- Generate COS Unserved Volume as Excel File --
 
-        public async Task<IActionResult> GenerateCOSUnservedVolumeToExcel(ViewModelBook model)
+        public async Task<IActionResult> GenerateCOSUnservedVolumeToExcel(ViewModelBook model, CancellationToken cancellationToken)
         {
             ViewBag.DateFrom = model.DateFrom.ToString("MMMM dd, yyyy");
             ViewBag.DateTo = model.DateTo.ToString("MMMM dd, yyyy");
@@ -336,7 +331,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // Return as Excel file
                 var stream = new MemoryStream();
-                package.SaveAs(stream);
+                await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
                 var fileName = $"COS_Unserved_Volume_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
@@ -382,13 +377,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var firstDayOfMonth = new DateOnly(viewModel.DateFrom.Year, viewModel.DateFrom.Month, 1);
-                var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-
-                var currentUser = _userManager.GetUserName(User)!;
-                var today = DateTimeHelper.GetCurrentPhilippineTime();
-                Expression<Func<FilprideDeliveryReceipt, bool>>? filter = default;
-                string dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
+                Expression<Func<FilprideDeliveryReceipt, bool>>? filter;
+                var dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
 
                 if(viewModel.ReportType == "Delivered")
                 {
@@ -610,13 +600,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().ColumnSpan(5).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                     if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
                                     {
-                                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom);
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity) != 0 ? entriesToday.Sum(dr => dr.Quantity) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
-                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity * dr.Freight) != 0 ? entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity * dr.Freight)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity * dr.Freight).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                    table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).ToList();
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity) != 0 ? entriesToday.Sum(dr => dr.Quantity) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().ColumnSpan(6).Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(entriesToday.Sum(dr => dr.Quantity * dr.Freight) != 0 ? entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? $"({Math.Abs(entriesToday.Sum(dr => dr.Quantity * dr.Freight)).ToString(SD.Two_Decimal_Format)})" : entriesToday.Sum(dr => dr.Quantity * dr.Freight).ToString(SD.Two_Decimal_Format) : null).FontColor(entriesToday.Sum(dr => dr.Quantity * dr.Freight) < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                        table.Cell().ColumnSpan(2).Background(Colors.Grey.Lighten1).Border(0.5f);
                                     }
                                     else
                                     {
@@ -636,11 +626,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Overall Summary
 
-                                col.Item().PaddingTop(10).Table(table =>
+                                col.Item().PaddingTop(10).Table(content =>
                                 {
                                     #region -- Columns Definition
 
-                                        table.ColumnsDefinition(columns =>
+                                        content.ColumnsDefinition(columns =>
                                         {
                                             columns.RelativeColumn();
                                             columns.RelativeColumn();
@@ -653,126 +643,126 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     #region -- Loop to Show Records
 
-                                        string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
+                                        string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
 
                                         foreach (var customerType in deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType))
                                         {
 
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text(customerType.Key).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text(customerType.Key).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
 
                                             #region -- Total Today --
 
-                                            table.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
+                                            content.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
 
                                             var totalToday = customerType.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
 
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalToday != 0 ? totalToday < 0 ? $"({Math.Abs(totalToday).ToString(SD.Two_Decimal_Format)})" : totalToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalToday < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalToday != 0 ? totalToday < 0 ? $"({Math.Abs(totalToday).ToString(SD.Two_Decimal_Format)})" : totalToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalToday < 0 ? Colors.Red.Medium : Colors.Black);
 
                                             foreach (var productName in productList)
                                             {
                                                 var totalProductToday = customerType.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductToday != 0 ? totalProductToday < 0 ? $"({Math.Abs(totalProductToday).ToString(SD.Two_Decimal_Format)})" : totalProductToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductToday < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductToday != 0 ? totalProductToday < 0 ? $"({Math.Abs(totalProductToday).ToString(SD.Two_Decimal_Format)})" : totalProductToday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductToday < 0 ? Colors.Red.Medium : Colors.Black);
                                             }
 
                                             #endregion
 
                                             #region -- Total Yesterday --
 
-                                            table.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
+                                            content.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
 
                                             var totalYesterday = customerType.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
 
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterday != 0 ? totalYesterday < 0 ? $"({Math.Abs(totalYesterday).ToString(SD.Two_Decimal_Format)})" : totalYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterday < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterday != 0 ? totalYesterday < 0 ? $"({Math.Abs(totalYesterday).ToString(SD.Two_Decimal_Format)})" : totalYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterday < 0 ? Colors.Red.Medium : Colors.Black);
 
                                             foreach (var productName in productList)
                                             {
                                                 var totalProductYesterday = customerType.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
                                                     .Sum(dr => dr.Quantity);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterday != 0 ? totalProductYesterday < 0 ? $"({Math.Abs(totalProductYesterday).ToString(SD.Two_Decimal_Format)})" : totalProductYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterday < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterday != 0 ? totalProductYesterday < 0 ? $"({Math.Abs(totalProductYesterday).ToString(SD.Two_Decimal_Format)})" : totalProductYesterday.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterday < 0 ? Colors.Red.Medium : Colors.Black);
                                             }
 
                                             #endregion
 
                                             #region -- Total Month ToDate --
 
-                                            table.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
+                                            content.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
 
                                             var totalMonthToDate = customerType.Sum(dr => dr.Quantity);
 
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDate != 0 ? totalMonthToDate < 0 ? $"({Math.Abs(totalMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDate != 0 ? totalMonthToDate < 0 ? $"({Math.Abs(totalMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
 
                                             foreach (var productName in productList)
                                             {
                                                 var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDate != 0 ? totalProductMonthToDate < 0 ? $"({Math.Abs(totalProductMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDate != 0 ? totalProductMonthToDate < 0 ? $"({Math.Abs(totalProductMonthToDate).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDate.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDate < 0 ? Colors.Red.Medium : Colors.Black);
                                             }
 
                                             #endregion
 
-                                            table.Cell().Height(10).Text(" ");
-                                            table.Cell().Height(10).Text(" ");
-                                            table.Cell().Height(10).Text(" ");
-                                            table.Cell().Height(10).Text(" ");
-                                            table.Cell().Height(10).Text(" ");
+                                            content.Cell().Height(10).Text(" ");
+                                            content.Cell().Height(10).Text(" ");
+                                            content.Cell().Height(10).Text(" ");
+                                            content.Cell().Height(10).Text(" ");
+                                            content.Cell().Height(10).Text(" ");
                                         }
 
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ALL").SemiBold();
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
-                                        table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ALL").SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("TOTAL(VOLUME)").SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("BIODIESEL").SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ECONOGAS").SemiBold();
+                                        content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().Text("ENVIROGAS").SemiBold();
 
                                         #region -- Total Today --
 
-                                        table.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
+                                        content.Cell().Border(0.5f).Padding(3).Text("TOTAL TODAY").SemiBold();
 
                                         var totalTodayOverAll = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
 
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalTodayOverAll != 0 ? totalTodayOverAll < 0 ? $"({Math.Abs(totalTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalTodayOverAll != 0 ? totalTodayOverAll < 0 ? $"({Math.Abs(totalTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
 
                                         foreach (var productName in productList)
                                         {
                                             var totalProductTodayOverAll = deliveryReceipts.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductTodayOverAll != 0 ? totalProductTodayOverAll < 0 ? $"({Math.Abs(totalProductTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductTodayOverAll != 0 ? totalProductTodayOverAll < 0 ? $"({Math.Abs(totalProductTodayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductTodayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductTodayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
                                         }
 
                                         #endregion
 
                                         #region -- Total Yesterday --
 
-                                        table.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
+                                        content.Cell().Border(0.5f).Padding(3).Text("CUM. AS OF YESTERDAY").SemiBold();
 
                                         var totalYesterdayOverAll = deliveryReceipts.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
 
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterdayOverAll != 0 ? totalYesterdayOverAll < 0 ? $"({Math.Abs(totalYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalYesterdayOverAll != 0 ? totalYesterdayOverAll < 0 ? $"({Math.Abs(totalYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
 
                                         foreach (var productName in productList)
                                         {
                                             var totalProductYesterdayOverAll = deliveryReceipts.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
                                                 .Sum(dr => dr.Quantity);
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterdayOverAll != 0 ? totalProductYesterdayOverAll < 0 ? $"({Math.Abs(totalProductYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductYesterdayOverAll != 0 ? totalProductYesterdayOverAll < 0 ? $"({Math.Abs(totalProductYesterdayOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductYesterdayOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductYesterdayOverAll < 0 ? Colors.Red.Medium : Colors.Black);
                                         }
 
                                         #endregion
 
                                         #region -- Total Month ToDate --
 
-                                        table.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
+                                        content.Cell().Border(0.5f).Padding(3).Text("MONTH TO DATE").SemiBold();
 
                                         var totalMonthToDateOverAll = deliveryReceipts.Sum(dr => dr.Quantity);
 
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll < 0 ? $"({Math.Abs(totalMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                        content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll < 0 ? $"({Math.Abs(totalMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
 
                                         foreach (var productName in productList)
                                         {
                                             var totalProductMonthToDateOverAll = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDateOverAll != 0 ? totalProductMonthToDateOverAll < 0 ? $"({Math.Abs(totalProductMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
+                                            content.Cell().Border(0.5f).Padding(3).AlignRight().Text(totalProductMonthToDateOverAll != 0 ? totalProductMonthToDateOverAll < 0 ? $"({Math.Abs(totalProductMonthToDateOverAll).ToString(SD.Two_Decimal_Format)})" : totalProductMonthToDateOverAll.ToString(SD.Two_Decimal_Format) : null).FontColor(totalProductMonthToDateOverAll < 0 ? Colors.Red.Medium : Colors.Black);
                                         }
 
                                         #endregion
@@ -840,9 +830,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 var currentUser = _userManager.GetUserName(User)!;
                 var today = DateTimeHelper.GetCurrentPhilippineTime();
-                Expression<Func<FilprideDeliveryReceipt, bool>>? filter = default;
-                string dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
-                string currencyFormatTwoDecimal = "#,##0.00";
+                Expression<Func<FilprideDeliveryReceipt, bool>>? filter;
+                var dateRangeType = viewModel.DateTo != default ? "ByRange" : "AsOf";
+                var currencyFormatTwoDecimal = "#,##0.00";
 
                 if(viewModel.ReportType == "Delivered")
                 {
@@ -881,304 +871,208 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 deliveryReceipts = deliveryReceipts.OrderBy(dr => dr.Date);
 
-                using (var package = new ExcelPackage())
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
+
+                // Insert image from root directory
+                var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
+                var picture = await worksheet.Drawings.AddPictureAsync("CompanyLogo", new FileInfo(imagePath));
+                picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
+                picture.SetSize(200, 60); // Adjust size as needed
+
+                var mergedCellsA5 = worksheet.Cells["A5:B5"];
+                mergedCellsA5.Merge = true;
+                mergedCellsA5.Value = "OPERATION - LOGISTICS";
+
+                var mergedCellsA6 = worksheet.Cells["A6:B6"];
+                mergedCellsA6.Merge = true;
+
+                mergedCellsA6.Value = dateRangeType == "AsOf"
+                    ? $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}"
+                    : $"DISPATCH REPORT AS OF {viewModel.DateTo:dd MMM, yyyy}";
+
+                var mergedCellsA7 = worksheet.Cells["A7:B7"];
+                mergedCellsA7.Merge = true;
+                mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "DELIVERED" : "IN TRANSIT";
+
+                // Table headers
+                worksheet.Cells["A9"].Value = "DR DATE";
+                worksheet.Cells["B9"].Value = "CUSTOMER NAME";
+                worksheet.Cells["C9"].Value = "TYPE";
+                worksheet.Cells["D9"].Value = "DR NO.";
+                worksheet.Cells["E9"].Value = "PRODUCTS";
+                worksheet.Cells["F9"].Value = "QTY.";
+                worksheet.Cells["G9"].Value = "PICK-UP POINT";
+                worksheet.Cells["H9"].Value = "PO #";
+                worksheet.Cells["I9"].Value = "ATL#";
+                worksheet.Cells["J9"].Value = "COS NO.";
+                worksheet.Cells["K9"].Value = "HAULER NAME";
+                worksheet.Cells["L9"].Value = "SUPPLIER";
+                worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
+                worksheet.Cells["N9"].Value = "ECC";
+                worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
+
+                //TODO Remove this in the future
+                worksheet.Cells["P9"].Value = "OTC COS No.";
+                worksheet.Cells["Q9"].Value = "OTC DR No.";
+
+                if (viewModel.ReportType == "Delivered")
                 {
-                    var worksheet = package.Workbook.Worksheets.Add("Dispatch Report");
+                    worksheet.Cells["R9"].Value = "DELIVERED DATE";
+                    worksheet.Cells["S9"].Value = "STATUS";
+                }
+                else
+                {
+                    worksheet.Cells["R9"].Value = "LIFTING DATE";
+                    worksheet.Cells["S9"].Value = "LIFTING QUANTITY";
+                }
 
-                    // Insert image from root directory
-                    var imagePath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "Filpride.jpg"); // Update this to your image file name
-                    var picture = worksheet.Drawings.AddPicture("CompanyLogo", new FileInfo(imagePath));
-                    picture.SetPosition(0, 0, 0, 0); // Adjust position as needed
-                    picture.SetSize(200, 60); // Adjust size as needed
 
-                    var mergedCellsA5 = worksheet.Cells["A5:B5"];
-                    mergedCellsA5.Merge = true;
-                    mergedCellsA5.Value = "OPERATION - LOGISTICS";
+                int currentRow = 10;
+                string headerColumn = "S9";
+                int grandTotalColumn = 19;
+                decimal grandSumOfTotalFreightAmount = 0;
+                decimal grandTotalQuantity = 0;
+                decimal totalLiftedQuantity = 0;
 
-                    var mergedCellsA6 = worksheet.Cells["A6:B6"];
-                    mergedCellsA6.Merge = true;
+                foreach (var dr in deliveryReceipts)
+                {
+                    var quantity = dr.Quantity;
+                    var freightCharge = dr.Freight;
+                    var ecc = dr.ECC;
+                    var totalFreightAmount = quantity * (freightCharge + ecc);
+                    var liftedQuantity = 0m;
 
-                    if (dateRangeType == "AsOf")
+                    if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
+                        dr.Date != viewModel.DateFrom)
                     {
-                        mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateFrom:dd MMM, yyyy}";
+                        // Don't show record of other dates if entry is "as of" and "delivered"
                     }
                     else
                     {
-                        mergedCellsA6.Value = $"DISPATCH REPORT AS OF {viewModel.DateTo:dd MMM, yyyy}";
-                    }
+                        worksheet.Cells[currentRow, 1].Value = dr.Date;
+                        worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
+                        worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
+                        worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
+                        worksheet.Cells[currentRow, 5].Value = dr.PurchaseOrder!.Product!.ProductName;
+                        worksheet.Cells[currentRow, 6].Value = dr.Quantity;
+                        worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
+                        worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
+                        worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
+                        worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
+                        worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
+                        worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
+                        worksheet.Cells[currentRow, 13].Value = freightCharge;
+                        worksheet.Cells[currentRow, 14].Value = ecc;
+                        worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
+                        worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
+                        worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
 
-                    var mergedCellsA7 = worksheet.Cells["A7:B7"];
-                    mergedCellsA7.Merge = true;
-                    mergedCellsA7.Value = viewModel.ReportType == "Delivered" ? "DELIVERED" : "IN TRANSIT";
-
-                    // Table headers
-                    worksheet.Cells["A9"].Value = "DR DATE";
-                    worksheet.Cells["B9"].Value = "CUSTOMER NAME";
-                    worksheet.Cells["C9"].Value = "TYPE";
-                    worksheet.Cells["D9"].Value = "DR NO.";
-                    worksheet.Cells["E9"].Value = "PRODUCTS";
-                    worksheet.Cells["F9"].Value = "QTY.";
-                    worksheet.Cells["G9"].Value = "PICK-UP POINT";
-                    worksheet.Cells["H9"].Value = "PO #";
-                    worksheet.Cells["I9"].Value = "ATL#";
-                    worksheet.Cells["J9"].Value = "COS NO.";
-                    worksheet.Cells["K9"].Value = "HAULER NAME";
-                    worksheet.Cells["L9"].Value = "SUPPLIER";
-                    worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
-                    worksheet.Cells["N9"].Value = "ECC";
-                    worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
-
-                    //TODO Remove this in the future
-                    worksheet.Cells["P9"].Value = "OTC COS No.";
-                    worksheet.Cells["Q9"].Value = "OTC DR No.";
-
-                    if (viewModel.ReportType == "Delivered")
-                    {
-                        worksheet.Cells["R9"].Value = "DELIVERED DATE";
-                        worksheet.Cells["S9"].Value = "STATUS";
-                    }
-                    else
-                    {
-                        worksheet.Cells["R9"].Value = "LIFTING DATE";
-                        worksheet.Cells["S9"].Value = "LIFTING QUANTITY";
-                    }
-
-
-                    int currentRow = 10;
-                    string headerColumn = "S9";
-                    int grandTotalColumn = 19;
-                    decimal grandSumOfTotalFreightAmount = 0;
-                    decimal grandTotalQuantity = 0;
-                    decimal totalLiftedQuantity = 0;
-
-                    foreach (var dr in deliveryReceipts)
-                    {
-                        var quantity = dr.Quantity;
-                        var freightCharge = dr.Freight;
-                        var ecc = dr.ECC;
-                        var totalFreightAmount = quantity * (freightCharge + ecc);
-                        var liftedQuantity = 0m;
-
-                        if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf" &&
-                            dr.Date != viewModel.DateFrom)
+                        if (viewModel.ReportType == "Delivered")
                         {
-                            // Don't show record of other dates if entry is "as of" and "delivered"
+                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                            worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
                         else
                         {
-                            worksheet.Cells[currentRow, 1].Value = dr.Date;
-                            worksheet.Cells[currentRow, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 2].Value = dr.Customer?.CustomerName;
-                            worksheet.Cells[currentRow, 3].Value = dr.Customer?.CustomerType;
-                            worksheet.Cells[currentRow, 4].Value = dr.DeliveryReceiptNo;
-                            worksheet.Cells[currentRow, 5].Value = dr.PurchaseOrder!.Product!.ProductName;
-                            worksheet.Cells[currentRow, 6].Value = dr.Quantity;
-                            worksheet.Cells[currentRow, 7].Value = dr.CustomerOrderSlip?.PickUpPoint?.Depot;
-                            worksheet.Cells[currentRow, 8].Value = dr.PurchaseOrder?.PurchaseOrderNo;
-                            worksheet.Cells[currentRow, 9].Value = dr.AuthorityToLoadNo;
-                            worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
-                            worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
-                            worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.Supplier?.SupplierName;
-                            worksheet.Cells[currentRow, 13].Value = freightCharge;
-                            worksheet.Cells[currentRow, 14].Value = ecc;
-                            worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
-                            worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
-                            worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
-
-                            if (viewModel.ReportType == "Delivered")
+                            if (dr.HasReceivingReport)
                             {
-                                worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
+                                var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
+                                liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
+                                worksheet.Cells[currentRow, 18].Value = getReceivingReport?.Date;
                                 worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                                worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                                worksheet.Cells[currentRow, 19].Value = liftedQuantity;
+                                worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
-                            else
-                            {
-                                if (dr.HasReceivingReport)
-                                {
-                                    var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
-                                    liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
-                                    worksheet.Cells[currentRow, 18].Value = getReceivingReport?.Date;
-                                    worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                                    worksheet.Cells[currentRow, 19].Value = liftedQuantity;
-                                    worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                }
-                            }
-
-                            currentRow++;
                         }
 
-                        grandTotalQuantity += quantity;
-                        grandSumOfTotalFreightAmount += totalFreightAmount;
-                        totalLiftedQuantity += liftedQuantity;
+                        currentRow++;
                     }
 
-                    // Grand Total row
-                    worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
+                    grandTotalQuantity += quantity;
+                    grandSumOfTotalFreightAmount += totalFreightAmount;
+                    totalLiftedQuantity += liftedQuantity;
+                }
 
-                    if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
+                // Grand Total row
+                worksheet.Cells[currentRow, 5].Value = "GRAND TOTAL";
+
+                if (viewModel.ReportType == "Delivered" && dateRangeType == "AsOf")
+                {
+                    // Don't add record of other dates if entry is "as of" and "delivered"
+                    var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).ToList();
+                    worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
+                    worksheet.Cells[currentRow, 15].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
+                }
+                else
+                {
+                    worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
+                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
+                    worksheet.Cells[currentRow, 19].Value = totalLiftedQuantity;
+                    worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                // Adding borders and bold styling to the total row
+                using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, grandTotalColumn]) // Whole row
+                {
+                    totalRowRange.Style.Font.Bold = true; // Make text bold
+                    totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                }
+
+                currentRow += 3;
+                var startOfSummary = currentRow;
+
+                // Generated by, checked by, received by footer
+                worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
+                worksheet.Cells[currentRow, 1].Value = "Generated by:";
+                worksheet.Cells[currentRow, 4].Value = "Noted & Checked by:";
+                worksheet.Cells[currentRow, 8].Value = "Received by:";
+
+                currentRow += 1;
+
+                worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
+                worksheet.Cells[currentRow, 1].Value = currentUser.ToUpper();
+
+                currentRow += 1;
+
+                worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
+                worksheet.Cells[currentRow, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
+                worksheet.Cells[currentRow, 4].Value = "LOGISTICS SUPERVISOR";
+                worksheet.Cells[currentRow, 8].Value = "CNC SUPERVISOR";
+
+                // Styling and formatting (optional)
+                worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
+
+                using (var range = worksheet.Cells[$"A9:{headerColumn}"])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.Color.SetColor(Color.White);
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 102, 204));
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                }
+
+                // Summary
+                if (dateRangeType == "AsOf" && viewModel.ReportType == "Delivered")
+                {
+                    //string[] customerTypes = { "Retail", "Industrial", "Government" };
+                    //var groupByCustomerType = deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType);
+
+                    string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
+
+                    foreach (var customerType in deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType))
                     {
-                        // Don't add record of other dates if entry is "as of" and "delivered"
-                        var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom);
-                        worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
-                        worksheet.Cells[currentRow, 15].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
-                    }
-                    else
-                    {
-                        worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                        worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
-                        worksheet.Cells[currentRow, 19].Value = totalLiftedQuantity;
-                        worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    }
-
-                    // Adding borders and bold styling to the total row
-                    using (var totalRowRange = worksheet.Cells[currentRow, 1, currentRow, grandTotalColumn]) // Whole row
-                    {
-                        totalRowRange.Style.Font.Bold = true; // Make text bold
-                        totalRowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        totalRowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                    }
-
-                    currentRow += 3;
-                    var startOfSummary = currentRow;
-
-                    // Generated by, checked by, received by footer
-                    worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
-                    worksheet.Cells[currentRow, 1].Value = "Generated by:";
-                    worksheet.Cells[currentRow, 4].Value = "Noted & Checked by:";
-                    worksheet.Cells[currentRow, 8].Value = "Received by:";
-
-                    currentRow += 1;
-
-                    worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
-                    worksheet.Cells[currentRow, 1].Value = currentUser.ToUpper();
-
-                    currentRow += 1;
-
-                    worksheet.Cells[currentRow, 1, currentRow, 2].Merge = true;
-                    worksheet.Cells[currentRow, 1].Value = $"Date & Time: {today:MM/dd/yyyy - hh:mm tt}";
-                    worksheet.Cells[currentRow, 4].Value = "LOGISTICS SUPERVISOR";
-                    worksheet.Cells[currentRow, 8].Value = "CNC SUPERVISOR";
-
-                    // Styling and formatting (optional)
-                    worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
-                    worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
-
-                    using (var range = worksheet.Cells[$"A9:{headerColumn}"])
-                    {
-                        range.Style.Font.Bold = true;
-                        range.Style.Font.Color.SetColor(System.Drawing.Color.White);
-                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(0, 102, 204));
-                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                        range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                    }
-
-                    // Summary
-                    if (dateRangeType == "AsOf" && viewModel.ReportType == "Delivered")
-                    {
-                        //string[] customerTypes = { "Retail", "Industrial", "Government" };
-                        //var groupByCustomerType = deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType);
-
-                        string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
-
-                        foreach (var customerType in deliveryReceipts.GroupBy(dr => dr.Customer!.CustomerType))
-                        {
-                            using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
-                            {
-                                range.Style.Font.Bold = true;
-                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            }
-                            worksheet.Cells[startOfSummary, 11].Value = customerType.Key;
-                            worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
-                            worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
-                            worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
-                            worksheet.Cells[startOfSummary, 13].Value = "BIODIESEL";
-                            worksheet.Cells[startOfSummary, 13].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 4));
-                            worksheet.Cells[startOfSummary, 14].Value = "ECONOGAS";
-                            worksheet.Cells[startOfSummary, 14].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 156, 100));
-                            worksheet.Cells[startOfSummary, 15].Value = "ENVIROGAS";
-                            worksheet.Cells[startOfSummary, 15].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,4,4));
-
-                            #region -- totalToday --
-
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
-
-                            var totalToday = customerType.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
-
-                            worksheet.Cells[startOfSummary, 12].Value = totalToday != 0 ? totalToday : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                            int columnOne = 13;
-
-                            foreach (var productName in productList)
-                            {
-                                var totalProductToday = customerType.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
-                                    .Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnOne].Value = totalProductToday != 0 ? totalProductToday : 0m;
-                                worksheet.Cells[startOfSummary, columnOne].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnOne++;
-                            }
-
-                            #endregion
-
-                            #region -- totalYesterday --
-
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
-
-                            var totalYesterday = customerType.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
-                            worksheet.Cells[startOfSummary, 12].Value = totalYesterday != 0 ? totalYesterday : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                            int columnTwo = 13;
-
-                            foreach (var productName in productList)
-                            {
-                                var totalProductYesterday = customerType.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnTwo].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
-                                worksheet.Cells[startOfSummary, columnTwo].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnTwo++;
-                            }
-
-                            #endregion
-
-                            #region -- Month to date --
-
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
-
-                            var totalMonthToDate = customerType.Sum(dr => dr.Quantity);
-                            worksheet.Cells[startOfSummary, 12].Value = totalMonthToDate != 0 ? totalMonthToDate : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
-
-                            int columnThree = 13;
-
-                            foreach (var productName in productList)
-                            {
-                                var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnThree].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
-                                worksheet.Cells[startOfSummary, columnThree].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnThree++;
-                            }
-
-                            #endregion
-
-                            worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                            startOfSummary += 2;
-
-                        }
-
-                        // All product types
                         using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
                         {
                             range.Style.Font.Bold = true;
                             range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         }
-                        worksheet.Cells[startOfSummary, 11].Value = "ALL";
+                        worksheet.Cells[startOfSummary, 11].Value = customerType.Key;
                         worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
                         worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
                         worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
@@ -1191,86 +1085,175 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         #region -- totalToday --
 
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+                        startOfSummary++;
+                        worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
+                        worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            var totalTodayOverAll = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+                        var totalToday = customerType.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
 
-                            worksheet.Cells[startOfSummary, 12].Value = totalTodayOverAll != 0 ? totalTodayOverAll : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[startOfSummary, 12].Value = totalToday != 0 ? totalToday : 0m;
+                        worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                            int columnOneOverAll = 13;
+                        int columnOne = 13;
 
-                            foreach (var productName in productList)
-                            {
-                                var totalProductToday = deliveryReceipts.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
-                                    .Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnOneOverAll].Value = totalProductToday != 0 ? totalProductToday : 0m;
-                                worksheet.Cells[startOfSummary, columnOneOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnOneOverAll++;
-                            }
+                        foreach (var productName in productList)
+                        {
+                            var totalProductToday = customerType.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                                .Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, columnOne].Value = totalProductToday != 0 ? totalProductToday : 0m;
+                            worksheet.Cells[startOfSummary, columnOne].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            columnOne++;
+                        }
 
                         #endregion
 
                         #region -- totalYesterday --
 
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+                        startOfSummary++;
+                        worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
+                        worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            var totalYesterdayOverAll = deliveryReceipts.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
-                            worksheet.Cells[startOfSummary, 12].Value = totalYesterdayOverAll != 0 ? totalYesterdayOverAll : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        var totalYesterday = customerType.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+                        worksheet.Cells[startOfSummary, 12].Value = totalYesterday != 0 ? totalYesterday : 0m;
+                        worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                            int columnTwoOverAll = 13;
+                        int columnTwo = 13;
 
-                            foreach (var productName in productList)
-                            {
-                                var totalProductYesterday = deliveryReceipts.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnTwoOverAll].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
-                                worksheet.Cells[startOfSummary, columnTwoOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnTwoOverAll++;
-                            }
+                        foreach (var productName in productList)
+                        {
+                            var totalProductYesterday = customerType.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, columnTwo].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
+                            worksheet.Cells[startOfSummary, columnTwo].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            columnTwo++;
+                        }
 
                         #endregion
 
                         #region -- Month to date --
 
-                            startOfSummary++;
-                            worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
-                            worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+                        startOfSummary++;
+                        worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
+                        worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
 
-                            var totalMonthToDateOverAll = deliveryReceipts.Sum(dr => dr.Quantity);
-                            worksheet.Cells[startOfSummary, 12].Value = totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll : 0m;
-                            worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        var totalMonthToDate = customerType.Sum(dr => dr.Quantity);
+                        worksheet.Cells[startOfSummary, 12].Value = totalMonthToDate != 0 ? totalMonthToDate : 0m;
+                        worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                            int columnThreeOverAll = 13;
+                        int columnThree = 13;
 
-                            foreach (var productName in productList)
-                            {
-                                var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
-                                worksheet.Cells[startOfSummary, columnThreeOverAll].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
-                                worksheet.Cells[startOfSummary, columnThreeOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                columnThreeOverAll++;
-                            }
+                        foreach (var productName in productList)
+                        {
+                            var totalProductMonthToDate = customerType.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                            worksheet.Cells[startOfSummary, columnThree].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
+                            worksheet.Cells[startOfSummary, columnThree].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            columnThree++;
+                        }
 
                         #endregion
 
                         worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        startOfSummary += 2;
+
                     }
 
+                    // All product types
+                    using (var range = worksheet.Cells[startOfSummary, 11, startOfSummary, 15])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    }
+                    worksheet.Cells[startOfSummary, 11].Value = "ALL";
+                    worksheet.Cells[startOfSummary, 11].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 204, 204));
+                    worksheet.Cells[startOfSummary, 12].Value = "TOTAL (VOLUME)";
+                    worksheet.Cells[startOfSummary, 12].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 156));
+                    worksheet.Cells[startOfSummary, 13].Value = "BIODIESEL";
+                    worksheet.Cells[startOfSummary, 13].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255, 204, 4));
+                    worksheet.Cells[startOfSummary, 14].Value = "ECONOGAS";
+                    worksheet.Cells[startOfSummary, 14].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(56, 156, 100));
+                    worksheet.Cells[startOfSummary, 15].Value = "ENVIROGAS";
+                    worksheet.Cells[startOfSummary, 15].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(255,4,4));
 
-                    worksheet.Cells.AutoFitColumns();
-                    worksheet.View.FreezePanes(10, 1);
+                    #region -- totalToday --
 
-                    // Return Excel file as response
-                    var stream = new MemoryStream();
-                    package.SaveAs(stream);
-                    stream.Position = 0;
-                    var fileName = $"DispatchReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
-                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                    startOfSummary++;
+                    worksheet.Cells[startOfSummary, 11].Value = "TOTAL TODAY";
+                    worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+
+                    var totalTodayOverAll = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).Sum(dr => dr.Quantity);
+
+                    worksheet.Cells[startOfSummary, 12].Value = totalTodayOverAll != 0 ? totalTodayOverAll : 0m;
+                    worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    int columnOneOverAll = 13;
+
+                    foreach (var productName in productList)
+                    {
+                        var totalProductToday = deliveryReceipts.Where(x => x.Date == viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName)
+                            .Sum(dr => dr.Quantity);
+                        worksheet.Cells[startOfSummary, columnOneOverAll].Value = totalProductToday != 0 ? totalProductToday : 0m;
+                        worksheet.Cells[startOfSummary, columnOneOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        columnOneOverAll++;
+                    }
+
+                    #endregion
+
+                    #region -- totalYesterday --
+
+                    startOfSummary++;
+                    worksheet.Cells[startOfSummary, 11].Value = "CUM. AS OF YESTERDAY";
+                    worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+
+                    var totalYesterdayOverAll = deliveryReceipts.Where(t => t.Date < viewModel.DateFrom).Sum(dr => dr.Quantity);
+                    worksheet.Cells[startOfSummary, 12].Value = totalYesterdayOverAll != 0 ? totalYesterdayOverAll : 0m;
+                    worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    int columnTwoOverAll = 13;
+
+                    foreach (var productName in productList)
+                    {
+                        var totalProductYesterday = deliveryReceipts.Where(x => x.Date < viewModel.DateFrom && x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                        worksheet.Cells[startOfSummary, columnTwoOverAll].Value = totalProductYesterday != 0 ? totalProductYesterday : 0m;
+                        worksheet.Cells[startOfSummary, columnTwoOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        columnTwoOverAll++;
+                    }
+
+                    #endregion
+
+                    #region -- Month to date --
+
+                    startOfSummary++;
+                    worksheet.Cells[startOfSummary, 11].Value = "MONTH TO DATE";
+                    worksheet.Cells[startOfSummary, 11].Style.Font.Bold = true;
+
+                    var totalMonthToDateOverAll = deliveryReceipts.Sum(dr => dr.Quantity);
+                    worksheet.Cells[startOfSummary, 12].Value = totalMonthToDateOverAll != 0 ? totalMonthToDateOverAll : 0m;
+                    worksheet.Cells[startOfSummary, 12].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                    int columnThreeOverAll = 13;
+
+                    foreach (var productName in productList)
+                    {
+                        var totalProductMonthToDate = deliveryReceipts.Where(x => x.PurchaseOrder?.Product?.ProductName == productName).Sum(dr => dr.Quantity);
+                        worksheet.Cells[startOfSummary, columnThreeOverAll].Value = totalProductMonthToDate != 0 ? totalProductMonthToDate : 0m;
+                        worksheet.Cells[startOfSummary, columnThreeOverAll].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        columnThreeOverAll++;
+                    }
+
+                    #endregion
+
+                    worksheet.Cells[startOfSummary, 11, startOfSummary, 15].Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 }
+
+
+                worksheet.Cells.AutoFitColumns();
+                worksheet.View.FreezePanes(10, 1);
+
+                // Return Excel file as response
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                var fileName = $"DispatchReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -1442,9 +1425,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     foreach (var record in sales)
                                     {
                                         var quantity = record.DeliveryReceipt.Quantity;
-                                        var freight = (record.DeliveryReceipt?.Freight ?? 0) * quantity;
+                                        var freight = record.DeliveryReceipt.Freight * quantity;
                                         var freightNetOfVat = freight / 1.12m;
-                                        var salesNetOfVat = record.DeliveryReceipt!.TotalAmount != 0 ? record.DeliveryReceipt.TotalAmount / 1.12m : 0;
+                                        var salesNetOfVat = record.DeliveryReceipt.TotalAmount != 0 ? record.DeliveryReceipt.TotalAmount / 1.12m : 0;
                                         var vat = salesNetOfVat * .12m;
 
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.DeliveredDate?.ToString(SD.Date_Format));
@@ -1497,11 +1480,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 #region -- Overall Summary
 
-                                    col.Item().PaddingTop(10).Table(table =>
+                                    col.Item().PaddingTop(10).Table(content =>
                                     {
                                         #region -- Columns Definition
 
-                                            table.ColumnsDefinition(columns =>
+                                            content.ColumnsDefinition(columns =>
                                             {
                                                 columns.RelativeColumn();
                                                 columns.RelativeColumn();
@@ -1525,7 +1508,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                         #region -- Table Header
 
-                                            table.Header(header =>
+                                            content.Header(header =>
                                             {
                                                 header.Cell().ColumnSpan(4).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).Text("Overall").AlignCenter().SemiBold();
                                                 header.Cell();
@@ -1617,22 +1600,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                                 #endregion
 
-                                                table.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(overAllQuantitySum != 0 ? overAllQuantitySum < 0 ? $"({Math.Abs(overAllQuantitySum).ToString(SD.Two_Decimal_Format)})" : overAllQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(overAllQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(overallNetOfAmountSum != 0 ? overallNetOfAmountSum < 0 ? $"({Math.Abs(overallNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : overallNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(overallNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(overallAverageSellingPrice != 0 ? overallAverageSellingPrice < 0 ? $"({Math.Abs(overallAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : overallAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(overallAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell();
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetOfAmountSum != 0 ? biodieselNetOfAmountSum < 0 ? $"({Math.Abs(biodieselNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselAverageSellingPrice != 0 ? biodieselAverageSellingPrice < 0 ? $"({Math.Abs(biodieselAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : biodieselAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell();
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetOfAmountSum != 0 ? econogasNetOfAmountSum < 0 ? $"({Math.Abs(econogasNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : econogasNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasAverageSellingPrice != 0 ? econogasAverageSellingPrice < 0 ? $"({Math.Abs(econogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell();
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetOfAmountSum != 0 ? envirogasNetOfAmountSum < 0 ? $"({Math.Abs(envirogasNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasAverageSellingPrice != 0 ? envirogasAverageSellingPrice < 0 ? $"({Math.Abs(envirogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).Text(customerType.ToString());
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(overAllQuantitySum != 0 ? overAllQuantitySum < 0 ? $"({Math.Abs(overAllQuantitySum).ToString(SD.Two_Decimal_Format)})" : overAllQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(overAllQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(overallNetOfAmountSum != 0 ? overallNetOfAmountSum < 0 ? $"({Math.Abs(overallNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : overallNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(overallNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(overallAverageSellingPrice != 0 ? overallAverageSellingPrice < 0 ? $"({Math.Abs(overallAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : overallAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(overallAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell();
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselNetOfAmountSum != 0 ? biodieselNetOfAmountSum < 0 ? $"({Math.Abs(biodieselNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : biodieselNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselAverageSellingPrice != 0 ? biodieselAverageSellingPrice < 0 ? $"({Math.Abs(biodieselAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : biodieselAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell();
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasNetOfAmountSum != 0 ? econogasNetOfAmountSum < 0 ? $"({Math.Abs(econogasNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : econogasNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasAverageSellingPrice != 0 ? econogasAverageSellingPrice < 0 ? $"({Math.Abs(econogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell();
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasNetOfAmountSum != 0 ? envirogasNetOfAmountSum < 0 ? $"({Math.Abs(envirogasNetOfAmountSum).ToString(SD.Two_Decimal_Format)})" : envirogasNetOfAmountSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasNetOfAmountSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasAverageSellingPrice != 0 ? envirogasAverageSellingPrice < 0 ? $"({Math.Abs(envirogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
 
                                                 totalQuantityForBiodiesel += biodieselQuantitySum;
                                                 totalAmountForBiodiesel += biodieselNetOfAmountSum;
@@ -1653,22 +1636,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             var averageSellingPriceForEconogas = totalAmountForEconogas != 0 && totalQuantityForEconogas != 0 ? totalAmountForEconogas / totalQuantityForEconogas : 0m;
                                             var averageSellingPriceForEnvirogas = totalAmountForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? totalAmountForEnvirogas / totalQuantityForEnvirogas : 0m;
 
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(overallTotalQuantity != 0 ? overallTotalQuantity < 0 ? $"({Math.Abs(overallTotalQuantity).ToString(SD.Two_Decimal_Format)})" : overallTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(overallTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalSalesNetOfVat != 0 ? totalSalesNetOfVat < 0 ? $"({Math.Abs(totalSalesNetOfVat).ToString(SD.Two_Decimal_Format)})" : totalSalesNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(totalSalesNetOfVat < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForOverAll != 0 ? averageSellingPriceForOverAll < 0 ? $"({Math.Abs(averageSellingPriceForOverAll).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForOverAll.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForOverAll < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForBiodiesel != 0 ? totalQuantityForBiodiesel < 0 ? $"({Math.Abs(totalQuantityForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForBiodiesel != 0 ? totalAmountForBiodiesel < 0 ? $"({Math.Abs(totalAmountForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalAmountForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForBiodiesel != 0 ? averageSellingPriceForBiodiesel < 0 ? $"({Math.Abs(averageSellingPriceForBiodiesel).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForBiodiesel.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEconogas != 0 ? totalQuantityForEconogas < 0 ? $"({Math.Abs(totalQuantityForEconogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForEconogas != 0 ? totalAmountForEconogas < 0 ? $"({Math.Abs(totalAmountForEconogas).ToString(SD.Two_Decimal_Format)})" : totalAmountForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEconogas != 0 ? averageSellingPriceForEconogas < 0 ? $"({Math.Abs(averageSellingPriceForEconogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEconogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEnvirogas != 0 ? totalQuantityForEnvirogas < 0 ? $"({Math.Abs(totalQuantityForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForEnvirogas != 0 ? totalAmountForEnvirogas < 0 ? $"({Math.Abs(totalAmountForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalAmountForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEnvirogas != 0 ? averageSellingPriceForEnvirogas < 0 ? $"({Math.Abs(averageSellingPriceForEnvirogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEnvirogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(overallTotalQuantity != 0 ? overallTotalQuantity < 0 ? $"({Math.Abs(overallTotalQuantity).ToString(SD.Two_Decimal_Format)})" : overallTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(overallTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalSalesNetOfVat != 0 ? totalSalesNetOfVat < 0 ? $"({Math.Abs(totalSalesNetOfVat).ToString(SD.Two_Decimal_Format)})" : totalSalesNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(totalSalesNetOfVat < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForOverAll != 0 ? averageSellingPriceForOverAll < 0 ? $"({Math.Abs(averageSellingPriceForOverAll).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForOverAll.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForOverAll < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForBiodiesel != 0 ? totalQuantityForBiodiesel < 0 ? $"({Math.Abs(totalQuantityForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForBiodiesel != 0 ? totalAmountForBiodiesel < 0 ? $"({Math.Abs(totalAmountForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalAmountForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForBiodiesel != 0 ? averageSellingPriceForBiodiesel < 0 ? $"({Math.Abs(averageSellingPriceForBiodiesel).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForBiodiesel.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEconogas != 0 ? totalQuantityForEconogas < 0 ? $"({Math.Abs(totalQuantityForEconogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForEconogas != 0 ? totalAmountForEconogas < 0 ? $"({Math.Abs(totalAmountForEconogas).ToString(SD.Two_Decimal_Format)})" : totalAmountForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEconogas != 0 ? averageSellingPriceForEconogas < 0 ? $"({Math.Abs(averageSellingPriceForEconogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEconogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEnvirogas != 0 ? totalQuantityForEnvirogas < 0 ? $"({Math.Abs(totalQuantityForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmountForEnvirogas != 0 ? totalAmountForEnvirogas < 0 ? $"({Math.Abs(totalAmountForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalAmountForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmountForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEnvirogas != 0 ? averageSellingPriceForEnvirogas < 0 ? $"({Math.Abs(averageSellingPriceForEnvirogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEnvirogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                                         #endregion
                                     });
@@ -1791,7 +1774,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1811,8 +1794,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var dr in salesReport)
                 {
                     var quantity = dr.DeliveryReceipt.Quantity;
-                    var freightAmount = (dr.DeliveryReceipt?.Freight ?? 0m) * quantity;
-                    var segment = dr.DeliveryReceipt!.TotalAmount;
+                    var freightAmount = dr.DeliveryReceipt.Freight * quantity;
+                    var segment = dr.DeliveryReceipt.TotalAmount;
                     var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
                     var vat = salesNetOfVat * .12m;
                     var freightNetOfVat = freightAmount / 1.12m;
@@ -1824,12 +1807,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
                     worksheet.Cells[row, 6].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CustomerOrderSlipNo;
                     worksheet.Cells[row, 7].Value = dr.DeliveryReceipt.CustomerOrderSlip?.OldCosNo;
-                    worksheet.Cells[row, 8].Value = dr.DeliveryReceipt?.DeliveryReceiptNo;
-                    worksheet.Cells[row, 9].Value = dr.DeliveryReceipt?.ManualDrNo;
-                    worksheet.Cells[row, 10].Value = dr.DeliveryReceipt?.PurchaseOrder?.PurchaseOrderNo;
-                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt?.PurchaseOrder?.OldPoNo;
-                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName;
+                    worksheet.Cells[row, 8].Value = dr.DeliveryReceipt.DeliveryReceiptNo;
+                    worksheet.Cells[row, 9].Value = dr.DeliveryReceipt.ManualDrNo;
+                    worksheet.Cells[row, 10].Value = dr.DeliveryReceipt.PurchaseOrder?.PurchaseOrderNo;
+                    worksheet.Cells[row, 11].Value = dr.DeliveryReceipt.PurchaseOrder?.OldPoNo;
+                    worksheet.Cells[row, 12].Value = dr.DeliveryReceipt.CustomerOrderSlip?.DeliveryOption;
+                    worksheet.Cells[row, 13].Value = dr.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName;
                     worksheet.Cells[row, 14].Value = dr.DeliveryReceipt.Quantity;
                     worksheet.Cells[row, 15].Value = freightAmount;
                     worksheet.Cells[row, 16].Value = segment;
@@ -1880,7 +1863,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
 
                 using (var range = worksheet.Cells[row, 13, row, 20])
@@ -1917,7 +1900,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1929,7 +1912,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
@@ -1958,7 +1941,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -1970,7 +1953,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
@@ -1999,7 +1982,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2011,7 +1994,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
@@ -2041,7 +2024,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2053,7 +2036,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 15, rowForSummary + 4, 17])
@@ -2062,10 +2045,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
                 }
-
-                var listForBiodiesel = new List<SalesReportViewModel>();
-                var listForEconogas = new List<SalesReportViewModel>();
-                var listForEnvirogas = new List<SalesReportViewModel>();
 
                 var totalOverallQuantity = 0m;
                 var totalOverallAmount = 0m;
@@ -2082,9 +2061,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = salesReport.Where(s => s.DeliveryReceipt.Customer?.CustomerType == customerType.ToString()).ToList();
-                    listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
-                    listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
-                    listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
+                    var listForBiodiesel = list.Where(s => s.DeliveryReceipt.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
+                    var listForEconogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
+                    var listForEnvirogas = list.Where(s => s.DeliveryReceipt.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Overall
                     var overAllQuantitySum = list.Sum(s => s.DeliveryReceipt.Quantity);
@@ -2197,7 +2176,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.View.FreezePanes(8, 3);
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
@@ -2283,7 +2262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2372,7 +2351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
+                    range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
                 }
 
                 using (var range = worksheet.Cells[row, 13, row, 20])
@@ -2409,7 +2388,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2421,7 +2400,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 2, rowForSummary + 4, 5])
@@ -2450,7 +2429,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2462,7 +2441,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 7, rowForSummary + 4, 9])
@@ -2491,7 +2470,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2503,7 +2482,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.Yellow);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                 }
 
                 using (var range = worksheet.Cells[rowForSummary + 4, 11, rowForSummary + 4, 13])
@@ -2533,7 +2512,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                     range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
@@ -2555,10 +2534,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Double; // Double bottom border
                 }
 
-                var listForBiodiesel = new List<FilprideSalesInvoice>();
-                var listForEconogas = new List<FilprideSalesInvoice>();
-                var listForEnvirogas = new List<FilprideSalesInvoice>();
-
                 var totalOverallQuantity = 0m;
                 var totalOverallAmount = 0m;
 
@@ -2574,9 +2549,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
                     var list = salesReport.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
-                    listForBiodiesel = list.Where(s => s.Product?.ProductName == "BIODIESEL").ToList();
-                    listForEconogas = list.Where(s => s.Product?.ProductName == "ECONOGAS").ToList();
-                    listForEnvirogas = list.Where(s => s.Product?.ProductName == "ENVIROGAS").ToList();
+                    var listForBiodiesel = list.Where(s => s.Product?.ProductName == "BIODIESEL").ToList();
+                    var listForEconogas = list.Where(s => s.Product?.ProductName == "ECONOGAS").ToList();
+                    var listForEnvirogas = list.Where(s => s.Product?.ProductName == "ENVIROGAS").ToList();
 
                     // Computation for Overall
                     var overAllQuantitySum = list.Sum(s => s.Quantity);
@@ -2690,7 +2665,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
@@ -2820,12 +2795,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Loop to Show Records
 
-                                decimal currentAmount = 0;
-                                decimal totalAmount = 0;
+                            decimal totalAmount = 0;
 
                                 foreach (var record in collectionReceiptReport)
                                 {
-                                    currentAmount = record.CashAmount + record.CheckAmount;
+                                    var currentAmount = record.CashAmount + record.CheckAmount;
 
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
@@ -2906,7 +2880,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     var collectionReceiptReport = await _unitOfWork.FilprideReport
-                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims);
+                        .GetCollectionReceiptReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
                     using var package = new ExcelPackage();
                     var worksheet = package.Workbook.Worksheets.Add("COLLECTION");
@@ -2944,15 +2918,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     headerCells.Style.Font.Bold = true;
 
                     // initializing records entry
-                    int row = 8;
-                    int startingRow = row - 1;
-                    string currencyFormat = "#,##0.00";
-                    decimal currentAmount = 0;
+                    var row = 8;
+                    var startingRow = row - 1;
+                    var currencyFormat = "#,##0.00";
                     decimal totalAmount = 0;
 
                     foreach (var cr in collectionReceiptReport)
                     {
-                        currentAmount = cr.CashAmount + cr.CheckAmount;
+                        var currentAmount = cr.CashAmount + cr.CheckAmount;
                         worksheet.Cells[row, 1].Value = cr.Customer?.CustomerCode ?? "";
                         worksheet.Cells[row, 2].Value = cr.Customer?.CustomerName ?? "";
                         worksheet.Cells[row, 3].Value = cr.Customer?.CustomerType ?? "";
@@ -2997,7 +2970,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells.AutoFitColumns();
 
-                    var excelBytes = package.GetAsByteArray();
+                    var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                     return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Collection Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
                 }
@@ -3509,7 +3482,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.View.FreezePanes(8, 1);
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"AgingReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
@@ -3706,14 +3679,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerPoNo);
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.UnitPrice != 0 ? record.UnitPrice < 0 ? $"({Math.Abs(record.UnitPrice).ToString(SD.Four_Decimal_Format)})" : record.UnitPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(record.UnitPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freight != 0 ? freight < 0 ? $"({Math.Abs(freight ?? 0).ToString(SD.Two_Decimal_Format)})" : freight?.ToString(SD.Two_Decimal_Format) : null).FontColor(freight < 0 ? Colors.Red.Medium : Colors.Black);
+                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freight != 0 ? freight < 0 ? $"({Math.Abs((decimal)freight).ToString(SD.Two_Decimal_Format)})" : freight?.ToString(SD.Two_Decimal_Format) : null).FontColor(freight < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.DeliveryReceipt?.Freight != 0 ? record.DeliveryReceipt?.Freight < 0 ? $"({Math.Abs(record.DeliveryReceipt?.Freight ?? 0).ToString(SD.Four_Decimal_Format)})" : record.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveryReceipt?.Freight < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatPerLiter != 0 ? vatPerLiter < 0 ? $"({Math.Abs(vatPerLiter).ToString(SD.Two_Decimal_Format)})" : vatPerLiter.ToString(SD.Two_Decimal_Format) : null).FontColor(vatPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatAmount != 0 ? vatAmount < 0 ? $"({Math.Abs(vatAmount).ToString(SD.Two_Decimal_Format)})" : vatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(vatAmount < 0 ? Colors.Red.Medium : Colors.Black);
@@ -3921,8 +3894,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = si.DueDate;
                     worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
                     worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
-                    worksheet.Cells[row, 9].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerPoNo;
-                    worksheet.Cells[row, 10].Value = si.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
+                    worksheet.Cells[row, 9].Value = si.CustomerOrderSlip?.CustomerPoNo;
+                    worksheet.Cells[row, 10].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
                     worksheet.Cells[row, 11].Value = si.Remarks;
                     worksheet.Cells[row, 12].Value = si.Product?.ProductName;
                     worksheet.Cells[row, 13].Value = si.Quantity;
@@ -4017,7 +3990,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.View.FreezePanes(8, 1);
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"ArPerCustomerReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
@@ -4051,7 +4024,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var serviceInvoice = await _unitOfWork.FilprideReport.GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims!);
+                var serviceInvoice = await _unitOfWork.FilprideReport
+                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims!, cancellationToken);
 
                 if (!serviceInvoice.Any())
                 {
@@ -4354,7 +4328,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.View.FreezePanes(8, 3);
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }

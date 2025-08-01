@@ -21,7 +21,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGoogleDriveService _googleDriveService;
-        private string dcrCsvFolderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
+        private readonly string _dcrCsvFolderId = "1pc5pAZsTNpNHAZhPecbwpm0QtPfdCPB-";
 
         public ExportToDCRController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, IGoogleDriveService googleDriveService)
         {
@@ -48,14 +48,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CVNO = c.CollectionReceiptNo ?? string.Empty,
                     CHECKNO = c.CheckNo ?? string.Empty,
                     PARTICULARS = c.Remarks ?? string.Empty,
-                    AMOUNT = (c.CashAmount + c.CheckAmount + c.EWT + c.WVAT),
+                    AMOUNT = c.CashAmount + c.CheckAmount + c.EWT + c.WVAT,
                     ACCOUNTNO = c.BankAccount?.AccountNo ?? string.Empty,
                     CHECKDATE = c.CheckDate?.ToString("MM/dd/yyy") ?? string.Empty,
-                    ISORCANCEL = ((c.CanceledBy != null || (c.Status == nameof(Status.Voided)))),
+                    ISORCANCEL = c.CanceledBy != null || c.Status == nameof(Status.Voided),
                     DATEDEPOSITED = c.TransactionDate.ToString("MM/dd/yyyy")
                 }).ToList();
 
-                string fileName = "COLLECTION.csv";
+                var fileName = "COLLECTION.csv";
                 await UploadDcrFile(fileName, collectionReceiptDtosList, cancellationToken);
                 return RedirectToAction("Index");
             }
@@ -129,8 +129,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             DEBIT = cvd.Debit,
                             CREDIT = cvd.Credit,
                             CUSTOMER_NAME = cvd.Customer?.CustomerName ?? string.Empty,
-                            BANK = (cvd?.BankAccount?.AccountName).IsNullOrEmpty() ? string.Empty : $"{cvd?.BankAccount?.AccountName} - {cvd?.BankAccount?.AccountNo}",
-                            EMPLOYEE_NAME = $"{cvd?.Employee?.FirstName ?? string.Empty} {cvd?.Employee?.LastName ?? string.Empty}",
+                            BANK = (cvd.BankAccount?.AccountName).IsNullOrEmpty() ? string.Empty : $"{cvd.BankAccount?.AccountName} - {cvd.BankAccount?.AccountNo}",
+                            EMPLOYEE_NAME = $"{cvd.Employee?.FirstName ?? string.Empty} {cvd.Employee?.LastName ?? string.Empty}",
                             COMPANY_NAME = cvd?.Company?.CompanyName ?? string.Empty
                         }).ToList();
 
@@ -138,7 +138,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                string fileName = "CV_DETAILS.csv";
+                var fileName = "CV_DETAILS.csv";
                 await UploadDcrFile(fileName, checkVoucherHeaderDtosList, cancellationToken);
                 return RedirectToAction("Index");
             }
@@ -222,7 +222,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new ArgumentException("Entities cannot be null.", nameof(entities));
                 }
 
-                var existingFile = await _googleDriveService.GetFileByNameAsync(fileName, dcrCsvFolderId);
+                var existingFile = await _googleDriveService.GetFileByNameAsync(fileName, _dcrCsvFolderId);
 
                 if (existingFile.DoesExist)
                 {
@@ -235,12 +235,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 };
 
                 using var memoryStream = new MemoryStream();
-                using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
-                using var csv = new CsvWriter(writer, config);
-                csv.WriteRecords(entities);
-                await writer.FlushAsync();
+                await using var writer = new StreamWriter(memoryStream, Encoding.UTF8);
+                await using var csv = new CsvWriter(writer, config);
+                await csv.WriteRecordsAsync(entities, cancellationToken);
+                await writer.FlushAsync(cancellationToken);
                 memoryStream.Position = 0;
-                var fileId = await _googleDriveService.UploadFileAsync(memoryStream, fileName, dcrCsvFolderId, "text/csv");
+                await _googleDriveService.UploadFileAsync(memoryStream, fileName, _dcrCsvFolderId, "text/csv");
                 TempData["success"] = $"{fileName} uploaded to Google Drive.";
             }
             catch (Exception ex)

@@ -40,14 +40,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var dateFrom = model.DateFrom;
-                var dateTo = model.DateTo;
-                var extractedBy = _userManager.GetUserName(this.User);
-
-                // get rr data from chosen date
                 var salesReport = await _unitOfWork.MMSIReport.GetSalesReport(model.DateFrom, model.DateTo, cancellationToken);
 
-                // check if there is no record
                 if (salesReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -55,7 +49,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 // Create the Excel package
-                string currencyFormatTwoDecimal = "#,##0.00";
+                var currencyFormatTwoDecimal = "#,##0.00";
                 using var package = new ExcelPackage();
 
                 var worksheet = package.Workbook.Worksheets.Add("Sales Report");
@@ -79,7 +73,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Cells[headerRow, 6].Value = "TYPE OF VESSEL";
                 worksheet.Cells[headerRow, 7].Value = "NAME OF TUGBOAT";
                 worksheet.Cells[headerRow, 8].Value = "PORT";
-                worksheet.Cells[headerRow, 9].Value = "TEMINAL";
+                worksheet.Cells[headerRow, 9].Value = "TERMINAL";
                 worksheet.Cells[headerRow, 10].Value = "NAME OF SERVICE";
                 worksheet.Cells[headerRow, 11].Value = "TIME STARTED";
                 worksheet.Cells[headerRow, 12].Value = "TIME END";
@@ -339,8 +333,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 #region -- Number of Tending Hours --
 
-                var numberOfTendingHoursColStart = col + 1;
-                var tendingHoursTugboats = await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
+                var numberOfTendingHoursColStart = col + 1; await _dbContext.MMSITugboats.OrderBy(t => t.TugboatName)
                     .ToListAsync(cancellationToken);
                 var numberOfTendingHoursCategories = new List<string> { "LOCAL", "FOREIGN" };
 
@@ -432,15 +425,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 foreach (var sales in salesReport)
                 {
-                    decimal totalBillingToUse = 0;
-                    if (sales.BillingId == null)
-                    {
-                        totalBillingToUse = sales.TotalNetRevenue;
-                    }
-                    else
-                    {
-                        totalBillingToUse = sales.TotalBilling;
-                    }
+                    var totalBillingToUse = sales.BillingId == null
+                        ? sales.TotalNetRevenue
+                        : sales.TotalBilling;
 
                     worksheet.Cells[row, 1].Value = sales.Date;
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MM/dd/yyyy";
@@ -472,11 +459,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     {
                         worksheet.Cells[row, 14].Value = totalBillingToUse;
                         worksheet.Cells[row, 15].Value = totalBillingToUse;
-                        using (var range = worksheet.Cells[row, 13, row, 15])
-                        {
-                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
-                        }
+                        using var range = worksheet.Cells[row, 13, row, 15];
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                     }
 
                     // BALANCE
@@ -758,19 +743,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 ex.Message, ex.StackTrace, _userManager.GetUserAsync(User));
                 return RedirectToAction(nameof(SalesReport));
             }
-        }
-
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
     }
 }

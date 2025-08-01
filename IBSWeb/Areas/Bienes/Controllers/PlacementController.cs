@@ -12,8 +12,6 @@ using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Bienes.Controllers
 {
@@ -68,7 +66,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 var query = await _unitOfWork.BienesPlacement
                     .GetAllAsync(cancellationToken: cancellationToken);
 
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -88,7 +86,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 // Column-specific search
                 foreach (var column in parameters.Columns)
                 {
-                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    if (!string.IsNullOrEmpty(column.Search.Value))
                     {
                         var searchValue = column.Search.Value.ToLower();
                         switch (column.Data)
@@ -100,7 +98,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     }
                 }
 
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -411,7 +409,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.Status = nameof(PlacementStatus.Posted);
                 existingRecord.IsPosted = true;
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(existingRecord.PostedBy, $"Posted placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -470,7 +467,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
                 existingRecord.InterestStatus = viewModel.InterestStatus;
                 existingRecord.TerminationRemarks = viewModel.TerminationRemarks;
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(existingRecord.TerminatedBy, $"Terminate placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -532,7 +528,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
             {
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to reactivate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Reactived by: {UserName}",
+                _logger.LogError(ex, "Failed to reactivate placement. Error: {ErrorMessage}, Stack: {StackTrace}. Reactivated by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Preview), new { id });
             }
@@ -569,7 +565,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
 
                 await _unitOfWork.BienesPlacement.RollOverAsync(existingRecord, user!, cancellationToken);
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(user!, $"Rollover placement# {existingRecord.ControlNumber}", "Placement", nameof(Bienes));
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -124,9 +123,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 await _unitOfWork.Billing.AddAsync(model, cancellationToken);
-                var newmodel = await _unitOfWork.Billing.GetAsync(b => b.CreatedDate == datetimeNow, cancellationToken);
-                int id = newmodel!.MMSIBillingId;
-                newmodel = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
+                var newModel = await _unitOfWork.Billing.GetAsync(b => b.CreatedDate == datetimeNow, cancellationToken);
+                int id = newModel!.MMSIBillingId;
+                newModel = await _unitOfWork.Billing.GetAsync(b => b.MMSIBillingId == id, cancellationToken);
 
                 #region -- Audit Trail
 
@@ -135,7 +134,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     Date = DateTimeHelper.GetCurrentPhilippineTime(),
                     Username = await GetUserNameAsync() ?? throw new InvalidOperationException(),
                     MachineName = Environment.MachineName,
-                    Activity = $"Create billing #{newmodel!.MMSIBillingNumber} for tickets #{string.Join(", #", model.ToBillDispatchTickets!)}",
+                    Activity = $"Create billing #{newModel!.MMSIBillingNumber} for tickets #{string.Join(", #", model.ToBillDispatchTickets!)}",
                     DocumentType = "Billing",
                     Company = await GetCompanyClaimAsync() ?? throw new InvalidOperationException()
                 };
@@ -263,7 +262,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
                 var queried = _dbContext.MMSIBillings
@@ -300,7 +298,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     }
                 }
 
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -321,7 +319,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 foreach (var column in parameters.Columns)
                 {
-                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    if (!string.IsNullOrEmpty(column.Search.Value))
                     {
                         var searchValue = column.Search.Value.ToLower();
 
@@ -336,16 +334,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                                 {
                                     queried = queried.Where(s => s.Status == "Collected");
                                 }
-                                else
-                                {
-                                    queried = queried.Where(s => s.Status != null);
-                                }
                                 break;
                         }
                     }
                 }
 
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -433,7 +427,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     var tempModel = await _unitOfWork.DispatchTicket
                         .GetAllAsync(d => d.BillingId == model.MMSIBillingId.ToString(), cancellationToken);
 
-                    List<string>? idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
+                    var idsOfBilledTickets = tempModel.Select(d => d.DispatchTicketId.ToString()).OrderBy(x => x).ToList();
                     currentModel.ToBillDispatchTickets = idsOfBilledTickets;
 
                     #region -- Changes
@@ -656,9 +650,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     row++;
                 }
 
-                var ticketsWithBAF = billing.PaidDispatchTickets;
+                var ticketsWithBaf = billing.PaidDispatchTickets;
 
-                if (ticketsWithBAF != null)
+                if (ticketsWithBaf != null)
                 {
                     foreach (var ticket in billing.PaidDispatchTickets.Where(t => t.BAFNetRevenue != 0))
                     {
@@ -687,7 +681,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 worksheet.Column(3).Width = 9;
                 worksheet.Column(4).Width = 8.5;
                 worksheet.Column(5).Width = 16;
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"DotMatrix_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
@@ -714,12 +708,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             var principal = await _unitOfWork.Principal
                 .GetAsync(c => c.CustomerId == customerId);
 
-            bool hasPrincipal = default;
-
-            if (principal != null)
-            {
-                hasPrincipal = true;
-            }
+            var hasPrincipal = principal != null;
 
             var customerDetailsJson = new
             {
@@ -727,7 +716,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 address = customerDetails.CustomerAddress,
                 tinNo = customerDetails.CustomerTin,
                 businessStyle = customerDetails.BusinessStyle,
-                hasPrincipal = hasPrincipal,
+                hasPrincipal,
                 vatType = customerDetails.VatType,
                 isUndoc = customerDetails.Type
             };
@@ -826,7 +815,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .GetAllAsync(dt => dt.BillingId == billingId.ToString(), cancellationToken);
             }
 
-            if (billedTickets != null && billedTickets?.FirstOrDefault()?.CustomerId == customerId)
+            if (billedTickets != null && billedTickets.FirstOrDefault()?.CustomerId == customerId)
             {
                 listToReturn?.AddRange(await _unitOfWork.Billing.GetMMSIBilledTicketsById(billingId, cancellationToken));
             }
@@ -843,7 +832,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
             if (viewModel.PortId != 0)
             {
                 viewModel.Terminals = await _unitOfWork.Terminal.GetMMSITerminalsSelectList(viewModel.PortId, cancellationToken);
-                return viewModel;
             }
 
             return viewModel;

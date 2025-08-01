@@ -1,8 +1,6 @@
 using IBS.DataAccess.Data;
-using IBS.Models;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
@@ -18,34 +16,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly ILogger<ComparativeReportController> _logger;
 
-        private readonly UserManager<ApplicationUser> _userManager;
-
         private readonly ApplicationDbContext _dbContext;
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public ComparativeReportController(ILogger<ComparativeReportController> logger,
-            UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
             IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
-            _userManager = userManager;
             _dbContext = dbContext;
             _webHostEnvironment = webHostEnvironment;
-        }
-
-        private async Task<string?> GetCompanyClaimAsync()
-        {
-            var user = await _userManager.GetUserAsync(User);
-
-            if (user == null)
-            {
-                return null;
-            }
-
-            var claims = await _userManager.GetClaimsAsync(user);
-            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         [HttpGet]
@@ -169,10 +150,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 #region -- Loop to Show Records
 
                                 var sumCurrentQuantity = 0m;
-                                var sumCurrentPrice = 0m;
                                 var sumCurrentTotal = 0m;
                                 var sumPreviousQuantity = 0m;
-                                var sumPreviousPrice = 0m;
                                 var sumPreviousTotal = 0m;
                                 var sumQuantityDifference = 0m;
                                 var sumPriceDifference = 0m;
@@ -216,8 +195,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 }
 
-                                sumCurrentPrice = sumCurrentTotal != 0 && sumCurrentQuantity != 0 ? sumCurrentTotal / sumCurrentQuantity : 0;
-                                sumPreviousPrice = sumPreviousTotal != 0 && sumPreviousQuantity != 0 ? sumPreviousTotal / sumPreviousQuantity : 0;
+                                var sumCurrentPrice = sumCurrentTotal != 0 && sumCurrentQuantity != 0 ? sumCurrentTotal / sumCurrentQuantity : 0;
+                                var sumPreviousPrice = sumPreviousTotal != 0 && sumPreviousQuantity != 0 ? sumPreviousTotal / sumPreviousQuantity : 0;
 
                                 #endregion
 
@@ -370,10 +349,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 #region -- Loop to Show Records
 
                                 var sumCurrentQuantity = 0m;
-                                var sumCurrentPrice = 0m;
                                 var sumCurrentTotal = 0m;
                                 var sumPreviousQuantity = 0m;
-                                var sumPreviousPrice = 0m;
                                 var sumPreviousTotal = 0m;
                                 var sumQuantityDifference = 0m;
                                 var sumPriceDifference = 0m;
@@ -417,8 +394,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 }
 
-                                sumCurrentPrice = sumCurrentTotal != 0 && sumCurrentQuantity != 0 ? sumCurrentTotal / sumCurrentQuantity : 0;
-                                sumPreviousPrice = sumPreviousTotal != 0 && sumPreviousQuantity != 0 ? sumPreviousTotal / sumPreviousQuantity : 0;
+                                var sumCurrentPrice = sumCurrentTotal != 0 && sumCurrentQuantity != 0 ? sumCurrentTotal / sumCurrentQuantity : 0;
+                                var sumPreviousPrice = sumPreviousTotal != 0 && sumPreviousQuantity != 0 ? sumPreviousTotal / sumPreviousQuantity : 0;
 
                                 #endregion
 

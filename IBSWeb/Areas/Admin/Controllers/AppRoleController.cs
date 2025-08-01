@@ -1,5 +1,4 @@
 using System.Linq.Dynamic.Core;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,13 +11,11 @@ namespace IBSWeb.Areas.Admin.Controllers
     public class AppRoleController : Controller
     {
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<AppRoleController> _logger;
 
-        public AppRoleController(RoleManager<IdentityRole> roleManager, IUnitOfWork unitOfWork, ILogger<AppRoleController> logger)
+        public AppRoleController(RoleManager<IdentityRole> roleManager, ILogger<AppRoleController> logger)
         {
             _roleManager = roleManager;
-            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
@@ -53,7 +50,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                 var queried = _roleManager.Roles;
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -64,7 +61,7 @@ namespace IBSWeb.Areas.Admin.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;

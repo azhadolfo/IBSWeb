@@ -1,5 +1,4 @@
 using IBS.Services;
-using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Quartz;

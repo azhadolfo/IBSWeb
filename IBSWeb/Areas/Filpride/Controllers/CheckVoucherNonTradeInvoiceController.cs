@@ -1,13 +1,11 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
-using IBS.Models.Filpride;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using IBS.Services;
@@ -30,8 +28,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly ApplicationDbContext _dbContext;
 
-        private readonly IWebHostEnvironment _webHostEnvironment;
-
         private readonly ICloudStorageService _cloudStorageService;
 
         private readonly ILogger<CheckVoucherNonTradeInvoiceController> _logger;
@@ -39,14 +35,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public CheckVoucherNonTradeInvoiceController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext dbContext,
-            IWebHostEnvironment webHostEnvironment,
             ICloudStorageService cloudStorageService,
             ILogger<CheckVoucherNonTradeInvoiceController> logger)
         {
             _unitOfWork = unitOfWork;
             _userManager = userManager;
             _dbContext = dbContext;
-            _webHostEnvironment = webHostEnvironment;
             _cloudStorageService = cloudStorageService;
             _logger = logger;
         }
@@ -64,20 +58,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName)
+        private string GenerateFileNameToSave(string incomingFileName)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
             return $"{fileName}-{DateTimeHelper.GetCurrentPhilippineTime():yyyyMMddHHmmss}{extension}";
-        }
-
-        private async Task GenerateSignedUrl(FilprideCheckVoucherHeader model)
-        {
-            // Get Signed URL only when Saved File Name is available.
-            if (!string.IsNullOrWhiteSpace(model.SupportingFileSavedFileName))
-            {
-                model.SupportingFileSavedUrl = await _cloudStorageService.GetSignedUrlAsync(model.SupportingFileSavedFileName);
-            }
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -105,7 +90,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToListAsync(cancellationToken);
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -127,7 +112,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
@@ -183,8 +168,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> GetDefaultExpense(int? supplierId)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
             var supplier = (await _unitOfWork.FilprideSupplier
                     .GetAsync(supp => supp.SupplierId == supplierId))!.DefaultExpenseNumber;
 
@@ -197,7 +180,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var defaultExpenseList = defaultExpense.Select(coa => new
                 {
-                    AccountNumber = coa.AccountNumber,
+                    coa.AccountNumber,
                     AccountTitle = coa.AccountName,
                     IsSelected = coa.AccountNumber == supplier?.Split(' ')[0]
                 }).ToList();
@@ -1000,7 +983,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public IActionResult GetAutomaticEntry(DateTime startDate, DateTime? endDate)
         {
-            if (startDate != default && endDate != default)
+            if (startDate != default && endDate != null)
             {
                 return Json(true);
             }
@@ -1023,8 +1006,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .Include(cvd => cvd.Employee)
                 .Include(cvd => cvd.Company)
                 .ToListAsync(cancellationToken);
-            var supplierName = (await _unitOfWork.FilprideSupplier.GetAsync(s => s.SupplierId == supplierId, cancellationToken))?.SupplierName;
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -1195,7 +1178,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided check voucher# {model.CheckVoucherHeaderNo}", "Check Voucher", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -1258,7 +1240,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(userName, $"Unposted check voucher# {cvHeader.CheckVoucherHeaderNo}", "Check Voucher", cvHeader.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -1464,7 +1445,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- cv invoiving details entry --
 
-                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails.Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId).ToListAsync();
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken: cancellationToken);
 
                 _dbContext.RemoveRange(existingDetailsModel);
                 await _unitOfWork.SaveAsync(cancellationToken);

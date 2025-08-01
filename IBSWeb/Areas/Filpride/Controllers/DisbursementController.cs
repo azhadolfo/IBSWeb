@@ -67,7 +67,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         d.Company == companyClaims, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -89,30 +89,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Column-specific search
                 foreach (var column in parameters.Columns)
                 {
-                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    if (!string.IsNullOrEmpty(column.Search.Value))
                     {
                         var searchValue = column.Search.Value.ToLower();
                         switch (column.Data)
                         {
                             case "dcpDate":
-                                if (searchValue == "not-null")
-                                {
-                                    disbursements = disbursements.Where(s => s.DcpDate != null).ToList();
-                                }
-                                else
-                                {
-                                    disbursements = disbursements.Where(s => s.DcpDate == null).ToList();
-                                }
+                                disbursements = searchValue == "not-null"
+                                    ? disbursements.Where(s => s.DcpDate != null).ToList()
+                                    : disbursements.Where(s => s.DcpDate == null).ToList();
                                 break;
                             case "dcrDate":
-                                if (searchValue == "not-null")
-                                {
-                                    disbursements = disbursements.Where(s => s.DcrDate != null).ToList();
-                                }
-                                else
-                                {
-                                    disbursements = disbursements.Where(s => s.DcrDate == null).ToList();
-                                }
+                                disbursements = searchValue == "not-null"
+                                    ? disbursements.Where(s => s.DcrDate != null).ToList()
+                                    : disbursements.Where(s => s.DcrDate == null).ToList();
                                 break;
                         }
                     }

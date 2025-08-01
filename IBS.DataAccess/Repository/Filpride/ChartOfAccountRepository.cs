@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.DTOs;
@@ -133,10 +134,28 @@ namespace IBS.DataAccess.Repository.Filpride
 
                 return generatedNo.ToString();
             }
-            else
+
+            return parent + "01";
+        }
+
+        public override async Task<FilprideChartOfAccount?> GetAsync(Expression<Func<FilprideChartOfAccount, bool>> filter, CancellationToken cancellationToken = default)
+        {
+            return await dbSet.Where(filter)
+                .Include(c => c.Children)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public override async Task<IEnumerable<FilprideChartOfAccount>> GetAllAsync(Expression<Func<FilprideChartOfAccount, bool>>? filter, CancellationToken cancellationToken = default)
+        {
+            IQueryable<FilprideChartOfAccount> query = dbSet
+                .Include(c => c.Children);
+
+            if (filter != null)
             {
-                return parent + "01";
+                query = query.Where(filter);
             }
+
+            return await query.ToListAsync(cancellationToken);
         }
     }
 }

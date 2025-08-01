@@ -3,7 +3,6 @@ using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.Books;
-using IBS.Models.Filpride.MasterFile;
 using IBS.Models.MMSI;
 using IBS.Models.MMSI.ViewModels;
 using IBS.Services;
@@ -73,7 +72,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var model = await CreateCollectionVmToCollectionModel(viewModel);
+                var model = await CreateCollectionVmToCollectionModel(viewModel, cancellationToken);
                 var dateNow = DateTimeHelper.GetCurrentPhilippineTime();
                 model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
                 model.CreatedDate = dateNow;
@@ -98,8 +97,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     return BadRequest();
                 }
-
-                int id = refetchModel.MMSICollectionId;
 
                 #region -- Audit Trail
 
@@ -157,11 +154,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 EWT = viewModel.EWT,
                 CheckNumber = viewModel.CheckNumber,
                 CheckDate = viewModel.CheckDate,
-                DepositDate = viewModel.DepositDate
+                DepositDate = viewModel.DepositDate,
+                Customer = await _unitOfWork.FilprideCustomer
+                    .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken)
             };
-
-            model.Customer = await _unitOfWork.FilprideCustomer
-                .GetAsync(c => c.CustomerId == viewModel.CustomerId, cancellationToken);
 
             if (viewModel.MMSICollectionId != null)
             {
@@ -195,38 +191,37 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
                 var queried = await _unitOfWork.Collection
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
                     queried = queried
                     .Where(c =>
-                        c.Date.Day.ToString().Contains(searchValue) == true ||
-                        c.Date.Month.ToString().Contains(searchValue) == true ||
-                        c.Date.Year.ToString().Contains(searchValue) == true ||
+                        c.Date.Day.ToString().Contains(searchValue) ||
+                        c.Date.Month.ToString().Contains(searchValue) ||
+                        c.Date.Year.ToString().Contains(searchValue) ||
 
-                        c.CheckDate.Day.ToString().Contains(searchValue) == true ||
-                        c.CheckDate.Month.ToString().Contains(searchValue) == true ||
-                        c.CheckDate.Year.ToString().Contains(searchValue) == true ||
+                        c.CheckDate.Day.ToString().Contains(searchValue) ||
+                        c.CheckDate.Month.ToString().Contains(searchValue) ||
+                        c.CheckDate.Year.ToString().Contains(searchValue) ||
 
-                        c.DepositDate.Day.ToString().Contains(searchValue) == true ||
-                        c.DepositDate.Month.ToString().Contains(searchValue) == true ||
-                        c.DepositDate.Year.ToString().Contains(searchValue) == true ||
+                        c.DepositDate.Day.ToString().Contains(searchValue) ||
+                        c.DepositDate.Month.ToString().Contains(searchValue) ||
+                        c.DepositDate.Year.ToString().Contains(searchValue) ||
 
-                        c.Amount.ToString().Contains(searchValue) == true ||
-                        c.MMSICollectionNumber.ToLower().Contains(searchValue) == true ||
+                        c.Amount.ToString().Contains(searchValue) ||
+                        c.MMSICollectionNumber.ToLower().Contains(searchValue) ||
                         c.Customer?.CustomerName.ToLower().Contains(searchValue) == true ||
-                        c.Status.ToLower().Contains(searchValue) == true
+                        c.Status.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -292,7 +287,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var model = await CreateCollectionVmToCollectionModel(viewModel);
+                    var model = await CreateCollectionVmToCollectionModel(viewModel, cancellationToken);
 
                     //previous billings
                     var previousCollectedBills = await _unitOfWork.Billing
@@ -308,7 +303,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     foreach (var previousBilling in previousCollectedBills)
                     {
                         var billing = await _unitOfWork.Billing
-                            .GetAsync(b => b.MMSIBillingId == previousBilling.MMSIBillingId);
+                            .GetAsync(b => b.MMSIBillingId == previousBilling.MMSIBillingId, cancellationToken);
                         if (billing == null) throw new NullReferenceException("Billing not found.");
                         billing.Status = "For Collection";
                         billing.CollectionId = 0;

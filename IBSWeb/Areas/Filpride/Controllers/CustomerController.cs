@@ -169,36 +169,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.FilprideCustomer
+                var query = await _unitOfWork.FilprideCustomer
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
+                    query = query
                     .Where(c =>
-                        c.CustomerCode!.ToLower().Contains(searchValue) == true ||
-                        c.CustomerName.ToLower().Contains(searchValue) == true ||
-                        c.CustomerTerms.ToLower().Contains(searchValue) == true ||
-                        c.VatType.ToLower().Contains(searchValue) == true
+                        c.CustomerCode!.ToLower().Contains(searchValue) ||
+                        c.CustomerName.ToLower().Contains(searchValue) ||
+                        c.CustomerTerms.ToLower().Contains(searchValue) ||
+                        c.VatType.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
+                    query = query
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = queried.Count();
-                var pagedData = queried
+                var totalRecords = query.Count();
+                var pagedData = query
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
@@ -300,7 +300,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             customer.IsActive = false;
-            await _unitOfWork.SaveAsync();
+            await _unitOfWork.SaveAsync(cancellationToken);
             TempData["success"] = "Customer has been deactivated";
             return RedirectToAction(nameof(Index));
         }
@@ -380,7 +380,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllCustomerIds()
         {
             var customerIds = _dbContext.FilprideCustomers
-                .Select(c => c.CustomerId) // Assuming Id is the primary key
+                .Select(c => c.CustomerId)
                 .ToList();
 
             return Json(customerIds);

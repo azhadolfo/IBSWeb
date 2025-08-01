@@ -4,11 +4,8 @@ using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
-using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace IBSWeb.Areas.Filpride.Controllers
 {
@@ -32,7 +29,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _dbContext = dbContext;
         }
 
-        public IActionResult Index(string? view, CancellationToken cancellationToken)
+        public IActionResult Index()
         {
             return View();
         }
@@ -155,36 +152,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.FilprideCustomerBranch
+                var query = await _unitOfWork.FilprideCustomerBranch
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
+                    query = query
                     .Where(b =>
-                        b.BranchName.ToLower().Contains(searchValue) == true ||
-                        b.BranchAddress.ToLower().Contains(searchValue) == true ||
-                        b.BranchTin.ToLower().Contains(searchValue) == true ||
-                        b.Customer!.CustomerName.ToLower().Contains(searchValue) == true
+                        b.BranchName.ToLower().Contains(searchValue) ||
+                        b.BranchAddress.ToLower().Contains(searchValue) ||
+                        b.BranchTin.ToLower().Contains(searchValue) ||
+                        b.Customer!.CustomerName.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
+                    query = query
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = queried.Count();
-                var pagedData = queried
+                var totalRecords = query.Count();
+                var pagedData = query
                     .Select(b  => new
                     {
                         b.Id,

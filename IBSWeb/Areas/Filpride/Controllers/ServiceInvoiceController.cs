@@ -5,7 +5,6 @@ using IBS.Models.Filpride.AccountsReceivable;
 using IBS.Models.Filpride.Books;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using System.Linq.Dynamic.Core;
@@ -79,7 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(sv => sv.Company == companyClaims, cancellationToken);
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -87,17 +86,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(s =>
                             s.ServiceInvoiceNo.ToLower().Contains(searchValue) ||
                             s.CustomerName.ToLower().Contains(searchValue) ||
-                            s.ServiceName.ToLower().Contains(searchValue) == true ||
+                            s.ServiceName.ToLower().Contains(searchValue) ||
                             s.Period.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                             s.Total.ToString().Contains(searchValue) ||
-                            s.Instructions.ToLower().Contains(searchValue) == true ||
+                            s.Instructions.ToLower().Contains(searchValue) ||
                             s.CreatedBy?.ToLower().Contains(searchValue) == true
                             )
                         .ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -164,7 +163,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken); ;
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Services = await _unitOfWork.GetFilprideServiceListById(companyClaims, cancellationToken);
 
             if (!ModelState.IsValid)
@@ -288,7 +287,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 decimal withHoldingTaxAmount = 0;
                 decimal withHoldingVatAmount = 0;
-                decimal netOfVatAmount = 0;
+                decimal netOfVatAmount;
                 decimal vatAmount = 0;
 
                 if (model.VatType == SD.VatType_Vatable)
@@ -569,7 +568,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(model.VoidedBy!, $"Voided service invoice# {model.ServiceInvoiceNo}", "Service Invoice", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -737,7 +735,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User);
-                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
                 FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of service invoice# {sv.ServiceInvoiceNo}", "Service Invoice", sv.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

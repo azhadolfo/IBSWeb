@@ -229,7 +229,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+                var generalBooks = await _unitOfWork.FilprideReport
+                    .GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
+
                 if (generalBooks.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
@@ -335,7 +337,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.View.FreezePanes(8, 1);
 
                 // Convert the Excel package to a byte array
-                var excelBytes = package.GetAsByteArray();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerBook_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
@@ -388,6 +390,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     TempData["info"] = "No records found!";
                     return RedirectToAction(nameof(GeneralLedgerReportByAccountNumber));
                 }
+
+                var chartOfAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(cancellationToken : cancellationToken);
 
                 var document = Document.Create(container =>
                 {
@@ -476,10 +481,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Initialize Variable for Computation
 
-                                int row = 8;
-                                decimal balance = 0;
-                                decimal debit = 0;
-                                decimal credit = 0;
+                                decimal balance;
+                                decimal debit;
+                                decimal credit;
 
                             #endregion
 
@@ -491,9 +495,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     foreach (var journal in grouped.OrderBy(g => g.Date))
                                     {
-                                        var account =
-                                            _dbContext.FilprideChartOfAccounts.FirstOrDefault(a =>
-                                                a.AccountNumber == journal.AccountNo);
+                                        var account = chartOfAccount.FirstOrDefault(a => a.AccountNumber == journal.AccountNo);
 
                                         if (balance != 0)
                                         {
@@ -521,8 +523,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(journal.Debit != 0 ? journal.Debit < 0 ? $"({Math.Abs(journal.Debit).ToString(SD.Two_Decimal_Format)})" : journal.Debit.ToString(SD.Two_Decimal_Format) : null).FontColor(journal.Debit < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(journal.Credit != 0 ? journal.Credit < 0 ? $"({Math.Abs(journal.Credit).ToString(SD.Two_Decimal_Format)})" : journal.Credit.ToString(SD.Two_Decimal_Format) : null).FontColor(journal.Credit < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(balance != 0 ? balance < 0 ? $"({Math.Abs(balance).ToString(SD.Two_Decimal_Format)})" : balance.ToString(SD.Two_Decimal_Format) : null).FontColor(balance < 0 ? Colors.Red.Medium : Colors.Black);
-
-                                        row++;
                                     }
 
                                     debit = grouped.Sum(j => j.Debit);
@@ -537,8 +537,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(balance.ToString(SD.Two_Decimal_Format)).SemiBold();
 
                                     #endregion
-
-                                    row++;
                                 }
 
                             #endregion
@@ -597,11 +595,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var dateFrom = model.DateFrom;
             var dateTo = model.DateTo;
-            var extractedBy = _userManager.GetUserName(this.User);
             var companyClaims = await GetCompanyClaimAsync();
 
-            var chartOfAccount = await _dbContext.FilprideChartOfAccounts
-                .FirstOrDefaultAsync(coa => coa.AccountNumber == model.AccountNo);
+            var chartOfAccount = await _unitOfWork.FilprideChartOfAccount
+                .GetAsync(coa => coa.AccountNumber == model.AccountNo, cancellationToken);
 
             var generalLedgerByAccountNo = await _dbContext.FilprideGeneralLedgerBooks
                 .Include(g => g.Supplier)
@@ -661,18 +658,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             int row = 8;
-            decimal balance = 0;
+            decimal balance;
             string currencyFormat = "#,##0.00";
-            decimal debit = 0;
-            decimal credit = 0;
+            decimal debit;
+            decimal credit;
             foreach (var grouped in generalLedgerByAccountNo.OrderBy(g => g.AccountNo).GroupBy(g => g.AccountTitle))
             {
                 balance = 0;
 
                 foreach (var journal in grouped.OrderBy(g => g.Date))
                 {
-                    var account = await _dbContext.FilprideChartOfAccounts
-                        .FirstOrDefaultAsync(a => a.AccountNumber == journal.AccountNo);
+                    var account = await _unitOfWork.FilprideChartOfAccount
+                        .GetAsync(a => a.AccountNumber == journal.AccountNo, cancellationToken);
 
                     if (balance != 0)
                     {
@@ -759,7 +756,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.View.FreezePanes(8, 1);
 
             // Convert the Excel package to a byte array
-            var excelBytes = package.GetAsByteArray();
+            var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
 
             return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GeneralLedgerByAccountNo_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
         }
@@ -767,95 +764,96 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         #region -- Generate General Ledger as .Txt file
-            public async Task<IActionResult> GenerateGeneralLedgerBookTxtFile(ViewModelBook model)
+        public async Task<IActionResult> GenerateGeneralLedgerBookTxtFile(ViewModelBook model)
+        {
+            if (!ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    try
-                    {
-                        var dateFrom = model.DateFrom;
-                        var dateTo = model.DateTo;
-                        var extractedBy = _userManager.GetUserName(User)!;
-                        var companyClaims = await GetCompanyClaimAsync();
-                        if (companyClaims == null)
-                        {
-                            return BadRequest();
-                        }
-
-                        var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
-                        if (generalBooks.Count == 0)
-                        {
-                            TempData["info"] = "No Record Found";
-                            return RedirectToAction(nameof(GeneralLedgerBook));
-                        }
-                        var totalDebit = generalBooks.Sum(gb => gb.Debit);
-                        var totalCredit = generalBooks.Sum(gb => gb.Credit);
-                        var lastRecord = generalBooks.LastOrDefault();
-                        var firstRecord = generalBooks.FirstOrDefault();
-                        if (lastRecord != null)
-                        {
-                            ViewBag.LastRecord = lastRecord.CreatedDate;
-                        }
-
-                        var fileContent = new StringBuilder();
-
-                        fileContent.AppendLine($"TAXPAYER'S NAME: Filpride Resources Inc.");
-                        fileContent.AppendLine($"TIN: 000-216-589-00000");
-                        fileContent.AppendLine($"ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines");
-                        fileContent.AppendLine();
-                        fileContent.AppendLine($"Accounting System: Accounting Administration System");
-                        fileContent.AppendLine($"Acknowledgement Certificate Control No.:");
-                        fileContent.AppendLine($"Date Issued:");
-                        fileContent.AppendLine();
-                        fileContent.AppendLine("Accounting Books File Attributes/Layout Definition");
-                        fileContent.AppendLine("File Name: General Ledger Book Report");
-                        fileContent.AppendLine("File Type: Text File");
-                        fileContent.AppendLine($"{"Number of Records: ",-35}{generalBooks.Count}");
-                        fileContent.AppendLine($"{"Amount Field Control Total: ",-35}{totalDebit}");
-                        fileContent.AppendLine($"{"Period Covered: ",-35}{dateFrom}{" to "}{dateTo} ");
-                        fileContent.AppendLine($"{"Transaction cut-off Date & Time: ",-35}{ViewBag.LastRecord}");
-                        fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
-                        fileContent.AppendLine();
-                        fileContent.AppendLine($"{"Field Name"}\t{"Description"}\t{"From"}\t{"To"}\t{"Length"}\t{"Example"}");
-                        fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t{"1"}\t{"10"}\t{"10"}\t{firstRecord!.Date}");
-                        fileContent.AppendLine($"{"Reference"}\t{"Reference"}\t{"12"}\t{"23"}\t{"12"}\t{firstRecord.Reference}");
-                        fileContent.AppendLine($"{"Description"}\t{"Description"}\t{"25"}\t{"74"}\t{"50"}\t{firstRecord.Description}");
-                        fileContent.AppendLine($"{"AccountTitle"}\t{"Account Title"}\t{"76"}\t{"125"}\t{"50"}\t{firstRecord.AccountNo + " " + firstRecord.AccountTitle}");
-                        fileContent.AppendLine($"{"Debit",-8}\t{"Debit",-8}\t{"127"}\t{"144"}\t{"18"}\t{firstRecord.Debit}");
-                        fileContent.AppendLine($"{"Credit",-8}\t{"Credit",-8}\t{"146"}\t{"163"}\t{"18"}\t{firstRecord.Credit}");
-                        fileContent.AppendLine();
-                        fileContent.AppendLine("GENERAL LEDGER BOOK");
-                        fileContent.AppendLine();
-                        fileContent.AppendLine($"{"Date",-10}\t{"Reference",-12}\t{"Description",-50}\t{"Account Title",-50}\t{"Debit",18}\t{"Credit",18}");
-
-                        // Generate the records
-                        foreach (var record in generalBooks)
-                        {
-                            fileContent.AppendLine($"{record.Date.ToString("MM/dd/yyyy"),-10}\t{record.Reference,-12}\t{record.Description,-50}\t{record.AccountNo + " " + record.AccountTitle,-50}\t{record.Debit,18}\t{record.Credit,18}");
-                        }
-                        fileContent.AppendLine(new string('-', 187));
-                        fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-50}\t{"TOTAL:",50}\t{totalDebit,18}\t{totalCredit,18}");
-
-                        fileContent.AppendLine();
-                        fileContent.AppendLine($"Software Name: {CS.AAS}");
-                        fileContent.AppendLine($"Version: {CS.Version}");
-                        fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
-                        fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
-
-                        // Convert the content to a byte array
-                        var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
-
-                        // Return the file to the user
-                        return File(bytes, "text/plain", "GeneralLedgerBookReport.txt");
-                    }
-                    catch (Exception ex)
-                    {
-                        TempData["error"] = ex.Message;
-                        return RedirectToAction(nameof(GeneralLedgerBook));
-                    }
-                }
-                return View(model);
+                return RedirectToAction(nameof(GeneralLedgerBook));
             }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(User)!;
+                var companyClaims = await GetCompanyClaimAsync();
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var generalBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
+                if (generalBooks.Count == 0)
+                {
+                    TempData["info"] = "No Record Found";
+                    return RedirectToAction(nameof(GeneralLedgerBook));
+                }
+                var totalDebit = generalBooks.Sum(gb => gb.Debit);
+                var totalCredit = generalBooks.Sum(gb => gb.Credit);
+                var lastRecord = generalBooks.LastOrDefault();
+                var firstRecord = generalBooks.FirstOrDefault();
+                if (lastRecord != null)
+                {
+                    ViewBag.LastRecord = lastRecord.CreatedDate;
+                }
+
+                var fileContent = new StringBuilder();
+
+                fileContent.AppendLine($"TAXPAYER'S NAME: Filpride Resources Inc.");
+                fileContent.AppendLine($"TIN: 000-216-589-00000");
+                fileContent.AppendLine($"ADDRESS: 57 Westgate Office, Sampson Road, CBD, Subic Bay Freeport Zone, Kalaklan, Olongapo City, 2200 Zambales, Philippines");
+                fileContent.AppendLine();
+                fileContent.AppendLine($"Accounting System: Accounting Administration System");
+                fileContent.AppendLine($"Acknowledgement Certificate Control No.:");
+                fileContent.AppendLine($"Date Issued:");
+                fileContent.AppendLine();
+                fileContent.AppendLine("Accounting Books File Attributes/Layout Definition");
+                fileContent.AppendLine("File Name: General Ledger Book Report");
+                fileContent.AppendLine("File Type: Text File");
+                fileContent.AppendLine($"{"Number of Records: ",-35}{generalBooks.Count}");
+                fileContent.AppendLine($"{"Amount Field Control Total: ",-35}{totalDebit}");
+                fileContent.AppendLine($"{"Period Covered: ",-35}{dateFrom} to {dateTo} ");
+                fileContent.AppendLine($"{"Transaction cut-off Date & Time: ",-35}{ViewBag.LastRecord}");
+                fileContent.AppendLine($"{"Extracted By: ",-35}{extractedBy.ToUpper()}");
+                fileContent.AppendLine();
+                fileContent.AppendLine("Field Name\tDescription\tFrom\tTo\tLength\tExample");
+                fileContent.AppendLine($"{"Date",-8}\t{"Date",-8}\t1\t10\t10\t{firstRecord!.Date}");
+                fileContent.AppendLine($"Reference\tReference\t12\t23\t12\t{firstRecord.Reference}");
+                fileContent.AppendLine($"Description\tDescription\t25\t74\t50\t{firstRecord.Description}");
+                fileContent.AppendLine($"AccountTitle\tAccount Title\t76\t125\t50\t{firstRecord.AccountNo + " " + firstRecord.AccountTitle}");
+                fileContent.AppendLine($"{"Debit",-8}\t{"Debit",-8}\t127\t144\t18\t{firstRecord.Debit}");
+                fileContent.AppendLine($"{"Credit",-8}\t{"Credit",-8}\t146\t163\t18\t{firstRecord.Credit}");
+                fileContent.AppendLine();
+                fileContent.AppendLine("GENERAL LEDGER BOOK");
+                fileContent.AppendLine();
+                fileContent.AppendLine($"{"Date",-10}\t{"Reference",-12}\t{"Description",-50}\t{"Account Title",-50}\t{"Debit",18}\t{"Credit",18}");
+
+                // Generate the records
+                foreach (var record in generalBooks)
+                {
+                    fileContent.AppendLine($"{record.Date.ToString("MM/dd/yyyy"),-10}\t{record.Reference,-12}\t{record.Description,-50}\t{record.AccountNo + " " + record.AccountTitle,-50}\t{record.Debit,18}\t{record.Credit,18}");
+                }
+                fileContent.AppendLine(new string('-', 187));
+                fileContent.AppendLine($"{"",-10}\t{"",-12}\t{"",-50}\t{"TOTAL:",50}\t{totalDebit,18}\t{totalCredit,18}");
+
+                fileContent.AppendLine();
+                fileContent.AppendLine($"Software Name: {CS.AAS}");
+                fileContent.AppendLine($"Version: {CS.Version}");
+                fileContent.AppendLine($"Extracted By: {extractedBy.ToUpper()}");
+                fileContent.AppendLine($"Date & Time Extracted: {DateTimeHelper.GetCurrentPhilippineTimeFormatted()}");
+
+                // Convert the content to a byte array
+                var bytes = Encoding.UTF8.GetBytes(fileContent.ToString());
+
+                // Return the file to the user
+                return File(bytes, "text/plain", "GeneralLedgerBookReport.txt");
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(GeneralLedgerBook));
+            }
+        }
         #endregion
     }
 }

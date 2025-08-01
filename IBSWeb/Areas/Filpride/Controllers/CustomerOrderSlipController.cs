@@ -541,24 +541,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // If there is new file uploads detected
                     if (viewModel.UploadedFiles != null)
                     {
-                        // Loop through all of the names
+                        // Loop through all the names
                         foreach (var newFile in arrayOfFileNames!)
                         {
                             // If the name is not in the old array: it is a new file. So rename it, upload it, and add it to old array
-                            if (!existingRecord.UploadedFiles!.Any(x =>
+                            if (existingRecord.UploadedFiles!.Any(x =>
                                     x.Equals(newFile, StringComparison.Ordinal)))
                             {
-                                // Get the new file
-                                var file = viewModel.UploadedFiles.FirstOrDefault(x => x.FileName == newFile);
-                                // Generate new fileName
-                                var fileName = GenerateFileNameToSave(file!.FileName);
-                                // Upload the new file
-                                await _cloudStorageService.UploadFileAsync(file, fileName);
-                                // Add the new file into the old array
-                                var tempList = existingRecord.UploadedFiles?.ToList(); // Convert array to list
-                                tempList?.Add(fileName); // Add new file name
-                                existingRecord.UploadedFiles = tempList?.ToArray();
+                                continue;
                             }
+
+                            // Get the new file
+                            var file = viewModel.UploadedFiles.FirstOrDefault(x => x.FileName == newFile);
+                            // Generate new fileName
+                            var fileName = GenerateFileNameToSave(file!.FileName);
+                            // Upload the new file
+                            await _cloudStorageService.UploadFileAsync(file, fileName);
+                            // Add the new file into the old array
+                            var tempList = existingRecord.UploadedFiles?.ToList(); // Convert array to list
+                            tempList?.Add(fileName); // Add new file name
+                            existingRecord.UploadedFiles = tempList?.ToArray();
                         }
                     }
                 }

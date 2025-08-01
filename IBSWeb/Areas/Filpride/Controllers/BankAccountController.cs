@@ -54,12 +54,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var banks = await _unitOfWork.FilprideBankAccount
                 .GetAllAsync(null, cancellationToken);
 
-                if (view == nameof(DynamicView.BankAccount))
-                {
-                    return View("ExportIndex", banks);
-                }
-
-                return View(banks);
+                return view == nameof(DynamicView.BankAccount) ? View("ExportIndex", banks) : View(banks);
             }
             catch (Exception ex)
             {
@@ -136,38 +131,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.FilprideBankAccount
+                var query = await _unitOfWork.FilprideBankAccount
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
+                    query = query
                     .Where(b =>
-                        b.AccountNo.ToLower().Contains(searchValue) == true ||
-                        b.AccountName.ToLower().Contains(searchValue) == true ||
-                        b.Bank.ToLower().Contains(searchValue) == true ||
-                        b.Branch.ToLower().Contains(searchValue) == true ||
-                        b.CreatedBy?.ToLower().Contains(searchValue) == true ||
-                        b.CreatedDate!.ToString().ToLower().Contains(searchValue) == true
+                        b.AccountNo.ToLower().Contains(searchValue) ||
+                        b.AccountName.ToLower().Contains(searchValue) ||
+                        b.Bank.ToLower().Contains(searchValue) ||
+                        b.Branch.ToLower().Contains(searchValue) ||
+                        b.CreatedBy!.ToLower().Contains(searchValue) ||
+                        b.CreatedDate.ToString().ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
+                    query = query
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = queried.Count();
-                var pagedData = queried
+                var totalRecords = query.Count();
+                var pagedData = query
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();
@@ -309,7 +304,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public IActionResult GetAllBankAccountIds()
         {
             var bankIds = _dbContext.FilprideBankAccounts
-                .Select(b => b.BankAccountId) // Assuming Id is the primary key
+                .Select(b => b.BankAccountId)
                 .ToList();
 
             return Json(bankIds);

@@ -64,9 +64,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var model = new FilpridePickUpPoint();
-            model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-            model.Company = companyClaims;
+            var model = new FilpridePickUpPoint
+            {
+                Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
+                Company = companyClaims
+            };
 
             return View(model);
         }
@@ -112,34 +114,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             try
             {
-                var queried = await _unitOfWork.FilpridePickUpPoint
+                var query = await _unitOfWork.FilpridePickUpPoint
                     .GetAllAsync(null, cancellationToken);
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
-                    queried = queried
+                    query = query
                     .Where(p =>
-                        p.Depot!.ToLower().Contains(searchValue) == true ||
-                        p.Supplier!.SupplierName.ToLower().Contains(searchValue) == true
+                        p.Depot.ToLower().Contains(searchValue) ||
+                        p.Supplier!.SupplierName.ToLower().Contains(searchValue)
                         ).ToList();
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-                    queried = queried
+                    query = query
                         .AsQueryable()
                         .OrderBy($"{columnName} {sortDirection}");
                 }
 
-                var totalRecords = queried.Count();
-                var pagedData = queried
+                var totalRecords = query.Count();
+                var pagedData = query
                     .Select(p => new
                     {
                         p.PickUpPointId,

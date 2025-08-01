@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Linq.Dynamic.Core;
 using System.Security.Claims;
 using IBS.DataAccess.Data;
@@ -15,7 +14,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using OfficeOpenXml;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -24,7 +22,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
     [CompanyAuthorize(nameof(MMSI))]
     public class DispatchTicketController : Controller
     {
-        public readonly ApplicationDbContext _dbContext;
+        private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICloudStorageService _cloudStorageService;
@@ -80,7 +78,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["warning"] = "Can't create entry, please review your input.";
-                ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
 
@@ -91,14 +89,13 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 model.Terminal = await _unitOfWork.Terminal.GetAsync(t => t.TerminalId == model.TerminalId, cancellationToken);
                 model.Terminal!.Port = await _unitOfWork.Port.GetAsync(p => p.PortId == model.Terminal.PortId, cancellationToken);
-                DateTime timeStamp = default;
                 model = await _unitOfWork.DispatchTicket.GetDispatchTicketLists(model, cancellationToken);
                 model.Customer = await _unitOfWork.FilprideCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
 
                 if (model.DateLeft < model.DateArrived || (model.DateLeft == model.DateArrived && model.TimeLeft < model.TimeArrived))
                 {
                     model.CreatedBy = await GetUserNameAsync() ?? throw new InvalidOperationException();
-                    timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
+                    var timeStamp = DateTimeHelper.GetCurrentPhilippineTime();
                     model.CreatedDate = timeStamp;
 
                     // upload file if something is submitted
@@ -170,7 +167,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["warning"] = "Start Date/Time should be earlier than End Date/Time!";
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = model.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
             catch (Exception ex)
@@ -180,7 +177,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
                 viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 TempData["error"] = $"{ex.Message}";
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = model.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
         }
@@ -451,7 +448,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 viewModel.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
             }
 
-            ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+            ViewData["PortId"] = model.Terminal?.Port?.PortId;
             ViewBag.FilterType = await GetCurrentFilterType();
             return View(viewModel);
         }
@@ -650,7 +647,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     await transaction.RollbackAsync(cancellationToken);
                     TempData["warning"] = "Date/Time Left cannot be later than Date/Time Arrived!";
-                    ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                    ViewData["PortId"] = model.Terminal?.Port?.PortId;
                     return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
                 }
             }
@@ -659,7 +656,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit ticket.");
                 TempData["error"] = ex.Message;
-                ViewData["PortId"] = model?.Terminal?.Port?.PortId;
+                ViewData["PortId"] = model.Terminal?.Port?.PortId;
                 return RedirectToAction("EditTicket", new { id = viewModel.DispatchTicketId });
             }
         }
@@ -862,9 +859,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDispatchTicketList(string status, CancellationToken cancellationToken)
         {
-            var item = new List<MMSIDispatchTicket>();
+            List<MMSIDispatchTicket> item;
 
-            if (status == "All" || status == null)
+            if (status == "All")
             {
                 item = (await _unitOfWork.DispatchTicket
                     .GetAllAsync(dt => dt.Status != "Cancelled" && dt.Status != "For Posting", cancellationToken)).ToList();
@@ -883,7 +880,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
                 var queried = _dbContext.MMSIDispatchTickets
                         .Include(dt => dt.Service)
@@ -925,10 +921,9 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
-                    bool isDateSearch = DateOnly.TryParse(searchValue, out var searchDate);
 
                     queried = queried
                     .Where(dt =>
@@ -966,35 +961,29 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 // Column-specific search
                 foreach (var column in parameters.Columns)
                 {
-                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    if (!string.IsNullOrEmpty(column.Search.Value))
                     {
                         var searchValue = column.Search.Value.ToLower();
                         switch (column.Data)
                         {
                             case "status":
-                                if (searchValue == "for tariff")
+                                switch (searchValue)
                                 {
-                                    queried = queried.Where(s => s.Status == "For Tariff");
-                                }
-                                if (searchValue == "for approval")
-                                {
-                                    queried = queried.Where(s => s.Status == "For Approval");
-                                }
-                                if (searchValue == "disapproved")
-                                {
-                                    queried = queried.Where(s => s.Status == "Disapproved");
-                                }
-                                if (searchValue == "for billing")
-                                {
-                                    queried = queried.Where(s => s.Status == "For Billing");
-                                }
-                                if (searchValue == "billed")
-                                {
-                                    queried = queried.Where(s => s.Status == "Billed");
-                                }
-                                else
-                                {
-                                    queried = queried.Where(s => s.Status != null);
+                                    case "for tariff":
+                                        queried = queried.Where(s => s.Status == "For Tariff");
+                                        break;
+                                    case "for approval":
+                                        queried = queried.Where(s => s.Status == "For Approval");
+                                        break;
+                                    case "disapproved":
+                                        queried = queried.Where(s => s.Status == "Disapproved");
+                                        break;
+                                    case "for billing":
+                                        queried = queried.Where(s => s.Status == "For Billing");
+                                        break;
+                                    case "billed":
+                                        queried = queried.Where(s => s.Status == "Billed");
+                                        break;
                                 }
                                 break;
                         }
@@ -1002,7 +991,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -1101,10 +1090,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 var result = new
                 {
-                    Dispatch = tariffRate.Dispatch, // Assuming Rate is a decimal property in MMSITariffRates
-                    BAF = tariffRate.BAF, // Example second decimal; replace with your logic
-                    DispatchDiscount = tariffRate.DispatchDiscount,
-                    BAFDiscount = tariffRate.BAFDiscount,
+                    tariffRate.Dispatch, // Assuming Rate is a decimal property in MMSITariffRates
+                    tariffRate.BAF, // Example second decimal; replace with your logic
+                    tariffRate.DispatchDiscount,
+                    tariffRate.BAFDiscount,
                     Exists = true
                 };
 
@@ -1199,7 +1188,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             return user?.UserName;
         }
 
-        private static string? GenerateFileNameToSave(string incomingFileName, string type)
+        private static string GenerateFileNameToSave(string incomingFileName, string type)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
@@ -1333,30 +1322,23 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 ApOtherTugs = model.ApOtherTugs
             };
 
-            if (model?.DispatchTicketId != null)
-            {
-                viewModel.DispatchTicketId = model.DispatchTicketId;
-            }
-
             return viewModel;
         }
 
-        public void ReadXLS(string FilePath)
+        public void ReadXLS(string filePath)
         {
-            FileInfo existingFile = new FileInfo(FilePath);
+            var existingFile = new FileInfo(filePath);
 
-            using (ExcelPackage package = new ExcelPackage(existingFile))
+            using var package = new ExcelPackage(existingFile);
+            var worksheet = package.Workbook.Worksheets[1];
+            var colCount = worksheet.Dimension.End.Column;
+            var rowCount = worksheet.Dimension.End.Row;
+
+            for (var row = 1; row <= rowCount; row++)
             {
-                ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
-                int colCount = worksheet.Dimension.End.Column;
-                int rowCount = worksheet.Dimension.End.Row;
-
-                for (int row = 1; row <= rowCount; row++)
+                for (var col = 1; col <= colCount; col++)
                 {
-                    for (int col = 1; col <= colCount; col++)
-                    {
-                        Console.WriteLine(" Row:" + row + " column:" + col + " Value:" + worksheet.Cells[row, col].Value?.ToString()?.Trim());
-                    }
+                    Console.WriteLine(" Row:" + row + " column:" + col + " Value:" + worksheet.Cells[row, col].Value?.ToString()?.Trim());
                 }
             }
         }

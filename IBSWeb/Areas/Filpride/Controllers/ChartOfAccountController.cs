@@ -16,57 +16,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
     [CompanyAuthorize(nameof(Filpride))]
     public class ChartOfAccountController : Controller
     {
-        public readonly ApplicationDbContext _dbContext;
-        public readonly UserManager<ApplicationUser> _userManager;
-        public readonly IUnitOfWork _unitOfWork;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<ChartOfAccountController> _logger;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ChartOfAccountController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager,
-            IUnitOfWork unitOfWork, ILogger<ChartOfAccountController> logger)
+        public ChartOfAccountController(ApplicationDbContext dbContext,
+            UserManager<ApplicationUser> userManager,
+            ILogger<ChartOfAccountController> logger,
+            IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _userManager = userManager;
-            _unitOfWork = unitOfWork;
             _logger = logger;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
             if (view == nameof(DynamicView.ChartOfAccount))
             {
-                var chartOfAccounts = await _dbContext.FilprideChartOfAccounts
-                    .Include(c => c.Children.OrderBy(ch => ch.AccountNumber))
-                    .OrderBy(c => c.AccountNumber)
-                    .ToListAsync(cancellationToken);
+                var chartOfAccounts = await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(cancellationToken : cancellationToken);
 
                 return View("ExportIndex", chartOfAccounts);
             }
 
-            var Level1 = await _dbContext.FilprideChartOfAccounts
-                .Include(c => c.Children.OrderBy(ch => ch.AccountNumber))
-                .OrderBy(c => c.AccountNumber)
-                .ToListAsync(cancellationToken);
+            var level1 = await _unitOfWork.FilprideChartOfAccount
+                .GetAllAsync(cancellationToken : cancellationToken);
 
-            return View(Level1.Where((c => c.Level == 1)).ToList());
+            return View(level1.Where(c => c.Level == 1).ToList());
         }
 
         [HttpGet]
         public async Task<IActionResult> Create(int parentId, string accountName, CancellationToken cancellationToken)
         {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                var parentAccount = await _dbContext.FilprideChartOfAccounts
-                    .Where(c => c.AccountId == parentId)
-                    .FirstOrDefaultAsync(cancellationToken);
+                var parentAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(c => c.AccountId == parentId, cancellationToken);
 
-                var lastSeries = int.Parse((_dbContext.FilprideChartOfAccounts
-                    .Where(c => c.ParentAccountId == parentId)
+                if (parentAccount == null)
+                {
+                    throw new InvalidOperationException("Parent Account not found");
+                }
+
+                var lastAccount = (await _unitOfWork.FilprideChartOfAccount
+                        .GetAllAsync(c => c.ParentAccountId == parentId, cancellationToken: cancellationToken))
                     .OrderByDescending(c => c.AccountNumber)
-                    .FirstOrDefaultAsync(cancellationToken).Result?.AccountNumber ?? parentAccount?.AccountNumber) ?? string.Empty);
+                    .FirstOrDefault();
 
-                var levelToCreate = parentAccount?.Level + 1;
+                var lastSeries = int.Parse(lastAccount?.AccountNumber ?? parentAccount.AccountNumber!);
 
-                FilprideChartOfAccount newAccount = new FilprideChartOfAccount()
+                var levelToCreate = parentAccount.Level + 1;
+
+                var newAccount = new FilprideChartOfAccount
                 {
                     IsMain = false,
                     AccountType = parentAccount?.AccountType,
@@ -74,9 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     AccountName = accountName,
                     ParentAccountId = parentId,
                     CreatedBy = User.Identity?.Name,
-                    EditedBy = null,
-                    EditedDate = default,
-                    Level = levelToCreate ?? 0,
+                    Level = levelToCreate,
                     FinancialStatementType = parentAccount?.FinancialStatementType ?? "",
                 };
 
@@ -90,14 +94,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         break;
                 }
 
-                await _dbContext.FilprideChartOfAccounts.AddAsync(newAccount, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
+                await _unitOfWork.FilprideChartOfAccount.AddAsync(newAccount, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -107,10 +112,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                var existingAccount = await _dbContext.FilprideChartOfAccounts
-                    .FindAsync(accountId, cancellationToken);
+                var existingAccount = await _unitOfWork.FilprideChartOfAccount
+                    .GetAsync(x => x.AccountId == accountId, cancellationToken);
 
                 if (existingAccount == null)
                 {
@@ -120,14 +127,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingAccount.AccountName = accountName;
                 existingAccount.EditedBy = User.Identity!.Name;
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Account Edited Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
@@ -152,10 +160,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var recordIds = selectedRecord.Split(',').Select(int.Parse).ToList();
 
                 // Retrieve the selected invoices from the database
-                var selectedList = await _dbContext.FilprideChartOfAccounts
-                    .Where(coa => recordIds.Contains(coa.AccountId))
+                var selectedList = (await _unitOfWork.FilprideChartOfAccount
+                    .GetAllAsync(coa => recordIds.Contains(coa.AccountId), cancellationToken))
                     .OrderBy(coa => coa.AccountId)
-                    .ToListAsync();
+                    .ToList();
 
                 // Create the Excel package
                 using var package = new ExcelPackage();
@@ -176,7 +184,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["L1"].Value = "ParentAccountId";
                 worksheet.Cells["M1"].Value = "OriginalChartOfAccount";
 
-                int row = 2;
+                var row = 2;
 
                 foreach (var item in selectedList)
                 {
@@ -206,7 +214,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 package.Workbook.Protection.SetPassword("mis123");
 
                 // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync();
+                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }

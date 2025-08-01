@@ -1,6 +1,4 @@
-using System.Drawing;
 using IBS.DataAccess.Data;
-using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
 using IBS.Models.Filpride.ViewModels;
 using IBS.Services.Attributes;
@@ -25,21 +23,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        private readonly IUnitOfWork _unitOfWork;
-
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         private readonly ILogger<FinancialReportController> _logger;
 
         public FinancialReportController(ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
-            IUnitOfWork unitOfWork,
             IWebHostEnvironment webHostEnvironment,
             ILogger<FinancialReportController> logger)
         {
             _dbContext = dbContext;
             _userManager = userManager;
-            _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
         }
@@ -985,7 +979,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 });
 
                                 column.Item().Text("TRIAL BALANCE").FontSize(14).SemiBold().AlignCenter();
-                                column.Item().Text($"For the Perdiod {model.DateFrom.ToString("MMM dd")} to {model.DateTo.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
+                                column.Item().Text($"For the Period {model.DateFrom.ToString("MMM dd")} to {model.DateTo.ToString(SD.Date_Format)}").SemiBold().AlignCenter();
                             });
 
                         #endregion
@@ -1046,10 +1040,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 foreach (var record in chartOfAccounts)
                                 {
-                                    decimal beginningDr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
-                                    decimal beginningCr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
-                                    decimal currentDr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
-                                    decimal currentCr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
+                                    var beginningDr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
+                                    var beginningCr = priorLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
+                                    var currentDr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Debit);
+                                    var currentCr = currentLedgers.Where(p => p.AccountNo == record.AccountNumber).Sum(p => p.Credit);
 
                                     table.Cell().Border(0.5f).Padding(3).Text(record.AccountNumber);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.AccountName);
@@ -1064,8 +1058,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentCr != 0 ? currentCr.ToString(SD.Two_Decimal_Format) : null);
                                     totalcurrentCr += currentCr;
 
-                                    decimal endingDr = beginningDr + currentDr - beginningCr - currentCr;
-                                    decimal endingCr = beginningCr + currentCr - beginningDr - currentDr;
+                                    var endingDr = beginningDr + currentDr - beginningCr - currentCr;
+                                    var endingCr = beginningCr + currentCr - beginningDr - currentDr;
 
                                     table.Cell().Border(0.5f).Padding(3).AlignRight().Text(endingDr != 0 ? endingDr.ToString(SD.Two_Decimal_Format) : null);
                                     totalEndingDr += endingDr;
@@ -2072,9 +2066,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 using var package = new ExcelPackage();
                 var worksheet = package.Workbook.Worksheets.Add("SRE Report");
-                string currencyFormat = "#,##0.00_);[Red](#,##0.00)";
+                var currencyFormat = "#,##0.00_);[Red](#,##0.00)";
                 worksheet.View.FreezePanes(5, 1);
-                int row = 1;
+                var row = 1;
 
                 #region == Column Header ==
 

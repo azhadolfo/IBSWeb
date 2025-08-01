@@ -133,7 +133,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -154,7 +154,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -683,7 +683,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 6].Value = item.FinalPrice;
                 worksheet.Cells[row, 7].Value = item.QuantityReceived;
                 worksheet.Cells[row, 8].Value = item.IsReceived;
-                worksheet.Cells[row, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                worksheet.Cells[row, 9].Value = item.ReceivedDate != default ? item.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : null;
                 worksheet.Cells[row, 10].Value = item.Remarks;
                 worksheet.Cells[row, 11].Value = item.CreatedBy;
                 worksheet.Cells[row, 12].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
@@ -717,7 +717,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
             var poIds = await _dbContext.FilpridePurchaseOrders
                                      .Where(po => po.Type == nameof(DocumentType.Documented) && po.Company == companyClaims)
-                                     .Select(po => po.PurchaseOrderId) // Assuming Id is the primary key
+                                     .Select(po => po.PurchaseOrderId)
                                      .ToListAsync();
 
             return Json(poIds);

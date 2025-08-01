@@ -13,7 +13,6 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 
@@ -143,7 +142,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -162,7 +161,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
@@ -388,7 +387,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);;
+                .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -689,7 +688,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 poNo = po.PurchaseOrderNo,
                 poQuantity = po.Quantity.ToString(SD.Two_Decimal_Format),
-                rrList = rrList,
+                rrList,
                 rrListPostedOnly = rrPostedOnly,
                 rrListNotPosted = rrNotPosted,
                 rrListCanceled = rrCanceled
@@ -847,7 +846,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Purchase Order Export --
 
                 int poRow = 2;
-                var currentPO = "";
+                var currentPo = "";
 
                 foreach (var item in selectedList.DistinctBy(rr => rr.PurchaseOrder!.PurchaseOrderNo))
                 {
@@ -856,12 +855,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         continue;
                     }
 
-                    if (item.PurchaseOrder.PurchaseOrderNo == currentPO)
+                    if (item.PurchaseOrder.PurchaseOrderNo == currentPo)
                     {
                         continue;
                     }
 
-                    currentPO = item.PurchaseOrder.PurchaseOrderNo;
+                    currentPo = item.PurchaseOrder.PurchaseOrderNo;
                     worksheet2.Cells[poRow, 1].Value = item.PurchaseOrder.Date.ToString("yyyy-MM-dd");
                     worksheet2.Cells[poRow, 2].Value = item.PurchaseOrder.Terms;
                     worksheet2.Cells[poRow, 3].Value = item.PurchaseOrder.Quantity;
@@ -870,7 +869,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[poRow, 6].Value = item.PurchaseOrder.FinalPrice;
                     worksheet2.Cells[poRow, 7].Value = item.PurchaseOrder.QuantityReceived;
                     worksheet2.Cells[poRow, 8].Value = item.PurchaseOrder.IsReceived;
-                    worksheet2.Cells[poRow, 9].Value = item.PurchaseOrder.ReceivedDate != default ? item.PurchaseOrder.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : default;
+                    worksheet2.Cells[poRow, 9].Value = item.PurchaseOrder.ReceivedDate != default ? item.PurchaseOrder.ReceivedDate.ToString("yyyy-MM-dd HH:mm:ss.ffffff zzz") : null;
                     worksheet2.Cells[poRow, 10].Value = item.PurchaseOrder.Remarks;
                     worksheet2.Cells[poRow, 11].Value = item.PurchaseOrder.CreatedBy;
                     worksheet2.Cells[poRow, 12].Value = item.PurchaseOrder.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
@@ -911,7 +910,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var rrIds = _dbContext.FilprideReceivingReports
                                      .Where(rr => rr.Type == nameof(DocumentType.Documented))
-                                     .Select(rr => rr.ReceivingReportId) // Assuming Id is the primary key
+                                     .Select(rr => rr.ReceivingReportId)
                                      .ToList();
 
             return Json(rrIds);

@@ -12,7 +12,6 @@ using IBS.Utility.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 
@@ -79,7 +78,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .GetAllAsync(si => si.Company == companyClaims, cancellationToken);
 
                 // Search filter
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -100,7 +99,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Name;
@@ -610,7 +609,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     po.Company == companyClaims && po.ProductId == productId && po.QuantityReceived != 0 &&
                     po.PostedBy != null);
 
-            if (purchaseOrders != null && purchaseOrders.Count() > 0)
+            if (purchaseOrders.Any())
             {
                 var poList = purchaseOrders.Select(po => new { Id = po.PurchaseOrderId, PONumber = po.PurchaseOrderNo }).ToList();
                 return Json(poList);
