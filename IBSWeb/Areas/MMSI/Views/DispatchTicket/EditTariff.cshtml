@@ -110,7 +110,7 @@
                                 <div class="row justify-content-end">
                                     <div class="col text-start">
                                         <label class="mx-1">
-                                            <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "")/> Per Hour
+                                            <input name="chargeType" type="radio" value="Per hour" required @(Model.DispatchChargeType == null ? "checked" : "") @(Model.DispatchChargeType == "Per hour" ? "checked" : "")> Per Hour
                                         </label>
                                         <label class="mx-1">
                                             <input name="chargeType" type="radio" value="Per move" required @(Model.DispatchChargeType == "Per move" ? "checked" : "")/> Per Move
@@ -159,7 +159,7 @@
                                         <div class="row">
                                             <div class="col text-start">
                                                 <label class="mx-1">
-                                                    <input name="chargeType2" type="radio" value="Per hour" required @(Model.BAFChargeType == null ? "checked" : "") @(Model.BAFChargeType == "Per hour" ? "checked" : "")/> Per Hour
+                                                    <input name="chargeType2" type="radio" value="Per hour" required @(Model.BAFChargeType == null ? "checked" : "") @(Model.BAFChargeType == "Per hour" ? "checked" : "")> Per Hour
                                                 </label>
                                                 <label class="mx-1">
                                                     <input name="chargeType2" type="radio" value="Per move" required @(Model.BAFChargeType == "Per move" ? "checked" : "")/> Per Move
@@ -293,6 +293,11 @@
     <script>
 
         $(document).ready(function () {
+            let dispatchRateInputVar = $('input[name="DispatchRate"]');
+            let bafRateInputVar = $('input[name="BAFRate"]');
+            let dispatchDiscountInputVar = $('input[name="DispatchDiscount"]');
+            let bafDiscountInputVar = $('input[name="BAFDiscount"]');
+            let customerIdVar = $("#CustomerId");
 
             ValueChange()
             $('#CustomerId').select2({
@@ -305,23 +310,23 @@
             function ValueChange() 
             {
                 @* Get if per hour or per move *@
-                var selectedValue = $('input[name="chargeType"]:checked').val();
-                var selectedValue2 = $('input[name="chargeType2"]:checked').val();
+                let selectedValue = $('input[name="chargeType"]:checked').val();
+                let selectedValue2 = $('input[name="chargeType2"]:checked').val();
                 
                 @* Get Dispatch/BAF Rate and Discount Value *@
-                var dispatchRate = $('input[name="DispatchRate"]').val() || 0;
-                var dispatchDiscountPercent = $('input[name="DispatchDiscount"]').val() || 0;
-                var dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
+                let dispatchRate = dispatchRateInputVar.val() || 0;
+                let dispatchDiscountPercent = dispatchDiscountInputVar.val() || 0;
+                let dispatchDiscountAmount = dispatchRate * ((dispatchDiscountPercent || 0) / 100);
 
-                var bafRate = $('input[name="BAFRate"]').val() || 0;
-                var bafDiscountPercent = $('input[name="BAFDiscount"]').val() || 0;
-                var bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
+                let bafRate = bafRateInputVar.val() || 0;
+                let bafDiscountPercent = bafDiscountInputVar.val() || 0;
+                let bafDiscountAmount = bafRate * ((bafDiscountPercent || 0) / 100);
 
                 @* Calculate, format, then show Dispatch/BAF Rate *@
-                var dispatchRevenue = 0;
-                var dispatchBilling = 0;
-                var bafRevenue = 0;
-                var bafBilling = 0;
+                let dispatchRevenue = 0;
+                let dispatchBilling = 0;
+                let bafRevenue = 0;
+                let bafBilling = 0;
 
                 if (selectedValue === "Per hour") {
                     dispatchRevenue = (dispatchRate * @Model.TotalHours) - (dispatchDiscountAmount * @Model.TotalHours);
@@ -341,11 +346,11 @@
                     bafBilling = parseNumber(bafRate); // Ensure two decimal places
                 }
 
-                var dispatchRevenueFormatted = formatNumber(dispatchRevenue);
-                var dispatchBillingFormatted = formatNumber(dispatchBilling);
+                let dispatchRevenueFormatted = formatNumber(dispatchRevenue);
+                let dispatchBillingFormatted = formatNumber(dispatchBilling);
 
-                var bafRevenueFormatted = formatNumber(bafRevenue);
-                var bafBillingFormatted = formatNumber(bafBilling);
+                let bafRevenueFormatted = formatNumber(bafRevenue);
+                let bafBillingFormatted = formatNumber(bafBilling);
 
                 $('input[name="DispatchBillingAmount"]').val(dispatchBillingFormatted);
                 $('input[name="BAFBillingAmount"]').val(bafBillingFormatted);
@@ -353,17 +358,17 @@
                 $('input[name="BAFNetRevenue"]').val(bafRevenueFormatted);
                 
                 @* Calculate, Parse, Format, and Display Total Billings/ Revenue *@
-                var totalBilling = dispatchBilling + bafBilling;
-                var formattedTotalBilling = formatNumber(totalBilling);
+                let totalBilling = dispatchBilling + bafBilling;
+                let formattedTotalBilling = formatNumber(totalBilling);
                 $('input[name="TotalBilling"]').val(formattedTotalBilling);
 
-                var totalRevenue = dispatchRevenue + bafRevenue;
-                var formattedTotalRevenue = formatNumber(totalRevenue);
+                let totalRevenue = dispatchRevenue + bafRevenue;
+                let formattedTotalRevenue = formatNumber(totalRevenue);
                 $('input[name="TotalNetRevenue"]').val(formattedTotalRevenue);
             }
 
             function CustomerChange() {
-                let customerId = $("#CustomerId").val();
+                let customerId = customerIdVar.val();
                 let dispatchTicketId = $("#DispatchTicketId").val();
 
                 $.ajax({
@@ -411,8 +416,8 @@
 
                 event.preventDefault();
 
-                let dispatchRateVal = $('input[name="DispatchRate"]').val();
-                let bafRateVal = $('input[name="BAFRate"]').val();
+                let dispatchRateVal = dispatchRateInputVar.val();
+                let bafRateVal = bafRateInputVar.val();
                 let dispatchRate = parseNumber(dispatchRateVal);
                 let bafRate = parseNumber(bafRateVal);
 
@@ -460,19 +465,19 @@
                 }
             }
 
-            $('input[name="DispatchRate"]').on('input', function () 
+            dispatchRateInputVar.on('input', function () 
             { ValueChange(); });
 
-            $('input[name="BAFRate"]').on('input', function () 
+            bafRateInputVar.on('input', function () 
             { ValueChange(); });
 
-            $('input[name="DispatchDiscount"]').on('input', function () 
+            dispatchDiscountInputVar.on('input', function ()
             { ValueChange(); });
 
-            $('input[name="BAFDiscount"]').on('input', function () 
+            bafDiscountInputVar.on('input', function () 
             { ValueChange(); });
 
-            $("#CustomerId").on('change', function ()
+            customerIdVar.on('change', function ()
             { CustomerChange(); });
 
             $("#submitButton").on("click", checkDispatchAndBafValues);
@@ -481,7 +486,7 @@
             $(document).on('change', 'input[name="chargeType2"]', ValueChange);
 
             document.getElementById('viewUpload')?.addEventListener('click', function () {
-                var maxHeight = window.innerHeight * 0.8;
+                let maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
                     imageUrl: '@Url.Content("~/Dispatch_Ticket_Uploads/" + Model.ImageName)',
@@ -495,8 +500,9 @@
                     width: 'auto',
                     heightAuto: true,
                     didOpen: () => {
-                        $('.swal2-image').css('max-height', maxHeight + 'px');
-                        $('.swal2-image').css('height', 'auto');
+                        let swal2Imagevar = $('.swal2-image');
+                        swal2Imagevar.css('max-height', maxHeight + 'px');
+                        swal2Imagevar.css('height', 'auto');
                     }
                 });
             });

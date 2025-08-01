@@ -85,7 +85,7 @@
                             @if (Model.Status == "For Approval")
                             {
                                 <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                    <img src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
+                                    <img alt="OrangePendingIcon" src="~/img/orangePendingIcon.png" style="height: 25px; width: 25px;" />
                                     <h5 class="text-warning ms-2 mb-0">For Approval</h5>
                                 </div>
                             }
@@ -93,7 +93,7 @@
                             @if (Model.Status == "For Billing")
                             {
                                 <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                    <img src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
+                                    <img alt="greenCheckIcon" src="~/img/greenCheckIcon.png" style="height: 25px; width: 25px;" />
                                     <h5 class="text-success ms-2 mb-0">Tariff Approved</h5>
                                 </div>
                             }
@@ -101,7 +101,7 @@
                             @if (Model.Status == "Disapproved")
                             {
                                 <div class="col-6 text-center p-0 ps-3 pb-2 d-flex justify-content-start align-items-center">
-                                    <img src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
+                                    <img alt="RedCrossIcon" src="~/img/redCrossIcon.png" style="height: 25px; width: 25px;" />
                                     <h5 class="text-danger ms-2 mb-0">Tariff Disapproved</h5>
                                 </div>
                             }
@@ -215,7 +215,7 @@
     <script>
         $(document).ready(function () {
             document.getElementById('viewUpload')?.addEventListener('click', function () {
-                var maxHeight = window.innerHeight * 0.8;
+                let maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
                     imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
@@ -229,15 +229,16 @@
                     width: 'auto',
                     heightAuto: true,
                     didOpen: () => {
-                        $('.swal2-image').css('max-height', maxHeight + 'px');
-                        $('.swal2-image').css('height', 'auto');
+                        let swal2Image = $('.swal2-image');
+                        swal2Image.css('max-height', maxHeight + 'px');
+                        swal2Image.css('height', 'auto');
                     }
                 });
             });
 
             document.getElementById('approveTariff')?.addEventListener('click', function () {
 
-                var imageId = this.getAttribute('data-id');
+                let imageId = this.getAttribute('data-id');
 
                 Swal.fire({
                     title: "Approve this Tariff?",
@@ -253,7 +254,7 @@
 
             document.getElementById('revokeApproval')?.addEventListener('click', function () {
 
-                var imageId = this.getAttribute('data-id');
+                let imageId = this.getAttribute('data-id');
 
                 Swal.fire({
                     title: "Revoke tariff status?",
@@ -269,7 +270,7 @@
 
             document.getElementById('disapproveTariff')?.addEventListener('click', function () {
 
-                var imageId = this.getAttribute('data-id');
+                let imageId = this.getAttribute('data-id');
 
                 Swal.fire({
                     title: "Disapprove this Tariff?",
@@ -285,7 +286,7 @@
 
             document.getElementById('deleteEntry')?.addEventListener('click', function () {
 
-                var id = this.getAttribute('data-id');
+                let id = this.getAttribute('data-id');
 
                 Swal.fire({
                     title: "Delete this Dispatch Ticket?",
