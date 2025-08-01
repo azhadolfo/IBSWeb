@@ -169,7 +169,8 @@
             let isStartup = true;
 
             // Initialize Select2
-            $('.js-example-basic-multiple').select2();
+            let multiSelectVar = $('.js-example-basic-multiple');
+            multiSelectVar.select2();
 
             // Initialize DataTable
             let table = initializeDataTable('#dataTable');
@@ -196,12 +197,12 @@
             function setupEventListeners() {
                 $('#isUndocumentedCheckbox').on('change', handleCheckboxChanged);
                 $('#customerId').on('change', handleCustomerChange);
-                $('.js-example-basic-multiple').on('change', debounce(handleBillSelectionChange, 100));
+                multiSelectVar.on('change', debounce(handleBillSelectionChange, 100));
             }
 
             // Initialize UI state
             function initialize() {
-                const selectedBills = $('.js-example-basic-multiple').val();
+                const selectedBills = multiSelectVar.val();
                 if (selectedBills && selectedBills.length > 0) {
                     handleBillSelectionChange();
                 }
@@ -289,7 +290,7 @@
                 isProcessing = true;
                 let tempData;
 
-                const selectedBills = $('.js-example-basic-multiple').val() || [];
+                const selectedBills = multiSelectVar.val() || [];
 
                 $.ajax({
                     url: '@Url.Action("GetSelectedBillings", "Collection", new { area = "MMSI" })',
@@ -319,7 +320,7 @@
 
                                 table.row.add([
                                     value.mmsiBillingNumber,
-                                    `₱ ${value.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    `₱ ${formatNumber(value.amount)}`
                                 ]);
                                 undeductedTotalAmount += value.amount;
                                 totalAmount += tempAmount;
@@ -346,45 +347,6 @@
                         isProcessing = false;
 
                         // calculateEWTDeduction();
-                    }
-                });
-            }
-
-            // calculate ewt 
-            function calculateEWTDeduction() {
-                if (isProcessing) return;
-                isProcessing = true;
-
-                const originalAmount = parseFloat($('#undeductedAmount').val()) || 0;
-                const customerId = $('#customerId').val();
-
-                // is customer vatable?
-                $.ajax({
-                    url: '@Url.Action("IsCustomerVatable", "Collection", new { area = "MMSI" })',
-                    type: 'GET',
-                    data: { customerId: customerId },
-                    success: function (result) {
-                        // if vatable
-                        if (result) {
-                            const deductedAmount = originalAmount / 1.12;
-                            const ewt = originalAmount - deductedAmount;
-
-                            $('#amountShow').val(deductedAmount.toFixed(2)); // show amount
-                            $('#amount').val(deductedAmount.toFixed(2)); // store amount
-                            $('#ewtShow').val(ewt.toFixed(2)); // show ewt
-                            $('#ewt').val(ewt.toFixed(2)); // store ewt
-                        } else {
-                            $('#amountShow').val(originalAmount.toFixed(2)); // show amount
-                            $('#amount').val(originalAmount.toFixed(2)); // store amount
-                            $('#ewtShow').val('0.00'); // show ewt
-                            $('#ewt').val('0.00'); // store ewt
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error checking VAT status:', error);
-                    },
-                    complete: function () {
-                        isProcessing = false;
                     }
                 });
             }

@@ -277,7 +277,8 @@
         $(document).ready(function () {
             
             // Initialize Select2 for all elements with this class
-            $('.js-example-basic-multiple').select2();
+            let multiSelectVar = $('.js-example-basic-multiple');    
+            multiSelectVar.select2();
 
             // DataTable initialization
             let table = initializeDataTable('#dataTable');
@@ -306,7 +307,7 @@
                 $("#CustomerId").on("change", handleCustomerChange); // Customer select: replace details, change ticket select list, empty principal val, principal select disable requirement
                 $("#PortSelect").on("change", handlePortChange); // Port select: update terminal select list
                 $("#submitButton").on("click", areYouSureToBill);
-                $('.js-example-basic-multiple').on('change', handleDispatchTicketsChange); // Tickets select: update ticket table contents, update total amount and ewt
+                multiSelectVar.on('change', handleDispatchTicketsChange); // Tickets select: update ticket table contents, update total amount and ewt
             }
 
             // Principal checkbox: checked - empty value, update select list, make it appear, enable requirement
@@ -462,7 +463,7 @@
 
             // Ticket select: changes, get the tickets
             function handleDispatchTicketsChange() {
-                const selectedTickets = $('.js-example-basic-multiple').val();
+                const selectedTickets = multiSelectVar.val();
                 $.ajax({
                     url: '/MMSI/Billing/GetDispatchTickets',
                     type: 'POST',

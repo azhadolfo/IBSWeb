@@ -409,11 +409,11 @@
     <script>
         $(document).ready(function () {
 
-            table = $('#dataTable').DataTable();
+            let table = $('#dataTable').DataTable();
 
             table.destroy();
 
-            table = $('#dataTable').DataTable({
+            table = table.DataTable({
                 paging: false,
                 info: false,
                 order: [[0, 'asc']],
