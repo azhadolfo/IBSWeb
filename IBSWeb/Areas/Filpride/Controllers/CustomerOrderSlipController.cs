@@ -536,11 +536,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         }
 
                     }
-                    // But if the old record is empty,
-                    else
-                    {
-
-                    }
                     // After this, the uploadedFiles only has the old fileNames that are retained
 
                     // If there is new file uploads detected
