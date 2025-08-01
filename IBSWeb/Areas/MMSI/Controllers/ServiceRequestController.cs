@@ -86,11 +86,12 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .ToList();
             }
 
-            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
+            var mmsiDispatchTickets = dispatchTickets.ToList();
+            foreach (var dispatchTicket in mmsiDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.ImageName)))
             {
                 dispatchTicket.ImageSignedUrl = await GenerateSignedUrl(dispatchTicket.ImageName!);
             }
-            foreach (var dispatchTicket in dispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.VideoName)))
+            foreach (var dispatchTicket in mmsiDispatchTickets.Where(dt => !string.IsNullOrEmpty(dt.VideoName)))
             {
                 dispatchTicket.VideoSignedUrl = await GenerateSignedUrl(dispatchTicket.VideoName!);
             }
@@ -231,27 +232,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 ViewData["PortId"] = model.Terminal?.Port?.PortId;
                 return View(viewModel);
             }
-        }
-
-        public async Task<IActionResult> Preview(int id, CancellationToken cancellationToken)
-        {
-            var model = await _unitOfWork.DispatchTicket.GetAsync(dt => dt.DispatchTicketId == id, cancellationToken);
-
-            if (model == null)
-            {
-                return NotFound();
-            }
-
-            if (!string.IsNullOrEmpty(model.ImageName))
-            {
-                model.ImageSignedUrl = await GenerateSignedUrl(model.ImageName);
-            }
-            if (!string.IsNullOrEmpty(model.VideoName))
-            {
-                model.VideoSignedUrl = await GenerateSignedUrl(model.VideoName);
-            }
-
-            return View(model);
         }
 
         [HttpGet]
@@ -460,7 +440,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                     var viewModel = DispatchTicketModelToServiceRequestVm(model!);
                     viewModel = await _unitOfWork.ServiceRequest.GetDispatchTicketSelectLists(viewModel, cancellationToken);
-                    ViewData["PortId"] = viewModel?.Terminal?.Port?.PortId;
+                    ViewData["PortId"] = viewModel.Terminal?.Port?.PortId;
                     return View(viewModel);
                 }
             }
@@ -503,7 +483,6 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
-                var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
                 var queried = _dbContext.MMSIDispatchTickets
@@ -545,7 +524,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 // Global search
-                if (!string.IsNullOrEmpty(parameters.Search?.Value))
+                if (!string.IsNullOrEmpty(parameters.Search.Value))
                 {
                     var searchValue = parameters.Search.Value.ToLower();
 
@@ -566,7 +545,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 // Column-specific search
                 foreach (var column in parameters.Columns)
                 {
-                    if (!string.IsNullOrEmpty(column.Search?.Value))
+                    if (!string.IsNullOrEmpty(column.Search.Value))
                     {
                         var searchValue = column.Search.Value.ToLower();
                         switch (column.Data)
@@ -590,7 +569,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order != null && parameters.Order.Count > 0)
+                if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -664,7 +643,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to delete image.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Edit), new { id = id });
+                return RedirectToAction(nameof(Edit), new { id });
             }
         }
 
@@ -691,7 +670,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             {
                 _logger.LogError(ex, "Failed to delete video.");
                 TempData["error"] = ex.Message;
-                return RedirectToAction(nameof(Edit), new { id = id });
+                return RedirectToAction(nameof(Edit), new { id });
             }
         }
 
@@ -822,7 +801,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
             }
         }
 
-        private string? GenerateFileNameToSave(string incomingFileName, string type)
+        private string GenerateFileNameToSave(string incomingFileName, string type)
         {
             var fileName = Path.GetFileNameWithoutExtension(incomingFileName);
             var extension = Path.GetExtension(incomingFileName);
