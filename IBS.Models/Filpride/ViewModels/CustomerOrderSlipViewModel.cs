@@ -84,6 +84,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = true)]
         public decimal Freight { get; set; }
+
+        public string? ArrayOfFileNames { get; set; }
     }
 
     public class COSFileInfo
