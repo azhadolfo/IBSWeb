@@ -267,7 +267,7 @@
     <script>
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
+                let customerId = $(this).val();
                 if (customerId) {
                     $.ajax({
                         url: '@Url.Action("GetCustomerDetails", "CustomerOrderSlip", new { area = "Filpride" })',
@@ -293,8 +293,8 @@
                                 $('select[name="StationCode"]').val('');
                                 clearBranches();
                             }
-                            var poSelect = $(".customerPoNo");
-                            var products = $(".products");
+                            const poSelect = $(".customerPoNo");
+                            const products = $(".products");
                             
                             @*TODO Uncomment this feature once the mobility company is live*@
                             // if (data.customerType === 'Retail') {
@@ -339,7 +339,7 @@
 
             // Function to populate branches dropdown
             function populateBranches(branches) {
-                var branchDropdown = $('select[name="SelectedBranch"]');
+                const branchDropdown = $('select[name="SelectedBranch"]');
                 branchDropdown.empty();
                 branchDropdown.append('<option value="" selected>Select branch</option>');
                 if (branches && branches.length > 0) {
@@ -356,15 +356,15 @@
 
             // Function to clear branches dropdown
             function clearBranches() {
-                var branchDropdown = $('select[name="SelectedBranch"]');
+                const branchDropdown = $('select[name="SelectedBranch"]');
                 branchDropdown.closest('.form-group').hide();
                 branchDropdown.empty();
                 branchDropdown.append('<option value="" selected>Select branch</option>');
             }
 
             function updateTermsEditability(hasMultipleTerms) {
-                var termsSelect = $('#termsSelect');
-                var selectedValue = termsSelect.val(); // Get the current selected value
+                const termsSelect = $('#termsSelect');
+                let selectedValue = termsSelect.val(); // Get the current selected value
                 
                 if (hasMultipleTerms) {
                     termsSelect.prop('disabled', false);
@@ -386,7 +386,7 @@
     <script>
         $(document).ready(function () {
             function toggleCommissionFields() {
-                var hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
+                let hasCommission = $('input[name="HasCommission"]:checked').val() === 'true';
                 if (hasCommission) {
                     $('#commissionInfo').show();
                     $('input[name="CommissioneeId"]').prop('required', true);
@@ -415,7 +415,7 @@
     <script>
         $(document).ready(function () {
             $('select[name="CustomerId"]').on('change', function () {
-                var customerType = $('input[name="CustomerType"]').val();
+                let customerType = $('input[name="CustomerType"]').val();
 
                 if (customerType === 'Retail') {
                     $('#accountSpecialistDiv').hide();
@@ -517,11 +517,11 @@
     @* </script> *@
     <script>
         function calculateAmountAndVat() {
-            var quantity = parseNumber($('input[name="Quantity"]').val());
-            var deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
+            let quantity = parseNumber($('input[name="Quantity"]').val());
+            let deliveredPrice = parseNumber($('input[name="DeliveredPrice"]').val());
 
-            var totalAmount = (quantity * deliveredPrice);
-            var vat = (totalAmount / 1.12) * 0.12;
+            let totalAmount = (quantity * deliveredPrice);
+            let vat = (totalAmount / 1.12) * 0.12;
 
             $('input[name="Vat"]').val(formatNumber(vat));
             $('input[name="TotalAmount"]').val(formatNumber(totalAmount));
@@ -537,7 +537,7 @@
     </script>
     <script>
         function checkCustomerBalance(totalAmount) {
-            var customerId = $('select[name="CustomerId"]').val();
+            let customerId = $('select[name="CustomerId"]').val();
             if (customerId) {
                 $.ajax({
                     url: '@Url.Action("CheckCustomerBalance", "CustomerOrderSlip", new { area = "Filpride" })',
@@ -570,7 +570,6 @@
                 const $fileChoosingArea = $('#fileChoosingArea');
                 const $fileInput = $('#UploadedFiles');
                 const $previewContainer = $('#previewContainer');
-                const $fileLink = $('.file-link');
                 let uploadedFiles = []; // Array to store all uploaded files
 
                 function init() {
@@ -590,24 +589,6 @@
                     $(document).on('click', '.remove-file', removeFile);
                 }
 
-                function triggerFileInput() {
-                    $fileInput.click(); // Trigger file input on clicking the contenteditable div
-                }
-
-                function onFileInputChange(event) {
-                    const files = event.target.files;
-                    if (files.length > 0) {
-                        handleFiles(files);
-                    }
-                }
-
-                function clearText(event) {
-                    // Clear any text pasted into the contenteditable div to keep it clean
-                    if ($fileUploadArea.text().trim() !== '') {
-                        $fileUploadArea.text('');
-                    }
-                }
-
                 function showUpload(event) {
                     const fileName = $(event.currentTarget).data('name');
                     const file = uploadedFiles.find(f => f.name === fileName);
@@ -618,93 +599,7 @@
                     }
 
                     const imageUrl = URL.createObjectURL(file);
-
-                    Swal.fire({
-                        imageUrl: imageUrl,
-                        imageAlt: fileName,
-                        showConfirmButton: false,
-                        background: 'transparent',
-                        customClass: {
-                            popup: 'custom-image-popup'
-                        },
-                        padding: '1rem',
-                        width: '90vw',
-                        heightAuto: true,
-                        didOpen: () => {
-                            $('.swal2-image').css({
-                                'max-height': '80vh',
-                                'max-width': '100%',
-                                'height': 'auto',
-                                'width': 'auto'
-                            });
-
-                            $('#custom-swal-close').remove();
-
-                            const closeButton = $('<button>×</button>').css({
-                                position: 'fixed',
-                                top: '10px',
-                                right: '10px',
-                                zIndex: '9999',
-                                background: 'rgba(202, 25, 41, 1)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '20%',
-                                width: '40px',
-                                height: '40px',
-                                fontSize: '30px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }).attr('id', 'custom-swal-close').on('click', () => Swal.close());
-
-                            $('body').append(closeButton);
-                        },
-                        willClose: () => {
-                            $('#custom-swal-close').remove();
-                            URL.revokeObjectURL(imageUrl);
-                        }
-                    });
-                }
-
-                function onPaste(event) {
-                    const clipboardData = event.originalEvent ? event.originalEvent.clipboardData : event.clipboardData;
-                    if (!clipboardData) {
-                        return;
-                    }
-
-                    if (clipboardData.files && clipboardData.files.length > 0) {
-                        handleFiles(clipboardData.files);
-                        event.preventDefault();
-                        return;
-                    }
-
-                    const items = clipboardData.items;
-                    if (!items || items.length === 0) {
-                        return;
-                    }
-
-                    const files = [];
-                    for (const item of items) {
-                        const file = item.getAsFile();
-                        if (file) {
-                            files.push(file);
-                        }
-                    }
-
-                    if (files.length > 0) {
-                        handleFiles(files);
-                        event.preventDefault();
-                    }
-                }
-
-                function onDrop(event) {
-                    event.preventDefault();
-                    $overlay.css('display', 'none');
-                    const files = event.originalEvent.dataTransfer.files;
-                    if (files.length > 0) {
-                        handleFiles(files);
-                    }
+                    window.open(imageUrl, '_blank');
                 }
 
                 function handleFiles(files) {
@@ -786,11 +681,55 @@
                     $fileInput[0].files = dataTransfer.files;
                 }
 
-                function clearUploads() {
-                    uploadedFiles = [];
-                    $previewContainer.html('');
-                    $fileUploadArea.data('file', null);
-                    $fileUploadArea.data('allFiles', []);
+                function triggerFileInput() {
+                    $fileInput.click(); // Trigger file input on clicking the contenteditable div
+                }
+
+                function onFileInputChange(event) {
+                    const files = event.target.files;
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
+                }
+
+                function onPaste(event) {
+                    const clipboardData = event.originalEvent ? event.originalEvent.clipboardData : event.clipboardData;
+                    if (!clipboardData) {
+                        return;
+                    }
+
+                    if (clipboardData.files && clipboardData.files.length > 0) {
+                        handleFiles(clipboardData.files);
+                        event.preventDefault();
+                        return;
+                    }
+
+                    const items = clipboardData.items;
+                    if (!items || items.length === 0) {
+                        return;
+                    }
+
+                    const files = [];
+                    for (const item of items) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            files.push(file);
+                        }
+                    }
+
+                    if (files.length > 0) {
+                        handleFiles(files);
+                        event.preventDefault();
+                    }
+                }
+
+                function onDrop(event) {
+                    event.preventDefault();
+                    $overlay.css('display', 'none');
+                    const files = event.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFiles(files);
+                    }
                 }
 
                 function onDragEnter(event) {
