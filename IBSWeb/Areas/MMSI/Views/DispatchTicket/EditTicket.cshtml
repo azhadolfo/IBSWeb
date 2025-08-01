@@ -2,8 +2,6 @@
 
 @{
     ViewData["Title"] = "Dispatch Ticket - Edit";
-
-    var portId = ViewData["PortId"] as int?;
     var filterType = ViewBag.FilterType as string;
 }
 
@@ -89,7 +87,7 @@
                     </div>
                     <div class="form-group col-6 my-2">
                         <label class="control-label ps-1 pb-1">Terminal<span class="required text-danger">*</span></label>
-                        <select asp-for="TerminalId" id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
+                        <select id="TerminalSelect" asp-items="@Model.Terminals" asp-for="TerminalId" class="form-select js-select2 border-0 shadow ms-5 mt-4" style="width:100%" required>
                             <option value="">Select Terminal</option>
                         </select>
                         <span asp-validation-for="TerminalId" class="text-danger"></span>
@@ -136,11 +134,11 @@
                 </div>
                 <div class="row">
                     <div class="form-group col-6 my-2">
-                        <label for="imageFile" class="form-label">Upload image of Dispatch Ticket</label>
+                        <label for="imageUpload" class="form-label">Upload image of Dispatch Ticket</label>
                         <input class="form-control form-control-sm" id="imageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
                     </div>
                     <div class="form-group col-6 my-2">
-                        <label for="videoFile" class="form-label">Upload video of Service Operation</label>
+                        <label for="videoUpload" class="form-label">Upload video of Service Operation</label>
                         <input class="form-control form-control-sm" id="videoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg" />
                     </div>
                 </div>
@@ -185,7 +183,7 @@
     <script>
         $(document).ready(function () {
             document.getElementById('viewImage')?.addEventListener('click', function () {
-                var maxHeight = window.innerHeight * 0.8;
+                let maxHeight = window.innerHeight * 0.8;
 
                 Swal.fire({
                     imageUrl: '@Html.Raw(Model.ImageSignedUrl)',
@@ -199,8 +197,9 @@
                     width: 'auto',
                     heightAuto: true,
                     didOpen: () => {
-                        $('.swal2-image').css('max-height', maxHeight + 'px');
-                        $('.swal2-image').css('height', 'auto');
+                        let swal2ImageVar = $('.swal2-image');
+                        swal2ImageVar.css('max-height', maxHeight + 'px');
+                        swal2ImageVar.css('height', 'auto');
                     }
                 });
             });
@@ -208,25 +207,27 @@
     </script>
 
     <script>
-        var currentPort = "";
+        let currentPort = "";
         const select = document.getElementById("TerminalSelect");
 
         $(document).ready(function () {
 
             // function for terminal choices change when port is selected
+            let portSelectVar = $("#PortSelect");
             function HandlePortChange() {
-                var portId = $("#PortSelect").val();
+                let portId = portSelectVar.val();
 
                 $.ajax({
                     url: '@Url.Action("ChangeTerminal", "ServiceRequest")',
                     type: "GET",
                     data: { portId: portId },
                     success: function (data) {
-                        $("#TerminalSelect").empty();
+                        let terminalSelectVar = $("#TerminalSelect");
+                        terminalSelectVar.empty();
                         if (Array.isArray(data) && data.length > 0) {
-                            $("#TerminalSelect").append('<option>');
+                            terminalSelectVar.append('<option>');
                             $.each(data, function (index, item) {
-                                $("#TerminalSelect").append($('<option>', {
+                                terminalSelectVar.append($('<option>', {
                                     value: item.value,
                                     text: item.text
                                 }));
@@ -239,7 +240,7 @@
 
             // swal asking if sure to delete image
             document.getElementById('deleteImage')?.addEventListener('click', function () {
-                var imageId = this.getAttribute('data-image-id');
+                let imageId = this.getAttribute('data-image-id');
 
                 Swal.fire({
                     title: "Do you want to delete the image?",
@@ -255,7 +256,7 @@
 
             // swal asking if sure to delete image
             document.getElementById('deleteVideo')?.addEventListener('click', function () {
-                var videoId = this.getAttribute('data-video-id');
+                let videoId = this.getAttribute('data-video-id');
 
                 Swal.fire({
                     title: "Do you want to delete the video?",
@@ -273,11 +274,11 @@
             document.getElementById('submitButton')?.addEventListener('click', function (event) {
 
                 event.preventDefault();
-                var existingImageName = '@Model.ImageName';
-                var existingVideoName = '@Model.VideoName';
-                var newImage = document.getElementById('imageUpload').files.length > 0;
-                var newVideo = document.getElementById('videoUpload').files.length > 0;
-                var form = document.getElementById('submitButton').form;
+                let existingImageName = '@Model.ImageName';
+                let existingVideoName = '@Model.VideoName';
+                let newImage = document.getElementById('imageUpload').files.length > 0;
+                let newVideo = document.getElementById('videoUpload').files.length > 0;
+                let form = document.getElementById('submitButton').form;
 
                 function trySubmit() {
                     // Check if the form is valid using HTML5 validation
@@ -308,7 +309,7 @@
             });
 
             // if port changes, proc terminal choice change function
-            $("#PortSelect").change(HandlePortChange);
+            portSelectVar.change(HandlePortChange);
 
             $(document).on("click", ".view-video", function () {
                 const videoLink = this.getAttribute("data-videolink");

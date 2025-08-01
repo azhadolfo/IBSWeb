@@ -2,8 +2,6 @@
 
 @{
     ViewData["Title"] = "Dispatch Ticket - Create";
-
-    var portId = ViewData["PortId"] as int?;
 }
 
 <style>
@@ -25,13 +23,13 @@
         table td {
             font-size: 10px;
             padding: 5px !important;
-            margin: 0px !important;
+            margin: 0 !important;
         }
 
         table th {
             font-size: 12px;
-            padding: 0px !important;
-            margin: 0px !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         span {
@@ -192,11 +190,11 @@
                 </div>
                 <div class="row">
                     <div class="form-group col-6 my-2">
-                        <label for="imageFile" class="form-label">Upload image of Dispatch Ticket</label>
+                        <label for="imageUpload" class="form-label">Upload image of Dispatch Ticket</label>
                         <input class="form-control form-control-sm" id="imageUpload" name="imageFile" type='file' accept="image/png, image/jpg, image/jpeg"/>
                     </div>
                     <div class="form-group col-6 my-2">
-                        <label for="videoFile" class="form-label">Upload video of service operation</label>
+                        <label for="videoUpload" class="form-label">Upload video of service operation</label>
                         <input class="form-control form-control-sm" id="videoUpload" name="videoFile" type='file' accept="video/mp4, video/ogg"/>
                     </div>
                 </div>
@@ -218,26 +216,29 @@
 @section Scripts {
     <script>
 
-        var currentPort = "";
+        let currentPort = "";
         const select = document.getElementById("TerminalSelect");
 
         $(document).ready(function () {
 
+            let port = $("#PortSelect")
+            
             function HandlePortChange() {
-                var portId = $("#PortSelect").val();
+                let portId = port.val();
 
                 $.ajax({
                     url: '@Url.Action("ChangeTerminal", "DispatchTicket")',
                     type: "GET",
                     data: { portId: portId },
                     success: function (data) {
-                        $("#TerminalSelect").empty();
+                        let terminalSelectVar = $("#TerminalSelect");
+                        terminalSelectVar.empty();
 
                         if (Array.isArray(data) && data.length > 0) {
-                            $("#TerminalSelect").append('<option>');
+                            terminalSelectVar.append('<option>');
 
                             $.each(data, function (index, item) {
-                                $("#TerminalSelect").append($('<option>', {
+                                terminalSelectVar.append($('<option>', {
                                     value: item.value,
                                     text: item.text
                                 }));
@@ -246,7 +247,8 @@
                     }
                 });
             }
-            $("#PortSelect").change(HandlePortChange);
+            
+            port.change(HandlePortChange);
         });
     </script>
 }
