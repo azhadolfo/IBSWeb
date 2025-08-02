@@ -61,11 +61,12 @@
     <script>
 
         $(document).ready(function () {
-
-            $('#isCompanyOwnedCheckBox').on('click', checkboxChanged);
+            
+            let isCompanyOwnedCheckBoxVar = $('#isCompanyOwnedCheckBox');
+            isCompanyOwnedCheckBoxVar.on('click', checkboxChanged);
 
             function checkboxChanged() {
-                let $checkbox = $('#isCompanyOwnedCheckBox');
+                let $checkbox = isCompanyOwnedCheckBoxVar;
                 let $inputField = $('#companyNameSelect');
 
                 if ($checkbox.prop("checked")) {
