@@ -14,10 +14,12 @@ namespace IBS.DataAccess.Repository.Filpride
     public class ReceivingReportRepository : Repository<FilprideReceivingReport>, IReceivingReportRepository
     {
         private readonly ApplicationDbContext _db;
+        private IPurchaseOrderRepository FilpridePurchaseOrder { get; set; }
 
         public ReceivingReportRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
+            FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
         }
 
         public async Task<DateOnly> ComputeDueDateAsync(int poId, DateOnly rrDate, CancellationToken cancellationToken = default)
@@ -292,7 +294,7 @@ namespace IBS.DataAccess.Repository.Filpride
             }
 
             // Compute the remaining using the default price
-            totalAmount += remainingQuantity * (deliveryReceipt.PurchaseOrder.Price + freight);
+            totalAmount += remainingQuantity * (await FilpridePurchaseOrder.GetPurchaseOrderCost(deliveryReceipt.PurchaseOrder.PurchaseOrderId, cancellationToken) + freight);
             model.Amount = totalAmount;
 
             #region --Audit Trail Recording
