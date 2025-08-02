@@ -116,11 +116,10 @@
     <script>
 
         $(document).ready(function () {
-
-            $('#isCompanyOwnedCheckBox').on('click', checkboxChanged);
+            let $checkbox = $('#isCompanyOwnedCheckBox');
+            $checkbox.on('click', checkboxChanged);
 
             function checkboxChanged() {
-                let $checkbox = $('#isCompanyOwnedCheckBox');
                 let $inputField = $('#companyNameSelect');
 
                 if ($checkbox.prop("checked")) {
