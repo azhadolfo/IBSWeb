@@ -61,13 +61,15 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+            let dataTableVar = $('#dataTable');
+            
             // Check if DataTable exists and destroy it
             if ($.fn.DataTable.isDataTable('#dataTable')) {
-                $('#dataTable').DataTable().destroy();
+                dataTableVar.DataTable().destroy();
             }
 
             // Initialize DataTable
-            $('#dataTable').DataTable({
+            dataTableVar.DataTable({
                 columnDefs: [
                     { targets: 2, width: '100px' }
                 ],
