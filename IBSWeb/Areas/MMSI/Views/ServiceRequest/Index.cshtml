@@ -136,9 +136,9 @@
         // Check if all checkboxes are selected
         function isAllCheckboxChecked() {
             const checkboxes = document.querySelectorAll(".selectCheckbox"); // Get all checkboxes
-            const isAllChecked = checkboxes.length > 0 &&
-                document.querySelectorAll(".selectCheckbox:checked").length === checkboxes.length; // If all is selected, = true
-            document.getElementById("selectAll").checked = isAllChecked; // 
+             // If all is selected, = true
+            document.getElementById("selectAll").checked = checkboxes.length > 0 &&
+                document.querySelectorAll(".selectCheckbox:checked").length === checkboxes.length; // 
         }
 
         // Handle individual checkbox changes
@@ -155,98 +155,12 @@
             isAllCheckboxChecked();
         }
 
-        // Update table based on status filter
-        function handleStatusChange(status) {
-
-            $.ajax({
-                url: '@Url.Action("GetDispatchTicketList", "ServiceRequest")',
-                type: "POST",
-                data: { status: status },
-                success: function (data) {
-                    // Destroy existing DataTable if initialized
-                    if ($.fn.DataTable.isDataTable("#paginatedTable")) {
-                        $("#paginatedTable").DataTable().destroy();
-                    }
-
-                    // Clear table body
-                    $("#paginatedTable tbody").empty();
-
-                    // Populate table with new data
-                    data.forEach((value, index) => {
-                        const badgeClass = {
-                            "For Posting": "bg-info",
-                            "Cancelled": "bg-secondary"
-                        }[value.status] || "bg-secondary";
-
-                        $("#paginatedTable tbody").append(`
-                                    <tr class="clickable-row">
-                                        <td data-orderable="false" class="text-center align-content-center">
-                                            <input type="checkbox"
-                                                ${value.status !== "Cancelled" ? `class="selectCheckbox" value="${value.dispatchTicketId}"` : "disabled"}>
-                                        </td>
-                                        <td class="text-start align-content-center">${value.date}</td>
-                                        <td class="text-start align-content-center">${value.cosNumber || ""}</td>
-                                        <td class="text-start align-content-center">${value.dispatchNumber}</td>
-                                        <td class="text-start align-content-center">
-                                            ${value.dateLeft} ${new Date("1970-01-01 " + value.timeLeft).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                        </td>
-                                        <td class="text-start align-content-center">
-                                            ${value.dateArrived} ${new Date("1970-01-01 " + value.timeArrived).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                                        </td>
-                                        <td class="text-start align-content-center">${value.activityService.activityServiceName}</td>
-                                        <td class="text-start align-content-center">${value.terminal.port.portName}-${value.terminal.terminalName}</td>
-                                        <td class="text-start align-content-center">${value.tugboat.tugboatName}</td>
-                                        <td class="text-start align-content-center">${value.tugMaster.tugMasterName}</td>
-                                        <td class="text-start align-content-center">${value.vessel.vesselName}</td>
-                                        <td class="text-start align-content-center">
-                                            <span class="badge rounded-pill ${badgeClass}" style="font-size: 14px; color: Ivory">
-                                                ${value.status}
-                                            </span>
-                                        </td>
-                                        <td class="text-start align-content-center">
-                                            <div class="d-flex justify-content-center" style="width: 150px;">
-                                                ${value.uploadName ? `
-                                                    <div class="dropdown align-content-center">
-                                                        <button class="btn btn-primary dropdown-toggle col-12" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">Actions</button>
-                                                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
-                                                            ${value.status !== "Cancelled" ? `<li><a class="dropdown-item" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a></li>` : ""}
-                                                            <li><a class="dropdown-item view-upload" href="#" data-uploadname="${value.signedUrl}"><i class="bi bi-eye"></i> View Image</a></li>
-                                                            <li><a class="dropdown-item view-video" href="#" data-videolink="/Dispatch_Ticket_Uploads/test.mp4"><i class="bi bi-eye"></i> View Video</a></li>
-                                                        </ul>
-                                                    </div>
-                                                ` : `
-                                                    <a class="view-upload btn btn-primary custom-btn col-12" href="/MMSI/ServiceRequest/Edit/${value.dispatchTicketId}"><i class="bi bi-pencil-square"></i> Edit</a>
-                                                `}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                `);
-                    });
-
-                    // Initialize DataTable with custom options
-                    $("#paginatedTable").DataTable({
-                        order: [[1, "desc"]], // Sort by status column (index 11) descending
-                        paging: true,
-                        searching: true,
-                        info: true,
-                        lengthChange: true
-                    });
-
-                    // Ensure checkbox state is updated after DataTable init
-                    toggleSelect(); // Refresh UI state
-                },
-                error: function (xhr, status, error) {
-                    console.error("AJAX error:", error);
-                }
-            });
-        }
-
         // Event listeners
         $(document).ready(function () {
             
-            var editUrl = '@Url.Action("Edit", "ServiceRequest")';
+            let editUrl = '@Url.Action("Edit", "ServiceRequest")';
 
-            var table = $('#paginatedTable').DataTable({
+            let table = $('#paginatedTable').DataTable({
                 "order": [[1, 'asc']],
                 "columnDefs": [
                     { "orderable": false, "targets": [0, 11, 12] }
@@ -269,15 +183,15 @@
                             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
                         });
                     },
-                    "error": function (xhr, error, thrown) {
+                    "error": function (xhr, error) {
                         console.error('DataTables error:', error);
                         alert('An error occurred while loading the data');
                     }
                 },
-                "preDrawCallback": function (settings) {
+                "preDrawCallback": function () {
                     $('#paginatedTable').addClass('table-loading');
                 },
-                "drawCallback": function (settings) {
+                "drawCallback": function () {
                     $('#paginatedTable').removeClass('table-loading');
 
                     // Initialize all tooltips
@@ -319,7 +233,7 @@
                         "orderable": true,
                         "className": "text-center", // Center the <td> content
                         "render": function(data, type, row) {
-                            let statusColor = ``;
+                            let statusColor;
                             if (row.status === "For Posting"){
                                 statusColor = `bg-info`
                             }
