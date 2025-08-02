@@ -97,11 +97,13 @@
         });
 
         $(document).ready(function () {
+            let dataTableVar = $('#dataTable');
+            
             if ($.fn.DataTable.isDataTable('#dataTable')) {
-                $('#dataTable').DataTable().destroy();
+                dataTableVar.DataTable().destroy();
             }
 
-            $('#dataTable').DataTable({
+            dataTableVar.DataTable({
                 "autoWidth": false,
                 "columnDefs": [
                     {
