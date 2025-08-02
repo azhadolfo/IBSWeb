@@ -71,6 +71,8 @@
 
 @section Scripts{
     <script>
+        let dataTableVar = $('#dataTable');
+        
         document.querySelectorAll('.delete-button').forEach(button => {
             button.addEventListener('click', function (event) {
                 event.preventDefault(); // Prevent default navigation
@@ -93,10 +95,10 @@
 
         $(document).ready(function () {
             if ($.fn.DataTable.isDataTable('#dataTable')) {
-                $('#dataTable').DataTable().destroy();
+                dataTableVar.DataTable().destroy();
             }
 
-            $('#dataTable').DataTable({
+            dataTableVar.DataTable({
                 "autoWidth": false,
                 "columnDefs": [
                     {
@@ -108,5 +110,6 @@
                 ]
             });
         });
+    
     </script>
 }
