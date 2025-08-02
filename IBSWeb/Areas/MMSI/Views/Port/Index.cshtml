@@ -93,13 +93,15 @@
         });
         
         $(document).ready(function () {
+            let dataTableVar = $('#dataTable');
+            
             // Check if the table is already initialized and destroy it
             if ($.fn.DataTable.isDataTable('#dataTable')) {
-                $('#dataTable').DataTable().destroy();
+                dataTableVar.DataTable().destroy();
             }
 
             // Initialize the DataTable with your settings
-            $('#dataTable').DataTable({
+            dataTableVar.DataTable({
                 "autoWidth": false,
                 "columnDefs": [
                     {
