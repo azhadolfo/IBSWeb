@@ -1424,7 +1424,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var grandTotalVolume = product
                                     .Sum(pr => pr.QuantityReceived); // volume
                                 var grandTotalPurchaseNet = product
-                                    .Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m); // Purchase Net Total
+                                    .Sum(pr => pr.Amount  / 1.12m); // Purchase Net Total
 
                                 purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
