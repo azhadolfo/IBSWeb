@@ -615,7 +615,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = po.Product?.ProductName;
                     worksheet.Cells[row, 6].Value = po.Quantity;
                     worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
-                    worksheet.Cells[row, 8].Value = po.Price;
+                    worksheet.Cells[row, 8].Value = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
                     worksheet.Cells[row, 9].Value = po.Amount;
                     worksheet.Cells[row, 10].Value = po.Remarks;
 
@@ -928,7 +928,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 var listForBiodiesel = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "BIODIESEL").ToList();
 
                                                 var biodieselQuantitySum = listForBiodiesel.Sum(s => s.QuantityReceived);
-                                                var biodieselPurchaseAndVatSum = listForBiodiesel.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var biodieselPurchaseAndVatSum = listForBiodiesel.Sum(pr => pr.Amount / 1.12m);
                                                 var biodieselAverageSellingPrice = biodieselPurchaseAndVatSum != 0m || biodieselQuantitySum != 0m ? biodieselPurchaseAndVatSum / biodieselQuantitySum : 0m;
 
                                                 #endregion
@@ -938,7 +938,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 var listForEconogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
 
                                                 var econogasQuantitySum = listForEconogas.Sum(s => s.QuantityReceived);
-                                                var econogasPurchaseAndVatSum = listForEconogas.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var econogasPurchaseAndVatSum = listForEconogas.Sum(pr => pr.Amount / 1.12m);
                                                 var econogasAverageSellingPrice = econogasPurchaseAndVatSum != 0m && econogasQuantitySum != 0m ? econogasPurchaseAndVatSum / econogasQuantitySum : 0m;
 
                                                 #endregion
@@ -948,7 +948,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                                 var listForEnvirogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
 
                                                 var envirogasQuantitySum = listForEnvirogas.Sum(s => s.QuantityReceived);
-                                                var envirogasPurchaseAndVatSum = listForEnvirogas.Sum(pr => (pr.QuantityReceived * pr.PurchaseOrder?.Price ?? 0m) / 1.12m);
+                                                var envirogasPurchaseAndVatSum = listForEnvirogas.Sum(pr => pr.Amount / 1.12m);
                                                 var envirogasAverageSellingPrice = envirogasPurchaseAndVatSum != 0m && envirogasQuantitySum != 0m ? envirogasPurchaseAndVatSum / envirogasQuantitySum : 0m;
 
                                                 #endregion
