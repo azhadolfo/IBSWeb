@@ -399,7 +399,7 @@ namespace IBS.Services
                             LockedDate = lockedDate,
                             ReceivingReportId = rr.ReceivingReportId,
                             Quantity = rr.QuantityReceived,
-                            Price = po.Price
+                            Price =  await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId)
                         });
                     }
                 }
