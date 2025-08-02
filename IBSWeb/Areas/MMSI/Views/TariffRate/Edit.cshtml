@@ -93,22 +93,25 @@
     <script>
 
         $(document).ready(function () {
+            
+            let terminalSelectVar = $("#TerminalSelect");
+            let portSelectVar = $("#PortSelect");
 
             function HandlePortChange() {
-                var portId = $("#PortSelect").val();
+                let portId = portSelectVar.val();
 
                 $.ajax({
                     url: '@Url.Action("ChangeTerminal", "DispatchTicket")',
                     type: "GET",
                     data: { portId: portId },
                     success: function (data) {
-                        $("#TerminalSelect").empty();
+                        terminalSelectVar.empty();
 
                         if (Array.isArray(data) && data.length > 0) {
-                            $("#TerminalSelect").append('<option>');
+                            terminalSelectVar.append('<option>');
 
                             $.each(data, function (index, item) {
-                                $("#TerminalSelect").append($('<option>', {
+                                terminalSelectVar.append($('<option>', {
                                     value: item.value,
                                     text: item.text
                                 }));
@@ -117,8 +120,8 @@
                     }
                 });
             }
-            
-            $("#PortSelect").change(HandlePortChange);
+
+            portSelectVar.change(HandlePortChange);
 
         });
 
