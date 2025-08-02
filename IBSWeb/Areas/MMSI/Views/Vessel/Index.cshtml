@@ -98,11 +98,13 @@
         });
 
         $(document).ready(function () {
-            if ($.fn.DataTable.isDataTable('#dataTable')) {
-                $('#dataTable').DataTable().destroy();
-            }
+            let dataTableVar = $('#dataTable');
             
-            $('#dataTable').DataTable({
+            if ($.fn.DataTable.isDataTable('#dataTable')) {
+                dataTableVar.DataTable().destroy();
+            }
+
+            dataTableVar.DataTable({
                 "autoWidth": false,
                 "columnDefs": [
                     {
