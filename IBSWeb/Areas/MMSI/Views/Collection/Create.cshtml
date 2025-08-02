@@ -182,7 +182,7 @@
                 if ($.fn.DataTable.isDataTable('#dataTable')) {
                     table.DataTable().clear().destroy();
                 }
-                table.DataTable({
+                table = table.DataTable({
                     paging: false,
                     info: false,
                     order: [[0, 'asc']],
