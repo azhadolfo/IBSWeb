@@ -490,7 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
-                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text((record.ActualPrices!.Count != 0 ? record.ActualPrices!.First().TriggeredPrice : record.Price) != 0
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text((record.ActualPrices?.Count != 0 ? record.ActualPrices?.First().TriggeredPrice : record.Price) != 0
                                     ? record.Price < 0 ? $"({Math.Abs(record.Price).ToString(SD.Four_Decimal_Format)})" : record.Price.ToString(SD.Four_Decimal_Format) : null);
                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Amount != 0 ? record.Amount < 0 ? $"({Math.Abs(record.Amount).ToString(SD.Two_Decimal_Format)})" : record.Amount.ToString(SD.Two_Decimal_Format) : null);
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
@@ -616,7 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = po.Product?.ProductName;
                     worksheet.Cells[row, 6].Value = po.Quantity;
                     worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
-                    worksheet.Cells[row, 8].Value = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
+                    worksheet.Cells[row, 8].Value = po.ActualPrices!.Count != 0 ? po.ActualPrices!.First().TriggeredPrice : po.Price;
                     worksheet.Cells[row, 9].Value = po.Amount;
                     worksheet.Cells[row, 10].Value = po.Remarks;
 
