@@ -128,6 +128,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         si.CreatedBy,
                         si.Status,
                         si.SalesInvoiceId,
+                        si.PostedBy
                     })
                     .ToList();
 
