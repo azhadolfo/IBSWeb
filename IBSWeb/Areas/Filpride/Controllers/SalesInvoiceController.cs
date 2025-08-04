@@ -129,7 +129,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         si.Status,
                         si.SalesInvoiceId,
                         si.PostedBy,
-                        si.AmountPaid
+                        si.AmountPaid,
+                        si.VoidedBy,
+                        si.CanceledBy,
+                        si.PaymentStatus,
+
                     })
                     .ToList();
 

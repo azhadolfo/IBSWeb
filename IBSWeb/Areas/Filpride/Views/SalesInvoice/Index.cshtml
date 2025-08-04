@@ -211,12 +211,14 @@
                         "data": "status",
                         "name": "status",
                         "render": function(data, type, row) {
-                            var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                              row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
-                                              row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
-                            var paymentStatus = (row.paymentStatus == "@nameof(Status.Pending)" && row.status == "@nameof(Status.Posted)")
-                                                ? "Outstanding" : row.paymentStatus == "Paid" && row.status == "@nameof(Status.Posted)" ? "Paid" : row.status;
-                            if (paymentStatus == "Paid") {
+                            let statusClass = row.status === "@nameof(Status.Posted)" ? "bg-info" :
+                                row.status === "@nameof(Status.Voided)" ? "bg-danger" :
+                                    row.status === "@nameof(Status.Canceled)" ? "bg-warning" : "";
+
+                            const paymentStatus = (row.paymentStatus === "@nameof(Status.Pending)" && row.status === "@nameof(Status.Posted)")
+                                ? "Outstanding" : row.paymentStatus === "Paid" && row.status === "@nameof(Status.Posted)" ? "Paid" : row.status;
+
+                            if (paymentStatus === "Paid") {
                                 statusClass = "bg-success";
                             }
 
@@ -228,7 +230,7 @@
                         "name": "salesInvoiceId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy !== null || row.canceledBy !== null ? 'display:none;' : ''}">
                                                 <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -250,7 +252,6 @@
                                                     `}
                                                 </ul>
                                             </div>`;
-                            return dropdown;
                         }
                     }
                 ],
