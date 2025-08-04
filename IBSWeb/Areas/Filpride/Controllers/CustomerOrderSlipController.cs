@@ -853,11 +853,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (hasTriggeredPrices)
                 {
-                    totalPoAmount += CalculateWeightedCost(po, supplier.Quantity);
+                    totalPoAmount += await CalculateWeightedCost(po, supplier.Quantity);
                 }
                 else
                 {
-                    var grossAmount = supplier.Quantity * po.Price;
+                    var grossAmount = supplier.Quantity * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
                     var netOfVat = po.VatType == SD.VatType_Vatable
                             ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(grossAmount)
                             : grossAmount;
@@ -869,7 +869,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             model.NetOfVatProductCost = totalQuantity > 0 ? totalPoAmount / totalQuantity : 0;
         }
 
-        private decimal CalculateWeightedCost(FilpridePurchaseOrder po, decimal requiredQuantity)
+        private async Task<decimal> CalculateWeightedCost(FilpridePurchaseOrder po, decimal requiredQuantity)
         {
             var weightedCostTotal = 0m;
             var totalCosVolume = 0m;
@@ -896,8 +896,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var finalPrice = po.VatType == SD.VatType_Vatable
-                    ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(po.Price)
-                    : po.Price;
+                    ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId))
+                    : await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId);
 
             return requiredQuantity * finalPrice;
         }

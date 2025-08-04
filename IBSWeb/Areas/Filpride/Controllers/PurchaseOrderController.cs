@@ -334,7 +334,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseOrder.SupplierId, cancellationToken),
                 Terms = purchaseOrder.Terms,
                 Quantity = purchaseOrder.Quantity,
-                Price = purchaseOrder.Price,
+                Price = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken),
                 Remarks = purchaseOrder.Remarks,
                 TriggerDate = purchaseOrder.TriggerDate,
                 OldPoNo = purchaseOrder.OldPoNo,
@@ -678,7 +678,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 1].Value = item.Date.ToString("yyyy-MM-dd");
                 worksheet.Cells[row, 2].Value = item.Terms;
                 worksheet.Cells[row, 3].Value = item.Quantity;
-                worksheet.Cells[row, 4].Value = item.Price;
+                worksheet.Cells[row, 4].Value = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(item.PurchaseOrderId);
                 worksheet.Cells[row, 5].Value = item.Amount;
                 worksheet.Cells[row, 6].Value = item.FinalPrice;
                 worksheet.Cells[row, 7].Value = item.QuantityReceived;

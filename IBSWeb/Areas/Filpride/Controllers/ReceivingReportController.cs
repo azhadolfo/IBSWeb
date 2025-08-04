@@ -864,7 +864,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet2.Cells[poRow, 1].Value = item.PurchaseOrder.Date.ToString("yyyy-MM-dd");
                     worksheet2.Cells[poRow, 2].Value = item.PurchaseOrder.Terms;
                     worksheet2.Cells[poRow, 3].Value = item.PurchaseOrder.Quantity;
-                    worksheet2.Cells[poRow, 4].Value = item.PurchaseOrder.Price;
+                    worksheet2.Cells[poRow, 4].Value = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(item.PurchaseOrder.PurchaseOrderId);
                     worksheet2.Cells[poRow, 5].Value = item.PurchaseOrder.Amount;
                     worksheet2.Cells[poRow, 6].Value = item.PurchaseOrder.FinalPrice;
                     worksheet2.Cells[poRow, 7].Value = item.PurchaseOrder.QuantityReceived;
