@@ -192,7 +192,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.PurchaseOrder!.Product!.ProductName,
                         rr.QuantityReceived,
                         rr.CreatedBy,
-                        rr.Status
+                        rr.Status,
+                        rr.VoidedBy,
+                        rr.PostedBy,
+                        rr.CanceledBy,
                     })
                     .ToList();
 

@@ -223,9 +223,9 @@
                         "data": "status",
                         "name": "status",
                         "render": function(data, type, row) {
-                            var statusClass = row.status == "@nameof(Status.Posted)" ? "bg-info" :
-                                              row.status == "@nameof(Status.Voided)"  ? "bg-danger" :
-                                              row.status == "@nameof(Status.Canceled)" ? "bg-warning" : "";
+                            var statusClass = row.status === "@nameof(Status.Posted)" ? "bg-info" :
+                                              row.status === "@nameof(Status.Voided)"  ? "bg-danger" :
+                                              row.status === "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
                             return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                         }
@@ -235,7 +235,7 @@
                         "name": "receivingReportId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
                                                 <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -253,7 +253,6 @@
                                                     `}
                                                 </ul>
                                             </div>`;
-                            return dropdown;
                         }
                     }
                 ],
