@@ -15,12 +15,10 @@ namespace IBS.DataAccess.Repository.Filpride
     public class DeliveryReceiptRepository : Repository<FilprideDeliveryReceipt>, IDeliveryReceiptRepository
     {
         private readonly ApplicationDbContext _db;
-        private IPurchaseOrderRepository FilpridePurchaseOrder { get; set; }
 
         public DeliveryReceiptRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
-            FilpridePurchaseOrder = new PurchaseOrderRepository(_db);
         }
 
         public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
@@ -627,10 +625,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     dr.Date.Year == endOfPreviousMonth.Year &&
                     dr.Status == nameof(DRStatus.PendingDelivery), cancellationToken);
 
+            var poRepo = new PurchaseOrderRepository(_db);
+
             foreach (var dr in inTransits.OrderBy(dr => dr.DeliveryReceiptNo))
             {
                 var productCode = dr.PurchaseOrder!.Product!.ProductCode;
-                var productCostGrossAmount = dr.Quantity * await FilpridePurchaseOrder.GetPurchaseOrderCost(dr.PurchaseOrder.PurchaseOrderId, cancellationToken);
+                var productCostGrossAmount = dr.Quantity * await poRepo.GetPurchaseOrderCost(dr.PurchaseOrder.PurchaseOrderId, cancellationToken);
                 var productCostNetOfVatAmount = ComputeNetOfVat(productCostGrossAmount);
                 var productCostVatAmount = ComputeVatAmount(productCostNetOfVatAmount);
                 var productCostEwtAmount = ComputeEwtAmount(productCostNetOfVatAmount, 0.01m);

@@ -334,7 +334,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         purchaseOrder.SupplierId, cancellationToken),
                 Terms = purchaseOrder.Terms,
                 Quantity = purchaseOrder.Quantity,
-                Price = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(purchaseOrder.PurchaseOrderId, cancellationToken),
+                Price = purchaseOrder.Price,
                 Remarks = purchaseOrder.Remarks,
                 TriggerDate = purchaseOrder.TriggerDate,
                 OldPoNo = purchaseOrder.OldPoNo,
