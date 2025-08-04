@@ -342,6 +342,7 @@ namespace IBS.DataAccess.Repository.Filpride
             .Where(p => p.Company == company && p.Date >= dateFrom && p.Date <= dateTo && p.Status == nameof(Status.Posted)) // Filter by date and company
             .Include(p => p.Supplier)
             .Include(p => p.Product)
+            .Include(p => p.ActualPrices)
             .OrderBy(p => p.Date) // Order by TransactionDate
             .ToListAsync(cancellationToken);
 

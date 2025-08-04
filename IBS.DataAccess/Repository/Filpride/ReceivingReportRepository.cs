@@ -291,10 +291,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 }
             }
 
-            var poRepo = new PurchaseOrderRepository(_db);
-
             // Compute the remaining using the default price
-            totalAmount += remainingQuantity * (await poRepo.GetPurchaseOrderCost(deliveryReceipt.PurchaseOrder.PurchaseOrderId, cancellationToken) + freight);
+            totalAmount += remainingQuantity * ((poActualPrice?.TriggeredPrice != null ? poActualPrice!.TriggeredPrice : deliveryReceipt.PurchaseOrder.Price) + freight);
             model.Amount = totalAmount;
 
             #region --Audit Trail Recording
