@@ -258,7 +258,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // MinDate = await _unitOfWork.GetThePreviousPostedPeriodAsync(cancellationToken) ?? DateTime.MinValue
             };
 
             return View(viewModel);
@@ -301,6 +303,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return BadRequest();
                 }
+
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // if (await _unitOfWork.IsPeriodPostedAsync(viewModel.Date, cancellationToken))
+                // {
+                //     TempData["warning"] = $"Oops! {viewModel.Date:MMMM yyyy} has already been closed. New entries are not allowed.";
+                //     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                // }
 
                 FilprideCustomerOrderSlip model = new()
                 {
@@ -450,6 +459,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerType = existingRecord.CustomerType,
                     StationCode = getPurchaseOrder?.StationCode,
                     Freight = existingRecord.Freight ?? 0,
+                    // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                    // MinDate = await _unitOfWork.GetThePreviousPostedPeriodAsync(cancellationToken) ?? DateTime.MinValue
                 };
 
                 // If there is uploaded, get signed URL
@@ -515,6 +526,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return NotFound();
                 }
+
+                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
+                // if (await _unitOfWork.IsPeriodPostedAsync(viewModel.Date, cancellationToken))
+                // {
+                //     TempData["warning"] = $"The book has already been closed for this period {viewModel.Date:MMMM yyyy}. " +
+                //                           $"Editing this record is not permitted.";
+                //     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+                // }
 
                 // If the new array has value
                 if (viewModel.ArrayOfFileNames != "[]")

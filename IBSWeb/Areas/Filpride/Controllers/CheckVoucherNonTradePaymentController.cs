@@ -507,11 +507,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var isClosed = await _dbContext.FilprideMonthlyNibits
-                    .Where(n => n.Month == cvHeader.Date.Month && n.Year == cvHeader.Date.Year)
-                    .AnyAsync(cancellationToken);
+                var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
 
-                if (isClosed)
+                if (isPeriodClosed)
                 {
                     throw new ArgumentException("Period closed, CV cannot be unposted.");
                 }

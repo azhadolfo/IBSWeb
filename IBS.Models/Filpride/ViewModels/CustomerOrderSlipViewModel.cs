@@ -86,6 +86,8 @@ namespace IBS.Models.Filpride.ViewModels
         public decimal Freight { get; set; }
 
         public string? ArrayOfFileNames { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 
     public class COSFileInfo

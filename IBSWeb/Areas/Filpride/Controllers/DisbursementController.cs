@@ -156,11 +156,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            var isBookClosed = await _dbContext.FilprideMonthlyNibits
-                .AnyAsync(x => x.Year == cv.Date.Year
-                               && x.Month == cv.Date.Month, cancellationToken);
+            var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
 
-            if (isBookClosed)
+            if (isPeriodClosed)
             {
                 return Json(new { success = false, message = "Book already closed." });
             }
@@ -182,11 +180,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return Json(new { success = false, message = "Record not found" });
             }
 
-            var isBookClosed = await _dbContext.FilprideMonthlyNibits
-                .AnyAsync(x => x.Year == cv.Date.Year
-                               && x.Month == cv.Date.Month, cancellationToken);
+            var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cv.Date, cancellationToken);
 
-            if (isBookClosed)
+            if (isPeriodClosed)
             {
                 return Json(new { success = false, message = "Book already closed." });
             }

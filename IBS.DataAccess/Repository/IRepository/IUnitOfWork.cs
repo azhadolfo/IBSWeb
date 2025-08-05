@@ -216,5 +216,7 @@ namespace IBS.DataAccess.Repository.IRepository
         INotificationRepository Notifications { get; }
 
         Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default);
+
+        Task<DateTime?> GetThePreviousPostedPeriodAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -51,6 +51,23 @@ namespace IBS.DataAccess.Repository
                                && m.Year == date.Year, cancellationToken);
         }
 
+        public async Task<DateTime?> GetThePreviousPostedPeriodAsync(CancellationToken cancellationToken = default)
+        {
+            var period = await _db.PostedPeriods
+                .OrderByDescending(x => x.Year)
+                .ThenByDescending(x => x.Month)
+                .FirstOrDefaultAsync(x => x.IsPosted, cancellationToken);
+
+            if (period == null)
+            {
+                return null;
+            }
+
+            return new DateOnly(period.Year, period.Month, 1)
+                .AddMonths(1)
+                .ToDateTime(new TimeOnly(0, 0));
+        }
+
         #region--Mobility
 
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
