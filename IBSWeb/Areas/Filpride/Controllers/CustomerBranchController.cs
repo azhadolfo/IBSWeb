@@ -67,8 +67,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Customer branch created successfully";
 
                 #region --Audit Trail Recording
 
@@ -80,6 +78,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer branch created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -131,8 +131,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                TempData["success"] = "Customer branch updated successfully";
 
                 #region --Audit Trail Recording
 
@@ -144,6 +142,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Customer branch updated successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
