@@ -637,3 +637,11 @@ table {
 body.loading {
     overflow: hidden;
 }
+
+/* Styling for the multiselect */
+.select2-container--default .select2-selection--multiple {
+    max-height: 100px;
+    min-height: 100px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+}

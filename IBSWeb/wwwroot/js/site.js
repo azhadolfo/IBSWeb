@@ -15,7 +15,8 @@ $(document).ready(function () {
     $('.js-multiple').select2({
         placeholder: "Select an option",
         allowClear: true,
-        width: 'resolve'
+        width: 'resolve',
+        closeOnSelect: false
     });
 });
 
