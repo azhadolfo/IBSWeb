@@ -95,6 +95,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _dbContext.FilpridePickUpPoints.AddAsync(model, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Created Pickup Point #{model.PickUpPointId}",
+                    "Pickup Point", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Pickup point created successfully";
