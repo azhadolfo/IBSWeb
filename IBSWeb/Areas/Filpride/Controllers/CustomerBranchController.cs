@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -68,6 +69,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer branch created successfully";
+
+                #region --Audit Trail Recording
+
+                var user = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new (
+                    user!, $"Created Customer Branch #{model.Id}",
+                    "Customer Branch", companyClaims! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -121,6 +133,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer branch updated successfully";
+
+                #region --Audit Trail Recording
+
+                var user = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new (
+                    user!, $"Edited Customer Branch #{model.Id}",
+                    "Customer Branch", companyClaims! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
