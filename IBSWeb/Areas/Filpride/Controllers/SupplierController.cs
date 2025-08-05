@@ -292,6 +292,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 model.EditedBy = _userManager.GetUserName(User);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Edited Supplier #{model.SupplierCode}",
+                    "Supplier", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Supplier updated successfully";
@@ -345,6 +355,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             supplier.IsActive = true;
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new (
+                _userManager.GetUserName(User)!, $"Activated Supplier #{supplier.SupplierCode}",
+                "Supplier", (await GetCompanyClaimAsync())! );
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             await _unitOfWork.SaveAsync(cancellationToken);
             TempData["success"] = "Supplier activated successfully";
             return RedirectToAction(nameof(Index));
@@ -389,6 +409,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             supplier.IsActive = false;
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new (
+                _userManager.GetUserName(User)!, $"Deactivated Supplier #{supplier.SupplierCode}",
+                "Supplier", (await GetCompanyClaimAsync())! );
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             await _unitOfWork.SaveAsync(cancellationToken);
             TempData["success"] = "Supplier deactivated successfully";
             return RedirectToAction(nameof(Index));
