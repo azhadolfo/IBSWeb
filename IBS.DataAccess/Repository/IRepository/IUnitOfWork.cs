@@ -214,5 +214,7 @@ namespace IBS.DataAccess.Repository.IRepository
         #endregion
 
         INotificationRepository Notifications { get; }
+
+        Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default);
     }
 }

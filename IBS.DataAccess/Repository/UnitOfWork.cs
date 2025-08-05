@@ -43,6 +43,14 @@ namespace IBS.DataAccess.Repository
 
         public INotificationRepository Notifications { get; private set; }
 
+        public async Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default)
+        {
+            return await _db.PostedPeriods
+                .AnyAsync(m => m.IsPosted
+                               && m.Month == date.Month
+                               && m.Year == date.Year, cancellationToken);
+        }
+
         #region--Mobility
 
         public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)

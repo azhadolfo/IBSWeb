@@ -1,3 +1,4 @@
+using Google.Apis.Drive.v3.Data;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
@@ -6,71 +7,81 @@ using IBS.Models.Filpride.Books;
 using IBS.Utility.Constants;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace IBS.Services
 {
-    public class MonthlyClosureService : IJob
+
+    public interface IMonthlyClosureService
+    {
+        Task Execute(DateOnly monthDate, string company, string user, CancellationToken cancellationToken = default);
+    }
+
+    public class MonthlyClosureService : IMonthlyClosureService
     {
         private readonly ApplicationDbContext _dbContext;
 
         private readonly ILogger<MonthlyClosureService> _logger;
 
-        private readonly UserManager<ApplicationUser> _userManager;
-
         private readonly IUnitOfWork _unitOfWork;
 
-        public MonthlyClosureService(ApplicationDbContext dbContext, ILogger<MonthlyClosureService> logger,
-            UserManager<ApplicationUser> userManager, IUnitOfWork unitOfWork)
+        public MonthlyClosureService(ApplicationDbContext dbContext,
+            ILogger<MonthlyClosureService> logger, IUnitOfWork unitOfWork)
         {
             _dbContext = dbContext;
             _logger = logger;
-            _userManager = userManager;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Execute(IJobExecutionContext context)
+        public async Task Execute(DateOnly monthDate, string company, string user, CancellationToken cancellationToken = default)
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
-                var dataMap = context.MergedJobDataMap.GetDateTime("monthDate");
-
-                var isMonthAlreadyLocked = await _dbContext.FilprideMonthlyNibits
-                    .AnyAsync(m => m.Month == dataMap.Month
-                                   && m.Year == dataMap.Year);
+                var isMonthAlreadyLocked = await _unitOfWork.IsPeriodPostedAsync(monthDate, cancellationToken);
 
                 if (isMonthAlreadyLocked)
                 {
-                    throw new InvalidOperationException($"{dataMap:MMM yyyy} is already locked.");
+                    throw new InvalidOperationException($"{monthDate:MMMM yyyy} is already locked.");
                 }
 
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
-                    .AnyAsync(x => x.Date.Month == dataMap.Month
-                                   && x.Date.Year == dataMap.Year
-                                   && !x.HasReceivingReport);
+                    .AnyAsync(x => x.Date.Month == monthDate.Month
+                                   && x.Date.Year == monthDate.Year
+                                   && !x.HasReceivingReport, cancellationToken);
 
                 if (hasUnliftedDrs)
                 {
-                    throw new InvalidOperationException($"There are still unlifted DRs for {dataMap:MMM yyyy}. " +
+                    throw new InvalidOperationException($"There are still unlifted DRs for {monthDate:MMMM yyyy}. " +
                                                         $"Closing for this month cannot proceed.");
                 }
 
-                await AutoReversalForCvWithoutDcrDate(dataMap);
-                await ComputeNibit(dataMap);
-                await RecordNotUpdatedSales(dataMap);
-                await RecordNotUpdatedPurchases(dataMap);
+                await AutoReversalForCvWithoutDcrDate(monthDate, cancellationToken);
+                await ComputeNibit(monthDate, cancellationToken);
+                await RecordNotUpdatedSales(monthDate, cancellationToken);
+                await RecordNotUpdatedPurchases(monthDate, cancellationToken);
 
-                _logger.LogInformation($"MonthlyClosureService is running at: {DateTimeHelper.GetCurrentPhilippineTime()}");
-                await transaction.CommitAsync();
+                var postedPeriod = new PostedPeriod
+                {
+                    Company = company,
+                    Month = monthDate.Month,
+                    Year = monthDate.Year,
+                    IsPosted = true,
+                    PostedBy = user,
+                    PostedOn = DateTimeHelper.GetCurrentPhilippineTime()
+                };
+
+                await _dbContext.PostedPeriods.AddAsync(postedPeriod, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, ex.Message);
-                await transaction.RollbackAsync();
+                await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
         }
@@ -132,7 +143,7 @@ namespace IBS.Services
             }
         }
 
-        private async Task AutoReversalForCvWithoutDcrDate(DateTime previousMonth)
+        private async Task AutoReversalForCvWithoutDcrDate(DateOnly previousMonth, CancellationToken cancellationToken)
         {
             try
             {
@@ -146,7 +157,7 @@ namespace IBS.Services
                         cv.PostedBy != null &&
                         cv.DcrDate == null
                     )
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 if (disbursementsWithoutDcrDate.Count == 0)
                 {
@@ -160,13 +171,13 @@ namespace IBS.Services
 
                     var details = await _dbContext.FilprideCheckVoucherDetails
                         .Where(cvd => cvd.CheckVoucherHeaderId == cv.CheckVoucherHeaderId)
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
 
                     foreach (var cvDetails in details)
                     {
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
-                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
                             AccountNo = cvDetails.AccountNo,
@@ -180,7 +191,7 @@ namespace IBS.Services
 
                         ledgers.Add(new FilprideGeneralLedgerBook
                         {
-                            Date = DateOnly.FromDateTime(previousMonth),
+                            Date = previousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
                             AccountNo = cvDetails.AccountNo,
@@ -194,7 +205,7 @@ namespace IBS.Services
 
                         journalBooks.Add(new FilprideJournalBook
                         {
-                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
                             AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
@@ -207,7 +218,7 @@ namespace IBS.Services
 
                         journalBooks.Add(new FilprideJournalBook
                         {
-                            Date = DateOnly.FromDateTime(endOfPreviousMonth),
+                            Date = endOfPreviousMonth,
                             Reference = cv.CheckVoucherHeaderNo!,
                             Description = cv.Particulars!,
                             AccountTitle = $"{cvDetails.AccountNo} {cvDetails.AccountName}",
@@ -225,9 +236,9 @@ namespace IBS.Services
 
                     }
 
-                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers);
-                    await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBooks);
-                    await _dbContext.SaveChangesAsync();
+                    await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+                    await _dbContext.FilprideJournalBooks.AddRangeAsync(journalBooks, cancellationToken);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
                 }
 
             }
@@ -238,11 +249,11 @@ namespace IBS.Services
             }
         }
 
-        private async Task ComputeNibit(DateTime previousMonth)
+        private async Task ComputeNibit(DateOnly previousMonth, CancellationToken cancellationToken)
         {
             try
             {
-                var generalLedgers = _dbContext.FilprideGeneralLedgerBooks
+                var generalLedgers = await _dbContext.FilprideGeneralLedgerBooks
                     .Include(gl => gl.Account) // Level 4
                     .ThenInclude(ac => ac.ParentAccount) // Level 3
                     .ThenInclude(ac => ac!.ParentAccount) // Level 2
@@ -252,7 +263,7 @@ namespace IBS.Services
                         gl.Date.Year == previousMonth.Year &&
                         gl.AccountId != null &&  // TODO Uncomment this if the GL is fixed
                         gl.Company == "Filpride") // TODO Make this dynamic later on
-                    .ToList();
+                    .ToListAsync(cancellationToken);
 
                 if (!generalLedgers.Any())
                 {
@@ -305,7 +316,7 @@ namespace IBS.Services
                 var beginning = await _dbContext.FilprideMonthlyNibits
                     .OrderByDescending(m => m.Year)
                     .ThenByDescending(m => m.Month)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(cancellationToken);
 
                 if (beginning != null)
                 {
@@ -314,8 +325,8 @@ namespace IBS.Services
 
                 nibitForThePeriod.EndingBalance = nibitForThePeriod.BeginningBalance + nibitForThePeriod.NetIncome + nibitForThePeriod.PriorPeriodAdjustment;
 
-                await _dbContext.FilprideMonthlyNibits.AddAsync(nibitForThePeriod);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.FilprideMonthlyNibits.AddAsync(nibitForThePeriod, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
             }
             catch (Exception ex)
@@ -325,7 +336,7 @@ namespace IBS.Services
             }
         }
 
-        private async Task RecordNotUpdatedSales(DateTime previousMonth)
+        private async Task RecordNotUpdatedSales(DateOnly previousMonth, CancellationToken cancellationToken)
         {
             try
             {
@@ -335,7 +346,7 @@ namespace IBS.Services
                                       && x.Date.Year == previousMonth.Year
                                       && x.OldPrice == 0
                                       && x.DeliveredQuantity > 0)
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 if (cosNotUpdatedPrice.Count == 0)
                 {
@@ -359,8 +370,8 @@ namespace IBS.Services
                     }
                 }
 
-                await _dbContext.FilprideSalesLockedRecordsQueues.AddRangeAsync(lockedRecordQueues);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.FilprideSalesLockedRecordsQueues.AddRangeAsync(lockedRecordQueues, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
             }
             catch (Exception ex)
@@ -370,7 +381,7 @@ namespace IBS.Services
             }
         }
 
-        private async Task RecordNotUpdatedPurchases(DateTime previousMonth)
+        private async Task RecordNotUpdatedPurchases(DateOnly previousMonth, CancellationToken cancellationToken)
         {
             try
             {
@@ -380,7 +391,7 @@ namespace IBS.Services
                                 && x.Date.Year == previousMonth.Year
                                 && x.UnTriggeredQuantity != 0
                                 && x.QuantityReceived > 0)
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 if (poNotUpdatedPrice.Count == 0)
                 {
@@ -399,13 +410,13 @@ namespace IBS.Services
                             LockedDate = lockedDate,
                             ReceivingReportId = rr.ReceivingReportId,
                             Quantity = rr.QuantityReceived,
-                            Price =  await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId)
+                            Price =  await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken)
                         });
                     }
                 }
 
-                await _dbContext.FilpridePurchaseLockedRecordsQueues.AddRangeAsync(lockedRecordQueues);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.FilpridePurchaseLockedRecordsQueues.AddRangeAsync(lockedRecordQueues, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
             }
             catch (Exception ex)

@@ -25,6 +25,7 @@ namespace IBS.Models.Filpride
         [Column(TypeName = "numeric(18, 4)")]
         public decimal EndingBalance { get; set; }
 
+        [StringLength(50)]
         public string Company { get; set; }
     }
 }

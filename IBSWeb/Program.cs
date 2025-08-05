@@ -93,21 +93,17 @@ builder.Services.AddSingleton<ICloudStorageService, CloudStorageService>();
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IUserAccessService, UserAccessService>();
 builder.Services.AddScoped<IHubConnectionRepository, HubConnectionRepository>();
+builder.Services.AddScoped<IMonthlyClosureService, MonthlyClosureService>();
 builder.Services.AddSignalR();
 
 // Add Quartz services
 builder.Services.AddQuartz(q =>
 {
     // Register the job
-    var monthlyClosureKey = JobKey.Create(nameof(MonthlyClosureService));
     var dailyPlacementLockKey = JobKey.Create(nameof(LockPlacementService));
     var firstOfTheMonthKey = JobKey.Create(nameof(FirstOfTheMonthService));
 
     ///TODO Register the job for COS Expiration
-
-    q.AddJob<MonthlyClosureService>(options =>
-        options.WithIdentity(monthlyClosureKey)
-            .StoreDurably());
 
     q.AddJob<LockPlacementService>(options =>
         options.WithIdentity(dailyPlacementLockKey));

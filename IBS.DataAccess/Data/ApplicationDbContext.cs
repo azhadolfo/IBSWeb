@@ -41,6 +41,8 @@ namespace IBS.DataAccess.Data
 
         public DbSet<HubConnection> HubConnections { get; set; }
 
+        public DbSet<PostedPeriod> PostedPeriods { get; set; }
+
         #region--MOBILITY
 
         #region--Sales Entity
