@@ -103,6 +103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer created successfully";
+
                     return RedirectToAction(nameof(Index));
                 }
 
@@ -151,8 +152,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 model.EditedBy = _userManager.GetUserName(User);
                 await _unitOfWork.FilprideCustomer.UpdateAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                var user = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new (user!, $"Edited Customer #{model.CustomerCode}", "Customer", model.Company );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer updated successfully";
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
@@ -258,6 +269,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             customer.IsActive = true;
             await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region --Audit Trail Recording
+
+            var user = _userManager.GetUserName(User);
+            FilprideAuditTrail auditTrailBook = new (
+                user!, $"Activated Customer #{customer.CustomerCode}",
+                "Customer", customer.Company );
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             TempData["success"] = "Customer has been activated";
             return RedirectToAction(nameof(Index));
         }
@@ -301,6 +323,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             customer.IsActive = false;
             await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region --Audit Trail Recording
+
+            var user = _userManager.GetUserName(User);
+            FilprideAuditTrail auditTrailBook = new (
+                user!, $"Deactivated Customer #{customer.CustomerCode}",
+                "Customer", customer.Company );
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             TempData["success"] = "Customer has been deactivated";
             return RedirectToAction(nameof(Index));
         }
