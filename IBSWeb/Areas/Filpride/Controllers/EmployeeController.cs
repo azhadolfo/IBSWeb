@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -72,6 +73,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 model.Company = companyClaims;
                 await _unitOfWork.FilprideEmployee.AddAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Created new Employee #{model.EmployeeNumber}",
+                    "Employee", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Employee {model.EmployeeNumber} created successfully";
                 return RedirectToAction(nameof(Index));
@@ -203,6 +214,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion -- Saving Default
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Created new Employee #{model.EmployeeNumber}",
+                    "Employee", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Employee edited successfully";
                 return RedirectToAction(nameof(Index));
