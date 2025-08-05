@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using OfficeOpenXml;
 using System.Threading;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Utility.Enums;
 using IBS.Utility.Helpers;
 
@@ -54,6 +55,19 @@ namespace IBSWeb.Areas.User.Controllers
             return View(products);
         }
 
+        private async Task<string?> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         [HttpGet]
         public IActionResult Create()
         {
@@ -74,6 +88,16 @@ namespace IBSWeb.Areas.User.Controllers
                     model.CreatedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Product.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new (
+                        _userManager.GetUserName(User)!, $"Created Product #{model.ProductCode}",
+                        "Product", (await GetCompanyClaimAsync())! );
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     TempData["success"] = "Product created successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -167,6 +191,16 @@ namespace IBSWeb.Areas.User.Controllers
                 {
                     model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new (
+                        _userManager.GetUserName(User)!, $"Edited Product #{model.ProductCode}",
+                        "Product", (await GetCompanyClaimAsync())! );
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     TempData["success"] = "Product updated successfully";
                     return RedirectToAction(nameof(Index));
                 }
@@ -217,6 +251,16 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 product.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Activated Product #{product.ProductCode}",
+                    "Product", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 TempData["success"] = "Product activated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -260,6 +304,16 @@ namespace IBSWeb.Areas.User.Controllers
             {
                 product.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Deactivated Product #{product.ProductCode}",
+                    "Product", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 TempData["success"] = "Product deactivated successfully";
                 return RedirectToAction(nameof(Index));
             }
