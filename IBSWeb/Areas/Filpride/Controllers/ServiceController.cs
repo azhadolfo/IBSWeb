@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -154,6 +155,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = "Services created successfully";
 
                 await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Create Service #{services.ServiceNo}",
+                    "Service", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
@@ -272,6 +283,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = "Services updated successfully";
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Edited Service #{services.ServiceNo}",
+                    "Service", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException ex)
