@@ -213,6 +213,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
                 existingModel.AccountNo = model.AccountNo;
                 existingModel.AccountName = model.AccountName;
                 existingModel.Bank = model.Bank;
@@ -222,11 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.IsBienes = model.IsBienes;
 
                 TempData["success"] = "Bank edited successfully.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", existingModel.Company);
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
