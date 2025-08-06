@@ -97,8 +97,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     await _dbContext.AddAsync(model, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
+                    #region -- Audit Trail Recording --
+
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                        $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
 
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Bank created successfully.";
@@ -151,8 +156,12 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     TempData["success"] = "Bank edited successfully.";
                     await _dbContext.SaveChangesAsync(cancellationToken);
 
+                    #region -- Audit Trail Recording --
+
                     FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
 
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
