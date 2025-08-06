@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MasterFile;
 using IBS.Models.Mobility;
 using IBS.Services.Attributes;
@@ -47,27 +48,36 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MobilityProduct model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                bool IsProductExist = await _unitOfWork
-                    .MobilityProduct
-                    .IsProductExist(model.ProductName, cancellationToken);
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
+            }
 
-                if (!IsProductExist)
-                {
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityProduct.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    TempData["success"] = "Product created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
+            bool IsProductExist = await _unitOfWork
+                .MobilityProduct
+                .IsProductExist(model.ProductName, cancellationToken);
 
+            if (IsProductExist)
+            {
                 ModelState.AddModelError("ProductName", "Product name already exist.");
                 return View(model);
             }
 
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            return View(model);
+            model.CreatedBy = _userManager.GetUserName(User);
+            await _unitOfWork.MobilityProduct.AddAsync(model, cancellationToken);
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region -- Audit Trail Recording --
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Created new Product #{model.ProductCode}", "Product", nameof(Mobility));
+            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording --
+
+            TempData["success"] = "Product created successfully";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -91,24 +101,33 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(MobilityProduct model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilityProduct.UpdateAsync(model, cancellationToken);
-                    TempData["success"] = "Product updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in updating product.");
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            try
+            {
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.MobilityProduct.UpdateAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Product #{model.ProductCode}", "Product", nameof(Mobility));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                TempData["success"] = "Product updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in updating product.");
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -143,15 +162,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
-            if (product != null)
+            if (product == null)
             {
-                product.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Product activated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            product.IsActive = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region -- Audit Trail Recording --
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Activated Product #{product.ProductCode}", "Product", nameof(Mobility));
+            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording --
+
+            TempData["success"] = "Product activated successfully";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -186,15 +214,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .MobilityProduct
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
-            if (product != null)
+            if (product == null)
             {
-                product.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Product deactivated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            product.IsActive = false;
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region -- Audit Trail Recording --
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Deactivated Product #{product.ProductCode}", "Product", nameof(Mobility));
+            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording --
+
+            TempData["success"] = "Product deactivated successfully";
+            return RedirectToAction(nameof(Index));
         }
     }
 }
