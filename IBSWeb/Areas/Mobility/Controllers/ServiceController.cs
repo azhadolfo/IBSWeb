@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -145,6 +146,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     await _dbContext.AddAsync(services, cancellationToken);
                     await _dbContext.SaveChangesAsync(cancellationToken);
+
+                    #region -- Audit Trail Recording --
+
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                        $"Created new Service #{services.ServiceNo}", "Service", nameof(Mobility));
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
+
                     await transaction.CommitAsync(cancellationToken);
                     return RedirectToAction(nameof(Index));
                 }
@@ -194,6 +204,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         existingModel.Name = services.Name;
                         existingModel.Percent = services.Percent;
                         TempData["success"] = "Services updated successfully";
+
+                        #region -- Audit Trail Recording --
+
+                        FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                            $"Edited Service #{services.ServiceNo}", "Service", nameof(Mobility));
+                        await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                        #endregion -- Audit Trail Recording --
 
                         await _dbContext.SaveChangesAsync(cancellationToken);
                     }
