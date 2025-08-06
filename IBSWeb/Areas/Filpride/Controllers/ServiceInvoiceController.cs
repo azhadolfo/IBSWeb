@@ -96,7 +96,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Sorting
-                if (parameters.Order.Count > 0)
+                if (parameters.Order?.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
