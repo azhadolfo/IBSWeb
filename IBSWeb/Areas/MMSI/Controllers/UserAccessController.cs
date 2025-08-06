@@ -1,7 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -13,12 +16,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<UserAccessController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UserAccessController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<UserAccessController> logger)
+        public UserAccessController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<UserAccessController> logger, UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         // GET
@@ -62,6 +67,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 var selectedUser = _dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
                 model.UserName = selectedUser!.UserName;
                 await _unitOfWork.UserAccess.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created User Access for {model.UserName}", "User Access", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "User access created successfully.";
                 return RedirectToAction(nameof(Index));
@@ -109,6 +123,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 {
                     return NotFound();
                 }
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited User Access for {model.UserName}", "User Access", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
 
                 tempModel.CanCreateServiceRequest = model.CanCreateServiceRequest;
                 tempModel.CanPostServiceRequest = model.CanPostServiceRequest;

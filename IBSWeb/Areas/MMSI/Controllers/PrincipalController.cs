@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -68,6 +69,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     .GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken) ?? throw new NullReferenceException("Customer not found");
                 model.CustomerId = customer.CustomerId;
                 await _unitOfWork.Principal.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Principal #{model.PrincipalNumber}", "Principal", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
@@ -132,6 +142,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
                     TempData["error"] = "Principal not found.";
                     return View(model);
                 }
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Principal #{currentModel.PrincipalNumber} => {model.PrincipalNumber}", "Principal", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
 
                 currentModel.Address = model.Address;
                 currentModel.PrincipalName = model.PrincipalName;

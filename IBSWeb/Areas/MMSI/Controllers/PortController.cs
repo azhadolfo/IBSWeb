@@ -1,7 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -13,12 +16,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<PortController> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PortController(ApplicationDbContext dbContext, ILogger<PortController> logger, IUnitOfWork unitOfWork)
+        public PortController(ApplicationDbContext dbContext, ILogger<PortController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -45,6 +50,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 await _unitOfWork.Port.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Port #{model.PortNumber}", "Port", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
             }
@@ -98,6 +112,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Port #{currentModel.PortNumber} => {model.PortNumber}", "Port", nameof(MMSI));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 currentModel.PortNumber = model.PortNumber;
                 currentModel.PortName = model.PortName;
                 currentModel.HasSBMA = model.HasSBMA;
