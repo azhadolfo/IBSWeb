@@ -171,7 +171,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
-                var totalRecords = purchaseOrders.Count();
+                var totalRecords = purchaseOrders.Count;
 
                 var pagedData = purchaseOrders
                     .Skip(parameters.Start)
@@ -235,6 +235,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.Products = await _unitOfWork
                 .GetProductListAsyncById(cancellationToken);
+
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             return View(viewModel);
         }
@@ -370,6 +372,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 SupplierSalesOrderNo = purchaseOrder.SupplierSalesOrderNo,
             };
 
+            ViewBag.FilterType = await GetCurrentFilterType();
+
             return View(viewModel);
         }
 
@@ -476,6 +480,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 return NotFound();
             }
+
+            ViewBag.FilterType = await GetCurrentFilterType();
 
             var purchaseOrder = await _dbContext.FilpridePurchaseOrders
                 .Include(po => po.Supplier)
