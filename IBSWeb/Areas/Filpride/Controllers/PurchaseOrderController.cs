@@ -111,13 +111,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
                 var filterTypeClaim = await GetCurrentFilterType();
 
-                var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                    .GetAllAsync(po => po.Company == companyClaims, cancellationToken);
+                var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                    .Include(po => po.PickUpPoint)
+                    .Include(po => po.ActualPrices)
+                    .Where(po => po.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
 
                 if (!string.IsNullOrEmpty(filterTypeClaim))
                 {
                     purchaseOrders = purchaseOrders
-                        .Where(po => po.Status == nameof(DRStatus.ForApprovalOfOM));
+                        .Where(po => po.Status == nameof(DRStatus.ForApprovalOfOM))
+                        .ToList();
                 }
 
                 if (!string.IsNullOrEmpty(filterTypeClaim))
@@ -126,7 +130,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         case "ForOMApproval":
                             purchaseOrders = purchaseOrders
-                                .Where(rr => rr.Status == nameof(DRStatus.ForApprovalOfOM));
+                                .Where(rr => rr.Status == nameof(DRStatus.ForApprovalOfOM))
+                                .ToList();
                             break;
                             // Add other cases as needed
                     }
@@ -141,9 +146,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Where(s =>
                         s.PurchaseOrderNo!.ToLower().Contains(searchValue) ||
                         s.OldPoNo.ToLower().Contains(searchValue) ||
-                        s.Supplier!.SupplierName.ToLower().Contains(searchValue) ||
+                        s.SupplierName.ToLower().Contains(searchValue) ||
                         s.PickUpPoint!.Depot.ToLower().Contains(searchValue) ||
-                        s.Product!.ProductName.ToLower().Contains(searchValue) ||
+                        s.ProductName.ToLower().Contains(searchValue) ||
                         s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.Quantity.ToString().Contains(searchValue) ||
                         s.Remarks.ToString().Contains(searchValue) ||
@@ -157,7 +162,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (parameters.Order.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     purchaseOrders = purchaseOrders
@@ -171,6 +176,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var pagedData = purchaseOrders
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
+                    .Select(po => new
+                    {
+                        po.PurchaseOrderId,
+                        po.PurchaseOrderNo,
+                        po.Date,
+                        po.OldPoNo,
+                        po.SupplierId,
+                        po.SupplierName,
+                        po.ProductName,
+                        po.PickUpPoint?.Depot,
+                        po.Quantity,
+                        po.QuantityReceived,
+                        po.FinalPrice,
+                        po.Amount,
+                        po.CreatedBy,
+                        po.Status,
+                        po.IsReceived,
+                        po.VoidedBy,
+                        po.CanceledBy,
+                        po.PostedBy,
+                        po.UnTriggeredQuantity,
+                        po.IsSubPo,
+                    })
                     .ToList();
 
                 return Json(new
@@ -271,7 +299,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     PickUpPointId = viewModel.PickUpPointId,
                     VatType = supplier.VatType,
                     TaxType = supplier.TaxType,
-                    OldPoNo = viewModel.OldPoNo
+                    OldPoNo = viewModel.OldPoNo,
+                    FinalPrice = viewModel.Price
                 };
 
                 await _unitOfWork.FilpridePurchaseOrder.AddAsync(model, cancellationToken);
@@ -395,6 +424,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Quantity = viewModel.Quantity;
                 existingModel.UnTriggeredQuantity = !supplier.RequiresPriceAdjustment ? 0 : existingModel.Quantity;
                 existingModel.Price = viewModel.Price;
+                existingModel.FinalPrice = existingModel.Price;
                 existingModel.Amount = viewModel.Quantity * viewModel.Price;
                 existingModel.SupplierSalesOrderNo = viewModel.SupplierSalesOrderNo;
                 existingModel.Remarks = viewModel.Remarks;
@@ -827,15 +857,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .FirstOrDefaultAsync(a => a.PurchaseOrderId == existingRecord.PurchaseOrderId
                                               && !a.IsApproved, cancellationToken);
 
-                if (actualPrices != null)
+                if (actualPrices == null)
                 {
-                    actualPrices.ApprovedBy = _userManager.GetUserName(this.User);
-                    actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    actualPrices.IsApproved = true;
-
-                    await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+                    TempData["error"] = "Actual price not found!";
+                    return Json(new { success = false, message = TempData["error"] });
                 }
 
+                actualPrices.ApprovedBy = _userManager.GetUserName(User);
+                actualPrices.ApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                actualPrices.IsApproved = true;
+
+                await _unitOfWork.FilpridePurchaseOrder.UpdateActualCostOnSalesAndReceiptsAsync(actualPrices, cancellationToken);
+
+                existingRecord.FinalPrice =  actualPrices.TriggeredPrice;
                 existingRecord.Status = nameof(Status.Posted);
 
                 #region --Audit Trail Recording
