@@ -161,8 +161,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     model.StationCode = stationCodeClaims;
                     await _unitOfWork.MobilitySupplier.AddAsync(model, cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new supplier {model.SupplierCode}", "Supplier", nameof(Mobility));
+                    #region --Audit Trail Recording --
+
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                        $"Create new supplier {model.SupplierCode}", "Supplier", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
 
                     await _unitOfWork.SaveAsync(cancellationToken);
                     await transaction.CommitAsync(cancellationToken);
@@ -252,6 +257,15 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     model.EditedBy = _userManager.GetUserName(User);
                     await _unitOfWork.MobilitySupplier.UpdateAsync(model, cancellationToken);
+
+                    #region -- Audit Trail Recording --
+
+                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                        $"Edited supplier #{model.SupplierCode}", "Supplier", nameof(Mobility));
+                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
+
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Supplier updated successfully";
                     return RedirectToAction(nameof(Index));
@@ -300,15 +314,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                supplier.IsActive = true;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Supplier activated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            supplier.IsActive = true;
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region --Audit Trail Recording --
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Activated supplier #{supplier.SupplierCode}", "Supplier", nameof(Mobility));
+            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording --
+
+            TempData["success"] = "Supplier activated successfully";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -343,15 +366,24 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
             {
-                supplier.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
-                TempData["success"] = "Supplier deactivated successfully";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            supplier.IsActive = false;
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region -- Audit Trail Recording --
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Deactivated supplier #{supplier.SupplierCode}", "Supplier", nameof(Mobility));
+            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording --
+
+            TempData["success"] = "Supplier deactivated successfully";
+            return RedirectToAction(nameof(Index));
         }
     }
 }
