@@ -156,7 +156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                    $"Create new supplier {model.SupplierCode}", "Supplier", model.Company);
+                    $"Create new Supplier #{model.SupplierCode}", "Supplier", model.Company);
                 await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                 await _unitOfWork.SaveAsync(cancellationToken);

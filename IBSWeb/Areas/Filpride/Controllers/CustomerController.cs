@@ -100,7 +100,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail Recording
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new customer #{model.CustomerCode}", "Customer", model.Company);
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new Customer #{model.CustomerCode}", "Customer", model.Company);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion -- Audit Trail Recording --
