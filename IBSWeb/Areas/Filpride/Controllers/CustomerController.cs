@@ -98,8 +98,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     await _unitOfWork.FilprideCustomer.AddAsync(model, cancellationToken);
                     await _unitOfWork.SaveAsync(cancellationToken);
 
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer {model.CustomerCode}", "Customer", model.Company);
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    #region -- Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Created new customer #{model.CustomerCode}", "Customer", model.Company);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion -- Audit Trail Recording --
 
                     await transaction.CommitAsync(cancellationToken);
                     TempData["success"] = "Customer created successfully";
