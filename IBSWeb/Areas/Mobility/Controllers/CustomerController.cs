@@ -84,8 +84,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region --Audit Trail Recording
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Activated customer #{customer.CustomerCode}", "Customer", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Activated customer {customer.CustomerCode}", "Customer", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording
 
@@ -139,14 +139,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                         model.StationCode = stationCodeClaims;
                         model.CustomerCode = await _unitOfWork.MobilityCustomer.GenerateCodeAsync(model.CustomerType, stationCodeClaims, cancellationToken);
                         model.CreatedBy = _userManager.GetUserName(User);
-                        await _dbContext.MobilityCustomers.AddAsync(model, cancellationToken);
+                        await _unitOfWork.MobilityCustomer.AddAsync(model, cancellationToken);
                         await _unitOfWork.SaveAsync(cancellationToken);
 
                         #region --Audit Trail Recording
 
                         FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                            $"Create new customer #{model.CustomerCode}", "Customer", nameof(Mobility));
-                        await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                            $"Create new customer {model.CustomerCode}", "Customer", nameof(Mobility));
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                         #endregion --Audit Trail Recording
 
@@ -204,24 +204,25 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 .MobilityCustomer
                 .GetAsync(c => c.CustomerId == id, cancellationToken);
 
-            if (customer != null)
+            if (customer == null)
             {
-                customer.IsActive = false;
-                await _unitOfWork.SaveAsync(cancellationToken);
-
-                #region --Audit Trail Recording
-
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                    $"Edited customer {customer.CustomerCode}", "Customer", nameof(Mobility));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion -- Audit Trail Recording
-
-                TempData["success"] = "Customer has been deactivated";
-                return RedirectToAction(nameof(Index));
+                return NotFound();
             }
 
-            return NotFound();
+            customer.IsActive = false;
+            await _unitOfWork.SaveAsync(cancellationToken);
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                $"Deactivated customer {customer.CustomerCode}", "Customer", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion -- Audit Trail Recording
+
+            TempData["success"] = "Customer has been deactivated";
+            return RedirectToAction(nameof(Index));
+
         }
 
         [HttpGet]
@@ -266,6 +267,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                     #endregion -- getMobilityStation --
 
+                    var existingCustomer = await _unitOfWork.MobilityCustomer.GetAsync(c => c.CustomerId == model.CustomerId, cancellationToken);
+
+                    if (existingCustomer == null)
+                    {
+                        return NotFound();
+                    }
+
                     #region -- Assign New Values --
 
                     await _unitOfWork.MobilityCustomer.UpdateAsync(model, cancellationToken);
@@ -278,7 +286,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                     #region --Audit Trail Recording
 
                     FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                        $"Edited customer #{model.CustomerCode}", "Customer", nameof(Mobility));
+                        $"Edited customer {existingCustomer.CustomerCode} => {model.CustomerCode}", "Customer", nameof(Mobility));
                     await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion -- Audit Trail Recording
