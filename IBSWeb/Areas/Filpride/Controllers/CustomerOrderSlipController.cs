@@ -173,7 +173,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     query = query.Where(s =>
                         s.CustomerOrderSlipNo.ToLower().Contains(searchValue) ||
                         s.OldCosNo.ToLower().Contains(searchValue) ||
-                        (s.PurchaseOrder != null && s.PurchaseOrder.PurchaseOrderNo!.ToLower().Contains(searchValue)) ||
+                        (s.AppointedSuppliers != null && s.AppointedSuppliers.Any(a =>
+                            a.PurchaseOrder != null &&
+                            a.PurchaseOrder.PurchaseOrderNo != null &&
+                            a.PurchaseOrder.PurchaseOrderNo.ToLower().Contains(searchValue))) ||
                         s.CustomerName.ToLower().Contains(searchValue) ||
                         (isDateSearch && s.Date == searchDate) ||
                         (s.Depot != null && s.Depot.ToLower().Contains(searchValue)) ||

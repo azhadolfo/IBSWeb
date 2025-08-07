@@ -72,9 +72,13 @@
                     $('[data-bs-toggle="tooltip"]').tooltip();
                 },
                 "columns": [
-                    { "data": "authorityToLoadNo" },
+                    { 
+                        "data": "authorityToLoadNo",
+                        "name": "authorityToLoadNo"
+                    },
                     {
                         "data": "dateBooked",
+                        "name": "dateBooked",
                         "render": function(data) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', { 
@@ -86,6 +90,7 @@
                     },
                     {
                         "data": "validUntil",
+                        "name": "validUntil",
                         "render": function(data) {
                             var date = new Date(data);
                             return date.toLocaleDateString('en-US', { 
@@ -95,10 +100,28 @@
                             });
                         }
                     },
-                    { "data": "customerOrderSlip.customerOrderSlipNo" },
-                    { "data": "remarks" },
+                    { 
+                        "data": "customerOrderSlipId",
+                        "name": "customerOrderSlipId",
+                        "render": function(data, type, row) {
+                            
+                            if (row.cosNos.length === 1){
+                                return `<span>${row.cosNos[0]}</span>`;
+                            }
+
+                            return `<span data-bs-toggle="tooltip" title="${row.cosNos.join(', ')}">
+                                        ${row.cosNos.length} COS
+                                    </span>`;
+                            
+                        }
+                    },
+                    { 
+                        "data": "remarks",
+                        "name": "remarks",
+                    },
                     {
                         "data": "authorityToLoadId",
+                        "name": "authorityToLoadId",
                         "orderable": false,
                         "render": function(data, type, row) {
                             let actions = `
