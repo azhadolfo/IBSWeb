@@ -72,54 +72,54 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MobilityBankAccount model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    if (await _unitOfWork.MobilityBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
-                    {
-                        ModelState.AddModelError("AccountNo", "Bank account no already exist!");
-                        return View(model);
-                    }
-
-                    if (await _unitOfWork.MobilityBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
-                    {
-                        ModelState.AddModelError("AccountName", "Bank account name already exist!");
-                        return View(model);
-                    }
-
-                    model.StationCode = await GetStationCodeClaimAsync() ?? throw new NullReferenceException();
-
-                    model.CreatedBy = _userManager.GetUserName(User);
-
-                    await _dbContext.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-
-                    #region -- Audit Trail Recording --
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                        $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion -- Audit Trail Recording --
-
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Bank created successfully.";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create bank account. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(model);
             }
 
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (await _unitOfWork.MobilityBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
+                {
+                    ModelState.AddModelError("AccountNo", "Bank account no already exist!");
+                    return View(model);
+                }
+
+                if (await _unitOfWork.MobilityBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
+                {
+                    ModelState.AddModelError("AccountName", "Bank account name already exist!");
+                    return View(model);
+                }
+
+                model.StationCode = await GetStationCodeClaimAsync() ?? throw new NullReferenceException();
+
+                model.CreatedBy = _userManager.GetUserName(User);
+
+                await _dbContext.AddAsync(model, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Bank created successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create bank account. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -142,39 +142,40 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    #region -- Audit Trail Recording --
-
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion -- Audit Trail Recording --
-
-                    existingModel.AccountNo = model.AccountNo;
-                    existingModel.AccountName = model.AccountName;
-                    existingModel.Bank = model.Bank;
-                    existingModel.Branch = model.Branch;
-
-                    TempData["success"] = "Bank edited successfully.";
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to edit bank account. Edited by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(existingModel);
-                }
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(existingModel);
             }
-            ModelState.AddModelError("", "The information you submitted is not valid!");
-            return View(existingModel);
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                existingModel.AccountNo = model.AccountNo;
+                existingModel.AccountName = model.AccountName;
+                existingModel.Bank = model.Bank;
+                existingModel.Branch = model.Branch;
+
+                TempData["success"] = "Bank edited successfully.";
+                await _dbContext.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit bank account. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(existingModel);
+            }
         }
     }
 }
