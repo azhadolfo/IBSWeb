@@ -186,6 +186,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Edited Employee #{existingModel.EmployeeNumber} => {model.EmployeeNumber}",
+                    "Employee", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+
                 #region -- Saving Default
 
                 existingModel.EmployeeNumber = model.EmployeeNumber;
@@ -214,16 +224,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #endregion -- Saving Default
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
-
-                #region --Audit Trail Recording
-
-                FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Created new Employee #{model.EmployeeNumber}",
-                    "Employee", (await GetCompanyClaimAsync())! );
-                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion --Audit Trail Recording
-
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Employee edited successfully";
                 return RedirectToAction(nameof(Index));
