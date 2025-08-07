@@ -71,8 +71,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region -- Audit Trail Recording --
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Created new Product #{model.ProductCode}", "Product", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Created new Product {model.ProductCode}", "Product", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording --
 
@@ -108,17 +108,23 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             try
             {
-                model.EditedBy = _userManager.GetUserName(User);
-                await _unitOfWork.MobilityProduct.UpdateAsync(model, cancellationToken);
+                var existingProduct = await _unitOfWork.MobilityProduct.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
+                if (existingProduct == null)
+                {
+                    return NotFound();
+                }
 
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                    $"Edited Product #{model.ProductCode}", "Product", nameof(Mobility));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    $"Edited Product {existingProduct.ProductCode} => {model.ProductCode}", "Product", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.MobilityProduct.UpdateAsync(model, cancellationToken);
                 TempData["success"] = "Product updated successfully";
                 return RedirectToAction(nameof(Index));
             }
@@ -173,8 +179,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region -- Audit Trail Recording --
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Activated Product #{product.ProductCode}", "Product", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Activated Product {product.ProductCode}", "Product", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording --
 
@@ -225,8 +231,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region -- Audit Trail Recording --
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Deactivated Product #{product.ProductCode}", "Product", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Deactivated Product {product.ProductCode}", "Product", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording --
 
