@@ -170,12 +170,12 @@ namespace IBSWeb.Areas.User.Controllers
                 .Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
-            if (company != null)
+            if (company == null)
             {
-                return View(company);
+                return NotFound();
             }
 
-            return NotFound();
+            return View(company);
         }
 
         [HttpPost]
