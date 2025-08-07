@@ -72,7 +72,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Created User Access for {model.UserName}", "User Access", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -128,7 +128,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Edited User Access for {model.UserName}", "User Access", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
