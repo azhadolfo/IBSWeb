@@ -253,20 +253,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, FilprideService services, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideService services, CancellationToken cancellationToken)
         {
-            if (id != services.ServiceId)
-            {
-                return NotFound();
-            }
-
             if (!ModelState.IsValid)
             {
                 return View(services);
             }
 
             var existingModel =  await _unitOfWork.FilprideService
-                .GetAsync(x => x.ServiceId == id, cancellationToken);
+                .GetAsync(x => x.ServiceId == services.ServiceId, cancellationToken);
 
             if (existingModel == null)
             {
@@ -287,7 +282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Edited Service #{services.ServiceNo}",
+                    _userManager.GetUserName(User)!, $"Edited Service #{existingModel.ServiceNo}",
                     "Service", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 

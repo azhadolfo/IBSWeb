@@ -22,6 +22,7 @@
         <form asp-action="Edit">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input asp-for="ServiceId" type="hidden"/>
             <div class="form-group mb-3">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control "/>
