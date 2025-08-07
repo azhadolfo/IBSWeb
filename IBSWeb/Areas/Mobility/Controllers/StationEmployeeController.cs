@@ -77,8 +77,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                    $"Created new Station Employee #{model.EmployeeNumber}", "Station Employee", nameof(Mobility));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    $"Created new Station Employee {model.EmployeeNumber}", "Station Employee", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -123,6 +123,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             try
             {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Station Employee {existingModel.EmployeeNumber} => {model.EmployeeNumber}", "Station Employee", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 #region -- Saving Default
 
                 existingModel.EmployeeNumber = model.EmployeeNumber;
@@ -150,16 +158,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #endregion -- Saving Default
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                #region -- Audit Trail Recording --
-
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                    $"Edited Station Employee #{existingModel.EmployeeNumber}", "Station Employee", nameof(Mobility));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                #endregion -- Audit Trail Recording --
-
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Station employee edited successfully";
                 return RedirectToAction(nameof(Index));
