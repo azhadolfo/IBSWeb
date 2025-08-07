@@ -325,8 +325,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region --Audit Trail Recording --
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Activated supplier #{supplier.SupplierCode}", "Supplier", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Activated supplier {supplier.SupplierCode}", "Supplier", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording --
 
@@ -377,8 +377,8 @@ namespace IBSWeb.Areas.Mobility.Controllers
             #region -- Audit Trail Recording --
 
             FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                $"Deactivated supplier #{supplier.SupplierCode}", "Supplier", nameof(Mobility));
-            await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                $"Deactivated supplier {supplier.SupplierCode}", "Supplier", nameof(Mobility));
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion -- Audit Trail Recording --
 
