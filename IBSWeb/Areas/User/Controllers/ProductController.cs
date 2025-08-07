@@ -77,37 +77,50 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Product model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                bool IsProductExist = await _unitOfWork
-                    .Product
-                    .IsProductExist(model.ProductName, cancellationToken);
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
+            }
 
-                if (!IsProductExist)
-                {
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Product.AddAsync(model, cancellationToken);
-                    await _unitOfWork.SaveAsync(cancellationToken);
+            bool IsProductExist = await _unitOfWork
+                .Product
+                .IsProductExist(model.ProductName, cancellationToken);
 
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new (
-                        _userManager.GetUserName(User)!, $"Created Product #{model.ProductCode}",
-                        "Product", (await GetCompanyClaimAsync())! );
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = "Product created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-
+            if (IsProductExist)
+            {
                 ModelState.AddModelError("ProductName", "Product name already exist.");
                 return View(model);
             }
 
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.CreatedBy = _userManager.GetUserName(User);
+                await _unitOfWork.Product.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Created Product #{model.ProductCode}",
+                    "Product", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Product created successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["Error"] = ex.Message;
+                return View(model);
+            }
+
         }
 
         [HttpPost]
@@ -190,6 +203,8 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 var existing = await _unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
@@ -210,6 +225,7 @@ namespace IBSWeb.Areas.User.Controllers
 
                 model.EditedBy = _userManager.GetUserName(User);
                 await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Product updated successfully";
                 return RedirectToAction(nameof(Index));
             }

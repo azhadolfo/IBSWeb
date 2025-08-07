@@ -260,6 +260,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(services);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             var existingModel =  await _unitOfWork.FilprideService
                 .GetAsync(x => x.ServiceId == services.ServiceId, cancellationToken);
 
@@ -288,11 +290,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
