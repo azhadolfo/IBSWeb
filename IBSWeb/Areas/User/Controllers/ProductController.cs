@@ -185,34 +185,40 @@ namespace IBSWeb.Areas.User.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Product model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
-
-                    #region --Audit Trail Recording
-
-                    FilprideAuditTrail auditTrailBook = new (
-                        _userManager.GetUserName(User)!, $"Edited Product #{model.ProductCode}",
-                        "Product", (await GetCompanyClaimAsync())! );
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-                    #endregion --Audit Trail Recording
-
-                    TempData["success"] = "Product updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in updating product.");
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            try
+            {
+                var existing = await _unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
+                if (existing == null)
+                {
+                    return NotFound();
+                }
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Edited Product #{existing.ProductCode} => {model.ProductCode}",
+                    "Product", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
+                TempData["success"] = "Product updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in updating product.");
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
 
         [HttpGet]
