@@ -91,14 +91,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 model.CreatedBy = _userManager.GetUserName(User)!;
                 model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                await _dbContext.MobilityPickUpPoints.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.MobilityPickUpPoint.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Created new Pickup Point {model.Depot}", "Pickup Point", nameof(Mobility));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -177,14 +177,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", nameof(Mobility));
-                                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
                 selected.Depot = model.Depot;
                 selected.SupplierId = model.SupplierId;
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
 
                 TempData["success"] = "Pickup point updated successfully";
