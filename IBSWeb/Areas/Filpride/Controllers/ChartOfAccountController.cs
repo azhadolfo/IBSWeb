@@ -148,6 +148,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Edited Account #{existingAccount.AccountNumber}",
+                    "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 existingAccount.AccountName = accountName;
                 existingAccount.EditedBy = User.Identity!.Name;
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
