@@ -62,7 +62,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Create new Terminal #{model.TerminalNumber}", "Terminal", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -142,7 +142,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Edited Terminal #{currentModel.TerminalNumber} => {model.TerminalNumber}", "Terminal", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 

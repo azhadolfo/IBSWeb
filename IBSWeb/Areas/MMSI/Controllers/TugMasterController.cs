@@ -58,7 +58,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Created new Tug Master #{model.TugMasterNumber}", "Tug Master", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
@@ -130,7 +130,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Edited Tug Master #{currentModel.TugMasterNumber} => {model.TugMasterNumber}", "Tug Master", nameof(MMSI));
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion -- Audit Trail Recording --
 
