@@ -59,7 +59,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var level1 = await _unitOfWork.FilprideChartOfAccount
                 .GetAllAsync(cancellationToken : cancellationToken);
 
-            return View(level1.Where(c => c.Level == 1).ToList());
+            return View(level1.Where(c => c.Level == 1)
+                .ToList());
         }
 
         [HttpGet]
