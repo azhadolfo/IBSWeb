@@ -104,7 +104,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Created Product #{model.ProductCode}",
+                    _userManager.GetUserName(User)!, $"Created Product {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
@@ -217,7 +217,7 @@ namespace IBSWeb.Areas.User.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Edited Product #{existing.ProductCode} => {model.ProductCode}",
+                    _userManager.GetUserName(User)!, $"Edited Product {existing.ProductCode} => {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
