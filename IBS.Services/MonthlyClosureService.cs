@@ -417,7 +417,7 @@ namespace IBS.Services
                             LockedDate = lockedDate,
                             ReceivingReportId = rr.ReceivingReportId,
                             Quantity = rr.QuantityReceived,
-                            Price =  await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken)
+                            Price =  po.Price
                         });
                     }
                 }
