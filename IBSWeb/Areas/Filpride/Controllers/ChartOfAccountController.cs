@@ -113,9 +113,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Created new Account #{newAccount.AccountNumber}",
-                    "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -126,8 +125,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -136,40 +135,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
+            var existingAccount = await _unitOfWork.FilprideChartOfAccount
+                .GetAsync(x => x.AccountId == accountId, cancellationToken);
+
+            if (existingAccount == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existingAccount = await _unitOfWork.FilprideChartOfAccount
-                    .GetAsync(x => x.AccountId == accountId, cancellationToken);
-
-                if (existingAccount == null)
-                {
-                    return NotFound();
-                }
+                existingAccount.AccountName = accountName;
+                existingAccount.EditedBy = User.Identity!.Name;
+                existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new (
-                    _userManager.GetUserName(User)!, $"Edited Account #{existingAccount.AccountNumber}",
-                    "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
-                existingAccount.AccountName = accountName;
-                existingAccount.EditedBy = User.Identity!.Name;
-                existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-
                 TempData["success"] = "Account Edited Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
