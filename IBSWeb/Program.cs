@@ -1,3 +1,4 @@
+using Google.Cloud.Storage.V1;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository;
 using IBS.DataAccess.Repository.IRepository;
@@ -5,6 +6,7 @@ using IBS.Models;
 using IBS.Services;
 using IBS.Utility;
 using IBSWeb.Hubs;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -140,6 +142,23 @@ builder.Services.AddQuartz(q =>
 
 // Add Quartz Hosted Service
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
+if (builder.Environment.IsProduction())
+{
+    var bucketName = builder.Configuration["GoogleCloudStorageBucketName"]!;
+    var storageClient = StorageClient.Create(); // uses GCP default credentials
+
+    builder.Services.AddDataProtection()
+        .SetApplicationName("IBS-Web")
+        .AddKeyManagementOptions(options =>
+        {
+            options.XmlRepository = new GcsXmlRepository(
+                storageClient,
+                bucketName,
+                "dataprotection-keys.xml"
+            );
+        });
+}
 
 var app = builder.Build();
 
