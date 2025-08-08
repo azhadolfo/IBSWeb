@@ -103,7 +103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
-                    $"Created Pickup Point #{model.PickUpPointId}","Pickup Point", (await GetCompanyClaimAsync())! );
+                    $"Created Pickup Point #{model.Depot}","Pickup Point", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
