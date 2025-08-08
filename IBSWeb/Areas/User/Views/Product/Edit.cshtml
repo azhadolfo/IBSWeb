@@ -24,12 +24,12 @@
                     <span asp-validation-for="ProductCode" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="ProductName" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="ProductName" maxlength="50" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="ProductName" class="ms-2"></label>
                     <span asp-validation-for="ProductName" class="text-danger"></span>
                 </div>
                 <div class="form-floating py-2 col-12">
-                    <input asp-for="ProductUnit" class="form-control border-0 shadow " placeholder="" />
+                    <input asp-for="ProductUnit" maxlength="2" class="form-control border-0 shadow " placeholder="" />
                     <label asp-for="ProductUnit" class="ms-2"></label>
                     <span asp-validation-for="ProductUnit" class="text-danger"></span>
                 </div>
