@@ -101,14 +101,14 @@ namespace IBSWeb.Areas.User.Controllers
                 await _unitOfWork.Product.AddAsync(model, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
 
-                #region --Audit Trail Recording
+                #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new (
                     _userManager.GetUserName(User)!, $"Created Product {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                #endregion --Audit Trail Recording
+                #endregion -- Audit Trail Recording --
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Product created successfully";
@@ -116,11 +116,11 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create product master file. Created by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return View(model);
             }
-
         }
 
         [HttpPost]
@@ -203,28 +203,29 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
+            var existing = await _unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existing = await _unitOfWork.Product.GetAsync(p => p.ProductId == model.ProductId, cancellationToken);
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
 
-                if (existing == null)
-                {
-                    return NotFound();
-                }
-
-                #region --Audit Trail Recording
+                #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new (
                     _userManager.GetUserName(User)!, $"Edited Product {existing.ProductCode} => {model.ProductCode}",
                     "Product", (await GetCompanyClaimAsync())! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                #endregion --Audit Trail Recording
+                #endregion -- Audit Trail Recording --
 
-                model.EditedBy = _userManager.GetUserName(User);
-                await _unitOfWork.Product.UpdateAsync(model, cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Product updated successfully";
                 return RedirectToAction(nameof(Index));
@@ -232,6 +233,7 @@ namespace IBSWeb.Areas.User.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in updating product.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
             }
@@ -265,11 +267,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork
-                .Product
+            var product = await _unitOfWork.Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
-            if (product != null)
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
                 product.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -283,11 +291,17 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Product activated successfully";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to activate product master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Activate), new { id = id });
+            }
         }
 
         [HttpGet]
@@ -318,11 +332,17 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var product = await _unitOfWork
-                .Product
+            var product = await _unitOfWork.Product
                 .GetAsync(c => c.ProductId == id, cancellationToken);
 
-            if (product != null)
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
                 product.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
@@ -336,11 +356,17 @@ namespace IBSWeb.Areas.User.Controllers
 
                 #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Product deactivated successfully";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deactivate product master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
         }
 
         [HttpGet]
