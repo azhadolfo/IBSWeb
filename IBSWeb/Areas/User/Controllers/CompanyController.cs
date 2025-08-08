@@ -66,8 +66,6 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
             bool companyExist = await _unitOfWork
                 .Company
                 .IsCompanyExistAsync(model.CompanyName, cancellationToken);
@@ -88,10 +86,11 @@ namespace IBSWeb.Areas.User.Controllers
                 return View(model);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                model.CompanyCode = await _unitOfWork
-                    .Company
+                model.CompanyCode = await _unitOfWork.Company
                     .GenerateCodeAsync(cancellationToken);
 
                 model.CreatedBy = _userManager.GetUserName(User);
@@ -113,6 +112,7 @@ namespace IBSWeb.Areas.User.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create company master file. Created by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
@@ -259,8 +259,7 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            var company = await _unitOfWork
-                .Company
+            var company = await _unitOfWork.Company
                 .GetAsync(c => c.CompanyId == id, cancellationToken);
 
             if (company == null)
@@ -268,21 +267,33 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            company.IsActive = true;
-            await _unitOfWork.SaveAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            #region --Audit Trail Recording
+            try
+            {
+                company.IsActive = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
 
-            FilprideAuditTrail auditTrailBook = new (
-                _userManager.GetUserName(User)!, $"Activated Company {company.CompanyCode}",
-                "Company", (await GetCompanyClaimAsync())! );
-            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                #region --Audit Trail Recording
 
-            #endregion --Audit Trail Recording
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Activated Company {company.CompanyCode}",
+                    "Company", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-            TempData["success"] = "Company activated successfully";
-            return RedirectToAction(nameof(Index));
+                #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Company activated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Activate), new { id = id });
+            }
         }
 
         [HttpGet]
@@ -322,21 +333,33 @@ namespace IBSWeb.Areas.User.Controllers
                 return NotFound();
             }
 
-            company.IsActive = false;
-            await _unitOfWork.SaveAsync(cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            #region --Audit Trail Recording
+            try
+            {
+                company.IsActive = false;
+                await _unitOfWork.SaveAsync(cancellationToken);
 
-            FilprideAuditTrail auditTrailBook = new (
-                _userManager.GetUserName(User)!, $"Deactivated Company {company.CompanyCode}",
-                "Company", (await GetCompanyClaimAsync())! );
-            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                #region --Audit Trail Recording
 
-            #endregion --Audit Trail Recording
+                FilprideAuditTrail auditTrailBook = new (
+                    _userManager.GetUserName(User)!, $"Deactivated Company {company.CompanyCode}",
+                    "Company", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-            TempData["success"] = "Company deactivated successfully";
-            return RedirectToAction(nameof(Index));
+                #endregion --Audit Trail Recording
 
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Company deactivated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
         }
     }
 }
