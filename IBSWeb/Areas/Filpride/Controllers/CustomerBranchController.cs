@@ -70,10 +70,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var user = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new (
-                    user!, $"Created Customer Branch #{model.Id}",
-                    "Customer Branch", companyClaims! );
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Created Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -134,10 +132,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                var user = _userManager.GetUserName(User);
-                FilprideAuditTrail auditTrailBook = new (
-                    user!, $"Edited Customer Branch #{model.Id}",
-                    "Customer Branch", companyClaims! );
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
@@ -148,9 +144,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
+                await transaction.RollbackAsync(cancellationToken);
                 model.CustomerSelectList =
                     await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);
