@@ -239,7 +239,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region -- Audit Trail Recording --
 
-                FilprideAuditTrail auditTrailBook = new(model.CreatedBy,
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
                     $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
