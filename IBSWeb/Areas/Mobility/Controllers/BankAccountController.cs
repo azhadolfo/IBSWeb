@@ -78,28 +78,26 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return View(model);
             }
 
+            if (await _unitOfWork.MobilityBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
+            {
+                ModelState.AddModelError("AccountNo", "Bank account no already exist!");
+                return View(model);
+            }
+
+            if (await _unitOfWork.MobilityBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
+            {
+                ModelState.AddModelError("AccountName", "Bank account name already exist!");
+                return View(model);
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                if (await _unitOfWork.MobilityBankAccount.IsBankAccountNoExist(model.AccountNo, cancellationToken))
-                {
-                    ModelState.AddModelError("AccountNo", "Bank account no already exist!");
-                    return View(model);
-                }
-
-                if (await _unitOfWork.MobilityBankAccount.IsBankAccountNameExist(model.AccountName, cancellationToken))
-                {
-                    ModelState.AddModelError("AccountName", "Bank account name already exist!");
-                    return View(model);
-                }
-
                 model.StationCode = await GetStationCodeClaimAsync() ?? throw new NullReferenceException();
-
                 model.CreatedBy = _userManager.GetUserName(User);
-
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.MobilityBankAccount.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -165,7 +163,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 existingModel.Branch = model.Branch;
 
                 TempData["success"] = "Bank edited successfully.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return RedirectToAction(nameof(Index));
             }
