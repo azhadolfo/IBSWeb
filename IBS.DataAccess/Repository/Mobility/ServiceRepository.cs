@@ -28,13 +28,12 @@ namespace IBS.DataAccess.Repository.Mobility
             }
 
             return (serviceNo + 1).ToString();
-
         }
 
-        public async Task<bool> IsServicesExist(string serviceName, string company, CancellationToken cancellationToken = default)
+        public async Task<bool> IsServicesExist(string serviceName, CancellationToken cancellationToken = default)
         {
-            return await _db.FilprideServices
-                .AnyAsync(c => c.Company == company && c.Name == serviceName, cancellationToken);
+            return await _db.MobilityServices
+                .AnyAsync(c => c.Name == serviceName, cancellationToken);
         }
     }
 }

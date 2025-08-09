@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -66,6 +67,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 await _unitOfWork.FilprideCustomerBranch.AddAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Created Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer branch created successfully";
                 return RedirectToAction(nameof(Index));
@@ -119,15 +129,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 await _unitOfWork.FilprideCustomerBranch.UpdateAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Customer Branch #{model.Id}", "Customer Branch", companyClaims! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer branch updated successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit customer branch. Created by: {UserName}", _userManager.GetUserName(User));
                 TempData["error"] = $"Error: '{ex.Message}'";
+                await transaction.RollbackAsync(cancellationToken);
                 model.CustomerSelectList =
                     await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims!, cancellationToken);
                 return View(model);

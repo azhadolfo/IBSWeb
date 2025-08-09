@@ -59,12 +59,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MobilityStationEmployee model, CancellationToken cancellationToken)
         {
-            var stationCodeClaims = await GetStationCodeClaimAsync();
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
+
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -72,8 +73,16 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 model.StationCode = stationCodeClaims;
                 await _dbContext.MobilityStationEmployees.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Station Employee {model.EmployeeNumber}", "Station Employee", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Station employee created successfully";
                 return RedirectToAction(nameof(Index));
@@ -115,6 +124,14 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             try
             {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Station Employee {existingModel.EmployeeNumber} => {model.EmployeeNumber}", "Station Employee", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 #region -- Saving Default
 
                 existingModel.EmployeeNumber = model.EmployeeNumber;
@@ -142,7 +159,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
                 #endregion -- Saving Default
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Station employee edited successfully";
                 return RedirectToAction(nameof(Index));

@@ -75,34 +75,41 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MobilityPickUpPoint model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    model.CreatedBy = _userManager.GetUserName(User)!;
-                    model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                    await _dbContext.MobilityPickUpPoints.AddAsync(model, cancellationToken);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-
-                    TempData["success"] = "Pickup point created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create pickup point master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = ex.Message;
-                    return View(model);
-                }
+                model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(model.StationCode, cancellationToken);
+                ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
             }
 
-            model.Suppliers = await _unitOfWork.FilprideSupplier.GetFilprideTradeSupplierListAsyncById(model.StationCode, cancellationToken);
-            ModelState.AddModelError("", "Make sure to fill all the required details.");
-            return View(model);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.CreatedBy = _userManager.GetUserName(User)!;
+                model.CreatedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                await _unitOfWork.MobilityPickUpPoint.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Pickup Point {model.Depot}", "Pickup Point", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Pickup point created successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create pickup point master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -145,43 +152,45 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(MobilityPickUpPoint model, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-                var user = await _userManager.GetUserAsync(User);
-
-                try
-                {
-                    var selected = await _unitOfWork.MobilityPickUpPoint
-                        .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
-
-                    if (selected == null)
-                    {
-                        return NotFound();
-                    }
-
-                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", nameof(Mobility));
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                    selected.Depot = model.Depot;
-                    selected.SupplierId = model.SupplierId;
-
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-
-                    TempData["success"] = "Pickup point updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, $"Failed to edit pickup point master file. Created by: {user}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            var selected = await _unitOfWork.MobilityPickUpPoint
+                .GetAsync(p => p.PickUpPointId == model.PickUpPointId, cancellationToken);
+
+            if (selected == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited pickup point {selected.Depot} to {model.Depot}", "Customer", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                selected.Depot = model.Depot;
+                selected.SupplierId = model.SupplierId;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Pickup point updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to edit pickup point master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
     }
 }

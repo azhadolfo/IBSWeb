@@ -85,10 +85,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingCustomer.EditedBy = model.EditedBy;
                 existingCustomer.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                FilprideAuditTrail auditTrailBook = new(existingCustomer.CreatedBy!, $"Edited customer {existingCustomer.CustomerCode}", "Customer", existingCustomer.Company);
-                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else

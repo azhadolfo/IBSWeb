@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using Microsoft.AspNetCore.Identity;
@@ -60,12 +61,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FilprideEmployee model, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
+
+            var companyClaims = await GetCompanyClaimAsync();
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -73,16 +75,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 model.Company = companyClaims;
                 await _unitOfWork.FilprideEmployee.AddAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Created new Employee #{model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Employee {model.EmployeeNumber} created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to create employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}", ex.Message, ex.StackTrace, User.Identity!.Name);
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to create employee. Error: {ErrorMessage}, Stack: {StackTrace}. Created by: {UserName}",
-                    ex.Message, ex.StackTrace, User.Identity!.Name);
                 return View(model);
             }
         }
@@ -165,8 +175,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
             var existingModel = await _unitOfWork.FilprideEmployee
                 .GetAsync(x => x.EmployeeId == model.EmployeeId, cancellationToken);
 
@@ -175,8 +183,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Employee #{existingModel.EmployeeNumber} => {model.EmployeeNumber}", "Employee", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 #region -- Saving Default
 
                 existingModel.EmployeeNumber = model.EmployeeNumber;
@@ -201,20 +219,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.IsActive = model.IsActive;
                 existingModel.Status = model.Status;
                 existingModel.Address = model.Address;
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 #endregion -- Saving Default
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Employee edited successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to edit employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}", ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-                _logger.LogError(ex, "Failed to edit employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
-                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return View(model);
             }
         }

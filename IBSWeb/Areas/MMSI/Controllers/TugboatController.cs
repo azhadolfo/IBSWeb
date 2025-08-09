@@ -1,7 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -13,12 +16,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<TugboatController> _logger;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TugboatController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TugboatController> logger)
+        public TugboatController(ApplicationDbContext dbContext, IUnitOfWork unitOfWork, ILogger<TugboatController> logger, UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -57,6 +62,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 }
 
                 await _unitOfWork.Tugboat.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Tugboat #{model.TugboatNumber}", "Tugboat", nameof(MMSI));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
@@ -128,6 +142,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Tugboat #{currentModel.TugboatNumber} => {model.TugboatNumber}", "Tugboat", nameof(MMSI));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 currentModel.TugboatOwnerId = model.IsCompanyOwned ? null : model.TugboatOwnerId;
                 currentModel.IsCompanyOwned = model.IsCompanyOwned;
                 currentModel.TugboatNumber = model.TugboatNumber;

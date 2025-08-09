@@ -89,6 +89,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingSupplier.IsMobility = model.IsMobility;
             existingSupplier.IsBienes = model.IsBienes;
             existingSupplier.RequiresPriceAdjustment = model.RequiresPriceAdjustment;
+            existingSupplier.TradeName = model.TradeName;
 
             if (model.ProofOfRegistrationFilePath != null && existingSupplier.ProofOfRegistrationFilePath != model.ProofOfRegistrationFilePath)
             {
@@ -104,10 +105,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 existingSupplier.EditedBy = model.EditedBy;
                 existingSupplier.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                FilprideAuditTrail auditTrailBook = new(existingSupplier.CreatedBy!, $"Edited supplier {existingSupplier.SupplierCode}", "Supplier", existingSupplier.Company);
-                await _db.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
                 await _db.SaveChangesAsync(cancellationToken);
             }
             else
