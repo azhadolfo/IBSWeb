@@ -59,12 +59,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MobilityStationEmployee model, CancellationToken cancellationToken)
         {
-            var stationCodeClaims = await GetStationCodeClaimAsync();
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(model);
             }
+
+            var stationCodeClaims = await GetStationCodeClaimAsync();
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -72,7 +73,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
             {
                 model.StationCode = stationCodeClaims;
                 await _dbContext.MobilityStationEmployees.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
                 #region -- Audit Trail Recording --
 
