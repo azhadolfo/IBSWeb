@@ -131,18 +131,18 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return View(model);
             }
 
+            var currentModel = await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken);
+
+            if (currentModel == null)
+            {
+                TempData["error"] = "Principal not found.";
+                return View(model);
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var currentModel = await _unitOfWork.Principal.GetAsync(p => p.PrincipalId == model.PrincipalId, cancellationToken);
-
-                if (currentModel == null)
-                {
-                    TempData["error"] = "Principal not found.";
-                    return View(model);
-                }
-
                 #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
@@ -166,17 +166,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 currentModel.IsActive = model.IsActive;
                 currentModel.CustomerId = model.CustomerId;
                 await _unitOfWork.Principal.SaveAsync(cancellationToken);
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Edited successfully";
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit principal.");
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
-
                 return View(model);
             }
         }
