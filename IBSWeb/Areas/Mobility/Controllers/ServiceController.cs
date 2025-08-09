@@ -115,18 +115,20 @@ namespace IBSWeb.Areas.Mobility.Controllers
 
             if (!ModelState.IsValid)
             {
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(services);
+            }
+
+            if (await _unitOfWork.MobilityService.IsServicesExist(services.Name, cancellationToken))
+            {
+                ModelState.AddModelError("Name", "Services already exist!");
                 return View(services);
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (await _unitOfWork.MobilityService.IsServicesExist(services.Name, stationCodeClaims, cancellationToken))
-                {
-                    ModelState.AddModelError("Name", "Services already exist!");
-                    return View(services);
-                }
-
                 var currentAndPrevious = await _dbContext.FilprideChartOfAccounts
                     .FindAsync(services.CurrentAndPreviousId, cancellationToken) ?? throw new NullReferenceException();
 
@@ -140,15 +142,9 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 services.UnearnedTitle = unearned.AccountName;
 
                 services.StationCode = stationCodeClaims;
-
                 services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
-
                 services.ServiceNo = await _unitOfWork.MobilityService.GetLastNumber(stationCodeClaims, cancellationToken);
-
-                TempData["success"] = "Services created successfully";
-
-                await _dbContext.AddAsync(services, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.MobilityService.AddAsync(services, cancellationToken);
 
                 #region -- Audit Trail Recording --
 
@@ -159,12 +155,13 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 #endregion -- Audit Trail Recording --
 
                 await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Services created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(services);
             }
@@ -173,7 +170,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
         {
-            if (id == null || _dbContext.MobilityServices == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -190,53 +187,57 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MobilityService services, CancellationToken cancellationToken)
         {
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("", "The information you submitted is not valid!");
+                return View(services);
+            }
+
             if (id != services.ServiceId)
             {
                 return NotFound();
             }
 
-            if (!ModelState.IsValid)
+            var existingModel = await _unitOfWork.MobilityService.GetAsync(s => s.ServiceId == id, cancellationToken);
+
+            if (existingModel == null)
             {
+                return NotFound();
+            }
+
+            if (await _unitOfWork.MobilityService.IsServicesExist(services.Name, cancellationToken))
+            {
+                ModelState.AddModelError("Name", "Services already exist!");
                 return View(services);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                var existingModel = await _dbContext.MobilityServices.FindAsync(id, cancellationToken);
-                if (existingModel != null)
-                {
-                    existingModel.Name = services.Name;
-                    existingModel.Percent = services.Percent;
-                    TempData["success"] = "Services updated successfully";
+                existingModel.Name = services.Name;
+                existingModel.Percent = services.Percent;
+                await _unitOfWork.SaveAsync(cancellationToken);
 
-                    #region -- Audit Trail Recording --
+                #region -- Audit Trail Recording --
 
-                    FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
-                        $"Edited Service {services.ServiceNo}", "Service", nameof(Mobility));
-                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Service {services.ServiceNo}", "Service", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                    #endregion -- Audit Trail Recording --
+                #endregion -- Audit Trail Recording --
 
-                    await _dbContext.SaveChangesAsync(cancellationToken);
-                }
-
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Services updated successfully";
+                return RedirectToAction(nameof(Index));
             }
-            catch (DbUpdateConcurrencyException ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
-                if (!ServicesExists(services.ServiceId))
-                {
-                    return NotFound();
-                }
-
-                throw;
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return View(services);
             }
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool ServicesExists(int id)
-        {
-            return (_dbContext.MobilityServices?.Any(e => e.ServiceId == id)).GetValueOrDefault();
         }
     }
 }
