@@ -57,7 +57,6 @@ namespace IBSWeb.Areas.Bienes.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetPlacements([FromForm] DataTablesParameters parameters,
             CancellationToken cancellationToken)
         {
@@ -98,7 +97,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
                     }
                 }
 
-                if (parameters.Order.Count > 0)
+                if (parameters.Order?.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
                     var columnName = parameters.Columns[orderColumn.Column].Data;
@@ -157,6 +156,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(PlacementViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
@@ -308,6 +308,7 @@ namespace IBSWeb.Areas.Bienes.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(PlacementViewModel viewModel, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();

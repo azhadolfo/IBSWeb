@@ -58,7 +58,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> GetAuthorityToLoads([FromForm] DataTablesParameters parameters, CancellationToken cancellationToken)
         {
             try
@@ -66,8 +65,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
 
-                var atlList = await _unitOfWork.FilprideAuthorityToLoad
-                    .GetAllAsync(a => a.Company == companyClaims, cancellationToken);
+                var atlList = await _dbContext.FilprideAuthorityToLoads
+                    .Include(a => a.Details).ThenInclude(d => d.CustomerOrderSlip)
+                    .Where(a => a.Company == companyClaims)
+                    .ToListAsync(cancellationToken);
 
                 // Search filter
                 if (!string.IsNullOrEmpty(parameters.Search?.Value))
@@ -80,17 +81,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         s.DateBooked.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.ValidUntil.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
                         s.UppiAtlNo?.ToLower().Contains(searchValue) == true ||
-                        s.CustomerOrderSlip?.CustomerOrderSlipNo.ToLower().Contains(searchValue) == true ||
+                        s.Details.Any(d =>
+                            d.CustomerOrderSlip!.CustomerOrderSlipNo.ToLower().Contains(searchValue)) ||
                         s.Remarks.ToLower().Contains(searchValue)
                         )
                     .ToList();
                 }
 
                 // Sorting
-                if (parameters.Order.Count > 0)
+                if (parameters.Order?.Count > 0)
                 {
                     var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Data;
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
                     var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
 
                     atlList = atlList
@@ -99,11 +101,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .ToList();
                 }
 
-                var totalRecords = atlList.Count();
+                var totalRecords = atlList.Count;
 
                 var pagedData = atlList
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
+                    .Select(atl => new
+                    {
+                        atl.AuthorityToLoadId,
+                        atl.AuthorityToLoadNo,
+                        atl.DateBooked,
+                        atl.ValidUntil,
+                        atl.CustomerOrderSlip,
+                        CosNos = atl.Details
+                            .Select(a => a.CustomerOrderSlip!.CustomerOrderSlipNo)
+                            .ToList(),
+                        atl.Remarks
+                    })
                     .ToList();
 
                 return Json(new

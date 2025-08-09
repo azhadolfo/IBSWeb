@@ -270,6 +270,13 @@ namespace IBS.Services
                     return;
                 }
 
+                if (generalLedgers.Sum(g => g.Debit) != generalLedgers.Sum(g => g.Debit))
+                {
+                    throw new InvalidOperationException($"GL balance mismatch. " +
+                                                        $"Debit:{generalLedgers.Sum(g => g.Debit):N4}, " +
+                                                        $"Credit: {generalLedgers.Sum(g => g.Credit):N4}");
+                }
+
                 var groupByLevelOne = generalLedgers
                     .OrderBy(gl => gl.Account.AccountNumber)
                     .Where(gl => gl.Account.FinancialStatementType == nameof(FinancialStatementType.PnL))
