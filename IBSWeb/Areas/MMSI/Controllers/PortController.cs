@@ -41,14 +41,16 @@ namespace IBSWeb.Areas.MMSI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(MMSIPort model, CancellationToken cancellationToken = default)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "Invalid entry, please try again.";
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    TempData["error"] = "Invalid entry, please try again.";
-                    return View(model);
-                }
-
                 await _unitOfWork.Port.AddAsync(model, cancellationToken);
 
                 #region -- Audit Trail Recording --
@@ -59,13 +61,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
                 #endregion -- Audit Trail Recording --
 
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
             }
-
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create port.");
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return View(model);
             }
@@ -106,7 +109,10 @@ namespace IBSWeb.Areas.MMSI.Controllers
         {
             var currentModel = await _unitOfWork.Port.GetAsync(p => p.PortId == model.PortId, cancellationToken);
 
-            if (currentModel == null) return NotFound();
+            if (currentModel == null)
+            {
+                return NotFound();
+            }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
