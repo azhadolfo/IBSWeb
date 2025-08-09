@@ -53,17 +53,17 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var tempModel = await _unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId, cancellationToken);
+
+            if (tempModel != null)
+            {
+                throw new Exception($"Access for {tempModel.UserName} already exists.");
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var tempModel = await _unitOfWork.UserAccess.GetAsync(ua => ua.UserId == model.UserId, cancellationToken);
-
-                if (tempModel != null)
-                {
-                    throw new Exception($"Access for {tempModel.UserName} already exists.");
-                }
-
                 var selectedUser = _dbContext.Users.FirstOrDefault(u => u.Id == model.UserId);
                 model.UserName = selectedUser!.UserName;
                 await _unitOfWork.UserAccess.AddAsync(model, cancellationToken);
@@ -83,8 +83,8 @@ namespace IBSWeb.Areas.MMSI.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to create user access.");
-                TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
                 model.Users = await _unitOfWork.Msap.GetMMSIUsersSelectListById(cancellationToken);
                 return View(model);
             }
@@ -140,6 +140,7 @@ namespace IBSWeb.Areas.MMSI.Controllers
                 tempModel.CanCreateBilling = model.CanCreateBilling;
                 tempModel.CanCreateCollection = model.CanCreateCollection;
                 await _unitOfWork.SaveAsync(cancellationToken);
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "User access edited successfully.";
                 return RedirectToAction(nameof(Index));
