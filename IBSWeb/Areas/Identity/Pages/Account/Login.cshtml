@@ -40,7 +40,7 @@
                         <div class="mb-3" id="station-div" style="display: none;">
                             <label for="station" class="form-label">Select Station</label>
                             <input type="hidden" id="stationHidden" name="Input.StationCode">
-                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" id="station-select" style="width: 100%">
+                            <select asp-for="Input.StationCode" asp-items="@Model.Stations" class="form-select js-select2" id="station-select" style="width: 100%" required>
                                 <option value="">Select station</option>
                             </select>
                             <span asp-validation-for="Input.StationCode" class="text-danger small"></span>
