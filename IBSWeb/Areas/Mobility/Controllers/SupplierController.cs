@@ -116,70 +116,80 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MobilitySupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
-            {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                var stationCodeClaims = await GetStationCodeClaimAsync();
-
-                if (stationCodeClaims == null)
-                {
-                    return BadRequest();
-                }
-
-                if (await _dbContext.MobilitySuppliers
-                        .AnyAsync(s => s.StationCode == stationCodeClaims && s.SupplierName == model.SupplierName && s.Category == model.Category, cancellationToken))
-                {
-                    ModelState.AddModelError("SupplierName", "Supplier already exist.");
-                    return View(model);
-                }
-
-                if (await _dbContext.MobilitySuppliers
-                        .AnyAsync(s => s.StationCode == stationCodeClaims && s.SupplierTin == model.SupplierTin && s.Branch == model.Branch && s.Category == model.Category, cancellationToken))
-                {
-                    ModelState.AddModelError("SupplierTin", "Tin number already exist.");
-                    return View(model);
-                }
-
-                try
-                {
-                    if (registration != null && registration.Length > 0)
-                    {
-                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
-                    }
-
-                    if (document != null && document.Length > 0)
-                    {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
-                    }
-
-                    model.SupplierCode = await _unitOfWork.MobilitySupplier
-                        .GenerateCodeAsync(stationCodeClaims, cancellationToken);
-                    model.CreatedBy = _userManager.GetUserName(User);
-                    model.StationCode = stationCodeClaims;
-                    await _unitOfWork.MobilitySupplier.AddAsync(model, cancellationToken);
-
-                    FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new supplier {model.SupplierCode}", "Supplier", nameof(Mobility));
-                    await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
-                    await _unitOfWork.SaveAsync(cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Supplier created successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
-                    await transaction.RollbackAsync(cancellationToken);
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
-            }
-            else
+            if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Make sure to fill all the required details.");
+                return View(model);
+            }
+
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
+            if (await _dbContext.MobilitySuppliers
+                    .AnyAsync(
+                        s => s.StationCode == stationCodeClaims && s.SupplierName == model.SupplierName &&
+                             s.Category == model.Category, cancellationToken))
+            {
+                ModelState.AddModelError("SupplierName", "Supplier already exist.");
+                return View(model);
+            }
+
+            if (await _dbContext.MobilitySuppliers
+                    .AnyAsync(
+                        s => s.StationCode == stationCodeClaims && s.SupplierTin == model.SupplierTin &&
+                             s.Branch == model.Branch && s.Category == model.Category, cancellationToken))
+            {
+                ModelState.AddModelError("SupplierTin", "Tin number already exist.");
+                return View(model);
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                if (registration != null && registration.Length > 0)
+                {
+                    model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                    model.ProofOfRegistrationFilePath =
+                        await _cloudStorageService.UploadFileAsync(registration,
+                            model.ProofOfRegistrationFileName!);
+                }
+
+                if (document != null && document.Length > 0)
+                {
+                    model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                    model.ProofOfExemptionFilePath =
+                        await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
+                }
+
+                model.SupplierCode = await _unitOfWork.MobilitySupplier
+                    .GenerateCodeAsync(stationCodeClaims, cancellationToken);
+                model.CreatedBy = _userManager.GetUserName(User);
+                model.StationCode = stationCodeClaims;
+                await _unitOfWork.MobilitySupplier.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
+                    $"Create new supplier {model.SupplierCode}", "Supplier", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier created successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
             }
         }
@@ -223,49 +233,58 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(MobilitySupplier model, IFormFile? registration, IFormFile? document, CancellationToken cancellationToken)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-                try
-                {
-                    var stationCodeClaims = await GetStationCodeClaimAsync();
-
-                    if (stationCodeClaims == null)
-                    {
-                        return BadRequest();
-                    }
-
-                    model.StationCode = stationCodeClaims;
-
-                    if (registration != null && registration.Length > 0)
-                    {
-                        model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                        model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
-                    }
-
-                    if (document != null && document.Length > 0)
-                    {
-                        model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                        model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
-                    }
-
-                    model.EditedBy = _userManager.GetUserName(User);
-                    await _unitOfWork.MobilitySupplier.UpdateAsync(model, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    TempData["success"] = "Supplier updated successfully";
-                    return RedirectToAction(nameof(Index));
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
-                    TempData["error"] = $"Error: '{ex.Message}'";
-                    return View(model);
-                }
+                return View(model);
             }
 
-            return View(model);
+            var stationCodeClaims = await GetStationCodeClaimAsync();
+
+            if (stationCodeClaims == null)
+            {
+                return BadRequest();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.StationCode = stationCodeClaims;
+
+                if (registration != null && registration.Length > 0)
+                {
+                    model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
+                    model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
+                }
+
+                if (document != null && document.Length > 0)
+                {
+                    model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
+                    model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
+                }
+
+                model.EditedBy = _userManager.GetUserName(User);
+                await _unitOfWork.MobilitySupplier.UpdateAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited supplier #{model.SupplierCode}", "Supplier", nameof(Mobility));
+                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier updated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -296,19 +315,40 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .MobilitySupplier
+            var supplier = await _unitOfWork.MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
                 supplier.IsActive = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Activated supplier {supplier.SupplierCode}", "Supplier", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Supplier activated successfully";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to activate supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Activate), new { id = id });
+            }
         }
 
         [HttpGet]
@@ -339,19 +379,40 @@ namespace IBSWeb.Areas.Mobility.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .MobilitySupplier
+            var supplier = await _unitOfWork.MobilitySupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
-            if (supplier != null)
+            if (supplier == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
             {
                 supplier.IsActive = false;
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Deactivated supplier {supplier.SupplierCode}", "Supplier", nameof(Mobility));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Supplier deactivated successfully";
                 return RedirectToAction(nameof(Index));
             }
-
-            return NotFound();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create customer master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
         }
     }
 }

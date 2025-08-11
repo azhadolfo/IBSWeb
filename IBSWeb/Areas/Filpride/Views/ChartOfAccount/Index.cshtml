@@ -43,7 +43,7 @@
                             <div class="accordion-body">
 
                                 <div class="accordion" id="LGroup-@L1.AccountNumber">
-                                    @foreach (var L2 in L1.Children)
+                                    @foreach (var L2 in L1.Children.OrderBy(coa => coa.AccountNumber))
                                     {
                                         <div class="row">
                                             <div class="accordion-item col-11 p-0">
@@ -62,7 +62,7 @@
                                                     <div class="accordion-body">
 
                                                         <div class="accordion" id="LGroup-@L2.AccountNumber">
-                                                            @foreach (var L3 in L2.Children)
+                                                            @foreach (var L3 in L2.Children.OrderBy(coa => coa.AccountNumber))
                                                             {
                                                                 <div class="row">
                                                                     <div class="accordion-item col-11 p-0">
@@ -83,7 +83,7 @@
                                                                                 <button class="btn btn-primary mb-3 createAccount" data-account-id="@L3.AccountId">Create Level 4 Account</button>
 
                                                                                 <div class="accordion" id="LGroup-@L3.AccountNumber">
-                                                                                    @foreach (var L4 in L3.Children)
+                                                                                    @foreach (var L4 in L3.Children.OrderBy(coa => coa.AccountNumber))
                                                                                     {
                                                                                         <div class="row">
                                                                                             <div class="accordion-item col-10 p-0">
@@ -104,7 +104,7 @@
                                                                                                         <button class="btn btn-primary mb-3 createAccount" data-account-id="@L4.AccountId">Create Level 5 Account</button>
 
                                                                                                         <div class="accordion" id="LGroup-@L4.AccountNumber">
-                                                                                                            @foreach (var L5 in L4.Children)
+                                                                                                            @foreach (var L5 in L4.Children.OrderBy(coa => coa.AccountNumber))
                                                                                                             {
                                                                                                                 <div class="row">
                                                                                                                     <div class="accordion-item col-10 p-0">

@@ -107,11 +107,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.CreatedBy = _userManager.GetUserName(User);
 
-                await _dbContext.AddAsync(model, cancellationToken);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.FilprideBankAccount.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recordings --
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new bank {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", model.Company);
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recordings --
 
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Bank #{model.AccountNo} created successfully.";
@@ -213,6 +217,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                #region -- Audit Trail Recordings --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo} => {model.Bank} {model.AccountName} {model.AccountNo}", "Bank Account", existingModel.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recordings --
+
                 existingModel.AccountNo = model.AccountNo;
                 existingModel.AccountName = model.AccountName;
                 existingModel.Bank = model.Bank;
@@ -221,13 +232,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.IsMobility = model.IsMobility;
                 existingModel.IsBienes = model.IsBienes;
 
-                TempData["success"] = "Bank edited successfully.";
-                await _dbContext.SaveChangesAsync(cancellationToken);
-
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Edited bank {existingModel.Bank} {existingModel.AccountName} {existingModel.AccountNo}", "Bank Account", existingModel.Company);
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
-
+                await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Bank edited successfully.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)

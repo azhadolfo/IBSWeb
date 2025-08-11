@@ -1,6 +1,7 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -32,6 +33,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
             _unitOfWork = unitOfWork;
         }
 
+        private async Task<string?> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
+        }
+
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
             if (view == nameof(DynamicView.ChartOfAccount))
@@ -45,7 +59,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var level1 = await _unitOfWork.FilprideChartOfAccount
                 .GetAllAsync(cancellationToken : cancellationToken);
 
-            return View(level1.Where(c => c.Level == 1).ToList());
+            return View(level1.Where(c => c.Level == 1)
+                .ToList());
         }
 
         [HttpGet]
@@ -96,14 +111,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideChartOfAccount.AddAsync(newAccount, cancellationToken);
                 await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Created new Account #{newAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Account #{newAccount.AccountNumber} Created Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create chart of account. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
@@ -112,31 +136,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int accountId, string accountName, CancellationToken cancellationToken)
         {
+            var existingAccount = await _unitOfWork.FilprideChartOfAccount
+                .GetAsync(x => x.AccountId == accountId, cancellationToken);
+
+            if (existingAccount == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existingAccount = await _unitOfWork.FilprideChartOfAccount
-                    .GetAsync(x => x.AccountId == accountId, cancellationToken);
-
-                if (existingAccount == null)
-                {
-                    return NotFound();
-                }
-
                 existingAccount.AccountName = accountName;
                 existingAccount.EditedBy = User.Identity!.Name;
                 existingAccount.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                await _dbContext.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
 
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Account #{existingAccount.AccountNumber}", "Chart of Accounts", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Account Edited Successfully";
                 return Json(new { redirectUrl = Url.Action("Index", "ChartOfAccount", new { area = "Filpride" }) });
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit chart of account. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["Error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }

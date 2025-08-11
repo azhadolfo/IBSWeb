@@ -109,8 +109,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(model);
             }
 
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -132,42 +130,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return View(model);
             }
 
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 if (registration != null && registration.Length > 0)
                 {
                     model.ProofOfRegistrationFileName = GenerateFileNameToSave(registration.FileName);
-                    model.ProofOfRegistrationFilePath =
-                        await _cloudStorageService.UploadFileAsync(registration,
-                            model.ProofOfRegistrationFileName!);
+                    model.ProofOfRegistrationFilePath = await _cloudStorageService.UploadFileAsync(registration, model.ProofOfRegistrationFileName!);
                 }
 
                 if (document != null && document.Length > 0)
                 {
                     model.ProofOfExemptionFileName = GenerateFileNameToSave(document.FileName);
-                    model.ProofOfExemptionFilePath =
-                        await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
+                    model.ProofOfExemptionFilePath = await _cloudStorageService.UploadFileAsync(document, model.ProofOfExemptionFileName!);
                 }
 
-                model.SupplierCode = await _unitOfWork.FilprideSupplier
-                    .GenerateCodeAsync(cancellationToken);
+                model.SupplierCode = await _unitOfWork.FilprideSupplier.GenerateCodeAsync(cancellationToken);
                 model.CreatedBy = _userManager.GetUserName(User);
                 model.Company = companyClaims;
                 await _unitOfWork.FilprideSupplier.AddAsync(model, cancellationToken);
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region -- Audit Trail Recording --
 
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!,
-                    $"Create new supplier {model.SupplierCode}", "Supplier", model.Company);
-                await _dbContext.FilprideAuditTrails.AddAsync(auditTrailBook, cancellationToken);
+                    $"Create new Supplier #{model.SupplierCode}", "Supplier", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                await _unitOfWork.SaveAsync(cancellationToken);
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Supplier created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}",
-                    _userManager.GetUserName(User));
+                _logger.LogError(ex, "Failed to create supplier master file. Created by: {UserName}", _userManager.GetUserName(User));
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
@@ -293,14 +292,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 model.EditedBy = _userManager.GetUserName(User);
                 await _unitOfWork.FilprideSupplier.UpdateAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Supplier #{model.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Supplier updated successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to edit supplier master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(model);
             }
@@ -314,9 +322,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .FilprideSupplier
-                .GetAsync(c => c.SupplierId == id, cancellationToken);
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier == null)
             {
@@ -324,7 +330,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return View(supplier);
-
         }
 
         [HttpPost, ActionName("Activate")]
@@ -335,19 +340,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .FilprideSupplier
-                .GetAsync(c => c.SupplierId == id, cancellationToken);
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier == null)
             {
                 return NotFound();
             }
 
-            supplier.IsActive = true;
-            await _unitOfWork.SaveAsync(cancellationToken);
-            TempData["success"] = "Supplier activated successfully";
-            return RedirectToAction(nameof(Index));
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                supplier.IsActive = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Activated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())!);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier activated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to activate supplier master file. Activated by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Activate), new { id = id });
+            }
         }
 
         [HttpGet]
@@ -358,8 +383,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .FilprideSupplier
+            var supplier = await _unitOfWork.FilprideSupplier
                 .GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier == null)
@@ -368,7 +392,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             return View(supplier);
-
         }
 
         [HttpPost, ActionName("Deactivate")]
@@ -379,20 +402,39 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var supplier = await _unitOfWork
-                .FilprideSupplier
-                .GetAsync(c => c.SupplierId == id, cancellationToken);
+            var supplier = await _unitOfWork.FilprideSupplier.GetAsync(c => c.SupplierId == id, cancellationToken);
 
             if (supplier == null)
             {
                 return NotFound();
             }
 
-            supplier.IsActive = false;
-            await _unitOfWork.SaveAsync(cancellationToken);
-            TempData["success"] = "Supplier deactivated successfully";
-            return RedirectToAction(nameof(Index));
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+            try
+            {
+                supplier.IsActive = false;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Deactivated Supplier #{supplier.SupplierCode}", "Supplier", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Supplier deactivated successfully";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deactivate supplier master file. Deactivated by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(Deactivate), new { id = id });
+            }
         }
 
         //Download as .xlsx file.(Export)

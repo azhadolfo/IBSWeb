@@ -1,7 +1,10 @@
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.MMSI.MasterFile;
 using IBS.Services.Attributes;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IBSWeb.Areas.MMSI.Controllers
@@ -13,12 +16,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<ServiceController> _logger;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ServiceController(ApplicationDbContext dbContext, ILogger<ServiceController> logger, IUnitOfWork unitOfWork)
+        public ServiceController(ApplicationDbContext dbContext, ILogger<ServiceController> logger, IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -47,6 +52,15 @@ namespace IBSWeb.Areas.MMSI.Controllers
             try
             {
                 await _unitOfWork.Service.AddAsync(model, cancellationToken);
+
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Created new Service #{model.ServiceNumber}", "Service", nameof(MMSI));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Creation Succeed!";
                 return RedirectToAction(nameof(Index));
@@ -107,6 +121,14 @@ namespace IBSWeb.Areas.MMSI.Controllers
 
             try
             {
+                #region -- Audit Trail Recording --
+
+                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                    $"Edited Service #{currentModel.ServiceNumber} => {model.ServiceNumber}", "Service", nameof(MMSI));
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion -- Audit Trail Recording --
+
                 currentModel.ServiceNumber = model.ServiceNumber;
                 currentModel.ServiceName = model.ServiceName;
                 await _unitOfWork.Service.SaveAsync(cancellationToken);

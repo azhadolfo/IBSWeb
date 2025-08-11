@@ -2,6 +2,7 @@ using System.Linq.Dynamic.Core;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.IRepository;
 using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Services.Attributes;
 using IBS.Utility.Enums;
@@ -111,16 +112,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 })
                 .ToListAsync(cancellationToken);
 
+            if (!ModelState.IsValid)
+            {
+                return View(services);
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
             {
                 return BadRequest();
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return View(services);
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -141,26 +142,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 services.CurrentAndPreviousNo = currentAndPrevious!.AccountNumber;
                 services.CurrentAndPreviousTitle = currentAndPrevious.AccountName;
-
                 services.UnearnedNo = unearned!.AccountNumber;
                 services.UnearnedTitle = unearned.AccountName;
-
                 services.Company = companyClaims;
-
                 services.CreatedBy = _userManager.GetUserName(User)!.ToUpper();
-
                 services.ServiceNo = await _unitOfWork.FilprideService.GetLastNumber(cancellationToken);
-
-                TempData["success"] = "Services created successfully";
-
                 await _unitOfWork.FilprideService.AddAsync(services, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Create Service #{services.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Services created successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 _logger.LogError(ex, "Failed to create service master file. Created by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = $"Error: '{ex.Message}'";
                 return View(services);
             }
@@ -242,25 +246,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, FilprideService services, CancellationToken cancellationToken)
+        public async Task<IActionResult> Edit(FilprideService services, CancellationToken cancellationToken)
         {
-            if (id != services.ServiceId)
-            {
-                return NotFound();
-            }
-
             if (!ModelState.IsValid)
             {
                 return View(services);
             }
 
             var existingModel =  await _unitOfWork.FilprideService
-                .GetAsync(x => x.ServiceId == id, cancellationToken);
+                .GetAsync(x => x.ServiceId == services.ServiceId, cancellationToken);
 
             if (existingModel == null)
             {
                 return NotFound();
             }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
@@ -269,14 +270,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.IsFilpride = services.IsFilpride;
                 existingModel.IsMobility = services.IsMobility;
                 existingModel.IsBienes = services.IsBienes;
-                TempData["success"] = "Services updated successfully";
+                await _unitOfWork.SaveAsync(cancellationToken);
 
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new (_userManager.GetUserName(User)!,
+                    $"Edited Service #{existingModel.ServiceNo}", "Service", (await GetCompanyClaimAsync())! );
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Services updated successfully";
                 return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException ex)
             {
                 _logger.LogError(ex, "Failed to edit service master file. Edited by: {UserName}", _userManager.GetUserName(User));
+                await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return RedirectToAction(nameof(Index));
             }
