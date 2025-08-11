@@ -351,11 +351,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 1);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"ClearedDisbursementReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Cleared_Disbursement_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
