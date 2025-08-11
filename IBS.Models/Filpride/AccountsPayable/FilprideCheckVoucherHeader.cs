@@ -50,7 +50,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "Supplier Id")]
         public int? SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
         [StringLength(200)]
@@ -78,7 +78,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "Bank Account Name")]
         public int? BankId { get; set; }
 
-        [ForeignKey("BankId")]
+        [ForeignKey(nameof(BankId))]
         public FilprideBankAccount? BankAccount { get; set; }
 
         [StringLength(200)]
@@ -187,7 +187,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int? EmployeeId { get; set; }
 
-        [ForeignKey("EmployeeId")]
+        [ForeignKey(nameof(EmployeeId))]
         public FilprideEmployee? Employee { get; set; }
 
         [StringLength(200)]

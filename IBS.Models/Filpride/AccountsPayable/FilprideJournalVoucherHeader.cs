@@ -30,7 +30,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "Check Voucher Id")]
         public int? CVId { get; set; }
 
-        [ForeignKey("CVId")]
+        [ForeignKey(nameof(CVId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
         [NotMapped]

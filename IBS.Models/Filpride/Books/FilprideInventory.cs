@@ -16,7 +16,7 @@ namespace IBS.Models.Filpride.Books
 
         public int ProductId { get; set; }
 
-        [ForeignKey("ProductId")]
+        [ForeignKey(nameof(ProductId))]
         public Product Product { get; set; }
 
         [Column(TypeName = "varchar(200)")]
@@ -96,7 +96,7 @@ namespace IBS.Models.Filpride.Books
 
         public int? POId { get; set; }
 
-        [ForeignKey("POId")]
+        [ForeignKey(nameof(POId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         public string Company { get; set; } = string.Empty;

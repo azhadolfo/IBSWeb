@@ -26,7 +26,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [Display(Name = "PO No.")]
         public int POId { get; set; }
 
-        [ForeignKey("POId")]
+        [ForeignKey(nameof(POId))]
         public FilpridePurchaseOrder? PurchaseOrder { get; set; }
 
         [Display(Name = "PO No")]

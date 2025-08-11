@@ -34,7 +34,7 @@ namespace IBS.Models.Mobility
 
         public int? SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public MobilitySupplier? Supplier { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

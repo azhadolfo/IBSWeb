@@ -13,7 +13,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Display(Name = "SI No")]
         public int? SalesInvoiceId { get; set; }
 
-        [ForeignKey("SalesInvoiceId")]
+        [ForeignKey(nameof(SalesInvoiceId))]
         public FilprideSalesInvoice? SalesInvoice { get; set; }
 
         [NotMapped]
@@ -22,7 +22,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [Display(Name = "SV No")]
         public int? ServiceInvoiceId { get; set; }
 
-        [ForeignKey("ServiceInvoiceId")]
+        [ForeignKey(nameof(ServiceInvoiceId))]
         public FilprideServiceInvoice? ServiceInvoice { get; set; }
 
         [NotMapped]

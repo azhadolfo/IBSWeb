@@ -34,7 +34,7 @@ namespace IBS.Models.Filpride.MasterFile
         public int? ParentAccountId { get; set; }
 
         // Navigation property for Parent Account
-        [ForeignKey("ParentAccountId")]
+        [ForeignKey(nameof(ParentAccountId))]
         public virtual FilprideChartOfAccount? ParentAccount { get; set; }
 
         // Navigation property for Child Accounts
