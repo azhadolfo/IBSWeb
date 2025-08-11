@@ -39,7 +39,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int? SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]
