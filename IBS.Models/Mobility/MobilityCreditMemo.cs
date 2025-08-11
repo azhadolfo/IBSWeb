@@ -23,7 +23,7 @@ namespace IBS.Models.Mobility
         [Display(Name = "SV No")]
         public int? ServiceInvoiceId { get; set; }
 
-        [ForeignKey("ServiceInvoiceId")]
+        [ForeignKey(nameof(ServiceInvoiceId))]
         public MobilityServiceInvoice? ServiceInvoice { get; set; }
 
         public string Description
