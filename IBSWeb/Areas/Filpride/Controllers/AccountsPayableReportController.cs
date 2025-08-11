@@ -4058,69 +4058,71 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var groupBySupplier = apReport
                     .OrderBy(po => po.Date)
                     .ThenBy(po => po.PurchaseOrderNo)
-                    .GroupBy(po => po.Supplier);
+                    .GroupBy(po => po.Supplier)
+                    .ToList();
 
                 int row = 5;
                 decimal originalPoGrandTotalBiodiesel = 0m;
                 decimal originalPoGrandTotalEconogas = 0m;
                 decimal originalPoGrandTotalEnvirogas = 0m;
-
                 decimal unliftedLastMonthGrandTotalBiodiesel = 0m;
                 decimal unliftedLastMonthGrandTotalEconogas = 0m;
                 decimal unliftedLastMonthGrandTotalEnvirogas = 0m;
-
                 decimal liftedThisMonthGrandTotalBiodiesel = 0m;
                 decimal liftedThisMonthGrandTotalEconogas = 0m;
                 decimal liftedThisMonthGrandTotalEnvirogas = 0m;
-
                 decimal unliftedThisMonthGrandTotalBiodiesel = 0m;
                 decimal unliftedThisMonthGrandTotalEconogas = 0m;
                 decimal unliftedThisMonthGrandTotalEnvirogas = 0m;
-
                 decimal grossAmountGrandTotalBiodiesel = 0m;
                 decimal grossAmountGrandTotalEconogas = 0m;
                 decimal grossAmountGrandTotalEnvirogas = 0m;
-
                 decimal ewtGrandTotalBiodiesel = 0m;
                 decimal ewtGrandTotalEconogas = 0m;
                 decimal ewtGrandTotalEnvirogas = 0m;
+                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
-                string[] productList = { "BIODIESEL", "ECONOGAS", "ENVIROGAS" };
+                string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
 
                 foreach (var sameSupplierGroup in groupBySupplier)
                 {
-                    // declare relevant variables per supplier
+                    var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
+                    var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
                     row += 2;
                     worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
                     worksheet.Cells[row, 2].Style.Font.Bold = true;
                     worksheet.Cells[row, 3].Value = sameSupplierGroup.First().Company;
-                    var groupByProduct = sameSupplierGroup.GroupBy(po => po.Product).OrderBy(po => po.Key?.ProductName);
+                    var groupByProduct = sameSupplierGroup
+                        .GroupBy(po => po.Product)
+                        .OrderBy(po => po.Key?.ProductName)
+                        .ToList();
                     decimal poSubtotal = 0m;
                     decimal unliftedLastMonthSubtotal = 0m;
                     decimal liftedThisMonthSubtotal = 0m;
                     decimal unliftedThisMonthSubtotal = 0m;
                     decimal grossAmountSubtotal = 0m;
+                    decimal ewtAmountSubtotal = 0m;
                     decimal tempForGrandTotal = 0m;
 
                     foreach (var product in productList)
                     {
                         // declare per product
-                        var aGroupByProduct = groupByProduct.FirstOrDefault(g => g.Key?.ProductName == product);
-                        decimal grossOfLiftedThisMonth = 0m;
+                        var aGroupByProduct = groupByProduct
+                            .FirstOrDefault(g => g.Key?.ProductName == product);
                         worksheet.Cells[row, 4].Value = product;
                         worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Supplier?.SupplierTerms;
 
                         // get the necessary values from po, separate it by variable
                         if (aGroupByProduct != null)
                         {
-                            if (aGroupByProduct.Sum(po => po?.Quantity) != 0m)
+                            if (aGroupByProduct.Sum(po => po.Quantity) != 0m)
                             {
                                 // original po volume
-                                var firstEntry = aGroupByProduct.FirstOrDefault();
                                 decimal allPoTotal = 0m;
                                 decimal unliftedLastMonth = 0m;
                                 decimal liftedThisMonth = 0m;
                                 decimal unliftedThisMonth = 0m;
+                                decimal grossOfLiftedThisMonth = 0m;
 
                                 foreach (var po in aGroupByProduct)
                                 {
@@ -4129,25 +4131,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     decimal currentPoQuantity = po.Quantity;
                                     allPoTotal += currentPoQuantity;
 
-                                    if (po!.ReceivingReports!.Count != 0)
+                                    if (po.ReceivingReports!.Count != 0)
                                     {
-                                        foreach (var rr in po!.ReceivingReports)
+                                        foreach (var rr in po.ReceivingReports)
                                         {
                                             if (rr.Date < monthYear)
                                             {
                                                 rrQtyForUnliftedLastMonth += rr.QuantityReceived;
                                             }
-                                            if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                            else if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
                                             {
                                                 rrQtyForLiftedThisMonth += rr.QuantityReceived;
+                                                grossOfLiftedThisMonth += rr.Amount;
                                             }
                                         }
                                     }
 
                                     unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
                                     liftedThisMonth += rrQtyForLiftedThisMonth;
-                                    unliftedThisMonth += currentPoQuantity - rrQtyForLiftedThisMonth -
-                                                        rrQtyForUnliftedLastMonth;
+                                    unliftedThisMonth += currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth;
                                 }
 
                                 if (allPoTotal != 0m)
@@ -4157,8 +4159,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 }
 
                                 // operations per product
-                                grossOfLiftedThisMonth = firstEntry!.Price * liftedThisMonth;
-                                var ewt = grossOfLiftedThisMonth / 1.12m * 0.01m;
+                                var netOfVat = isVatable
+                                    ? repoCalculator.ComputeNetOfVat(grossOfLiftedThisMonth)
+                                    : grossOfLiftedThisMonth;
+                                var ewt = isTaxable
+                                    ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                    : 0m;
 
                                 // WRITE ORIGINAL PO VOLUME
                                 worksheet.Cells[row, 6].Value = allPoTotal;
@@ -4231,17 +4237,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 liftedThisMonthSubtotal += liftedThisMonth;
                                 unliftedThisMonthSubtotal += unliftedThisMonth;
                                 grossAmountSubtotal += grossOfLiftedThisMonth;
+                                ewtAmountSubtotal += ewt;
 
                                 // write per product: price, gross, ewt, net
-                                worksheet.Cells[row, 10].Value = firstEntry!.Price / 1.12m;
-                                worksheet.Cells[row, 11].Value = firstEntry!.Price;
+                                var price = grossOfLiftedThisMonth / liftedThisMonth;
+                                var priceNetOfVat = isVatable
+                                    ? repoCalculator.ComputeNetOfVat(price)
+                                    : price;
+
+                                worksheet.Cells[row, 10].Value = priceNetOfVat;
+                                worksheet.Cells[row, 11].Value = price;
                                 worksheet.Cells[row, 12].Value = grossOfLiftedThisMonth;
                                 worksheet.Cells[row, 13].Value = ewt;
                                 worksheet.Cells[row, 14].Value = grossOfLiftedThisMonth - ewt;
-                                using ( var range = worksheet.Cells[row, 10, row, 14] )
-                                {
-                                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                }
+                                using var range = worksheet.Cells[row, 10, row, 14];
+                                range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
                         }
 
@@ -4273,11 +4283,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
                     if (liftedThisMonthSubtotal != 0)
                     {
-                        worksheet.Cells[row, 10].Value = ((grossAmountSubtotal / liftedThisMonthSubtotal) / 1.12m);
-                        worksheet.Cells[row, 11].Value = grossAmountSubtotal / liftedThisMonthSubtotal;
+                        var price = grossAmountSubtotal / liftedThisMonthSubtotal;
+                        var priceNetOfVat = isVatable
+                            ? repoCalculator.ComputeNetOfVat(price)
+                            : price;
+                        worksheet.Cells[row, 10].Value = priceNetOfVat;
+                        worksheet.Cells[row, 11].Value = price;
                         worksheet.Cells[row, 12].Value = grossAmountSubtotal;
-                        worksheet.Cells[row, 13].Value = (grossAmountSubtotal / 1.12m * 0.01m);
-                        worksheet.Cells[row, 14].Value = (grossAmountSubtotal - (grossAmountSubtotal / 1.12m * 0.01m));
+                        worksheet.Cells[row, 13].Value = ewtAmountSubtotal;
+                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtAmountSubtotal;
                     }
                     else
                     {
@@ -4306,17 +4320,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 2].Style.Font.Bold = true;
                 worksheet.Cells[row, 3].Value = "FILPRIDE";
 
-                decimal finalPo = originalPoGrandTotalBiodiesel + originalPoGrandTotalEconogas +
-                                  originalPoGrandTotalEnvirogas;
-                decimal finalUnliftedLastMonth = unliftedLastMonthGrandTotalBiodiesel +
-                                                 unliftedLastMonthGrandTotalEconogas + originalPoGrandTotalEnvirogas;
-                decimal finalLiftedThisMonth = liftedThisMonthGrandTotalBiodiesel + liftedThisMonthGrandTotalEconogas +
-                                               liftedThisMonthGrandTotalEnvirogas;
-                decimal finalUnliftedThisMonth = unliftedThisMonthGrandTotalBiodiesel +
-                                                 unliftedThisMonthGrandTotalEconogas +
-                                                 unliftedThisMonthGrandTotalEnvirogas;
-                decimal finalGross = grossAmountGrandTotalBiodiesel + grossAmountGrandTotalEconogas +
-                                     grossAmountGrandTotalEnvirogas;
+                decimal finalPo = originalPoGrandTotalBiodiesel + originalPoGrandTotalEconogas + originalPoGrandTotalEnvirogas;
+                decimal finalUnliftedLastMonth = unliftedLastMonthGrandTotalBiodiesel + unliftedLastMonthGrandTotalEconogas + originalPoGrandTotalEnvirogas;
+                decimal finalLiftedThisMonth = liftedThisMonthGrandTotalBiodiesel + liftedThisMonthGrandTotalEconogas + liftedThisMonthGrandTotalEnvirogas;
+                decimal finalUnliftedThisMonth = unliftedThisMonthGrandTotalBiodiesel + unliftedThisMonthGrandTotalEconogas + unliftedThisMonthGrandTotalEnvirogas;
+                decimal finalGross = grossAmountGrandTotalBiodiesel + grossAmountGrandTotalEconogas + grossAmountGrandTotalEnvirogas;
                 decimal finalEwt = ewtGrandTotalBiodiesel + ewtGrandTotalEconogas + ewtGrandTotalEnvirogas;
 
                 foreach (var product in productList)
@@ -4333,7 +4341,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalBiodiesel;
                             if (liftedThisMonthGrandTotalBiodiesel != 0)
                             {
-                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel) / 1.12m;
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel / 1.12m;
                                 worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
                             }
                             else
@@ -4352,7 +4360,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEconogas;
                             if (liftedThisMonthGrandTotalEconogas != 0)
                             {
-                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas) / 1.12m;
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas / 1.12m;
                                 worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
                             }
                             else
@@ -4371,7 +4379,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEnvirogas;
                             if (liftedThisMonthGrandTotalEnvirogas != 0)
                             {
-                                worksheet.Cells[row, 10].Value = (grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas) / 1.12m;
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas / 1.12m;
                                 worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
                             }
                             else
@@ -4401,11 +4409,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = finalUnliftedThisMonth;
                 if (finalLiftedThisMonth != 0)
                 {
-                    worksheet.Cells[row, 10].Value = ((finalGross / finalLiftedThisMonth) / 1.12m);
+                    worksheet.Cells[row, 10].Value = finalGross / finalLiftedThisMonth / 1.12m;
                     worksheet.Cells[row, 11].Value = finalGross / finalLiftedThisMonth;
                     worksheet.Cells[row, 12].Value = finalGross;
-                    worksheet.Cells[row, 13].Value = finalGross / 1.12m * 0.01m;
-                    worksheet.Cells[row, 14].Value = finalGross - (finalGross / 1.12m * 0.01m);
+                    worksheet.Cells[row, 13].Value = finalEwt;
+                    worksheet.Cells[row, 14].Value = finalGross - finalEwt;
                 }
                 else
                 {
@@ -4434,10 +4442,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 8].Value = "Acknowledged by:";
                 worksheet.Cells[row, 11].Value = "Received by:";
                 row += 3;
-                worksheet.Cells[row, 2].Value = "Gerecho B. Tayco";
-                worksheet.Cells[row, 5].Value = "Clifford M. Aranda";
-                worksheet.Cells[row, 8].Value = "Aniebeth S. Dionzon";
-                worksheet.Cells[row, 11].Value = "Jerrylyn B. Gatoc";
+                worksheet.Cells[row, 2].Value = "";
+                worksheet.Cells[row, 5].Value = "";
+                worksheet.Cells[row, 8].Value = "";
+                worksheet.Cells[row, 11].Value = "";
                 using (var range = worksheet.Cells[row, 1, row, 11])
                 {
                     range.Style.Font.Bold = true;
@@ -4460,7 +4468,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 foreach (var aGroupBySupplier in groupBySupplier)
                 {
                     var firstRecord = aGroupBySupplier.FirstOrDefault();
-                    DateOnly monthYearTemp = new DateOnly(monthYear.Year, (monthYear.Month), 1);
+                    var isVatable = firstRecord!.VatType == SD.VatType_Vatable;
+                    var isTaxable = firstRecord.TaxType == SD.TaxType_WithTax;
+                    DateOnly monthYearTemp = new DateOnly(monthYear.Year, monthYear.Month, 1);
                     DateOnly lastDayOfMonth = monthYearTemp.AddDays(-1);
                     var poGrandTotal = 0m;
                     var unliftedLastMonthGrandTotal = 0m;
@@ -4468,11 +4478,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var unliftedThisMonthGrandTotal = 0m;
                     var grossAmountGrandTotal = 0m;
                     var ewtGrandTotal = 0m;
-                    var netOfEwtGrandTotal = 0m;
 
-                    worksheet = package.Workbook.Worksheets.Add(firstRecord!.Supplier!.SupplierName);
+                    worksheet = package.Workbook.Worksheets.Add(firstRecord.Supplier!.SupplierName);
                     worksheet.Cells.Style.Font.Name = "Calibri";
-                    worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord!.Supplier!.SupplierName}";
+                    worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord.Supplier!.SupplierName}";
                     worksheet.Cells[2, 1].Value = "AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
                     worksheet.Cells[3, 1].Value = "REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
                     worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
@@ -4481,150 +4490,164 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row = 8;
                     var groupByProduct = aGroupBySupplier.GroupBy(po => po.Product!.ProductName).ToList();
 
-                    foreach (string product in productList)
+                    foreach (var product in productList)
                     {
-                        var aGroupByProduct = groupByProduct.FirstOrDefault(g => g.FirstOrDefault()!.Product!.ProductName == product);
+                        var aGroupByProduct = groupByProduct
+                            .FirstOrDefault(g => g.FirstOrDefault()!.Product!.ProductName == product);
 
-                        if (aGroupByProduct != null)
+                        if (aGroupByProduct == null)
                         {
-                            var poSubtotal = 0m;
-                            var unliftedLastMonthSubtotal = 0m;
-                            var liftedThisMonthSubtotal = 0m;
-                            var unliftedThisMonthSubtotal = 0m;
-                            var grossAmountSubtotal = 0m;
-                            var ewtSubtotal = 0m;
-                            var netOfEwtSubtotal = 0m;
+                            continue;
+                        }
 
-                            worksheet.Cells[row, 1].Value = "PO#";
-                            worksheet.Cells[row, 2].Value = "DATE";
-                            worksheet.Cells[row, 3].Value = "PRODUCT";
-                            worksheet.Cells[row, 4].Value = "PORT";
-                            worksheet.Cells[row, 5].Value = "REFERENCE MOPS";
-                            worksheet.Cells[row, 6].Value = "ORIGINAL PO VOLUME";
-                            worksheet.Cells[row, 7].Value = "UNLIFTED LAST MONTH";
-                            worksheet.Cells[row, 8].Value = "LIFTED THIS MONTH";
-                            worksheet.Cells[row, 9].Value = "UNLIFTED THIS MONTH";
-                            worksheet.Cells[row, 10].Value = "PRICE(VAT-EX)";
-                            worksheet.Cells[row, 11].Value = "PRICE(VAT-INC)";
-                            worksheet.Cells[row, 12].Value = "GROSS AMOUNT(VAT-INC)";
-                            worksheet.Cells[row, 13].Value = "EWT";
-                            worksheet.Cells[row, 14].Value = "NET OF EWT";
+                        var poSubtotal = 0m;
+                        var unliftedLastMonthSubtotal = 0m;
+                        var liftedThisMonthSubtotal = 0m;
+                        var unliftedThisMonthSubtotal = 0m;
+                        var grossAmountSubtotal = 0m;
+                        var ewtSubtotal = 0m;
 
-                            using (var range = worksheet.Cells[row, 1, row, 14])
+                        worksheet.Cells[row, 1].Value = "PO#";
+                        worksheet.Cells[row, 2].Value = "DATE";
+                        worksheet.Cells[row, 3].Value = "PRODUCT";
+                        worksheet.Cells[row, 4].Value = "PORT";
+                        worksheet.Cells[row, 5].Value = "REFERENCE MOPS";
+                        worksheet.Cells[row, 6].Value = "ORIGINAL PO VOLUME";
+                        worksheet.Cells[row, 7].Value = "UNLIFTED LAST MONTH";
+                        worksheet.Cells[row, 8].Value = "LIFTED THIS MONTH";
+                        worksheet.Cells[row, 9].Value = "UNLIFTED THIS MONTH";
+                        worksheet.Cells[row, 10].Value = "PRICE(VAT-EX)";
+                        worksheet.Cells[row, 11].Value = "PRICE(VAT-INC)";
+                        worksheet.Cells[row, 12].Value = "GROSS AMOUNT(VAT-INC)";
+                        worksheet.Cells[row, 13].Value = "EWT";
+                        worksheet.Cells[row, 14].Value = "NET OF EWT";
+
+                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        {
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255,204,172));
+                            range.Style.Font.Bold = true;
+                        }
+
+                        worksheet.Row(row).Height = 36;
+                        row++;
+
+                        foreach(var po in aGroupByProduct)
+                        {
+                            // computing the cells variables
+                            var poTotal = po.Quantity;
+                            var grossAmount = 0m;
+                            var unliftedLastMonth = 0m;
+                            var liftedThisMonthRrQty = 0m;
+                            var unliftedThisMonth = 0m;
+
+                            if (po.ReceivingReports!.Count != 0)
                             {
-                                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                                range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                                range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255,204,172));
-                                range.Style.Font.Bold = true;
+                                var liftedLastMonthRrQty = po.ReceivingReports
+                                    .Where(rr => rr.Date < monthYear)
+                                    .Sum(rr => rr.QuantityReceived);
+
+                                unliftedLastMonth = poTotal - liftedLastMonthRrQty;
+
+                                var liftedThisMonth = po.ReceivingReports
+                                    .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                    .ToList();
+
+                                liftedThisMonthRrQty = liftedThisMonth.Sum(x => x.QuantityReceived);
+
+                                unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
+                                grossAmount += liftedThisMonth.Sum(x => x.Amount);
                             }
 
-                            worksheet.Row(row).Height = 36;
-                            row++;
+                            var netOfVat = isVatable
+                                ? repoCalculator.ComputeNetOfVat(grossAmount)
+                                : grossAmount;
+                            var ewt = isTaxable
+                                ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                : 0m;
 
-                            foreach(var po in aGroupByProduct)
-                            {
-                                // computing the cells variables
-                                var poTotal = po.Quantity;
-                                decimal grossAmount = (po.Price * po.Quantity);
-                                decimal ewt = (grossAmount / 1.12m * 0.01m);
-                                decimal unliftedLastMonth = 0m;
-                                decimal liftedLastMonthRrQty = 0m;
-                                decimal liftedThisMonthRrQty = 0m;
-                                decimal unliftedThisMonth = 0m;
+                            // incrementing subtotals
+                            poSubtotal += poTotal;
+                            unliftedLastMonthSubtotal += unliftedLastMonth;
+                            liftedThisMonthSubtotal += liftedThisMonthRrQty;
+                            unliftedThisMonthSubtotal += unliftedThisMonth;
+                            grossAmountSubtotal += grossAmount;
+                            ewtSubtotal += ewt;
 
-                                if (po.ReceivingReports!.Count != 0)
-                                {
-                                    liftedLastMonthRrQty = po.ReceivingReports
-                                        .Where(rr => rr.Date < monthYear)
-                                        .Sum(rr => rr.QuantityReceived);
+                            // writing the values to cells
+                            worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                            worksheet.Cells[row, 2].Value = po.Date.ToString("MM/dd/yyyy");
+                            worksheet.Cells[row, 3].Value = po.Product!.ProductName;
+                            worksheet.Cells[row, 4].Value = po.PickUpPoint!.Depot;
+                            worksheet.Cells[row, 5].Value = po.TriggerDate != default ? $"TRIGGER {po.TriggerDate.ToString("MM.dd.yyyy")}" : "UNDETERMINED";
+                            worksheet.Cells[row, 6].Value = poTotal;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonth;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                            worksheet.Cells[row, 10].Value = isVatable
+                                ? repoCalculator.ComputeNetOfVat(po.FinalPrice)
+                                : po.FinalPrice;
+                            worksheet.Cells[row, 11].Value = po.FinalPrice;
+                            worksheet.Cells[row, 12].Value = grossAmount;
+                            worksheet.Cells[row, 13].Value = ewt;
+                            worksheet.Cells[row, 14].Value = grossAmount - ewt;
 
-                                    unliftedLastMonth = poTotal - liftedLastMonthRrQty;
-
-                                    liftedThisMonthRrQty = po.ReceivingReports
-                                        .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
-                                        .Sum(rr => rr.QuantityReceived);
-
-                                    unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
-                                }
-
-                                // incrementing subtotals
-                                poSubtotal += poTotal;
-                                unliftedLastMonthSubtotal += unliftedLastMonth;
-                                liftedThisMonthSubtotal += liftedThisMonthRrQty;
-                                unliftedThisMonthSubtotal += unliftedThisMonth;
-                                grossAmountSubtotal += grossAmount;
-                                ewtSubtotal += ewt;
-                                netOfEwtSubtotal += (grossAmountSubtotal - ewt);
-
-                                // writing the values to cells
-                                worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
-                                worksheet.Cells[row, 2].Value = po.Date.ToString("MM/dd/yyyy");
-                                worksheet.Cells[row, 3].Value = po.Product!.ProductName;
-                                worksheet.Cells[row, 4].Value = po.PickUpPoint!.Depot;
-                                worksheet.Cells[row, 5].Value = po.TriggerDate != default ? $"TRIGGER {po.TriggerDate.ToString("MM.dd.yyyy")}" : "UNDETERMINED";
-                                worksheet.Cells[row, 6].Value = poTotal;
-                                worksheet.Cells[row, 7].Value = unliftedLastMonth;
-                                worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
-                                worksheet.Cells[row, 9].Value = unliftedThisMonth;
-                                worksheet.Cells[row, 10].Value = (po.Price / 1.12m);
-                                worksheet.Cells[row, 11].Value = po.Price;
-                                worksheet.Cells[row, 12].Value = grossAmount;
-                                worksheet.Cells[row, 13].Value = ewt;
-                                worksheet.Cells[row, 14].Value = (grossAmount - ewt);
-
-                                using (var range = worksheet.Cells[row, 6, row, 14])
-                                {
-                                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
-                                }
-
-                                row++;
-                            }
-
-                            // incrementing grandtotals
-                            poGrandTotal += poSubtotal;
-                            unliftedLastMonthGrandTotal += unliftedLastMonthSubtotal;
-                            liftedThisMonthGrandTotal += liftedThisMonthSubtotal;
-                            unliftedThisMonthGrandTotal += unliftedThisMonthSubtotal;
-                            grossAmountGrandTotal += grossAmountSubtotal;
-                            ewtGrandTotal += ewtSubtotal;
-                            netOfEwtGrandTotal += netOfEwtSubtotal;
-
-                            worksheet.Cells[row, 2].Value = "SUB-TOTAL";
-                            worksheet.Cells[row, 6].Value = poSubtotal;
-                            worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
-                            worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
-                            worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
-                            if (liftedThisMonthSubtotal != 0)
-                            {
-                                worksheet.Cells[row, 10].Value = ((grossAmountSubtotal / liftedThisMonthSubtotal) / 1.12m);
-                                worksheet.Cells[row, 11].Value = (grossAmountSubtotal / liftedThisMonthSubtotal);
-                            }
-                            worksheet.Cells[row, 12].Value = grossAmountSubtotal;
-                            worksheet.Cells[row, 13].Value = ewtSubtotal;
-                            worksheet.Cells[row, 14].Value = (grossAmountSubtotal - ewtSubtotal);
-
-                            using (var range = worksheet.Cells[row, 3, row, 5])
-                            {
-                                range.Merge = true;
-                                range.Value = product;
-                                range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                            }
                             using (var range = worksheet.Cells[row, 6, row, 14])
                             {
                                 range.Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
-                            using (var range = worksheet.Cells[row, 1, row, 14])
-                            {
-                                range.Style.Font.Bold = true;
-                                range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
-                            }
 
-                            row += 2;
+                            row++;
                         }
+
+                        // incrementing grandtotals
+                        poGrandTotal += poSubtotal;
+                        unliftedLastMonthGrandTotal += unliftedLastMonthSubtotal;
+                        liftedThisMonthGrandTotal += liftedThisMonthSubtotal;
+                        unliftedThisMonthGrandTotal += unliftedThisMonthSubtotal;
+                        grossAmountGrandTotal += grossAmountSubtotal;
+                        ewtGrandTotal += ewtSubtotal;
+
+                        worksheet.Cells[row, 2].Value = "SUB-TOTAL";
+                        worksheet.Cells[row, 6].Value = poSubtotal;
+                        worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
+                        worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
+                        worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                        if (liftedThisMonthSubtotal != 0)
+                        {
+                            var price = grossAmountSubtotal / liftedThisMonthSubtotal;
+                            var priceNetOfVat = isVatable
+                                ? repoCalculator.ComputeNetOfVat(price)
+                                : price;
+                            worksheet.Cells[row, 10].Value = priceNetOfVat;
+                            worksheet.Cells[row, 11].Value = price;
+                        }
+                        worksheet.Cells[row, 12].Value = grossAmountSubtotal;
+                        worksheet.Cells[row, 13].Value = ewtSubtotal;
+                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtSubtotal;
+
+                        using (var range = worksheet.Cells[row, 3, row, 5])
+                        {
+                            range.Merge = true;
+                            range.Value = product;
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        }
+                        using (var range = worksheet.Cells[row, 6, row, 14])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        {
+                            range.Style.Font.Bold = true;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        }
+
+                        row += 2;
                     }
 
                     worksheet.Cells[row, 2].Value = "GRAND-TOTAL";
@@ -4634,12 +4657,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotal;
                     if (liftedThisMonthGrandTotal != 0)
                     {
-                        worksheet.Cells[row, 10].Value = ((grossAmountGrandTotal / liftedThisMonthGrandTotal) / 1.12m);
-                        worksheet.Cells[row, 11].Value = (grossAmountGrandTotal / liftedThisMonthGrandTotal);
+                        var price = grossAmountGrandTotal / liftedThisMonthGrandTotal;
+                        var priceNetOfVat = isVatable
+                            ? repoCalculator.ComputeNetOfVat(price)
+                            : price;
+                        worksheet.Cells[row, 10].Value = priceNetOfVat;
+                        worksheet.Cells[row, 11].Value = price;
                     }
                     worksheet.Cells[row, 12].Value = grossAmountGrandTotal;
                     worksheet.Cells[row, 13].Value = ewtGrandTotal;
-                    worksheet.Cells[row, 14].Value = (grossAmountGrandTotal - ewtGrandTotal);
+                    worksheet.Cells[row, 14].Value = grossAmountGrandTotal - ewtGrandTotal;
 
                     using (var range = worksheet.Cells[row, 3, row, 5])
                     {
@@ -4666,9 +4693,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = "Approved by:";
                     worksheet.Cells[row, 8].Value = "Acknowledged by:";
                     row += 2;
-                    worksheet.Cells[row, 1].Value = "Gerecho B. Tayco";
-                    worksheet.Cells[row, 5].Value = "Clifford M. Aranda";
-                    worksheet.Cells[row, 8].Value = "Aniebeth S. Dionzon";
+                    worksheet.Cells[row, 1].Value = "";
+                    worksheet.Cells[row, 5].Value = "";
+                    worksheet.Cells[row, 8].Value = "";
                     using (var range = worksheet.Cells[row, 1, row, 8])
                     {
                         range.Style.Font.Bold = true;
@@ -4690,10 +4717,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == BY SUPPLIER ==
 
-                var excelBytes = package.GetAsByteArray();
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"ApReport_{DateTime.UtcNow.AddHours(8):yyyyddMMHHmmss}.xlsx");
+                var fileName = $"AP_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
