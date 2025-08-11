@@ -20,7 +20,7 @@ namespace IBS.Models.Filpride.MasterFile
 
         public int SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public FilprideSupplier? Supplier { get; set; }
 
         [StringLength(50)]
