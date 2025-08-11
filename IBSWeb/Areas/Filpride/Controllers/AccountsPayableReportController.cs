@@ -490,7 +490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
-                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text((record.ActualPrices?.Count != 0 ? record.ActualPrices?.First().TriggeredPrice : record.Price) != 0
+                                table.Cell().Border(0.5f).Padding(3).AlignRight().Text((record.ActualPrices?.Count != 0 ? record.ActualPrices?.First(x => x.IsApproved).TriggeredPrice : record.Price) != 0
                                     ? record.Price < 0 ? $"({Math.Abs(record.Price).ToString(SD.Four_Decimal_Format)})" : record.Price.ToString(SD.Four_Decimal_Format) : null);
                                 table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Amount != 0 ? record.Amount < 0 ? $"({Math.Abs(record.Amount).ToString(SD.Two_Decimal_Format)})" : record.Amount.ToString(SD.Two_Decimal_Format) : null);
                                 table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
@@ -616,7 +616,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 5].Value = po.Product?.ProductName;
                     worksheet.Cells[row, 6].Value = po.Quantity;
                     worksheet.Cells[row, 7].Value = po.Product?.ProductUnit;
-                    worksheet.Cells[row, 8].Value = po.ActualPrices!.Count != 0 ? po.ActualPrices!.First().TriggeredPrice : po.Price;
+                    worksheet.Cells[row, 8].Value = po.ActualPrices!.Count != 0 ? po.ActualPrices!.First(x => x.IsApproved).TriggeredPrice : po.Price;
                     worksheet.Cells[row, 9].Value = po.Amount;
                     worksheet.Cells[row, 10].Value = po.Remarks;
 
@@ -632,11 +632,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 1);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"PurchaseOrderReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Purchase_Order_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -674,7 +674,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return RedirectToAction(nameof(PurchaseReport));
                 }
 
-                var document = Document.Create(container =>
+                var document =  Document.Create(container =>
                 {
                     container.Page(page =>
                     {
@@ -798,12 +798,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         var volume = record.QuantityReceived;
                                         var costAmountGross = record.Amount;
                                         var costPerLiter = costAmountGross / volume;
-                                        var costAmountNet = costAmountGross / 1.12m;
+                                        var costAmountNet = record.PurchaseOrder!.VatType == SD.VatType_Vatable
+                                            ? costAmountGross / 1.12m
+                                            : costAmountGross;
+                                        var vatAmount = record.PurchaseOrder!.VatType == SD.VatType_Vatable
+                                            ? costAmountNet * 0.12m
+                                            : 0m;
+                                        var taxAmount = record.PurchaseOrder!.VatType == SD.VatType_Vatable
+                                            ? costAmountNet * 0.12m
+                                            : 0m;
 
                                         table.Cell().Border(0.5f).Padding(3).Text(record.Date.ToString(SD.Date_Format));
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierTin);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Supplier?.SupplierAddress);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.SupplierTin);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.SupplierAddress);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.ReceivingReportNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
@@ -812,19 +820,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).Text(record.SupplierInvoiceDate?.ToString(SD.Date_Format));
                                         table.Cell().Border(0.5f).Padding(3).Text(record.SupplierDrNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.WithdrawalCertificate);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.Customer?.CustomerName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costPerLiter != 0 ? costPerLiter < 0 ? $"({Math.Abs(costPerLiter).ToString(SD.Four_Decimal_Format)})" : costPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(costPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountGross != 0 ? costAmountGross < 0 ? $"({Math.Abs(costAmountGross).ToString(SD.Two_Decimal_Format)})" : costAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.12m) != 0 ? (costAmountNet * 0.12m) < 0 ? $"({Math.Abs((costAmountNet * 0.12m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.12m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.12m) < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text((costAmountNet * 0.01m) != 0 ? (costAmountNet * 0.01m) < 0 ? $"({Math.Abs((costAmountNet * 0.01m)).ToString(SD.Two_Decimal_Format)})" : (costAmountNet * 0.01m).ToString(SD.Two_Decimal_Format) : null).FontColor((costAmountNet * 0.01m) < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatAmount != 0 ? vatAmount < 0 ? $"({Math.Abs(vatAmount).ToString(SD.Two_Decimal_Format)})" : vatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(vatAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(taxAmount != 0 ? taxAmount < 0 ? $"({Math.Abs(taxAmount).ToString(SD.Two_Decimal_Format)})" : taxAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(taxAmount < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(costAmountNet != 0 ? costAmountNet < 0 ? $"({Math.Abs(costAmountNet).ToString(SD.Two_Decimal_Format)})" : costAmountNet.ToString(SD.Two_Decimal_Format) : null).FontColor(costAmountNet < 0 ? Colors.Red.Medium : Colors.Black);
 
                                         totalVolume += volume;
                                         totalCostAmount += costAmountGross;
-                                        totalVatAmount += costAmountNet * 0.12m;
-                                        totalWhtAmount += costAmountNet * 0.01m;
+                                        totalVatAmount += vatAmount;
+                                        totalWhtAmount += taxAmount;
                                         totalNetPurchases += costAmountNet;
                                     }
 
@@ -905,95 +913,107 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         #region -- Initialize Variable for Computation
 
                                         var totalQuantityForBiodiesel = 0m;
-                                        var totalPurchaseAndVatForBiodiesel = 0m;
+                                        var totalPurchaseNetOfVatForBiodiesel = 0m;
                                         var totalQuantityForEconogas = 0m;
-                                        var totalPurchaseAndVatForEconogas = 0m;
+                                        var totalPurchaseNetOfVatForEconogas = 0m;
                                         var totalQuantityForEnvirogas = 0m;
-                                        var totalPurchaseAndVatForEnvirogas  = 0m;
+                                        var totalPurchaseNetOfVatForEnvirogas  = 0m;
 
                                         #endregion
 
                                         #region -- Loop to Show Records
 
                                             var groupBySupplier = purchaseReport
-                                                    .OrderBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
-                                                    .GroupBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName);
+                                                    .OrderBy(rr => rr.PurchaseOrder!.SupplierName)
+                                                    .GroupBy(rr => rr.PurchaseOrder!.SupplierName);
 
                                             // for each supplier
                                             foreach (var record in groupBySupplier)
                                             {
+                                                var list = purchaseReport.Where(s => s.PurchaseOrder!.SupplierName == record.Key).ToList();
+
+                                                var isVatable = list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+
                                                 #region Computation for Biodiesel
 
-                                                var list = purchaseReport.Where(s => s.PurchaseOrder!.Supplier!.SupplierName == record.Key).ToList();
-
-                                                var listForBiodiesel = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "BIODIESEL").ToList();
+                                                var listForBiodiesel = list.Where(s => s.PurchaseOrder!.ProductName == "BIODIESEL").ToList();
 
                                                 var biodieselQuantitySum = listForBiodiesel.Sum(s => s.QuantityReceived);
-                                                var biodieselPurchaseAndVatSum = listForBiodiesel.Sum(pr => pr.Amount / 1.12m);
-                                                var biodieselAverageSellingPrice = biodieselPurchaseAndVatSum != 0m || biodieselQuantitySum != 0m ? biodieselPurchaseAndVatSum / biodieselQuantitySum : 0m;
+                                                var biodieselPurchaseNetOfVatSum = isVatable
+                                                    ? listForBiodiesel.Sum(pr => pr.Amount / 1.12m)
+                                                    : listForBiodiesel.Sum(pr => pr.Amount);
+                                                var biodieselAverageSellingPrice = biodieselPurchaseNetOfVatSum != 0m || biodieselQuantitySum != 0m
+                                                    ? biodieselPurchaseNetOfVatSum / biodieselQuantitySum
+                                                    : 0m;
 
                                                 #endregion
 
                                                 #region Computation for Econogas
 
-                                                var listForEconogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
+                                                var listForEconogas = list.Where(s => s.PurchaseOrder!.ProductName == "ECONOGAS").ToList();
 
                                                 var econogasQuantitySum = listForEconogas.Sum(s => s.QuantityReceived);
-                                                var econogasPurchaseAndVatSum = listForEconogas.Sum(pr => pr.Amount / 1.12m);
-                                                var econogasAverageSellingPrice = econogasPurchaseAndVatSum != 0m && econogasQuantitySum != 0m ? econogasPurchaseAndVatSum / econogasQuantitySum : 0m;
+                                                var econogasPurchaseNetOfVatSum = isVatable
+                                                    ? listForEconogas.Sum(pr => pr.Amount / 1.12m)
+                                                    :  listForEconogas.Sum(pr => pr.Amount);
+                                                var econogasAverageSellingPrice = econogasPurchaseNetOfVatSum != 0m && econogasQuantitySum != 0m
+                                                    ? econogasPurchaseNetOfVatSum / econogasQuantitySum
+                                                    : 0m;
 
                                                 #endregion
 
                                                 #region Computation for Envirogas
 
-                                                var listForEnvirogas = list.Where(s => s.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
+                                                var listForEnvirogas = list.Where(s => s.PurchaseOrder!.ProductName == "ENVIROGAS").ToList();
 
                                                 var envirogasQuantitySum = listForEnvirogas.Sum(s => s.QuantityReceived);
-                                                var envirogasPurchaseAndVatSum = listForEnvirogas.Sum(pr => pr.Amount / 1.12m);
-                                                var envirogasAverageSellingPrice = envirogasPurchaseAndVatSum != 0m && envirogasQuantitySum != 0m ? envirogasPurchaseAndVatSum / envirogasQuantitySum : 0m;
+                                                var envirogasPurchaseNetOfVatSum = isVatable
+                                                    ? listForEnvirogas.Sum(pr => pr.Amount / 1.12m)
+                                                    : listForEnvirogas.Sum(pr => pr.Amount);
+                                                var envirogasAverageSellingPrice = envirogasPurchaseNetOfVatSum != 0m && envirogasQuantitySum != 0m ? envirogasPurchaseNetOfVatSum / envirogasQuantitySum : 0m;
 
                                                 #endregion
 
                                                 content.Cell().Border(0.5f).Padding(3).Text(record.Key);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselQuantitySum != 0 ? biodieselQuantitySum < 0 ? $"({Math.Abs(biodieselQuantitySum).ToString(SD.Two_Decimal_Format)})" : biodieselQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselPurchaseAndVatSum != 0 ? biodieselPurchaseAndVatSum < 0 ? $"({Math.Abs(biodieselPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : biodieselPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselPurchaseNetOfVatSum != 0 ? biodieselPurchaseNetOfVatSum < 0 ? $"({Math.Abs(biodieselPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : biodieselPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(biodieselPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(biodieselAverageSellingPrice != 0 ? biodieselAverageSellingPrice < 0 ? $"({Math.Abs(biodieselAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : biodieselAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(biodieselAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
                                                 content.Cell();
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasQuantitySum != 0 ? econogasQuantitySum < 0 ? $"({Math.Abs(econogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : econogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasPurchaseAndVatSum != 0 ? econogasPurchaseAndVatSum < 0 ? $"({Math.Abs(econogasPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : econogasPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasPurchaseNetOfVatSum != 0 ? econogasPurchaseNetOfVatSum < 0 ? $"({Math.Abs(econogasPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : econogasPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(econogasPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(econogasAverageSellingPrice != 0 ? econogasAverageSellingPrice < 0 ? $"({Math.Abs(econogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : econogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(econogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
                                                 content.Cell();
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasQuantitySum != 0 ? envirogasQuantitySum < 0 ? $"({Math.Abs(envirogasQuantitySum).ToString(SD.Two_Decimal_Format)})" : envirogasQuantitySum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasQuantitySum < 0 ? Colors.Red.Medium : Colors.Black);
-                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasPurchaseAndVatSum != 0 ? envirogasPurchaseAndVatSum < 0 ? $"({Math.Abs(envirogasPurchaseAndVatSum).ToString(SD.Two_Decimal_Format)})" : envirogasPurchaseAndVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasPurchaseAndVatSum < 0 ? Colors.Red.Medium : Colors.Black);
+                                                content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasPurchaseNetOfVatSum != 0 ? envirogasPurchaseNetOfVatSum < 0 ? $"({Math.Abs(envirogasPurchaseNetOfVatSum).ToString(SD.Two_Decimal_Format)})" : envirogasPurchaseNetOfVatSum.ToString(SD.Two_Decimal_Format) : null).FontColor(envirogasPurchaseNetOfVatSum < 0 ? Colors.Red.Medium : Colors.Black);
                                                 content.Cell().Border(0.5f).Padding(3).AlignRight().Text(envirogasAverageSellingPrice != 0 ? envirogasAverageSellingPrice < 0 ? $"({Math.Abs(envirogasAverageSellingPrice).ToString(SD.Four_Decimal_Format)})" : envirogasAverageSellingPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(envirogasAverageSellingPrice < 0 ? Colors.Red.Medium : Colors.Black);
 
                                                 totalQuantityForBiodiesel += biodieselQuantitySum;
-                                                totalPurchaseAndVatForBiodiesel += biodieselPurchaseAndVatSum;
+                                                totalPurchaseNetOfVatForBiodiesel += biodieselPurchaseNetOfVatSum;
                                                 totalQuantityForEconogas += econogasQuantitySum;
-                                                totalPurchaseAndVatForEconogas += econogasPurchaseAndVatSum;
+                                                totalPurchaseNetOfVatForEconogas += econogasPurchaseNetOfVatSum;
                                                 totalQuantityForEnvirogas += envirogasQuantitySum;
-                                                totalPurchaseAndVatForEnvirogas += envirogasPurchaseAndVatSum;
+                                                totalPurchaseNetOfVatForEnvirogas += envirogasPurchaseNetOfVatSum;
                                             }
 
                                         #endregion
 
                                         #region -- Create Table Cell for Totals
 
-                                            var averageSellingPriceForBiodiesel = totalPurchaseAndVatForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? totalPurchaseAndVatForBiodiesel / totalQuantityForBiodiesel : 0m;
-                                            var averageSellingPriceForEconogas = totalPurchaseAndVatForEconogas != 0 && totalQuantityForEconogas != 0 ? totalPurchaseAndVatForEconogas / totalQuantityForEconogas : 0m;
-                                            var averageSellingPriceForEnvirogas = totalPurchaseAndVatForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? totalPurchaseAndVatForEnvirogas / totalQuantityForEnvirogas : 0m;
+                                            var averageSellingPriceForBiodiesel = totalPurchaseNetOfVatForBiodiesel != 0 && totalQuantityForBiodiesel != 0 ? totalPurchaseNetOfVatForBiodiesel / totalQuantityForBiodiesel : 0m;
+                                            var averageSellingPriceForEconogas = totalPurchaseNetOfVatForEconogas != 0 && totalQuantityForEconogas != 0 ? totalPurchaseNetOfVatForEconogas / totalQuantityForEconogas : 0m;
+                                            var averageSellingPriceForEnvirogas = totalPurchaseNetOfVatForEnvirogas != 0 && totalQuantityForEnvirogas != 0 ? totalPurchaseNetOfVatForEnvirogas / totalQuantityForEnvirogas : 0m;
 
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForBiodiesel != 0 ? totalQuantityForBiodiesel < 0 ? $"({Math.Abs(totalQuantityForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalQuantityForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForBiodiesel != 0 ? totalPurchaseAndVatForBiodiesel < 0 ? $"({Math.Abs(totalPurchaseAndVatForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForBiodiesel != 0 ? totalPurchaseNetOfVatForBiodiesel < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForBiodiesel).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForBiodiesel.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForBiodiesel != 0 ? averageSellingPriceForBiodiesel < 0 ? $"({Math.Abs(averageSellingPriceForBiodiesel).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForBiodiesel.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForBiodiesel < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                             content.Cell();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEconogas != 0 ? totalQuantityForEconogas < 0 ? $"({Math.Abs(totalQuantityForEconogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForEconogas != 0 ? totalPurchaseAndVatForEconogas < 0 ? $"({Math.Abs(totalPurchaseAndVatForEconogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForEconogas != 0 ? totalPurchaseNetOfVatForEconogas < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForEconogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForEconogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEconogas != 0 ? averageSellingPriceForEconogas < 0 ? $"({Math.Abs(averageSellingPriceForEconogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEconogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEconogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                             content.Cell();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantityForEnvirogas != 0 ? totalQuantityForEnvirogas < 0 ? $"({Math.Abs(totalQuantityForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalQuantityForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantityForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseAndVatForEnvirogas != 0 ? totalPurchaseAndVatForEnvirogas < 0 ? $"({Math.Abs(totalPurchaseAndVatForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseAndVatForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseAndVatForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                            content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalPurchaseNetOfVatForEnvirogas != 0 ? totalPurchaseNetOfVatForEnvirogas < 0 ? $"({Math.Abs(totalPurchaseNetOfVatForEnvirogas).ToString(SD.Two_Decimal_Format)})" : totalPurchaseNetOfVatForEnvirogas.ToString(SD.Two_Decimal_Format) : null).FontColor(totalPurchaseNetOfVatForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                             content.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(averageSellingPriceForEnvirogas != 0 ? averageSellingPriceForEnvirogas < 0 ? $"({Math.Abs(averageSellingPriceForEnvirogas).ToString(SD.Four_Decimal_Format)})" : averageSellingPriceForEnvirogas.ToString(SD.Four_Decimal_Format) : null).FontColor(averageSellingPriceForEnvirogas < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                                         #endregion
@@ -1161,27 +1181,44 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var currencyFormat = "#,##0.0000"; // numbers format
                     var currencyFormat2 = "#,##0.00"; // numbers format
 
+                    var atlNos = purchaseReport.Select(pr => pr.AuthorityToLoadNo).Distinct().ToList();
+                    var atls = await _dbContext.FilprideAuthorityToLoads
+                        .Where(x => atlNos.Contains(x.AuthorityToLoadNo))
+                        .ToListAsync(cancellationToken);
+                    var atlLookup = atls.ToDictionary(x => x.AuthorityToLoadNo);
+
                     #region -- Populate data rows --
 
                     foreach (var pr in purchaseReport)
                     {
                         #region -- Variables and Formulas --
 
+                        var isSupplierVatable = pr.PurchaseOrder!.VatType == SD.VatType_Vatable;
+                        var isSupplierTaxable = pr.PurchaseOrder!.TaxType == SD.TaxType_WithTax;
+                        var isHaulerVatable = pr.DeliveryReceipt!.HaulerVatType == SD.VatType_Vatable;
+
                         // calculate values, put in variables to be displayed per cell
                         var volume = pr.QuantityReceived; // volume
                         var costAmount = pr.Amount; // purchase total gross
-                        var netPurchases = costAmount / 1.12m; // purchase total net
+                        var netPurchases = isSupplierVatable
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(costAmount)
+                            : costAmount; // purchase total net
                         var freight = pr.DeliveryReceipt?.Freight ?? 0m; // freight g vat
-                        var netFreight = freight / 1.12m; // freight n vat
+                        var netFreight = isHaulerVatable && freight != 0m
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(freight)
+                            : freight; // freight n vat
                         var freightAmount = freight * volume; // purchase total net
                         var freightAmountNet = netFreight * volume; // purchase total net
-                        var vatAmount = netPurchases * 0.12m; // vat total
-                        var whtAmount = netPurchases * 0.01m; // wht total
+                        var vatAmount = isSupplierVatable
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeVatAmount(netPurchases)
+                            : 0m; // vat total
+                        var whtAmount = isSupplierTaxable
+                            ? _unitOfWork.FilpridePurchaseOrder.ComputeEwtAmount(netPurchases, 0.01m)
+                            : 0m; // wht total
                         var costPerLiter = costAmount / volume; // sale price per liter
                         var commission = ((pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m) * volume);
 
-                        var atl = await _unitOfWork.FilprideAuthorityToLoad
-                            .GetAsync(x => x.AuthorityToLoadNo == pr.AuthorityToLoadNo, cancellationToken);
+                        atlLookup.TryGetValue(pr.AuthorityToLoadNo!, out var atl);
 
                         #endregion
 
@@ -1189,29 +1226,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         purchaseReportWorksheet.Cells[row, 1].Value = pr.Date; // Date
                         purchaseReportWorksheet.Cells[row, 2].Value = pr.DeliveryReceipt?.DeliveredDate; // DeliveredDate
-                        purchaseReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.Supplier?.SupplierName; // Supplier Name
-                        purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.Supplier?.SupplierTin; // Supplier Tin
-                        purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.Supplier?.SupplierAddress; // Supplier Address
+                        purchaseReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.SupplierName; // Supplier Name
+                        purchaseReportWorksheet.Cells[row, 4].Value = pr.PurchaseOrder?.SupplierTin; // Supplier Tin
+                        purchaseReportWorksheet.Cells[row, 5].Value = pr.PurchaseOrder?.SupplierAddress; // Supplier Address
                         purchaseReportWorksheet.Cells[row, 6].Value = pr.PurchaseOrder?.PurchaseOrderNo; // PO No.
                         purchaseReportWorksheet.Cells[row, 7].Value = pr.ReceivingReportNo ?? pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride RR
                         purchaseReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo; // COS
                         purchaseReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.DeliveryReceiptNo; // Filpride DR
-                        purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.PickUpPoint?.Depot; // Filpride DR
+                        purchaseReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.Depot; // Filpride DR
                         purchaseReportWorksheet.Cells[row, 11].Value = atl?.AuthorityToLoadNo; // ATL #
                         purchaseReportWorksheet.Cells[row, 12].Value = atl?.UppiAtlNo; // Supplier ATL #
                         purchaseReportWorksheet.Cells[row, 13].Value = pr.SupplierInvoiceNumber; // Supplier's Sales Invoice
                         purchaseReportWorksheet.Cells[row, 14].Value = pr.SupplierInvoiceDate; // Supplier's Sales Invoice
                         purchaseReportWorksheet.Cells[row, 15].Value = pr.SupplierDrNo; // Supplier's DR
                         purchaseReportWorksheet.Cells[row, 16].Value = pr.WithdrawalCertificate; // Supplier's WC
-                        purchaseReportWorksheet.Cells[row, 17].Value = pr.DeliveryReceipt?.Customer?.CustomerName; // Customer Name
-                        purchaseReportWorksheet.Cells[row, 18].Value = pr.PurchaseOrder?.Product?.ProductName; // Product
+                        purchaseReportWorksheet.Cells[row, 17].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.CustomerName; // Customer Name
+                        purchaseReportWorksheet.Cells[row, 18].Value = pr.PurchaseOrder?.ProductName; // Product
                         purchaseReportWorksheet.Cells[row, 19].Value = volume; // Volume
                         purchaseReportWorksheet.Cells[row, 20].Value = costPerLiter; // Purchase price per liter
                         purchaseReportWorksheet.Cells[row, 21].Value = costAmount; // Purchase total gross
                         purchaseReportWorksheet.Cells[row, 22].Value = vatAmount; // Vat total
                         purchaseReportWorksheet.Cells[row, 23].Value = freight; // WHT total
                         purchaseReportWorksheet.Cells[row, 24].Value = whtAmount; // freight g vat
-                        purchaseReportWorksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.Hauler?.SupplierName; // Hauler's Name
+                        purchaseReportWorksheet.Cells[row, 25].Value = pr.DeliveryReceipt?.HaulerName; // Hauler's Name
                         purchaseReportWorksheet.Cells[row, 26].Value = netPurchases; // Purchase total net ======== move to third last
                         purchaseReportWorksheet.Cells[row, 27].Value = netFreight; // freight n vat ============
                         purchaseReportWorksheet.Cells[row, 28].Value = freightAmount; // freight amount n vat ============
@@ -1240,17 +1277,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         purchaseReportWorksheet.Cells[row, 1, row, 2].Style.Numberformat.Format = "MMM/dd/yyyy";
                         purchaseReportWorksheet.Cells[row, 14].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 27].Style.Numberformat.Format = currencyFormat;
-                        purchaseReportWorksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat2;
-                        purchaseReportWorksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat2;
 
                         #endregion -- Add format number cells from Assign Values to Cells --
 
@@ -1276,15 +1302,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     purchaseReportWorksheet.Cells[row, 29].Value = totalNetFreight;
                     purchaseReportWorksheet.Cells[row, 30].Value = totalCommission;
 
-                    purchaseReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                    purchaseReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 28].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 29].Style.Numberformat.Format = currencyFormat2;
-                    purchaseReportWorksheet.Cells[row, 30].Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(22).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(27).Style.Numberformat.Format = currencyFormat;
+                    purchaseReportWorksheet.Column(28).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(29).Style.Numberformat.Format = currencyFormat2;
+                    purchaseReportWorksheet.Column(30).Style.Numberformat.Format = currencyFormat2;
 
                     #endregion -- Assign values of other totals and formatting of total cells --
 
@@ -1297,7 +1325,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(172, 185, 202));
                     }
                     // line to subtotal values
-                    using (var range = purchaseReportWorksheet.Cells[row, 14, row, 30])
+                    using (var range = purchaseReportWorksheet.Cells[row, 17, row, 30])
                     {
                         range.Style.Font.Bold = true;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin; // Single top border
@@ -1369,23 +1397,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     // query a group by supplier
                     var supplierByRr = purchaseReport
-                        .OrderBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName)
-                        .GroupBy(rr => rr.PurchaseOrder!.Supplier!.SupplierName);
+                        .OrderBy(rr => rr.PurchaseOrder!.SupplierName)
+                        .GroupBy(rr => rr.PurchaseOrder!.SupplierName);
 
                     // for each supplier
                     foreach (var rrSupplier in supplierByRr)
                     {
                         var startingColumn = 2;
+                        var isVatable = rrSupplier.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
 
                         // get name of group supplier
-                        purchaseReportWorksheet.Cells[row, 2].Value = rrSupplier.First().PurchaseOrder!.Supplier!.SupplierName;
+                        purchaseReportWorksheet.Cells[row, 2].Value = rrSupplier.First().PurchaseOrder!.SupplierName;
                         purchaseReportWorksheet.Cells[row, 2].Style.Font.Bold = true;
                         purchaseReportWorksheet.Cells[row, 2].Style.Font.Italic = true;
 
                         // group each product of supplier
                         var productBySupplier = rrSupplier
-                            .OrderBy(p => p.PurchaseOrder!.Product!.ProductName)
-                            .GroupBy(rr => rr.PurchaseOrder!.Product!.ProductName);
+                            .OrderBy(p => p.PurchaseOrder!.ProductName)
+                            .GroupBy(rr => rr.PurchaseOrder!.ProductName);
 
                         // get volume, net purchases, and average cost per liter
                         foreach (var product in productBySupplier)
@@ -1394,12 +1423,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 var grandTotalVolume = product
                                     .Sum(pr => pr.QuantityReceived); // volume
-                                var grandTotalPurchaseNet = product
-                                    .Sum(pr => pr.Amount  / 1.12m); // Purchase Net Total
+                                var grandTotalPurchaseNet = isVatable
+                                    ? product.Sum(pr => pr.Amount  / 1.12m)
+                                    : product.Sum(pr => pr.Amount); // Purchase Net Total
 
                                 purchaseReportWorksheet.Cells[row, startingColumn + 1].Value = grandTotalVolume;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 2].Value = grandTotalPurchaseNet;
-                                purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = (grandTotalVolume != 0m ? grandTotalPurchaseNet / grandTotalVolume : 0m); // Gross Margin Per Liter
+                                purchaseReportWorksheet.Cells[row, startingColumn + 3].Value = grandTotalVolume != 0m ? grandTotalPurchaseNet / grandTotalVolume : 0m; // Gross Margin Per Liter
                                 purchaseReportWorksheet.Cells[row, startingColumn+1, row, startingColumn + 3].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 1].Style.Numberformat.Format = currencyFormat2;
                                 purchaseReportWorksheet.Cells[row, startingColumn + 2].Style.Numberformat.Format = currencyFormat2;
@@ -1464,10 +1494,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Purchase Report Worksheet --
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
+                var fileName = $"Purchase_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Purchase Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -1653,17 +1685,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                     foreach (var record in grossMarginReport)
                                     {
+                                        var isVatable = record.PurchaseOrder!.VatType == SD.VatType_Vatable;
                                         var volume = record.QuantityReceived;
                                         var costAmountGross = record.Amount;
                                         var purchasePerLiter = costAmountGross / volume;
-                                        var salePricePerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m);
-                                        var costAmountNet = costAmountGross / 1.12m;
-                                        var costVatAmount = costAmountNet * 0.12m;
+                                        var salePricePerLiter = record.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m;
+                                        var costAmountNet = isVatable
+                                            ? _unitOfWork.FilpridePurchaseOrder.ComputeNetOfVat(costAmountGross)
+                                            : costAmountGross;
+                                        var costVatAmount = isVatable
+                                            ? _unitOfWork.FilpridePurchaseOrder.ComputeVatAmount(costAmountNet)
+                                            : 0m;
                                         var saleAmountGross = volume * salePricePerLiter;
-                                        var gmPerLiter = (salePricePerLiter - purchasePerLiter);
+                                        var gmPerLiter = salePricePerLiter - purchasePerLiter;
                                         var gmAmount = volume * gmPerLiter;
-                                        var freightChargePerLiter = (record.DeliveryReceipt!.Freight) + (record.DeliveryReceipt?.ECC ?? 0m);
-                                        var commissionPerLiter = (record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m);
+                                        var freightChargePerLiter = record.DeliveryReceipt!.Freight + (record.DeliveryReceipt?.ECC ?? 0m);
+                                        var commissionPerLiter = record.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m;
                                         var commissionAmount = commissionPerLiter * volume;
                                         var netMarginPerLiter = gmPerLiter - freightChargePerLiter;
                                         var freightChargeAmount = volume * freightChargePerLiter;
@@ -1674,11 +1711,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.PurchaseOrderNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.ReceivingReportNo);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.Customer?.CustomerName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.Product?.ProductName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.PurchaseOrder?.ProductName);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.Hauler?.SupplierName);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.Commissionee?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.HaulerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.CustomerOrderSlip?.CommissioneeName);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(volume != 0 ? volume < 0 ? $"({Math.Abs(volume).ToString(SD.Two_Decimal_Format)})" : volume.ToString(SD.Two_Decimal_Format) : null).FontColor(volume < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(salePricePerLiter != 0 ? salePricePerLiter < 0 ? $"({Math.Abs(salePricePerLiter).ToString(SD.Four_Decimal_Format)})" : salePricePerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(salePricePerLiter < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(saleAmountGross != 0 ? saleAmountGross < 0 ? $"({Math.Abs(saleAmountGross).ToString(SD.Two_Decimal_Format)})" : saleAmountGross.ToString(SD.Two_Decimal_Format) : null).FontColor(saleAmountGross < 0 ? Colors.Red.Medium : Colors.Black);
@@ -1801,17 +1838,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                             foreach (var customerType in Enum.GetValues<CustomerType>())
                                             {
-                                                var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
+                                                var list = grossMarginReport.Where(s => s.DeliveryReceipt!.CustomerOrderSlip?.CustomerType == customerType.ToString()).ToList();
+                                                var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                                                var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                                                var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
+                                                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
                                                 // Computation for Overall
                                                 var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
                                                 var overallSalesSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                                                var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
+                                                var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(overallSalesSum)
+                                                    : overallSalesSum;
                                                 var overallPurchasesSum = list.Sum(s => s.Amount);
-                                                var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
+                                                var overallNetOfPurchasesSum = isSupplierVatable && overallPurchasesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
+                                                    : overallPurchasesSum;
                                                 var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
                                                 var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                                                var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
+                                                var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(overallFreightSum)
+                                                    : overallFreightSum;
                                                 var overallCommissionSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                                                 var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
                                                 var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
@@ -1914,16 +1961,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
                                                 var listForBiodiesel = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
+                                                var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                                                var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                                                var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
+                                                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
+
 
                                                 // Computation for Biodiesel
                                                 var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity);
                                                 var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                                                var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
+                                                var biodieselNetOfSalesSum = isCustomerVatable && biodieselSalesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(biodieselSalesSum)
+                                                    : biodieselSalesSum;
                                                 var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
-                                                var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
+                                                var biodieselNetOfPurchasesSum = isSupplierVatable && biodieselPurchasesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
+                                                    : biodieselPurchasesSum;
                                                 var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
                                                 var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                                                var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
+                                                var biodieselNetOfFreightSum = isHaulerVatable && biodieselFreightSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(biodieselFreightSum)
+                                                    : biodieselFreightSum;
                                                 var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                                                 var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
                                                 var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
@@ -2026,16 +2084,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
                                                 var listForEconogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS").ToList();
+                                                var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                                                var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                                                var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
+                                                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
                                                 // Computation for Econogas
                                                 var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity);
                                                 var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                                                var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
+                                                var econogasNetOfSalesSum = isCustomerVatable && econogasSalesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(econogasSalesSum)
+                                                    : econogasSalesSum;
                                                 var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
-                                                var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
+                                                var econogasNetOfPurchasesSum = isSupplierVatable && econogasPurchasesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
+                                                    : econogasPurchasesSum;
                                                 var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
                                                 var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                                                var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
+                                                var econogasNetOfFreightSum = isHaulerVatable && econogasFreightSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(econogasFreightSum)
+                                                    : econogasFreightSum;
                                                 var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                                                 var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
                                                 var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
@@ -2138,16 +2206,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                             {
                                                 var list = grossMarginReport.Where(s => s.DeliveryReceipt!.Customer?.CustomerType == customerType.ToString()).ToList();
                                                 var listForEnvirogas = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS").ToList();
+                                                var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                                                var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                                                var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
+                                                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
                                                 // Computation for Envirogas
                                                 var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity);
                                                 var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                                                var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
+                                                var envirogasNetOfSalesSum = isCustomerVatable && envirogasSalesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(envirogasSalesSum)
+                                                    : envirogasSalesSum;
                                                 var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
-                                                var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
+                                                var envirogasNetOfPurchasesSum = isSupplierVatable && envirogasPurchasesSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
+                                                    : envirogasPurchasesSum;
                                                 var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
                                                 var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                                                var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
+                                                var envirogasNetOfFreightSum = isHaulerVatable && envirogasFreightSum != 0m
+                                                    ? repoCalculator.ComputeNetOfVat(envirogasFreightSum)
+                                                    : envirogasFreightSum;
                                                 var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                                                 var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
                                                 var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
@@ -2273,6 +2351,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalCommissionAmount = 0m;
                 var totalNetMarginPerLiter = 0m;
                 var totalNetMarginAmount = 0m;
+                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
                 #endregion
 
@@ -2348,18 +2427,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Variables and Formulas --
 
                     // calculate values, put in variables to be displayed per cell
+                    var isSupplierVatable = pr.PurchaseOrder!.VatType == SD.VatType_Vatable;
+                    var isHaulerVatable = pr.DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                    var isCustomerVatable = pr.DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
                     var volume = pr.QuantityReceived;
                     var cosPricePerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.DeliveredPrice ?? 0m; // sales per liter
                     var salesAmount = volume * cosPricePerLiter; // sales total
-                    var netSales = salesAmount / 1.12m;
+                    var netSales = isCustomerVatable
+                        ? repoCalculator.ComputeNetOfVat(salesAmount)
+                        : salesAmount;
                     var costAmount = pr.Amount; // purchase total
                     var costPerLiter = costAmount / volume; // purchase per liter
-                    var netPurchases = costAmount / 1.12m; // purchase total net
+                    var netPurchases = isSupplierVatable
+                        ? repoCalculator.ComputeNetOfVat(costAmount)
+                        : costAmount; // purchase total net
                     var gmAmount = netSales - netPurchases; // gross margin total
                     var gmPerLiter = gmAmount/volume; // gross margin per liter
                     var freightCharge = (pr.DeliveryReceipt?.Freight ?? 0m) + (pr.DeliveryReceipt?.ECC ?? 0m); // freight charge per liter
-                    var freightChargeAmount = volume * freightCharge; // freight charge total
-                    var freightChargeNet = freightChargeAmount / 1.12m;
+                    var freightChargeAmount = pr.DeliveryReceipt?.FreightAmount ?? 0m; // freight charge total
+                    var freightChargeNet = isHaulerVatable && freightChargeAmount != 0m
+                        ? repoCalculator.ComputeNetOfVat(freightChargeAmount)
+                        : freightChargeAmount;
                     var commissionPerLiter = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m; // commission rate
                     var commissionAmount = volume * commissionPerLiter; // commission total
                     var netMarginAmount = gmAmount - freightChargeNet - commissionAmount;
@@ -2370,15 +2458,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     #region -- Assign Values to Cells --
 
                     gmReportWorksheet.Cells[row, 1].Value = pr.Date;
-                    gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.Supplier?.SupplierName;
+                    gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.SupplierName;
                     gmReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.PurchaseOrderNo;
                     gmReportWorksheet.Cells[row, 4].Value = pr.ReceivingReportNo;
                     gmReportWorksheet.Cells[row, 5].Value = pr.DeliveryReceipt?.DeliveryReceiptNo;
-                    gmReportWorksheet.Cells[row, 6].Value = pr.DeliveryReceipt?.Customer?.CustomerName;
-                    gmReportWorksheet.Cells[row, 7].Value = pr.PurchaseOrder?.Product?.ProductName;
+                    gmReportWorksheet.Cells[row, 6].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.CustomerName;
+                    gmReportWorksheet.Cells[row, 7].Value = pr.PurchaseOrder?.ProductName;
                     gmReportWorksheet.Cells[row, 8].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.AccountSpecialist;
-                    gmReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.Hauler?.SupplierName;
-                    gmReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.Commissionee?.SupplierName;
+                    gmReportWorksheet.Cells[row, 9].Value = pr.DeliveryReceipt?.HaulerName;
+                    gmReportWorksheet.Cells[row, 10].Value = pr.DeliveryReceipt?.CustomerOrderSlip?.CommissioneeName;
                     gmReportWorksheet.Cells[row, 11].Value = volume;
                     gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
                     gmReportWorksheet.Cells[row, 13].Value = salesAmount;
@@ -2413,22 +2501,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalFcNet += freightChargeNet;
 
                     gmReportWorksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                    gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
-                    gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                     #endregion -- Add the values to total and format number cells --
 
@@ -2464,22 +2536,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells[row, 25].Value = totalNetMarginPerLiter;
                 gmReportWorksheet.Cells[row, 26].Value = totalNetMarginAmount;
 
-                gmReportWorksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
-                gmReportWorksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormat;
-                gmReportWorksheet.Cells[row, 26].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(11).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(12).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(13).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(14).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(15).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(16).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(17).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(18).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(19).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(20).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(21).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(22).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(23).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(24).Style.Numberformat.Format = currencyFormatTwoDecimal;
+                gmReportWorksheet.Column(25).Style.Numberformat.Format = currencyFormat;
+                gmReportWorksheet.Column(26).Style.Numberformat.Format = currencyFormatTwoDecimal;
 
                 #endregion -- Assign values of other totals and formatting of total cells --
 
@@ -2737,16 +2809,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var listForBiodiesel = list.Where(s => s.DeliveryReceipt!.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
                     var listForEconogas = list.Where(s => s.DeliveryReceipt!.PurchaseOrder!.Product?.ProductName == "ECONOGAS").ToList();
                     var listForEnvirogas = list.Where(s => s.DeliveryReceipt!.PurchaseOrder!.Product?.ProductName == "ENVIROGAS").ToList();
+                    var isSupplierVatable = list.Count > 0 && list.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                    var isHaulerVatable = list.Count > 0 && list.First().DeliveryReceipt?.HaulerVatType == SD.VatType_Vatable;
+                    var isCustomerVatable = list.Count > 0 && list.First().DeliveryReceipt?.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
 
                     // Computation for Overall
                     var overallQuantitySum = list.Sum(s => s.DeliveryReceipt!.Quantity);
                     var overallSalesSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                    var overallNetOfSalesSum = overallSalesSum != 0m ? overallSalesSum / 1.12m : 0;
+                    var overallNetOfSalesSum = isCustomerVatable && overallSalesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(overallSalesSum)
+                        : overallSalesSum;
                     var overallPurchasesSum = list.Sum(s => s.Amount);
-                    var overallNetOfPurchasesSum = overallPurchasesSum != 0m ? overallPurchasesSum / 1.12m : 0;
+                    var overallNetOfPurchasesSum = isSupplierVatable && overallPurchasesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(overallPurchasesSum)
+                        : overallPurchasesSum;
                     var overallGrossMarginSum = overallNetOfSalesSum - overallNetOfPurchasesSum;
-                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                    var overallNetOfFreightSum = overallFreightSum != 0m ? overallFreightSum / 1.12m : 0;
+                    var overallFreightSum = list.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                    var overallNetOfFreightSum = isHaulerVatable && overallFreightSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(overallFreightSum)
+                        : overallFreightSum;
                     var overallCommissionSum = list.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var overallNetMarginSum = overallGrossMarginSum - (overallFreightSum + overallCommissionSum);
                     var overallNetMarginPerLiterSum = overallNetMarginSum != 0 && overallQuantitySum != 0 ? overallNetMarginSum / overallQuantitySum : 0;
@@ -2773,12 +2854,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Computation for Biodiesel
                     var biodieselQuantitySum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity);
                     var biodieselSalesSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                    var biodieselNetOfSalesSum = biodieselSalesSum != 0m ? biodieselSalesSum / 1.12m : 0;
+                    var biodieselNetOfSalesSum = isCustomerVatable && biodieselSalesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(biodieselSalesSum)
+                        : biodieselSalesSum;
                     var biodieselPurchasesSum = listForBiodiesel.Sum(s => s.Amount);
-                    var biodieselNetOfPurchasesSum = biodieselPurchasesSum != 0m ? biodieselPurchasesSum / 1.12m : 0;
+                    var biodieselNetOfPurchasesSum = isSupplierVatable && biodieselPurchasesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(biodieselPurchasesSum)
+                        : biodieselPurchasesSum;
                     var biodieselGrossMarginSum = biodieselNetOfSalesSum - biodieselNetOfPurchasesSum;
-                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                    var biodieselNetOfFreightSum = biodieselFreightSum != 0m ? biodieselFreightSum / 1.12m : 0;
+                    var biodieselFreightSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                    var biodieselNetOfFreightSum = isHaulerVatable && biodieselFreightSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(biodieselFreightSum)
+                        : biodieselFreightSum;
                     var biodieselCommissionSum = listForBiodiesel.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt.CustomerOrderSlip!.CommissionRate);
                     var biodieselNetMarginSum = biodieselGrossMarginSum - (biodieselFreightSum + biodieselCommissionSum);
                     var biodieselNetMarginPerLiterSum = biodieselNetMarginSum != 0 && biodieselQuantitySum != 0 ? biodieselNetMarginSum / biodieselQuantitySum : 0;
@@ -2804,12 +2891,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Computation for Econogas
                     var econogasQuantitySum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity);
                     var econogasSalesSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt.CustomerOrderSlip!.DeliveredPrice);
-                    var econogasNetOfSalesSum = econogasSalesSum != 0m ? econogasSalesSum / 1.12m : 0;
+                    var econogasNetOfSalesSum = isCustomerVatable && econogasSalesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(econogasSalesSum)
+                        : econogasSalesSum;
                     var econogasPurchasesSum = listForEconogas.Sum(s => s.Amount);
-                    var econogasNetOfPurchasesSum = econogasPurchasesSum != 0m ? econogasPurchasesSum / 1.12m : 0;
+                    var econogasNetOfPurchasesSum = isSupplierVatable && econogasPurchasesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(econogasPurchasesSum)
+                        : econogasPurchasesSum;
                     var econogasGrossMarginSum = econogasNetOfSalesSum - econogasNetOfPurchasesSum;
-                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                    var econogasNetOfFreightSum = econogasFreightSum != 0m ? econogasFreightSum / 1.12m : 0;
+                    var econogasFreightSum = listForEconogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                    var econogasNetOfFreightSum = isHaulerVatable && econogasFreightSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(econogasFreightSum)
+                        : econogasFreightSum;
                     var econogasCommissionSum = listForEconogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var econogasNetMarginSum = econogasGrossMarginSum - (econogasFreightSum + econogasCommissionSum);
                     var econogasNetMarginPerLiterSum = econogasNetMarginSum != 0 && econogasQuantitySum != 0 ? econogasNetMarginSum / econogasQuantitySum : 0;
@@ -2835,12 +2928,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Computation for Envirogas
                     var envirogasQuantitySum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity);
                     var envirogasSalesSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.DeliveredPrice);
-                    var envirogasNetOfSalesSum = envirogasSalesSum != 0m ? envirogasSalesSum / 1.12m : 0;
+                    var envirogasNetOfSalesSum = isCustomerVatable && envirogasSalesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(envirogasSalesSum)
+                        : envirogasSalesSum;
                     var envirogasPurchasesSum = listForEnvirogas.Sum(s => s.Amount);
-                    var envirogasNetOfPurchasesSum = envirogasPurchasesSum != 0m ? envirogasPurchasesSum / 1.12m : 0;
+                    var envirogasNetOfPurchasesSum = isSupplierVatable && envirogasPurchasesSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(envirogasPurchasesSum)
+                        : envirogasPurchasesSum;
                     var envirogasGrossMarginSum = envirogasNetOfSalesSum - envirogasNetOfPurchasesSum;
-                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * (s.DeliveryReceipt.Freight + s.DeliveryReceipt.ECC));
-                    var envirogasNetOfFreightSum = envirogasFreightSum != 0m ? envirogasFreightSum / 1.12m : 0;
+                    var envirogasFreightSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.FreightAmount);
+                    var envirogasNetOfFreightSum = isHaulerVatable && envirogasFreightSum != 0m
+                        ? repoCalculator.ComputeNetOfVat(envirogasFreightSum)
+                        : envirogasFreightSum;
                     var envirogasCommissionSum = listForEnvirogas.Sum(s => s.DeliveryReceipt!.Quantity * s.DeliveryReceipt!.CustomerOrderSlip!.CommissionRate);
                     var envirogasNetMarginSum = envirogasGrossMarginSum - (envirogasFreightSum + envirogasCommissionSum);
                     var envirogasNetMarginPerLiterSum = envirogasNetMarginSum != 0 && envirogasQuantitySum != 0 ? envirogasNetMarginSum / envirogasQuantitySum : 0;
@@ -2988,10 +3087,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 gmReportWorksheet.Cells.AutoFitColumns();
                 gmReportWorksheet.View.FreezePanes(8, 1);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"GM Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"GM_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -3169,6 +3269,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var grandTotalEndingGross = 0m;
                                 var grandTotalEndingEwt = 0m;
                                 var grandTotalEndingNetAmount = 0m;
+                                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
 
                                 #endregion
 
@@ -3177,21 +3278,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 foreach (var rr in receivingReports)
                                 {
                                     bool isStart = true;
+                                    var isSupplierTaxable = rr.First().PurchaseOrder!.TaxType == SD.TaxType_WithTax;
+                                    var isSupplierVatable = rr.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
 
                                     //BEGINNING
                                     var subTotalBeginningVolume = rr.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.QuantityReceived);
                                     var subTotalBeginningGross = rr.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.Amount);
-                                    var subTotalBeginningEwt = (subTotalBeginningGross / 1.12m) * 0.01m;
+                                    var subTotalBeginningNetOfVat = isSupplierVatable
+                                        ? repoCalculator.ComputeNetOfVat(subTotalBeginningGross)
+                                        : subTotalBeginningGross;
+                                    var subTotalBeginningEwt = isSupplierTaxable
+                                        ? repoCalculator.ComputeEwtAmount(subTotalBeginningNetOfVat, 0.01m)
+                                        : 0m;
                                     var subTotalBeginningNetAmount = subTotalBeginningGross - subTotalBeginningEwt;
                                     //PURCHASES
                                     var subTotalPurchaseVolume = rr.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.QuantityReceived);
                                     var subTotalPurchaseGross = rr.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.Amount);
-                                    var subTotalPurchaseEwt = (subTotalPurchaseGross / 1.12m) * 0.01m;
+                                    var subTotalPurchaseNetOfVat = isSupplierVatable && subTotalPurchaseGross != 0
+                                        ? repoCalculator.ComputeNetOfVat(subTotalPurchaseGross)
+                                        : subTotalPurchaseGross;
+                                    var subTotalPurchaseEwt = isSupplierTaxable && subTotalPurchaseNetOfVat != 0
+                                        ? repoCalculator.ComputeEwtAmount(subTotalPurchaseNetOfVat, 0.01m)
+                                        : 0m;
                                     var subTotalPurchaseNetAmount = subTotalPurchaseGross - subTotalPurchaseEwt;
                                     //PAYMENT
                                     var subTotalPaymentVolume = rr.Where(x => x.IsPaid).Sum(x => x.QuantityReceived);
                                     var subTotalPaymentGross = rr.Where(x => x.IsPaid).Sum(x => x.Amount);
-                                    var subTotalPaymentEwt = (subTotalPaymentGross / 1.12m) * 0.01m;
+                                    var subTotalPaymentNetOfVat = isSupplierVatable && subTotalPaymentGross != 0
+                                        ? repoCalculator.ComputeNetOfVat(subTotalPaymentGross)
+                                        : subTotalPaymentGross;
+                                    var subTotalPaymentEwt = isSupplierTaxable && subTotalPaymentNetOfVat != 0
+                                        ? repoCalculator.ComputeEwtAmount(subTotalPaymentNetOfVat, 0.01m)
+                                        : 0m;
                                     var subTotalPaymentNetAmount = subTotalPaymentGross - subTotalPaymentEwt;
                                     //ENDING BALANCE
                                     var subTotalEndingVolume = (subTotalBeginningVolume + subTotalPurchaseVolume) - subTotalPaymentVolume;
@@ -3206,17 +3324,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         //BEGINNING
                                         var beginningVolume = item.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.QuantityReceived);
                                         var beginningGross = item.Where(x => !x.IsPaid && x.Date < model.DateTo).Sum(x => x.Amount);
-                                        var beginningEwt = (beginningGross / 1.12m) * 0.01m;
+                                        var beginningNetOfVat = isSupplierVatable && beginningGross != 0
+                                            ? repoCalculator.ComputeNetOfVat(beginningGross)
+                                            : beginningGross;
+                                        var beginningEwt = isSupplierTaxable && beginningNetOfVat != 0
+                                            ? repoCalculator.ComputeEwtAmount(beginningNetOfVat, 0.01m)
+                                            : 0m;
                                         var beginningNetAmount = beginningGross - beginningEwt;
                                         //PURCHASES
                                         var purchaseVolume = item.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.QuantityReceived);
                                         var purchaseGross = item.Where(x => !x.IsPaid && x.Date == model.DateTo).Sum(x => x.Amount);
-                                        var purchaseEwt = (purchaseGross / 1.12m) * 0.01m;
+                                        var purchaseNetOfVat = isSupplierVatable && purchaseGross != 0
+                                            ? repoCalculator.ComputeNetOfVat(purchaseGross)
+                                            : purchaseGross;
+                                        var purchaseEwt = isSupplierTaxable && purchaseNetOfVat != 0
+                                            ? repoCalculator.ComputeEwtAmount(purchaseNetOfVat, 0.01m)
+                                            : 0m;
                                         var purchaseNetAmount = purchaseGross - purchaseEwt;
                                         //PAYMENT
                                         var paymentVolume = item.Where(x => x.IsPaid).Sum(x => x.QuantityReceived);
                                         var paymentGross = item.Where(x => x.IsPaid).Sum(x => x.Amount);
-                                        var paymentEwt = (paymentGross / 1.12m) * 0.01m;
+                                        var paymentNetOfVat = isSupplierVatable && paymentGross != 0
+                                            ? repoCalculator.ComputeNetOfVat(paymentGross)
+                                            : paymentGross;
+                                        var paymentEwt = isSupplierTaxable && paymentNetOfVat != 0
+                                            ? repoCalculator.ComputeEwtAmount(paymentNetOfVat, 0.01m)
+                                            : 0m;
                                         var paymentNetAmount = paymentGross - paymentEwt;
                                         //ENDING BALANCE
                                         var endingVolume = (beginningVolume + purchaseVolume) - paymentVolume;
@@ -3506,6 +3639,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var grandTotalEwtEnding = 0m;
                 var grandTotalNetEnding = 0m;
 
+                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
+
                 #endregion
 
                 // loop for each month
@@ -3535,6 +3670,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         // write the name of supplier
                         var supplierName = supplier.FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName ?? "";
+                        var isSupplierVatable = supplier.First().PurchaseOrder!.VatType == SD.VatType_Vatable;
+                        var isSupplierTaxable = supplier.First().PurchaseOrder!.TaxType == SD.TaxType_WithTax;
                         worksheet.Cells[row, 2].Value = supplierName;
                         var whichPayment = string.Empty;
                         var forPayment = false;
@@ -3600,7 +3737,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         .Where(rr => rr.PurchaseOrder?.Supplier?.SupplierName == supplier
                                             .FirstOrDefault()?.PurchaseOrder?.Supplier?.SupplierName)
                                         .Sum(rr => rr.QuantityReceived);
-                                    var ewt = gross / 1.12m * 0.01m;
+                                    var netOfVat = isSupplierVatable
+                                        ? repoCalculator.ComputeNetOfVat(gross)
+                                        : gross;
+                                    var ewt = isSupplierTaxable
+                                        ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                        : 0m;
                                     var net = gross - ewt;
 
                                     worksheet.Cells[row, i * 5-1].Value = volume;
@@ -3816,10 +3958,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Column(13).Width = 1;
                 worksheet.Column(18).Width = 1;
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Trade Payable Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Trade_Payable_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
 
             }
             catch (Exception ex)
@@ -3832,5 +3975,761 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion -- Generate AP Trade Report --
+
+        [HttpGet]
+        public IActionResult ApReport()
+        {
+            return View();
+        }
+
+        #region -- Generate Ap Report Excel File --
+
+        [HttpPost]
+        public async Task<IActionResult> ApReportExcelFile(DateOnly monthYear, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (monthYear == default)
+                {
+                    TempData["error"] = "Please enter a valid month";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                // string currencyFormat = "#,##0.0000";
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                // fetch for this month and back
+                var apReport = await _unitOfWork.FilprideReport.GetApReport(monthYear, companyClaims, cancellationToken);
+
+                if (apReport.Count == 0)
+                {
+                    TempData["error"] = "No Record Found";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                #region == TOPSHEET ==
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+
+                var worksheet = package.Workbook.Worksheets.Add("TOPSHEET");
+                worksheet.Cells.Style.Font.Name = "Calibri";
+
+                worksheet.Cells[1, 2].Value = "Summary of Purchases";
+                worksheet.Cells[1, 2].Style.Font.Bold = true;
+                worksheet.Cells[2, 2].Value = $"AP Monitoring Report for the month of {monthYear.ToString("MMMM")} {monthYear.Year}";
+                worksheet.Cells[3, 2].Value = "Filpride Resources, Inc.";
+                worksheet.Cells[1, 2, 3, 2].Style.Font.Size = 14;
+
+                worksheet.Cells[5, 2].Value = "SUPPLIER";
+                worksheet.Cells[5, 3].Value = "BUYER";
+                worksheet.Cells[5, 4].Value = "PRODUCT";
+                worksheet.Cells[5, 5].Value = "PAYMENT TERMS";
+                worksheet.Cells[5, 6].Value = "ORIGINAL PO VOLUME";
+                worksheet.Cells[5, 7].Value = "UNLIFTED LAST MONTH";
+                worksheet.Cells[5, 8].Value = "LIFTED THIS MONTH";
+                worksheet.Cells[5, 9].Value = "UNLIFTED THIS MONTH";
+                worksheet.Cells[5, 10].Value = "PRICE(VAT-EX)";
+                worksheet.Cells[5, 11].Value = "PRICE (VAT-INC)";
+                worksheet.Cells[5, 12].Value = "GROSS AMOUNT";
+                worksheet.Cells[5, 13].Value = "EWT";
+                worksheet.Cells[5, 14].Value = "NET OF EWT";
+
+                using (var range = worksheet.Cells[5, 2, 5, 14])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255,204,172));
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+
+                worksheet.Row(5).Height = 36;
+
+                var groupBySupplier = apReport
+                    .OrderBy(po => po.Date)
+                    .ThenBy(po => po.PurchaseOrderNo)
+                    .GroupBy(po => po.Supplier)
+                    .ToList();
+
+                int row = 5;
+                decimal originalPoGrandTotalBiodiesel = 0m;
+                decimal originalPoGrandTotalEconogas = 0m;
+                decimal originalPoGrandTotalEnvirogas = 0m;
+                decimal unliftedLastMonthGrandTotalBiodiesel = 0m;
+                decimal unliftedLastMonthGrandTotalEconogas = 0m;
+                decimal unliftedLastMonthGrandTotalEnvirogas = 0m;
+                decimal liftedThisMonthGrandTotalBiodiesel = 0m;
+                decimal liftedThisMonthGrandTotalEconogas = 0m;
+                decimal liftedThisMonthGrandTotalEnvirogas = 0m;
+                decimal unliftedThisMonthGrandTotalBiodiesel = 0m;
+                decimal unliftedThisMonthGrandTotalEconogas = 0m;
+                decimal unliftedThisMonthGrandTotalEnvirogas = 0m;
+                decimal grossAmountGrandTotalBiodiesel = 0m;
+                decimal grossAmountGrandTotalEconogas = 0m;
+                decimal grossAmountGrandTotalEnvirogas = 0m;
+                decimal ewtGrandTotalBiodiesel = 0m;
+                decimal ewtGrandTotalEconogas = 0m;
+                decimal ewtGrandTotalEnvirogas = 0m;
+                var repoCalculator = _unitOfWork.FilpridePurchaseOrder;
+
+                string[] productList = ["BIODIESEL", "ECONOGAS", "ENVIROGAS"];
+
+                foreach (var sameSupplierGroup in groupBySupplier)
+                {
+                    var isVatable = sameSupplierGroup.First().VatType == SD.VatType_Vatable;
+                    var isTaxable = sameSupplierGroup.First().TaxType == SD.TaxType_WithTax;
+                    row += 2;
+                    worksheet.Cells[row, 2].Value = sameSupplierGroup.First().Supplier!.SupplierName;
+                    worksheet.Cells[row, 2].Style.Font.Bold = true;
+                    worksheet.Cells[row, 3].Value = sameSupplierGroup.First().Company;
+                    var groupByProduct = sameSupplierGroup
+                        .GroupBy(po => po.Product)
+                        .OrderBy(po => po.Key?.ProductName)
+                        .ToList();
+                    decimal poSubtotal = 0m;
+                    decimal unliftedLastMonthSubtotal = 0m;
+                    decimal liftedThisMonthSubtotal = 0m;
+                    decimal unliftedThisMonthSubtotal = 0m;
+                    decimal grossAmountSubtotal = 0m;
+                    decimal ewtAmountSubtotal = 0m;
+                    decimal tempForGrandTotal = 0m;
+
+                    foreach (var product in productList)
+                    {
+                        // declare per product
+                        var aGroupByProduct = groupByProduct
+                            .FirstOrDefault(g => g.Key?.ProductName == product);
+                        worksheet.Cells[row, 4].Value = product;
+                        worksheet.Cells[row, 5].Value = groupByProduct.FirstOrDefault()?.FirstOrDefault()?.Supplier?.SupplierTerms;
+
+                        // get the necessary values from po, separate it by variable
+                        if (aGroupByProduct != null)
+                        {
+                            if (aGroupByProduct.Sum(po => po.Quantity) != 0m)
+                            {
+                                // original po volume
+                                decimal allPoTotal = 0m;
+                                decimal unliftedLastMonth = 0m;
+                                decimal liftedThisMonth = 0m;
+                                decimal unliftedThisMonth = 0m;
+                                decimal grossOfLiftedThisMonth = 0m;
+
+                                foreach (var po in aGroupByProduct)
+                                {
+                                    decimal rrQtyForUnliftedLastMonth = 0m;
+                                    decimal rrQtyForLiftedThisMonth = 0m;
+                                    decimal currentPoQuantity = po.Quantity;
+                                    allPoTotal += currentPoQuantity;
+
+                                    if (po.ReceivingReports!.Count != 0)
+                                    {
+                                        foreach (var rr in po.ReceivingReports)
+                                        {
+                                            if (rr.Date < monthYear)
+                                            {
+                                                rrQtyForUnliftedLastMonth += rr.QuantityReceived;
+                                            }
+                                            else if (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                            {
+                                                rrQtyForLiftedThisMonth += rr.QuantityReceived;
+                                                grossOfLiftedThisMonth += rr.Amount;
+                                            }
+                                        }
+                                    }
+
+                                    unliftedLastMonth += currentPoQuantity - rrQtyForUnliftedLastMonth;
+                                    liftedThisMonth += rrQtyForLiftedThisMonth;
+                                    unliftedThisMonth += currentPoQuantity - rrQtyForUnliftedLastMonth - rrQtyForLiftedThisMonth;
+                                }
+
+                                if (allPoTotal != 0m)
+                                {
+                                    poSubtotal += allPoTotal;
+                                    tempForGrandTotal += allPoTotal;
+                                }
+
+                                // operations per product
+                                var netOfVat = isVatable
+                                    ? repoCalculator.ComputeNetOfVat(grossOfLiftedThisMonth)
+                                    : grossOfLiftedThisMonth;
+                                var ewt = isTaxable
+                                    ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                    : 0m;
+
+                                // WRITE ORIGINAL PO VOLUME
+                                worksheet.Cells[row, 6].Value = allPoTotal;
+                                worksheet.Cells[row, 6].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                                // WRITE UNLIFTED LAST MONTH
+                                if (unliftedLastMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 7].Value = unliftedLastMonth;
+                                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 7].Value = 0m;
+                                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // WRITE LIFTED THIS MONTH
+                                if (liftedThisMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 8].Value = liftedThisMonth;
+                                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 8].Value = 0m;
+                                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // WRITE UNLIFTED THIS MONTH
+                                if (unliftedThisMonth != 0m)
+                                {
+                                    worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 9].Value = 0m;
+                                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                }
+
+                                // operations for grandtotals
+                                switch (product)
+                                {
+                                    case "BIODIESEL":
+                                        unliftedLastMonthGrandTotalBiodiesel += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalBiodiesel += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalBiodiesel += unliftedThisMonth;
+                                        grossAmountGrandTotalBiodiesel += grossOfLiftedThisMonth;
+                                        ewtGrandTotalBiodiesel += ewt;
+                                        break;
+                                    case "ECONOGAS":
+                                        unliftedLastMonthGrandTotalEconogas += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalEconogas += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalEconogas += unliftedThisMonth;
+                                        grossAmountGrandTotalEconogas += grossOfLiftedThisMonth;
+                                        ewtGrandTotalEconogas += ewt;
+                                        break;
+                                    case "ENVIROGAS":
+                                        unliftedLastMonthGrandTotalEnvirogas += unliftedLastMonth;
+                                        liftedThisMonthGrandTotalEnvirogas += liftedThisMonth;
+                                        unliftedThisMonthGrandTotalEnvirogas += unliftedThisMonth;
+                                        grossAmountGrandTotalEnvirogas += grossOfLiftedThisMonth;
+                                        ewtGrandTotalEnvirogas += ewt;
+                                        break;
+                                }
+
+                                // operations for subtotals
+                                unliftedLastMonthSubtotal += unliftedLastMonth;
+                                liftedThisMonthSubtotal += liftedThisMonth;
+                                unliftedThisMonthSubtotal += unliftedThisMonth;
+                                grossAmountSubtotal += grossOfLiftedThisMonth;
+                                ewtAmountSubtotal += ewt;
+
+                                // write per product: price, gross, ewt, net
+                                var price = grossOfLiftedThisMonth / liftedThisMonth;
+                                var priceNetOfVat = isVatable
+                                    ? repoCalculator.ComputeNetOfVat(price)
+                                    : price;
+
+                                worksheet.Cells[row, 10].Value = priceNetOfVat;
+                                worksheet.Cells[row, 11].Value = price;
+                                worksheet.Cells[row, 12].Value = grossOfLiftedThisMonth;
+                                worksheet.Cells[row, 13].Value = ewt;
+                                worksheet.Cells[row, 14].Value = grossOfLiftedThisMonth - ewt;
+                                using var range = worksheet.Cells[row, 10, row, 14];
+                                range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            }
+                        }
+
+                        switch (product)
+                        {
+                            case "BIODIESEL":
+                                originalPoGrandTotalBiodiesel += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
+                                break;
+                            case "ECONOGAS":
+                                originalPoGrandTotalEconogas += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
+                                break;
+                            case "ENVIROGAS":
+                                originalPoGrandTotalEnvirogas += tempForGrandTotal;
+                                tempForGrandTotal = 0m;
+                                break;
+
+                        }
+
+                        row++;
+                    }
+
+                    worksheet.Cells[row, 3].Value = "SUB-TOTAL";
+                    worksheet.Cells[row, 4].Value = "ALL PRODUCTS";
+                    worksheet.Cells[row, 6].Value = poSubtotal;
+                    worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
+                    worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
+                    worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                    if (liftedThisMonthSubtotal != 0)
+                    {
+                        var price = grossAmountSubtotal / liftedThisMonthSubtotal;
+                        var priceNetOfVat = isVatable
+                            ? repoCalculator.ComputeNetOfVat(price)
+                            : price;
+                        worksheet.Cells[row, 10].Value = priceNetOfVat;
+                        worksheet.Cells[row, 11].Value = price;
+                        worksheet.Cells[row, 12].Value = grossAmountSubtotal;
+                        worksheet.Cells[row, 13].Value = ewtAmountSubtotal;
+                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtAmountSubtotal;
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, 10].Value = 0m;
+                        worksheet.Cells[row, 11].Value = 0m;
+                        worksheet.Cells[row, 12].Value = 0m;
+                        worksheet.Cells[row, 13].Value = 0m;
+                        worksheet.Cells[row, 14].Value = 0m;
+                    }
+
+                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+
+                    using (var range = worksheet.Cells[row, 3, row, 14])
+                    {
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        range.Style.Font.Bold = true;
+                    }
+                }
+
+                row += 2;
+                worksheet.Cells[row, 2].Value = "ALL SUPPLIERS";
+                worksheet.Cells[row, 2].Style.Font.Bold = true;
+                worksheet.Cells[row, 3].Value = "FILPRIDE";
+
+                decimal finalPo = originalPoGrandTotalBiodiesel + originalPoGrandTotalEconogas + originalPoGrandTotalEnvirogas;
+                decimal finalUnliftedLastMonth = unliftedLastMonthGrandTotalBiodiesel + unliftedLastMonthGrandTotalEconogas + originalPoGrandTotalEnvirogas;
+                decimal finalLiftedThisMonth = liftedThisMonthGrandTotalBiodiesel + liftedThisMonthGrandTotalEconogas + liftedThisMonthGrandTotalEnvirogas;
+                decimal finalUnliftedThisMonth = unliftedThisMonthGrandTotalBiodiesel + unliftedThisMonthGrandTotalEconogas + unliftedThisMonthGrandTotalEnvirogas;
+                decimal finalGross = grossAmountGrandTotalBiodiesel + grossAmountGrandTotalEconogas + grossAmountGrandTotalEnvirogas;
+                decimal finalEwt = ewtGrandTotalBiodiesel + ewtGrandTotalEconogas + ewtGrandTotalEnvirogas;
+
+                foreach (var product in productList)
+                {
+                    worksheet.Cells[row, 4].Value = product;
+                    worksheet.Cells[row, 5].Value = "ALL TERMS";
+
+                    switch (product)
+                    {
+                        case "BIODIESEL":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalBiodiesel;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalBiodiesel;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalBiodiesel;
+                            if (liftedThisMonthGrandTotalBiodiesel != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalBiodiesel / liftedThisMonthGrandTotalBiodiesel;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalBiodiesel;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalBiodiesel;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalBiodiesel - ewtGrandTotalBiodiesel;
+                            break;
+                        case "ECONOGAS":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEconogas;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEconogas;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEconogas;
+                            if (liftedThisMonthGrandTotalEconogas != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEconogas / liftedThisMonthGrandTotalEconogas;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEconogas;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalEconogas;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEconogas - ewtGrandTotalEconogas;
+                            break;
+                        case "ENVIROGAS":
+                            worksheet.Cells[row, 6].Value = originalPoGrandTotalEnvirogas;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotalEnvirogas;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotalEnvirogas;
+                            if (liftedThisMonthGrandTotalEnvirogas != 0)
+                            {
+                                worksheet.Cells[row, 10].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas / 1.12m;
+                                worksheet.Cells[row, 11].Value = grossAmountGrandTotalEnvirogas / liftedThisMonthGrandTotalEnvirogas;
+                            }
+                            else
+                            {
+                                worksheet.Cells[row, 10].Value = 0m;
+                                worksheet.Cells[row, 11].Value = 0m;
+                            }
+                            worksheet.Cells[row, 12].Value = grossAmountGrandTotalEnvirogas;
+                            worksheet.Cells[row, 13].Value = ewtGrandTotalEnvirogas;
+                            worksheet.Cells[row, 14].Value = grossAmountGrandTotalEnvirogas - ewtGrandTotalEnvirogas;
+                            break;
+                    }
+
+                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    row++;
+                }
+
+                // final total
+                worksheet.Cells[row, 3].Value = "GRAND-TOTAL";
+                worksheet.Cells[row, 4].Value = "ALL PRODUCTS";
+                worksheet.Cells[row, 6].Value = finalPo;
+                worksheet.Cells[row, 7].Value = finalUnliftedLastMonth;
+                worksheet.Cells[row, 8].Value = finalLiftedThisMonth;
+                worksheet.Cells[row, 9].Value = finalUnliftedThisMonth;
+                if (finalLiftedThisMonth != 0)
+                {
+                    worksheet.Cells[row, 10].Value = finalGross / finalLiftedThisMonth / 1.12m;
+                    worksheet.Cells[row, 11].Value = finalGross / finalLiftedThisMonth;
+                    worksheet.Cells[row, 12].Value = finalGross;
+                    worksheet.Cells[row, 13].Value = finalEwt;
+                    worksheet.Cells[row, 14].Value = finalGross - finalEwt;
+                }
+                else
+                {
+                    worksheet.Cells[row, 10].Value = 0m;
+                    worksheet.Cells[row, 11].Value = 0m;
+                    worksheet.Cells[row, 12].Value = 0m;
+                    worksheet.Cells[row, 13].Value = 0m;
+                    worksheet.Cells[row, 14].Value = 0m;
+                }
+
+                using (var range = worksheet.Cells[row, 6, row, 14])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                using (var range = worksheet.Cells[row, 3, row, 14])
+                {
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Font.Bold = true;
+                }
+
+                row += 6;
+                worksheet.Cells[row, 2].Value = "Prepared by:";
+                worksheet.Cells[row, 5].Value = "Approved by:";
+                worksheet.Cells[row, 8].Value = "Acknowledged by:";
+                worksheet.Cells[row, 11].Value = "Received by:";
+                row += 3;
+                worksheet.Cells[row, 2].Value = "";
+                worksheet.Cells[row, 5].Value = "";
+                worksheet.Cells[row, 8].Value = "";
+                worksheet.Cells[row, 11].Value = "";
+                using (var range = worksheet.Cells[row, 1, row, 11])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.UnderLine = true;
+                }
+                row++;
+                worksheet.Cells[row, 2].Value = "Pricing Specialist";
+                worksheet.Cells[row, 5].Value = "Operations Manager";
+                worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+                worksheet.Cells[row, 11].Value = "Finance Manager";
+
+                worksheet.Columns.AutoFit();
+                worksheet.Column(1).Width = 8;
+                worksheet.Column(2).Width = 30;
+
+                #endregion == TOPSHEET ==
+
+                #region == BY SUPPLIER ==
+
+                foreach (var aGroupBySupplier in groupBySupplier)
+                {
+                    var firstRecord = aGroupBySupplier.FirstOrDefault();
+                    var isVatable = firstRecord!.VatType == SD.VatType_Vatable;
+                    var isTaxable = firstRecord.TaxType == SD.TaxType_WithTax;
+                    DateOnly monthYearTemp = new DateOnly(monthYear.Year, monthYear.Month, 1);
+                    DateOnly lastDayOfMonth = monthYearTemp.AddDays(-1);
+                    var poGrandTotal = 0m;
+                    var unliftedLastMonthGrandTotal = 0m;
+                    var liftedThisMonthGrandTotal = 0m;
+                    var unliftedThisMonthGrandTotal = 0m;
+                    var grossAmountGrandTotal = 0m;
+                    var ewtGrandTotal = 0m;
+
+                    worksheet = package.Workbook.Worksheets.Add(firstRecord.Supplier!.SupplierName);
+                    worksheet.Cells.Style.Font.Name = "Calibri";
+                    worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord.Supplier!.SupplierName}";
+                    worksheet.Cells[2, 1].Value = "AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
+                    worksheet.Cells[3, 1].Value = "REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
+                    worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
+                    worksheet.Cells[5, 1].Value = $"DUE DATE: {lastDayOfMonth.ToString("MMMM dd, yyyy")}";
+                    worksheet.Cells[1, 1, 5, 1].Style.Font.Bold = true;
+                    row = 8;
+                    var groupByProduct = aGroupBySupplier.GroupBy(po => po.Product!.ProductName).ToList();
+
+                    foreach (var product in productList)
+                    {
+                        var aGroupByProduct = groupByProduct
+                            .FirstOrDefault(g => g.FirstOrDefault()!.Product!.ProductName == product);
+
+                        if (aGroupByProduct == null)
+                        {
+                            continue;
+                        }
+
+                        var poSubtotal = 0m;
+                        var unliftedLastMonthSubtotal = 0m;
+                        var liftedThisMonthSubtotal = 0m;
+                        var unliftedThisMonthSubtotal = 0m;
+                        var grossAmountSubtotal = 0m;
+                        var ewtSubtotal = 0m;
+
+                        worksheet.Cells[row, 1].Value = "PO#";
+                        worksheet.Cells[row, 2].Value = "DATE";
+                        worksheet.Cells[row, 3].Value = "PRODUCT";
+                        worksheet.Cells[row, 4].Value = "PORT";
+                        worksheet.Cells[row, 5].Value = "REFERENCE MOPS";
+                        worksheet.Cells[row, 6].Value = "ORIGINAL PO VOLUME";
+                        worksheet.Cells[row, 7].Value = "UNLIFTED LAST MONTH";
+                        worksheet.Cells[row, 8].Value = "LIFTED THIS MONTH";
+                        worksheet.Cells[row, 9].Value = "UNLIFTED THIS MONTH";
+                        worksheet.Cells[row, 10].Value = "PRICE(VAT-EX)";
+                        worksheet.Cells[row, 11].Value = "PRICE(VAT-INC)";
+                        worksheet.Cells[row, 12].Value = "GROSS AMOUNT(VAT-INC)";
+                        worksheet.Cells[row, 13].Value = "EWT";
+                        worksheet.Cells[row, 14].Value = "NET OF EWT";
+
+                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        {
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            range.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                            range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255,204,172));
+                            range.Style.Font.Bold = true;
+                        }
+
+                        worksheet.Row(row).Height = 36;
+                        row++;
+
+                        foreach(var po in aGroupByProduct)
+                        {
+                            // computing the cells variables
+                            var poTotal = po.Quantity;
+                            var grossAmount = 0m;
+                            var unliftedLastMonth = 0m;
+                            var liftedThisMonthRrQty = 0m;
+                            var unliftedThisMonth = 0m;
+
+                            if (po.ReceivingReports!.Count != 0)
+                            {
+                                var liftedLastMonthRrQty = po.ReceivingReports
+                                    .Where(rr => rr.Date < monthYear)
+                                    .Sum(rr => rr.QuantityReceived);
+
+                                unliftedLastMonth = poTotal - liftedLastMonthRrQty;
+
+                                var liftedThisMonth = po.ReceivingReports
+                                    .Where(rr => rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year)
+                                    .ToList();
+
+                                liftedThisMonthRrQty = liftedThisMonth.Sum(x => x.QuantityReceived);
+
+                                unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
+                                grossAmount += liftedThisMonth.Sum(x => x.Amount);
+                            }
+
+                            var netOfVat = isVatable
+                                ? repoCalculator.ComputeNetOfVat(grossAmount)
+                                : grossAmount;
+                            var ewt = isTaxable
+                                ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                : 0m;
+
+                            // incrementing subtotals
+                            poSubtotal += poTotal;
+                            unliftedLastMonthSubtotal += unliftedLastMonth;
+                            liftedThisMonthSubtotal += liftedThisMonthRrQty;
+                            unliftedThisMonthSubtotal += unliftedThisMonth;
+                            grossAmountSubtotal += grossAmount;
+                            ewtSubtotal += ewt;
+
+                            // writing the values to cells
+                            worksheet.Cells[row, 1].Value = po.PurchaseOrderNo;
+                            worksheet.Cells[row, 2].Value = po.Date.ToString("MM/dd/yyyy");
+                            worksheet.Cells[row, 3].Value = po.Product!.ProductName;
+                            worksheet.Cells[row, 4].Value = po.PickUpPoint!.Depot;
+                            worksheet.Cells[row, 5].Value = po.TriggerDate != default ? $"TRIGGER {po.TriggerDate.ToString("MM.dd.yyyy")}" : "UNDETERMINED";
+                            worksheet.Cells[row, 6].Value = poTotal;
+                            worksheet.Cells[row, 7].Value = unliftedLastMonth;
+                            worksheet.Cells[row, 8].Value = liftedThisMonthRrQty;
+                            worksheet.Cells[row, 9].Value = unliftedThisMonth;
+                            worksheet.Cells[row, 10].Value = isVatable
+                                ? repoCalculator.ComputeNetOfVat(po.FinalPrice)
+                                : po.FinalPrice;
+                            worksheet.Cells[row, 11].Value = po.FinalPrice;
+                            worksheet.Cells[row, 12].Value = grossAmount;
+                            worksheet.Cells[row, 13].Value = ewt;
+                            worksheet.Cells[row, 14].Value = grossAmount - ewt;
+
+                            using (var range = worksheet.Cells[row, 6, row, 14])
+                            {
+                                range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                            }
+
+                            row++;
+                        }
+
+                        // incrementing grandtotals
+                        poGrandTotal += poSubtotal;
+                        unliftedLastMonthGrandTotal += unliftedLastMonthSubtotal;
+                        liftedThisMonthGrandTotal += liftedThisMonthSubtotal;
+                        unliftedThisMonthGrandTotal += unliftedThisMonthSubtotal;
+                        grossAmountGrandTotal += grossAmountSubtotal;
+                        ewtGrandTotal += ewtSubtotal;
+
+                        worksheet.Cells[row, 2].Value = "SUB-TOTAL";
+                        worksheet.Cells[row, 6].Value = poSubtotal;
+                        worksheet.Cells[row, 7].Value = unliftedLastMonthSubtotal;
+                        worksheet.Cells[row, 8].Value = liftedThisMonthSubtotal;
+                        worksheet.Cells[row, 9].Value = unliftedThisMonthSubtotal;
+                        if (liftedThisMonthSubtotal != 0)
+                        {
+                            var price = grossAmountSubtotal / liftedThisMonthSubtotal;
+                            var priceNetOfVat = isVatable
+                                ? repoCalculator.ComputeNetOfVat(price)
+                                : price;
+                            worksheet.Cells[row, 10].Value = priceNetOfVat;
+                            worksheet.Cells[row, 11].Value = price;
+                        }
+                        worksheet.Cells[row, 12].Value = grossAmountSubtotal;
+                        worksheet.Cells[row, 13].Value = ewtSubtotal;
+                        worksheet.Cells[row, 14].Value = grossAmountSubtotal - ewtSubtotal;
+
+                        using (var range = worksheet.Cells[row, 3, row, 5])
+                        {
+                            range.Merge = true;
+                            range.Value = product;
+                            range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        }
+                        using (var range = worksheet.Cells[row, 6, row, 14])
+                        {
+                            range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        }
+                        using (var range = worksheet.Cells[row, 1, row, 14])
+                        {
+                            range.Style.Font.Bold = true;
+                            range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                        }
+
+                        row += 2;
+                    }
+
+                    worksheet.Cells[row, 2].Value = "GRAND-TOTAL";
+                    worksheet.Cells[row, 6].Value = poGrandTotal;
+                    worksheet.Cells[row, 7].Value = unliftedLastMonthGrandTotal;
+                    worksheet.Cells[row, 8].Value = liftedThisMonthGrandTotal;
+                    worksheet.Cells[row, 9].Value = unliftedThisMonthGrandTotal;
+                    if (liftedThisMonthGrandTotal != 0)
+                    {
+                        var price = grossAmountGrandTotal / liftedThisMonthGrandTotal;
+                        var priceNetOfVat = isVatable
+                            ? repoCalculator.ComputeNetOfVat(price)
+                            : price;
+                        worksheet.Cells[row, 10].Value = priceNetOfVat;
+                        worksheet.Cells[row, 11].Value = price;
+                    }
+                    worksheet.Cells[row, 12].Value = grossAmountGrandTotal;
+                    worksheet.Cells[row, 13].Value = ewtGrandTotal;
+                    worksheet.Cells[row, 14].Value = grossAmountGrandTotal - ewtGrandTotal;
+
+                    using (var range = worksheet.Cells[row, 3, row, 5])
+                    {
+                        range.Merge = true;
+                        range.Value = "ALL PRODUCTS";
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    using (var range = worksheet.Cells[row, 6, row, 14])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+                    using (var range = worksheet.Cells[row, 1, row, 14])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    }
+
+
+                    row += 6;
+                    worksheet.Cells[row, 1].Value = "Note:   Volume paid is the volume recorded in the Purchase Journal Report.";
+                    row += 3;
+                    worksheet.Cells[row, 1].Value = "Prepared by:";
+                    worksheet.Cells[row, 5].Value = "Approved by:";
+                    worksheet.Cells[row, 8].Value = "Acknowledged by:";
+                    row += 2;
+                    worksheet.Cells[row, 1].Value = "";
+                    worksheet.Cells[row, 5].Value = "";
+                    worksheet.Cells[row, 8].Value = "";
+                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Font.UnderLine = true;
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+                    row++;
+                    worksheet.Cells[row, 1].Value = "Pricing Specialist";
+                    worksheet.Cells[row, 5].Value = "Operations Manager";
+                    worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+                    using (var range = worksheet.Cells[row, 1, row, 8])
+                    {
+                        range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    }
+
+                    worksheet.Columns.AutoFit();
+                    worksheet.Column(1).Width = 14;
+                }
+
+                #endregion == BY SUPPLIER ==
+
+                var fileName = $"AP_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                return RedirectToAction(nameof(ApReport));
+            }
+        }
+
+        #endregion
     }
 }

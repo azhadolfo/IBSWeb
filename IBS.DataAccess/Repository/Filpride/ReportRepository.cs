@@ -486,12 +486,20 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, string company, CancellationToken cancellationToken = default)
         {
             var purchaseOrders = await _db.FilpridePurchaseOrders
-                .Include(po => po.ReceivingReports)
+                .Include(po => po.ReceivingReports!.Where(rr =>
+                    rr.Status == nameof(Status.Posted) &&
+                    (rr.Date < monthYear ||
+                     (rr.Date.Year == monthYear.Year && rr.Date.Month <= monthYear.Month))))
                 .Include(po => po.Product)
                 .Include(po => po.Supplier)
                 .Include(po => po.PickUpPoint)
-                .Where(po => (po.Date.Month == monthYear.Month && po.Date.Year == monthYear.Year && po.Status == "Posted") ||
-                            po.ReceivingReports!.Any(rr => (rr.Date.Month == monthYear.Month && rr.Date.Year == monthYear.Year) && rr.Status == "Posted"))
+                .Where(po => po.Date.Month == monthYear.Month &&
+                             po.Date.Year == monthYear.Year &&
+                             po.Status == nameof(Status.Posted) &&
+                             po.ReceivingReports!.Any(rr =>
+                                 rr.Status == nameof(Status.Posted) &&
+                                 (rr.Date < monthYear ||
+                                  (rr.Date.Year == monthYear.Year && rr.Date.Month <= monthYear.Month))))
                 .OrderBy(po => po.Date)
                 .ThenBy(po => po.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);

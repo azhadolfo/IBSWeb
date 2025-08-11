@@ -220,7 +220,7 @@ namespace IBS.DataAccess.Repository
         {
             if (grossAmount == 0)
             {
-                throw new ArgumentException("Gross amount cannot be zero.");
+                return grossAmount;
             }
 
             return grossAmount / (1 + VatRate);
@@ -228,11 +228,6 @@ namespace IBS.DataAccess.Repository
 
         public decimal ComputeVatAmount(decimal netOfVatAmount)
         {
-            if (netOfVatAmount == 0)
-            {
-                throw new ArgumentException("Net of vat amount cannot be negative or zero.");
-            }
-
             return netOfVatAmount * VatRate;
         }
 
@@ -271,31 +266,11 @@ namespace IBS.DataAccess.Repository
 
         public decimal ComputeEwtAmount(decimal netOfVatAmount, decimal percent)
         {
-            if (netOfVatAmount == 0)
-            {
-                throw new ArgumentException("Net of vat amount cannot be zero.");
-            }
-
-            if (percent == 0)
-            {
-                throw new ArgumentException("Ewt percent cannot be zero.");
-            }
-
             return netOfVatAmount * percent;
         }
 
         public decimal ComputeNetOfEwt(decimal grossAmount, decimal ewtAmount)
         {
-            if (grossAmount == 0)
-            {
-                throw new ArgumentException("Gross amount cannot be zero.");
-            }
-
-            if (ewtAmount == 0)
-            {
-                throw new ArgumentException("Ewt amount cannot be zero.");
-            }
-
             return grossAmount - ewtAmount;
         }
 
