@@ -24,7 +24,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(12)")]
         public string? SVNo { get; set; }
 
-        [ForeignKey("ServiceInvoiceId")]
+        [ForeignKey(nameof(ServiceInvoiceId))]
         public MobilityServiceInvoice? ServiceInvoice { get; set; }
 
         //Customer Property

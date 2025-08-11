@@ -36,7 +36,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [StringLength(13)]
         public string? SVNo { get; set; }
 
-        [ForeignKey("ServiceInvoiceId")]
+        [ForeignKey(nameof(ServiceInvoiceId))]
         public FilprideServiceInvoice? ServiceInvoice { get; set; }
 
         [ForeignKey(nameof(CustomerId))]

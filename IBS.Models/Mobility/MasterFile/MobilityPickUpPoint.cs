@@ -21,7 +21,7 @@ namespace IBS.Models.Mobility.MasterFile
 
         public int SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public MobilitySupplier? Supplier { get; set; }
 
         [Column(TypeName = "varchar(50)")]

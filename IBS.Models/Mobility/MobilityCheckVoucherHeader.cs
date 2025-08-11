@@ -40,7 +40,7 @@ namespace IBS.Models.Mobility
         [Display(Name = "Supplier Id")]
         public int? SupplierId { get; set; }
 
-        [ForeignKey("SupplierId")]
+        [ForeignKey(nameof(SupplierId))]
         public MobilitySupplier? Supplier { get; set; }
 
         [NotMapped]
@@ -63,7 +63,7 @@ namespace IBS.Models.Mobility
         [Display(Name = "Bank Account Name")]
         public int? BankId { get; set; }
 
-        [ForeignKey("BankId")]
+        [ForeignKey(nameof(BankId))]
         public MobilityBankAccount? BankAccount { get; set; }
 
         [Display(Name = "Check #")]
@@ -161,7 +161,7 @@ namespace IBS.Models.Mobility
 
         public int? EmployeeId { get; set; }
 
-        [ForeignKey("EmployeeId")]
+        [ForeignKey(nameof(EmployeeId))]
         public MobilityStationEmployee? Employee { get; set; }
 
         public string Address { get; set; }

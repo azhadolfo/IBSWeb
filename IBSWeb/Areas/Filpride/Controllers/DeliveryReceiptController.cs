@@ -933,6 +933,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(DRStatus.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
+                model.ManualDrNo += "x";
                 await _unitOfWork.FilprideDeliveryReceipt.DeductTheVolumeToCos(model.CustomerOrderSlipId,
                     model.Quantity, cancellationToken);
                 await _unitOfWork.FilprideDeliveryReceipt.UpdatePreviousAppointedSupplierAsync(model);
