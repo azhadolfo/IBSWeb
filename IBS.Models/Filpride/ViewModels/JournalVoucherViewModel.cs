@@ -22,7 +22,7 @@ namespace IBS.Models.Filpride.ViewModels
         [Display(Name = "CV Id")]
         public int? CVId { get; set; }
 
-        [ForeignKey("CVId")]
+        [ForeignKey(nameof(CVId))]
         public FilprideCheckVoucherHeader? CheckVoucherHeader { get; set; }
 
         [NotMapped]
