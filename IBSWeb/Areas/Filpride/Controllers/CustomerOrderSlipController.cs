@@ -542,19 +542,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // If the new array has value
                 if (viewModel.ArrayOfFileNames != "[]")
                 {
-                    thereIsNewFile = true;
                     var arrayOfFileNames = JsonSerializer.Deserialize<string[]>(viewModel.ArrayOfFileNames!);
 
                     if (existingRecord.UploadedFiles != null) // If the old record has value
                     {
                         foreach (var existingFile in existingRecord.UploadedFiles!) // Filter out the files that does not exist in the new array
                         {
-                            if (arrayOfFileNames!.Any(x =>
-                                    x.Equals(existingFile, StringComparison.OrdinalIgnoreCase))) // If the old value is in the new array, keep it; else delete it and its file
+                            if (arrayOfFileNames != null && arrayOfFileNames[0] != null)
                             {
-                                continue;
+                                if (arrayOfFileNames!.Any(x =>
+                                        x.Equals(existingFile, StringComparison.OrdinalIgnoreCase))) // If the old value is in the new array, keep it; else delete it and its file
+                                {
+                                    continue;
+                                }
                             }
 
+                            thereIsNewFile = true;
                             await _cloudStorageService.DeleteFileAsync(existingFile);
                             existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray();
                         }
@@ -565,6 +568,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // If there is new file uploads detected
                     if (viewModel.UploadedFiles != null)
                     {
+                        thereIsNewFile = true;
                         // Loop through all the names
                         foreach (var newFile in arrayOfFileNames!)
                         {
