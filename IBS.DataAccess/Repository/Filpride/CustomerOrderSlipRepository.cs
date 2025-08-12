@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Filpride.IRepository;
 using IBS.Models.Filpride.Books;
@@ -73,7 +74,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task UpdateAsync(CustomerOrderSlipViewModel viewModel, CancellationToken cancellationToken = default)
+        public async Task UpdateAsync(CustomerOrderSlipViewModel viewModel, bool thereIsNewFile, CancellationToken cancellationToken = default)
         {
             var existingRecord = await GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId,
                 cancellationToken) ?? throw new NullReferenceException("CustomerOrderSlip not found");
@@ -131,7 +132,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 existingRecord.CustomerTin = branch.BranchTin;
             }
 
-            if (_db.ChangeTracker.HasChanges())
+            if (_db.ChangeTracker.HasChanges() || thereIsNewFile)
             {
                 existingRecord.EditedBy = viewModel.CurrentUser;
                 existingRecord.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
