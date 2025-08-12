@@ -537,12 +537,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 //     return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
                 // }
 
+                var thereIsNewFile = false;
+
                 // If the new array has value
                 if (viewModel.ArrayOfFileNames != "[]")
                 {
+                    thereIsNewFile = true;
                     var arrayOfFileNames = JsonSerializer.Deserialize<string[]>(viewModel.ArrayOfFileNames!);
 
-                    if (existingRecord.UploadedFiles?.Length != 0) // If the old record has value
+                    if (existingRecord.UploadedFiles != null) // If the old record has value
                     {
                         foreach (var existingFile in existingRecord.UploadedFiles!) // Filter out the files that does not exist in the new array
                         {
@@ -566,8 +569,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         foreach (var newFile in arrayOfFileNames!)
                         {
                             // If the name is not in the old array: it is a new file. So rename it, upload it, and add it to old array
-                            if (existingRecord.UploadedFiles!.Any(x =>
-                                    x.Equals(newFile, StringComparison.Ordinal)))
+                            if ((existingRecord.UploadedFiles ?? Enumerable.Empty<string>())
+                                .Any(x => x.Equals(newFile, StringComparison.Ordinal)))
                             {
                                 continue;
                             }
@@ -579,9 +582,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             // Upload the new file
                             await _cloudStorageService.UploadFileAsync(file, fileName);
                             // Add the new file into the old array
-                            var tempList = existingRecord.UploadedFiles?.ToList(); // Convert array to list
-                            tempList?.Add(fileName); // Add new file name
-                            existingRecord.UploadedFiles = tempList?.ToArray();
+                            List<string> tempList = existingRecord.UploadedFiles?.ToList() ?? new List<string>();
+                            tempList.Add(fileName);
+                            existingRecord.UploadedFiles = tempList.ToArray();
                         }
                     }
                 }
@@ -678,8 +681,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     changes.Add("Freight was updated.");
                 }
+                if (thereIsNewFile)
+                {
+                    changes.Add("Uploads changed.");
+                }
 
-                await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, cancellationToken);
+                await _unitOfWork.FilprideCustomerOrderSlip.UpdateAsync(viewModel, thereIsNewFile, cancellationToken);
 
                 if (changes.Count > 0 && existingRecord.Status != nameof(CosStatus.Created))
                 {

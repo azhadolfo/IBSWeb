@@ -615,11 +615,13 @@
                 let uploadedFiles = []; // Array to store all uploaded files
                 let enableUploadNewAttachment = true; // Used in condition to enable uploading, TEMPORARILY TRUE FOR DEBUGGING
 
-                uploadedFiles = fileInfos.map(fileInfo => fileInfo.FileName);
+                if(fileInfos !== null){
+                    uploadedFiles = fileInfos.map(fileInfo => fileInfo.FileName);
 
-                uploadedFiles.forEach(function(fileName, index) {
-                    displayExistingFileName(fileName);
-                });
+                    uploadedFiles.forEach(function(fileName, index) {
+                        displayExistingFileName(fileName);
+                    });
+                }
 
 
                 document.getElementById("arrayOfFileNames").value = JSON.stringify(uploadedFiles); // assign the array value to the input
