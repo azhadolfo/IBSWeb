@@ -500,7 +500,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --Saving default value
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettingsMultiple(model.CollectionReceiptNo!, model.MultipleSI!, model.Company, cancellationToken);
+                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo ?? "", model.Company, cancellationToken);
                 var offsetAmount = offset.Sum(o => o.Amount);
                 await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
 
@@ -766,7 +766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
                 // second is to apply the changes to new SI:
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettingsMultiple(existingModel.CollectionReceiptNo!, existingModel.MultipleSI!, existingModel.Company, cancellationToken);
+                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SINo ?? "", existingModel.Company, cancellationToken);
                 var offsetAmount = offset.Sum(o => o.Amount);
                 await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(existingModel.MultipleSI!, existingModel.SIMultipleAmount!, offsetAmount, cancellationToken);
 
@@ -1865,10 +1865,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (model.SalesInvoiceId != null)
                 {
                     offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
-                }
-                if (model.MultipleSIId != null)
-                {
-                    offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettingsMultiple(model.CollectionReceiptNo!, model.MultipleSI!, model.Company, cancellationToken);
                 }
                 else
                 {

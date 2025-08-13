@@ -81,22 +81,6 @@ namespace IBS.DataAccess.Repository.Filpride
             return result;
         }
 
-        public async Task<List<FilprideOffsettings>> GetOffsettingsMultiple(string source, string[] references, string company, CancellationToken cancellationToken = default)
-        {
-            var result = new List<FilprideOffsettings>();
-
-            foreach (var reference in references)
-            {
-                var offsettings = await _db.FilprideOffsettings
-                    .Where(o => o.Company == company && o.Source == source && o.Reference == reference)
-                    .ToListAsync(cancellationToken);
-
-                result.AddRange(offsettings);
-            }
-
-            return result;
-        }
-
         public async Task PostAsync(FilprideCollectionReceipt collectionReceipt, List<FilprideOffsettings> offsettings, CancellationToken cancellationToken = default)
         {
             var ledgers = new List<FilprideGeneralLedgerBook>();
