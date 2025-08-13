@@ -310,8 +310,10 @@
                                 $('select[name="Terms"]').val(data.terms).change();
                                 $('input[name="StationCode"]').val(data.stationCode);
 
-                                // Populate Branches dropdown using fetched data
-                                populateBranches(data.branches);
+                                if (!isInitialize){
+                                    // Populate Branches dropdown using fetched data
+                                    populateBranches(data.branches);
+                                }
 
                                 updateTermsEditability(data.hasMultipleTerms);
 
