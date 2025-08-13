@@ -66,7 +66,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? CurrentUser { get; set; }
 
         [StringLength(50)]
-        public string OtcCosNo { get; set; }
+        public string OtcCosNo { get; set; } = String.Empty;
 
         public string? Status { get; set; }
 
