@@ -1252,7 +1252,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var stream = new MemoryStream();
                 await package.SaveAsAsync(stream, cancellationToken);
                 stream.Position = 0;
-                var fileName = $"DispatchReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var fileName = $"Dispatch_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
                 return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
@@ -1418,17 +1418,27 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     var overallTotalQuantity = 0m;
                                     var overallTotalAmount = 0m;
 
+                                    var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
+
                                 #endregion
 
                                 #region -- Loop to Show Records
 
                                     foreach (var record in sales)
                                     {
+                                        var isCustomerVatable = record.DeliveryReceipt.CustomerOrderSlip?.VatType == SD.VatType_Vatable;
+                                        var isHaulerVatable = record.DeliveryReceipt.HaulerVatType == SD.VatType_Vatable;
                                         var quantity = record.DeliveryReceipt.Quantity;
-                                        var freight = record.DeliveryReceipt.Freight * quantity;
-                                        var freightNetOfVat = freight / 1.12m;
-                                        var salesNetOfVat = record.DeliveryReceipt.TotalAmount != 0 ? record.DeliveryReceipt.TotalAmount / 1.12m : 0;
-                                        var vat = salesNetOfVat * .12m;
+                                        var freight = record.DeliveryReceipt.FreightAmount;
+                                        var freightNetOfVat = isHaulerVatable
+                                            ? repoCalculator.ComputeNetOfVat(freight)
+                                            : freight;
+                                        var salesNetOfVat = isCustomerVatable
+                                            ? repoCalculator.ComputeNetOfVat(record.DeliveryReceipt.TotalAmount)
+                                            : record.DeliveryReceipt.TotalAmount;
+                                        var vat = isCustomerVatable
+                                            ? repoCalculator.ComputeVatAmount(salesNetOfVat)
+                                            : 0m;
 
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.DeliveredDate?.ToString(SD.Date_Format));
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.Customer?.CustomerName);
@@ -1791,14 +1801,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalFreightNetOfVat = 0m;
                 var totalCommissionRate = 0m;
                 var totalVat = 0m;
+                var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
+
                 foreach (var dr in salesReport)
                 {
-                    var quantity = dr.DeliveryReceipt.Quantity;
-                    var freightAmount = dr.DeliveryReceipt.Freight * quantity;
+                    var isCustomerVatable = dr.DeliveryReceipt.CustomerOrderSlip?.VatType == SD.VatType_Vatable;
+                    var isHaulerVatable = dr.DeliveryReceipt.HaulerVatType == SD.VatType_Vatable;
+                    var freightAmount = dr.DeliveryReceipt.FreightAmount;
                     var segment = dr.DeliveryReceipt.TotalAmount;
-                    var salesNetOfVat = segment != 0 ? segment / 1.12m : 0;
-                    var vat = salesNetOfVat * .12m;
-                    var freightNetOfVat = freightAmount / 1.12m;
+                    var salesNetOfVat = isCustomerVatable ? repoCalculator.ComputeNetOfVat(segment) : segment;
+                    var vat = isCustomerVatable ? repoCalculator.ComputeVatAmount(salesNetOfVat) : 0m;
+                    var freightNetOfVat = isHaulerVatable ? repoCalculator.ComputeNetOfVat(freightAmount) : freightAmount;
 
                     worksheet.Cells[row, 1].Value = dr.DeliveryReceipt.DeliveredDate;
                     worksheet.Cells[row, 2].Value = dr.DeliveryReceipt.Customer?.CustomerName;
@@ -2175,10 +2188,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 3);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"SalesReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Sales_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -2970,9 +2984,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     worksheet.Cells.AutoFitColumns();
 
-                    var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                    return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Collection Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                    var fileName = $"Collection_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                    var stream = new MemoryStream();
+                    await package.SaveAsAsync(stream, cancellationToken);
+                    stream.Position = 0;
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
                 }
                 catch (Exception ex)
                 {
@@ -3005,7 +3021,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims, cancellationToken);
+                    .GetAllAsync(si => si.PostedBy != null
+                                       && si.AmountPaid == 0
+                                       && !si.IsPaid && si.Company == companyClaims, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3140,27 +3158,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var totalSixtyOneToNinetyDays = 0m;
                                 var totalOverNinetyDays = 0m;
 
+                                var repoCalculator = _unitOfWork.FilprideSalesInvoice;
+
                                 foreach (var record in salesInvoice)
                                 {
 
                                     var gross = record.Amount;
-                                    decimal netDiscount = record.Amount - record.Discount;
-                                    decimal netOfVatAmount = record.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
-                                    decimal withHoldingTaxAmount = (record.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
-                                    decimal retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
-                                    decimal vcfAmount = 0.0000m;
-                                    decimal adjustedGross = gross - vcfAmount;
-                                    decimal adjustedNet = gross - vcfAmount - retentionAmount;
+                                    var netDiscount = record.Amount - record.Discount;
+                                    var netOfVatAmount = record.CustomerOrderSlip?.VatType == SD.VatType_Vatable
+                                        ? repoCalculator.ComputeNetOfVat(netDiscount)
+                                        : netDiscount;
+                                    var withHoldingTaxAmount = record.CustomerOrderSlip?.HasEWT ?? true
+                                        ? repoCalculator.ComputeEwtAmount(netDiscount, 0.01m)
+                                        : 0;
+                                    var retentionAmount = (record.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                                    var vcfAmount = 0.0000m;
+                                    var adjustedGross = gross - vcfAmount;
+                                    var adjustedNet = gross - vcfAmount - retentionAmount;
 
-                                    DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-                                    int daysDue = (today > record.DueDate) ? (today.DayNumber - record.DueDate.DayNumber) : 0;
+                                    var today = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+                                    var daysDue = today > record.DueDate ? today.DayNumber - record.DueDate.DayNumber : 0;
                                     var current = (record.DueDate >= today) ? gross : 0.0000m;
                                     var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
                                     var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
                                     var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
                                     var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString("MMM yyyy"));
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
                                     table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerTerms);
@@ -3272,9 +3296,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var companyClaims = await GetCompanyClaimAsync();
 
                 var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(
-                        si => si.PostedBy != null && si.AmountPaid == 0 && !si.IsPaid && si.Company == companyClaims,
-                        cancellationToken);
+                    .GetAllAsync(si => si.PostedBy != null
+                                       && si.AmountPaid == 0 && !si.IsPaid
+                                       && si.Company == companyClaims, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3355,32 +3379,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalThirtyOneToSixtyDays = 0m;
                 var totalSixtyOneToNinetyDays = 0m;
                 var totalOverNinetyDays = 0m;
+                var repoCalculator = _unitOfWork.FilprideSalesInvoice;
+
                 foreach (var si in salesInvoice)
                 {
                     var gross = si.Amount;
-                    decimal netDiscount = si.Amount - si.Discount;
-                    decimal netOfVatAmount =
-                        si.Customer?.VatType == SD.VatType_Vatable ? netDiscount / 1.12m : netDiscount;
-                    decimal withHoldingTaxAmount =
-                        (si.Customer?.WithHoldingTax ?? false) ? (netDiscount / 1.12m) * 0.01m : 0;
-                    decimal retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
-                    decimal vcfAmount = 0.0000m;
-                    decimal adjustedGross = gross - vcfAmount;
-                    decimal adjustedNet = gross - vcfAmount - retentionAmount;
+                    var netDiscount = si.Amount - si.Discount;
+                    var netOfVatAmount = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable
+                        ? repoCalculator.ComputeNetOfVat(netDiscount)
+                        : netDiscount;
+                    var withHoldingTaxAmount = si.CustomerOrderSlip?.HasEWT ?? true
+                        ? repoCalculator.ComputeEwtAmount(netDiscount, 0.01m)
+                        : 0;
+                    var retentionAmount = (si.Customer?.RetentionRate ?? 0.0000m) * netOfVatAmount;
+                    var vcfAmount = 0.0000m;
+                    var adjustedGross = gross - vcfAmount;
+                    var adjustedNet = gross - vcfAmount - retentionAmount;
 
-                    DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-                    int daysDue = (today > si.DueDate) ? (today.DayNumber - si.DueDate.DayNumber) : 0;
+                    var today = DateOnly.FromDateTime(DateTime.Today);
+                    var daysDue = (today > si.DueDate) ? (today.DayNumber - si.DueDate.DayNumber) : 0;
                     var current = (si.DueDate >= today) ? gross : 0.0000m;
                     var oneToThirtyDays = (daysDue >= 1 && daysDue <= 30) ? gross : 0.0000m;
                     var thirtyOneToSixtyDays = (daysDue >= 31 && daysDue <= 60) ? gross : 0.0000m;
                     var sixtyOneToNinetyDays = (daysDue >= 61 && daysDue <= 90) ? gross : 0.0000m;
                     var overNinetyDays = (daysDue > 90) ? gross : 0.0000m;
 
-                    worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("MMM");
+                    worksheet.Cells[row, 1].Value = si.TransactionDate.ToString("MMMM yyyy");
                     worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
                     worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
                     worksheet.Cells[row, 4].Value = si.Terms;
-                    worksheet.Cells[row, 5].Value = (si.Customer?.WithHoldingTax ?? false) ? "1" : "0";
+                    worksheet.Cells[row, 5].Value = si.Customer?.WithHoldingTax ?? false ? "1" : "0";
                     worksheet.Cells[row, 6].Value = si.TransactionDate;
                     worksheet.Cells[row, 7].Value = si.DueDate;
                     worksheet.Cells[row, 8].Value = si.SalesInvoiceNo;
@@ -3481,11 +3509,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 1);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"AgingReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Aging_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -3516,13 +3544,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var salesInvoice = await _dbContext.FilprideSalesInvoices
-                    .Where(si => si.PostedBy != null && si.Company == companyClaims)
-                    .Include(si => si.Product)
-                    .Include(si => si.Customer)
-                    .Include(si => si.DeliveryReceipt)
-                    .Include(si => si.CustomerOrderSlip)
-                    .ToListAsync(cancellationToken);
+                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.PostedBy != null && si.Company == companyClaims, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3647,27 +3670,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                             #region -- Loop to Show Records
 
-                                decimal totalQuantity = 0m;
-                                decimal totalFreight = 0m;
-                                decimal totalFreightPerLiter = 0m;
-                                decimal totalVatPerLiter = 0m;
-                                decimal totalVatAmount = 0m;
-                                decimal totalGrossAmount = 0m;
-                                decimal totalAmountPaid = 0m;
-                                decimal totalBalance = 0m;
-                                decimal totalEwtAmount = 0m;
-                                decimal totalEwtAmountPaid = 0m;
-                                decimal totalewtBalance = 0m;
+                                var totalQuantity = 0m;
+                                var totalFreight = 0m;
+                                var totalFreightPerLiter = 0m;
+                                var totalVatPerLiter = 0m;
+                                var totalVatAmount = 0m;
+                                var totalGrossAmount = 0m;
+                                var totalAmountPaid = 0m;
+                                var totalBalance = 0m;
+                                var totalEwtAmount = 0m;
+                                var totalEwtAmountPaid = 0m;
+                                var totalEwtBalance = 0m;
+                                var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
 
                                 foreach (var record in salesInvoice)
                                 {
-
-                                    var freight = record.DeliveryReceipt?.Freight * record.DeliveryReceipt?.Quantity;
+                                    var isVatable = (record.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) ==
+                                                    SD.VatType_Vatable;
+                                    var isTaxable = record.CustomerOrderSlip?.HasEWT ?? true;
+                                    var freight = record.DeliveryReceipt?.FreightAmount;
                                     var grossAmount = record.Amount;
-                                    var vatableAmount = grossAmount / 1.12m;
-                                    var vatAmount = vatableAmount * .12m;
-                                    var vatPerLiter = vatAmount * record.Quantity;
-                                    var ewtAmount = vatableAmount * .01m;
+                                    var netOfVat = isVatable
+                                        ? repoCalculator.ComputeNetOfVat(grossAmount)
+                                        : grossAmount;
+                                    var vatAmount = isVatable
+                                        ? repoCalculator.ComputeVatAmount(netOfVat)
+                                        : 0m;
+                                    var vatPerLiter = vatAmount / record.Quantity;
+                                    var ewtAmount = isTaxable
+                                        ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                        : 0m;
                                     var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
                                     var ewtBalance = ewtAmount - isEwtAmountPaid;
 
@@ -3707,7 +3739,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     totalBalance += record.Balance;
                                     totalEwtAmount += ewtAmount;
                                     totalEwtAmountPaid += isEwtAmountPaid;
-                                    totalewtBalance += ewtBalance;
+                                    totalEwtBalance += ewtBalance;
                                 }
 
                             #endregion
@@ -3729,7 +3761,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalBalance != 0 ? totalBalance < 0 ? $"({Math.Abs(totalBalance).ToString(SD.Two_Decimal_Format)})" : totalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(totalBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEwtAmount != 0 ? totalEwtAmount < 0 ? $"({Math.Abs(totalEwtAmount).ToString(SD.Two_Decimal_Format)})" : totalEwtAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalEwtAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEwtAmountPaid != 0 ? totalEwtAmountPaid < 0 ? $"({Math.Abs(totalEwtAmountPaid).ToString(SD.Two_Decimal_Format)})" : totalEwtAmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(totalEwtAmountPaid < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
-                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalewtBalance != 0 ? totalewtBalance < 0 ? $"({Math.Abs(totalewtBalance).ToString(SD.Two_Decimal_Format)})" : totalewtBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(totalewtBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalEwtBalance != 0 ? totalEwtBalance < 0 ? $"({Math.Abs(totalEwtBalance).ToString(SD.Two_Decimal_Format)})" : totalEwtBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(totalEwtBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                             #endregion
 
@@ -3786,13 +3818,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var salesInvoice = await _dbContext.FilprideSalesInvoices
-                    .Where(si => si.PostedBy != null && si.Company == companyClaims)
-                    .Include(si => si.Product)
-                    .Include(si => si.Customer)
-                    .Include(si => si.DeliveryReceipt)
-                    .Include(si => si.CustomerOrderSlip)
-                    .ToListAsync(cancellationToken);
+                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
+                    .GetAllAsync(si => si.PostedBy != null && si.Company == companyClaims, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3873,16 +3900,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalBalance = 0m;
                 var totalEwtAmount = 0m;
                 var totalEwtAmountPaid = 0m;
-                var totalewtBalance = 0m;
+                var totalEwtBalance = 0m;
+                var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
 
                 foreach (var si in salesInvoice)
                 {
+                    var isVatable = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable;
+                    var isTaxable = si.CustomerOrderSlip?.HasEWT ?? true;
                     var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
                     var grossAmount = si.Amount;
-                    var vatableAmount = grossAmount / 1.12m;
-                    var vatAmount = vatableAmount * .12m;
-                    var vatPerLiter = vatAmount * si.Quantity;
-                    var ewtAmount = vatableAmount * .01m;
+                    var netOfVat = isVatable
+                        ? repoCalculator.ComputeNetOfVat(grossAmount)
+                        : grossAmount;
+                    var vatAmount = isVatable ? repoCalculator.ComputeVatAmount(netOfVat) : 0m;
+                    var vatPerLiter = vatAmount / si.Quantity;
+                    var ewtAmount = isTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m) : 0m;
                     var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
                     var ewtBalance = ewtAmount - isEwtAmountPaid;
 
@@ -3939,7 +3971,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     totalBalance += si.Balance;
                     totalEwtAmount += ewtAmount;
                     totalEwtAmountPaid += isEwtAmountPaid;
-                    totalewtBalance += ewtBalance;
+                    totalEwtBalance += ewtBalance;
                 }
 
                 worksheet.Cells[row, 12].Value = "Total ";
@@ -3955,7 +3987,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 22].Value = totalBalance;
                 worksheet.Cells[row, 23].Value = totalEwtAmount;
                 worksheet.Cells[row, 24].Value = totalEwtAmountPaid;
-                worksheet.Cells[row, 25].Value = totalewtBalance;
+                worksheet.Cells[row, 25].Value = totalEwtBalance;
 
                 worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
@@ -3989,11 +4021,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 1);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    $"ArPerCustomerReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"AR_Per_Customer_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
@@ -4327,10 +4359,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells.AutoFitColumns();
                 worksheet.View.FreezePanes(8, 3);
 
-                // Convert the Excel package to a byte array
-                var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
-
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceReport_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                var fileName = $"Service_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
             catch (Exception ex)
             {
