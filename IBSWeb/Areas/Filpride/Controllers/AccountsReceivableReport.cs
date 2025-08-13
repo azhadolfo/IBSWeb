@@ -3525,9 +3525,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
         #endregion
 
         [HttpGet]
-        public IActionResult ArPerCustomer()
+        public async Task<IActionResult> ArPerCustomer()
         {
-            return View();
+            var companyClaims = await GetCompanyClaimAsync();
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            ViewModelBook viewmodel = new()
+            {
+                CustomerList = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims)
+            };
+
+            return View(viewmodel);
         }
 
         #region -- Generated AR Per Customer Report as Quest PDF
@@ -3544,8 +3555,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.PostedBy != null && si.Company == companyClaims, cancellationToken);
+                var salesInvoice = await _unitOfWork.FilprideReport
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3683,72 +3694,115 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 var totalEwtBalance = 0m;
                                 var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
 
-                                foreach (var record in salesInvoice)
+                                foreach (var groupByCustomer in salesInvoice.GroupBy(x => x.Customer))
                                 {
-                                    var isVatable = (record.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) ==
-                                                    SD.VatType_Vatable;
-                                    var isTaxable = record.CustomerOrderSlip?.HasEWT ?? true;
-                                    var freight = record.DeliveryReceipt?.FreightAmount;
-                                    var grossAmount = record.Amount;
-                                    var netOfVat = isVatable
-                                        ? repoCalculator.ComputeNetOfVat(grossAmount)
-                                        : grossAmount;
-                                    var vatAmount = isVatable
-                                        ? repoCalculator.ComputeVatAmount(netOfVat)
-                                        : 0m;
-                                    var vatPerLiter = vatAmount / record.Quantity;
-                                    var ewtAmount = isTaxable
-                                        ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
-                                        : 0m;
-                                    var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
-                                    var ewtBalance = ewtAmount - isEwtAmountPaid;
+                                    foreach (var record in groupByCustomer)
+                                    {
+                                        var isVatable = (record.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) ==
+                                                        SD.VatType_Vatable;
+                                        var isTaxable = record.CustomerOrderSlip?.HasEWT ?? true;
+                                        var freight = record.DeliveryReceipt?.FreightAmount;
+                                        var grossAmount = record.Amount;
+                                        var netOfVat = isVatable
+                                            ? repoCalculator.ComputeNetOfVat(grossAmount)
+                                            : grossAmount;
+                                        var vatAmount = isVatable
+                                            ? repoCalculator.ComputeVatAmount(netOfVat)
+                                            : 0m;
+                                        var vatPerLiter = vatAmount / record.Quantity;
+                                        var ewtAmount = isTaxable
+                                            ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m)
+                                            : 0m;
+                                        var isEwtAmountPaid = record.IsTaxAndVatPaid ? ewtAmount : 0m;
+                                        var ewtBalance = ewtAmount - isEwtAmountPaid;
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerTerms);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerPoNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.UnitPrice != 0 ? record.UnitPrice < 0 ? $"({Math.Abs(record.UnitPrice).ToString(SD.Four_Decimal_Format)})" : record.UnitPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(record.UnitPrice < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freight != 0 ? freight < 0 ? $"({Math.Abs((decimal)freight).ToString(SD.Two_Decimal_Format)})" : freight?.ToString(SD.Two_Decimal_Format) : null).FontColor(freight < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.DeliveryReceipt?.Freight != 0 ? record.DeliveryReceipt?.Freight < 0 ? $"({Math.Abs(record.DeliveryReceipt?.Freight ?? 0).ToString(SD.Four_Decimal_Format)})" : record.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveryReceipt?.Freight < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatPerLiter != 0 ? vatPerLiter < 0 ? $"({Math.Abs(vatPerLiter).ToString(SD.Two_Decimal_Format)})" : vatPerLiter.ToString(SD.Two_Decimal_Format) : null).FontColor(vatPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatAmount != 0 ? vatAmount < 0 ? $"({Math.Abs(vatAmount).ToString(SD.Two_Decimal_Format)})" : vatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(vatAmount < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(grossAmount != 0 ? grossAmount < 0 ? $"({Math.Abs(grossAmount).ToString(SD.Two_Decimal_Format)})" : grossAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(grossAmount < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AmountPaid != 0 ? record.AmountPaid < 0 ? $"({Math.Abs(record.AmountPaid).ToString(SD.Two_Decimal_Format)})" : record.AmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(record.AmountPaid < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Balance != 0 ? record.Balance < 0 ? $"({Math.Abs(record.Balance).ToString(SD.Two_Decimal_Format)})" : record.Balance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Balance < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtAmount != 0 ? ewtAmount < 0 ? $"({Math.Abs(ewtAmount).ToString(SD.Two_Decimal_Format)})" : ewtAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(ewtAmount < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(isEwtAmountPaid != 0 ? isEwtAmountPaid < 0 ? $"({Math.Abs(isEwtAmountPaid).ToString(SD.Two_Decimal_Format)})" : isEwtAmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(isEwtAmountPaid < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtBalance != 0 ? ewtBalance < 0 ? $"({Math.Abs(ewtBalance).ToString(SD.Two_Decimal_Format)})" : ewtBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(ewtBalance < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerTerms);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.TransactionDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DueDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoiceNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt?.DeliveryReceiptNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerPoNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CustomerOrderSlip?.CustomerOrderSlipNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Remarks);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductName);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Product?.ProductUnit);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.UnitPrice != 0 ? record.UnitPrice < 0 ? $"({Math.Abs(record.UnitPrice).ToString(SD.Four_Decimal_Format)})" : record.UnitPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(record.UnitPrice < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freight != 0 ? freight < 0 ? $"({Math.Abs((decimal)freight).ToString(SD.Two_Decimal_Format)})" : freight?.ToString(SD.Two_Decimal_Format) : null).FontColor(freight < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.DeliveryReceipt?.Freight != 0 ? record.DeliveryReceipt?.Freight < 0 ? $"({Math.Abs(record.DeliveryReceipt?.Freight ?? 0).ToString(SD.Four_Decimal_Format)})" : record.DeliveryReceipt?.Freight.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveryReceipt?.Freight < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatPerLiter != 0 ? vatPerLiter < 0 ? $"({Math.Abs(vatPerLiter).ToString(SD.Two_Decimal_Format)})" : vatPerLiter.ToString(SD.Two_Decimal_Format) : null).FontColor(vatPerLiter < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(vatAmount != 0 ? vatAmount < 0 ? $"({Math.Abs(vatAmount).ToString(SD.Two_Decimal_Format)})" : vatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(vatAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(grossAmount != 0 ? grossAmount < 0 ? $"({Math.Abs(grossAmount).ToString(SD.Two_Decimal_Format)})" : grossAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(grossAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.AmountPaid != 0 ? record.AmountPaid < 0 ? $"({Math.Abs(record.AmountPaid).ToString(SD.Two_Decimal_Format)})" : record.AmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(record.AmountPaid < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.Balance != 0 ? record.Balance < 0 ? $"({Math.Abs(record.Balance).ToString(SD.Two_Decimal_Format)})" : record.Balance.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Balance < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtAmount != 0 ? ewtAmount < 0 ? $"({Math.Abs(ewtAmount).ToString(SD.Two_Decimal_Format)})" : ewtAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(ewtAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(isEwtAmountPaid != 0 ? isEwtAmountPaid < 0 ? $"({Math.Abs(isEwtAmountPaid).ToString(SD.Two_Decimal_Format)})" : isEwtAmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(isEwtAmountPaid < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(ewtBalance != 0 ? ewtBalance < 0 ? $"({Math.Abs(ewtBalance).ToString(SD.Two_Decimal_Format)})" : ewtBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(ewtBalance < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    totalQuantity += record.Quantity;
-                                    totalFreight += freight ?? 0m;
-                                    totalFreightPerLiter += record.DeliveryReceipt?.Freight ?? 0m;
-                                    totalVatPerLiter += vatPerLiter;
-                                    totalVatAmount += vatAmount;
-                                    totalGrossAmount += grossAmount;
-                                    totalAmountPaid += record.AmountPaid;
-                                    totalBalance += record.Balance;
-                                    totalEwtAmount += ewtAmount;
-                                    totalEwtAmountPaid += isEwtAmountPaid;
-                                    totalEwtBalance += ewtBalance;
+                                        totalQuantity += record.Quantity;
+                                        totalFreight += freight ?? 0m;
+                                        totalFreightPerLiter += record.DeliveryReceipt?.Freight ?? 0m;
+                                        totalVatPerLiter += vatPerLiter;
+                                        totalVatAmount += vatAmount;
+                                        totalGrossAmount += grossAmount;
+                                        totalAmountPaid += record.AmountPaid;
+                                        totalBalance += record.Balance;
+                                        totalEwtAmount += ewtAmount;
+                                        totalEwtAmountPaid += isEwtAmountPaid;
+                                        totalEwtBalance += ewtBalance;
+                                    }
+
+                                    var subTotalQuantity = groupByCustomer.Sum(x => x.Quantity);
+
+                                    var isVatableSub = groupByCustomer.Select(x => x.CustomerOrderSlip?.VatType).FirstOrDefault();
+                                    var isTaxableSub = groupByCustomer.Select(x => x.CustomerOrderSlip?.HasEWT).FirstOrDefault();
+                                    var subTotalFreight = groupByCustomer.Sum(x => x.DeliveryReceipt?.FreightAmount) ?? 0m;
+                                    var subTotalFreightPerLiter = subTotalFreight != 0m && subTotalQuantity != 0m ? subTotalFreight / subTotalQuantity : 0m;
+                                    var subTotalGrossAmount = groupByCustomer.Sum(x => x.Amount);
+                                    var subTotalNetOfVat = isVatableSub == SD.VatType_Vatable
+                                        ? repoCalculator.ComputeNetOfVat(subTotalGrossAmount)
+                                        : subTotalGrossAmount;
+                                    var subTotalVatAmount = isVatableSub == SD.VatType_Vatable
+                                        ? repoCalculator.ComputeVatAmount(subTotalNetOfVat)
+                                        : 0m;
+                                    var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
+                                    var subTotalVatPerLiter = subTotalVatAmount / subTotalQuantity;
+                                    var subTotalEwtAmount = isTaxableSub == true
+                                        ? repoCalculator.ComputeEwtAmount(subTotalNetOfVat, 0.01m)
+                                        : 0m;
+                                    var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
+                                    var subTotalEwtBalance = subTotalEwtAmount - isEwtAmountPaidSub;
+                                    var subTotalUnitPrice = subTotalGrossAmount / subTotalQuantity;
+                                    var subTotalBalance = groupByCustomer.Sum(x => x.Balance);
+                                    var subTotalEwtAmountPaid = isEwtAmountPaidSub;
+
+                                    table.Cell().ColumnSpan(12).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("SUB TOTAL:").SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalQuantity != 0 ? subTotalQuantity < 0 ? $"({Math.Abs(subTotalQuantity).ToString(SD.Two_Decimal_Format)})" : subTotalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalUnitPrice != 0 ? subTotalUnitPrice < 0 ? $"({Math.Abs(subTotalUnitPrice).ToString(SD.Four_Decimal_Format)})" : subTotalUnitPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(subTotalUnitPrice < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalFreight != 0 ? subTotalFreight < 0 ? $"({Math.Abs(subTotalFreight).ToString(SD.Two_Decimal_Format)})" : subTotalFreight.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalFreight < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalFreightPerLiter != 0 ? subTotalFreightPerLiter < 0 ? $"({Math.Abs(subTotalFreightPerLiter).ToString(SD.Four_Decimal_Format)})" : subTotalFreightPerLiter.ToString(SD.Four_Decimal_Format) : null).FontColor(subTotalFreightPerLiter < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalVatPerLiter != 0 ? subTotalVatPerLiter < 0 ? $"({Math.Abs(subTotalVatPerLiter).ToString(SD.Two_Decimal_Format)})" : subTotalVatPerLiter.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalVatPerLiter < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalVatAmount != 0 ? subTotalVatAmount < 0 ? $"({Math.Abs(subTotalVatAmount).ToString(SD.Two_Decimal_Format)})" : subTotalVatAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalVatAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalGrossAmount != 0 ? subTotalGrossAmount < 0 ? $"({Math.Abs(subTotalGrossAmount).ToString(SD.Two_Decimal_Format)})" : subTotalGrossAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalGrossAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalAmountPaid != 0 ? subTotalAmountPaid < 0 ? $"({Math.Abs(subTotalAmountPaid).ToString(SD.Two_Decimal_Format)})" : subTotalAmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalAmountPaid < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalBalance != 0 ? subTotalBalance < 0 ? $"({Math.Abs(subTotalBalance).ToString(SD.Two_Decimal_Format)})" : subTotalBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEwtAmount != 0 ? subTotalEwtAmount < 0 ? $"({Math.Abs(subTotalEwtAmount).ToString(SD.Two_Decimal_Format)})" : subTotalEwtAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalEwtAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEwtAmountPaid != 0 ? subTotalEwtAmountPaid < 0 ? $"({Math.Abs(subTotalEwtAmountPaid).ToString(SD.Two_Decimal_Format)})" : subTotalEwtAmountPaid.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalEwtAmountPaid < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
+                                    table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(subTotalEwtBalance != 0 ? subTotalEwtBalance < 0 ? $"({Math.Abs(subTotalEwtBalance).ToString(SD.Two_Decimal_Format)})" : subTotalEwtBalance.ToString(SD.Two_Decimal_Format) : null).FontColor(subTotalEwtBalance < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 }
 
+                                totalFreightPerLiter = totalFreight != 0 && totalQuantity != 0 ? totalFreight / totalQuantity : 0m;
                             #endregion
 
                             #region -- Create Table Cell for Totals
 
                                 var unitPrice = totalGrossAmount / totalQuantity;
 
-                                table.Cell().ColumnSpan(12).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().ColumnSpan(12).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("GRAND TOTAL:").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalQuantity != 0 ? totalQuantity < 0 ? $"({Math.Abs(totalQuantity).ToString(SD.Two_Decimal_Format)})" : totalQuantity.ToString(SD.Two_Decimal_Format) : null).FontColor(totalQuantity < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f);
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(unitPrice != 0 ? unitPrice < 0 ? $"({Math.Abs(unitPrice).ToString(SD.Four_Decimal_Format)})" : unitPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(unitPrice < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
@@ -3818,8 +3872,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
-                var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                    .GetAllAsync(si => si.PostedBy != null && si.Company == companyClaims, cancellationToken);
+                var salesInvoice = await _unitOfWork.FilprideReport
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -3903,49 +3957,117 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var totalEwtBalance = 0m;
                 var repoCalculator = _unitOfWork.FilprideDeliveryReceipt;
 
-                foreach (var si in salesInvoice)
+                foreach (var groupByCustomer in salesInvoice.GroupBy(x => x.Customer))
                 {
-                    var isVatable = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable;
-                    var isTaxable = si.CustomerOrderSlip?.HasEWT ?? true;
-                    var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
-                    var grossAmount = si.Amount;
-                    var netOfVat = isVatable
-                        ? repoCalculator.ComputeNetOfVat(grossAmount)
-                        : grossAmount;
-                    var vatAmount = isVatable ? repoCalculator.ComputeVatAmount(netOfVat) : 0m;
-                    var vatPerLiter = vatAmount / si.Quantity;
-                    var ewtAmount = isTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m) : 0m;
-                    var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
-                    var ewtBalance = ewtAmount - isEwtAmountPaid;
+                    foreach (var si in groupByCustomer)
+                    {
+                        var isVatable = (si.CustomerOrderSlip?.VatType ?? SD.VatType_Vatable) == SD.VatType_Vatable;
+                        var isTaxable = si.CustomerOrderSlip?.HasEWT ?? true;
+                        var freight = si.DeliveryReceipt?.Freight * si.DeliveryReceipt?.Quantity;
+                        var grossAmount = si.Amount;
+                        var netOfVat = isVatable
+                            ? repoCalculator.ComputeNetOfVat(grossAmount)
+                            : grossAmount;
+                        var vatAmount = isVatable ? repoCalculator.ComputeVatAmount(netOfVat) : 0m;
+                        var vatPerLiter = vatAmount / si.Quantity;
+                        var ewtAmount = isTaxable ? repoCalculator.ComputeEwtAmount(netOfVat, 0.01m) : 0m;
+                        var isEwtAmountPaid = si.IsTaxAndVatPaid ? ewtAmount : 0m;
+                        var ewtBalance = ewtAmount - isEwtAmountPaid;
 
-                    worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
-                    worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
-                    worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
-                    worksheet.Cells[row, 4].Value = si.Terms;
-                    worksheet.Cells[row, 5].Value = si.TransactionDate;
-                    worksheet.Cells[row, 6].Value = si.DueDate;
-                    worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
-                    worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
-                    worksheet.Cells[row, 9].Value = si.CustomerOrderSlip?.CustomerPoNo;
-                    worksheet.Cells[row, 10].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
-                    worksheet.Cells[row, 11].Value = si.Remarks;
-                    worksheet.Cells[row, 12].Value = si.Product?.ProductName;
-                    worksheet.Cells[row, 13].Value = si.Quantity;
-                    worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
-                    worksheet.Cells[row, 15].Value = si.UnitPrice;
-                    worksheet.Cells[row, 16].Value = freight;
-                    worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
-                    worksheet.Cells[row, 18].Value = vatPerLiter;
-                    worksheet.Cells[row, 19].Value = vatAmount;
-                    worksheet.Cells[row, 20].Value = grossAmount;
-                    worksheet.Cells[row, 21].Value = si.AmountPaid;
-                    worksheet.Cells[row, 22].Value = si.Balance;
-                    worksheet.Cells[row, 23].Value = ewtAmount;
-                    worksheet.Cells[row, 24].Value = isEwtAmountPaid;
-                    worksheet.Cells[row, 25].Value = ewtBalance;
+                        worksheet.Cells[row, 1].Value = si.Customer?.CustomerCode;
+                        worksheet.Cells[row, 2].Value = si.Customer?.CustomerName;
+                        worksheet.Cells[row, 3].Value = si.Customer?.CustomerType;
+                        worksheet.Cells[row, 4].Value = si.Terms;
+                        worksheet.Cells[row, 5].Value = si.TransactionDate;
+                        worksheet.Cells[row, 6].Value = si.DueDate;
+                        worksheet.Cells[row, 7].Value = si.SalesInvoiceNo;
+                        worksheet.Cells[row, 8].Value = si.DeliveryReceipt?.DeliveryReceiptNo;
+                        worksheet.Cells[row, 9].Value = si.CustomerOrderSlip?.CustomerPoNo;
+                        worksheet.Cells[row, 10].Value = si.CustomerOrderSlip?.CustomerOrderSlipNo;
+                        worksheet.Cells[row, 11].Value = si.Remarks;
+                        worksheet.Cells[row, 12].Value = si.Product?.ProductName;
+                        worksheet.Cells[row, 13].Value = si.Quantity;
+                        worksheet.Cells[row, 14].Value = si.Product?.ProductUnit;
+                        worksheet.Cells[row, 15].Value = si.UnitPrice;
+                        worksheet.Cells[row, 16].Value = freight;
+                        worksheet.Cells[row, 17].Value = si.DeliveryReceipt?.Freight;
+                        worksheet.Cells[row, 18].Value = vatPerLiter;
+                        worksheet.Cells[row, 19].Value = vatAmount;
+                        worksheet.Cells[row, 20].Value = grossAmount;
+                        worksheet.Cells[row, 21].Value = si.AmountPaid;
+                        worksheet.Cells[row, 22].Value = si.Balance;
+                        worksheet.Cells[row, 23].Value = ewtAmount;
+                        worksheet.Cells[row, 24].Value = isEwtAmountPaid;
+                        worksheet.Cells[row, 25].Value = ewtBalance;
 
-                    worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 5].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
+                        worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 17].Style.Numberformat.Format = currencyFormat;
+                        worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 21].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 22].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 23].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                        worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
+
+                        row++;
+
+                        totalQuantity += si.Quantity;
+                        totalFreight += freight ?? 0m;
+                        totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
+                        totalVatPerLiter += vatPerLiter;
+                        totalVatAmount += vatAmount;
+                        totalGrossAmount += grossAmount;
+                        totalAmountPaid += si.AmountPaid;
+                        totalBalance += si.Balance;
+                        totalEwtAmount += ewtAmount;
+                        totalEwtAmountPaid += isEwtAmountPaid;
+                        totalEwtBalance += ewtBalance;
+                    }
+                    var subTotalQuantity = groupByCustomer.Sum(x => x.Quantity);
+
+                    var isVatableSub = groupByCustomer.Select(x => x.CustomerOrderSlip?.VatType).FirstOrDefault();
+                    var isTaxableSub = groupByCustomer.Select(x => x.CustomerOrderSlip?.HasEWT).FirstOrDefault();
+                    var subTotalFreight = groupByCustomer.Sum(x => x.DeliveryReceipt?.FreightAmount) ?? 0m;
+                    var subTotalFreightPerLiter = subTotalFreight != 0m && subTotalQuantity != 0m ? subTotalFreight / subTotalQuantity : 0m;
+                    var subTotalGrossAmount = groupByCustomer.Sum(x => x.Amount);
+                    var subTotalNetOfVat = isVatableSub == SD.VatType_Vatable
+                        ? repoCalculator.ComputeNetOfVat(subTotalGrossAmount)
+                        : subTotalGrossAmount;
+                    var subTotalVatAmount = isVatableSub == SD.VatType_Vatable
+                        ? repoCalculator.ComputeVatAmount(subTotalNetOfVat)
+                        : 0m;
+                    var subTotalAmountPaid = groupByCustomer.Sum(x => x.AmountPaid);
+                    var subTotalVatPerLiter = subTotalVatAmount / subTotalQuantity;
+                    var subTotalEwtAmount = isTaxableSub == true
+                        ? repoCalculator.ComputeEwtAmount(subTotalNetOfVat, 0.01m)
+                        : 0m;
+                    var isEwtAmountPaidSub = groupByCustomer.Select(x => x.IsTaxAndVatPaid).FirstOrDefault() ? subTotalEwtAmount : 0m;
+                    var subTotalEwtBalance = subTotalEwtAmount - isEwtAmountPaidSub;
+                    var subTotalUnitPrice = subTotalGrossAmount / subTotalQuantity;
+                    var subTotalBalance = groupByCustomer.Sum(x => x.Balance);
+                    var subTotalEwtAmountPaid = isEwtAmountPaidSub;
+
+                    worksheet.Cells[row, 12].Value = "SUB TOTAL ";
+
+                    worksheet.Cells[row, 13].Value = subTotalQuantity;
+                    worksheet.Cells[row, 15].Value = subTotalUnitPrice;
+                    worksheet.Cells[row, 16].Value = subTotalFreight;
+                    worksheet.Cells[row, 17].Value = subTotalFreightPerLiter;
+                    worksheet.Cells[row, 18].Value = subTotalVatPerLiter;
+                    worksheet.Cells[row, 19].Value = subTotalVatAmount;
+                    worksheet.Cells[row, 20].Value = subTotalGrossAmount;
+                    worksheet.Cells[row, 21].Value = subTotalAmountPaid;
+                    worksheet.Cells[row, 22].Value = subTotalBalance;
+                    worksheet.Cells[row, 23].Value = subTotalEwtAmount;
+                    worksheet.Cells[row, 24].Value = subTotalEwtAmountPaid;
+                    worksheet.Cells[row, 25].Value = subTotalEwtBalance;
+
                     worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatTwoDecimal;
@@ -3959,22 +4081,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                     worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
+                    // Apply style to sub total row
+                    using (var range = worksheet.Cells[row, 1, row, 25])
+                    {
+                        range.Style.Font.Bold = true;
+                        range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                        range.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(172, 185, 202));
+                    }
+
                     row++;
-
-                    totalQuantity += si.Quantity;
-                    totalFreight += freight ?? 0m;
-                    totalFreightPerLiter += si.DeliveryReceipt?.Freight ?? 0m;
-                    totalVatPerLiter += vatPerLiter;
-                    totalVatAmount += vatAmount;
-                    totalGrossAmount += grossAmount;
-                    totalAmountPaid += si.AmountPaid;
-                    totalBalance += si.Balance;
-                    totalEwtAmount += ewtAmount;
-                    totalEwtAmountPaid += isEwtAmountPaid;
-                    totalEwtBalance += ewtBalance;
                 }
+                totalFreightPerLiter = totalFreight != 0 && totalQuantity != 0 ? totalFreight / totalQuantity : 0m;
 
-                worksheet.Cells[row, 12].Value = "Total ";
+                worksheet.Cells[row, 12].Value = "GRAND TOTAL ";
 
                 worksheet.Cells[row, 13].Value = totalQuantity;
                 worksheet.Cells[row, 15].Value = totalGrossAmount / totalQuantity;
@@ -4002,7 +4121,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 24].Style.Numberformat.Format = currencyFormatTwoDecimal;
                 worksheet.Cells[row, 25].Style.Numberformat.Format = currencyFormatTwoDecimal;
 
-                // Apply style to subtotal row
+                // Apply style to grand total row
                 using (var range = worksheet.Cells[row, 1, row, 25])
                 {
                     range.Style.Font.Bold = true;
