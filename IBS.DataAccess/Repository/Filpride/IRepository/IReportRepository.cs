@@ -45,5 +45,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         public Task<List<FilprideServiceInvoice>> GetServiceInvoiceReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default);
         public Task<List<FilpridePurchaseOrder>> GetApReport(DateOnly monthYear, string company, CancellationToken cancellationToken = default);
+
+        public Task<List<FilprideSalesInvoice>> GetARPerCustomerReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, CancellationToken cancellationToken = default);
     }
 }
