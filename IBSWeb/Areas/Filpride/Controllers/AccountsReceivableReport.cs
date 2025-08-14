@@ -2785,6 +2785,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -2797,6 +2798,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date(INV)").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CR No.").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Check").SemiBold();
@@ -2813,28 +2815,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 foreach (var record in collectionReceiptReport)
                                 {
-                                    var currentAmount = record.CashAmount + record.CheckAmount;
+                                    if (record.MultipleSIId == null)
+                                    {
+                                        var currentAmount = record.CashAmount + record.CheckAmount;
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    totalAmount += currentAmount;
+                                        totalAmount += currentAmount;
+                                    }
+                                    else
+                                    {
+                                        var getSalesInvoice = _unitOfWork.FilprideSalesInvoice.GetAllAsync(x => record.MultipleSIId.Contains(x.SalesInvoiceId));
+                                        foreach (var sales in getSalesInvoice.Result)
+                                        {
+                                            var currentAmount = record.CashAmount + record.CheckAmount;
 
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.TransactionDate.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CollectionReceiptNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.SalesInvoiceNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.DueDate.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            totalAmount += currentAmount;
+                                        }
+                                    }
                                 }
 
                             #endregion
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().ColumnSpan(10).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmount != 0 ? totalAmount < 0 ? $"({Math.Abs(totalAmount).ToString(SD.Two_Decimal_Format)})" : totalAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                             #endregion
