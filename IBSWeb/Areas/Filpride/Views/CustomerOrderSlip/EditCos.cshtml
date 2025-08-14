@@ -619,16 +619,18 @@
                 let uploadedFiles = []; // Array to store all uploaded files
                 let enableUploadNewAttachment = true; // Used in condition to enable uploading, TEMPORARILY TRUE FOR DEBUGGING
 
-                if(fileInfos !== null){
-                    uploadedFiles = fileInfos.map(fileInfo => fileInfo.FileName);
+                // For the existing, create an instance of {} with FileName as its name property
+                uploadedFiles = fileInfos.map(fileInfo => ({
+                    name: fileInfo.FileName
+                }));
 
-                    uploadedFiles.forEach(function(fileName, index) {
-                        displayExistingFileName(fileName);
-                    });
-                }
-
-
-                document.getElementById("arrayOfFileNames").value = JSON.stringify(uploadedFiles); // assign the array value to the input
+                // Add each of the name to the array of file strings
+                uploadedFiles.forEach(function(uploadedFile, index) {
+                    $arrayOfFileNames.push(uploadedFile);
+                    displayExistingFileName(uploadedFile.name);
+                });
+                
+                document.getElementById("arrayOfFileNames").value = JSON.stringify(uploadedFiles.map(file => file.name)); // assign the array value to the input
 
                 function init() {
                     bindEvents();
@@ -701,41 +703,34 @@
                         return;
                     }
 
-                    // Convert FileList to array
+                    // Convert list of files to array
                     const fileArray = Array.from(files);
 
-                    // Filter out duplicates based on name and size
+                    // Variable of new uploads, check the current array if already existing
                     const newFiles = fileArray.filter(file =>
                         !uploadedFiles.some(existing =>
                             existing.name === file.name && existing.size === file.size
                         )
                     );
 
-                    // Add new files to uploadedFiles
+                    // Add new files to current array
                     uploadedFiles = uploadedFiles.concat(newFiles);
                     // Initialize DataTransfer
                     const dataTransfer = new DataTransfer();
-                    // Put all the files to dataTransfer object
+                    // Store files in the transfer object
                     uploadedFiles.forEach(file => {
                         if (file instanceof File) { // Validate File object
                             dataTransfer.items.add(file);
                         }
                     });
-
-                    // Put the files in the html input
-                    $fileInput[0].files = dataTransfer.files;
-
-                    // Store file names in $fileUploadArea (fix overwriting issue)
-                    const fileNames = newFiles.map(file => file.name); // Get names of new files
-                    fileNames.forEach(fileName => displayFileName({ name: fileName })); // Create elements for each new name
-                    $fileUploadArea.data('file', fileNames); // Store array of names instead of single name
-                    $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name));
                     
-                    uploadedFiles.forEach(function(uploadedFile, index) {
-                        console.log(`File: `, uploadedFile);
-                    });
+                    $fileInput[0].files = dataTransfer.files; // Store the transfer objects in the html input
+                    const fileNames = newFiles.map(file => file.name); // Get names of new files
+                    fileNames.forEach(fileName => displayFileName({ name: fileName })); // Create elements for each new files
+                    $fileUploadArea.data('file', fileNames); // Store the array of new names
+                    $fileUploadArea.data('allFiles', uploadedFiles.map(file => file.name)); // Store the array of all names
+                    // Assign the names of the uploaded entites to array of strings
                     document.getElementById("arrayOfFileNames").value = JSON.stringify(uploadedFiles.map(file => file.name));
-                    console.log(JSON.stringify(uploadedFiles.map(file => file.name)));
                 }
 
                 // Create html element for new file
