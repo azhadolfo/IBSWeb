@@ -2785,6 +2785,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
                                     columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                             #endregion
@@ -2797,6 +2798,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Customer Name").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Acc. Type").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Tran. Date(INV)").SemiBold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("CR No.").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Invoice No.").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Due Date").SemiBold();
                                     header.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignCenter().AlignMiddle().Text("Date of Check").SemiBold();
@@ -2813,28 +2815,52 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 foreach (var record in collectionReceiptReport)
                                 {
-                                    var currentAmount = record.CashAmount + record.CheckAmount;
+                                    if (record.MultipleSIId == null)
+                                    {
+                                        var currentAmount = record.CashAmount + record.CheckAmount;
 
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
-                                    table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
-                                    table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.TransactionDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.SalesInvoiceNo);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.SalesInvoice?.DueDate.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                        table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
 
-                                    totalAmount += currentAmount;
+                                        totalAmount += currentAmount;
+                                    }
+                                    else
+                                    {
+                                        var getSalesInvoice = _unitOfWork.FilprideSalesInvoice.GetAllAsync(x => record.MultipleSIId.Contains(x.SalesInvoiceId));
+                                        foreach (var sales in getSalesInvoice.Result)
+                                        {
+                                            var currentAmount = record.CashAmount + record.CheckAmount;
 
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerCode);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerName);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.Customer?.CustomerType);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.TransactionDate.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CollectionReceiptNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.SalesInvoiceNo);
+                                            table.Cell().Border(0.5f).Padding(3).Text(sales.DueDate.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CheckDate?.ToString(SD.Date_Format));
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.BankAccount?.Bank);
+                                            table.Cell().Border(0.5f).Padding(3).Text(record.CheckNo);
+                                            table.Cell().Border(0.5f).Padding(3).AlignRight().Text(currentAmount != 0 ? currentAmount < 0 ? $"({Math.Abs(currentAmount).ToString(SD.Two_Decimal_Format)})" : currentAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(currentAmount < 0 ? Colors.Red.Medium : Colors.Black);
+
+                                            totalAmount += currentAmount;
+                                        }
+                                    }
                                 }
 
                             #endregion
 
                             #region -- Create Table Cell for Totals
 
-                                table.Cell().ColumnSpan(9).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
+                                table.Cell().ColumnSpan(10).Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text("TOTAL:").SemiBold();
                                 table.Cell().Background(Colors.Grey.Lighten1).Border(0.5f).Padding(3).AlignRight().Text(totalAmount != 0 ? totalAmount < 0 ? $"({Math.Abs(totalAmount).ToString(SD.Two_Decimal_Format)})" : totalAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(totalAmount < 0 ? Colors.Red.Medium : Colors.Black).SemiBold();
 
                             #endregion
@@ -2916,14 +2942,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells["B7"].Value = "CUSTOMER NAME";
                     worksheet.Cells["C7"].Value = "ACCT. TYPE";
                     worksheet.Cells["D7"].Value = "TRAN. DATE (INV)";
-                    worksheet.Cells["E7"].Value = "INVOICE No.";
-                    worksheet.Cells["F7"].Value = "DUE DATE";
-                    worksheet.Cells["G7"].Value = "DATE OF CHECK";
-                    worksheet.Cells["H7"].Value = "BANK";
-                    worksheet.Cells["I7"].Value = "CHECK No.";
-                    worksheet.Cells["J7"].Value = "AMOUNT";
+                    worksheet.Cells["E7"].Value = "CR No.";
+                    worksheet.Cells["F7"].Value = "INVOICE No.";
+                    worksheet.Cells["G7"].Value = "DUE DATE";
+                    worksheet.Cells["H7"].Value = "DATE OF CHECK";
+                    worksheet.Cells["I7"].Value = "BANK";
+                    worksheet.Cells["J7"].Value = "CHECK No.";
+                    worksheet.Cells["K7"].Value = "AMOUNT";
 
-                    var headerCells = worksheet.Cells["A7:J7"];
+                    var headerCells = worksheet.Cells["A7:K7"];
                     headerCells.Style.Font.Size = 11;
                     headerCells.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     headerCells.Style.Fill.BackgroundColor.SetColor(Color.DarkGray);
@@ -2939,36 +2966,68 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     foreach (var cr in collectionReceiptReport)
                     {
-                        var currentAmount = cr.CashAmount + cr.CheckAmount;
-                        worksheet.Cells[row, 1].Value = cr.Customer?.CustomerCode ?? "";
-                        worksheet.Cells[row, 2].Value = cr.Customer?.CustomerName ?? "";
-                        worksheet.Cells[row, 3].Value = cr.Customer?.CustomerType ?? "";
-                        worksheet.Cells[row, 4].Value = cr.SalesInvoice?.TransactionDate ?? default;
-                        worksheet.Cells[row, 5].Value = cr.SalesInvoice?.SalesInvoiceNo ?? "";
-                        worksheet.Cells[row, 6].Value = cr.SalesInvoice?.DueDate ?? default;
-                        worksheet.Cells[row, 7].Value = cr.CheckDate;
-                        worksheet.Cells[row, 8].Value = $"{cr.BankAccount?.Bank} {cr.BankAccount?.AccountNo}";
-                        worksheet.Cells[row, 9].Value = cr.CheckNo;
-                        worksheet.Cells[row, 10].Value = currentAmount;
+                        if (cr.MultipleSIId == null)
+                        {
+                            var currentAmount = cr.CashAmount + cr.CheckAmount;
+                            worksheet.Cells[row, 1].Value = cr.Customer!.CustomerCode;
+                            worksheet.Cells[row, 2].Value = cr.Customer!.CustomerName;
+                            worksheet.Cells[row, 3].Value = cr.Customer!.CustomerType;
+                            worksheet.Cells[row, 4].Value = cr.SalesInvoice!.TransactionDate;
+                            worksheet.Cells[row, 5].Value = cr.CollectionReceiptNo;
+                            worksheet.Cells[row, 6].Value = cr.SalesInvoice!.SalesInvoiceNo;
+                            worksheet.Cells[row, 7].Value = cr.SalesInvoice!.DueDate;
+                            worksheet.Cells[row, 8].Value = cr.CheckDate;
+                            worksheet.Cells[row, 9].Value = $"{cr.BankAccount?.Bank} {cr.BankAccount?.AccountNo}";
+                            worksheet.Cells[row, 10].Value = cr.CheckNo;
+                            worksheet.Cells[row, 11].Value = currentAmount;
 
-                        worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 6].Style.Numberformat.Format = "MMM/dd/yyyy";
-                        worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                            worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[row, 7].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[row, 8].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
 
-                        totalAmount += currentAmount;
-                        row++;
+                            totalAmount += currentAmount;
+                            row++;
+                        }
+                        else
+                        {
+                            var getSalesInvoice = await _unitOfWork.FilprideSalesInvoice.GetAllAsync(x => cr.MultipleSIId.Contains(x.SalesInvoiceId), cancellationToken);
+                            foreach (var sales in getSalesInvoice)
+                            {
+                                var currentAmount = cr.CashAmount + cr.CheckAmount;
+                                worksheet.Cells[row, 1].Value = cr.Customer!.CustomerCode;
+                                worksheet.Cells[row, 2].Value = cr.Customer!.CustomerName;
+                                worksheet.Cells[row, 3].Value = cr.Customer!.CustomerType;
+                                worksheet.Cells[row, 4].Value = sales.TransactionDate;
+                                worksheet.Cells[row, 5].Value = cr.CollectionReceiptNo;
+                                worksheet.Cells[row, 6].Value = sales.SalesInvoiceNo;
+                                worksheet.Cells[row, 7].Value = sales.DueDate;
+                                worksheet.Cells[row, 8].Value = cr.CheckDate;
+                                worksheet.Cells[row, 9].Value = $"{cr.BankAccount?.Bank} {cr.BankAccount?.AccountNo}";
+                                worksheet.Cells[row, 10].Value = cr.CheckNo;
+                                worksheet.Cells[row, 11].Value = currentAmount;
+
+                                worksheet.Cells[row, 4].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[row, 7].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[row, 8].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+
+                                totalAmount += currentAmount;
+                                row++;
+                            }
+                        }
                     }
 
-                    worksheet.Cells[row, 9].Value = "Total:";
-                    worksheet.Cells[row, 10].Value = totalAmount;
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                    using (var range = worksheet.Cells[row, 1, row, 10])
+                    worksheet.Cells[row, 10].Value = "Total:";
+                    worksheet.Cells[row, 11].Value = totalAmount;
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                    using (var range = worksheet.Cells[row, 1, row, 11])
                     {
                         range.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         range.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
                         range.Style.Border.BorderAround(ExcelBorderStyle.Thin);
                     }
-                    using (var range = worksheet.Cells[row, 9, row, 10])
+                    using (var range = worksheet.Cells[row, 10, row, 11])
                     {
                         range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
                         range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -2977,12 +3036,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     int lastRow = row-1;
 
-                    using (var range = worksheet.Cells[startingRow-1, 10, lastRow, 10])
+                    using (var range = worksheet.Cells[startingRow-1, 11, lastRow, 11])
                     {
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
                     }
 
                     worksheet.Cells.AutoFitColumns();
+                    worksheet.View.FreezePanes(8, 1);
 
                     var fileName = $"Collection_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
                     var stream = new MemoryStream();
