@@ -256,12 +256,18 @@
 
     <div class="row pt-2">
         @{
-            if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) || Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
+            if (User.IsInRole("FinanceManager") || User.IsInRole("CncManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
             {
-                if (User.IsInRole("FinanceManager") || User.IsInRole("CncManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+                if (Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfCNC) || Model.CustomerOrderSlip.Status == nameof(CosStatus.ForApprovalOfFM))
                 {
                     <div class="col-6 col-md-3">
                         <a id="approveButton" class="btn btn-primary form-control buttons">Action</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-6 col-md-3">
+                        <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
                     </div>
                 }
             }
@@ -271,6 +277,8 @@
                     <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
                 </div>
             }
+            
+            
         }
 
         <div class="col-6 col-md-3">
