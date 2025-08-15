@@ -157,5 +157,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         [NotMapped]
         public List<FilprideGeneralLedgerBook>? Details { get; set; }
+
+        public ICollection<FilprideCollectionReceiptDetail>? ReceiptDetails { get; set; }
     }
 }

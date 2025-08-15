@@ -221,6 +221,7 @@ namespace IBS.DataAccess.Data
         public DbSet<FilprideSalesInvoice> FilprideSalesInvoices { get; set; }
         public DbSet<FilprideServiceInvoice> FilprideServiceInvoices { get; set; }
         public DbSet<FilprideOffsettings> FilprideOffsettings { get; set; }
+        public DbSet<FilprideCollectionReceiptDetail> FilprideCollectionReceiptDetails { get; set; }
         #endregion
 
         #region Accounts Payable
@@ -909,6 +910,19 @@ namespace IBS.DataAccess.Data
                     .WithMany()
                     .HasForeignKey(cr => cr.BankId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<FilprideCollectionReceiptDetail>(crd =>
+            {
+                crd.HasOne(d => d.FilprideCollectionReceipt)
+                    .WithMany(d => d.ReceiptDetails)
+                    .HasForeignKey(d => d.CollectionReceiptId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                crd.HasIndex(d => d.InvoiceNo);
+
+                crd.HasIndex(d => d.CollectionReceiptNo);
+
             });
 
             #endregion -- Collection Receipt --

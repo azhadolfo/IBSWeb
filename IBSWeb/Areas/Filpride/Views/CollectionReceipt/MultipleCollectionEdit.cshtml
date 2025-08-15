@@ -352,7 +352,7 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         function appendSIAmountRow(siNo, siText) {
             $siAmount.append(`
                     <tr id='row_${siNo}'>
-                        <td style="text-center">
+                        <td class="text-center">
                             <input type='hidden' value='${siNo}' />
                             <input class="text-center" type='text' value='${siText}' style='border:none' readonly />
                         </td>

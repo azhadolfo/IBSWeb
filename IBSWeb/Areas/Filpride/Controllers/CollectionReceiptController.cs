@@ -297,6 +297,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
 
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = model.CollectionReceiptId,
+                    CollectionReceiptNo = model.CollectionReceiptNo,
+                    InvoiceDate = DateOnly.FromDateTime(existingSalesInvoice.CreatedDate),
+                    InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
+                    Amount = model.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
                 #endregion --Saving default value
 
                 // #region --Offsetting function
@@ -453,6 +464,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.MultipleSI = new string[model.MultipleSIId.Length];
                 model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
 
+                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                var details = new List<FilprideCollectionReceiptDetail>();
+
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
                 {
                     var siId = viewModel.MultipleSIId[i];
@@ -470,11 +485,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.Type == null)
                     {
                         model.Type = salesInvoice.Type;
+
+                        model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
+                            .GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
                     }
+
+                    details.Add(new FilprideCollectionReceiptDetail
+                    {
+                        CollectionReceiptId = model.CollectionReceiptId,
+                        CollectionReceiptNo = model.CollectionReceiptNo!,
+                        InvoiceDate = DateOnly.FromDateTime(salesInvoice.CreatedDate),
+                        InvoiceNo = salesInvoice.SalesInvoiceNo!,
+                        Amount = viewModel.SIMultipleAmount[i],
+                    });
                 }
 
-                model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
-                    .GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
+                await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -491,8 +517,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         await _cloudStorageService.UploadFileAsync(viewModel.Bir2307, model.F2307FileName!);
                     model.IsCertificateUpload = true;
                 }
-
-                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
 
                 #endregion --Saving default value
 
@@ -697,6 +721,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
                 existingModel.MultipleTransactionDate = new DateOnly[viewModel.MultipleSIId.Length];
 
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new List<FilprideCollectionReceiptDetail>();
+
+                // looping all the new SI
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
                 {
                     var siId = viewModel.MultipleSIId[i];
@@ -712,7 +743,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
                     existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
                     existingModel.SIMultipleAmount[i] = viewModel.SIMultipleAmount[i];
+
+                    details.Add(new  FilprideCollectionReceiptDetail
+                    {
+                        CollectionReceiptId = existingModel.CollectionReceiptId,
+                        CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                        InvoiceDate = salesInvoice.TransactionDate,
+                        InvoiceNo = salesInvoice.SalesInvoiceNo!,
+                        Amount = existingModel.SIMultipleAmount[i],
+                    });
                 }
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -964,6 +1006,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = model.CollectionReceiptId,
+                    CollectionReceiptNo = model.CollectionReceiptNo,
+                    InvoiceDate = DateOnly.FromDateTime(existingServiceInvoice.CreatedDate),
+                    InvoiceNo = existingServiceInvoice.ServiceInvoiceNo,
+                    Amount = model.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
 
                 #endregion --Saving default value
 
@@ -1385,6 +1438,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = existingModel.CollectionReceiptId,
+                    CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                    InvoiceDate = DateOnly.FromDateTime(existingSalesInvoice.CreatedDate),
+                    InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
+                    Amount = existingModel.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
                 #endregion --Saving default value
 
                 // #region --Offsetting function
@@ -1670,6 +1738,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
+
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = existingModel.CollectionReceiptId,
+                    CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                    InvoiceDate = DateOnly.FromDateTime(existingServiceInvoice.CreatedDate),
+                    InvoiceNo = existingServiceInvoice.ServiceInvoiceNo,
+                    Amount = existingModel.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
 
                 #endregion --Saving default value
 
