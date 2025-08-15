@@ -1,6 +1,10 @@
 using IBS.DataAccess.Data;
+using IBS.DataAccess.Repository.IRepository;
+using IBS.Models;
+using IBS.Models.Filpride.Books;
 using IBS.Services.Attributes;
 using IBS.Utility.Constants;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
@@ -20,13 +24,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+        private readonly IUnitOfWork _unitOfWork;
+
+        private readonly UserManager<ApplicationUser> _userManager;
+
         public ComparativeReportController(ILogger<ComparativeReportController> logger,
-            ApplicationDbContext dbContext,
-            IWebHostEnvironment webHostEnvironment)
+            ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
+            IWebHostEnvironment webHostEnvironment,
+            UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
             _webHostEnvironment = webHostEnvironment;
+            _userManager = userManager;
+        }
+
+        private async Task<string?> GetCompanyClaimAsync()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+            return claims.FirstOrDefault(c => c.Type == "Company")?.Value;
         }
 
         [HttpGet]
@@ -37,8 +61,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(DateOnly monthDate, string category, CancellationToken cancellation)
+        public async Task<IActionResult> Index(DateOnly monthDate, string category, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
             try
             {
                 if (category == "Sales")
@@ -49,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(x => x.LockedDate.Month == monthDate.Month
                                     && x.LockedDate.Year == monthDate.Year)
                         .OrderBy(x => x.DeliveryReceiptId)
-                        .ToListAsync(cancellation);
+                        .ToListAsync(cancellationToken);
 
                     if (lockedSales.Count == 0)
                     {
@@ -235,6 +266,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         });
                     });
 
+                    #region -- Audit Trail --
+
+                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate sales comparative report quest pdf", "Comparative Report", companyClaims);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion
+
                     var pdfBytes = document.GeneratePdf();
                     return File(pdfBytes, "application/pdf");
 
@@ -248,7 +286,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Where(x => x.LockedDate.Month == monthDate.Month
                                     && x.LockedDate.Year == monthDate.Year)
                         .OrderBy(x => x.ReceivingReportId)
-                        .ToListAsync(cancellation);
+                        .ToListAsync(cancellationToken);
 
                     if (lockedPurchases.Count == 0)
                     {
@@ -433,6 +471,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                         });
                     });
+
+                    #region -- Audit Trail --
+
+                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate purchase comparative report quest pdf", "Comparative Report", companyClaims);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion
 
                     var pdfBytes = document.GeneratePdf();
                     return File(pdfBytes, "application/pdf");
