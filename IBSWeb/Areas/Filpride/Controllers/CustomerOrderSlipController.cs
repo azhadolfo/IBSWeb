@@ -974,82 +974,79 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                if (existingRecord.OmApprovedBy == null)
+                existingRecord.OmApprovedBy = _userManager.GetUserName(User);
+                existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
+                existingRecord.OMReason = reason;
+                existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
+                existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
+
+                if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                 {
-                    existingRecord.OmApprovedBy = _userManager.GetUserName(User);
-                    existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.OMReason = reason;
-                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
-                    existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
+                    var multiplePo = await _dbContext.FilprideCOSAppointedSuppliers
+                        .Include(a => a.PurchaseOrder)
+                        .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
+                        .ToListAsync(cancellationToken);
 
-                    if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
+                    var poNumbers = new List<string>();
+
+                    foreach (var item in multiplePo)
                     {
-                        var multiplePo = await _dbContext.FilprideCOSAppointedSuppliers
-                            .Include(a => a.PurchaseOrder)
-                            .Where(a => a.CustomerOrderSlipId == existingRecord.CustomerOrderSlipId)
-                            .ToListAsync(cancellationToken);
+                        var existingPo = item.PurchaseOrder;
 
-                        var poNumbers = new List<string>();
-
-                        foreach (var item in multiplePo)
+                        var subPoModel = new FilpridePurchaseOrder
                         {
-                            var existingPo = item.PurchaseOrder;
+                            PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo!.Type!, cancellationToken),
+                            Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                            SupplierId = existingPo.SupplierId,
+                            ProductId = existingRecord.ProductId,
+                            Terms = existingPo.Terms,
+                            Quantity = item.Quantity,
+                            Price = (decimal)existingRecord.Freight!,
+                            Amount = item.Quantity * (decimal)existingRecord.Freight,
+                            Remarks = $"{existingRecord.SubPORemarks}\nPlease note: The values in this purchase order are for the freight charge.",
+                            Company = existingPo.Company,
+                            IsSubPo = true,
+                            CustomerId = existingRecord.CustomerId,
+                            SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo!, existingPo.Company, cancellationToken),
+                            CreatedBy = existingRecord.OmApprovedBy,
+                            CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            PostedBy = existingRecord.OmApprovedBy,
+                            PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                            Status = nameof(Status.Posted),
+                            OldPoNo = existingPo.OldPoNo,
+                            PickUpPointId = existingPo.PickUpPointId,
+                            Type = existingPo.Type,
+                            SupplierName = existingPo.SupplierName,
+                            SupplierAddress = existingPo.SupplierAddress,
+                            SupplierTin = existingPo.SupplierTin,
+                            ProductName = existingPo.ProductName,
+                            VatType = existingPo.VatType,
+                            TaxType = existingPo.TaxType
+                        };
 
-                            var subPoModel = new FilpridePurchaseOrder
-                            {
-                                PurchaseOrderNo = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeAsync(existingRecord.Company, existingPo!.Type!, cancellationToken),
-                                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
-                                SupplierId = existingPo.SupplierId,
-                                ProductId = existingRecord.ProductId,
-                                Terms = existingPo.Terms,
-                                Quantity = item.Quantity,
-                                Price = (decimal)existingRecord.Freight!,
-                                Amount = item.Quantity * (decimal)existingRecord.Freight,
-                                Remarks = $"{existingRecord.SubPORemarks}\nPlease note: The values in this purchase order are for the freight charge.",
-                                Company = existingPo.Company,
-                                IsSubPo = true,
-                                CustomerId = existingRecord.CustomerId,
-                                SubPoSeries = await _unitOfWork.FilpridePurchaseOrder.GenerateCodeForSubPoAsync(existingPo.PurchaseOrderNo!, existingPo.Company, cancellationToken),
-                                CreatedBy = existingRecord.OmApprovedBy,
-                                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                                PostedBy = existingRecord.OmApprovedBy,
-                                PostedDate = DateTimeHelper.GetCurrentPhilippineTime(),
-                                Status = nameof(Status.Posted),
-                                OldPoNo = existingPo.OldPoNo,
-                                PickUpPointId = existingPo.PickUpPointId,
-                                Type = existingPo.Type,
-                                SupplierName = existingPo.SupplierName,
-                                SupplierAddress = existingPo.SupplierAddress,
-                                SupplierTin = existingPo.SupplierTin,
-                                ProductName = existingPo.ProductName,
-                                VatType = existingPo.VatType,
-                                TaxType = existingPo.TaxType
-                            };
+                        poNumbers.Add(subPoModel.PurchaseOrderNo);
 
-                            poNumbers.Add(subPoModel.PurchaseOrderNo);
+                        #region --Audit Trail Recording
 
-                            #region --Audit Trail Recording
+                        FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy!,
+                            $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
+                            "Purchase Order",
+                            subPoModel.Company);
 
-                            FilprideAuditTrail auditTrailCreate = new(subPoModel.PostedBy!,
-                                $"Created new purchase order# {subPoModel.PurchaseOrderNo}",
-                                "Purchase Order",
-                                subPoModel.Company);
+                        FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy!,
+                            $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
+                            "Purchase Order",
+                            subPoModel.Company);
 
-                            FilprideAuditTrail auditTrailPost = new(subPoModel.PostedBy!,
-                                $"Posted purchase order# {subPoModel.PurchaseOrderNo}",
-                                "Purchase Order",
-                                subPoModel.Company);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailCreate, cancellationToken);
+                        await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailPost, cancellationToken);
 
-                            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailCreate, cancellationToken);
-                            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailPost, cancellationToken);
+                        #endregion --Audit Trail Recording
 
-                            #endregion --Audit Trail Recording
-
-                            await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
-                        }
-
-                        message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
+                        await _unitOfWork.FilpridePurchaseOrder.AddAsync(subPoModel, cancellationToken);
                     }
+
+                    message = $"Sub Purchase Order Numbers: {string.Join(", ", poNumbers)} have been successfully generated.";
                 }
 
                 FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!, $"Approved customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
