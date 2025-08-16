@@ -282,14 +282,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(viewModel.CustomerId, cancellationToken);
 
             var customer = await _unitOfWork.FilprideCustomer
                 .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
-
-            viewModel.Branches = !customer!.HasBranch
-                ? null
-                : await _unitOfWork.FilprideCustomer
-                    .GetCustomerBranchesSelectListAsync(customer.CustomerId, cancellationToken);
 
             if (!ModelState.IsValid)
             {
