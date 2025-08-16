@@ -297,11 +297,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
 
-                #endregion --Saving default value
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = model.CollectionReceiptId,
+                    CollectionReceiptNo = model.CollectionReceiptNo,
+                    InvoiceDate = DateOnly.FromDateTime(existingSalesInvoice.CreatedDate),
+                    InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
+                    Amount = model.Total
+                };
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
+                #endregion --Saving default value
 
                 // #region --Offsetting function
                 //
@@ -457,6 +464,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.MultipleSI = new string[model.MultipleSIId.Length];
                 model.MultipleTransactionDate = new DateOnly[model.MultipleSIId.Length];
 
+                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
+
+                var details = new List<FilprideCollectionReceiptDetail>();
+
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
                 {
                     var siId = viewModel.MultipleSIId[i];
@@ -474,11 +485,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     if (model.Type == null)
                     {
                         model.Type = salesInvoice.Type;
+
+                        model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
+                            .GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
                     }
+
+                    details.Add(new FilprideCollectionReceiptDetail
+                    {
+                        CollectionReceiptId = model.CollectionReceiptId,
+                        CollectionReceiptNo = model.CollectionReceiptNo!,
+                        InvoiceDate = DateOnly.FromDateTime(salesInvoice.CreatedDate),
+                        InvoiceNo = salesInvoice.SalesInvoiceNo!,
+                        Amount = viewModel.SIMultipleAmount[i],
+                    });
                 }
 
-                model.CollectionReceiptNo = await _unitOfWork.FilprideCollectionReceipt
-                    .GenerateCodeAsync(companyClaims, model.Type!, cancellationToken);
+                await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -496,13 +518,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     model.IsCertificateUpload = true;
                 }
 
-                await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
-
                 #endregion --Saving default value
-
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo ?? "", model.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
 
                 // #region --Offsetting function
                 //
@@ -680,21 +696,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var series = existingModel.SINo ?? existingModel.SVNo;
-                var findOffsetting = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Company == existingModel.Company && offset.Source == existingModel.CollectionReceiptNo && offset.Reference == series)
-                    .ToListAsync(cancellationToken);
-
-                if (existingModel.MultipleSI != null)
-                {
-                    await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(existingModel.MultipleSIId!, existingModel.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                }
-                else
-                {
-                    TempData["info"] = "No series number found";
-                    return RedirectToAction(nameof(Index));
-                }
-
                 #region --Saving default value
 
                 var bankAccount = await _unitOfWork.FilprideBankAccount
@@ -720,6 +721,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
                 existingModel.MultipleTransactionDate = new DateOnly[viewModel.MultipleSIId.Length];
 
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new List<FilprideCollectionReceiptDetail>();
+
                 // looping all the new SI
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
                 {
@@ -736,7 +743,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingModel.MultipleSI[i] = salesInvoice.SalesInvoiceNo!;
                     existingModel.MultipleTransactionDate[i] = salesInvoice.TransactionDate;
                     existingModel.SIMultipleAmount[i] = viewModel.SIMultipleAmount[i];
+
+                    details.Add(new  FilprideCollectionReceiptDetail
+                    {
+                        CollectionReceiptId = existingModel.CollectionReceiptId,
+                        CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                        InvoiceDate = salesInvoice.TransactionDate,
+                        InvoiceNo = salesInvoice.SalesInvoiceNo!,
+                        Amount = existingModel.SIMultipleAmount[i],
+                    });
                 }
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
@@ -764,11 +782,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
-
-                // second is to apply the changes to new SI:
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SINo ?? "", existingModel.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(existingModel.MultipleSI!, existingModel.SIMultipleAmount!, offsetAmount, cancellationToken);
 
                 // #region --Offsetting function
                 //
@@ -994,11 +1007,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.FilprideCollectionReceipt.AddAsync(model, cancellationToken);
 
-                #endregion --Saving default value
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = model.CollectionReceiptId,
+                    CollectionReceiptNo = model.CollectionReceiptNo,
+                    InvoiceDate = DateOnly.FromDateTime(existingServiceInvoice.CreatedDate),
+                    InvoiceNo = existingServiceInvoice.ServiceInvoiceNo,
+                    Amount = model.Total
+                };
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
+                #endregion --Saving default value
 
                 // #region --Offsetting function
                 //
@@ -1364,13 +1384,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var findOffsetting = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Company == existingModel.Company && offset.Source == existingModel.CollectionReceiptNo && offset.Reference == existingModel.SINo)
-                    .ToListAsync(cancellationToken);
-                await _unitOfWork.FilprideCollectionReceipt
-                    .RemoveSIPayment(existingModel.SalesInvoice!.SalesInvoiceId, existingModel.Total, findOffsetting
-                        .Sum(offset => offset.Amount), cancellationToken);
-
                 #region --Saving default value
 
                 var existingSalesInvoice = await _unitOfWork.FilprideSalesInvoice
@@ -1425,14 +1438,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = existingModel.CollectionReceiptId,
+                    CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                    InvoiceDate = DateOnly.FromDateTime(existingSalesInvoice.CreatedDate),
+                    InvoiceNo = existingSalesInvoice.SalesInvoiceNo!,
+                    Amount = existingModel.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
                 #endregion --Saving default value
-
-                var offset = await _unitOfWork.FilprideCollectionReceipt
-                    .GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SINo!, existingModel.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt
-                    .UpdateInvoice(existingModel.SalesInvoice!.SalesInvoiceId, existingModel.Total, offsetAmount, cancellationToken);
-
 
                 // #region --Offsetting function
                 //
@@ -1664,14 +1685,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var series = existingModel.SINo ?? existingModel.SVNo;
-                var findOffsetting = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Company == existingModel.Company && offset.Source == existingModel.CollectionReceiptNo && offset.Reference == series)
-                    .ToListAsync(cancellationToken);
-                await _unitOfWork.FilprideCollectionReceipt
-                    .RemoveSVPayment(existingModel.ServiceInvoice!.ServiceInvoiceId, existingModel.Total, findOffsetting
-                        .Sum(offset => offset.Amount), cancellationToken);
-
                 #region --Saving default value
 
                 var existingServiceInvoice = await _unitOfWork.FilprideServiceInvoice
@@ -1726,13 +1739,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EditedBy = _userManager.GetUserName(User);
                 existingModel.EditedDate = DateTimeHelper.GetCurrentPhilippineTime();
 
-                #endregion --Saving default value
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
 
-                var offset = await _unitOfWork.FilprideCollectionReceipt
-                    .GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SVNo!, existingModel.Company, cancellationToken);
-                var offsetAmount = offset.Sum(o => o.Amount);
-                await _unitOfWork.FilprideCollectionReceipt
-                    .UpdateSV(existingModel.ServiceInvoice!.ServiceInvoiceId, existingModel.Total, offsetAmount, cancellationToken);
+                var details = new FilprideCollectionReceiptDetail
+                {
+                    CollectionReceiptId = existingModel.CollectionReceiptId,
+                    CollectionReceiptNo = existingModel.CollectionReceiptNo!,
+                    InvoiceDate = DateOnly.FromDateTime(existingServiceInvoice.CreatedDate),
+                    InvoiceNo = existingServiceInvoice.ServiceInvoiceNo,
+                    Amount = existingModel.Total
+                };
+
+                await _dbContext.FilprideCollectionReceiptDetails.AddAsync(details, cancellationToken);
+
+                #endregion --Saving default value
 
                 // #region --Offsetting function
                 //
@@ -1860,18 +1882,36 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
                 bool isMultipleSi = false;
+
                 List<FilprideOffsettings>? offset;
 
+                decimal offsetAmount;
                 if (model.SalesInvoiceId != null)
                 {
                     offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SINo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
                 }
                 else
                 {
                     offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(model.CollectionReceiptNo!, model.SVNo!, model.Company, cancellationToken);
+                    offsetAmount = offset.Sum(o => o.Amount);
                 }
 
                 await _unitOfWork.FilprideCollectionReceipt.PostAsync(model, offset, cancellationToken);
+
+                if (model.SalesInvoiceId != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateInvoice(model.SalesInvoice!.SalesInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
+                else if (model.MultipleSIId != null)
+                {
+                    isMultipleSi = true;
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateMultipleInvoice(model.MultipleSI!, model.SIMultipleAmount!, offsetAmount, cancellationToken);
+                }
+                else
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UpdateSV(model.ServiceInvoice!.ServiceInvoiceId, model.Total, offsetAmount, cancellationToken);
+                }
 
                 #region --Audit Trail Recording
 
@@ -1924,6 +1964,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     await _unitOfWork.FilprideCollectionReceipt.RemoveRecords<FilprideOffsettings>(offset => offset.Source == model.CollectionReceiptNo && offset.Reference == series, cancellationToken);
                 }
+                if (model.SINo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.SVNo != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else if (model.MultipleSI != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
+                }
+                else
+                {
+                    TempData["info"] = "No series number found";
+                    return RedirectToAction(nameof(Index));
+                }
 
                 #region --Audit Trail Recording
 
@@ -1964,29 +2021,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
                 model.CancellationRemarks = cancellationRemarks;
-
-                var series = model.SINo ?? model.SVNo;
-                var findOffsetting = await _dbContext.FilprideOffsettings
-                    .Where(offset => offset.Company == model.Company && offset.Source == model.CollectionReceiptNo && offset.Reference == series)
-                    .ToListAsync(cancellationToken);
-
-                if (model.SINo != null)
-                {
-                    await _unitOfWork.FilprideCollectionReceipt.RemoveSIPayment(model.SalesInvoice!.SalesInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                }
-                else if (model.SVNo != null)
-                {
-                    await _unitOfWork.FilprideCollectionReceipt.RemoveSVPayment(model.ServiceInvoice!.ServiceInvoiceId, model.Total, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                }
-                else if (model.MultipleSI != null)
-                {
-                    await _unitOfWork.FilprideCollectionReceipt.RemoveMultipleSIPayment(model.MultipleSIId!, model.SIMultipleAmount!, findOffsetting.Sum(offset => offset.Amount), cancellationToken);
-                }
-                else
-                {
-                    TempData["info"] = "No series number found";
-                    return RedirectToAction(nameof(Index));
-                }
 
                 #region --Audit Trail Recording
 
