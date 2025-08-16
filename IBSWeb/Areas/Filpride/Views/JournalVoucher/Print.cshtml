@@ -21,13 +21,26 @@
 }
 <br />
 <div class="text-end">
+    @if (Model.Header?.Status == nameof(Status.Voided))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>VOIDED</b>
+        </div>
+    }
+    @if (Model.Header?.Status == nameof(Status.Canceled))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>CANCELED</b>
+        </div>
+    }
+    
     @if (selectedCompany == "Filpride")
     {
-        <img src="~/img/Filpride.jpg" height="" width="130px" />
+        <img src="~/img/Filpride.jpg" height="" width="130px"/>
     }
     @if (selectedCompany == "Mobility")
     {
-        <img src="~/img/usa88-logo.png" height="" width="130px" />
+        <img src="~/img/usa88-logo.png" height="" width="130px"/>
     }
 </div>
 <div class="text-center">
@@ -219,17 +232,20 @@
 }
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.Header.Status != nameof(Status.Canceled) && Model.Header.Status != nameof(Status.Voided))
         {
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.JournalVoucherHeaderId)">Post</a>
-            </div>
-        }
-        else
-        {
-            <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.Header.JournalVoucherHeaderId)" class="btn btn-primary form-control buttons">Print</a>
-            </div>
+            if (Model.Header.PostedBy == null)
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.JournalVoucherHeaderId)">Post</a>
+                </div>
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="confirmPrint(@Model.Header.JournalVoucherHeaderId)" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+            }    
         }
     }
 

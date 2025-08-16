@@ -79,6 +79,19 @@
 
 <br />
 <div class="text-end">
+    @if (Model.Status == nameof(Status.Voided))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>VOIDED</b>
+        </div>
+    }
+    @if (Model.Status == nameof(Status.Canceled))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>CANCELED</b>
+        </div>
+    }
+    
     @if (selectedCompany == "Filpride")
     {
         <img src="~/img/Filpride-logo.png" width="130px"/>
@@ -264,26 +277,29 @@
 
 <div class="row pt-2">
     @{
-        if (Model.PostedBy == null)
+        if (Model.Status != nameof(Status.Canceled) && Model.Status != nameof(Status.Voided))
         {
-            <div class="col-6 col-md-3">
-                <a class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.PurchaseOrderId)">Post</a>
-            </div>
-        }
-        else if (Model.PostedBy != null && Model.Status == nameof(DRStatus.ForApprovalOfOM))
-        {
-            if (User.IsInRole("OperationManager") || User.IsInRole("Admin"))
+            if (Model.PostedBy == null)
             {
                 <div class="col-6 col-md-3">
-                    <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>
+                    <a class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.PurchaseOrderId)">Post</a>
                 </div>
             }
-        }
-        else
-        {
-            <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.PurchaseOrderId)" class="btn btn-primary form-control buttons">Print</a>
-            </div>
+            else if (Model.PostedBy != null && Model.Status == nameof(DRStatus.ForApprovalOfOM))
+            {
+                if (User.IsInRole("OperationManager") || User.IsInRole("Admin"))
+                {
+                    <div class="col-6 col-md-3">
+                        <a class="btn btn-primary form-control buttons" onclick="confirmApprove(@Model.PurchaseOrderId)">Approve</a>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="confirmPrint(@Model.PurchaseOrderId)" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+            }     
         }
     }
 

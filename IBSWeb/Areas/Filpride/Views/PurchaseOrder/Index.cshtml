@@ -293,7 +293,7 @@
                         } else {
                             if (row.voidedBy != null || row.canceledBy != null) {
                                 // Hide dropdown entirely if the record is voided or canceled
-                                dropdownContent = '';
+                                dropdownContent = `<li><a class="dropdown-item" href="@Url.Action("Print", "PurchaseOrder", new { area = "Filpride" })/${data}">Preview</a></li>`;
                             } else if (row.postedBy == null) {
                                 // Show Edit, Preview, and Cancel options if not posted
                                 dropdownContent = `
@@ -335,7 +335,7 @@
                         }
 
                         var dropdown = `
-                            <div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                            <div class="dropdown actions-dropdown">
                                  <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
