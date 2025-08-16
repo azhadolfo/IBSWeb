@@ -179,7 +179,7 @@
                         "orderable": false,
                         "render": function (data, type, row) {
                             let dropdownHtml = `
-                                    <div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                                    <div class="dropdown actions-dropdown">
                                         <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -188,29 +188,30 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                            if (row.postedBy == null) {
-                                if (row.multipleSIId != null) {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("MultipleCollectionEdit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
-                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                            if (row.voidedBy === null && row.canceledBy === null)
+                            {
+                                if (row.postedBy == null) {
+                                    if (row.multipleSIId != null) {
+                                        dropdownHtml += `
+                                        <li><a href="@Url.Action("MultipleCollectionEdit", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>`;
+                                    } else {
+                                        dropdownHtml += `
+                                        <li><a href="@Url.Action("EditForSales", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>`;
+                                    }
+                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                                 } else {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("EditForSales", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Edit</a></li>
-                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                    dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                                 }
-                                dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
-                            } else {
-                                if (row.multipleSIId != null) {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-
-                                } else {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-                                }
-                                dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                             }
+                            
+                            if (row.multipleSIId != null) {
+                                dropdownHtml += `
+                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
 
+                            } else {
+                                dropdownHtml += `
+                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                            }
                             dropdownHtml += `</ul></div>`;
                             return dropdownHtml;
                         }

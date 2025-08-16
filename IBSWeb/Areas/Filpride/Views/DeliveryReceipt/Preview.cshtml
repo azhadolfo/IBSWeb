@@ -21,16 +21,29 @@
 
 <table class="w-100">
     <tbody>
-        <tr>
-            @if (selectedCompany == "Filpride")
-            {
-                <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px" /></td>
-            }
-            @if (selectedCompany == "Mobility")
-            {
-                <td class="text-end" style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px" /></td>
-            }
-        </tr>
+    <tr>
+        @if (Model.Status == nameof(Status.Voided))
+        {
+            <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+                <b>VOIDED</b>
+            </div>
+        }
+        @if (Model.Status == nameof(Status.Canceled))
+        {
+            <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+                <b>CANCELED</b>
+            </div>
+        }
+        
+        @if (selectedCompany == "Filpride")
+        {
+            <td class="text-end" style="padding: 0 !important;"><img src="~/img/Filpride.jpg" width="130px"/></td>
+        }
+        @if (selectedCompany == "Mobility")
+        {
+            <td class="text-end" style="padding: 0 !important;"><img src="~/img/usa88-logo.png" width="130px"/></td>
+        }
+    </tr>
         <tr style="margin: 0 !important;">
             <td class="text-center" style="padding: 0 !important;">
                 @if (selectedCompany == "Filpride")
@@ -135,23 +148,26 @@ else
 }
 
 <div class="row pt-2">
-    @if (Model.Status != nameof(CosStatus.ForApprovalOfOM))
+    @if (Model.Status != nameof(Status.Canceled) && Model.Status != nameof(Status.Voided))
     {
-        <div class="col-6 col-md-3">
-            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
-        </div>
-        <div class="col-6 col-md-3">
-            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
-        </div>
-    }
-    else
-    {
-        if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+        if (Model.Status != nameof(CosStatus.ForApprovalOfOM))
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
+                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Print" asp-route-id="@Model.DeliveryReceiptId" onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
             </div>
         }
+        else
+        {
+            if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
+                </div>
+            }
+        }        
     }
 
     <div class="col-6 col-md-3">

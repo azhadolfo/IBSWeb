@@ -179,39 +179,40 @@
                         "data": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
-                                            <button class="btn btn-light btn-sm dropdown-toggle w-100" 
-                                                        type="button" 
-                                                        data-bs-toggle="dropdown" 
-                                                        aria-expanded="false">
-                                                    <i class="bi bi-three-dots"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                              ${row.postedBy == null ?
-                                                                            `<li>
-                                                   <a class="dropdown-item" href="${
-                                                                                row.isAdvances
-                                                                                    ? (row.employeeId
-                                                                                        ? '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
-                                                                                        : '@Url.Action("EditAdvancesToSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })/')
-                                                                                    : '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
-                                                                            }${row.checkVoucherHeaderId}">Edit</a>
-                                                 </li>
-                                                 <li>
-                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a>
-                                                 </li>
-                                                 <li>
-                                                   <a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a>
-                                                 </li>` :
-                                                                            `<li>
-                                                   <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a>
-                                                 </li>
-                                                 <li>
-                                                   <a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a>
-                                                 </li>`
-                                                                        }
-                                            </ul>
-                                        </div>`;
+                            return `<div class="dropdown actions-dropdown">
+                                <button class="btn btn-light btn-sm dropdown-toggle w-100" 
+                                            type="button" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                   ${row.voidedBy !== null || row.canceledBy !== null ? `
+                                    ` : `
+                                        ${row.postedBy == null ?
+                                            `<li>
+                                                 <a class="dropdown-item" href="${
+                                                row.isAdvances
+                                                    ? (row.employeeId
+                                                        ? '@Url.Action("EditAdvancesToEmployee", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
+                                                        : '@Url.Action("EditAdvancesToSupplier", "CheckVoucherNonTradePayment", new { area = "Filpride" })/')
+                                                    : '@Url.Action("Edit", "CheckVoucherNonTradePayment", new { area = "Filpride" })/'
+                                                    }${row.checkVoucherHeaderId}">Edit</a>
+                                           </li>
+                                           <li>
+                                             <a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a>
+                                           </li>
+                                           ` : `
+                                           <li>
+                                             <a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a>
+                                           </li>`
+                                        }
+                                   `}
+                                   <li>
+                                     <a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradePayment", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}">Preview</a>
+                                   </li>
+                                </ul>
+                            </div>`;
                         }
                     }
                 ],

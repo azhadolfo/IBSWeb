@@ -164,7 +164,7 @@
                     "data": "debitMemoId",
                     "orderable": false,
                     "render": function (data, type, row) {
-                        var dropdown = `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                        var dropdown = `<div class="dropdown actions-dropdown">
                                             <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -172,14 +172,16 @@
                                                     <i class="bi bi-three-dots"></i>
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                ${row.postedBy == null ? `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "DebitMemo", new { area = "Filpride" })/${data}">Edit</a></li>
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "DebitMemo", new { area = "Filpride" })/${data}">Preview</a></li>
-                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
-                                                ` : `
-                                                    <li><a class="dropdown-item" href="@Url.Action("Print", "DebitMemo", new { area = "Filpride" })/${data}">Preview</a></li>
-                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
+                                                ${row.voidedBy !== null || row.canceledBy !== null ? `
+                                                    ` : `
+                                                    ${row.postedBy == null ? `
+                                                        <li><a class="dropdown-item" href="@Url.Action("Edit", "DebitMemo", new { area = "Filpride" })/${data}">Edit</a></li>
+                                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${data})">Cancel</a></li>
+                                                    ` : `
+                                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
+                                                    `}
                                                 `}
+                                                <li><a class="dropdown-item" href="@Url.Action("Print", "DebitMemo", new { area = "Filpride" })/${data}">Preview</a></li>
                                             </ul>
                                         </div>`;
                         return dropdown;

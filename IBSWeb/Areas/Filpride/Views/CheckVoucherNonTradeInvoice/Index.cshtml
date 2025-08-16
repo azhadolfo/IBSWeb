@@ -226,7 +226,7 @@
                         "name": "checkVoucherHeaderId",
                         "orderable": false,
                         "render": function (data, type, row) {
-                            return `<div class="dropdown actions-dropdown" style="${row.voidedBy != null || row.canceledBy != null ? 'display:none;' : ''}">
+                            return `<div class="dropdown actions-dropdown">
                                     <button class="btn btn-light btn-sm dropdown-toggle w-100" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
@@ -234,22 +234,24 @@
                                                     <i class="bi bi-three-dots"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        ${row.postedBy == null ? `
-                                            ${row.supplier?.supplierId != null ? `
-                                                <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
-                                            ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("EditPayrollInvoice", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
-                                            `}
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
-                                            <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
+                                        ${row.voidedBy !== null || row.canceledBy !== null ? `
                                         ` : `
-                                            <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
-                                            ${!row.isPaid ? `
-                                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
+                                            ${row.postedBy == null ? `
+                                                ${row.supplier?.supplierId != null ? `
+                                                    <li><a class="dropdown-item" href="@Url.Action("Edit", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                ` : `
+                                                <li><a class="dropdown-item" href="@Url.Action("EditPayrollInvoice", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })/${row.checkVoucherHeaderId}">Edit</a></li>
+                                                `}
+                                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmCancel(${row.checkVoucherHeaderId})">Cancel</a></li>
                                             ` : `
-                                                <li><button class="dropdown-item" disabled readonly>Void</button></li>
+                                                ${!row.isPaid ? `
+                                                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${row.checkVoucherHeaderId})">Void</a></li>
+                                                ` : `
+                                                    <li><button class="dropdown-item" disabled readonly>Void</button></li>
+                                                `}
                                             `}
                                         `}
+                                        <li><a class="dropdown-item" href="@Url.Action("Print", "CheckVoucherNonTradeInvoice", new { area = "Filpride" })?id=${row.checkVoucherHeaderId}&supplierId=${row.supplierId != null ? row.supplierId : row.supplier?.supplierId}">Preview</a></li>
                                     </ul>
                                 </div>`;
                         }

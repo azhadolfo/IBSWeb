@@ -23,13 +23,26 @@
 
 <br />
 <div class="text-end">
+    @if (Model.Header?.Status == nameof(Status.Voided))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>VOIDED</b>
+        </div>
+    }
+    @if (Model.Header?.Status == nameof(Status.Canceled))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>CANCELED</b>
+        </div>
+    }
+    
     @if (selectedCompany == "Filpride")
     {
-        <img src="~/img/Filpride.jpg" height="" width="130px" />
+        <img src="~/img/Filpride.jpg" height="" width="130px"/>
     }
     @if (selectedCompany == "Mobility")
     {
-        <img src="~/img/usa88-logo.png" height="" width="130px" />
+        <img src="~/img/usa88-logo.png" height="" width="130px"/>
     }
 </div>
 <div class="text-center">
@@ -275,7 +288,7 @@
             <tr>
                 <td style="width:33%;">
                     <br />
-                    <span class="underline" style="display: inline-block; width:60%;">@Model.Header.CreatedBy?.ToUpper();</span> <br />
+                    <span class="underline" style="display: inline-block; width:60%;">@Model.Header.CreatedBy?.ToUpper()</span> <br />
                 </td>
                 <td style="width:33%;">
                     <br />
@@ -342,20 +355,26 @@
 
 <div class="row pt-2">
     @{
-        if (Model.Header.PostedBy == null)
+        if (Model.Header.Status != nameof(Status.Canceled) && Model.Header.Status != nameof(Status.Voided))
         {
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.CheckVoucherHeaderId)">Post</a>
-            </div>
-        }
-        else
-        {
-            <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplierId)" class="btn btn-primary form-control buttons">Print</a>
-            </div>
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
-            </div>
+            if (Model.Header.PostedBy == null)
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.Header.CheckVoucherHeaderId)">Post</a>
+                </div>
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="confirmPrint(@Model.Header?.CheckVoucherHeaderId, @supplierId)" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+                if (Model.Header?.AmountPaid == 0)
+                {
+                    <div class="col-6 col-md-3">
+                        <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmUnpost(@Model.Header?.CheckVoucherHeaderId)">Unpost</a>
+                    </div>
+                }
+            }
         }
     }
 

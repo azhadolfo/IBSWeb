@@ -31,13 +31,26 @@
 
 <br />
 <div class="text-end">
+    @if (Model.Status == nameof(Status.Voided))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>VOIDED</b>
+        </div>
+    }
+    @if (Model.Status == nameof(Status.Canceled))
+    {
+        <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+            <b>CANCELED</b>
+        </div>
+    }
+    
     @if (selectedCompany == "Filpride")
     {
-        <img src="~/img/Filpride.jpg" height="" width="130px" alt="Filpride Logo" />
+        <img src="~/img/Filpride.jpg" height="" width="130px" alt="Filpride Logo"/>
     }
     @if (selectedCompany == "Mobility")
     {
-        <img src="~/img/usa88-logo.png" height="" width="130px" alt="Filpride Logo" />
+        <img src="~/img/usa88-logo.png" height="" width="130px" alt="Filpride Logo"/>
     }
 </div>
 <div class="text-center">
@@ -111,9 +124,48 @@
             </thead>
             <tbody>
                 <tr style="height:80px;">
-                    <td>@Html.DisplayFor(model => model.SalesInvoice!.SalesInvoiceNo)</td>
-                    <td>@Model.SalesInvoice!.TransactionDate.ToString(SD.Date_Format)</td>
-                    <td>@Html.DisplayFor(model => model.SalesInvoice!.CustomerOrderSlip!.ProductName)</td>
+                    <td>
+                        @{
+                            var invoiceNo = "";
+                            @if (Model.SalesInvoice != null)
+                            {
+                                invoiceNo = Model.SalesInvoice.SalesInvoiceNo;
+                            }
+                            else
+                            {
+                                invoiceNo = Model.ServiceInvoice?.ServiceInvoiceNo;
+                            }
+                        }
+                        @invoiceNo
+                    </td>
+                    <td>
+                        @{
+                            var transactionDate = "";
+                            if (Model.SalesInvoice != null)
+                            {
+                                transactionDate = Model.SalesInvoice.TransactionDate.ToString(SD.Date_Format);
+                            }
+                            else
+                            {
+                                transactionDate = Model.ServiceInvoice?.CreatedDate.ToString(SD.Date_Format);
+                            }
+                        }
+                        @transactionDate
+                    </td>
+                    <td>
+                        @{
+                            var productName = "";
+                            if (Model.SalesInvoice != null)
+                            {
+                                productName = Model.SalesInvoice?.CustomerOrderSlip?.ProductName;
+                            }
+                            else
+                            {
+                                productName = Model.ServiceInvoice?.ServiceName;
+                            }
+                        }
+                        @productName
+                    </td>
                     <td>@Model.Description.ToUpper()</td>
                     <td>@Model.DebitAmount.ToString(decimalFormat)</td>
                 </tr>
@@ -246,17 +298,20 @@
 
 <div class="row pt-2">
     @{
-        if (Model.PostedBy == null)
+        if (Model.Status != nameof(Status.Canceled) && Model.Status != nameof(Status.Voided))
         {
-            <div class="col-6 col-md-3">
-                <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.DebitMemoId)">Post</a>
-            </div>
-        }
-        else
-        {
-            <div class="col-6 col-md-3">
-                <a onclick="confirmPrint(@Model.DebitMemoId)" class="btn btn-primary form-control buttons">Print</a>
-            </div>
+            if (Model.PostedBy == null)
+            {
+                <div class="col-6 col-md-3">
+                    <a id="approveButton" class="btn btn-primary form-control buttons" onclick="confirmPost(@Model.DebitMemoId)">Post</a>
+                </div>
+            }
+            else
+            {
+                <div class="col-6 col-md-3">
+                    <a onclick="confirmPrint(@Model.DebitMemoId)" class="btn btn-primary form-control buttons">Print</a>
+                </div>
+            }       
         }
     }
 
