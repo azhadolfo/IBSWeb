@@ -393,8 +393,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 FilprideAuditTrail auditTrailBook = new(model.CreatedBy!, $"Create new customer order slip# {model.CustomerOrderSlipNo}", "Customer Order Slip", model.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
-                await transaction.CommitAsync(cancellationToken);
                 await ApplyStorageChanges(filesToUpload, [] );
+                await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = $"Customer order slip created successfully. Series#: {model.CustomerOrderSlipNo}";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
