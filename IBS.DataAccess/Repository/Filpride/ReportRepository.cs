@@ -456,10 +456,13 @@ namespace IBS.DataAccess.Repository.Filpride
             var collectionReceipts = await _db.FilprideCollectionReceipts
                 .Where(cr => cr.Company == company && cr.TransactionDate >= dateFrom && cr.TransactionDate <= dateTo)
                 .Include(cr => cr.SalesInvoice)
+                .ThenInclude(si => si!.CustomerOrderSlip)
                 .Include(cr => cr.Customer)
+                .Include(cr => cr.ServiceInvoice)
+                .Include(cr => cr.BankAccount)
                 .OrderBy(cr => cr.Customer!.CustomerCode)
                 .ThenBy(cr => cr.Customer!.CustomerName)
-                .ThenBy(cr => cr.Customer!.CustomerType) // Order by TransactionDate
+                .ThenBy(cr => cr.Customer!.CustomerType)
                 .ToListAsync(cancellationToken);
 
             return collectionReceipts;
