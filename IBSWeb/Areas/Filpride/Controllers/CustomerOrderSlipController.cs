@@ -282,6 +282,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(viewModel.CustomerId, cancellationToken);
+
+            var customer = await _unitOfWork.FilprideCustomer
+                .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -293,9 +297,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var customer = await _unitOfWork.FilprideCustomer
-                    .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
-
                 var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
 
                 var commissionee = await _unitOfWork.FilprideSupplier
@@ -363,6 +364,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     model.UploadedFiles = uploadUrls.ToArray();
+                }
+                else
+                {
+                    throw new Exception("At least 1 attachment should be uploaded.");
                 }
 
                 if (model.Branch != null)
@@ -507,28 +512,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
-
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
 
+            var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
+                .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
+
+            if (existingRecord == null)
+            {
+                return NotFound();
+            }
+
+            viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+            viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
+            viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+            viewModel.Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m));
+            viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(existingRecord.CustomerId, cancellationToken);
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var existingRecord = await _unitOfWork.FilprideCustomerOrderSlip
-                    .GetAsync(cos => cos.CustomerOrderSlipId == viewModel.CustomerOrderSlipId, cancellationToken);
-
-                if (existingRecord == null)
-                {
-                    return NotFound();
-                }
-
                 // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
                 // if (await _unitOfWork.IsPeriodPostedAsync(viewModel.Date, cancellationToken))
                 // {
@@ -540,7 +547,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var thereIsNewFile = false;
 
                 // If the new array has value
-                if (viewModel.ArrayOfFileNames != "[]")
+                if (viewModel.ArrayOfFileNames != "[]" && viewModel.ArrayOfFileNames != "[null]")
                 {
                     var arrayOfFileNames = JsonSerializer.Deserialize<string[]>(viewModel.ArrayOfFileNames!);
 
@@ -594,15 +601,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
                 else
                 {
-                    // If the new array is empty but the previous existing has value, it means the user deleted all
-                    if (existingRecord.UploadedFiles?.Length != 0)
-                    {
-                        foreach (var existingFile in existingRecord.UploadedFiles!)
-                        {
-                            await _cloudStorageService.DeleteFileAsync(existingFile);
-                            existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray();
-                        }
-                    }
+                   throw new Exception("At least 1 attachment should be uploaded.");
                 }
 
                 viewModel.CurrentUser = _userManager.GetUserName(User);
@@ -759,6 +758,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to edit customer order slip. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                var fileInfos = new List<COSFileInfo>();
+
+                foreach (var file in existingRecord.UploadedFiles!)
+                {
+                    var fileInfo = new COSFileInfo
+                    {
+                        FileName = file,
+                        SignedUrl = await _cloudStorageService.GetSignedUrlAsync(file)
+                    };
+                    fileInfos.Add(fileInfo);
+                }
+
+                viewModel.FileInfos = fileInfos;
+
                 return View(viewModel);
             }
         }
