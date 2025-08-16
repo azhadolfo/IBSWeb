@@ -201,9 +201,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerAddress = customer.CustomerAddress,
                     CustomerBusinessStyle = customer.BusinessStyle,
                     CustomerTin = customer.CustomerTin,
-                    VatType = customer.VatType,
-                    HasEwt = customer.WithHoldingTax,
-                    HasWvat = customer.WithHoldingVat,
+                    VatType = service.Name != "TRANSACTION FEE" ? customer.VatType : SD.VatType_Exempt,
+                    HasEwt = customer.WithHoldingTax && service.Name != "TRANSACTION FEE",
+                    HasWvat = customer.WithHoldingVat && service.Name != "TRANSACTION FEE",
                     CreatedBy = User.Identity!.Name,
                     Total = viewModel.Total,
                     Balance = viewModel.Total,
@@ -219,7 +219,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (viewModel.DeliveryReceiptId != null)
                 {
-                    model.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                    var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(x => x.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+                    if (deliveryReceipt == null)
+                    {
+                        throw new NullReferenceException("DR not found!");
+                    }
+
+                    deliveryReceipt.HasAlreadyInvoiced = true;
+                    deliveryReceipt.Status = nameof(DRStatus.Invoiced);
+
+                    model.DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId;
                 }
 
                 #endregion
@@ -351,21 +362,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var ledgers = new List<FilprideGeneralLedgerBook>();
                 var accountTitlesDto = await _unitOfWork.FilprideServiceInvoice.GetListOfAccountTitleDto(cancellationToken);
-                var arNonTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020500") ?? throw new ArgumentException("Account title '101020500' not found.");
+                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
                 var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
                 var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
                 var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
 
-                ///TODO waiting for Ma'am LSA journal entries
                 ledgers.Add(
                     new FilprideGeneralLedgerBook
                     {
                         Date = postedDate,
                         Reference = model.ServiceInvoiceNo,
                         Description = model.ServiceName,
-                        AccountId = arNonTradeTitle.AccountId,
-                        AccountNo = arNonTradeTitle.AccountNumber,
-                        AccountTitle = arNonTradeTitle.AccountName,
+                        AccountId = arTradeTitle.AccountId,
+                        AccountNo = arTradeTitle.AccountNumber,
+                        AccountTitle = arTradeTitle.AccountName,
                         Debit = model.Total - (withHoldingTaxAmount + withHoldingVatAmount),
                         Credit = 0,
                         Company = model.Company,
@@ -450,6 +460,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     );
                 }
 
+                if (model.ServiceName == "TRANSACTION FEE")
+                {
+                    await ReverseTheDrEntries(model.DeliveryReceipt!.DeliveryReceiptNo, model.Company,
+                        cancellationToken);
+                }
+
                 if (!_unitOfWork.FilprideServiceInvoice.IsJournalEntriesBalanced(ledgers))
                 {
                     throw new ArgumentException("Debit and Credit is not equal, check your entries.");
@@ -502,7 +518,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (model.DeliveryReceiptId != null)
                 {
-                    await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
+                    var previousDr = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(x => x.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+
+                    if (previousDr == null)
+                    {
+                        throw new NullReferenceException("DR not found!");
+                    }
+
+                    previousDr.HasAlreadyInvoiced = false;
+                    previousDr.Status = nameof(DRStatus.ForInvoicing);
                 }
 
                 #region --Audit Trail Recording
@@ -557,9 +582,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Voided);
 
-                if (model.DeliveryReceiptId != null)
+                if (model.ServiceName == "TRANSACTION FEE")
                 {
-                    await ReverseTheProcessedDr(model.DeliveryReceiptId, cancellationToken);
+                    var dr = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(x => x.DeliveryReceiptId == model.DeliveryReceiptId, cancellationToken);
+
+                    if (dr == null)
+                    {
+                        throw new NullReferenceException("DR not found!");
+                    }
+
+                    dr.HasAlreadyInvoiced = false;
+                    dr.Status = nameof(DRStatus.ForInvoicing);
+
+                    await RevertTheReversalOfDrEntries(dr.DeliveryReceiptNo, dr.Company, cancellationToken);
                 }
 
                 await _unitOfWork.FilprideServiceInvoice.RemoveRecords<FilprideSalesBook>(gl => gl.SerialNo == model.ServiceInvoiceNo, cancellationToken);
@@ -677,9 +713,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.CustomerBusinessStyle = customer.BusinessStyle;
                 existingModel.CustomerAddress = customer.CustomerAddress;
                 existingModel.CustomerTin = customer.CustomerTin;
-                existingModel.VatType = customer.VatType;
-                existingModel.HasEwt = customer.WithHoldingTax;
-                existingModel.HasWvat = customer.WithHoldingVat;
+                existingModel.VatType = service.Name != "TRANSACTION FEE" ? customer.VatType : SD.VatType_Exempt;
+                existingModel.HasEwt = customer.WithHoldingTax && service.Name != "TRANSACTION FEE";
+                existingModel.HasWvat = customer.WithHoldingVat && service.Name != "TRANSACTION FEE";
 
                 #endregion --Saving the default properties
 
@@ -694,12 +730,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 if (existingModel.DeliveryReceiptId != viewModel.DeliveryReceiptId && existingModel.DeliveryReceipt != null)
                 {
-                    await ReverseTheProcessedDr(existingModel.DeliveryReceiptId, cancellationToken);
+                    var previousDr = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(x => x.DeliveryReceiptId == existingModel.DeliveryReceiptId, cancellationToken);
+
+                    if (previousDr == null)
+                    {
+                        throw new NullReferenceException("DR not found!");
+                    }
+
+                    previousDr.HasAlreadyInvoiced = false;
+                    previousDr.Status = nameof(DRStatus.ForInvoicing);
                 }
 
                 if (viewModel.DeliveryReceiptId != null)
                 {
-                    existingModel.DeliveryReceiptId = await ProcessTheDrForTransactionFee(viewModel.DeliveryReceiptId, cancellationToken);
+                    var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
+                        .GetAsync(x => x.DeliveryReceiptId == viewModel.DeliveryReceiptId, cancellationToken);
+
+                    if (deliveryReceipt == null)
+                    {
+                        throw new NullReferenceException("DR not found!");
+                    }
+
+                    deliveryReceipt.HasAlreadyInvoiced = true;
+                    deliveryReceipt.Status = nameof(DRStatus.Invoiced);
+
+                    existingModel.DeliveryReceiptId = deliveryReceipt.DeliveryReceiptId;
                 }
 
                 #endregion
@@ -858,12 +914,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             foreach (var dr in drs)
             {
-                decimal cosPrice = dr.CustomerOrderSlip!.DeliveredPrice;
-                decimal cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)dr.PurchaseOrderId!);
-                decimal freight = dr.Freight;
-                decimal commission = dr.CommissionRate;
-                decimal grossMargin = cosPrice - (cost + freight + commission);
-                decimal total = dr.Quantity * grossMargin;
+                var cosPrice = dr.CustomerOrderSlip!.DeliveredPrice;
+                var cost = await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)dr.PurchaseOrderId!);
+                var freight = dr.Freight;
+                var commission = dr.CommissionRate;
+                var grossMargin = cosPrice - (cost + freight + commission);
+                var total = dr.Quantity * grossMargin;
 
                 result.Add(new
                 {
@@ -876,64 +932,57 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return Json(result);
         }
 
-        private async Task<int> ProcessTheDrForTransactionFee(int? deliveryReceiptId,
-            CancellationToken cancellationToken)
+        private async Task RevertTheReversalOfDrEntries(string previousDrNo, string company, CancellationToken cancellationToken)
         {
-            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAsync(x => x.DeliveryReceiptId == deliveryReceiptId, cancellationToken);
+            await _dbContext.FilprideGeneralLedgerBooks
+                .Where(x => x.Reference == previousDrNo
+                            && x.Company == company && x.Description.StartsWith("Reversal"))
+                .ExecuteDeleteAsync(cancellationToken);
 
-            if (deliveryReceipt == null)
-            {
-                throw new NullReferenceException("DR not found!");
-            }
-
-            deliveryReceipt.HasAlreadyInvoiced = true;
-            deliveryReceipt.Status = nameof(DRStatus.Invoiced);
-
-            #region Reverse the DR related
-
-            var drGl = await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == deliveryReceipt.DeliveryReceiptNo
-                            && x.Company == deliveryReceipt.Company)
-                .ToListAsync(cancellationToken);
-
-            foreach (var dr in drGl)
-            {
-                (dr.Debit, dr.Credit) = (dr.Credit, dr.Debit);
-            }
-
-            #endregion
-
-            return deliveryReceipt.DeliveryReceiptId;
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task ReverseTheProcessedDr(int? previousDeliveryReceiptId,
-            CancellationToken cancellationToken)
+        private async Task ReverseTheDrEntries(string drNo, string company, CancellationToken cancellationToken)
         {
-            var deliveryReceipt = await _unitOfWork.FilprideDeliveryReceipt
-                .GetAsync(x => x.DeliveryReceiptId == previousDeliveryReceiptId, cancellationToken);
-
-            if (deliveryReceipt == null)
-            {
-                throw new NullReferenceException("DR not found!");
-            }
-
-            deliveryReceipt.HasAlreadyInvoiced = false;
-            deliveryReceipt.Status = nameof(DRStatus.ForInvoicing);
-
-            #region Reverse the DR related
-
-            var drGl = await _dbContext.FilprideGeneralLedgerBooks
-                .Where(x => x.Reference == deliveryReceipt.DeliveryReceiptNo
-                            && x.Company == deliveryReceipt.Company)
+            var originalEntries = await _dbContext.FilprideGeneralLedgerBooks
+                .Where(x => x.Reference == drNo
+                            && x.Company == company)
                 .ToListAsync(cancellationToken);
 
-            foreach (var dr in drGl)
+            var reversalEntries = new List<FilprideGeneralLedgerBook>();
+
+            foreach (var originalEntry  in originalEntries)
             {
-                (dr.Credit, dr.Debit) = (dr.Debit, dr.Credit);
+                var reversalEntry = new FilprideGeneralLedgerBook
+                {
+                    Reference = originalEntry.Reference,
+                    AccountNo = originalEntry.AccountNo,
+                    AccountTitle = originalEntry.AccountTitle,
+                    Description = "Reversal of entries due to recording of transaction fee.",
+                    Debit = originalEntry.Credit,
+                    Credit = originalEntry.Debit,
+                    CreatedBy = User.Identity!.Name,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    IsPosted = true,
+                    Company = originalEntry.Company,
+                    BankAccountId = originalEntry.BankAccountId,
+                    CustomerId = originalEntry.CustomerId,
+                    SupplierId = originalEntry.SupplierId,
+                    AccountId = originalEntry.AccountId,
+                    EmployeeId = originalEntry.EmployeeId,
+                    CompanyId = originalEntry.CompanyId,
+                    BankAccountName = originalEntry.BankAccountName,
+                    CompanyName = originalEntry.CompanyName,
+                    CustomerName = originalEntry.CustomerName,
+                    EmployeeName = originalEntry.EmployeeName,
+                    SupplierName = originalEntry.SupplierName,
+                };
+
+                reversalEntries.Add(reversalEntry);
             }
 
-            #endregion
+            await _dbContext.FilprideGeneralLedgerBooks.AddRangeAsync(reversalEntries, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
     }
