@@ -68,7 +68,6 @@ namespace IBS.Services
             try
             {
                 await _storageClient.DeleteObjectAsync(_options.GoogleCloudStorageBucketName, fileNameToDelete);
-                _logger.LogInformation($"File '{fileNameToDelete}' successfully deleted.");
             }
             catch (Exception ex)
             {
