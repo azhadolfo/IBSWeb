@@ -82,7 +82,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims!);
+                var checkVoucherHeader = await _unitOfWork.FilprideReport.GetClearedDisbursementReport(model.DateFrom, model.DateTo, companyClaims);
 
                 if (checkVoucherHeader.Count == 0)
                 {
@@ -413,7 +413,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             try
             {
-                var purchaseOrder = await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims!);
+                var purchaseOrder = await _unitOfWork.FilprideReport.GetPurchaseOrderReport(model.DateFrom, model.DateTo, companyClaims);
 
                 if (purchaseOrder.Count == 0)
                 {
@@ -714,7 +714,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             try
             {
-                var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims!, dateSelectionType:model.DateSelectionType);
+                var purchaseReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, dateSelectionType:model.DateSelectionType);
 
                 if (purchaseReport.Count == 0)
                 {
@@ -1611,7 +1611,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, model.Commissionee);
+                var grossMarginReport = await _unitOfWork.FilprideReport.GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee);
 
                 if (!grossMarginReport.Any())
                 {

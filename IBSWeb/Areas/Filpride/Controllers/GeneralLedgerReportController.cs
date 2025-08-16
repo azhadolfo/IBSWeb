@@ -80,7 +80,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var generalLedgerBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims!);
+                var generalLedgerBooks = await _unitOfWork.FilprideReport.GetGeneralLedgerBooks(model.DateFrom, model.DateTo, companyClaims);
 
                 if (!generalLedgerBooks.Any())
                 {

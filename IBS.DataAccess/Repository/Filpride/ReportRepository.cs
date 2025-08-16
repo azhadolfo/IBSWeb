@@ -462,7 +462,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(cr => cr.BankAccount)
                 .OrderBy(cr => cr.Customer!.CustomerCode)
                 .ThenBy(cr => cr.Customer!.CustomerName)
-                .ThenBy(cr => cr.Customer!.CustomerType) // Order by TransactionDate
+                .ThenBy(cr => cr.Customer!.CustomerType)
                 .ToListAsync(cancellationToken);
 
             return collectionReceipts;

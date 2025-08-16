@@ -83,7 +83,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims!);
+                var cosSummary = await _unitOfWork.FilprideReport.GetCosUnservedVolume(model.DateFrom, model.DateTo, companyClaims);
 
                 if (cosSummary.Count == 0)
                 {
@@ -1342,7 +1342,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims!, model.Commissionee, cancellationToken);
+                var sales = await _unitOfWork.FilprideReport.GetSalesReport(model.DateFrom, model.DateTo, companyClaims, model.Commissionee, cancellationToken);
 
                 if (!sales.Any())
                 {
@@ -3779,7 +3779,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4103,7 +4103,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 var salesInvoice = await _unitOfWork.FilprideReport
-                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims!, model.Customers, cancellationToken);
+                    .GetARPerCustomerReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, cancellationToken);
 
                 if (!salesInvoice.Any())
                 {
@@ -4421,7 +4421,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var serviceInvoice = await _unitOfWork.FilprideReport
-                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims!, cancellationToken);
+                    .GetServiceInvoiceReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken);
 
                 if (!serviceInvoice.Any())
                 {
