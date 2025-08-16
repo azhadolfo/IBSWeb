@@ -298,6 +298,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 var product = await _unitOfWork.Product.GetAsync(x => x.ProductId == viewModel.ProductId, cancellationToken);
+                var filesToUpload = new List<FilesToUpload>();
 
                 var commissionee = await _unitOfWork.FilprideSupplier
                     .GetAsync(x => x.SupplierId == viewModel.CommissioneeId, cancellationToken);
@@ -359,7 +360,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     foreach (var file in viewModel.UploadedFiles)
                     {
                         var fileName = GenerateFileNameToSave(file.FileName);
-                        await _cloudStorageService.UploadFileAsync(file, fileName);
+                        filesToUpload.Add( new FilesToUpload{ FileName = fileName, File = file });
                         uploadUrls.Add(fileName);
                     }
 
@@ -393,6 +394,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 await transaction.CommitAsync(cancellationToken);
+                await ApplyStorageChanges(filesToUpload, [] );
                 TempData["success"] = $"Customer order slip created successfully. Series#: {model.CustomerOrderSlipNo}";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
@@ -545,13 +547,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // }
 
                 var thereIsNewFile = false;
+                var filesToUpload = new List<FilesToUpload>();
+                string[]? filesToDelete = [];
 
                 // If the new array has value
                 if (viewModel.ArrayOfFileNames != "[]" && viewModel.ArrayOfFileNames != "[null]")
                 {
                     var arrayOfFileNames = JsonSerializer.Deserialize<string[]>(viewModel.ArrayOfFileNames!);
 
-                    if (existingRecord.UploadedFiles != null) // If the old record has value
+                    // Eliminating the removed items from the old list
+                    if (existingRecord.UploadedFiles != null) // Check first if the old list has value
                     {
                         foreach (var existingFile in existingRecord.UploadedFiles!) // Filter out the files that does not exist in the new array
                         {
@@ -565,8 +570,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             }
 
                             thereIsNewFile = true;
-                            await _cloudStorageService.DeleteFileAsync(existingFile);
-                            existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray();
+                            filesToDelete = filesToDelete.Append(existingFile).ToArray();
+                            existingRecord.UploadedFiles = existingRecord.UploadedFiles.Where(s => s != existingFile).ToArray(); // Update the list.
                         }
 
                     }
@@ -586,13 +591,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 continue;
                             }
 
-                            // Get the new file
-                            var file = viewModel.UploadedFiles.FirstOrDefault(x => x.FileName == newFile);
-                            // Generate new fileName
-                            var fileName = GenerateFileNameToSave(file!.FileName);
-                            // Upload the new file
-                            await _cloudStorageService.UploadFileAsync(file, fileName);
-                            // Add the new file into the old array
+                            var file = viewModel.UploadedFiles.FirstOrDefault(x => x.FileName == newFile); // Get the new file
+                            var fileName = GenerateFileNameToSave(file!.FileName); // Generate new fileName
+                            filesToUpload.Add(new FilesToUpload() { File = file, FileName = fileName }); // Add the file and fileName for creation
+
+                            // Add the new fileName into the old array
                             List<string> tempList = existingRecord.UploadedFiles?.ToList() ?? new List<string>();
                             tempList.Add(fileName);
                             existingRecord.UploadedFiles = tempList.ToArray();
@@ -747,7 +750,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideAuditTrail auditTrailBook = new(existingRecord.EditedBy!, $"Edit customer order slip# {existingRecord.CustomerOrderSlipNo}", "Customer Order Slip", existingRecord.Company);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
+                await ApplyStorageChanges(filesToUpload, filesToDelete);
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Customer order slip updated successfully.";
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
@@ -775,6 +778,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 return View(viewModel);
             }
+        }
+
+        public async Task ApplyStorageChanges(List<FilesToUpload> filesToUpload, string[] filesToDelete)
+        {
+            if (filesToUpload.Count != 0)
+            {
+                foreach (var file in filesToUpload)
+                {
+                    await _cloudStorageService.UploadFileAsync(file.File, file.FileName);
+                }
+            }
+            if (filesToDelete.Length != 0)
+            {
+                foreach (var file in filesToDelete)
+                {
+                    await _cloudStorageService.DeleteFileAsync(file);
+                }
+            }
+
         }
 
         public async Task<IActionResult> Preview(int? id, CancellationToken cancellationToken)

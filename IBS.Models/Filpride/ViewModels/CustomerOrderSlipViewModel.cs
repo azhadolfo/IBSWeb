@@ -95,4 +95,10 @@ namespace IBS.Models.Filpride.ViewModels
         public string FileName { get; set; }
         public string SignedUrl { get; set; }
     }
+
+    public class FilesToUpload
+    {
+        public IFormFile File { get; set; }
+        public string FileName { get; set; }
+    }
 }
