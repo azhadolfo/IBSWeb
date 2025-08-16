@@ -68,11 +68,10 @@ namespace IBS.Services
             try
             {
                 await _storageClient.DeleteObjectAsync(_options.GoogleCloudStorageBucketName, fileNameToDelete);
-                _logger.LogInformation($"File '{fileNameToDelete}' successfully deleted.");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error occurred while deleting file '{fileNameToDelete}': {ex.Message}");
+                _logger.LogError(ex, $"Error occurred while deleting file: {ex.Message}");
                 throw;
             }
         }
@@ -91,7 +90,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error occurred while obtaining signed URL for file '{fileNameToRead}': {ex.Message}");
+                _logger.LogError(ex, $"Error occurred while obtaining signed URL for file: {ex.Message}");
                 throw;
             }
         }
@@ -106,8 +105,6 @@ namespace IBS.Services
 
             try
             {
-                _logger.LogInformation($"Uploading file '{fileNameToSave}' to bucket '{_options.GoogleCloudStorageBucketName}'.");
-
                 using (var memoryStream = new MemoryStream())
                 {
                     await fileToUpload.CopyToAsync(memoryStream);
@@ -119,14 +116,12 @@ namespace IBS.Services
                         fileToUpload.ContentType ?? "application/octet-stream",
                         memoryStream
                     );
-
-                    _logger.LogInformation($"File '{fileNameToSave}' uploaded successfully. Media link: {uploadedFile.MediaLink}");
                     return uploadedFile.MediaLink;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error occurred while uploading file '{fileNameToSave}': {ex.Message}");
+                _logger.LogError(ex, $"Error occurred while uploading file: {ex.Message}");
                 throw;
             }
         }
@@ -135,8 +130,6 @@ namespace IBS.Services
         {
             try
             {
-                _logger.LogInformation($"Downloading file {fileNameToDownload} from storage {_options.GoogleCloudStorageBucketName}");
-
                 using (var storageClient = StorageClient.Create(_googleCredential))
                 {
                     var memoryStream = new MemoryStream();
@@ -148,7 +141,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error occurred while downloading file {fileNameToDownload}: {ex.Message}");
+                _logger.LogError(ex, $"Error occurred while downloading file: {ex.Message}");
                 throw;
             }
         }
@@ -179,7 +172,7 @@ namespace IBS.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error processing file {fileName}: {ex.Message}");
+                _logger.LogError(ex, $"Error processing file: {ex.Message}");
                 throw;
             }
         }

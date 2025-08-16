@@ -25,7 +25,8 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
-                .Where(c => c.Company == companyClaims)
+                .Where(c => c.Company == companyClaims
+                            && !c.DeliveryReceiptNo.Contains("BEG"))
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 

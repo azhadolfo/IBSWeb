@@ -143,7 +143,7 @@
                         <span asp-validation-for="Terms" class="text-danger"></span>
                         <input type="hidden" asp-for="Terms"/>
                     </div>
-                    <div class="form-group py-2 col-12">
+                    <div class="form-group py-2 col-12" style="display: none;">
                         <label class="control-label">Branch<span class="required">*</span></label>
                         <select asp-for="SelectedBranch" asp-items="@Model.Branches" class="form-select js-select2 border-0 shadow" style="width:100%" required>
                             <option value="" selected>Select branch</option>
