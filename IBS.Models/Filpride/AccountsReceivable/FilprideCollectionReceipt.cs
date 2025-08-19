@@ -155,6 +155,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [StringLength(13)]
         public string? Type { get; set; }
 
+        public DateOnly? DepositedDate { get; set; }
+
         [NotMapped]
         public List<FilprideGeneralLedgerBook>? Details { get; set; }
 
