@@ -245,10 +245,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 await _unitOfWork.SaveAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-
                 TempData["success"] = "Collection Receipt deposited date has been recorded successfully.";
 
-                return RedirectToAction(nameof(Index));
+                if (model.SalesInvoiceId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
             }
             catch (Exception ex)
             {
