@@ -398,6 +398,73 @@ namespace IBS.DataAccess.Repository.Filpride
 
         }
 
+        public async Task DepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default)
+        {
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+            var customerName = collectionReceipt.SalesInvoiceId != null
+                ?
+                collectionReceipt.SalesInvoice!.Customer!.CustomerName
+                : collectionReceipt.MultipleSIId != null
+                    ? collectionReceipt.Customer!.CustomerName
+                    : collectionReceipt.ServiceInvoice!.Customer!.CustomerName;
+            string description = "";
+
+            if (collectionReceipt.SalesInvoiceId != null)
+            {
+                var dr = collectionReceipt.SalesInvoice!.DeliveryReceipt;
+                description = $"CR Ref collected from {customerName} for {dr!.DeliveryReceiptNo} DR {dr.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+            }
+            else
+            {
+                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.ServiceInvoiceNo} SV Dated {collectionReceipt.ServiceInvoice.DueDate} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+            }
+
+            if (collectionReceipt.CashAmount > 0 || collectionReceipt.CheckAmount > 0)
+            {
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = collectionReceipt.TransactionDate,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
+                        Description = description,
+                        AccountId = cashInBankTitle.AccountId,
+                        AccountNo = cashInBankTitle.AccountNumber,
+                        AccountTitle = cashInBankTitle.AccountName,
+                        Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
+                        Credit = 0,
+                        Company = collectionReceipt.Company,
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        BankAccountId = collectionReceipt.BankId,
+                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
+                    }
+                );
+
+                ledgers.Add(
+                    new FilprideGeneralLedgerBook
+                    {
+                        Date = collectionReceipt.TransactionDate,
+                        Reference = collectionReceipt.CollectionReceiptNo!,
+                        Description = description,
+                        AccountId = cashInBankTitle.AccountId,
+                        AccountNo = cashInBankTitle.AccountNumber,
+                        AccountTitle = cashInBankTitle.AccountName,
+                        Debit = 0,
+                        Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
+                        Company = collectionReceipt.Company,
+                        CreatedBy = collectionReceipt.PostedBy,
+                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
+                    }
+                );
+            }
+
+            await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task RemoveSIPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             var si = await _db

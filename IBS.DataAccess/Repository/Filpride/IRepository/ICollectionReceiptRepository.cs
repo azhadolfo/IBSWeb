@@ -23,5 +23,7 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
         Task<List<FilprideOffsettings>> GetOffsettings(string source, string reference, string company, CancellationToken cancellationToken = default);
 
         Task PostAsync(FilprideCollectionReceipt collectionReceipt, List<FilprideOffsettings> offsettings, CancellationToken cancellationToken = default);
+
+        Task DepositAsync(FilprideCollectionReceipt collectionReceipt, CancellationToken cancellationToken = default);
     }
 }
