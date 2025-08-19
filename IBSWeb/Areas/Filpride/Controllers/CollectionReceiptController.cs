@@ -194,6 +194,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        public async Task<IActionResult> GetBanks(CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            return Json(await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken));
+        }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> RecordDepositInfo(int id, int bankId, DateOnly depositDate, CancellationToken cancellationToken)
+        {
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == bankId, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                var model = await _unitOfWork.FilprideCollectionReceipt
+                    .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
+                model.DepositedDate = depositDate;
+                model.BankId = bank.BankAccountId;
+                model.BankAccountName = bank.AccountName;
+                model.BankAccountNumber = bank.AccountNo;
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Record deposit date of collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["success"] = "Collection Receipt deposited date has been recorded successfully.";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to record deposit date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SingleCollectionCreateForSales(CollectionReceiptSingleSiViewModel viewModel, CancellationToken cancellationToken)
