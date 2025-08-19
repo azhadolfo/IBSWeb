@@ -81,7 +81,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     const { depositDate, bankId } = result.value;
-                    window.location.href = `@Url.Action("RecordDepositInfo", "CollectionReceipt", new { area = "Filpride" })/${collectionReceiptId}?depositDate=${encodeURIComponent(depositDate)}&bankId=${encodeURIComponent(bankId)}`;
+                    window.location.href = `@Url.Action("Deposit", "CollectionReceipt", new { area = "Filpride" })/${collectionReceiptId}?depositDate=${encodeURIComponent(depositDate)}&bankId=${encodeURIComponent(bankId)}`;
                 }
             });
         }

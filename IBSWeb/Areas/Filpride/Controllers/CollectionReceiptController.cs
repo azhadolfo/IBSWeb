@@ -208,7 +208,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
         [HttpGet]
-        public async Task<IActionResult> RecordDepositInfo(int id, int bankId, DateOnly depositDate, CancellationToken cancellationToken)
+        public async Task<IActionResult> Deposit(int id, int bankId, DateOnly depositDate, CancellationToken cancellationToken)
         {
             var bank = await _unitOfWork.FilprideBankAccount
                 .GetAsync(b => b.BankAccountId == bankId, cancellationToken);
@@ -218,22 +218,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                var model = await _unitOfWork.FilprideCollectionReceipt
-                    .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
-
-                if (model == null)
-                {
-                    return NotFound();
-                }
-
                 model.DepositedDate = depositDate;
                 model.BankId = bank.BankAccountId;
                 model.BankAccountName = bank.AccountName;
                 model.BankAccountNumber = bank.AccountNo;
+
+                await _unitOfWork.FilprideCollectionReceipt.DepositAsync(model, cancellationToken);
 
                 #region --Audit Trail Recording
 
@@ -259,7 +261,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to record deposit date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
-                return RedirectToAction(nameof(Index));
+
+                if (model.SalesInvoiceId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
             }
         }
 
