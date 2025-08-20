@@ -403,63 +403,77 @@ namespace IBS.DataAccess.Repository.Filpride
             var ledgers = new List<FilprideGeneralLedgerBook>();
             var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
             var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+            string description = "";
+
+            collectionReceipt.ReceiptDetails = await _db.FilprideCollectionReceiptDetails
+                .Where(rd => rd.CollectionReceiptId == collectionReceipt.CollectionReceiptId)
+                .ToListAsync(cancellationToken);
+
             var customerName = collectionReceipt.SalesInvoiceId != null
                 ?
                 collectionReceipt.SalesInvoice!.Customer!.CustomerName
                 : collectionReceipt.MultipleSIId != null
                     ? collectionReceipt.Customer!.CustomerName
                     : collectionReceipt.ServiceInvoice!.Customer!.CustomerName;
-            string description = "";
-            if (collectionReceipt.SalesInvoiceId != null)
+
+            if (collectionReceipt.SalesInvoiceId != null || collectionReceipt.MultipleSIId != null)
             {
-                collectionReceipt.SalesInvoice!.DeliveryReceipt = await _db.FilprideDeliveryReceipts.FindAsync(collectionReceipt.SalesInvoice.DeliveryReceiptId, cancellationToken);
-                description = $"CR Ref collected from {customerName} for {collectionReceipt.SalesInvoice!.DeliveryReceipt!.DeliveryReceiptNo} DR Dated {collectionReceipt.SalesInvoice.DeliveryReceipt.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                if (collectionReceipt.SalesInvoiceId != null)
+                {
+                    description = $"CR Ref collected from {customerName} for {collectionReceipt.SalesInvoice!.SalesInvoiceNo} SI Dated {collectionReceipt.SalesInvoice.TransactionDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                }
+                else
+                {
+                    var crNoAndDate = new List<string>();
+                    foreach (var rd in collectionReceipt.ReceiptDetails)
+                    {
+                        crNoAndDate.Add($"{rd.InvoiceNo} SI Dated {rd.InvoiceDate:MMM/dd/yyyy}");
+                    }
+                    var connectedCrNoAndDate = string.Join(", ", crNoAndDate);
+                    description = $"CR Ref collected from {customerName} for {connectedCrNoAndDate} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                }
             }
             else
             {
-                collectionReceipt.ServiceInvoice!.DeliveryReceipt = await _db.FilprideDeliveryReceipts.FindAsync(collectionReceipt.ServiceInvoice.DeliveryReceiptId, cancellationToken);
-                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.DeliveryReceipt!.DeliveryReceiptNo} DR Dated {collectionReceipt.ServiceInvoice.DeliveryReceipt.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.ServiceInvoiceNo} SV Dated {collectionReceipt.ServiceInvoice.CreatedDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
             }
 
-            if (collectionReceipt.CashAmount > 0 || collectionReceipt.CheckAmount > 0)
-            {
-                ledgers.Add(
-                    new FilprideGeneralLedgerBook
-                    {
-                        Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo!,
-                        Description = description,
-                        AccountId = cashInBankTitle.AccountId,
-                        AccountNo = cashInBankTitle.AccountNumber,
-                        AccountTitle = cashInBankTitle.AccountName,
-                        Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
-                        Credit = 0,
-                        Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        BankAccountId = collectionReceipt.BankId,
-                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
-                    }
-                );
+            ledgers.Add(
+                new FilprideGeneralLedgerBook
+                {
+                    Date = collectionReceipt.TransactionDate,
+                    Reference = collectionReceipt.CollectionReceiptNo!,
+                    Description = description,
+                    AccountId = cashInBankTitle.AccountId,
+                    AccountNo = cashInBankTitle.AccountNumber,
+                    AccountTitle = cashInBankTitle.AccountName,
+                    Debit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
+                    Credit = 0,
+                    Company = collectionReceipt.Company,
+                    CreatedBy = collectionReceipt.PostedBy,
+                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    BankAccountId = collectionReceipt.BankId,
+                    BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
+                }
+            );
 
-                ledgers.Add(
-                    new FilprideGeneralLedgerBook
-                    {
-                        Date = collectionReceipt.TransactionDate,
-                        Reference = collectionReceipt.CollectionReceiptNo!,
-                        Description = description,
-                        AccountId = cashInBankTitle.AccountId,
-                        AccountNo = cashInBankTitle.AccountNumber,
-                        AccountTitle = cashInBankTitle.AccountName,
-                        Debit = 0,
-                        Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
-                        Company = collectionReceipt.Company,
-                        CreatedBy = collectionReceipt.PostedBy,
-                        CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                        BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
-                    }
-                );
-            }
+            ledgers.Add(
+                new FilprideGeneralLedgerBook
+                {
+                    Date = collectionReceipt.TransactionDate,
+                    Reference = collectionReceipt.CollectionReceiptNo!,
+                    Description = description,
+                    AccountId = cashInBankTitle.AccountId,
+                    AccountNo = cashInBankTitle.AccountNumber,
+                    AccountTitle = cashInBankTitle.AccountName,
+                    Debit = 0,
+                    Credit = collectionReceipt.CashAmount + collectionReceipt.CheckAmount,
+                    Company = collectionReceipt.Company,
+                    CreatedBy = collectionReceipt.PostedBy,
+                    CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    BankAccountName = collectionReceipt.BankId.HasValue ? $"{collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}" : null
+                }
+            );
 
             await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);

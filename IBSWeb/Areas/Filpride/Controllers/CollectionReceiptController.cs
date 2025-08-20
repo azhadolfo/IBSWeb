@@ -262,7 +262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to record deposit date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                if (model.SalesInvoiceId != null)
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
                 {
                     return RedirectToAction(nameof(Index));
                 }
