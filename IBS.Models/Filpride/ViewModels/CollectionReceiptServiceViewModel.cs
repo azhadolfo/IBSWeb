@@ -31,14 +31,28 @@ namespace IBS.Models.Filpride.ViewModels
         [StringLength(50)]
         public string? CheckNo { get; set; }
 
-        public int? BankId { get; set; }
-
-        public List<SelectListItem>? BankAccounts { get; set; }
+        public string? CheckBank { get; set; }
 
         [StringLength(50)]
         public string? CheckBranch { get; set; }
 
         public decimal CheckAmount { get; set; }
+
+        public DateOnly? ManagersCheckDate { get; set; }
+
+        [StringLength(50)]
+        public string? ManagersCheckNo { get; set; }
+
+        public string? ManagersCheckBank { get; set; }
+
+        [StringLength(50)]
+        public string? ManagersCheckBranch { get; set; }
+
+        public decimal ManagersCheckAmount { get; set; }
+
+        public int? BankId { get; set; }
+
+        public List<SelectListItem>? BankAccounts { get; set; }
 
         public decimal EWT { get; set; }
 
