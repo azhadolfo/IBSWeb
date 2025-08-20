@@ -420,7 +420,7 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 if (collectionReceipt.SalesInvoiceId != null)
                 {
-                    description = $"CR Ref collected from {customerName} for {collectionReceipt.SalesInvoice!.SalesInvoiceNo} SI Dated {collectionReceipt.SalesInvoice.TransactionDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                    description = $"CR Ref collected from {customerName} for {collectionReceipt.SalesInvoice!.SalesInvoiceNo} SI Dated {collectionReceipt.SalesInvoice.TransactionDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}";
                 }
                 else
                 {
@@ -430,12 +430,12 @@ namespace IBS.DataAccess.Repository.Filpride
                         crNoAndDate.Add($"{rd.InvoiceNo} SI Dated {rd.InvoiceDate:MMM/dd/yyyy}");
                     }
                     var connectedCrNoAndDate = string.Join(", ", crNoAndDate);
-                    description = $"CR Ref collected from {customerName} for {connectedCrNoAndDate} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                    description = $"CR Ref collected from {customerName} for {connectedCrNoAndDate} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}";
                 }
             }
             else
             {
-                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.ServiceInvoiceNo} SV Dated {collectionReceipt.ServiceInvoice.CreatedDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.ServiceInvoiceNo} SV Dated {collectionReceipt.ServiceInvoice.CreatedDate:MMM/dd/yyyy} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountNumber} {collectionReceipt.BankAccountName}";
             }
 
             ledgers.Add(
