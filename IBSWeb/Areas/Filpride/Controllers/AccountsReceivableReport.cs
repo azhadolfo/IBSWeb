@@ -195,7 +195,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.DeliveredPrice != 0 ? record.DeliveredPrice < 0 ? $"({Math.Abs(record.DeliveredPrice).ToString(SD.Four_Decimal_Format)})" : record.DeliveredPrice.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveredPrice < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.Quantity != 0 ? record.Quantity < 0 ? $"({Math.Abs(record.Quantity).ToString(SD.Two_Decimal_Format)})" : record.Quantity.ToString(SD.Two_Decimal_Format) : null).FontColor(record.Quantity < 0 ? Colors.Red.Medium : Colors.Black);
                                     table.Cell().Border(0.5f).AlignRight().Padding(3).Text(record.TotalAmount != 0 ? record.TotalAmount < 0 ? $"({Math.Abs(record.TotalAmount).ToString(SD.Two_Decimal_Format)})" : record.TotalAmount.ToString(SD.Two_Decimal_Format) : null).FontColor(record.TotalAmount < 0 ? Colors.Red.Medium : Colors.Black);
-                                    table.Cell().Border(0.5f).Padding(3).Text("APPROVED");
+                                    table.Cell().Border(0.5f).Padding(3).Text(record.Status.ToUpper());
                                     table.Cell().Border(0.5f).Padding(3).Text(record.ExpirationDate.ToString());
                                 }
 
@@ -317,7 +317,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 6].Value = item.DeliveredPrice;
                     worksheet.Cells[row, 7].Value = unservedVolume;
                     worksheet.Cells[row, 8].Value = item.TotalAmount;
-                    worksheet.Cells[row, 9].Value = "APPROVED";
+                    worksheet.Cells[row, 9].Value = item.Status.ToUpper();
                     worksheet.Cells[row, 10].Value = item.ExpirationDate?.ToString("dd-MMM-yyyy");
                     worksheet.Cells[row, 11].Value = item.OldCosNo;
 
