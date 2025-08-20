@@ -294,7 +294,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerId = viewModel.CustomerId,
                     Remarks = viewModel.Remarks,
                     Quantity = viewModel.Volume,
-                    TotalAmount = viewModel.TotalAmount,
+                    TotalAmount = viewModel.Volume * customerOrderSlip.DeliveredPrice,
                     Company = companyClaims,
                     CreatedBy = _userManager.GetUserName(User),
                     ManualDrNo = viewModel.ManualDrNo,
