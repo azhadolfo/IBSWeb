@@ -112,7 +112,7 @@ namespace IBS.DataAccess.Repository.Filpride
             existingRecord.CustomerId = viewModel.CustomerId;
             existingRecord.Remarks = viewModel.Remarks;
             existingRecord.Quantity = viewModel.Volume;
-            existingRecord.TotalAmount = viewModel.TotalAmount;
+            existingRecord.TotalAmount = viewModel.Volume * customerOrderSlip.DeliveredPrice;
             existingRecord.ManualDrNo = viewModel.ManualDrNo;
             existingRecord.Driver = viewModel.Driver;
             existingRecord.PlateNo = viewModel.PlateNo;
