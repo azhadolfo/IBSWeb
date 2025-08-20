@@ -155,6 +155,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [StringLength(13)]
         public string? Type { get; set; }
 
+        [Column(TypeName = "date")]
         public DateOnly? DepositedDate { get; set; }
 
         [NotMapped]
