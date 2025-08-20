@@ -410,15 +410,15 @@ namespace IBS.DataAccess.Repository.Filpride
                     ? collectionReceipt.Customer!.CustomerName
                     : collectionReceipt.ServiceInvoice!.Customer!.CustomerName;
             string description = "";
-
             if (collectionReceipt.SalesInvoiceId != null)
             {
-                var dr = collectionReceipt.SalesInvoice!.DeliveryReceipt;
-                description = $"CR Ref collected from {customerName} for {dr!.DeliveryReceiptNo} DR {dr.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                collectionReceipt.SalesInvoice!.DeliveryReceipt = await _db.FilprideDeliveryReceipts.FindAsync(collectionReceipt.SalesInvoice.DeliveryReceiptId, cancellationToken);
+                description = $"CR Ref collected from {customerName} for {collectionReceipt.SalesInvoice!.DeliveryReceipt!.DeliveryReceiptNo} DR Dated {collectionReceipt.SalesInvoice.DeliveryReceipt.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
             }
             else
             {
-                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.ServiceInvoiceNo} SV Dated {collectionReceipt.ServiceInvoice.DueDate} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
+                collectionReceipt.ServiceInvoice!.DeliveryReceipt = await _db.FilprideDeliveryReceipts.FindAsync(collectionReceipt.ServiceInvoice.DeliveryReceiptId, cancellationToken);
+                description = $"CR Ref collected from {customerName} for {collectionReceipt.ServiceInvoice!.DeliveryReceipt!.DeliveryReceiptNo} DR Dated {collectionReceipt.ServiceInvoice.DeliveryReceipt.Date} Check No. {collectionReceipt.CheckNo} issued by {collectionReceipt.BankAccountName}";
             }
 
             if (collectionReceipt.CashAmount > 0 || collectionReceipt.CheckAmount > 0)
