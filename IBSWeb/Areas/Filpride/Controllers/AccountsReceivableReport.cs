@@ -2366,8 +2366,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var freightNetOfVat = freightAmount / 1.12m;
 
                     worksheet.Cells[row, 1].Value = dr.TransactionDate;
-                    worksheet.Cells[row, 2].Value = dr.CustomerOrderSlip?.CustomerName;
-                    worksheet.Cells[row, 3].Value = dr.CustomerOrderSlip?.CustomerType;
+                    worksheet.Cells[row, 2].Value = dr.Customer?.CustomerName;
+                    worksheet.Cells[row, 3].Value = dr.Customer?.CustomerType;
                     worksheet.Cells[row, 4].Value = dr.CustomerOrderSlip?.AccountSpecialist;
                     worksheet.Cells[row, 5].Value = dr.SalesInvoiceNo;
                     worksheet.Cells[row, 6].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.CustomerOrderSlipNo;
@@ -2377,7 +2377,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 10].Value = dr.PurchaseOrder?.PurchaseOrderNo;
                     worksheet.Cells[row, 11].Value = dr.PurchaseOrder?.OldPoNo;
                     worksheet.Cells[row, 12].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.DeliveryOption;
-                    worksheet.Cells[row, 13].Value = dr.CustomerOrderSlip!.ProductName;
+                    worksheet.Cells[row, 13].Value = dr.Product?.ProductName;
                     worksheet.Cells[row, 14].Value = quantity;
                     worksheet.Cells[row, 15].Value = freightAmount;
                     worksheet.Cells[row, 16].Value = segment;
