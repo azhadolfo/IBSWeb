@@ -249,7 +249,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.CommitAsync(cancellationToken);
                 TempData["success"] = "Collection Receipt deposited date has been recorded successfully.";
 
-                if (model.SalesInvoiceId != null)
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
                 {
                     return RedirectToAction(nameof(Index));
                 }
