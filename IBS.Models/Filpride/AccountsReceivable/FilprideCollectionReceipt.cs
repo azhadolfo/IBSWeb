@@ -107,6 +107,37 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         private string? _checkBranch;
 
+        //Check
+        [Column(TypeName = "date")]
+        public DateOnly? ManagersCheckDate { get; set; }
+
+        [StringLength(50)]
+        public string? ManagersCheckNo
+        {
+            get => _managersCheckNo;
+            set => _managersCheckNo = value?.Trim();
+        }
+
+        private string? _managersCheckNo;
+
+        [StringLength(50)]
+        public string? ManagersCheckBank
+        {
+            get => _managersCheckBank;
+            set => _managersCheckBank = value?.Trim();
+        }
+
+        private string? _managersCheckBank;
+
+        [StringLength(50)]
+        public string? ManagersCheckBranch
+        {
+            get => _managersCheckBranch;
+            set => _managersCheckBranch = value?.Trim();
+        }
+
+        private string? _managersCheckBranch;
+
         public int? BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
@@ -121,6 +152,10 @@ namespace IBS.Models.Filpride.AccountsReceivable
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
         public decimal CheckAmount { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal ManagersCheckAmount { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]
         [Column(TypeName = "numeric(18,4)")]
