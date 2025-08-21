@@ -78,12 +78,14 @@ Balance:        <span id="balance"></span>
                         <td class="text-center" style="width:25%"></td>
                         <td class="text-center" style="width:15%">DATE</td>
                         <td class="text-center" style="width:15%">CHK #</td>
+                        <td class="text-center" style="width:15%">BANK</td>
                         <td class="text-center" style="width:15%">BRANCH</td>
                         <td class="text-center" style="width:15%">AMOUNT</td>
                     </tr>
 
                     <tr>
                         <td style="padding-left:20px;">Cash</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
@@ -94,6 +96,7 @@ Balance:        <span id="balance"></span>
                         <td style="padding-left:20px;">Check</td>
                         <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
+                        <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
@@ -103,10 +106,12 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input asp-for="EWT" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
                     <tr>
                         <td style="padding-left:20px;">WVAT</td>
+                        <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input style="border:none" class="form-control" disabled /></td>
