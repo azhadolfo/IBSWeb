@@ -3,6 +3,7 @@ using System;
 using IBS.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IBS.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250821034202_UpdateTheStringLengthOfCrNoInCollectionReceiptDetails")]
+    partial class UpdateTheStringLengthOfCrNoInCollectionReceiptDetails
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1438,11 +1441,6 @@ namespace IBS.DataAccess.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("check_amount");
 
-                    b.Property<string>("CheckBank")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("check_bank");
-
                     b.Property<string>("CheckBranch")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -1479,10 +1477,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
-
-                    b.Property<DateOnly?>("DepositedDate")
-                        .HasColumnType("date")
-                        .HasColumnName("deposited_date");
 
                     b.Property<decimal>("EWT")
                         .HasColumnType("numeric(18,4)")
@@ -1523,29 +1517,6 @@ namespace IBS.DataAccess.Migrations
                     b.Property<bool>("IsPrinted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_printed");
-
-                    b.Property<decimal>("ManagersCheckAmount")
-                        .HasColumnType("numeric(18,4)")
-                        .HasColumnName("managers_check_amount");
-
-                    b.Property<string>("ManagersCheckBank")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("managers_check_bank");
-
-                    b.Property<string>("ManagersCheckBranch")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("managers_check_branch");
-
-                    b.Property<DateOnly?>("ManagersCheckDate")
-                        .HasColumnType("date")
-                        .HasColumnName("managers_check_date");
-
-                    b.Property<string>("ManagersCheckNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("managers_check_no");
 
                     b.Property<string[]>("MultipleSI")
                         .HasColumnType("text[]")

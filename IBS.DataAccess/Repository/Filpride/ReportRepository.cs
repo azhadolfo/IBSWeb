@@ -263,6 +263,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
+                .ThenBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
             // Fetch all sales invoices within the date range
