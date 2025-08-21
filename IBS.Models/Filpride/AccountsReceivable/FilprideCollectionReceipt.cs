@@ -89,7 +89,14 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         private string? _checkNo;
 
-        public int? BankId { get; set; }
+        [StringLength(50)]
+        public string? CheckBank
+        {
+            get => _checkBank;
+            set => _checkBank = value?.Trim();
+        }
+
+        private string? _checkBank;
 
         [StringLength(50)]
         public string? CheckBranch
@@ -99,6 +106,8 @@ namespace IBS.Models.Filpride.AccountsReceivable
         }
 
         private string? _checkBranch;
+
+        public int? BankId { get; set; }
 
         [ForeignKey(nameof(BankId))]
         public FilprideBankAccount? BankAccount { get; set; }
