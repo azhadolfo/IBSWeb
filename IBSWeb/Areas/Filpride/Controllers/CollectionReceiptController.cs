@@ -2292,7 +2292,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 2].Value = item.ReferenceNo;
                     worksheet.Cells[row, 3].Value = item.Remarks;
                     worksheet.Cells[row, 4].Value = item.CashAmount;
-                    worksheet.Cells[row, 5].Value = item.CheckDate;
+                    worksheet.Cells[row, 5].Value = item.CheckDate?.ToString("yyyy-MM-dd") ?? null;
                     worksheet.Cells[row, 6].Value = item.CheckNo;
                     worksheet.Cells[row, 7].Value = item.BankAccount?.Bank;
                     worksheet.Cells[row, 8].Value = item.CheckBranch;
