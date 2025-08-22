@@ -1993,7 +1993,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    OldCvNo = viewModel.OldCVNo,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2244,7 +2245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Tin = viewModel.SupplierTinNo,
                     Type = getDeliveryReceipt.PurchaseOrder.Type,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    OldCvNo = viewModel.OldCVNo
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2484,7 +2486,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Particulars = existingHeaderModel.Particulars!,
                 CreatedBy = _userManager.GetUserName(User),
                 DRs = [],
-                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken)
+                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -2736,7 +2739,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CreatedBy = _userManager.GetUserName(this.User),
                 DRs = [],
                 Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
