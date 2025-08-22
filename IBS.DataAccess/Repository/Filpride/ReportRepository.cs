@@ -374,7 +374,13 @@ namespace IBS.DataAccess.Repository.Filpride
             return checkVoucherHeader;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, List<int>? commissioneeIds = null, string dateSelectionType = "RRDate", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom,
+            DateOnly dateTo,
+            string company,
+            List<int>? customerIds = null,
+            List<int>? commissioneeIds = null,
+            string dateSelectionType = "RRDate",
+            CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {

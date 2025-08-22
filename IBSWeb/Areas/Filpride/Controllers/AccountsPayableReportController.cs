@@ -1133,7 +1133,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // get rr data from chosen date
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetPurchaseReport(model.DateFrom,
+                        model.DateTo,
+                        companyClaims,
+                        dateSelectionType: model.DateSelectionType,
+                        cancellationToken: cancellationToken);
 
                 // check if there is no record
                 if (purchaseReport.Count == 0)
