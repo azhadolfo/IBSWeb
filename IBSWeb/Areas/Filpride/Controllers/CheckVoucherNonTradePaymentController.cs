@@ -245,7 +245,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 EmployeeId = details.EmployeeId,
                                 EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
                                 CompanyId = details.CompanyId,
-                                CompanyName = details.Company?.CompanyName
+                                CompanyName = details.Company?.CompanyName,
+                                ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
                 }

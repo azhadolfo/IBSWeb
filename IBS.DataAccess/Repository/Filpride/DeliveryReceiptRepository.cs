@@ -240,6 +240,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -258,6 +259,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -275,7 +277,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
-                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName
+                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName,
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -291,6 +294,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -306,6 +310,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 var poPrice = await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)deliveryReceipt.PurchaseOrderId!, cancellationToken);
@@ -327,6 +332,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -342,6 +348,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
@@ -366,6 +373,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
 
                         var freightVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
@@ -385,6 +393,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 
@@ -408,6 +417,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
 
                         var eccVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
@@ -427,6 +437,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 
@@ -456,7 +467,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.HaulerId,
-                        SupplierName = deliveryReceipt.HaulerName
+                        SupplierName = deliveryReceipt.HaulerName,
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -472,6 +484,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -496,6 +509,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -512,7 +526,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.Commissionee?.SupplierName
+                        SupplierName = deliveryReceipt.Commissionee?.SupplierName,
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     if (commissionEwtAmount > 0)
@@ -529,7 +544,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime()
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 

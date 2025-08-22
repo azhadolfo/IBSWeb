@@ -431,7 +431,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedBy = model.CreatedBy,
                             CreatedDate = model.CreatedDate,
                             CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
-                            CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName
+                            CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
+                            ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     };
 
@@ -450,7 +451,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }
@@ -469,7 +471,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }
@@ -487,7 +490,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.CreatedBy,
                             Credit = netOfVatAmount,
-                            CreatedDate = model.CreatedDate
+                            CreatedDate = model.CreatedDate,
+                            ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     );
 
@@ -506,7 +510,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = vatAmount,
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }
@@ -605,7 +610,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                             CustomerId = model.ServiceInvoice.CustomerId,
-                            CustomerName = model.ServiceInvoice.CustomerName
+                            CustomerName = model.ServiceInvoice.CustomerName,
+                            ModuleType = nameof(ModuleType.DebitMemo)
                         }
                     };
 
@@ -625,6 +631,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }
@@ -644,6 +651,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }
@@ -662,6 +670,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.DebitMemo)
                         });
                     }
 
@@ -681,6 +690,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.DebitMemo)
                             }
                         );
                     }

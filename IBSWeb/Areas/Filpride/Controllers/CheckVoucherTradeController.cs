@@ -964,6 +964,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
                                 SupplierId = details.SupplierId,
                                 SupplierName = details.Supplier?.SupplierName,
+                                ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
                 }

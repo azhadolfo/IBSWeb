@@ -578,6 +578,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                             CustomerId = model.SalesInvoice.CustomerOrderSlip.CustomerId,
                             CustomerName = model.SalesInvoice.CustomerOrderSlip.CustomerName,
+                            ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     };
 
@@ -597,6 +598,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }
@@ -616,6 +618,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }
@@ -634,6 +637,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     );
 
@@ -653,6 +657,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Company = model.Company,
                                 CreatedBy = model.PostedBy,
                                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }
@@ -797,7 +802,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             CreatedBy = model.CreatedBy,
                             CreatedDate = model.CreatedDate,
                             CustomerId = model.ServiceInvoice.CustomerId,
-                            CustomerName = model.ServiceInvoice.CustomerName
+                            CustomerName = model.ServiceInvoice.CustomerName,
+                            ModuleType = nameof(ModuleType.CreditMemo)
                         }
                     };
 
@@ -816,7 +822,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = Math.Abs(withHoldingTaxAmount),
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }
@@ -835,7 +842,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = Math.Abs(withHoldingVatAmount),
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }
@@ -852,7 +860,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Credit = 0,
                         Company = model.Company,
                         CreatedBy = model.CreatedBy,
-                        CreatedDate = model.CreatedDate
+                        CreatedDate = model.CreatedDate,
+                        ModuleType = nameof(ModuleType.CreditMemo)
                     });
 
                     if (vatAmount < 0)
@@ -870,7 +879,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 Credit = 0,
                                 Company = model.Company,
                                 CreatedBy = model.CreatedBy,
-                                CreatedDate = model.CreatedDate
+                                CreatedDate = model.CreatedDate,
+                                ModuleType = nameof(ModuleType.CreditMemo)
                             }
                         );
                     }

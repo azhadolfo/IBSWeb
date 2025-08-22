@@ -94,4 +94,14 @@ namespace IBS.Utility.Enums
         Payment
     }
 
+    public enum ModuleType
+    {
+        Sales,
+        Purchase,
+        Disbursement,
+        DebitMemo,
+        CreditMemo,
+        Collection,
+    }
+
 }
