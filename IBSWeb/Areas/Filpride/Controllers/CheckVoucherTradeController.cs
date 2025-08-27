@@ -465,6 +465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = rr.ReceivingReportId,
                         rr.ReceivingReportNo,
+                        rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                     };
