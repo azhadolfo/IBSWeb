@@ -288,7 +288,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideDeliveryReceipt model = new()
                 {
-                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, cancellationToken),
+                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                    Type = viewModel.Type,
                     Date = viewModel.Date,
                     CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                     CustomerId = viewModel.CustomerId,
