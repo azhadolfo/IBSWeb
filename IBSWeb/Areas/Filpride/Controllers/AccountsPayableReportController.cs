@@ -432,6 +432,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .Include(cvd => cvd.CheckVoucherHeader)
                         .ThenInclude(cvh => cvh!.Supplier)
                         .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
+                        .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
+                        .ThenByDescending(cvd => cvd.Debit)
                         .ToListAsync(cancellationToken);
 
                 if (nonTradeInvoiceReport.Count == 0)
@@ -454,25 +456,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-                worksheet.Cells["B2"].Value = $"{dateFrom.ToString("MMM dd, yyyy")} - {dateTo.ToString("MMM dd, yyyy")}";
+                worksheet.Cells["B2"].Value =
+                    $"{dateFrom.ToString("MMM dd, yyyy")} - {dateTo.ToString("MMM dd, yyyy")}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
                 int row = 6;
 
                 worksheet.Cells[row, 1].Value = "DATE";
-                worksheet.Cells[row, 2].Value = "CV No.";
-                worksheet.Cells[row, 3].Value = "DCR DATE";
-                worksheet.Cells[row, 4].Value = "CHECK #";
-                worksheet.Cells[row, 5].Value = "PAYEE";
-                worksheet.Cells[row, 6].Value = "PARTICULARS";
-                worksheet.Cells[row, 7].Value = "DOCUMENT TYPE";
-                worksheet.Cells[row, 8].Value = "ACCOUNT ENTRIES";
-                worksheet.Cells[row, 9].Value = "DEBIT";
-                worksheet.Cells[row, 10].Value = "CREDIT";
-                worksheet.Cells[row, 11].Value = "Status";
+                worksheet.Cells[row, 2].Value = "INV No.";
+                worksheet.Cells[row, 3].Value = "PAYEE";
+                worksheet.Cells[row, 4].Value = "PARTICULARS";
+                worksheet.Cells[row, 5].Value = "DOCUMENT TYPE";
+                worksheet.Cells[row, 6].Value = "ACCOUNT ENTRIES";
+                worksheet.Cells[row, 7].Value = "DEBIT";
+                worksheet.Cells[row, 8].Value = "CREDIT";
+                worksheet.Cells[row, 9].Value = "Status";
 
-                using (var range = worksheet.Cells[row, 1, row, 11])
+                using (var range = worksheet.Cells[row, 1, row, 9])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -492,19 +493,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     worksheet.Cells[row, 1].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue);
                     worksheet.Cells[row, 2].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo;
-                    worksheet.Cells[row, 3].Value = inv.CheckVoucherHeader.DcrDate.HasValue ? inv.CheckVoucherHeader.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-                    worksheet.Cells[row, 4].Value = inv.CheckVoucherHeader.CheckNo;
-                    worksheet.Cells[row, 5].Value = inv.CheckVoucherHeader.Payee;
-                    worksheet.Cells[row, 6].Value = inv.CheckVoucherHeader.Particulars;
-                    worksheet.Cells[row, 7].Value = $"{inv.CheckVoucherHeader.Type}";
-                    worksheet.Cells[row, 8].Value = inv.AccountName;
-                    worksheet.Cells[row, 9].Value = inv.Debit;
-                    worksheet.Cells[row, 10].Value = inv.Credit;
-                    worksheet.Cells[row, 11].Value = inv.CheckVoucherHeader.Status;
+                    worksheet.Cells[row, 3].Value = inv.CheckVoucherHeader.Payee;
+                    worksheet.Cells[row, 4].Value = inv.CheckVoucherHeader.Particulars;
+                    worksheet.Cells[row, 5].Value = inv.CheckVoucherHeader.Type;
+                    worksheet.Cells[row, 6].Value = $"{inv.AccountNo} {inv.AccountName}";
+                    worksheet.Cells[row, 7].Value = inv.Debit;
+                    worksheet.Cells[row, 8].Value = inv.Credit;
+                    worksheet.Cells[row, 9].Value = inv.CheckVoucherHeader.Status;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 7].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -512,17 +511,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 8].Value = "Total: ";
-                worksheet.Cells[row, 9].Value = totalDebit;
-                worksheet.Cells[row, 10].Value = totalCredit;
+                worksheet.Cells[row, 6].Value = "Total: ";
+                worksheet.Cells[row, 7].Value = totalDebit;
+                worksheet.Cells[row, 8].Value = totalCredit;
 
-                using (var range = worksheet.Cells[row, 1, row, 10])
+                using (var range = worksheet.Cells[row, 1, row, 8])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 9, row, 10])
+                using (var range = worksheet.Cells[row, 7, row, 8])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
