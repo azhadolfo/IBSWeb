@@ -288,7 +288,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 FilprideDeliveryReceipt model = new()
                 {
-                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, cancellationToken),
+                    DeliveryReceiptNo = await _unitOfWork.FilprideDeliveryReceipt.GenerateCodeAsync(companyClaims, viewModel.Type, cancellationToken),
+                    Type = viewModel.Type,
                     Date = viewModel.Date,
                     CustomerOrderSlipId = viewModel.CustomerOrderSlipId,
                     CustomerId = viewModel.CustomerId,
@@ -1045,8 +1046,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var fileBytes = await System.IO.File.ReadAllBytesAsync(templatePath);
 
             using var package = new ExcelPackage(new MemoryStream(fileBytes));
-            var worksheet = package.Workbook.Worksheets[0]; // Assuming the template has one sheet
+            var worksheet = package.Workbook.Worksheets[0];
 
+            // Fill in the data
             worksheet.Cells["H2"].Value = deliveryReceipt.AuthorityToLoadNo;
             worksheet.Cells["H7"].Value = receivingReport?.OldRRNo ?? receivingReport?.ReceivingReportNo;
             worksheet.Cells["H9"].Value = deliveryReceipt.ManualDrNo;
@@ -1059,11 +1061,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
             worksheet.Cells["H17"].Value = deliveryReceipt.Quantity.ToString("N0");
             worksheet.Cells["H19"].Value = deliveryReceipt.Remarks;
 
+            // === SIMPLE SECURITY PROTECTION ===
+
+            // 1. Set a fixed password for your organization
+            const string PROTECTION_PASSWORD = "mis123"; // Change this to your company password
+
+            // 2. Protect the worksheet - prevents editing, deleting, formatting
+            worksheet.Protection.SetPassword(PROTECTION_PASSWORD);
+            worksheet.Protection.AllowSelectLockedCells = true;   // Users can select cells
+            worksheet.Protection.AllowSelectUnlockedCells = true; // Users can select cells
+            worksheet.Protection.AllowFormatCells = false;        // No formatting changes
+            worksheet.Protection.AllowInsertRows = false;         // No adding rows
+            worksheet.Protection.AllowDeleteRows = false;         // No deleting rows
+            worksheet.Protection.AllowInsertColumns = false;      // No adding columns
+            worksheet.Protection.AllowDeleteColumns = false;      // No deleting columns
+            worksheet.Protection.AllowSort = false;               // No sorting
+            worksheet.Protection.AllowAutoFilter = false;         // No filtering
+            worksheet.View.ShowGridLines = false; // Makes it look more official and professional
+
+            // 3. Add document properties for identification
+            package.Workbook.Properties.Author = "Integrated Business System";
+            package.Workbook.Properties.Company = "Filpride";
+            package.Workbook.Properties.Comments = $"Official DR - Generated: {DateTimeHelper.GetCurrentPhilippineTime():yyyy-MM-dd HH:mm:ss}";
+
+            // 4. Mark as final (shows read-only warning in Excel)
+            package.Workbook.Properties.SetCustomPropertyValue("_MarkAsFinal", "true");
+
             var stream = new MemoryStream();
             await package.SaveAsAsync(stream);
 
             var content = stream.ToArray();
-            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
+            return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"{deliveryReceipt.DeliveryReceiptNo}.xlsx");
         }
 
         [HttpGet]
