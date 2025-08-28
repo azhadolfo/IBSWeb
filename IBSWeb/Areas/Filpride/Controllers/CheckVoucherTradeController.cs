@@ -429,8 +429,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy != null && po.Company == companyClaims);
+            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                .Include(x => x.ReceivingReports)
+                .Where(po => po.SupplierId == supplierId
+                             && po.PostedBy != null
+                             && po.QuantityReceived > 0
+                             && po.Company == companyClaims
+                             && po.ReceivingReports != null
+                             && po.ReceivingReports.Any(x => !x.IsPaid))
+                .ToListAsync();
 
             if (!purchaseOrders.Any())
             {
@@ -449,7 +456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && rr.AmountPaid == 0 && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
 
             if (cvId != null)
             {

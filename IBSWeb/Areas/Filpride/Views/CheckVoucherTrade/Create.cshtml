@@ -265,7 +265,7 @@
         // store rows per PO
         let poDataMap = {};
 
-        $(".GetRRList").change(function () {
+        $(".GetRRList").change(async function () {
             let poNumbers = $(this).val(); // assume multiple select
             let tbody = $('.rrAmount');
 
@@ -274,30 +274,29 @@
             poDataMap = {};
 
             if (poNumbers && poNumbers.length > 0) {
-                poNumbers.forEach(po => {
-                    displayRecords(po, tbody);
-                });
+                for (const po of poNumbers) {
+                    await displayRecords(po, tbody);
+                }
             }
             displayAdvances(poNumbers);
         });
 
         function displayRecords(poNumber, tbody) {
-            $.ajax({
-                url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
-                method: "GET",
-                data: { poNumber: poNumber },
-                traditional: true,
-                success: function (data) {
-                    let subGross = 0;
-                    let subPaid = 0;
-                    let subBalance = 0;
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
+                    method: "GET",
+                    data: { poNumber: poNumber },
+                    success: function (data) {
+                        let subGross = 0;
+                        let subPaid = 0;
+                        let subBalance = 0;
 
-                    if (data && data.length > 0) {
-                        data.forEach(rr => {
-                            let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
+                        if (data && data.length > 0) {
+                            data.forEach(rr => {
+                                let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
 
-                            const tr = $(`
-                        <tr data-po="${poNumber}">
+                                const tr = $(`<tr data-po="${poNumber}">
                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
                             <td>${poNumber}</td>
                             <td>${rr.receivingReportNo}</td>
@@ -305,41 +304,38 @@
                             <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
                             <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
                             <td class="text-end balance">${formatNumber(balance)}</td>
-                        </tr>
-                        `);
-                            tbody.append(tr);
+                        </tr>`);
+                                tbody.append(tr);
 
-                            subGross += parseNumber(rr.netOfEwtAmount);
-                            subPaid += parseNumber(rr.amountPaid);
-                            subBalance += balance;
-                        });
+                                subGross += parseNumber(rr.netOfEwtAmount);
+                                subPaid += parseNumber(rr.amountPaid);
+                                subBalance += balance;
+                            });
 
-                        // append subtotal row for this PO
-                        const subTotal = $(`
-                    <tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
+                            const subTotal = $(`<tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
                         <td colspan="3"></td>
                         <td class="fw-bold text-end">Subtotal:</td>
                         <td class="text-end">${formatNumber(subGross)}</td>
                         <td class="text-end"></td>
                         <td class="text-end">${formatNumber(subBalance)}</td>
-                    </tr>
-                `);
-                        tbody.append(subTotal);
+                    </tr>`);
+                            tbody.append(subTotal);
 
-                        // save totals in map
-                        poDataMap[poNumber] = {
-                            gross: subGross,
-                            paid: subPaid,
-                            balance: subBalance
-                        };
+                            poDataMap[poNumber] = {
+                                gross: subGross,
+                                paid: subPaid,
+                                balance: subBalance
+                            };
 
-                        // update grand total row
-                        updateGrandTotal(tbody);
+                            updateGrandTotal(tbody);
+                        }
+                        resolve();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching RRs:', error);
+                        reject(error);
                     }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error fetching RRs:', error);
-                }
+                });
             });
         }
 

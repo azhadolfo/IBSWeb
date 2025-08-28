@@ -266,20 +266,21 @@
 
         // store rows per PO
         let poDataMap = {};
-        // Initial load
         let initialPOs = @Html.Raw(Json.Serialize(Model.POSeries));
         let cvId = @Html.Raw(Json.Serialize(Model.CVId));
         let tbody = $('.rrAmount');
-        
-        tbody.empty();
-        if (initialPOs && initialPOs.length > 0) {
-            initialPOs.forEach(po => {
-                displayRecords(po, tbody, cvId);
-            });
-        }
-        displayAdvances(initialPOs);
 
-        $(".GetRRList").change(function () {
+        tbody.empty();
+        (async function loadInitial() {
+            if (initialPOs && initialPOs.length > 0) {
+                for (const po of initialPOs) {
+                    await displayRecords(po, tbody, cvId);
+                }
+            }
+            displayAdvances(initialPOs);
+        })();
+
+        $(".GetRRList").change(async function () {
             let poNumbers = $(this).val(); // assume multiple select
             let tbody = $('.rrAmount');
 
@@ -287,38 +288,38 @@
             poDataMap = {};
 
             if (poNumbers && poNumbers.length > 0) {
-                poNumbers.forEach(po => {
-                    displayRecords(po, tbody, cvId);
-                });
+                for (const po of poNumbers) {
+                    await displayRecords(po, tbody, cvId);
+                }
             }
             displayAdvances(poNumbers);
         });
 
         function displayRecords(poNumber, tbody, cvId) {
-            $.ajax({
-                url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
-                method: "GET",
-                data: { poNumber: poNumber, cvId: cvId },
-                traditional: true,
-                success: function (data) {
-                    let subGross = 0;
-                    let subPaid = 0;
-                    let subBalance = 0;
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
+                    method: "GET",
+                    data: { poNumber: poNumber, cvId: cvId },
+                    traditional: true,
+                    success: function (data) {
+                        let subGross = 0;
+                        let subPaid = 0;
+                        let subBalance = 0;
 
-                    const modelRRs = new Map(
-                        @Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount })))
-                            .map(r => [r.id, r.amount])
-                    );
+                        const modelRRs = new Map(
+                            @Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount })))
+                                .map(r => [r.id, r.amount])
+                        );
 
-                    if (data && data.length > 0) {
-                        data.forEach(rr => {
-                            let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
-                            const rrAmount = modelRRs.get(rr.id) || 0;
-                            let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
+                        if (data && data.length > 0) {
+                            data.forEach(rr => {
+                                let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
+                                const rrAmount = modelRRs.get(rr.id) || 0;
+                                let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
 
-                            const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
-                            const tr = $(`
-                        <tr data-po="${poNumber}">
+                                const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
+                                const tr = $(`<tr data-po="${poNumber}">
                             <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
                             <td>${poNumber}</td>
                             <td>${rr.receivingReportNo}</td>
@@ -326,41 +327,39 @@
                             <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
                             <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
                             <td class="text-end balance">${formatNumber(balance)}</td>
-                        </tr>
-                    `);
-                            tbody.append(tr);
+                        </tr>`);
+                                tbody.append(tr);
 
-                            subGross += parseNumber(rr.netOfEwtAmount);
-                            subPaid += parseNumber(rr.amountPaid);
-                            subBalance += balance;
-                        });
+                                subGross += parseNumber(rr.netOfEwtAmount);
+                                subPaid += parseNumber(rr.amountPaid);
+                                subBalance += balance;
+                            });
 
-                        // append subtotal row for this PO
-                        const subTotal = $(`
-                    <tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
+                            const subTotal = $(`<tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
                         <td colspan="3"></td>
                         <td class="fw-bold text-end">Subtotal (${poNumber}):</td>
                         <td class="text-end">${formatNumber(subGross)}</td>
                         <td class="text-end">${formatNumber(subPaid)}</td>
                         <td class="text-end">${formatNumber(subBalance)}</td>
-                    </tr>
-                `);
-                        tbody.append(subTotal);
+                    </tr>`);
+                            tbody.append(subTotal);
 
-                        // save totals in map
-                        poDataMap[poNumber] = {
-                            gross: subGross,
-                            paid: subPaid,
-                            balance: subBalance
-                        };
+                            poDataMap[poNumber] = {
+                                gross: subGross,
+                                paid: subPaid,
+                                balance: subBalance
+                            };
 
-                        updateGrandTotal(tbody);
-                        initializeCheckedCheckboxes();
+                            updateGrandTotal(tbody);
+                            initializeCheckedCheckboxes();
+                        }
+                        resolve();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching RRs:', error);
+                        reject(error);
                     }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error fetching RRs:', error);
-                }
+                });
             });
         }
 
@@ -376,18 +375,17 @@
             });
 
             if (Object.keys(poDataMap).length > 0) {
-                const grandTotalRow = $(`
-            <tr style="border-top:double;" class="fw-bold sticky-bottom bg-white grandTotalRow">
-                <td colspan="3"></td>
-                <td class="fw-bold text-end p-2">Grand Total:</td>
-                <td class="text-end">${formatNumber(grandGross)}</td>
-                <td class="text-end">${formatNumber(grandPaid)}</td>
-                <td class="text-end">${formatNumber(grandBalance)}</td>
-            </tr>
-        `);
+                const grandTotalRow = $(`<tr style="border-top:double;" class="fw-bold sticky-bottom bg-white grandTotalRow">
+            <td colspan="3"></td>
+            <td class="fw-bold text-end p-2">Grand Total:</td>
+            <td class="text-end">${formatNumber(grandGross)}</td>
+            <td class="text-end">${formatNumber(grandPaid)}</td>
+            <td class="text-end">${formatNumber(grandBalance)}</td>
+        </tr>`);
                 tbody.append(grandTotalRow);
             }
 }
+
 
 
         function displayAdvances(poNumber){
