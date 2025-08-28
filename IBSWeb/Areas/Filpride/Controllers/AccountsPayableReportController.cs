@@ -471,7 +471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 6].Value = "ACCOUNT ENTRIES";
                 worksheet.Cells[row, 7].Value = "DEBIT";
                 worksheet.Cells[row, 8].Value = "CREDIT";
-                worksheet.Cells[row, 9].Value = "Status";
+                worksheet.Cells[row, 9].Value = "STATUS";
 
                 using (var range = worksheet.Cells[row, 1, row, 9])
                 {
@@ -511,7 +511,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 6].Value = "Total: ";
+                worksheet.Cells[row, 6].Value = "TOTAL: ";
                 worksheet.Cells[row, 7].Value = totalDebit;
                 worksheet.Cells[row, 8].Value = totalCredit;
 
@@ -626,7 +626,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 9].Value = "ACCOUNT ENTRIES";
                 worksheet.Cells[row, 10].Value = "DEBIT";
                 worksheet.Cells[row, 11].Value = "CREDIT";
-                worksheet.Cells[row, 12].Value = "Status";
+                worksheet.Cells[row, 12].Value = "STATUS";
 
                 using (var range = worksheet.Cells[row, 1, row, 12])
                 {
@@ -676,7 +676,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 8].Value = "Total: ";
+                worksheet.Cells[row, 8].Value = "TOTAL: ";
                 worksheet.Cells[row, 10].Value = totalDebit;
                 worksheet.Cells[row, 11].Value = totalCredit;
 
