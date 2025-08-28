@@ -354,6 +354,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --CV Details Entry
 
+                #region -- Partial payment of RR's
+
+                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                    if (getReceivingReport != null)
+                    {
+                        getReceivingReport.AmountPaid += item.Amount;
+
+                        cvTradePaymentModel.Add(
+                        new FilprideCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = cvh.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                    }
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel);
+
+                #endregion -- Partial payment of RR's
+
                 #region -- Uploading file --
 
                 if (file != null && file.Length > 0)

@@ -1714,8 +1714,7 @@ namespace IBSWeb.Areas.Mobility.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEmployees()
         {
-            var stationCodeClaims = await GetStationCodeClaimAsync();
-            var employees = await _unitOfWork.MobilityEmployee.GetAllAsync(e => e.StationCode == stationCodeClaims);
+            var employees = await _unitOfWork.MobilityEmployee.GetAllAsync();
 
             return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new
             {
