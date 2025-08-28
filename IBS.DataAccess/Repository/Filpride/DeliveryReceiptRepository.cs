@@ -21,12 +21,23 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default)
+        {
+            if (documentType == nameof(DocumentType.Documented))
+            {
+                return await GenerateDocumentedCodeAsync(companyClaims, cancellationToken);
+            }
+
+            return await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken);
+        }
+
+        private async Task<string> GenerateDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .Where(c => c.Company == companyClaims
-                            && !c.DeliveryReceiptNo.Contains("BEG"))
+                            && !c.DeliveryReceiptNo.Contains("BEG")
+                            && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -40,7 +51,28 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+        }
 
+        private async Task<string> GenerateUnDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        {
+            var lastDr = await _db
+                .FilprideDeliveryReceipts
+                .Where(c => c.Company == companyClaims
+                            && !c.DeliveryReceiptNo.Contains("BEG")
+                            && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.DeliveryReceiptNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastDr == null)
+            {
+                return "DRU000000001";
+            }
+
+            var lastSeries = lastDr.DeliveryReceiptNo;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
 
         public override async Task<IEnumerable<FilprideDeliveryReceipt>> GetAllAsync(Expression<Func<FilprideDeliveryReceipt, bool>>? filter, CancellationToken cancellationToken = default)
