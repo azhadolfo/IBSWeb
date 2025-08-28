@@ -1608,8 +1608,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEmployees()
         {
-            var companyClaims = await GetCompanyClaimAsync();
-            var employees = await _unitOfWork.FilprideEmployee.GetAllAsync(e => e.Company == companyClaims);
+            var employees = await _unitOfWork.FilprideEmployee.GetAllAsync();
 
             return Json(employees.OrderBy(e => e.EmployeeNumber).Select(e => new
             {
