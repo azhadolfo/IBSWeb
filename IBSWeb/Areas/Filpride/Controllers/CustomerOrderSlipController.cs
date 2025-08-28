@@ -847,16 +847,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.GrossMargin = model.NetOfVatCosPrice - model.NetOfVatProductCost -
                                     model.NetOfVatFreightCharge - model.NetOfVatCommission;
 
+                var companyClaims = await GetCompanyClaimAsync();
 
                 // Return appropriate view based on approval status
                 if (customerOrderSlip.Status == nameof(CosStatus.ForApprovalOfOM))
                 {
+                    #region --Audit Trail Recording
+
+                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview customer order slip print layout customer order slip#{customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip", companyClaims!);
+                    await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                    #endregion --Audit Trail Recording
+
                     return View("PreviewByOperationManager", model);
                 }
 
                 // Add credit information for finance view
                 model.AvailableCreditLimit = customerOrderSlip.AvailableCreditLimit;
                 model.Total = model.AvailableCreditLimit - customerOrderSlip.TotalAmount;
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Preview customer order slip print layout customer order slip#{customerOrderSlip.CustomerOrderSlipNo}", "Customer Order Slip", companyClaims!);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
 
                 return View("PreviewByFinance", model);
             }
@@ -867,6 +882,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
+        }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var cos = await _unitOfWork.FilprideCustomerOrderSlip.GetAsync(x => x.CustomerOrderSlipId == id, cancellationToken);
+
+            if (cos == null)
+            {
+                return NotFound();
+            }
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed copy of customer order slip# {cos.CustomerOrderSlipNo}", "Customer Order Slip", cos.Company);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            return RedirectToAction(nameof(Preview), new { id });
         }
 
         private CustomerOrderSlipForApprovalViewModel CreateBaseViewModel(FilprideCustomerOrderSlip customerOrderSlip)
