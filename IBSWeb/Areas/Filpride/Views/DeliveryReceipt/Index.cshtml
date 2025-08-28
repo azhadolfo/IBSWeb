@@ -146,10 +146,10 @@
                     "data": "status",
                     "name": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.status == "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
-                                          row.status == "@nameof(DRStatus.Invoiced)" ? "bg-success" :
-                                          row.status == "@nameof(DRStatus.Voided)" || row.status == "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
-                                          row.status == "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
+                        var statusClass = row.status === "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
+                                          row.status === "@nameof(DRStatus.Invoiced)" ? "bg-success" :
+                                          row.status === "@nameof(DRStatus.Voided)" || row.status === "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
+                                          row.status === "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
 
                         return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                     }
@@ -169,7 +169,7 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                        if (row.status != "@DRStatus.ForApprovalOfOM") {
+                        if (row.status !== "@DRStatus.ForApprovalOfOM") {
                             if (!row.deliveredDate) {
                                 actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>
