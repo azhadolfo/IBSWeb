@@ -257,14 +257,14 @@
             else
             {
                 <div class="col-6 col-md-3">
-                    <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                    <a onclick="confirmPrint(@Model.CustomerOrderSlip.CustomerOrderSlipId)" class="btn btn-primary form-control buttons">Print</a>
                 </div>
             }
         }
         else
         {
             <div class="col-6 col-md-3">
-                <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+                <a onclick="confirmPrint(@Model.CustomerOrderSlip.CustomerOrderSlipId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
 
@@ -458,5 +458,26 @@
         });
         
     </script>
+
+    <script>
+        function confirmPrint(id)
+        {
+            const afterPrintHandler = () => {
+                window.removeEventListener('afterprint', afterPrintHandler);
+                controllerThenPrint(id);
+            };
+
+            window.addEventListener('afterprint', afterPrintHandler);
+            window.print();
+        }
+    </script>
+
+    <script>
+        function controllerThenPrint(id) {
+            var url = `@Url.Action("Printed", "CustomerOrderSlip", new { area = "Filpride" })/${id}`;
+            window.location.href = url; // only redirect
+        }
+    </script>
+
     <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }
