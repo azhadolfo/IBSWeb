@@ -353,7 +353,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             // Convert the Excel package to a byte array
             var excelBytes = await package.GetAsByteArrayAsync();
 
-            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ServiceList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
         }
 
         #endregion -- export xlsx record --

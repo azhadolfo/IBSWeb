@@ -54,8 +54,9 @@
                             </tr>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+                                <th>PO No's</th>
                                 <th>RR No's</th>
-                                <th>Payment</th>
+                                <th>IS RR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -260,67 +261,113 @@
                 }
             });
         });
-        
+
+        // store rows per PO
+        let poDataMap = {};
+
         $(".GetRRList").change(function () {
-            var poNumber = $(this).val(); // Get all selected POIds
-            displayRecords(poNumber);
-            displayAdvances(poNumber);
+            let poNumbers = $(this).val(); // assume multiple select
+            let tbody = $('.rrAmount');
+
+            // remove all first (we will rebuild fresh)
+            tbody.empty();
+            poDataMap = {};
+
+            if (poNumbers && poNumbers.length > 0) {
+                poNumbers.forEach(po => {
+                    displayRecords(po, tbody);
+                });
+            }
+            displayAdvances(poNumbers);
         });
 
-        function displayRecords(poNumber) {
+        function displayRecords(poNumber, tbody) {
             $.ajax({
                 url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
                 method: "GET",
-                data: { poNumber: poNumber }, // Pass PO numbers to controller
-                traditional: true, // Ensure jQuery sends the array properly
+                data: { poNumber: poNumber },
+                traditional: true,
                 success: function (data) {
-                    const tbody = $('.rrAmount');
-                    let totalGross = 0;
-                    let totalAmountPaid = 0;
-                    let totalBalance = 0;
-                    
-                    tbody.empty();
+                    let subGross = 0;
+                    let subPaid = 0;
+                    let subBalance = 0;
 
-                    if (data){
-                        data.forEach((rr, index) => {
+                    if (data && data.length > 0) {
+                        data.forEach(rr => {
                             let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
+
                             const tr = $(`
-                                        <tr>
-                                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
-                                            <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" readonly style="display: none"></td>
-                                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
-                                            <td class="text-end">${formatNumber(rr.amountPaid)}</td>
-                                            <td class="text-end balance">${formatNumber(balance)}</td>
-                                        </tr>
-                                    `);
+                        <tr data-po="${poNumber}">
+                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox"></td>
+                            <td>${poNumber}</td>
+                            <td>${rr.receivingReportNo}</td>
+                            <td>${rr.oldRRNo}</td>
+                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
+                            <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
+                            <td class="text-end balance">${formatNumber(balance)}</td>
+                        </tr>
+                        `);
                             tbody.append(tr);
 
-                            totalGross += parseNumber(rr.netOfEwtAmount);
-                            totalAmountPaid += parseNumber(rr.amountPaid);
-                            totalBalance += balance;
+                            subGross += parseNumber(rr.netOfEwtAmount);
+                            subPaid += parseNumber(rr.amountPaid);
+                            subBalance += balance;
                         });
-                    }
 
-                    // Append Grand Total Rows
-                    const totalRow = $(`
-                <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                    <td colspan="7" class="pt-1"></td>
-                </tr>
-                <tr class="sticky-bottom bg-white">
-                    <td colspan="2"></td>
-                    <td class="fw-bold text-end p-2">Grand Total:</td>
-                    <td class="text-end" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
-                    <td class="text-end" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
-                    <td class="text-end" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
-                </tr>
-            `);
-                    tbody.append(totalRow);
+                        // append subtotal row for this PO
+                        const subTotal = $(`
+                    <tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
+                        <td colspan="3"></td>
+                        <td class="fw-bold text-end">Subtotal:</td>
+                        <td class="text-end">${formatNumber(subGross)}</td>
+                        <td class="text-end"></td>
+                        <td class="text-end">${formatNumber(subBalance)}</td>
+                    </tr>
+                `);
+                        tbody.append(subTotal);
+
+                        // save totals in map
+                        poDataMap[poNumber] = {
+                            gross: subGross,
+                            paid: subPaid,
+                            balance: subBalance
+                        };
+
+                        // update grand total row
+                        updateGrandTotal(tbody);
+                    }
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching RRs:', error);
                 }
             });
+        }
+
+        function updateGrandTotal(tbody) {
+            // remove old grand total
+            $(".grandTotalRow").remove();
+
+            let grandGross = 0, grandPaid = 0, grandBalance = 0;
+
+            Object.values(poDataMap).forEach(totals => {
+                grandGross += totals.gross;
+                grandPaid += totals.paid;
+                grandBalance += totals.balance;
+            });
+
+            if (Object.keys(poDataMap).length > 0) {
+                const grandTotalRow = $(`
+
+                    <tr style="border-top:double;" class="fw-bold sticky-bottom bg-white grandTotalRow">
+                        <td colspan="3"></td>
+                        <td class="fw-bold text-end p-2">Grand Total:</td>
+                        <td class="text-end">${formatNumber(grandGross)}</td>
+                        <td class="text-end">${formatNumber(grandPaid)}</td>
+                        <td class="text-end">${formatNumber(grandBalance)}</td>
+                    </tr>
+                `);
+                tbody.append(grandTotalRow);
+            }
         }
         
         function displayAdvances(poNumber){

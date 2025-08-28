@@ -465,6 +465,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = rr.ReceivingReportId,
                         rr.ReceivingReportNo,
+                        rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                     };
@@ -1816,7 +1817,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
