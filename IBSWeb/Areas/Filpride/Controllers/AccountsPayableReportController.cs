@@ -531,6 +531,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 worksheet.Cells.AutoFitColumns();
+
+                for (int i = 1; i <= 10; i++)
+                {
+                    double width = worksheet.Column(i).Width;
+                    if (width > 80)
+                    {
+                        worksheet.Column(i).Width = 50;
+                    }
+                }
+
                 worksheet.View.FreezePanes(7, 1);
 
                 #region -- Audit Trail --
@@ -731,16 +741,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 worksheet.Cells.AutoFitColumns();
 
-                double width = worksheet.Column(8).Width;
-                if (width > 80)
+                for (int i = 1; i <= 13; i++)
                 {
-                    worksheet.Column(8).Width = 80;
-                }
-
-                width = worksheet.Column(6).Width;
-                if (width > 80)
-                {
-                    worksheet.Column(6).Width = 80;
+                    double width = worksheet.Column(i).Width;
+                    if (width > 80)
+                    {
+                        worksheet.Column(i).Width = 50;
+                    }
                 }
 
                 worksheet.View.FreezePanes(7, 1);
