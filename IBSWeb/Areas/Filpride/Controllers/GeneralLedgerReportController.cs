@@ -360,7 +360,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Audit Trail --
 
-                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledder by transaction report excel file", "General Ledger Report", companyClaims);
+                    FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate general ledger by transaction report excel file", "General Ledger Report", companyClaims);
                     await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                     #endregion
