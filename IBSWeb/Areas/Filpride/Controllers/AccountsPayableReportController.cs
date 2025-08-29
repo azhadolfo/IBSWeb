@@ -705,8 +705,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
-                    worksheet.Cells[row, 10].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -730,6 +730,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 worksheet.Cells.AutoFitColumns();
+
+                double width = worksheet.Column(8).Width;
+                if (width > 80)
+                {
+                    worksheet.Column(8).Width = 80;
+                }
+
+                width = worksheet.Column(6).Width;
+                if (width > 80)
+                {
+                    worksheet.Column(6).Width = 80;
+                }
+
                 worksheet.View.FreezePanes(7, 1);
 
                 #region -- Audit Trail --
