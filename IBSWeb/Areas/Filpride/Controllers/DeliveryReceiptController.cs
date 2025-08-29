@@ -634,6 +634,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var companyClaims = await GetCompanyClaimAsync();
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview delivery receipt print layout delivery receipt#{existingRecord.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
                 return View(existingRecord);
             }
             catch (Exception ex)
@@ -643,6 +652,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
+        }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var dr = await _unitOfWork.FilprideDeliveryReceipt
+                .GetAsync(x => x.DeliveryReceiptId == id, cancellationToken);
+
+            if (dr == null)
+            {
+                return NotFound();
+            }
+
+            if (!dr.IsPrinted)
+            {
+                dr.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed original copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt", dr.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+            }
+            else
+            {
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed re-printed copy of delivery receipt# {dr.DeliveryReceiptNo}", "Delivery Receipt", dr.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+            }
+
+            return RedirectToAction(nameof(Preview), new { id });
         }
 
         public async Task<IActionResult> Print(int? id, CancellationToken cancellationToken)
