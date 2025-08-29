@@ -248,6 +248,11 @@
             // Get today's date in yyyy-MM-dd format
             let today = new Date().toISOString().split('T')[0];
 
+            // Calculate minimum date (today - 2 days)
+            let minDate = new Date();
+            minDate.setDate(minDate.getDate() - 2);
+            let minDateString = minDate.toISOString().split('T')[0];
+
             // Get the last day of the current month
             let currentDate = new Date();
             let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -255,7 +260,7 @@
             Swal.fire({
                 title: "Please confirm the delivery date",
                 html: `
-            <input type="date" id="deliveredDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
+            <input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${lastDayOfMonth}" required>
         `,
                 focusConfirm: false,
                 allowEscapeKey: false,
