@@ -616,10 +616,10 @@ namespace IBS.DataAccess.Repository
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<List<SelectListItem>> GetFilprideEmployeeListById(string company, CancellationToken cancellationToken = default)
+        public async Task<List<SelectListItem>> GetFilprideEmployeeListById(CancellationToken cancellationToken = default)
         {
             return await _db.FilprideEmployees
-                .Where(e => e.IsActive && e.Company == company)
+                .Where(e => e.IsActive)
                 .Select(e => new SelectListItem
                 {
                     Value = e.EmployeeId.ToString(),
