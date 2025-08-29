@@ -640,12 +640,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, col].Value = "INVOICE No."; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
                 worksheet.Cells[row, col].Value = "ACCOUNT NAME"; col++;
-                worksheet.Cells[row, col].Value = "BANK"; col++;
                 worksheet.Cells[row, col].Value = "DEBIT"; col++;
                 worksheet.Cells[row, col].Value = "CREDIT"; col++;
                 worksheet.Cells[row, col].Value = "STATUS";
 
-                using (var range = worksheet.Cells[row, 1, row, 14])
+                using (var range = worksheet.Cells[row, 1, row, 13])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -702,11 +701,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     col++;
 
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
-                    worksheet.Cells[row, col].Value = inv.AccountName; col++;
 
-                    if (inv.CheckVoucherHeader.BankAccountName != null)
+                    if (inv.AccountName == "Cash in Bank")
                     {
-                        worksheet.Cells[row, col].Value = $"{inv.CheckVoucherHeader.BankAccountNumber} {inv.CheckVoucherHeader.BankAccountName}";
+                        worksheet.Cells[row, col].Value = $"{inv.AccountName} ({inv.CheckVoucherHeader.BankAccountNumber} {inv.CheckVoucherHeader.BankAccountName})";
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, col].Value = $"{inv.AccountName}";
                     }
                     col++;
 
@@ -715,8 +717,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
                     worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
-                    worksheet.Cells[row, 13].Style.Numberformat.Format = currencyFormat;
 
                     totalCredit += inv.Credit;
                     totalDebit += inv.Debit;
@@ -724,17 +726,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     row++;
                 }
 
-                worksheet.Cells[row, 11].Value = "TOTAL: ";
-                worksheet.Cells[row, 12].Value = totalDebit;
-                worksheet.Cells[row, 13].Value = totalCredit;
+                worksheet.Cells[row, 10].Value = "TOTAL: ";
+                worksheet.Cells[row, 11].Value = totalDebit;
+                worksheet.Cells[row, 12].Value = totalCredit;
 
-                using (var range = worksheet.Cells[row, 1, row, 13])
+                using (var range = worksheet.Cells[row, 1, row, 12])
                 {
                     range.Style.Font.Bold = true;
                     range.Style.Border.Top.Style = ExcelBorderStyle.Double;
                     range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
-                using (var range = worksheet.Cells[row, 12, row, 13])
+                using (var range = worksheet.Cells[row, 11, row, 12])
                 {
                     range.Style.Numberformat.Format = currencyFormat;
                 }
