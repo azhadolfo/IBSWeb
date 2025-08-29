@@ -93,6 +93,6 @@ namespace IBS.Models.Filpride.ViewModels
 
         public bool IsTheCreationLockForTheMonth { get; set; }
 
-        public string Type { get; set; }
+        public string Type { get; set; } = string.Empty;
     }
 }
