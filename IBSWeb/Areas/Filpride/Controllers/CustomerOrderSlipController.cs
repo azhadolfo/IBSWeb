@@ -225,6 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.Status,
                         cos.SupplierId,
                         cos.BalanceQuantity,
+                        cos.DeliveredQuantity,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)

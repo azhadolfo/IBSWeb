@@ -379,7 +379,7 @@
             <td colspan="3"></td>
             <td class="fw-bold text-end p-2">Grand Total:</td>
             <td class="text-end">${formatNumber(grandGross)}</td>
-            <td class="text-end">${formatNumber(grandPaid)}</td>
+            <td class="text-end amountPaid"></td>
             <td class="text-end">${formatNumber(grandBalance)}</td>
         </tr>`);
                 tbody.append(grandTotalRow);
@@ -527,6 +527,7 @@
                 totalNetOfEWT += rrAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
+            $(".amountPaid").text(formatNumber(totalNetOfEWT));
 
             // Check if advances row is visible
             var hasAdvances = $("#advancesRow").is(":visible");
