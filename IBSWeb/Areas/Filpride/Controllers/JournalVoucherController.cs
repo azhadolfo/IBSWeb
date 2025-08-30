@@ -351,6 +351,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Details = details
             };
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview journal voucher print layout journal voucher#{header.JournalVoucherHeaderNo}", "Journal Voucher", companyClaims!);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             return View(viewModel);
         }
 
@@ -727,18 +736,34 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
         {
             var cv = await _unitOfWork.FilprideJournalVoucher.GetAsync(x => x.JournalVoucherHeaderId == id, cancellationToken);
-            if (cv?.IsPrinted == false)
+
+            if (cv == null)
+            {
+                return NotFound();
+            }
+
+            if (cv.IsPrinted == false)
             {
                 #region --Audit Trail Recording
 
                 var printedBy = _userManager.GetUserName(User);
                 FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
-                await _dbContext.AddAsync(auditTrailBook, cancellationToken);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
 
                 cv.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            else
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of journal voucher# {cv.JournalVoucherHeaderNo}", "Journal Voucher", cv.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
             }
             return RedirectToAction(nameof(Print), new { id });
         }
