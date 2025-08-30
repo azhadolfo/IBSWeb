@@ -881,6 +881,29 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Check Voucher Details Table Header --
 
+                #region -- Check Voucher Trade Payments Table Header --
+
+                var worksheet7 = package.Workbook.Worksheets.Add("CheckVoucherTradePayments");
+
+                worksheet7.Cells["A1"].Value = "Id";
+                worksheet7.Cells["B1"].Value = "DocumentId";
+                worksheet7.Cells["C1"].Value = "DocumentType";
+                worksheet7.Cells["D1"].Value = "CheckVoucherId";
+                worksheet7.Cells["E1"].Value = "AmountPaid";
+
+                #endregion -- Check Voucher Header Table Header --
+
+                #region -- Check Voucher Multiple Payment Table Header --
+
+                var worksheet8 = package.Workbook.Worksheets.Add("MultipleCheckVoucherPayments");
+
+                worksheet8.Cells["A1"].Value = "Id";
+                worksheet8.Cells["B1"].Value = "CheckVoucherHeaderPaymentId";
+                worksheet8.Cells["C1"].Value = "CheckVoucherHeaderInvoiceId";
+                worksheet8.Cells["D1"].Value = "AmountPaid";
+
+                #endregion
+
                 #region -- Journal Voucher Header Table Header --
 
                 var worksheet = package.Workbook.Worksheets.Add("JournalVoucherHeader");
@@ -940,7 +963,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Journal Voucher Header Export --
 
-                #region -- Check Vocher Header Export (Trade and Invoicing) --
+                #region -- Check Voucher Header Export (Trade and Invoicing)--
 
                 int cvhRow = 2;
                 var currentCvTradeAndInvoicing = "";
@@ -957,7 +980,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     currentCvTradeAndInvoicing = item.CheckVoucherHeader.CheckVoucherHeaderNo;
-                    worksheet5.Cells[cvhRow, 1].Value = item.CheckVoucherHeader.Date.ToString("yyyy-MM-dd");
+                    worksheet5.Cells[cvhRow, 1].Value = item.Date.ToString("yyyy-MM-dd");
                     if (item.CheckVoucherHeader.RRNo != null && !item.CheckVoucherHeader.RRNo.Contains(null))
                     {
                         worksheet5.Cells[cvhRow, 2].Value = string.Join(", ", item.CheckVoucherHeader.RRNo.Select(rrNo => rrNo.ToString()));
@@ -1007,16 +1030,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvhRow++;
                 }
 
-                #endregion -- Check Vocher Header Export (Trade and Invoicing) --
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => recordIds.Contains(cv.CheckVoucherId) && cv.DocumentType == "RR")
+                    .ToListAsync();
 
-                #region -- Check Vocher Header Export (Payment) --
+                int cvRow = 2;
+                foreach (var payment in getCheckVoucherTradePayment)
+                {
+                    worksheet7.Cells[cvRow, 1].Value = payment.Id;
+                    worksheet7.Cells[cvRow, 2].Value = payment.DocumentId;
+                    worksheet7.Cells[cvRow, 3].Value = payment.DocumentType;
+                    worksheet7.Cells[cvRow, 4].Value = payment.CheckVoucherId;
+                    worksheet7.Cells[cvRow, 5].Value = payment.AmountPaid;
+
+                    cvRow++;
+                }
+
+                #endregion -- Check Voucher Header Export (Trade and Invoicing) --
+
+                #region -- Check Voucher Header Export (Payment) --
 
                 var cvNos = selectedList.Select(item => item.CheckVoucherHeader!.CheckVoucherHeaderNo).ToList();
                 var currentCvPayment = "";
 
-                var checkVoucherPayment = await _dbContext.FilprideCheckVoucherHeaders
-                    .Where(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference))
-                    .ToListAsync();
+                var checkVoucherPayment = await _unitOfWork.FilprideCheckVoucher
+                    .GetAllAsync(cvh => cvh.Reference != null && cvNos.Contains(cvh.CheckVoucherHeaderNo));
 
                 foreach (var item in checkVoucherPayment)
                 {
@@ -1076,7 +1114,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     cvhRow++;
                 }
 
-                #endregion -- Check Vocher Header Export (Payment) --
+                var cvPaymentId = checkVoucherPayment.Select(cvn => cvn.CheckVoucherHeaderId).ToList();
+                var getCheckVoucherMultiplePayment = await _dbContext.FilprideMultipleCheckVoucherPayments
+                    .Where(cv => cvPaymentId.Contains(cv.CheckVoucherHeaderPaymentId))
+                    .ToListAsync();
+
+                int cvn = 2;
+                foreach (var payment in getCheckVoucherMultiplePayment)
+                {
+                    worksheet8.Cells[cvn, 1].Value = payment.Id;
+                    worksheet8.Cells[cvn, 2].Value = payment.CheckVoucherHeaderPaymentId;
+                    worksheet8.Cells[cvn, 3].Value = payment.CheckVoucherHeaderInvoiceId;
+                    worksheet8.Cells[cvn, 4].Value = payment.AmountPaid;
+
+                    cvn++;
+                }
+
+                #endregion -- Check Voucher Header Export (Payment) --
 
                 #region -- Journal Voucher Details Export --
 
@@ -1107,13 +1161,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region -- Check Voucher Details Export (Trade and Invoicing) --
 
                 var getCvDetails = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => selectedList
-                        .Select(jvh => jvh.CheckVoucherHeader!.CheckVoucherHeaderNo)
-                        .Contains(cvd.TransactionNo))
+                    .Where(cvd => cvNos.Contains(cvd.TransactionNo))
                     .OrderBy(cvd => cvd.CheckVoucherHeaderId)
                     .ToListAsync();
 
-                int cvdRow = 2;
+                var cvdRow = 2;
 
                 foreach (var item in getCvDetails)
                 {
@@ -1124,6 +1176,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet6.Cells[cvdRow, 5].Value = item.Credit;
                     worksheet6.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
                     worksheet6.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
+                    worksheet6.Cells[cvdRow, 8].Value = item.Amount;
+                    worksheet6.Cells[cvdRow, 9].Value = item.AmountPaid;
+                    worksheet6.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet6.Cells[cvdRow, 11].Value = item.EwtPercent;
+                    worksheet6.Cells[cvdRow, 12].Value = item.IsUserSelected;
+                    worksheet6.Cells[cvdRow, 13].Value = item.IsVatable;
 
                     cvdRow++;
                 }
@@ -1146,6 +1204,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet6.Cells[cvdRow, 5].Value = item.Credit;
                     worksheet6.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
                     worksheet6.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
+                    worksheet6.Cells[cvdRow, 8].Value = item.Amount;
+                    worksheet6.Cells[cvdRow, 9].Value = item.AmountPaid;
+                    worksheet6.Cells[cvdRow, 10].Value = item.SupplierId;
+                    worksheet6.Cells[cvdRow, 11].Value = item.EwtPercent;
+                    worksheet6.Cells[cvdRow, 12].Value = item.IsUserSelected;
+                    worksheet6.Cells[cvdRow, 13].Value = item.IsVatable;
 
                     cvdRow++;
                 }

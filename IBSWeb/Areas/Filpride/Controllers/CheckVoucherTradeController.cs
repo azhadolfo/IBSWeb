@@ -1609,8 +1609,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var cvNos = selectedList.Select(item => item.CheckVoucherHeaderNo).ToList();
 
-                var checkVoucherPayment = await _unitOfWork.FilprideCheckVoucher
-                    .GetAllAsync(cvh => cvh.Reference != null && cvNos.Contains(cvh.Reference));
+                var checkVoucherPayment = (await _unitOfWork.FilprideCheckVoucher
+                        .GetAllAsync(cvh => cvh.Reference != null))
+                    .Where(cvh => cvh.Reference != null &&
+                        cvh.Reference
+                            .Split(',', StringSplitOptions.TrimEntries)
+                            .Any(r => cvNos.Contains(r)))
+                    .ToList();
+
 
                 foreach (var item in checkVoucherPayment)
                 {

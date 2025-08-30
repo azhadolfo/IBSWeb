@@ -138,7 +138,7 @@ namespace IBS.Models.Filpride.AccountsPayable
         [StringLength(50)]
         public string? AccruedType { get; set; }
 
-        [StringLength(13)]
+        [StringLength(1000)]
         public string? Reference { get; set; }
 
         [NotMapped]
