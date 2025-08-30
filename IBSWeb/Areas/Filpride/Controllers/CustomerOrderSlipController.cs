@@ -1921,7 +1921,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [DepartmentAuthorize(SD.Department_Marketing, SD.Department_RCD)]
-        public async Task<IActionResult> ChangePrice(int? id, decimal newPrice, string referenceNo, CancellationToken cancellationToken)
+        public async Task<IActionResult> ChangePrice(int? id, decimal newPrice, string referenceNo, IFormFile? file,  CancellationToken cancellationToken)
         {
             if (id == null)
             {
@@ -1938,6 +1938,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord == null)
                 {
                     return NotFound();
+                }
+
+                var fileUploadContainer = new List<FilesToUpload>();
+
+                if (file != null)
+                {
+                    var fileName = GenerateFileNameToSave(file!.FileName);
+                    existingRecord.UploadedFiles = existingRecord.UploadedFiles == null || existingRecord.UploadedFiles.Length == 0 ? [fileName] : existingRecord.UploadedFiles.Concat([fileName]).ToArray();
+                    var fileToUpload = new FilesToUpload { FileName = fileName, File = file };
+                    fileUploadContainer.Add(fileToUpload);
                 }
 
                 existingRecord.OldPrice = existingRecord.DeliveredPrice;
@@ -1988,7 +1998,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["success"] = $"The price for {existingRecord.CustomerOrderSlipNo} has been updated, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).";
 
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
+                await ApplyStorageChanges(fileUploadContainer, []);
                 await transaction.CommitAsync(cancellationToken);
 
                 return RedirectToAction(nameof(Index));
