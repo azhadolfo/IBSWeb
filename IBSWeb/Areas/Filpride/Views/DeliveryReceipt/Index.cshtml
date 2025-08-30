@@ -260,8 +260,8 @@
             Swal.fire({
                 title: "Please confirm the delivery date",
                 html: `
-            <input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${lastDayOfMonth}" required>
-        `,
+    <input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${lastDayOfMonth}" required>
+`,
                 focusConfirm: false,
                 allowEscapeKey: false,
                 allowOutsideClick: false,
@@ -285,6 +285,13 @@
 
                     if (selectedDate > maxDate) {
                         Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        return false; // Prevent submission
+                    }
+
+                    // Check if the selected date is before the minimum date
+                    let minDateObj = new Date(minDateString);
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage('The selected date cannot be more than 2 days in the past.');
                         return false; // Prevent submission
                     }
 
