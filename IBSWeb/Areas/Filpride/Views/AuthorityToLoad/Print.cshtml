@@ -53,77 +53,77 @@
     <div class="table-responsive">
         <table class="table table-borderless">
             <tbody>
-                <tr>
-                    <td><b>Supplier:</b> @(Model.Supplier!.SupplierName.ToUpper())</td>
-                    <td class="text-end"><b>Freight:</b> @Model.Freight.ToString(SD.Four_Decimal_Format)</td>
-                </tr>
-                <tr>
-                    <td><b>Date Booked:</b> @Model.DateBooked.ToString(SD.Date_Format)</td>
-                    <td class="text-end"><b>Load Port:</b> @Model.Depot</td>
-                </tr>
-                <tr>
-                    <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
-                    <td></td>
-                </tr>
+            <tr>
+                <td><b>Supplier:</b> @(Model.Supplier!.SupplierName.ToUpper())</td>
+                <td class="text-end"><b>Freight:</b> @Model.Freight.ToString(SD.Four_Decimal_Format)</td>
+            </tr>
+            <tr>
+                <td><b>Date Booked:</b> @Model.DateBooked.ToString(SD.Date_Format)</td>
+                <td class="text-end"><b>Load Port:</b> @Model.Depot</td>
+            </tr>
+            <tr>
+                <td><b>Valid Until:</b> @Html.DisplayFor(model => model.ValidUntil)</td>
+                <td></td>
+            </tr>
             </tbody>
         </table>
     </div>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>
+            <tr>
+                <th colspan="7" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
+            </tr>
+            @if (Model.UppiAtlNo != null)
+            {
                 <tr>
-                    <th colspan="7" class="text-center table-secondary">Filpride's ATL#: @Model.AuthorityToLoadNo</th>
+                    <th colspan="7" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo.ToUpper()</th>
                 </tr>
-                @if (Model.UppiAtlNo != null)
-                {
-                    <tr>
-                        <th colspan="7" class="text-center table-secondary">Supplier's ATL#: @Model.UppiAtlNo.ToUpper()</th>
-                    </tr>
-                }
-                <tr>
-                    <th>COS#</th>
-                    <th>Customer</th>
-                    <th>Product</th>
-                    <th>Volume</th>
-                    <th>Supplier SO#</th>
-                    <th>Filpride PO#</th>
-                    <th>Customer PO#</th>
-                </tr>
+            }
+            <tr>
+                <th>COS#</th>
+                <th>Customer</th>
+                <th>Product</th>
+                <th>Volume</th>
+                <th>Supplier SO#</th>
+                <th>Filpride PO#</th>
+                <th>Customer PO#</th>
+            </tr>
             </thead>
             <tbody>
                 
-                @foreach (var cos in Model.Details
-                              .OrderBy(d => d.CustomerOrderSlip!.CustomerId)
-                              .ThenBy(d => d.CustomerOrderSlipId))
-                {
-                    <tr>
-                        <td>
-                            @cos.CustomerOrderSlip!.CustomerOrderSlipNo
-                        </td>
-                        <td>
-                            @cos.CustomerOrderSlip!.Customer!.CustomerName.ToUpper()
-                        </td>
-                        <td>
-                            @cos.CustomerOrderSlip!.Product!.ProductName
-                        </td>
-                        <td>
-                            @cos.Quantity.ToString(SD.Two_Decimal_Format)
-                        </td>
-                        <td>
-                            @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                                .Where(a => a.SupplierId == Model.SupplierId)
-                                .Select(a => a.PurchaseOrder!.SupplierSalesOrderNo))
-                        </td>
-                        <td>
-                            @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
-                                .Where(a => a.SupplierId == Model.SupplierId)
-                                .Select(x => x.PurchaseOrder!.PurchaseOrderNo))
-                        </td>
-                        <td>
-                            @cos.CustomerOrderSlip.CustomerPoNo.ToUpper()
-                        </td>
-                    </tr>
-                }
+            @foreach (var cos in Model.Details
+                          .OrderBy(d => d.CustomerOrderSlip!.CustomerId)
+                          .ThenBy(d => d.CustomerOrderSlipId))
+            {
+                <tr>
+                    <td>
+                        @cos.CustomerOrderSlip!.CustomerOrderSlipNo
+                    </td>
+                    <td>
+                        @cos.CustomerOrderSlip!.Customer!.CustomerName.ToUpper()
+                    </td>
+                    <td>
+                        @cos.CustomerOrderSlip!.Product!.ProductName
+                    </td>
+                    <td>
+                        @cos.Quantity.ToString(SD.Two_Decimal_Format)
+                    </td>
+                    <td>
+                        @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
+                            .Where(a => a.SupplierId == Model.SupplierId)
+                            .Select(a => a.PurchaseOrder!.SupplierSalesOrderNo))
+                    </td>
+                    <td>
+                        @string.Join(", ", cos.CustomerOrderSlip!.AppointedSuppliers!
+                            .Where(a => a.SupplierId == Model.SupplierId)
+                            .Select(x => x.PurchaseOrder!.PurchaseOrderNo))
+                    </td>
+                    <td>
+                        @cos.CustomerOrderSlip.CustomerPoNo.ToUpper()
+                    </td>
+                </tr>
+            }
                 
             </tbody>
         </table>
@@ -131,18 +131,18 @@
     <div class="table-responsive">
         <table class="table table-borderless">
             <tbody>
-                <tr>
-                    <td><b>Hauler:</b> @Model.HaulerName?.ToUpper()</td>
-                </tr>
-                <tr>
-                    <td><b>Driver:</b> @Model.Driver?.ToUpper()</td>
-                </tr>
-                <tr>
-                    <td><b>Plate #:</b> @Model.PlateNo?.ToUpper()</td>
-                </tr>
-                <tr>
-                    <td class="mt-5"><b>Remarks:</b><pre>@Model.Remarks.ToUpper()</pre></td>
-                </tr>
+            <tr>
+                <td><b>Hauler:</b> @Model.HaulerName?.ToUpper()</td>
+            </tr>
+            <tr>
+                <td><b>Driver:</b> @Model.Driver?.ToUpper()</td>
+            </tr>
+            <tr>
+                <td><b>Plate #:</b> @Model.PlateNo?.ToUpper()</td>
+            </tr>
+            <tr>
+                <td class="mt-5"><b>Remarks:</b><pre>@Model.Remarks.ToUpper()</pre></td>
+            </tr>
             </tbody>
         </table>
     </div>
@@ -170,7 +170,7 @@
 
     <div class="row pt-2">
         <div class="col-6 col-md-3">
-            <a onclick="window.print()" class="btn btn-primary form-control buttons">Print</a>
+            <a onclick="confirmPrint(@Model.AuthorityToLoadId)" class="btn btn-primary form-control buttons">Print</a>
         </div>
 
         <div class="col-6 col-md-3">
@@ -179,3 +179,23 @@
     </div>
     <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 </div>
+
+@section Scripts{
+    <script>
+        function confirmPrint(id)
+        {
+            const afterPrintHandler = () => {
+                window.removeEventListener('afterprint', afterPrintHandler);
+                controllerThenPrint(id);
+            };
+
+            window.addEventListener('afterprint', afterPrintHandler);
+            window.print();
+        }
+        
+        function controllerThenPrint(id) {
+            var url = `@Url.Action("Printed", "AuthorityToLoad", new { area = "Filpride" })/${id}`;
+            window.location.href = url;
+        }
+    </script>
+}

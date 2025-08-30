@@ -481,6 +481,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             return View(receivingReport);
         }
 
@@ -707,21 +716,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            if (rr.IsPrinted)
+            if (!rr.IsPrinted)
             {
-                return RedirectToAction(nameof(Print), new { id });
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                rr.IsPrinted = true;
+                await _unitOfWork.SaveAsync(cancellationToken);
+            }
+            else
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
             }
 
-            #region --Audit Trail Recording
-
-            var printedBy = _userManager.GetUserName(User);
-            FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed original copy of receiving report# {rr.ReceivingReportNo}", "Receiving Report", rr.Company);
-            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
-
-            #endregion --Audit Trail Recording
-
-            rr.IsPrinted = true;
-            await _unitOfWork.SaveAsync(cancellationToken);
             return RedirectToAction(nameof(Print), new { id });
         }
 

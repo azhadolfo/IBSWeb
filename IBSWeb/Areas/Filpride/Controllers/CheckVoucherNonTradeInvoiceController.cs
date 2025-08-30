@@ -950,6 +950,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Print(int? id, int? supplierId, CancellationToken cancellationToken)
         {
+            var companyClaims = await GetCompanyClaimAsync();
+
             if (id == null)
             {
                 return NotFound();
@@ -976,6 +978,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Details = details,
                 Supplier = getSupplier
             };
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview check voucher# {header.CheckVoucherHeaderNo}", "Check Voucher", companyClaims!);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
 
             return View(viewModel);
         }
@@ -1280,6 +1289,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cv.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
+            else
+            {
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed re-printed copy of check voucher# {cv.CheckVoucherHeaderNo}", "Check Voucher", cv.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+                #endregion --Audit Trail Recording
+            }
+
             return RedirectToAction(nameof(Print), new { id, supplierId });
         }
 

@@ -312,46 +312,59 @@
             })
         }
     </script>
+
     @if (Model.Type == nameof(DocumentType.Documented) && !Model.IsPrinted)
     {
         <script>
-        function confirmPrint(id) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This will mark the document as reprinted and can't be undone.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const afterPrintHandler = () => {
-                        window.removeEventListener('afterprint', afterPrintHandler);
-                        var url = `@Url.Action("Printed", "ServiceInvoice", new { area = "Filpride" })/${id}`;
-                        window.location.href = url;
-                    };
+            function confirmPrint(id)
+            {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This will mark the document as reprinted and can't be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes'
+                }).then((result) =>
+                {
+                    if (result.isConfirmed)
+                    {
+                        const afterPrintHandler  = () =>
+                        {
+                            window.removeEventListener('afterprint', afterPrintHandler);
+                            controllerThenPrint(id);
+                        };
 
-                    window.addEventListener('afterprint', afterPrintHandler);
-
-                    // Close Swal before printing to avoid blank overlay
-                    Swal.close();
-                    setTimeout(() => {
-                        window.print();
-                    }, 200); // small delay to ensure Swal fully closes before print
-                }
-            });
-        }
-    </script>
+                        window.addEventListener('afterprint', afterPrintHandler);
+                        Swal.close();
+                        setTimeout(() => { window.print(); }, 200);
+                    }
+                });
+            }
+        </script>
     }
     else
     {
         <script>
-        function confirmPrint(id) {
-            // Call the print function
-            window.print();
-        }
+            function confirmPrint(id)
+            {
+                const afterPrintHandler = () => {
+                    window.removeEventListener('afterprint', afterPrintHandler);
+                    controllerThenPrint(id);
+                };
+
+                window.addEventListener('afterprint', afterPrintHandler);
+                window.print();
+            }
         </script>
     }
+    <script>
+        function controllerThenPrint(id) {
+            var url = `@Url.Action("Printed", "ServiceInvoice", new { area = "Filpride" })/${id}`;
+            window.location.href = url;
+        }
+    </script>
+    
     <script src="~/js/disable-dev-tools-in-print.js" asp-append-version="true"></script>
 }

@@ -284,6 +284,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     return BadRequest();
                 }
+                var companyClaims = await GetCompanyClaimAsync();
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load", companyClaims!);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
 
                 return View(existingRecord);
             }
@@ -294,6 +302,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
                 return RedirectToAction(nameof(Index));
             }
+        }
+
+        public async Task<IActionResult> Printed(int id, CancellationToken cancellationToken)
+        {
+            var atl = await _unitOfWork.FilprideAuthorityToLoad
+                .GetAsync(x => x.AuthorityToLoadId == id, cancellationToken);
+
+            if (atl == null)
+            {
+                return NotFound();
+            }
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrail = new(User.Identity!.Name!, $"Printed copy of authority to load# {atl.AuthorityToLoadNo}", "Authority to Load", atl.Company);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrail, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
+            return RedirectToAction(nameof(Print), new { id });
         }
 
         [HttpGet]

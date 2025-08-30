@@ -437,6 +437,21 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> Print(int id, CancellationToken cancellationToken)
         {
             var sales = await _unitOfWork.FilprideSalesInvoice.GetAsync(si => si.SalesInvoiceId == id, cancellationToken);
+
+            if (sales == null)
+            {
+                return NotFound();
+            }
+
+            var companyClaims = await GetCompanyClaimAsync();
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview sales invoice# {sales.SalesInvoiceNo}", "Sales Invoice", companyClaims!);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             return View(sales);
         }
 
@@ -645,6 +660,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 si.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
+            else
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User);
+                FilprideAuditTrail auditTrailBook = new(printedBy!, $"Printed re-printed copy of sales invoice# {si.SalesInvoiceNo}", "Sales Invoice", si.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+            }
+
             return RedirectToAction(nameof(Print), new { id });
         }
 

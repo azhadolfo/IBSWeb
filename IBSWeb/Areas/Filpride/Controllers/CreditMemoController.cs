@@ -454,6 +454,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var companyClaims = await GetCompanyClaimAsync();
+
+            #region --Audit Trail Recording
+
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview credit memo# {creditMemo.CreditMemoNo}", "Credit Memo", companyClaims!);
+            await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+            #endregion --Audit Trail Recording
+
             return View(creditMemo);
         }
 
@@ -1043,6 +1052,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 cm.IsPrinted = true;
                 await _unitOfWork.SaveAsync(cancellationToken);
             }
+            else
+            {
+                #region --Audit Trail Recording
+
+                var printedBy = _userManager.GetUserName(User)!;
+                FilprideAuditTrail auditTrailBook = new(printedBy, $"Printed re-printed copy of credit memo# {cm.CreditMemoNo}", "Credit Memo", cm.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+            }
+
             return RedirectToAction(nameof(Print), new { id });
         }
 
