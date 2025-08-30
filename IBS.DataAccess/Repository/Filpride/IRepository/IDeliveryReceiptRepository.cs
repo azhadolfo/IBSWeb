@@ -7,11 +7,11 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 {
     public interface IDeliveryReceiptRepository : IRepository<FilprideDeliveryReceipt>
     {
-        Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default);
+        Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default);
 
         Task UpdateAsync(DeliveryReceiptViewModel viewModel, CancellationToken cancellationToken = default);
 
-        Task<List<SelectListItem>> GetDeliveryReceiptListAsync(string companyclaims, CancellationToken cancellationToken = default);
+        Task<List<SelectListItem>> GetDeliveryReceiptListAsync(string companyClaims, CancellationToken cancellationToken = default);
 
         Task<List<SelectListItem>> GetDeliveryReceiptListForSalesInvoice(string companyClaims, int cosId, CancellationToken cancellationToken = default);
 

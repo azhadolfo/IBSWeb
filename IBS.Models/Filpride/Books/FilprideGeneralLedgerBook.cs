@@ -16,12 +16,15 @@ namespace IBS.Models.Filpride.Books
         [Column(TypeName = "date")]
         public DateOnly Date { get; set; }
 
+        [Column(TypeName = "varchar(20)")]
         public string Reference { get; set; }
 
         [Display(Name = "Account Number")]
+        [Column(TypeName = "varchar(50)")]
         public string AccountNo { get; set; }
 
         [Display(Name = "Account Title")]
+        [Column(TypeName = "varchar(200)")]
         public string AccountTitle { get; set; }
 
         public string Description { get; set; }
@@ -43,6 +46,7 @@ namespace IBS.Models.Filpride.Books
 
         public bool IsPosted { get; set; } = true;
 
+        [Column(TypeName = "varchar(50)")]
         public string Company { get; set; } = string.Empty;
 
         #region Bank Properties
@@ -108,5 +112,8 @@ namespace IBS.Models.Filpride.Books
         public string? CompanyName { get; set; }
 
         #endregion
+
+        [Column(TypeName = "varchar(50)")]
+        public string ModuleType { get; set; } = string.Empty;
     }
 }

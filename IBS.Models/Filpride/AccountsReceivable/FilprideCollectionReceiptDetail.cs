@@ -13,7 +13,7 @@ namespace IBS.Models.Filpride.AccountsReceivable
 
         public FilprideCollectionReceipt? FilprideCollectionReceipt { get; set; }
 
-        [StringLength(15)]
+        [StringLength(13)]
         public string CollectionReceiptNo { get; set; }
 
         [Column(TypeName = "date")]

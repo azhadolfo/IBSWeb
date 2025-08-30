@@ -92,5 +92,7 @@ namespace IBS.Models.Filpride.ViewModels
         public bool HasReceivingReport { get; set; }
 
         public bool IsTheCreationLockForTheMonth { get; set; }
+
+        public string Type { get; set; } = string.Empty;
     }
 }

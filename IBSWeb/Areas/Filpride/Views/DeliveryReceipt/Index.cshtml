@@ -146,10 +146,10 @@
                     "data": "status",
                     "name": "status",
                     "render": function(data, type, row) {
-                        var statusClass = row.status == "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
-                                          row.status == "@nameof(DRStatus.Invoiced)" ? "bg-success" :
-                                          row.status == "@nameof(DRStatus.Voided)" || row.status == "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
-                                          row.status == "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
+                        var statusClass = row.status === "@nameof(DRStatus.ForInvoicing)" ? "bg-info" :
+                                          row.status === "@nameof(DRStatus.Invoiced)" ? "bg-success" :
+                                          row.status === "@nameof(DRStatus.Voided)" || row.status === "@nameof(CosStatus.ForApprovalOfOM)"  ? "bg-danger" :
+                                          row.status === "@nameof(DRStatus.Canceled)" ? "bg-warning" : "";
 
                         return `<span class="badge rounded-pill ${statusClass}">${row.status}</span>`;
                     }
@@ -169,7 +169,7 @@
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">`;
 
-                        if (row.status != "@DRStatus.ForApprovalOfOM") {
+                        if (row.status !== "@DRStatus.ForApprovalOfOM") {
                             if (!row.deliveredDate) {
                                 actions += `
                                     <li><a class="dropdown-item" href="@Url.Action("Edit", "DeliveryReceipt", new { area = "Filpride" })/${data}">Edit</a></li>
@@ -248,6 +248,11 @@
             // Get today's date in yyyy-MM-dd format
             let today = new Date().toISOString().split('T')[0];
 
+            // Calculate minimum date (today - 2 days)
+            let minDate = new Date();
+            minDate.setDate(minDate.getDate() - 2);
+            let minDateString = minDate.toISOString().split('T')[0];
+
             // Get the last day of the current month
             let currentDate = new Date();
             let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
@@ -255,8 +260,8 @@
             Swal.fire({
                 title: "Please confirm the delivery date",
                 html: `
-            <input type="date" id="deliveredDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
-        `,
+    <input type="date" id="deliveredDate" class="swal2-input" value="${today}" min="${minDateString}" max="${lastDayOfMonth}" required>
+`,
                 focusConfirm: false,
                 allowEscapeKey: false,
                 allowOutsideClick: false,
@@ -280,6 +285,13 @@
 
                     if (selectedDate > maxDate) {
                         Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        return false; // Prevent submission
+                    }
+
+                    // Check if the selected date is before the minimum date
+                    let minDateObj = new Date(minDateString);
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage('The selected date cannot be more than 2 days in the past.');
                         return false; // Prevent submission
                     }
 

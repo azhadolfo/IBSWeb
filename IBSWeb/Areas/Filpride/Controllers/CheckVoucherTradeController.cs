@@ -354,6 +354,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --CV Details Entry
 
+                #region -- Partial payment of RR's
+
+                var cvTradePaymentModel = new List<FilprideCVTradePayment>();
+                foreach (var item in viewModel.RRs)
+                {
+                    var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                    if (getReceivingReport != null)
+                    {
+                        getReceivingReport.AmountPaid += item.Amount;
+
+                        cvTradePaymentModel.Add(
+                        new FilprideCVTradePayment
+                        {
+                            DocumentId = getReceivingReport.ReceivingReportId,
+                            DocumentType = "RR",
+                            CheckVoucherId = cvh.CheckVoucherHeaderId,
+                            AmountPaid = item.Amount
+                        });
+                    }
+                }
+
+                await _dbContext.AddRangeAsync(cvTradePaymentModel);
+
+                #endregion -- Partial payment of RR's
+
                 #region -- Uploading file --
 
                 if (file != null && file.Length > 0)
@@ -404,8 +429,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(po => po.SupplierId == supplierId && po.PostedBy != null && po.Company == companyClaims);
+            var purchaseOrders = await _dbContext.FilpridePurchaseOrders
+                .Include(x => x.ReceivingReports)
+                .Where(po => po.SupplierId == supplierId
+                             && po.PostedBy != null
+                             && po.QuantityReceived > 0
+                             && po.Company == companyClaims
+                             && po.ReceivingReports != null
+                             && po.ReceivingReports.Any(x => !x.IsPaid))
+                .ToListAsync();
 
             if (!purchaseOrders.Any())
             {
@@ -424,7 +456,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideReceivingReports
-                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
+                .Where(rr => rr.Company == companyClaims && !rr.IsPaid && rr.AmountPaid == 0 && poNumber.Contains(rr.PONo) && rr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -465,6 +497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = rr.ReceivingReportId,
                         rr.ReceivingReportNo,
+                        rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
                     };
@@ -981,6 +1014,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 BankAccountName = details.BankId.HasValue ? $"{details.BankAccount?.AccountNo} {details.BankAccount?.AccountName}" : null,
                                 SupplierId = details.SupplierId,
                                 SupplierName = details.Supplier?.SupplierName,
+                                ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
                 }
@@ -1832,7 +1866,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CheckVoucherList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {
@@ -2010,7 +2044,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    OldCvNo = viewModel.OldCVNo,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2261,7 +2296,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Tin = viewModel.SupplierTinNo,
                     Type = getDeliveryReceipt.PurchaseOrder.Type,
                     BankAccountName = bank.AccountName,
-                    BankAccountNumber = bank.AccountNo
+                    BankAccountNumber = bank.AccountNo,
+                    OldCvNo = viewModel.OldCVNo
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2501,7 +2537,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Particulars = existingHeaderModel.Particulars!,
                 CreatedBy = _userManager.GetUserName(User),
                 DRs = [],
-                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken)
+                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -2753,7 +2790,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CreatedBy = _userManager.GetUserName(this.User),
                 DRs = [],
                 Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                OldCVNo = existingHeaderModel.OldCvNo
             };
 
             var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments

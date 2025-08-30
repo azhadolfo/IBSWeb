@@ -1,10 +1,12 @@
 ﻿@using IBS.Utility.Constants
+@using IBS.Utility.Enums
 @using IBS.Utility.Helpers
 @model DeliveryReceiptViewModel
 
 @{
     ViewData["Title"] = "Delivery Receipt - Create";
     var today = DateTimeHelper.GetCurrentPhilippineTime();
+    var minDate = today.AddDays(-2);
 }
 
 <link rel="stylesheet" href="~/css/form-style.css">
@@ -26,10 +28,22 @@
             @Html.AntiForgeryToken()
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Type<span class="required">*</span></label>
+                    <select asp-for="Type" class="form-select js-select2 border-0 shadow" style="width:100%;">
+                        <option value="" selected disabled>Select DR type</option>
+                        @foreach (var documentType in Enum.GetValues<DocumentType>())
+                        {
+                            <option value="@documentType">@documentType.ToString()</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
                 <div class="form-floating col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow"
                            placeholder=""
-                           value="@today.ToString("yyyy-MM-dd")"/>
+                           value="@today.ToString("yyyy-MM-dd")"
+                           min="@minDate.ToString("yyyy-MM-dd")"/>
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>

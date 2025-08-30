@@ -55,8 +55,9 @@
                             </tr>
                             <tr>
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
+                                <th>PO No's</th>
                                 <th>RR No's</th>
-                                <th>Payment</th>
+                                <th>IS RR No's</th>
                                 <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
@@ -75,9 +76,9 @@
                     <span asp-validation-for="POSeries" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="OldCVNo" type="text" class="form-control" placeholder="" />
+                    <input asp-for="OldCVNo" type="text" class="form-control" placeholder="" required/>
                     <span asp-validation-for="OldCVNo" class="text-danger"></span>
-                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #</label>
+                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #</label><span class="required">*</span>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
@@ -263,80 +264,129 @@
             });
         });
 
-        displayRecords(@Html.Raw(Json.Serialize(Model.POSeries)), @Html.Raw(Json.Serialize(Model.CVId)));
-        displayAdvances(@Html.Raw(Json.Serialize(Model.POSeries)));
+        // store rows per PO
+        let poDataMap = {};
+        let initialPOs = @Html.Raw(Json.Serialize(Model.POSeries));
+        let cvId = @Html.Raw(Json.Serialize(Model.CVId));
+        let tbody = $('.rrAmount');
 
-        $(".GetRRList").change(function () {
-            var poNumber = $(this).val(); // Get all selected POIds
-            displayRecords(poNumber);
-            displayAdvances(poNumber);
-        });
-        
-        function displayRecords(poNumber, cvId) {
-            $.ajax({
-                url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
-                method: "GET",
-                data: { poNumber: poNumber, cvId : cvId }, // Pass PO numbers to controller
-                traditional: true, // Ensure jQuery sends the array properly
-                success: function (data) {
-                    const tbody = $('.rrAmount');
-                    let totalGross = 0;
-                    let totalAmountPaid = 0;
-                    let totalBalance = 0;
-                    const modelRRs = new Map(@Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount})))
-                        .map(r => [r.id, r.amount]));
-
-                    tbody.empty();
-
-                    if (data){
-                        data.forEach((rr, index) => {
-                            let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
-                            const rrAmount = modelRRs.get(rr.id) || 0;
-                            let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
-                            let checkingBalance = parseNumber(rr.netOfEwtAmount) - amountPaid;
-                            
-                            const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
-                            const tr = $(`
-                                        <tr>
-                                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
-                                            <td>${rr.receivingReportNo}</td>
-                                            <td><input type="text" class="paymentAmount" readonly style="display: none"></td>
-                                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
-                                            <td class="text-end">${formatNumber(rr.amountPaid)}</td>
-                                            <td class="text-end balance">${formatNumber(balance)}</td>
-                                        </tr>
-                                    `);
-                            tbody.append(tr);
-
-                            totalGross += parseNumber(rr.netOfEwtAmount);
-                            totalAmountPaid += parseNumber(rr.amountPaid);
-                            totalBalance += balance;
-                        });
-                    }
-
-                    // Append Grand Total Rows
-                    const totalRow = $(`
-                <tr style="border-bottom:double;" class="sticky-lg-bottom">
-                    <td colspan="7" class="pt-1"></td>
-                </tr>
-                <tr class="sticky-bottom bg-white">
-                    <td colspan="2"></td>
-                    <td class="fw-bold text-end p-2">Grand Total:</td>
-                    <td class="text-end" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
-                    <td class="text-end" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
-                    <td class="text-end" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
-                </tr>
-            `);
-                    tbody.append(totalRow);
-
-                    // Ensure checkbox state is processed AFTER records are loaded
-                    initializeCheckedCheckboxes();
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error fetching RRs:', error);
+        tbody.empty();
+        (async function loadInitial() {
+            if (initialPOs && initialPOs.length > 0) {
+                for (const po of initialPOs) {
+                    await displayRecords(po, tbody, cvId);
                 }
+            }
+            displayAdvances(initialPOs);
+        })();
+
+        $(".GetRRList").change(async function () {
+            let poNumbers = $(this).val(); // assume multiple select
+            let tbody = $('.rrAmount');
+
+            tbody.empty();
+            poDataMap = {};
+
+            if (poNumbers && poNumbers.length > 0) {
+                for (const po of poNumbers) {
+                    await displayRecords(po, tbody, cvId);
+                }
+            }
+            displayAdvances(poNumbers);
+        });
+
+        function displayRecords(poNumber, tbody, cvId) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
+                    method: "GET",
+                    data: { poNumber: poNumber, cvId: cvId },
+                    traditional: true,
+                    success: function (data) {
+                        let subGross = 0;
+                        let subPaid = 0;
+                        let subBalance = 0;
+
+                        const modelRRs = new Map(
+                            @Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount })))
+                                .map(r => [r.id, r.amount])
+                        );
+
+                        if (data && data.length > 0) {
+                            data.forEach(rr => {
+                                let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
+                                const rrAmount = modelRRs.get(rr.id) || 0;
+                                let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
+
+                                const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
+                                const tr = $(`<tr data-po="${poNumber}">
+                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
+                            <td>${poNumber}</td>
+                            <td>${rr.receivingReportNo}</td>
+                            <td>${rr.oldRRNo}</td>
+                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
+                            <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
+                            <td class="text-end balance">${formatNumber(balance)}</td>
+                        </tr>`);
+                                tbody.append(tr);
+
+                                subGross += parseNumber(rr.netOfEwtAmount);
+                                subPaid += parseNumber(rr.amountPaid);
+                                subBalance += balance;
+                            });
+
+                            const subTotal = $(`<tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
+                        <td colspan="3"></td>
+                        <td class="fw-bold text-end">Subtotal (${poNumber}):</td>
+                        <td class="text-end">${formatNumber(subGross)}</td>
+                        <td class="text-end">${formatNumber(subPaid)}</td>
+                        <td class="text-end">${formatNumber(subBalance)}</td>
+                    </tr>`);
+                            tbody.append(subTotal);
+
+                            poDataMap[poNumber] = {
+                                gross: subGross,
+                                paid: subPaid,
+                                balance: subBalance
+                            };
+
+                            updateGrandTotal(tbody);
+                            initializeCheckedCheckboxes();
+                        }
+                        resolve();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching RRs:', error);
+                        reject(error);
+                    }
+                });
             });
         }
+
+        function updateGrandTotal(tbody) {
+            $(".grandTotalRow").remove();
+
+            let grandGross = 0, grandPaid = 0, grandBalance = 0;
+
+            Object.values(poDataMap).forEach(totals => {
+                grandGross += totals.gross;
+                grandPaid += totals.paid;
+                grandBalance += totals.balance;
+            });
+
+            if (Object.keys(poDataMap).length > 0) {
+                const grandTotalRow = $(`<tr style="border-top:double;" class="fw-bold sticky-bottom bg-white grandTotalRow">
+            <td colspan="3"></td>
+            <td class="fw-bold text-end p-2">Grand Total:</td>
+            <td class="text-end">${formatNumber(grandGross)}</td>
+            <td class="text-end amountPaid"></td>
+            <td class="text-end">${formatNumber(grandBalance)}</td>
+        </tr>`);
+                tbody.append(grandTotalRow);
+            }
+}
+
+
 
         function displayAdvances(poNumber){
             // New addition: Check if any selected PO has COD or PREPAID terms
@@ -477,6 +527,7 @@
                 totalNetOfEWT += rrAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
+            $(".amountPaid").text(formatNumber(totalNetOfEWT));
 
             // Check if advances row is visible
             var hasAdvances = $("#advancesRow").is(":visible");

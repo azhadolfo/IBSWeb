@@ -387,7 +387,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 Credit = 0,
                 CreatedBy = model.PostedBy,
                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                Company = model.Company
+                Company = model.Company,
+                ModuleType = nameof(ModuleType.Purchase)
             });
 
             if (vatAmount > 0)
@@ -404,7 +405,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = 0,
                     CreatedBy = model.PostedBy,
                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company
+                    Company = model.Company,
+                    ModuleType = nameof(ModuleType.Purchase)
                 });
             }
 
@@ -422,7 +424,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                 Company = model.Company,
                 SupplierId = model.PurchaseOrder.SupplierId,
-                SupplierName = model.PurchaseOrder.SupplierName
+                SupplierName = model.PurchaseOrder.SupplierName,
+                ModuleType = nameof(ModuleType.Purchase)
             });
 
             if (ewtAmount > 0)
@@ -439,7 +442,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     Credit = ewtAmount,
                     CreatedBy = model.PostedBy,
                     CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
-                    Company = model.Company
+                    Company = model.Company,
+                    ModuleType = nameof(ModuleType.Purchase)
                 });
             }
 

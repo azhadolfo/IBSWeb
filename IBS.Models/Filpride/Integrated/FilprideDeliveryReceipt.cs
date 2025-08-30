@@ -164,7 +164,8 @@ namespace IBS.Models.Filpride.Integrated
         [ForeignKey(nameof(AuthorityToLoadId))]
         public FilprideAuthorityToLoad? AuthorityToLoad { get; set; }
 
-
+        [Column(TypeName = "varchar(15)")]
+        public string Type { get; set; } = string.Empty;
 
     }
 }

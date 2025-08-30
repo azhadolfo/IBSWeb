@@ -248,7 +248,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"ChartOfAccountList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
             catch (Exception ex)
             {

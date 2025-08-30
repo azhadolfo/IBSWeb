@@ -194,6 +194,82 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModel);
         }
 
+        public async Task<IActionResult> GetBanks(CancellationToken cancellationToken = default)
+        {
+            var companyClaims = await GetCompanyClaimAsync();
+
+            if (companyClaims == null)
+            {
+                return BadRequest();
+            }
+
+            return Json(await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken));
+        }
+
+        [DepartmentAuthorize(SD.Department_TradeAndSupply, SD.Department_RCD)]
+        [HttpGet]
+        public async Task<IActionResult> Deposit(int id, int bankId, DateOnly depositDate, CancellationToken cancellationToken)
+        {
+            var bank = await _unitOfWork.FilprideBankAccount
+                .GetAsync(b => b.BankAccountId == bankId, cancellationToken);
+
+            if (bank == null)
+            {
+                return NotFound();
+            }
+
+            var model = await _unitOfWork.FilprideCollectionReceipt
+                .GetAsync(cr => cr.CollectionReceiptId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.DepositedDate = depositDate;
+                model.BankId = bank.BankAccountId;
+                model.BankAccountName = bank.AccountName;
+                model.BankAccountNumber = bank.AccountNo;
+
+                await _unitOfWork.FilprideCollectionReceipt.DepositAsync(model, cancellationToken);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!,
+                    $"Record deposit date of collection receipt#{model.CollectionReceiptNo}", "Collection Receipt", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await _unitOfWork.SaveAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Collection Receipt deposited date has been recorded successfully.";
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to record deposit date. Error: {ErrorMessage}, Stack: {StackTrace}. Recorded by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+
+                if (model.SalesInvoiceId != null || model.MultipleSIId != null)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                return RedirectToAction(nameof(ServiceInvoiceIndex));
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SingleCollectionCreateForSales(CollectionReceiptSingleSiViewModel viewModel, CancellationToken cancellationToken)
@@ -223,7 +299,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["warning"] = "Please input at least one type form of payment";
@@ -264,19 +340,22 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ReferenceNo = viewModel.ReferenceNo,
                     Remarks = viewModel.Remarks,
                     CashAmount = viewModel.CashAmount,
-                    CheckNo = viewModel.CheckNo,
-                    CheckBranch = viewModel.CheckBranch,
                     CheckDate = viewModel.CheckDate,
+                    CheckNo = viewModel.CheckNo,
+                    CheckBank = viewModel.CheckBank,
+                    CheckBranch = viewModel.CheckBranch,
                     CheckAmount = viewModel.CheckAmount,
+                    ManagersCheckDate = viewModel.ManagersCheckDate,
+                    ManagersCheckNo = viewModel.ManagersCheckNo,
+                    ManagersCheckBank = viewModel.ManagersCheckBank,
+                    ManagersCheckBranch = viewModel.ManagersCheckBranch,
+                    ManagersCheckAmount = viewModel.ManagersCheckAmount,
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
                     CreatedBy = User.Identity!.Name,
                     Company = companyClaims,
                     Type = existingSalesInvoice.Type,
-                    BankId = bankAccount?.BankAccountId,
-                    BankAccountName = bankAccount?.AccountName,
-                    BankAccountNumber = bankAccount?.AccountNo
                 };
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
@@ -416,7 +495,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["warning"] = "Please input at least one type form of payment";
@@ -449,14 +528,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckNo = viewModel.CheckNo,
                     CheckBranch = viewModel.CheckBranch,
                     CheckDate = viewModel.CheckDate,
+                    CheckBank = viewModel.CheckBank,
+                    ManagersCheckDate = viewModel.ManagersCheckDate,
+                    ManagersCheckNo = viewModel.ManagersCheckNo,
+                    ManagersCheckBank = viewModel.ManagersCheckBank,
+                    ManagersCheckBranch = viewModel.ManagersCheckBranch,
+                    ManagersCheckAmount = viewModel.ManagersCheckAmount,
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
                     CreatedBy = User.Identity!.Name,
                     Company = companyClaims,
-                    BankId = viewModel.BankId,
-                    BankAccountName = bankAccount?.AccountName,
-                    BankAccountNumber = bankAccount?.AccountNo,
                     MultipleSIId = viewModel.MultipleSIId,
                     SIMultipleAmount = viewModel.SIMultipleAmount,
                 };
@@ -623,7 +705,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CheckNo = existingModel.CheckNo,
                 CheckDate = existingModel.CheckDate,
                 CheckAmount = existingModel.CheckAmount,
-                BankId = existingModel.BankId,
+                CheckBank = existingModel.CheckBank,
+                ManagersCheckDate = existingModel.ManagersCheckDate,
+                ManagersCheckNo = existingModel.ManagersCheckNo,
+                ManagersCheckBank = existingModel.ManagersCheckBank,
+                ManagersCheckBranch = existingModel.ManagersCheckBranch,
+                ManagersCheckAmount = existingModel.ManagersCheckAmount,
                 BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                 EWT = existingModel.EWT,
                 WVAT = existingModel.WVAT,
@@ -679,7 +766,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["error"] = "Please input at least one type form of payment";
@@ -710,12 +797,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.CheckNo = viewModel.CheckNo;
                 existingModel.CheckBranch = viewModel.CheckBranch;
                 existingModel.CheckDate = viewModel.CheckDate;
+                existingModel.CheckBank = viewModel.CheckBank;
+                existingModel.ManagersCheckDate = viewModel.ManagersCheckDate;
+                existingModel.ManagersCheckNo = viewModel.ManagersCheckNo;
+                existingModel.ManagersCheckBank = viewModel.ManagersCheckBank;
+                existingModel.ManagersCheckBranch = viewModel.ManagersCheckBranch;
+                existingModel.ManagersCheckAmount = viewModel.ManagersCheckAmount;
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
-                existingModel.BankId = bankAccount?.BankAccountId;
-                existingModel.BankAccountName = bankAccount?.AccountName;
-                existingModel.BankAccountNumber = bankAccount?.AccountName;
                 existingModel.MultipleSIId = new int[viewModel.MultipleSIId.Length];
                 existingModel.MultipleSI = new string[viewModel.MultipleSIId.Length];
                 existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
@@ -932,7 +1022,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["warning"] = "Please input at least one type form of payment";
@@ -978,15 +1068,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CheckBranch = viewModel.CheckBranch,
                     CheckDate = viewModel.CheckDate,
                     CheckAmount = viewModel.CheckAmount,
+                    CheckBank = viewModel.CheckBank,
+                    ManagersCheckDate = viewModel.ManagersCheckDate,
+                    ManagersCheckNo = viewModel.ManagersCheckNo,
+                    ManagersCheckBank = viewModel.ManagersCheckBank,
+                    ManagersCheckBranch = viewModel.ManagersCheckBranch,
+                    ManagersCheckAmount = viewModel.ManagersCheckAmount,
                     EWT = viewModel.EWT,
                     WVAT = viewModel.WVAT,
                     Total = total,
                     CreatedBy = User.Identity!.Name,
                     Company = companyClaims,
-                    Type = existingServiceInvoice.Type,
-                    BankId = bankAccount?.BankAccountId,
-                    BankAccountName = bankAccount?.AccountName,
-                    BankAccountNumber = bankAccount?.AccountNo
+                    Type = existingServiceInvoice.Type
                 };
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
@@ -1324,10 +1417,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CashAmount = existingModel.CashAmount,
                 CheckDate = existingModel.CheckDate,
                 CheckNo = existingModel.CheckNo,
-                BankId = existingModel.BankId,
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                 CheckBranch = existingModel.CheckBranch,
                 CheckAmount = existingModel.CheckAmount,
+                CheckBank = existingModel.CheckBank,
+                ManagersCheckDate = existingModel.ManagersCheckDate,
+                ManagersCheckNo = existingModel.ManagersCheckNo,
+                ManagersCheckBank = existingModel.ManagersCheckBank,
+                ManagersCheckBranch = existingModel.ManagersCheckBranch,
+                ManagersCheckAmount = existingModel.ManagersCheckAmount,
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                 EWT = existingModel.EWT,
                 WVAT = existingModel.WVAT,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
@@ -1382,7 +1480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["warning"] = "Please input at least one type form of payment";
@@ -1420,12 +1518,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Remarks = viewModel.Remarks;
                 existingModel.CheckDate = viewModel.CheckDate;
                 existingModel.CheckNo = viewModel.CheckNo;
-                existingModel.BankId = viewModel.BankId;
-                existingModel.BankAccountName = bankAccount?.AccountName;
-                existingModel.BankAccountNumber = bankAccount?.AccountNo;
                 existingModel.CheckBranch = viewModel.CheckBranch;
-                existingModel.CashAmount = viewModel.CashAmount;
                 existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.CheckBank = viewModel.CheckBank;
+                existingModel.ManagersCheckDate = viewModel.ManagersCheckDate;
+                existingModel.ManagersCheckNo = viewModel.ManagersCheckNo;
+                existingModel.ManagersCheckBank = viewModel.ManagersCheckBank;
+                existingModel.ManagersCheckBranch = viewModel.ManagersCheckBranch;
+                existingModel.ManagersCheckAmount = viewModel.ManagersCheckAmount;
+                existingModel.CashAmount = viewModel.CashAmount;
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
@@ -1624,10 +1725,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 CashAmount = existingModel.CashAmount,
                 CheckDate = existingModel.CheckDate,
                 CheckNo = existingModel.CheckNo,
-                BankId = existingModel.BankId,
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                CheckBank = existingModel.CheckBank,
                 CheckBranch = existingModel.CheckBranch,
                 CheckAmount = existingModel.CheckAmount,
+                ManagersCheckDate = existingModel.ManagersCheckDate,
+                ManagersCheckNo = existingModel.ManagersCheckNo,
+                ManagersCheckBank = existingModel.ManagersCheckBank,
+                ManagersCheckBranch = existingModel.ManagersCheckBranch,
+                ManagersCheckAmount = existingModel.ManagersCheckAmount,
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
                 EWT = existingModel.EWT,
                 WVAT = existingModel.WVAT,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
@@ -1683,7 +1789,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
-            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.EWT + viewModel.WVAT;
+            var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
             {
                 TempData["warning"] = "Please input at least one type form of payment";
@@ -1721,12 +1827,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.Remarks = viewModel.Remarks;
                 existingModel.CheckDate = viewModel.CheckDate;
                 existingModel.CheckNo = viewModel.CheckNo;
-                existingModel.BankId = viewModel.BankId;
-                existingModel.BankAccountName = bankAccount?.AccountName;
-                existingModel.BankAccountNumber = bankAccount?.AccountNo;
                 existingModel.CheckBranch = viewModel.CheckBranch;
-                existingModel.CashAmount = viewModel.CashAmount;
                 existingModel.CheckAmount = viewModel.CheckAmount;
+                existingModel.CheckBank = viewModel.CheckBank;
+                existingModel.ManagersCheckDate = viewModel.ManagersCheckDate;
+                existingModel.ManagersCheckNo = viewModel.ManagersCheckNo;
+                existingModel.ManagersCheckBank = viewModel.ManagersCheckBank;
+                existingModel.ManagersCheckBranch = viewModel.ManagersCheckBranch;
+                existingModel.ManagersCheckAmount = viewModel.ManagersCheckAmount;
+                existingModel.CashAmount = viewModel.CashAmount;
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
@@ -2318,7 +2427,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 2].Value = item.ReferenceNo;
                     worksheet.Cells[row, 3].Value = item.Remarks;
                     worksheet.Cells[row, 4].Value = item.CashAmount;
-                    worksheet.Cells[row, 5].Value = item.CheckDate;
+                    worksheet.Cells[row, 5].Value = item.CheckDate?.ToString("yyyy-MM-dd") ?? null;
                     worksheet.Cells[row, 6].Value = item.CheckNo;
                     worksheet.Cells[row, 7].Value = item.BankAccount?.Bank;
                     worksheet.Cells[row, 8].Value = item.CheckBranch;
@@ -2529,7 +2638,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 // Convert the Excel package to a byte array
                 var excelBytes = await package.GetAsByteArrayAsync();
 
-                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CollectionReceiptList_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"CollectionReceiptList_IBS_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx");
             }
         }
 

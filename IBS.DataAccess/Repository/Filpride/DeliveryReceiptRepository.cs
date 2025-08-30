@@ -21,12 +21,23 @@ namespace IBS.DataAccess.Repository.Filpride
             _db = db;
         }
 
-        public async Task<string> GenerateCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        public async Task<string> GenerateCodeAsync(string companyClaims, string documentType, CancellationToken cancellationToken = default)
+        {
+            if (documentType == nameof(DocumentType.Documented))
+            {
+                return await GenerateDocumentedCodeAsync(companyClaims, cancellationToken);
+            }
+
+            return await GenerateUnDocumentedCodeAsync(companyClaims, cancellationToken);
+        }
+
+        private async Task<string> GenerateDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
         {
             var lastDr = await _db
                 .FilprideDeliveryReceipts
                 .Where(c => c.Company == companyClaims
-                            && !c.DeliveryReceiptNo.Contains("BEG"))
+                            && !c.DeliveryReceiptNo.Contains("BEG")
+                            && c.Type == nameof(DocumentType.Documented))
                 .OrderBy(c => c.DeliveryReceiptNo)
                 .LastOrDefaultAsync(cancellationToken);
 
@@ -40,7 +51,28 @@ namespace IBS.DataAccess.Repository.Filpride
             var incrementedNumber = int.Parse(numericPart) + 1;
 
             return lastSeries.Substring(0, 2) + incrementedNumber.ToString("D10");
+        }
 
+        private async Task<string> GenerateUnDocumentedCodeAsync(string companyClaims, CancellationToken cancellationToken = default)
+        {
+            var lastDr = await _db
+                .FilprideDeliveryReceipts
+                .Where(c => c.Company == companyClaims
+                            && !c.DeliveryReceiptNo.Contains("BEG")
+                            && c.Type == nameof(DocumentType.Undocumented))
+                .OrderBy(c => c.DeliveryReceiptNo)
+                .LastOrDefaultAsync(cancellationToken);
+
+            if (lastDr == null)
+            {
+                return "DRU000000001";
+            }
+
+            var lastSeries = lastDr.DeliveryReceiptNo;
+            var numericPart = lastSeries.Substring(3);
+            var incrementedNumber = int.Parse(numericPart) + 1;
+
+            return lastSeries.Substring(0, 3) + incrementedNumber.ToString("D9");
         }
 
         public override async Task<IEnumerable<FilprideDeliveryReceipt>> GetAllAsync(Expression<Func<FilprideDeliveryReceipt, bool>>? filter, CancellationToken cancellationToken = default)
@@ -240,6 +272,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -258,6 +291,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -275,7 +309,8 @@ namespace IBS.DataAccess.Repository.Filpride
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                     CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
-                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName
+                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName,
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -291,6 +326,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -306,6 +342,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 var poPrice = await unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost((int)deliveryReceipt.PurchaseOrderId!, cancellationToken);
@@ -327,6 +364,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 ledgers.Add(new FilprideGeneralLedgerBook
@@ -342,6 +380,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     Company = deliveryReceipt.Company,
                     CreatedBy = deliveryReceipt.PostedBy,
                     CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
                 });
 
                 if (deliveryReceipt.Freight > 0 || deliveryReceipt.ECC > 0)
@@ -366,6 +405,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
 
                         var freightVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
@@ -385,6 +425,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 
@@ -408,6 +449,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
 
                         var eccVatAmount = deliveryReceipt.HaulerVatType == SD.VatType_Vatable
@@ -427,6 +469,7 @@ namespace IBS.DataAccess.Repository.Filpride
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
                             CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 
@@ -456,7 +499,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.HaulerId,
-                        SupplierName = deliveryReceipt.HaulerName
+                        SupplierName = deliveryReceipt.HaulerName,
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -472,6 +516,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
                 }
 
@@ -496,6 +541,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         Company = deliveryReceipt.Company,
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     ledgers.Add(new FilprideGeneralLedgerBook
@@ -512,7 +558,8 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.Commissionee?.SupplierName
+                        SupplierName = deliveryReceipt.Commissionee?.SupplierName,
+                        ModuleType = nameof(ModuleType.Sales)
                     });
 
                     if (commissionEwtAmount > 0)
@@ -529,7 +576,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             Credit = commissionEwtAmount,
                             Company = deliveryReceipt.Company,
                             CreatedBy = deliveryReceipt.PostedBy,
-                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime()
+                            CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         });
                     }
 

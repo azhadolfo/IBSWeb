@@ -62,6 +62,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult NonTradeInvoiceReport()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult CvDisbursementReport()
+        {
+            return View();
+        }
+
         #region -- Generated Cleared Disbursement Report as Quest PDF
 
         [HttpPost]
@@ -386,6 +398,383 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
+        #endregion
+
+        #region -- Generate NonTrade Invoice Report as Excel File --
+
+        public async Task<IActionResult> GenerateNonTradeInvoiceReportExcelFile (ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Please input date range";
+                return RedirectToAction(nameof(NonTradeInvoiceReport));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(User)!;
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var nonTradeInvoiceReport =
+                    await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
+                                      && cvd.CheckVoucherHeader.CvType == nameof(CVType.Invoicing)
+                                      && cvd.CheckVoucherHeader.Date >= dateFrom &&
+                                      cvd.CheckVoucherHeader.Date <= dateTo)
+                        .Include(cvd => cvd.Supplier)
+                        .Include(cvd => cvd.CheckVoucherHeader)
+                        .ThenInclude(cvh => cvh!.Supplier)
+                        .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
+                        .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
+                        .ThenByDescending(cvd => cvd.Debit)
+                        .ToListAsync(cancellationToken);
+
+                if (nonTradeInvoiceReport.Count == 0)
+                {
+                    TempData["info"] = "No Record Found";
+                    return RedirectToAction(nameof(NonTradeInvoiceReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("APNonTradeInvoiceReport");
+
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "AP NON-TRADE INVOICE REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value =
+                    $"{dateFrom.ToString("MMM dd, yyyy")} - {dateTo.ToString("MMM dd, yyyy")}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                int row = 6;
+                int col = 1;
+
+                worksheet.Cells[row, col].Value = "DATE"; col++;
+                worksheet.Cells[row, col].Value = "INV No."; col++;
+                worksheet.Cells[row, col].Value = "PAYEE"; col++;
+                worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
+                worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
+                worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
+                worksheet.Cells[row, col].Value = "ACCOUNT NAME"; col++;
+                worksheet.Cells[row, col].Value = "DEBIT"; col++;
+                worksheet.Cells[row, col].Value = "CREDIT"; col++;
+                worksheet.Cells[row, col].Value = "STATUS";
+
+                using (var range = worksheet.Cells[row, 1, row, 10])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                row++;
+                var currencyFormat = "#,##0.00";
+                var totalCredit = 0m;
+                var totalDebit = 0m;
+
+                foreach (var inv in nonTradeInvoiceReport)
+                {
+                    col = 1;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
+                    worksheet.Cells[row, col].Value = inv.AccountNo; col++;
+                    worksheet.Cells[row, col].Value = inv.AccountName; col++;
+                    worksheet.Cells[row, col].Value = inv.Debit; col++;
+                    worksheet.Cells[row, col].Value = inv.Credit; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormat;
+
+                    totalCredit += inv.Credit;
+                    totalDebit += inv.Debit;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 7].Value = "TOTAL: ";
+                worksheet.Cells[row, 8].Value = totalDebit;
+                worksheet.Cells[row, 9].Value = totalCredit;
+
+                using (var range = worksheet.Cells[row, 1, row, 9])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+                using (var range = worksheet.Cells[row, 8, row, 9])
+                {
+                    range.Style.Numberformat.Format = currencyFormat;
+                }
+
+                worksheet.Cells.AutoFitColumns();
+
+                for (int i = 1; i <= 10; i++)
+                {
+                    double width = worksheet.Column(i).Width;
+                    if (width > 80)
+                    {
+                        worksheet.Column(i).Width = 50;
+                    }
+                }
+
+                worksheet.View.FreezePanes(7, 1);
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate Non-Trade Invoice report excel file", "Accounts Payable Report", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                var fileName = $"NonTrade_Invoice_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate cleared disbursement report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(NonTradeInvoiceReport));
+            }
+        }
+
+        #endregion
+
+        #region -- Generate Cv Disbursement Report as Excel File --
+
+        public async Task<IActionResult> GenerateCvDisbursementReportExcelFile (ViewModelBook model, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["warning"] = "Please input date range";
+                return RedirectToAction(nameof(CvDisbursementReport));
+            }
+
+            try
+            {
+                var dateFrom = model.DateFrom;
+                var dateTo = model.DateTo;
+                var extractedBy = _userManager.GetUserName(User)!;
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var nonTradeInvoiceReport =
+                    await _dbContext.FilprideCheckVoucherDetails
+                        .Where(cvd => cvd.CheckVoucherHeader!.Company == companyClaims
+                                      && cvd.CheckVoucherHeader.CvType != nameof(CVType.Invoicing)
+                                      && cvd.CheckVoucherHeader.Date >= dateFrom &&
+                                      cvd.CheckVoucherHeader.Date <= dateTo)
+                        .Include(cvd => cvd.Supplier)
+                        .Include(cvd => cvd.CheckVoucherHeader)
+                        .ThenInclude(cvh => cvh!.Supplier)
+                        .OrderBy(cvd => cvd.CheckVoucherHeader!.Date)
+                        .ThenBy(cvd => cvd.CheckVoucherHeader!.CheckVoucherHeaderNo)
+                        .ThenByDescending(cvd => cvd.Debit)
+                        .ToListAsync(cancellationToken);
+
+                if (nonTradeInvoiceReport.Count == 0)
+                {
+                    TempData["info"] = "No Record Found";
+                    return RedirectToAction(nameof(CvDisbursementReport));
+                }
+
+                // Create the Excel package
+                using var package = new ExcelPackage();
+                // Add a new worksheet to the Excel package
+                var worksheet = package.Workbook.Worksheets.Add("CvDisbursementReport");
+
+                var mergedCells = worksheet.Cells["A1:C1"];
+                mergedCells.Merge = true;
+                mergedCells.Value = "CV DISBURSEMENT REPORT";
+                mergedCells.Style.Font.Size = 13;
+
+                worksheet.Cells["A2"].Value = "Date Range:";
+                worksheet.Cells["A3"].Value = "Extracted By:";
+                worksheet.Cells["A4"].Value = "Company:";
+
+                worksheet.Cells["B2"].Value = $"{dateFrom.ToString("MMM dd, yyyy")} - {dateTo.ToString("MMM dd, yyyy")}";
+                worksheet.Cells["B3"].Value = $"{extractedBy}";
+                worksheet.Cells["B4"].Value = $"{companyClaims}";
+
+                int row = 6;
+                int col = 1;
+
+                worksheet.Cells[row, col].Value = "DATE"; col++;
+                worksheet.Cells[row, col].Value = "CV No."; col++;
+                worksheet.Cells[row, col].Value = "DCR DATE"; col++;
+                worksheet.Cells[row, col].Value = "CHECK #"; col++;
+                worksheet.Cells[row, col].Value = "PAYEE"; col++;
+                worksheet.Cells[row, col].Value = "PARTICULARS"; col++;
+                worksheet.Cells[row, col].Value = "DOCUMENT TYPE"; col++;
+                worksheet.Cells[row, col].Value = "INVOICE No."; col++;
+                worksheet.Cells[row, col].Value = "ACCOUNT NUMBER"; col++;
+                worksheet.Cells[row, col].Value = "ACCOUNT NAME"; col++;
+                worksheet.Cells[row, col].Value = "DEBIT"; col++;
+                worksheet.Cells[row, col].Value = "CREDIT"; col++;
+                worksheet.Cells[row, col].Value = "STATUS";
+
+                using (var range = worksheet.Cells[row, 1, row, 13])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                row++;
+                var currencyFormat = "#,##0.00";
+                var totalCredit = 0m;
+                var totalDebit = 0m;
+
+                foreach (var inv in nonTradeInvoiceReport)
+                {
+                    col = 1;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader!.Date.ToDateTime(TimeOnly.MinValue); col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.DcrDate.HasValue ? inv.CheckVoucherHeader.DcrDate.Value.ToDateTime(TimeOnly.MinValue) : null; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckNo; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
+
+                    if (inv.CheckVoucherHeader.Category == "Trade")
+                    {
+                        var rrListOfString = new List<string>();
+                        var cvTradeRrs = await _dbContext.FilprideCVTradePayments.Where(ctp =>
+                            ctp.CheckVoucherId == inv.CheckVoucherHeader.CheckVoucherHeaderId).ToListAsync(cancellationToken);
+
+                        if (cvTradeRrs.Count > 0)
+                        {
+                            foreach (var cvTradeRr in cvTradeRrs)
+                            {
+                                var rr = await _unitOfWork.FilprideReceivingReport.GetAsync(r => r.ReceivingReportId == cvTradeRr.DocumentId, cancellationToken);
+                                if (rr != null)
+                                {
+                                    rrListOfString.Add(rr.ReceivingReportNo!);
+                                }
+                            }
+                        }
+
+                        if (rrListOfString.Count > 0)
+                        {
+                            worksheet.Cells[row, col].Value = $"{string.Join(", ", rrListOfString)}";
+                        }
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Reference;
+                    }
+                    col++;
+
+                    worksheet.Cells[row, col].Value = inv.AccountNo; col++;
+
+                    if (inv.AccountName == "Cash in Bank")
+                    {
+                        worksheet.Cells[row, col].Value = $"{inv.AccountName} ({inv.CheckVoucherHeader.BankAccountNumber} {inv.CheckVoucherHeader.BankAccountName})";
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, col].Value = $"{inv.AccountName}";
+                    }
+                    col++;
+
+                    worksheet.Cells[row, col].Value = inv.Debit; col++;
+                    worksheet.Cells[row, col].Value = inv.Credit; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Status;
+
+                    worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
+                    worksheet.Cells[row, 11].Style.Numberformat.Format = currencyFormat;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormat;
+
+                    totalCredit += inv.Credit;
+                    totalDebit += inv.Debit;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 10].Value = "TOTAL: ";
+                worksheet.Cells[row, 11].Value = totalDebit;
+                worksheet.Cells[row, 12].Value = totalCredit;
+
+                using (var range = worksheet.Cells[row, 1, row, 12])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+                using (var range = worksheet.Cells[row, 11, row, 12])
+                {
+                    range.Style.Numberformat.Format = currencyFormat;
+                }
+
+                worksheet.Cells.AutoFitColumns();
+
+                for (int i = 1; i <= 13; i++)
+                {
+                    double width = worksheet.Column(i).Width;
+                    if (width > 80)
+                    {
+                        worksheet.Column(i).Width = 50;
+                    }
+                }
+
+                worksheet.View.FreezePanes(7, 1);
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate Cv Disbursement report excel file", "Accounts Payable Report", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                var fileName = $"CV_Disbursement_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate cleared disbursement report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(CvDisbursementReport));
+            }
+        }
 
         #endregion
 
@@ -1133,7 +1522,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 // get rr data from chosen date
                 var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetPurchaseReport(model.DateFrom, model.DateTo, companyClaims, cancellationToken: cancellationToken);
+                    .GetPurchaseReport(model.DateFrom,
+                        model.DateTo,
+                        companyClaims,
+                        dateSelectionType: model.DateSelectionType,
+                        cancellationToken: cancellationToken);
 
                 // check if there is no record
                 if (purchaseReport.Count == 0)

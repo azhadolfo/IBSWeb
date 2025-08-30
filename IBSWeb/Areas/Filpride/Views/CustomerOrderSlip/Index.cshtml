@@ -218,6 +218,10 @@
                             actions += `<li><a class="dropdown-item" href="@Url.Action("Preview", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Preview</a></li>`;
                             
                             switch (status) {
+                                case '@CosStatus.ForApprovalOfCNC':
+                                    actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
+                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                                    break;
                                 case '@CosStatus.Created':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("AppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Appoint Supplier</a></li>`;
@@ -230,14 +234,13 @@
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForApprovalOfOM':
-                                case '@CosStatus.ForApprovalOfCNC':
                                 case '@CosStatus.ForApprovalOfFM':
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.ForDR':
-                                    if (row.balanceQuantity === row.quantity){
+                                    if (row.deliveredQuantity === 0){
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("EditCos", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Edit COS</a></li>`;
                                         actions += `<li><a class="dropdown-item" href="@Url.Action("ReAppointSupplier", "CustomerOrderSlip", new { area = "Filpride" })/${customerOrderSlipId}">Reappoint Supplier</a></li>`;
                                     }
@@ -247,8 +250,14 @@
                                     actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
                                     break;
                                 case '@CosStatus.Completed':
-                                    actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
-                                    actions += `<li><a class="dropdown-item" href="#" onclick="confirmCloseCos('${customerOrderSlipId}')">Close COS</a></li>`;
+                                    if (row.deliveredQuantity > 0 && row.oldPrice === 0){
+                                        actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    }
+                                    break;
+                                case '@CosStatus.Closed':
+                                    if (row.oldPrice === 0){
+                                        actions += `<li><a class="dropdown-item" href="#" onclick="changePrice('${customerOrderSlipId}')">Change Price</a></li>`;
+                                    }
                                     break;
                             }
                             

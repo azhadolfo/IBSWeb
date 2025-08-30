@@ -45,6 +45,71 @@
 </div>
 
 @section Scripts {
+
+    <script>
+        async function addDepositInfo(collectionReceiptId) {
+            // Fetch banks
+            const response = await fetch('@Url.Action("GetBanks", "CollectionReceipt", new { area = "Filpride" })');
+            const banks = await response.json();
+            console.log("collectionReceiptId = " + collectionReceiptId);
+
+            // Build <option>s
+            let bankOptions = banks.map(b => `<option value="${b.value}">${b.text}</option>`).join('');
+            let bankSelect = `<select id="swal-input2" class="swal2-select w-75">${bankOptions}</select>`;
+
+            // Today's date
+            let today = new Date().toISOString().split('T')[0];
+
+            Swal.fire({
+                title: 'Enter Deposit Info',
+                html:
+                    `<input id="swal-input1" type="date" value="${today}" class="swal2-input w-75">` +
+                    bankSelect,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Next',
+                preConfirm: () => {
+                    const depositDate = document.getElementById('swal-input1').value;
+                    const bankId = document.getElementById('swal-input2').value;
+
+                    if (!depositDate || !bankId) {
+                        Swal.showValidationMessage('Both Deposit Date and Bank are required');
+                        return false;
+                    }
+
+                    return { depositDate, bankId };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const { depositDate, bankId } = result.value;
+
+                    // Get the bank name (text) for display
+                    const bankName = banks.find(b => b.value == bankId)?.text || "Unknown Bank";
+
+                    // Now ask for confirmation before redirect
+                    Swal.fire({
+                        title: 'Confirm Deposit',
+                        html: `
+                    <p><b>Deposit Date:</b> ${depositDate}</p>
+                    <p><b>Bank:</b> ${bankName}</p>
+                `,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Confirm'
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            window.location.href = `@Url.Action("Deposit", "CollectionReceipt", new { area = "Filpride" })/${collectionReceiptId}?depositDate=${encodeURIComponent(depositDate)}&bankId=${encodeURIComponent(bankId)}`;
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+
     <script>
         function confirmVoid(id) {
             Swal.fire({
@@ -201,12 +266,15 @@
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmCancel(${row.collectionReceiptId})">Cancel</a></li>`;
                             } else {
                                 if (row.multipleSIId != null) {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
-
+                                    if (row.depositedDate === null || row.depositedDate === "") {
+                                        dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
+                                    }
+                                    dropdownHtml += `<li><a href="@Url.Action("MultipleCollectionPrint", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 } else {
-                                    dropdownHtml += `
-                                        <li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
+                                    if (row.depositedDate === null || row.depositedDate === "") {
+                                        dropdownHtml += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="addDepositInfo(${row.collectionReceiptId})">Add Deposit Info</a></li>`;
+                                    }
+                                    dropdownHtml += `<li><a href="@Url.Action("Print", "CollectionReceipt", new { area = "Filpride" })/${row.collectionReceiptId}" class="dropdown-item">Preview</a></li>`;
                                 }
                                 dropdownHtml += `<li><a class="dropdown-item" onclick="confirmVoid(${row.collectionReceiptId})">Void</a></li>`;
                             }

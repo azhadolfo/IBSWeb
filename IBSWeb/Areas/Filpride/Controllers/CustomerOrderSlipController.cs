@@ -25,7 +25,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_RCD, SD.Department_Finance, SD.Department_Marketing, SD.Department_TradeAndSupply, SD.Department_Logistics, SD.Department_CreditAndCollection)]
+    [DepartmentAuthorize(SD.Department_RCD,
+        SD.Department_Finance,
+        SD.Department_Marketing,
+        SD.Department_TradeAndSupply,
+        SD.Department_Logistics,
+        SD.Department_CreditAndCollection,
+        SD.Department_Accounting)]
     public class CustomerOrderSlipController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -219,6 +225,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         cos.Status,
                         cos.SupplierId,
                         cos.BalanceQuantity,
+                        cos.DeliveredQuantity,
                         // Extract only PurchaseOrderNos from AppointedSuppliers
                         AppointedSupplierPOs = cos.AppointedSuppliers!
                             .Select(a => a.PurchaseOrder!.PurchaseOrderNo)
@@ -332,7 +339,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Company = companyClaims,
                     CreatedBy = _userManager.GetUserName(User),
                     ProductId = viewModel.ProductId,
-                    Status = nameof(CosStatus.Created),
+                    Status = nameof(CosStatus.ForApprovalOfCNC),
                     OldCosNo = viewModel.OtcCosNo,
                     Terms = viewModel.Terms,
                     Branch = viewModel.SelectedBranch,
@@ -708,17 +715,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     if (changes.Any(x => x.Contains("Product") || x.Contains("Quantity") ))
                     {
-                        message += "\nFor TNS kindly reappoint the supplier.";
-                        existingRecord.Status = nameof(CosStatus.Created);
+                        existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
                         existingRecord.PickUpPointId = null;
                         existingRecord.Depot = string.Empty;
                         existingRecord.OmApprovedBy = null;
                         existingRecord.OmApprovedDate = null;
                         existingRecord.FmApprovedBy = null;
                         existingRecord.FmApprovedDate = null;
-                        existingRecord.CncApprovedBy = null;
-                        existingRecord.CncApprovedDate = null;
-                        existingRecord.FinanceInstruction = null;
                         existingRecord.OMReason = null;
                         existingRecord.ExpirationDate = null;
 
@@ -1030,7 +1033,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.OMReason = reason;
                 existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
-                existingRecord.Status = nameof(CosStatus.ForApprovalOfCNC);
+                existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
 
                 if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
                 {
@@ -1142,7 +1145,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     existingRecord.CncApprovedBy = _userManager.GetUserName(User);
                     existingRecord.CncApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
-                    existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
+                    existingRecord.Status = nameof(CosStatus.Created);
                     TempData["success"] = "Customer order slip approved by cnc successfully.";
                 }
                 else
@@ -1491,9 +1494,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingCos.OmApprovedDate = null;
                 existingCos.FmApprovedBy = null;
                 existingCos.FmApprovedDate = null;
-                existingCos.CncApprovedBy = null;
-                existingCos.CncApprovedDate = null;
-                existingCos.FinanceInstruction = null;
                 existingCos.OMReason = null;
                 existingCos.ExpirationDate = null;
 

@@ -131,14 +131,18 @@
                         <td style="padding-left:20px;">Check</td>
                         <td><input asp-for="CheckDate" type="date" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckNo" style="border:none" class="form-control" /></td>
-                        <td>
-                            <select asp-for="BankId" asp-items="@Model.BankAccounts"
-                                    class="form-select js-select2">
-                                <option></option>
-                            </select>
-                        </td>
+                        <td><input asp-for="CheckBank" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckBranch" style="border:none" class="form-control" /></td>
                         <td><input asp-for="CheckAmount" style="border:none" class="form-control moneyInput" /></td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding-left:20px;">Manager's Check</td>
+                        <td><input asp-for="ManagersCheckDate" type="date" style="border:none" class="form-control"/></td>
+                        <td><input asp-for="ManagersCheckNo" style="border:none" class="form-control"/></td>
+                        <td><input asp-for="ManagersCheckBank" style="border:none" class="form-control"/></td>
+                        <td><input asp-for="ManagersCheckBranch" style="border:none" class="form-control"/></td>
+                        <td><input asp-for="ManagersCheckAmount" style="border:none" class="form-control moneyInput"/></td>
                     </tr>
 
                     <tr>

@@ -263,7 +263,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 EmployeeId = details.EmployeeId,
                                 EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
                                 CompanyId = details.CompanyId,
-                                CompanyName = details.Company?.CompanyName
+                                CompanyName = details.Company?.CompanyName,
+                                ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
                 }
@@ -1449,7 +1450,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+            viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
             viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -1470,7 +1471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (!ModelState.IsValid)
             {
                 TempData["warning"] = "The information provided was invalid.";
-                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 return View(viewModel);
             }
@@ -1590,7 +1591,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["error"] = ex.Message;
                 await transaction.RollbackAsync(cancellationToken);
 
-                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -1621,7 +1622,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            var employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+            var employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
             var bankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
@@ -1658,7 +1659,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
@@ -1771,7 +1772,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 _logger.LogError(ex, "Failed to edit advances to employee. Error: {ErrorMessage}, Stack: {StackTrace}. Edited by: {UserName}",
                     ex.Message, ex.StackTrace, _userManager.GetUserName(User));
 
-                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(companyClaims, cancellationToken);
+                viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
 
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 

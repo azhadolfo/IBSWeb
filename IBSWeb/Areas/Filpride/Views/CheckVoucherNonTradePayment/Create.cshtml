@@ -43,8 +43,8 @@
                     <span asp-validation-for="MultipleCvId" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="OldCVNo" type="text" class="form-control" placeholder="Old CV No."/>
-                    <label asp-for="OldCVNo" class="control-label ms-2">Old CV #</label>
+                    <input asp-for="OldCVNo" type="text" class="form-control" placeholder="Old CV No." required/>
+                    <label asp-for="OldCVNo" class="control-label ms-2">Old CV #</label><span class="required">*</span>
                     <span asp-validation-for="OldCVNo" class="text-danger"></span>
                 </div>
                 <table class="table">

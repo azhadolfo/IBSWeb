@@ -235,7 +235,11 @@ namespace IBS.DataAccess.Repository.Filpride
             return await _db.FilprideCustomerOrderSlips
                 .Include(a => a.Customer)
                 .Include(a => a.Product)
-                .Where(a => a.Company == company && a.Date >= dateFrom && a.Date <= dateTo && a.Status == nameof(CosStatus.ForDR))
+                .Where(a => a.Company == company
+                            && a.Date >= dateFrom
+                            && a.Date <= dateTo
+                            && a.Status != nameof(CosStatus.Closed)
+                            && a.Status != nameof(CosStatus.Completed))
                 .OrderBy(a => a.Date)
                 .ToListAsync();
         }
@@ -259,6 +263,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(dr => dr.Customer)
                 .Include(dr => dr.PurchaseOrder)
                 .OrderBy(dr => dr.DeliveredDate)
+                .ThenBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
             // Fetch all sales invoices within the date range
@@ -369,7 +374,13 @@ namespace IBS.DataAccess.Repository.Filpride
             return checkVoucherHeader;
         }
 
-        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom, DateOnly dateTo, string company, List<int>? customerIds = null, List<int>? commissioneeIds = null, string dateSelectionType = "RRDate", CancellationToken cancellationToken = default)
+        public async Task<List<FilprideReceivingReport>> GetPurchaseReport(DateOnly dateFrom,
+            DateOnly dateTo,
+            string company,
+            List<int>? customerIds = null,
+            List<int>? commissioneeIds = null,
+            string dateSelectionType = "RRDate",
+            CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
             {
