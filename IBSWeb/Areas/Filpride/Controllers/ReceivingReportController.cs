@@ -485,7 +485,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview receiving report print layout receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview receiving report# {receivingReport.ReceivingReportNo}", "Purchase Order", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
             #endregion --Audit Trail Recording

@@ -639,7 +639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview delivery receipt print layout delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview delivery receipt# {existingRecord.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording

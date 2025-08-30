@@ -288,7 +288,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Audit Trail Recording
 
-                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview authority to load print layout authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load", companyClaims!);
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Preview authority to load# {existingRecord.AuthorityToLoadNo}", "Authority to Load", companyClaims!);
                 await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
 
                 #endregion --Audit Trail Recording
