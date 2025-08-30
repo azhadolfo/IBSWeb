@@ -1134,12 +1134,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var stream = new MemoryStream();
             await package.SaveAsAsync(stream);
             var content = stream.ToArray();
-
             var companyClaims = await GetCompanyClaimAsync();
 
             #region --Audit Trail Recording
 
-            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel for deliver receipt#{deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
+            FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Generated excel file for deliver receipt#{deliveryReceipt.DeliveryReceiptNo}", "Delivery Receipt", companyClaims!);
             await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook);
 
             #endregion --Audit Trail Recording
