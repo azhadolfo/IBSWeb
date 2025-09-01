@@ -1031,6 +1031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 model.VoidedBy = _userManager.GetUserName(this.User);
                 model.VoidedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(DRStatus.Voided);
+                model.ManualDrNo += "x";
 
                 if (existingInventory != null)
                 {
