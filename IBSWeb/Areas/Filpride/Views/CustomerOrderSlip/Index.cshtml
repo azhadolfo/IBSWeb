@@ -312,8 +312,8 @@
                     const price = document.getElementById('swal-input1').value;
                     const ref = document.getElementById('swal-input2').value;
                     const file = document.getElementById('formFileLg').files[0];
-                    if (!price || !ref) {
-                        Swal.showValidationMessage('Both Price and Ref# are required');
+                    if (!price || !ref || !file) {
+                        Swal.showValidationMessage('Price, Ref#, and Attachment are required');
                         return false;
                     }
                     return { price: price, ref: ref, file: file };
@@ -325,8 +325,8 @@
                     const file = result.value.file;
 
                     Swal.fire({
-                        title: 'Are you sure?',
-                        html: `Do you want to proceed with the price change?<br>Price: ${price}<br>Reference #: ${ref}<br>File: ${file ? file.name : 'No file selected'}`,
+                        title: 'Are you sure? (One Time Only)',
+                        html: `Do you want to proceed with the price change?<br><br><b>Price:</b> ${price}<br><b>Reference #:</b> ${ref}<br><b>File:</b> ${file ? file.name : 'No file selected'}`,
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
