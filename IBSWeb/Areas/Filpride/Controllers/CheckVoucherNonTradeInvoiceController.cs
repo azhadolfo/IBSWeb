@@ -1053,7 +1053,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                 CompanyId = details.CompanyId,
                                 CompanyName = details.Company?.CompanyName,
                                 EmployeeId = details.EmployeeId,
-                                EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null
+                                EmployeeName = details.EmployeeId.HasValue ? $"{details.Employee?.FirstName} {details.Employee?.MiddleName} {details.Employee?.LastName}" : null,
+                                ModuleType = nameof(ModuleType.Disbursement)
                             }
                         );
                 }

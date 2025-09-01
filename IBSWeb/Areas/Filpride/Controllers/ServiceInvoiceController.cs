@@ -396,7 +396,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         CreatedBy = model.PostedBy,
                         CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         CustomerId = model.CustomerId,
-                        CustomerName = model.CustomerName
+                        CustomerName = model.CustomerName,
+                        ModuleType = nameof(ModuleType.Sales)
                     }
                 );
                 if (withHoldingTaxAmount > 0)
@@ -415,6 +416,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         }
                     );
                 }
@@ -434,6 +436,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         }
                     );
                 }
@@ -451,6 +454,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         Company = model.Company,
                         CreatedBy = model.PostedBy,
                         CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
                     }
                 );
 
@@ -470,6 +474,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             Company = model.Company,
                             CreatedBy = model.PostedBy,
                             CreatedDate = model.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
+                            ModuleType = nameof(ModuleType.Sales)
                         }
                     );
                 }
