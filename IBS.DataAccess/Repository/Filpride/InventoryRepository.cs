@@ -106,11 +106,32 @@ namespace IBS.DataAccess.Repository.Filpride
                             i.ProductId == receivingReport.PurchaseOrder!.Product!.ProductId &&
                             i.POId == receivingReport.POId)
                 .OrderBy(i => i.Date)
+                .ThenBy(i => i.Particular == "Purchases" ? 0 : 1) // Purchases first, then Sales
                 .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
-            // Find the insertion point and get relevant transactions
-            var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= receivingReport.Date);
+            // Find the correct insertion point - after all purchases on the same date, but before any sales
+            var lastIndex = -1;
+            for (int i = 0; i < sortedInventory.Count; i++)
+            {
+                if (sortedInventory[i].Date > receivingReport.Date)
+                    break;
+
+                if (sortedInventory[i].Date == receivingReport.Date)
+                {
+                    // If same date, include all purchases as "previous"
+                    if (sortedInventory[i].Particular == "Purchases")
+                    {
+                        lastIndex = i;
+                    }
+                    // Don't advance for sales on the same date - they should be subsequent
+                }
+                else if (sortedInventory[i].Date < receivingReport.Date)
+                {
+                    lastIndex = i;
+                }
+            }
+
             var previousInventory = lastIndex >= 0 ? sortedInventory[lastIndex] : null;
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
 
@@ -118,15 +139,16 @@ namespace IBS.DataAccess.Repository.Filpride
             var total = receivingReport.PurchaseOrder?.VatType == SD.VatType_Vatable
                 ? ComputeNetOfVat(receivingReport.Amount)
                 : receivingReport.Amount;
-            var inventoryBalance = previousInventory?.InventoryBalance + receivingReport.QuantityReceived ?? receivingReport.QuantityReceived;
-            var totalBalance = previousInventory?.TotalBalance + total ?? 0 + total;
+
+            var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) + receivingReport.QuantityReceived;
+            var totalBalance = (previousInventory?.TotalBalance ?? 0) + total;
 
             var averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
                 ? total / receivingReport.QuantityReceived
                 : totalBalance / inventoryBalance;
 
             // Create new inventory entry
-            FilprideInventory inventory = new()
+            var inventory = new FilprideInventory
             {
                 Date = receivingReport.Date,
                 ProductId = receivingReport.PurchaseOrder!.ProductId,
@@ -134,8 +156,10 @@ namespace IBS.DataAccess.Repository.Filpride
                 Particular = "Purchases",
                 Reference = receivingReport.ReceivingReportNo,
                 Quantity = receivingReport.QuantityReceived,
-                Cost = total / receivingReport.QuantityReceived, //unit cost
+                Cost = total / receivingReport.QuantityReceived, // unit cost
                 IsValidated = true,
+                ValidatedBy = receivingReport.CreatedBy, // Add this if available
+                ValidatedDate = DateTimeHelper.GetCurrentPhilippineTime(), // Add this if available
                 Total = total,
                 InventoryBalance = inventoryBalance,
                 TotalBalance = totalBalance,
@@ -143,15 +167,19 @@ namespace IBS.DataAccess.Repository.Filpride
                 Company = receivingReport.Company
             };
 
-            // Update subsequent transactions
+            // Update subsequent transactions with running totals
+            var runningInventoryBalance = inventoryBalance;
+            var runningTotalBalance = totalBalance;
+            var runningAverageCost = averageCost;
+
             foreach (var transaction in subsequentTransactions)
             {
                 if (transaction.Particular == "Sales")
                 {
-                    transaction.Cost = averageCost;
-                    transaction.Total = transaction.Quantity * averageCost;
-                    transaction.TotalBalance = totalBalance - transaction.Total;
-                    transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
+                    transaction.Cost = runningAverageCost;
+                    transaction.Total = transaction.Quantity * runningAverageCost;
+                    transaction.TotalBalance = runningTotalBalance - transaction.Total;
+                    transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
                     transaction.AverageCost = Math.Round(transaction.TotalBalance, 4) == 0 ||
                                               Math.Round(transaction.InventoryBalance, 4) == 0
                         ? transaction.Cost
@@ -160,58 +188,66 @@ namespace IBS.DataAccess.Repository.Filpride
                     var costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
 
                     // Update running totals
-                    averageCost = transaction.AverageCost;
-                    totalBalance = transaction.TotalBalance;
-                    inventoryBalance = transaction.InventoryBalance;
+                    runningAverageCost = transaction.AverageCost;
+                    runningTotalBalance = transaction.TotalBalance;
+                    runningInventoryBalance = transaction.InventoryBalance;
 
-                    // Update journal entries
-                    var journalEntries = await _db.FilprideGeneralLedgerBooks
-                        .Where(j => j.Reference == transaction.Reference &&
-                                   (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var journal in journalEntries)
-                    {
-                        if (journal.Debit != 0 && journal.Debit != costOfGoodsSold)
-                        {
-                            journal.Debit = costOfGoodsSold;
-                            journal.Credit = 0;
-                        }
-                        else if (journal.Credit != 0 && journal.Credit != costOfGoodsSold)
-                        {
-                            journal.Credit = costOfGoodsSold;
-                            journal.Debit = 0;
-                        }
-                    }
-
-                    if (journalEntries.Any())
-                    {
-                        _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
-                    }
+                    // Update journal entries efficiently
+                    await UpdateJournalEntriesForCostOfGoodsSoldAsync(transaction.Reference!, costOfGoodsSold, cancellationToken);
                 }
                 else if (transaction.Particular == "Purchases")
                 {
-                    transaction.TotalBalance = totalBalance + transaction.Total;
-                    transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
+                    transaction.TotalBalance = runningTotalBalance + transaction.Total;
+                    transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
                     transaction.AverageCost = Math.Round(transaction.TotalBalance, 4) == 0 ||
                                               Math.Round(transaction.InventoryBalance, 4) == 0
                         ? transaction.Cost
                         : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
-                    averageCost = transaction.AverageCost;
-                    totalBalance = transaction.TotalBalance;
-                    inventoryBalance = transaction.InventoryBalance;
+                    runningAverageCost = transaction.AverageCost;
+                    runningTotalBalance = transaction.TotalBalance;
+                    runningInventoryBalance = transaction.InventoryBalance;
                 }
             }
 
+            // Batch updates for better performance
             if (subsequentTransactions.Count != 0)
             {
                 _db.FilprideInventories.UpdateRange(subsequentTransactions);
             }
 
-            await _db.AddAsync(inventory, cancellationToken);
+            await _db.FilprideInventories.AddAsync(inventory, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task UpdateJournalEntriesForCostOfGoodsSoldAsync(string reference, decimal costOfGoodsSold, CancellationToken cancellationToken)
+        {
+            var journalEntries = await _db.FilprideGeneralLedgerBooks
+                .Where(j => j.Reference == reference &&
+                           (j.AccountNo.StartsWith("50101") || j.AccountNo.StartsWith("10104")))
+                .ToListAsync(cancellationToken);
+
+            if (!journalEntries.Any())
+            {
+                return;
+            }
+
+            foreach (var journal in journalEntries)
+            {
+                if (journal.Debit != 0 && Math.Abs(journal.Debit - costOfGoodsSold) > 0.01m) // Use small tolerance for decimal comparison
+                {
+                    journal.Debit = costOfGoodsSold;
+                    journal.Credit = 0;
+                }
+                else if (journal.Credit != 0 && Math.Abs(journal.Credit - costOfGoodsSold) > 0.01m)
+                {
+                    journal.Credit = costOfGoodsSold;
+                    journal.Debit = 0;
+                }
+            }
+
+            _db.FilprideGeneralLedgerBooks.UpdateRange(journalEntries);
         }
 
         public async Task AddSalesToInventoryAsync(FilprideDeliveryReceipt deliveryReceipt, CancellationToken cancellationToken = default)
@@ -221,10 +257,32 @@ namespace IBS.DataAccess.Repository.Filpride
                             i.ProductId == deliveryReceipt.CustomerOrderSlip!.ProductId &&
                             i.POId == deliveryReceipt.PurchaseOrderId)
                 .OrderBy(i => i.Date)
+                .ThenBy(i => i.Particular == "Purchases" ? 0 : 1) // Purchases first, then Sales
                 .ThenBy(i => i.Particular)
                 .ToListAsync(cancellationToken);
 
-            var lastIndex = sortedInventory.FindLastIndex(s => s.Date <= deliveryReceipt.DeliveredDate);
+            // Find the correct insertion point - after all purchases on the same date
+            var lastIndex = -1;
+            for (int i = 0; i < sortedInventory.Count; i++)
+            {
+                if (sortedInventory[i].Date > deliveryReceipt.DeliveredDate)
+                    break;
+
+                if (sortedInventory[i].Date == deliveryReceipt.DeliveredDate)
+                {
+                    // If same date, only consider it as "previous" if it's a purchase
+                    if (sortedInventory[i].Particular == "Purchases")
+                    {
+                        lastIndex = i;
+                    }
+                    // Don't update lastIndex for sales on the same date
+                }
+                else if (sortedInventory[i].Date < deliveryReceipt.DeliveredDate)
+                {
+                    lastIndex = i;
+                }
+            }
+
             var previousInventory = lastIndex >= 0 ? sortedInventory[lastIndex] : null;
             var subsequentTransactions = sortedInventory.Skip(lastIndex + 1).ToList();
             decimal cost;
@@ -232,7 +290,8 @@ namespace IBS.DataAccess.Repository.Filpride
             if (previousInventory == null)
             {
                 var purchaseOrder = await _db.FilpridePurchaseOrders
-                    .FindAsync(deliveryReceipt.PurchaseOrderId, cancellationToken) ?? throw new NullReferenceException("Purchase order not found");
+                    .FirstOrDefaultAsync(x => x.PurchaseOrderId == deliveryReceipt.PurchaseOrderId, cancellationToken)
+                                    ?? throw new NullReferenceException("Purchase order not found");
 
                 var unitOfWork = new UnitOfWork(_db);
 
@@ -252,8 +311,8 @@ namespace IBS.DataAccess.Repository.Filpride
 
             // Calculate initial values for new inventory entry
             var total = deliveryReceipt.Quantity * cost;
-            var inventoryBalance = previousInventory?.InventoryBalance - deliveryReceipt.Quantity ?? 0 - deliveryReceipt.Quantity;
-            var totalBalance = previousInventory?.TotalBalance - total ?? 0 - total;
+            var inventoryBalance = (previousInventory?.InventoryBalance ?? 0) - deliveryReceipt.Quantity;
+            var totalBalance = (previousInventory?.TotalBalance ?? 0) - total;
 
             var averageCost = Math.Round(totalBalance, 4) == 0 || Math.Round(inventoryBalance, 4) == 0
                 ? cost
@@ -280,14 +339,18 @@ namespace IBS.DataAccess.Repository.Filpride
             };
 
             // Update subsequent transactions
+            var runningInventoryBalance = inventoryBalance;
+            var runningTotalBalance = totalBalance;
+            var runningAverageCost = averageCost;
+
             foreach (var transaction in subsequentTransactions)
             {
                 if (transaction.Particular == "Sales")
                 {
-                    transaction.Cost = averageCost;
-                    transaction.Total = transaction.Quantity * averageCost;
-                    transaction.TotalBalance = totalBalance - transaction.Total;
-                    transaction.InventoryBalance = inventoryBalance - transaction.Quantity;
+                    transaction.Cost = runningAverageCost;
+                    transaction.Total = transaction.Quantity * runningAverageCost;
+                    transaction.TotalBalance = runningTotalBalance - transaction.Total;
+                    transaction.InventoryBalance = runningInventoryBalance - transaction.Quantity;
                     transaction.AverageCost = Math.Round(transaction.TotalBalance, 4) == 0 ||
                                               Math.Round(transaction.InventoryBalance, 4) == 0
                         ? transaction.Cost
@@ -296,26 +359,26 @@ namespace IBS.DataAccess.Repository.Filpride
                     var costOfGoodsSold = transaction.AverageCost * transaction.Quantity;
 
                     // Update running totals
-                    averageCost = transaction.AverageCost;
-                    totalBalance = transaction.TotalBalance;
-                    inventoryBalance = transaction.InventoryBalance;
+                    runningAverageCost = transaction.AverageCost;
+                    runningTotalBalance = transaction.TotalBalance;
+                    runningInventoryBalance = transaction.InventoryBalance;
 
                     // Update journal entries if needed
                     await UpdateJournalEntriesAsync(transaction.Reference!, costOfGoodsSold, cancellationToken);
                 }
                 else if (transaction.Particular == "Purchases")
                 {
-                    transaction.TotalBalance = totalBalance + transaction.Total;
-                    transaction.InventoryBalance = inventoryBalance + transaction.Quantity;
+                    transaction.TotalBalance = runningTotalBalance + transaction.Total;
+                    transaction.InventoryBalance = runningInventoryBalance + transaction.Quantity;
                     transaction.AverageCost = Math.Round(transaction.TotalBalance, 4) == 0 ||
                                               Math.Round(transaction.InventoryBalance, 4) == 0
                         ? transaction.Cost
                         : transaction.TotalBalance / transaction.InventoryBalance;
 
                     // Update running totals
-                    averageCost = transaction.AverageCost;
-                    totalBalance = transaction.TotalBalance;
-                    inventoryBalance = transaction.InventoryBalance;
+                    runningAverageCost = transaction.AverageCost;
+                    runningTotalBalance = transaction.TotalBalance;
+                    runningInventoryBalance = transaction.InventoryBalance;
                 }
             }
 
