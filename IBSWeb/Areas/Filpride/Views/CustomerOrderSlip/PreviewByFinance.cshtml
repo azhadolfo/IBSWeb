@@ -245,8 +245,13 @@
         <div class="hide-in-print pt-2 px-1 row">
             @foreach (var file in Model.UploadedFiles)
             {
-                <div class="file-item d-inline-flex align-items-center mb-3 col-3">
-                    <a class="btn btn-outline-primary border shadow text-truncate" href="@file.SignedUrl" target="_blank" data-name="@file.FileName" data-url="@file.SignedUrl" title="@file.FileName">
+                <div class="file-item col-6 col-md-3 mb-3 d-flex align-items-center">
+                    <a class="btn btn-outline-primary border text-truncate w-100"
+                       href="@file.SignedUrl"
+                       target="_blank"
+                       data-name="@file.FileName"
+                       data-url="@file.SignedUrl"
+                       title="@file.FileName">
                         @file.FileName
                     </a>
                 </div>
