@@ -364,6 +364,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 AuthorityToLoadNo = receivingReport.AuthorityToLoadNo,
                 Remarks = receivingReport.Remarks,
                 PostedBy = receivingReport.PostedBy,
+                CostBasedOnSoa = receivingReport.CostBasedOnSoa,
             };
 
             return View(viewModel);
@@ -439,6 +440,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.ReceivedDate = viewModel.ReceivedDate;
                 existingModel.Amount = viewModel.QuantityReceived * await _unitOfWork.FilpridePurchaseOrder.GetPurchaseOrderCost(po.PurchaseOrderId, cancellationToken);
                 existingModel.OldRRNo = viewModel.OldRRNo;
+                existingModel.CostBasedOnSoa = viewModel.CostBasedOnSoa;
 
                 if (!_dbContext.ChangeTracker.HasChanges())
                 {

@@ -113,5 +113,8 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         [StringLength(50)]
         public string? OldRRNo { get; set; }
+
+        [Column(TypeName = "numeric(18,4)")]
+        public decimal CostBasedOnSoa { get; set; }
     }
 }

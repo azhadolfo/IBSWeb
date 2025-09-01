@@ -31,6 +31,8 @@ namespace IBS.Models.Filpride.ViewModels
         [StringLength(50)]
         public string? WithdrawalCertificate { get; set; }
 
+        public decimal CostBasedOnSoa { get; set; }
+
         [Required]
         [StringLength(100)]
         public string TruckOrVessels { get; set; }
