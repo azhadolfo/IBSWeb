@@ -167,14 +167,16 @@ namespace IBS.DataAccess.Repository.Filpride
         {
             var receivingReports = await _db.FilprideReceivingReports
                 .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
-                .Where(r => r.POId == model.PurchaseOrderId && r.Status == nameof(Status.Posted) && !r.IsCostUpdated)
+                .Where(r => r.POId == model.PurchaseOrderId
+                            && r.Status == nameof(Status.Posted)
+                            && !r.IsCostUpdated)
                 .OrderBy(r => r.ReceivingReportId)
                 .ToListAsync(cancellationToken);
 
             var inventories = await _db.FilprideInventories
                 .Where(i => i.POId == model.PurchaseOrderId)
                 .OrderBy(i => i.Date)
-                .ThenBy(i => i.Particular)
+                .ThenBy(i => i.Particular == "Purchases" ? 0 : 1)
                 .ToListAsync(cancellationToken);
 
             if (receivingReports.Count > 0)
