@@ -68,7 +68,7 @@
             </td>
         </tr>
         <tr>
-            <td class="text-end" style="padding: 0 !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.DeliveryReceiptNo)</b></h6></td>
+            <td class="text-end" style="padding-top: 10px !important;"><h6 class="series"><b>No.&nbsp;@Html.DisplayFor(model => model.DeliveryReceiptNo)</b></h6></td>
         </tr>
         <tr>
             <td class="text-center" style="padding: 0 !important;"><h3 class="module-name"><b>DELIVERY RECEIPT</b></h3></td>
@@ -80,16 +80,16 @@
     <table class="w-100">
         <tbody>
             <tr>
-                <td class="w-75"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip!.Customer?.CustomerName.ToUpper()</td>
-                <td class="w-25 text-end"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
+                <td class="w-50"><b>Sold To:</b> &nbsp;@Model.CustomerOrderSlip!.Customer?.CustomerName.ToUpper()</td>
+                <td class="w-50 text-end align-text-top"><b>Date:</b> &nbsp;@Model.Date.ToString(SD.Date_Format)</td>
             </tr>
             <tr>
-                <td class="w-75"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
-                <td class="w-25 text-end"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
+                <td class="w-50"><b>Address:</b> &nbsp;@Model.CustomerAddress.ToUpper()</td>
+                <td class="w-50 text-end align-text-top"><b>PO No:</b> &nbsp;@(Model.PurchaseOrder?.PurchaseOrderNo)</td>
             </tr>
             <tr>
                 <td></td>
-                <td class="2-25 text-end"><b>Terms:</b> &nbsp;@Model.CustomerOrderSlip.Terms</td>
+                <td class="w-50 text-end align-text-top"><b>Terms:</b> &nbsp;@Model.CustomerOrderSlip.Terms</td>
             </tr>
         </tbody>
     </table>
@@ -148,12 +148,12 @@ else
     </div>
 }
 
-<div class="row pt-2">
+<div class="row pt-3">
     @if (Model.Status != nameof(DRStatus.Canceled) && Model.Status != nameof(DRStatus.Voided))
     {
         @if (Model.Status != nameof(CosStatus.ForApprovalOfOM))
         {
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-3 pb-2">
                 <a onclick="confirmPrint(@Model.DeliveryReceiptId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
@@ -161,18 +161,18 @@ else
         {
             if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
             {
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 pb-2">
                     <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
                 </div>
             }
         }
     
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-3 pb-2">
             <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
         </div>
     }
 
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-3 pb-2">
         <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border form-control buttons">Back to List</a>
     </div>
 </div>
