@@ -24,7 +24,7 @@
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="mb-3">
                 <div class="row">
-                    <div class="col">
+                    <div class="col-12 col-md-4">
                         <input asp-for="SalesInvoiceId" type="hidden"/>
                         <div class="form-group mb-3">
                             <label asp-for="SalesInvoiceNo" class="control-label"></label>
@@ -66,7 +66,7 @@
                             <input asp-for="Terms" class="form-control" readonly tabindex="-1"/>
                         </div>
                     </div>
-                    <div class="col">
+                    <div class="col-12 col-md-4">
                         <input type="hidden" asp-for="ProductId"/>
                         <div class="form-group mb-3">
                             <label class="control-label">Product Name</label>
@@ -95,7 +95,7 @@
                     </div>
 
                     @*   column 3 *@
-                    <div class="col">
+                    <div class="col-12 col-md-4">
                         <div class="form-group mb-3">
                             <label asp-for="TransactionDate" class="control-label"></label>
                             <input type="date"
