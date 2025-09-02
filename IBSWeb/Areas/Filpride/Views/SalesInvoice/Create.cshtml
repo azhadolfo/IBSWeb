@@ -37,7 +37,7 @@
                         <span asp-validation-for="Type" class="text-danger"></span>
                     </div>
 
-                    <div class="col">
+                    <div class="col-12 col-md-4">
                         <div class="form-group mb-3">
                             <label class="control-label">Customer Name<span class="required">*</span></label>
                             <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-control js-select2" style="width:100%">
@@ -74,7 +74,7 @@
                         </div>
                     </div>
 
-                    <div class="col">
+                    <div class="col-12 col-md-4">
 
                         <input type="hidden" asp-for="ProductId"/>
                         <div class="form-group mb-3">
@@ -106,7 +106,7 @@
                         </div>
                     </div>
 
-                    <div class="col">
+                    <div class="col-12 col-md-4">
                         <div class="form-group mb-3">
                             <label asp-for="TransactionDate" class="control-label">Transaction Date<span class="required">*</span></label>
                             <input type="date"
