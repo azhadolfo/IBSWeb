@@ -483,15 +483,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var rrList = receivingReports
                 .Select(rr =>
                 {
-                    var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount);
+                    var netOfVatAmount = rr.PurchaseOrder?.VatType == SD.VatType_Vatable
+                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(rr.Amount)
+                        : rr.Amount;
 
-                    var ewtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
+                    var ewtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.01m)
                         : 0.0000m;
 
-                    var netOfEwtAmount = rr.PurchaseOrder?.Supplier?.TaxType == SD.TaxType_WithTax
+                    var netOfEwtAmount = rr.PurchaseOrder?.TaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(rr.Amount, ewtAmount)
-                        : netOfVatAmount;
+                        : rr.Amount;
 
                     return new
                     {
