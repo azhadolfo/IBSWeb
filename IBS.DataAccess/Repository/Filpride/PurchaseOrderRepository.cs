@@ -165,131 +165,118 @@ namespace IBS.DataAccess.Repository.Filpride
 
         public async Task UpdateActualCostOnSalesAndReceiptsAsync(FilpridePOActualPrice model, CancellationToken cancellationToken = default)
         {
+            // Early validation
+            if (model.AppliedVolume >= model.TriggeredVolume)
+            {
+                return; // Nothing to process
+            }
+
+            // Single query to get all required data with optimized includes
             var receivingReports = await _db.FilprideReceivingReports
-                .Include(rr => rr.PurchaseOrder).ThenInclude(po => po!.Supplier)
+                .Include(rr => rr.PurchaseOrder)
+                    .ThenInclude(po => po!.Supplier)
+                .Include(r => r.DeliveryReceipt)
                 .Where(r => r.POId == model.PurchaseOrderId
                             && r.Status == nameof(Status.Posted)
                             && !r.IsCostUpdated)
                 .OrderBy(r => r.ReceivingReportId)
                 .ToListAsync(cancellationToken);
 
+            if (!receivingReports.Any())
+            {
+                return; // No receiving reports to process
+            }
+
+            // Get inventories and purchase books in parallel
             var inventories = await _db.FilprideInventories
                 .Where(i => i.POId == model.PurchaseOrderId)
                 .OrderBy(i => i.Date)
                 .ThenBy(i => i.Particular == "Purchases" ? 0 : 1)
                 .ToListAsync(cancellationToken);
 
-            if (receivingReports.Count > 0)
+            var rrNumbers = receivingReports.Select(rr => rr.ReceivingReportNo).ToList();
+            var companies = receivingReports.Select(rr => rr.Company).Distinct().ToList();
+
+            var purchaseBooks = await _db.FilpridePurchaseBooks
+                .Where(p => companies.Contains(p.Company) && rrNumbers.Contains(p.DocumentNo))
+                .ToListAsync(cancellationToken);
+
+            // Create lookup dictionaries for better performance
+            var inventoryLookup = inventories
+                .ToLookup(inv => new { inv.Reference, inv.Company });
+            var purchaseBookLookup = purchaseBooks
+                .ToDictionary(pb => new { pb.Company, pb.DocumentNo }, pb => pb);
+
+            var unitOfWork = new UnitOfWork(_db);
+            var netOfVatPrice = ComputeNetOfVat(model.TriggeredPrice);
+            var remainingVolume = model.TriggeredVolume - model.AppliedVolume;
+
+            // Process receiving reports
+            foreach (var receivingReport in receivingReports)
             {
-                for (var i = 0; i < receivingReports.Count; i++)
+                if (remainingVolume <= 0)
                 {
+                    break;
+                }
 
-                    var isSupplierVatable = receivingReports[i].PurchaseOrder!.VatType == SD.VatType_Vatable;
-                    var isSupplierTaxable = receivingReports[i].PurchaseOrder!.TaxType == SD.TaxType_WithTax;
+                var purchaseOrder = receivingReport.PurchaseOrder!;
+                var isSupplierVatable = purchaseOrder.VatType == SD.VatType_Vatable;
+                var isSupplierTaxable = purchaseOrder.TaxType == SD.TaxType_WithTax;
 
-                    #region Update RR Amount
+                // Calculate effective volume
+                var effectiveVolume = Math.Min(receivingReport.QuantityReceived, remainingVolume);
+                var updatedAmount = effectiveVolume * model.TriggeredPrice;
+                var difference = updatedAmount - receivingReport.Amount;
 
-                    // Calculate the effective volume
-                    var effectiveVolume = Math.Min(receivingReports[i].QuantityReceived, model.TriggeredVolume - model.AppliedVolume);
+                // Update receiving report
+                receivingReport.Amount = updatedAmount;
+                receivingReport.IsCostUpdated = true;
+                model.AppliedVolume += effectiveVolume;
+                remainingVolume -= effectiveVolume;
 
-                    // Update the RR Amount based on the effective volume
-                    receivingReports[i].Amount = effectiveVolume * model.TriggeredPrice;
-                    receivingReports[i].IsCostUpdated = true;
-                    model.AppliedVolume += effectiveVolume;
+                // Update inventory
+                var inventory = inventoryLookup[new { Reference = receivingReport.ReceivingReportNo, receivingReport.Company }]
+                    .FirstOrDefault();
 
-                    #endregion Update RR Amount
-
-                    #region Update RR Inventory
-
-                    var inventory = inventories.FirstOrDefault(inv => inv.Reference == receivingReports[i].ReceivingReportNo
-                                                                      && inv.Company == receivingReports[i].Company);
-
-                    inventory!.Cost = ComputeNetOfVat(model.TriggeredPrice);
+                if (inventory != null)
+                {
+                    inventory.Cost = netOfVatPrice;
                     inventory.Total = inventory.Quantity * inventory.Cost;
 
-                    if (inventories[0].InventoryId == inventory.InventoryId)
+                    // Update first inventory's average cost and total balance
+                    if (inventories.FirstOrDefault()?.InventoryId == inventory.InventoryId)
                     {
                         inventory.AverageCost = inventory.Cost;
                         inventory.TotalBalance = inventory.Total;
                     }
-
-                    #endregion Update RR Inventory
-
-                    #region Update Purchase Book
-
-                    var purchaseBook = await _db.FilpridePurchaseBooks
-                        .FirstOrDefaultAsync(p => p.Company == receivingReports[i].Company && p.DocumentNo == receivingReports[i].ReceivingReportNo, cancellationToken);
-
-                    purchaseBook!.Amount = receivingReports[i].Amount;
-                    purchaseBook.NetPurchases = isSupplierVatable ? ComputeNetOfVat(receivingReports[i].Amount) : receivingReports[i].Amount;
-                    purchaseBook.VatAmount = isSupplierVatable ? ComputeVatAmount(purchaseBook.NetPurchases) : purchaseBook.NetPurchases;
-                    purchaseBook.WhtAmount = isSupplierTaxable ? ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m) : 0;
-
-                    #endregion Update Purchase Book
-
-                    var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
-                        .AnyAsync(x => x.Year == receivingReports[i].Date.Year
-                                       && x.Month == receivingReports[i].Date.Year, cancellationToken);
-
-                    if (!isNibitForThisPeriodLocked)
-                    {
-                        #region Update RR General Ledger
-
-                        var index = i;
-                        var journalEntries = await _db.FilprideGeneralLedgerBooks
-                            .Where(g => g.Company == receivingReports[index].Company
-                                        && g.Reference == receivingReports[index].ReceivingReportNo)
-                            .OrderBy(g => g.GeneralLedgerBookId)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var journalEntry in journalEntries)
-                        {
-                            if (journalEntry.AccountNo.StartsWith("10104"))
-                            {
-                                journalEntry.Debit = purchaseBook.NetPurchases;
-                            }
-                            else if (journalEntry.AccountNo.StartsWith("1010602"))
-                            {
-                                journalEntry.Debit = purchaseBook.VatAmount;
-                            }
-                            else if (journalEntry.AccountNo.StartsWith("2010302"))
-                            {
-                                journalEntry.Credit = purchaseBook.WhtAmount;
-                            }
-                            else
-                            {
-                                journalEntry.Credit = purchaseBook.WhtAmount > 0
-                                    ? ComputeNetOfEwt(purchaseBook.Amount, purchaseBook.WhtAmount)
-                                    : purchaseBook.Amount;
-                            }
-                        }
-
-                        if (!IsJournalEntriesBalanced(journalEntries))
-                        {
-                            throw new ArgumentException("Debit and Credit is not equal, check your entries.");
-                        }
-
-                        #endregion Update RR General Ledger
-                    }
-
-                    // Break the loop if TriggeredQuantity is met
-                    if (model.AppliedVolume >= model.TriggeredVolume)
-                    {
-                        break;
-                    }
-
                 }
 
-                #region ReCalculate Inventory
+                // Update purchase book
+                var purchaseBookKey = new { receivingReport.Company, DocumentNo = receivingReport.ReceivingReportNo };
+                if (purchaseBookLookup.TryGetValue(purchaseBookKey!, out var purchaseBook))
+                {
+                    purchaseBook.Amount = receivingReport.Amount;
+                    purchaseBook.NetPurchases = isSupplierVatable
+                        ? ComputeNetOfVat(receivingReport.Amount)
+                        : receivingReport.Amount;
+                    purchaseBook.VatAmount = isSupplierVatable
+                        ? ComputeVatAmount(purchaseBook.NetPurchases)
+                        : purchaseBook.NetPurchases;
+                    purchaseBook.WhtAmount = isSupplierTaxable
+                        ? ComputeEwtAmount(purchaseBook.NetPurchases, 0.01m)
+                        : 0;
+                }
 
-                var unitOfWork = new UnitOfWork(_db);
-
-                await unitOfWork.FilprideInventory.ReCalculateInventoryAsync(inventories, cancellationToken);
-
-                #endregion ReCalculate Inventory
-
-                await _db.SaveChangesAsync(cancellationToken);
+                // Create GL entries for cost update
+                await unitOfWork.FilprideReceivingReport.CreateEntriesForUpdatingCost(
+                    receivingReport, difference, model.ApprovedBy!, cancellationToken);
             }
+
+            // Recalculate inventory once at the end
+            await unitOfWork.FilprideInventory.ReCalculateInventoryAsync(inventories, cancellationToken);
+
+            // Single save operation
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task<decimal> GetPurchaseOrderCost(int purchaseOrderId, CancellationToken cancellationToken = default)

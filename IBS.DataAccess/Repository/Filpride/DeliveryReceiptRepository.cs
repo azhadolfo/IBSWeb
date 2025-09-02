@@ -914,12 +914,12 @@ namespace IBS.DataAccess.Repository.Filpride
                     continue;
                 }
 
-                await CreateEntriesForLockedDr(deliveryReceipt, difference, userName, cancellationToken);
+                await CreateEntriesForUpdatingPrice(deliveryReceipt, difference, userName, cancellationToken);
 
             }
         }
 
-        private async Task CreateEntriesForLockedDr(FilprideDeliveryReceipt deliveryReceipt, decimal difference, string userName, CancellationToken cancellationToken = default)
+        private async Task CreateEntriesForUpdatingPrice(FilprideDeliveryReceipt deliveryReceipt, decimal difference, string userName, CancellationToken cancellationToken = default)
         {
             try
             {
