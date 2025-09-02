@@ -1954,9 +1954,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.DeliveredPrice = newPrice;
                 existingRecord.TotalAmount = existingRecord.Quantity * existingRecord.DeliveredPrice;
                 existingRecord.PriceReference = referenceNo;
+                var userName = User.Identity!.Name!;
 
                 await _unitOfWork.FilprideDeliveryReceipt.RecalculateDeliveryReceipts(existingRecord.CustomerOrderSlipId,
-                    existingRecord.DeliveredPrice, cancellationToken);
+                    existingRecord.DeliveredPrice, userName, cancellationToken);
 
                 #region Notification
 
@@ -1990,7 +1991,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion
 
-                FilprideAuditTrail auditTrailBook = new(_userManager.GetUserName(User)!,
+                FilprideAuditTrail auditTrailBook = new(userName,
                     $"Update actual price for customer order slip# {existingRecord.CustomerOrderSlipNo}, from {existingRecord.OldPrice:N4} to {existingRecord.DeliveredPrice:N4} (gross of VAT).",
                     "Customer Order Slip",
                     existingRecord.Company);
