@@ -9,13 +9,23 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-2">
-            <button id="newAdvancesBtn" class="btn btn-light">
-                <i class="bi bi-plus-circle"></i> New Advances
+        <div class="dropdown actions-dropdown">
+            <button class="btn btn-light btn-sm dropdown-toggle w-100 responsive-index-button"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <i class="bi bi-plus-circle"></i> Create
             </button>
-            <a asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create" class="btn btn-light">
-                <i class="bi bi-plus-circle"></i> New Payment
-            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <a class="dropdown-item responsive-index-button" id="newAdvancesBtn">
+                        <i class="bi bi-plus-circle"></i> New Advances
+                    </a>
+                    <a class="dropdown-item responsive-index-button" asp-area="Filpride" asp-controller="CheckVoucherNonTradePayment" asp-action="Create">
+                        <i class="bi bi-plus-circle"></i> New Payment
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
 

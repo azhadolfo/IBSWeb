@@ -9,18 +9,25 @@
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center bg-secondary p-3 rounded shadow">
         <h2 class="text-white m-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-2">
-            <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create"
-               class="btn btn-light d-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> New Invoice
-            </a>
-            <a asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice"
-               class="btn btn-light d-flex align-items-center gap-2">
-                <i class="bi bi-plus-circle"></i> New Payroll Invoice
-            </a>
+        <div class="dropdown actions-dropdown">
+            <button class="btn btn-light btn-sm dropdown-toggle w-100 responsive-index-button"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <i class="bi bi-plus-circle"></i> Create
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                    <a class="dropdown-item responsive-index-button" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="Create">
+                        <i class="bi bi-plus-circle"></i> Invoice
+                    </a>
+                    <a class="dropdown-item responsive-index-button" asp-area="Filpride" asp-controller="CheckVoucherNonTradeInvoice" asp-action="CreatePayrollInvoice">
+                        <i class="bi bi-plus-circle"></i> Payroll Invoice
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
-
     <div class="card shadow border-0 mt-3">
         <div class="card-body p-3">
             <div class="table-responsive" style="max-height: 70vh">
