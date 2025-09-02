@@ -43,6 +43,10 @@ html {
     font-size: 14px;
 }
 
+.responsive-index-button {
+    font-size: 11px;
+}
+
 h2 {
     font-size: 1.4em;
 }
@@ -50,6 +54,10 @@ h2 {
 @media (min-width: 768px) {
     html {
         font-size: 16px;
+    }
+    
+    .responsive-index-button {
+        font-size: 13px;
     }
 
     h2 {
