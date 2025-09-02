@@ -38,5 +38,11 @@
 
 /* Make dropdown arrows smaller */
 .select2-selection__arrow {
-    height: 24px !important;
+    height: 19.5px !important;
+}
+
+@media (min-width: 768px) {
+    .select2-selection__arrow {
+        height: 23px !important;
+    }
 }
