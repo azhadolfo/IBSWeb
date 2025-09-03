@@ -2050,7 +2050,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = cashInBank,
                     CreatedBy = _userManager.GetUserName(this.User),
                     Company = companyClaims,
-                    Type = getDeliveryReceipt.PurchaseOrder.Type,
+                    Type = getDeliveryReceipt.Type,
                     CvType = "Commission",
                     SupplierName = supplier.SupplierName,
                     Address = supplier.SupplierAddress,
@@ -2306,10 +2306,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierName = supplier.SupplierName,
                     Address = viewModel.SupplierAddress,
                     Tin = viewModel.SupplierTinNo,
-                    Type = getDeliveryReceipt.PurchaseOrder.Type,
+                    Type = getDeliveryReceipt.Type,
                     BankAccountName = bank.AccountName,
                     BankAccountNumber = bank.AccountNo,
-                    OldCvNo = viewModel.OldCVNo
+                    OldCvNo = viewModel.OldCVNo,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
