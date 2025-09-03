@@ -498,7 +498,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckVoucherHeaderNo; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
                     worksheet.Cells[row, col].Value = inv.AccountNo; col++;
                     worksheet.Cells[row, col].Value = inv.AccountName; col++;
                     worksheet.Cells[row, col].Value = inv.Debit; col++;
@@ -567,7 +567,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         #endregion
 
-        #region -- Generate Cv Disbursement Report as Excel File --
+        #region -- Generate CV Disbursement Report as Excel File --
 
         public async Task<IActionResult> GenerateCvDisbursementReportExcelFile (ViewModelBook model, CancellationToken cancellationToken)
         {
@@ -669,7 +669,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.CheckNo; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Payee; col++;
                     worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Particulars; col++;
-                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type; col++;
+                    worksheet.Cells[row, col].Value = inv.CheckVoucherHeader.Type == nameof(DocumentType.Documented) ? "Doc" : "Undoc"; col++;
 
                     if (inv.CheckVoucherHeader.Category == "Trade")
                     {
