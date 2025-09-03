@@ -359,7 +359,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.RRs)
                 {
-                    var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
                     if (getReceivingReport != null)
                     {
                         getReceivingReport.AmountPaid += item.Amount;
@@ -472,7 +472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var receivingReports = await query
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(rr => rr!.Supplier)
-                .OrderBy(rr => rr.ReceivingReportNo)
+                .OrderBy(rr => rr.PurchaseOrder!.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);
 
             if (!receivingReports.Any())
@@ -497,6 +497,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = rr.ReceivingReportId,
                         rr.ReceivingReportNo,
+                        rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
@@ -593,8 +594,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(p => !p.IsSubPo && p.Company == companyClaims, cancellationToken))
+            model.PONo = _dbContext.FilpridePurchaseOrders
+                .Include(x => x.ReceivingReports)
+                .Where(po => po.PostedBy != null
+                             && po.QuantityReceived > 0
+                             && po.Company == companyClaims
+                             && po.ReceivingReports != null
+                             && po.ReceivingReports.Any(x => !x.IsPaid))
                 .OrderBy(s => s.PurchaseOrderNo)
                 .Select(s => new SelectListItem
                 {
