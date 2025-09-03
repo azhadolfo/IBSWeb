@@ -359,7 +359,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var cvTradePaymentModel = new List<FilprideCVTradePayment>();
                 foreach (var item in viewModel.RRs)
                 {
-                    var getReceivingReport = await _dbContext.FilprideReceivingReports.FindAsync(item.Id, cancellationToken);
+                    var getReceivingReport = await _unitOfWork.FilprideReceivingReport.GetAsync(x => x.ReceivingReportId == item.Id, cancellationToken);
                     if (getReceivingReport != null)
                     {
                         getReceivingReport.AmountPaid += item.Amount;
@@ -472,7 +472,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var receivingReports = await query
                 .Include(rr => rr.PurchaseOrder)
                 .ThenInclude(rr => rr!.Supplier)
-                .OrderBy(rr => rr.ReceivingReportNo)
+                .OrderBy(rr => rr.PurchaseOrder!.PurchaseOrderNo)
                 .ToListAsync(cancellationToken);
 
             if (!receivingReports.Any())
@@ -499,6 +499,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = rr.ReceivingReportId,
                         rr.ReceivingReportNo,
+                        rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
                         AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
                         NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
@@ -595,8 +596,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 });
             }
 
-            model.PONo = (await _unitOfWork.FilpridePurchaseOrder
-                .GetAllAsync(p => !p.IsSubPo && p.Company == companyClaims, cancellationToken))
+            model.PONo = _dbContext.FilpridePurchaseOrders
+                .Include(x => x.ReceivingReports)
+                .Where(po => po.PostedBy != null
+                             && po.QuantityReceived > 0
+                             && po.Company == companyClaims
+                             && po.ReceivingReports != null
+                             && po.ReceivingReports.Any(x => !x.IsPaid))
                 .OrderBy(s => s.PurchaseOrderNo)
                 .Select(s => new SelectListItem
                 {
@@ -2046,7 +2052,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = cashInBank,
                     CreatedBy = _userManager.GetUserName(this.User),
                     Company = companyClaims,
-                    Type = getDeliveryReceipt.PurchaseOrder.Type,
+                    Type = getDeliveryReceipt.Type,
                     CvType = "Commission",
                     SupplierName = supplier.SupplierName,
                     Address = supplier.SupplierAddress,
@@ -2302,10 +2308,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierName = supplier.SupplierName,
                     Address = viewModel.SupplierAddress,
                     Tin = viewModel.SupplierTinNo,
-                    Type = getDeliveryReceipt.PurchaseOrder.Type,
+                    Type = getDeliveryReceipt.Type,
                     BankAccountName = bank.AccountName,
                     BankAccountNumber = bank.AccountNo,
-                    OldCvNo = viewModel.OldCVNo
+                    OldCvNo = viewModel.OldCVNo,
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2433,8 +2439,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drList = deliverReceipt
                     .Select(dr =>
                     {
+                        var netOfVatAmount = dr.Commissionee?.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
+                            : dr.CommissionAmount;
+
                         var ewtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(dr.CommissionAmount, 0.05m)
+                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.05m)
                             : 0m;
 
                         var netOfEwtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
@@ -2487,15 +2497,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var drList = deliverReceipt
                 .Select(dr =>
                 {
-                    var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount);
+                    var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
+                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount)
+                        : dr.FreightAmount;
 
-                    var ewtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                    var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
                         : 0.0000m;
 
-                    var netOfEwtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                    var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
-                        : netOfVatAmount;
+                        : dr.FreightAmount;
 
                     return new
                     {

@@ -78,7 +78,7 @@
                 <div class="form-floating mb-3">
                     <input asp-for="OldCVNo" type="text" class="form-control" placeholder="" required/>
                     <span asp-validation-for="OldCVNo" class="text-danger"></span>
-                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #</label><span class="required">*</span>
+                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #<span class="required">*</span></label>
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
@@ -264,129 +264,105 @@
             });
         });
 
-        // store rows per PO
-        let poDataMap = {};
-        let initialPOs = @Html.Raw(Json.Serialize(Model.POSeries));
         let cvId = @Html.Raw(Json.Serialize(Model.CVId));
-        let tbody = $('.rrAmount');
-
-        tbody.empty();
-        (async function loadInitial() {
-            if (initialPOs && initialPOs.length > 0) {
-                for (const po of initialPOs) {
-                    await displayRecords(po, tbody, cvId);
-                }
-            }
-            displayAdvances(initialPOs);
-        })();
-
-        $(".GetRRList").change(async function () {
-            let poNumbers = $(this).val(); // assume multiple select
-            let tbody = $('.rrAmount');
-
-            tbody.empty();
-            poDataMap = {};
-
-            if (poNumbers && poNumbers.length > 0) {
-                for (const po of poNumbers) {
-                    await displayRecords(po, tbody, cvId);
-                }
-            }
-            displayAdvances(poNumbers);
+        
+        $(document).ready(function () {
+            let poNumber = $(".GetRRList").val();
+            displayRecords(poNumber, cvId)
+            displayAdvances(poNumber);
         });
 
-        function displayRecords(poNumber, tbody, cvId) {
-            return new Promise((resolve, reject) => {
-                $.ajax({
-                    url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
-                    method: "GET",
-                    data: { poNumber: poNumber, cvId: cvId },
-                    traditional: true,
-                    success: function (data) {
-                        let subGross = 0;
-                        let subPaid = 0;
-                        let subBalance = 0;
+        $(".GetRRList").change(function () {
+            let poNumber = $(this).val(); // Get all selected POIds
+            displayRecords(poNumber, cvId);
+            displayAdvances(poNumber);
+        });
 
+        function displayRecords(poNumber, cvId) {
+            $.ajax({
+                url: "@Url.Action("GetRRs", "CheckVoucherTrade")",
+                method: "GET",
+                data: { poNumber: poNumber, cvId: cvId  }, // Pass PO numbers to controller
+                traditional: true, // Ensure jQuery sends the array properly
+                success: function (data) {
+                    const tbody = $('.rrAmount');
+                    let totalGross = 0;
+                    let totalAmountPaid = 0;
+                    let totalBalance = 0;
+                    let subTotalGross = 0;
+
+                    tbody.empty();
+
+                    if (data) {
+                        let currentPO = null;
                         const modelRRs = new Map(
                             @Html.Raw(Json.Serialize(Model.RRs.Select(r => new { r.Id, r.Amount })))
                                 .map(r => [r.id, r.amount])
                         );
 
-                        if (data && data.length > 0) {
-                            data.forEach(rr => {
-                                let balance = parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid);
-                                const rrAmount = modelRRs.get(rr.id) || 0;
-                                let amountPaid = parseNumber(rr.amountPaid) - rrAmount;
+                        data.forEach((rr, index) => {
+                            currentPO = rr.purchaseOrderNo;
+                            const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
+                            let display = modelRRs.has(rr.id) ? '' : 'display: none';
+                            let inputamountClass = modelRRs.has(rr.id) ? 'inputAmount' : '';
+                            const amountPaid = modelRRs.get(rr.id);
+                            const tr = $(`
+                                <tr data-po="${rr.purchaseOrderNo}">
+                                    <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
+                                    <td>${rr.purchaseOrderNo}</td>
+                                    <td>${rr.receivingReportNo}</td>
+                                    <td>${rr.oldRRNo}</td>
+                                    <td class="text-end grossAmount">${formatNumber(rr.netOfEwtAmount)}</td>
+                                    <td class="text-end"><input type="text" class="paymentAmount text-end ${inputamountClass}" readonly style="${display}" value="${amountPaid}"></td>
+                                    <td class="text-end balance">${formatNumber(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
+                                </tr>
+                            `);
 
-                                const isChecked = modelRRs.has(rr.id) ? 'checked' : '';
-                                const tr = $(`<tr data-po="${poNumber}">
-                            <td><input type="checkbox" value="${rr.id}" class="selectCheckbox" ${isChecked}></td>
-                            <td>${poNumber}</td>
-                            <td>${rr.receivingReportNo}</td>
-                            <td>${rr.oldRRNo}</td>
-                            <td class="text-end">${formatNumber(rr.netOfEwtAmount)}</td>
-                            <td class="text-end"><input type="text" class="paymentAmount" readonly style="display: none"></td>
-                            <td class="text-end balance">${formatNumber(balance)}</td>
-                        </tr>`);
-                                tbody.append(tr);
+                            subTotalGross += parseNumber(rr.netOfEwtAmount);
+                            totalGross += parseNumber(rr.netOfEwtAmount);
 
-                                subGross += parseNumber(rr.netOfEwtAmount);
-                                subPaid += parseNumber(rr.amountPaid);
-                                subBalance += balance;
-                            });
+                            tbody.append(tr);
 
-                            const subTotal = $(`<tr class="fw-bold bg-light subtotalRow" data-po="${poNumber}">
-                        <td colspan="3"></td>
-                        <td class="fw-bold text-end">Subtotal (${poNumber}):</td>
-                        <td class="text-end">${formatNumber(subGross)}</td>
-                        <td class="text-end">${formatNumber(subPaid)}</td>
-                        <td class="text-end">${formatNumber(subBalance)}</td>
-                    </tr>`);
-                            tbody.append(subTotal);
-
-                            poDataMap[poNumber] = {
-                                gross: subGross,
-                                paid: subPaid,
-                                balance: subBalance
-                            };
-
-                            updateGrandTotal(tbody);
-                            initializeCheckedCheckboxes();
-                        }
-                        resolve();
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error fetching RRs:', error);
-                        reject(error);
+                            // Append subtotal ONLY when last row of this PO group
+                            if (index === data.length - 1 || data[index + 1].purchaseOrderNo !== currentPO) {
+                                const subTotal = $(`
+                                <tr class="fw-bold bg-light subtotalRow" data-po="${currentPO}">
+                                    <td colspan="3"></td>
+                                    <td class="fw-bold text-end">Subtotal (${rr.purchaseOrderNo}):</td>
+                                    <td class="text-end subTotalGross">${formatNumber(subTotalGross)}</td>
+                                    <td class="text-end subTotalAmountPaid">0.00</td>
+                                    <td class="text-end subTotalBalance">0.00</td>
+                                </tr>
+                            `);
+                                tbody.append(subTotal);
+                                subTotalGross = 0;
+                            }
+                        });
+                        reindexSelected();
                     }
-                });
+
+
+                    // Append Grand Total Rows
+                    const totalRow = $(`
+                        <tr style="border-bottom:double;" class="sticky-lg-bottom">
+                            <td colspan="7" class="pt-1"></td>
+                        </tr>
+                        <tr class="sticky-bottom bg-white">
+                            <td colspan="3"></td>
+                            <td class="fw-bold text-end p-2">Grand Total:</td>
+                            <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
+                            <td class="text-end grandTotalAmountPaid" id="grandTotalNetAmount">0.00</td>
+                            <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
+                        </tr>
+                    `);
+                    tbody.append(totalRow);
+                    updateAmounts();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching RRs:', error);
+                }
             });
         }
-
-        function updateGrandTotal(tbody) {
-            $(".grandTotalRow").remove();
-
-            let grandGross = 0, grandPaid = 0, grandBalance = 0;
-
-            Object.values(poDataMap).forEach(totals => {
-                grandGross += totals.gross;
-                grandPaid += totals.paid;
-                grandBalance += totals.balance;
-            });
-
-            if (Object.keys(poDataMap).length > 0) {
-                const grandTotalRow = $(`<tr style="border-top:double;" class="fw-bold sticky-bottom bg-white grandTotalRow">
-            <td colspan="3"></td>
-            <td class="fw-bold text-end p-2">Grand Total:</td>
-            <td class="text-end">${formatNumber(grandGross)}</td>
-            <td class="text-end amountPaid"></td>
-            <td class="text-end">${formatNumber(grandBalance)}</td>
-        </tr>`);
-                tbody.append(grandTotalRow);
-            }
-}
-
-
 
         function displayAdvances(poNumber){
             // New addition: Check if any selected PO has COD or PREPAID terms
@@ -428,106 +404,82 @@
 
         function toggleSelectAll(selectAllCheckbox) {
             const isChecked = selectAllCheckbox.checked;
-            selectedRecords = isChecked ? [] : []; // Reset selected records
 
-            $('.selectCheckbox').each(function () {
-                const checkbox = $(this);
-                const row = checkbox.closest('tr');
-                const rrId = checkbox.val(); // Get checkbox value
-
-                if (isChecked) {
-                    if (!selectedRecords.includes(rrId)) {
-                        selectedRecords.push(rrId); // Add value
-                    }
-                    checkbox.prop('checked', true);
-                } else {
-                    selectedRecords = []; // Reset when deselecting all
-                    checkbox.prop('checked', false);
+            $(".selectCheckbox").each(function () {
+                if (isChecked && !this.checked) {
+                    // Check unchecked ones only
+                    $(this).prop("checked", true).trigger("change");
+                } else if (!isChecked && this.checked) {
+                    // Uncheck checked ones only
+                    $(this).prop("checked", false).trigger("change");
                 }
-
-                handleCheckboxChange(checkbox);
             });
 
             allRecordsSelected = isChecked;
         }
 
-        // Event listener to show/hide input field on checkbox toggle
-        $(document).ready(function () {
-            checkBox();
-            initializeCheckedCheckboxes(); // Call this on page load
-        });
+        $(document).on('change', '.selectCheckbox', function () {
+            const row = $(this).closest('tr');
+            const inputField = row.find('.paymentAmount');
+            const balance = parseNumber(row.find('.balance').text().trim());
+            const grossAmount = parseNumber(row.find('.grossAmount').text());
 
-        function checkBox() {
-            $(document).on('change', '.selectCheckbox', function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function initializeCheckedCheckboxes() {
-            $('.selectCheckbox:checked').each(function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function handleCheckboxChange(checkboxElement) {
-            const $checkbox = $(checkboxElement);
-            const $row = $checkbox.closest('tr');
-            const $inputField = $row.find('.paymentAmount');
-            const rrId = $checkbox.val(); // Get checkbox value
-            const $balanceField = $row.find('.balance').text();
-
-            if ($checkbox.is(':checked')) {
-                if (!selectedRecords.includes(rrId)) {
-                    selectedRecords.push(rrId); // Add value
+            if (this.checked) {
+                if (!selectedRecords.includes(this.value)) {
+                    selectedRecords.push(this.value); // ✅ push instead of add
                 }
+                inputField.val(balance).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumber(grossAmount - balance));
             } else {
-                selectedRecords = selectedRecords.filter(id => id !== rrId); // Remove value
+                selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
+                inputField.removeAttr("name").hide().val('');
+                row.find('.selectCheckbox').removeAttr("name");
+                row.find('.balance').text(formatNumber(grossAmount));
             }
 
-            // Recalculate and update name attributes
-            selectedRecords.forEach((id, index) => {
-                const $checkboxRow = $(`.selectCheckbox[value="${id}"]`).closest('tr');
-                $checkboxRow.find('.selectCheckbox').attr("name", `RRs[${index}].Id`);
-                $checkboxRow.find('.paymentAmount').attr("name", `RRs[${index}].Amount`);
-            });
-
-            // Retrieve and apply the correct amount
-            const amountPaid = @Html.Raw(Json.Serialize(Model.RRs.ToDictionary(r => r.Id, r => r.Amount)));
-
-            if ($checkbox.is(':checked')) {
-                const amount = amountPaid[rrId]; // Get amount by ID, fallback to ''
-                if (amount === undefined){
-                    $inputField.val(parseNumber($balanceField)).addClass("inputAmount").show();
-                }else{
-                    $inputField.val(amount).addClass("inputAmount").show();
-                }
-            } else {
-                $inputField.removeAttr("name").hide().val('');
-            }
-
+            reindexSelected();
             updateAmounts();
-        }
-
-        // "Select All" using event delegation
-        $(document).on('change', '#selectAllCheckbox', function () {
-            toggleSelectAll(this);
         });
+
+        function reindexSelected() {
+            $(".selectCheckbox:checked").each(function (i) {
+                const row = $(this).closest('tr');
+                const inputField = row.find('.paymentAmount');
+
+                $(this).attr("name", `RRs[${i}].Id`);
+                inputField.attr("name", `RRs[${i}].Amount`);
+            });
+        }
 
         $(document).on('input', '.inputAmount', function () {
             updateAmounts();
         });
 
         function updateAmounts() {
-            var amountInputs = document.querySelectorAll('.inputAmount');
-            var totalNetOfEWT = 0;
-            amountInputs.forEach(function (input) {
-                var rawValue = input.value;
-                var rrAmount = parseNumber(rawValue);
+            let totalNetOfEWT = 0;
 
-                totalNetOfEWT += rrAmount;
+            $(".subtotalRow").each(function () {
+                const po = $(this).data("po");
+                let amountInputs = document.querySelectorAll(`tr[data-po='${po}'] .inputAmount`);
+                let subTotalAmountPaid = 0;
+
+                amountInputs.forEach(function (input) {
+                    let rawValue = input.value;
+                    let rrAmount = parseNumber(rawValue);
+
+                    totalNetOfEWT += rrAmount;
+                    subTotalAmountPaid += rrAmount;
+                });
+
+                let subTotalGross = parseNumber($(this).find(".subTotalGross").text());
+                $(this).find(".subTotalAmountPaid").text(formatNumber(subTotalAmountPaid));
+                $(this).find(".subTotalBalance").text(formatNumber(Math.abs(subTotalGross - subTotalAmountPaid)));
             });
+
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
-            $(".amountPaid").text(formatNumber(totalNetOfEWT));
+            $(".grandTotalAmountPaid").text(formatNumber(totalNetOfEWT));
+            let grandTotalGross = parseNumber($(".grandTotalGross").text());
+            $(".grandTotalBalance").text(formatNumber(Math.abs(grandTotalGross - totalNetOfEWT)));
 
             // Check if advances row is visible
             var hasAdvances = $("#advancesRow").is(":visible");
@@ -542,7 +494,7 @@
 
             // Update the Cash in Bank amount
             $(".cib-credit").val(formatNumber(cashInBankAmount));
-            
+
             updateTotalDebitAndCredit();
             validateDebitAndCredit();
         }
