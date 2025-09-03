@@ -5,6 +5,25 @@
     ViewData["Title"] = "Check Voucher Non-Trade Payroll Invoice - Create";
 }
 
+<style>
+    .accounting-table-wrapper {
+        overflow: auto;
+    }
+
+    .accounting-table th,
+    .accounting-table td {
+        white-space: nowrap;
+        min-width: 100px;
+    }
+
+    @@media (max-width: 768px) {
+    .accounting-table {
+        width: 100%;
+        min-width: 600px;
+    }
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -74,32 +93,31 @@
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
                         Add Entry
                     </button>
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>Account No.</th>
-                            <th>Account Title</th>
-                            <th>
-                                Debit
-                            </th>
-                            <th>
-                                Credit
-                            </th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody id="accountingEntriesBody">
-                        <tbody>
-                        <tr>
-                            <td class="text-end" colspan="2">TOTAL:</td>
-                            <td class="totalDebit">0.0000</td>
-                            <td class="totalCredit">0.0000</td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive accounting-table-wrapper">
+                        <table class="table accounting-table">
+                            <thead>
+                            <tr>
+                                <th>Account No.</th>
+                                <th>Account Title</th>
+                                <th>Debit</th>
+                                <th>Credit</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody id="accountingEntriesBody">
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <td class="text-end" colspan="2">TOTAL:</td>
+                                <td class="totalDebit">0.0000</td>
+                                <td class="totalCredit">0.0000</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
                 <br/>
                 <div class="row pt-2">
