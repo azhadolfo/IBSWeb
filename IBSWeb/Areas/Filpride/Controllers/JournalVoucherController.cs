@@ -271,6 +271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         public async Task<IActionResult> GetCV(int id)
         {
             var header = _dbContext.FilprideCheckVoucherHeaders
+                .AsNoTracking()
                 .Include(s => s.Employee)
                 .Include(s => s.Supplier)
                 .FirstOrDefault(cvh => cvh.CheckVoucherHeaderId == id);
@@ -281,6 +282,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var details = await _dbContext.FilprideCheckVoucherDetails
+                .AsNoTracking()
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync();
 

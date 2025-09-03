@@ -23,7 +23,7 @@
         <form asp-action="Create" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="form-group mb-3">
@@ -70,8 +70,8 @@
                         <span asp-validation-for="Header!.JVReason" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-8 tradeList">
-                    <div class="row pb-3">
+                <div class="col-12 col-md-8 tradeList">
+                    <div class="row pb-3 overflow-auto">
 
                         <div class="table-responsive">
                             <table class="w-100">
