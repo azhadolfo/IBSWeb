@@ -4,6 +4,25 @@
     ViewData["Title"] = "Check Voucher Advances To Supplier - Edit";
 }
 
+<style>
+    .accounting-table-wrapper {
+        overflow: auto;
+    }
+
+    .accounting-table th,
+    .accounting-table td {
+        white-space: nowrap;
+        min-width: 100px;
+    }
+
+    @@media (max-width: 768px) {
+        .accounting-table {
+            width: 100%;
+            min-width: 600px;
+        }
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -86,15 +105,14 @@
                     <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
                     <span asp-validation-for="Particulars" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <table class="table">
+                <div class="form-group accounting-table-wrapper">
+                    <table class="table accounting-table">
                         <thead>
                         <tr>
                             <th>Account No.</th>
                             <th>Account Title</th>
                             <th>Debit</th>
                             <th>Credit</th>
-                            <th></th>
                         </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
@@ -103,21 +121,18 @@
                             <td><input type="text" name="AccountTitle" value="Advances to Suppliers" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="Debit" value="0.00" class="w-100 advances-debit" style="border:none" readonly/></td>
                             <td><input type="text" name="Credit" value="0.00" class="w-100" style="border:none" readonly/></td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td><input type="text" name="AccountNumber" value="201030210" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="AccountTitle" value="Expanded Withholding Tax 1%" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="Debit" value="0.00" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="Credit" value="0.00" class="w-100 ewt-amount" style="border:none" readonly/></td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td><input type="text" name="AccountNumber" value="101010100" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="AccountTitle" value="Cash in Bank" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="Debit" value="0.00" class="w-100" style="border:none" readonly/></td>
                             <td><input type="text" name="Credit" value="0.00" class="w-100 cib-credit" style="border:none" readonly/></td>
-                            <td></td>
                         </tr>
                         </tbody>
                         <tfoot>
@@ -125,7 +140,6 @@
                             <td class="text-end" colspan="2">TOTAL:</td>
                             <td class="totalDebit">0.00</td>
                             <td class="totalCredit">0.00</td>
-                            <td></td>
                         </tr>
                         </tfoot>
                     </table>
