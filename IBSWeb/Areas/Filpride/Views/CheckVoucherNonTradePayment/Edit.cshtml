@@ -4,6 +4,25 @@
     ViewData["Title"] = "Check Voucher Non-Trade Payment - Edit";
 }
 
+<style>
+    .accounting-table-wrapper {
+        overflow: auto;
+    }
+
+    .accounting-table th,
+    .accounting-table td {
+        white-space: nowrap;
+        min-width: 100px;
+    }
+
+    @@media (max-width: 768px) {
+        .accounting-table {
+            width: 100%;
+            min-width: 600px;
+        }
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -104,8 +123,8 @@
                     <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
                     <span asp-validation-for="Particulars" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <table class="table">
+                <div class="form-group accounting-table-wrapper">
+                    <table class="table accounting-table">
                         <thead>
                         <tr>
                             <th>Account No.</th>
@@ -116,7 +135,6 @@
                             <th>
                                 Credit
                             </th>
-                            <th></th>
                         </tr>
                         </thead>
                         <tbody id="accountingEntriesBody">
@@ -126,7 +144,6 @@
                             <td class="text-end" colspan="2">TOTAL:</td>
                             <td class="totalDebit">0.0000</td>
                             <td class="totalCredit">0.0000</td>
-                            <td></td>
                         </tr>
                         </tbody>
                     </table>
@@ -260,7 +277,6 @@
                                             <td><input name='AccountTitle' value='${entry.accountTitle}' class="w-100" style='border:none' readonly /></td>
                                             <td><input name="Debit" value='${formatNumber(entry.debit)}' class="w-100 debit" style='border:none' readonly /></td>
                                             <td><input name="Credit" value='${formatNumber(entry.credit)}' class="w-100 credit" style='border:none' readonly /></td>
-                                            <td></td>
                                         </tr>`;
                                     $("#accountingEntriesBody").append(newRow);
                                 });
