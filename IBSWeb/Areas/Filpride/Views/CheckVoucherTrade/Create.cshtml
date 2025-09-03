@@ -58,7 +58,7 @@
                                 <th>RR No's</th>
                                 <th>IS RR No's</th>
                                 <th class="text-end">Amount</th>
-                                <th class="text-center">Amount Paid</th>
+                                <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
                             </thead>
@@ -296,7 +296,7 @@
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
                                     <td class="text-end grossAmount">${formatNumber(rr.netOfEwtAmount)}</td>
-                                    <td class="text-center"><input type="text" class="paymentAmount" readonly style="display: none"></td>
+                                    <td class="text-end"><input type="text" class="paymentAmount text-end" readonly style="display: none"></td>
                                     <td class="text-end balance">${formatNumber(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
                                 </tr>
                             `);
@@ -313,7 +313,7 @@
                                     <td colspan="3"></td>
                                     <td class="fw-bold text-end">Subtotal (${rr.purchaseOrderNo}):</td>
                                     <td class="text-end subTotalGross">${formatNumber(subTotalGross)}</td>
-                                    <td class="text-center subTotalAmountPaid">0.00</td>
+                                    <td class="text-end subTotalAmountPaid">0.00</td>
                                     <td class="text-end subTotalBalance">0.00</td>
                                 </tr>
                             `);
@@ -333,7 +333,7 @@
                             <td colspan="3"></td>
                             <td class="fw-bold text-end p-2">Grand Total:</td>
                             <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
-                            <td class="text-center grandTotalAmountPaid" id="grandTotalNetAmount">0.00</td>
+                            <td class="text-end grandTotalAmountPaid" id="grandTotalNetAmount">0.00</td>
                             <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
                         </tr>
                     `);
