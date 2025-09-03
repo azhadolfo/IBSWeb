@@ -2439,8 +2439,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drList = deliverReceipt
                     .Select(dr =>
                     {
+                        var netOfVatAmount = dr.Commissionee?.VatType == SD.VatType_Vatable
+                            ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
+                            : dr.CommissionAmount;
+
                         var ewtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
-                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(dr.CommissionAmount, 0.05m)
+                            ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.05m)
                             : 0m;
 
                         var netOfEwtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
@@ -2493,15 +2497,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var drList = deliverReceipt
                 .Select(dr =>
                 {
-                    var netOfVatAmount = _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount);
+                    var netOfVatAmount = dr.HaulerVatType == SD.VatType_Vatable
+                        ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.FreightAmount)
+                        : dr.FreightAmount;
 
-                    var ewtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                    var ewtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.02m)
                         : 0.0000m;
 
-                    var netOfEwtAmount = dr.Hauler?.TaxType == SD.TaxType_WithTax
+                    var netOfEwtAmount = dr.HaulerTaxType == SD.TaxType_WithTax
                         ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.FreightAmount, ewtAmount)
-                        : netOfVatAmount;
+                        : dr.FreightAmount;
 
                     return new
                     {
