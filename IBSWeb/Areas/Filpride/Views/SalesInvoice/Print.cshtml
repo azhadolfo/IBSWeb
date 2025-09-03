@@ -311,7 +311,7 @@
     </tbody>
 </table>
 
-@if (Model.Type == nameof(DocumentType.Documented))
+@if (Model.Type == nameof(DocumentType.Documented) && customerType != nameof(CustomerType.Retail))
 {
     <p style="margin-top:20px;" class="p-italic">
         This is a system generated invoice, no signature required.

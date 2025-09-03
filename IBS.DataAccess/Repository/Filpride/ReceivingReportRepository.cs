@@ -536,5 +536,186 @@ namespace IBS.DataAccess.Repository.Filpride
 
             await _db.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task CreateEntriesForUpdatingCost(FilprideReceivingReport model, decimal difference, string userName, CancellationToken cancellationToken = default)
+        {
+            #region --General Ledger Recording
+
+            var ledgers = new List<FilprideGeneralLedgerBook>();
+            var isIncremental = difference > 0;
+            difference = Math.Abs(difference);
+            var particulars = $"Update Cost on DR#{model.DeliveryReceipt?.DeliveryReceiptNo}. DR dated {model.DeliveryReceipt?.DeliveredDate}";
+            var netOfVatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeNetOfVat(difference)
+                : difference;
+            var vatAmount = model.PurchaseOrder!.VatType == SD.VatType_Vatable
+                ? ComputeVatAmount(netOfVatAmount)
+                : 0m;
+            var ewtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax ? ComputeEwtAmount(netOfVatAmount, 0.01m) : 0m;
+
+            if (model.PurchaseOrder.Terms == SD.Terms_Cod || model.PurchaseOrder.Terms == SD.Terms_Prepaid)
+            {
+                var advancesVoucher = await _db.FilprideCheckVoucherDetails
+                    .Include(cv => cv.CheckVoucherHeader)
+                    .FirstOrDefaultAsync(cv =>
+                        cv.CheckVoucherHeader!.SupplierId == model.PurchaseOrder.SupplierId &&
+                        cv.CheckVoucherHeader.IsAdvances &&
+                        cv.CheckVoucherHeader.Status == nameof(CheckVoucherPaymentStatus.Posted) &&
+                        cv.AccountName.Contains("Expanded Withholding Tax") &&
+                        cv.Credit > cv.AmountPaid,
+                        cancellationToken);
+
+                if (advancesVoucher != null)
+                {
+                    var affectedEwt = Math.Min(advancesVoucher.Credit, ewtAmount);
+
+                    if (isIncremental)
+                    {
+                        ewtAmount -= affectedEwt;
+                        advancesVoucher.AmountPaid += affectedEwt;
+                    }
+                    else
+                    {
+                        ewtAmount += affectedEwt;
+                        advancesVoucher.AmountPaid -= affectedEwt;
+                    }
+                }
+            }
+
+            var netOfEwtAmount = model.PurchaseOrder!.TaxType == SD.TaxType_WithTax
+                ? ComputeNetOfEwt(difference, ewtAmount)
+                : difference;
+
+            var (inventoryAcctNo, inventoryAcctTitle) = GetInventoryAccountTitle(model.PurchaseOrder.Product!.ProductCode);
+            var (cogsAcctNo, cogsAcctTitle) = GetCogsAccountTitle(model.PurchaseOrder.Product!.ProductCode);
+            var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+            var vatInputTitle = accountTitlesDto.Find(c => c.AccountNumber == "101060200") ?? throw new ArgumentException("Account title '101060200' not found.");
+            var ewtTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030210") ?? throw new ArgumentException("Account title '201030210' not found.");
+            var apTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "202010100") ?? throw new ArgumentException("Account title '202010100' not found.");
+            var inventoryTitle = accountTitlesDto.Find(c => c.AccountNumber == inventoryAcctNo) ?? throw new ArgumentException($"Account title '{inventoryAcctNo}' not found.");
+            var cogsTitle = accountTitlesDto.Find(c => c.AccountNumber == cogsAcctNo) ?? throw new ArgumentException($"Account title '{cogsAcctNo}' not found.");
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                Reference = model.ReceivingReportNo!,
+                Description = particulars,
+                AccountId = inventoryTitle.AccountId,
+                AccountNo = inventoryTitle.AccountNumber,
+                AccountTitle = inventoryTitle.AccountName,
+                Debit = isIncremental ? netOfVatAmount : 0,
+                Credit = !isIncremental ? netOfVatAmount : 0,
+                CreatedBy = userName,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                Company = model.Company,
+                ModuleType = nameof(ModuleType.Purchase)
+            });
+
+            if (vatAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = model.ReceivingReportNo!,
+                    Description = particulars,
+                    AccountId = vatInputTitle.AccountId,
+                    AccountNo = vatInputTitle.AccountNumber,
+                    AccountTitle = vatInputTitle.AccountName,
+                    Debit = isIncremental ? vatAmount : 0,
+                    Credit = !isIncremental ? vatAmount : 0,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Company = model.Company,
+                    ModuleType = nameof(ModuleType.Purchase)
+                });
+            }
+
+            ledgers.Add(new FilprideGeneralLedgerBook
+            {
+                Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                Reference = model.ReceivingReportNo!,
+                Description = particulars,
+                AccountId = apTradeTitle.AccountId,
+                AccountNo = apTradeTitle.AccountNumber,
+                AccountTitle = apTradeTitle.AccountName,
+                Debit = !isIncremental ? netOfEwtAmount : 0,
+                Credit = isIncremental ? netOfEwtAmount : 0,
+                CreatedBy = userName,
+                CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                Company = model.Company,
+                SupplierId = model.PurchaseOrder.SupplierId,
+                SupplierName = model.PurchaseOrder.SupplierName,
+                ModuleType = nameof(ModuleType.Purchase)
+            });
+
+            if (ewtAmount > 0)
+            {
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = model.ReceivingReportNo!,
+                    Description = particulars,
+                    AccountId = ewtTitle.AccountId,
+                    AccountNo = ewtTitle.AccountNumber,
+                    AccountTitle = ewtTitle.AccountName,
+                    Debit = !isIncremental ? ewtAmount : 0,
+                    Credit = isIncremental ? ewtAmount : 0,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    Company = model.Company,
+                    ModuleType = nameof(ModuleType.Purchase)
+                });
+            }
+
+            if (model.DeliveryReceipt?.DeliveredDate != null)
+            {
+                var priceAdjustment = difference / model.QuantityReceived;
+                var cogsAmount = model.DeliveryReceipt.Quantity *  priceAdjustment;
+                var cogsNetOfVat = ComputeNetOfVat(cogsAmount);
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = model.ReceivingReportNo!,
+                    Description = particulars,
+                    AccountId = cogsTitle.AccountId,
+                    AccountNo = cogsTitle.AccountNumber,
+                    AccountTitle = cogsTitle.AccountName,
+                    Debit = isIncremental ? cogsNetOfVat : 0,
+                    Credit = !isIncremental ? cogsNetOfVat : 0,
+                    Company = model.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime()),
+                    Reference = model.ReceivingReportNo!,
+                    Description = particulars,
+                    AccountId = inventoryTitle.AccountId,
+                    AccountNo = inventoryTitle.AccountNumber,
+                    AccountTitle = inventoryTitle.AccountName,
+                    Debit = !isIncremental ? cogsNetOfVat : 0,
+                    Credit = isIncremental ? cogsNetOfVat : 0,
+                    Company = model.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+            }
+
+            if (!IsJournalEntriesBalanced(ledgers))
+            {
+                throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+            }
+
+            await _db.AddRangeAsync(ledgers, cancellationToken);
+
+            #endregion --General Ledger Recording
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
     }
 }

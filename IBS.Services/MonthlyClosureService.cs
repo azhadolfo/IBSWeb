@@ -50,6 +50,8 @@ namespace IBS.Services
                 var hasUnliftedDrs = await _dbContext.FilprideDeliveryReceipts
                     .AnyAsync(x => x.Date.Month == monthDate.Month
                                    && x.Date.Year == monthDate.Year
+                                   && x.VoidedBy == null
+                                   && x.CanceledBy == null
                                    && !x.HasReceivingReport, cancellationToken);
 
                 if (hasUnliftedDrs)

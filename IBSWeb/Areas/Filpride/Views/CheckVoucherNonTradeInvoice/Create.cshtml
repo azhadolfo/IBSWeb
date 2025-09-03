@@ -299,9 +299,9 @@
             const netOfTaxAmount = amount - taxAmount;
 
             // Update fields
-            taxAmountField.value = taxAmount.toFixed(2);
-            vatAmountField.value = vatAmount.toFixed(2);
-            netOfVatField.value = netOfVat.toFixed(2);
+            taxAmountField.value = taxAmount.toFixed(4);
+            vatAmountField.value = vatAmount.toFixed(4);
+            netOfVatField.value = netOfVat.toFixed(4);
 
             // Add to accumulated entries without clearing previous entries
             addToAccumulatedEntries(accountTitle, netOfVat, 0);
@@ -393,8 +393,8 @@
             const totalsRow = document.createElement("tr");
             totalsRow.innerHTML = `
             <td><strong>Totals</strong></td>
-            <td class="text-end"><strong>${totalDebit.toFixed(2)}</strong></td>
-            <td class="text-end"><strong>${totalCredit.toFixed(2)}</strong></td>
+            <td class="text-end"><strong>${formatNumber(totalDebit)}</strong></td>
+            <td class="text-end"><strong>${formatNumber(totalCredit)}</strong></td>
         `;
             tbody.appendChild(totalsRow);
         }
@@ -403,8 +403,8 @@
             const row = document.createElement("tr");
             row.innerHTML = `
             <td>${account}</td>
-            <td class="text-end">${debit > 0 ? debit.toFixed(2) : ""}</td>
-            <td class="text-end">${credit > 0 ? credit.toFixed(2) : ""}</td>
+            <td class="text-end">${debit > 0 ? formatNumber(debit) : ""}</td>
+            <td class="text-end">${credit > 0 ? formatNumber(credit) : ""}</td>
         `;
             tbody.appendChild(row);
         }

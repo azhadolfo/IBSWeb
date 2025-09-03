@@ -317,9 +317,9 @@
             taxAmount = netOfVat * taxPercentage;
 
             // Update fields with formatted values
-            vatAmountField.value = vatAmount.toFixed(2);
-            taxAmountField.value = taxAmount.toFixed(2);
-            netOfVatField.value = netOfVat.toFixed(2);
+            vatAmountField.value = vatAmount.toFixed(4);
+            taxAmountField.value = taxAmount.toFixed(4);
+            netOfVatField.value = netOfVat.toFixed(4);
 
             // Add to accumulated entries
             const accountTitle = accountField.options[accountField.selectedIndex]?.text || '';
@@ -403,8 +403,8 @@
             <tr><td colspan="3"><hr></td></tr>
             <tr>
                 <td><strong>Totals</strong></td>
-                <td class="text-end"><strong>${totalDebit.toFixed(2)}</strong></td>
-                <td class="text-end"><strong>${totalCredit.toFixed(2)}</strong></td>
+                <td class="text-end"><strong>${formatNumber(totalDebit)}</strong></td>
+                <td class="text-end"><strong>${formatNumber(totalCredit)}</strong></td>
             </tr>
             `);
             
@@ -414,8 +414,8 @@
             tbody.insertAdjacentHTML('beforeend', `
         <tr>
             <td>${account}</td>
-            <td class="text-end">${debit > 0 ? debit.toFixed(2) : ""}</td>
-            <td class="text-end">${credit > 0 ? credit.toFixed(2) : ""}</td>
+            <td class="text-end">${debit > 0 ? formatNumber(debit) : ""}</td>
+            <td class="text-end">${credit > 0 ? formatNumber(credit) : ""}</td>
         </tr>
     `);
         }
@@ -486,8 +486,6 @@
                 width: 'resolve',
                 theme: 'classic'
             });
-            
-            console.log(newRow.querySelector('.chart-of-accounts'));
 
             // Clear the selection of the Chart of Accounts dropdown in the new row using Select2's val method
             $(newRow).find('.chart-of-accounts').val(null).trigger('change');
@@ -582,11 +580,8 @@
         // Form validation
         function validateTotals() {
             const totalAmount = parseFloat(document.querySelector('[name="Total"]').value) || 0;
-            console.log(totalAmount);
             const totalDebit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.debit, 0);
-            console.log(totalDebit);
             const totalCredit = Object.values(accumulatedEntries).reduce((sum, amt) => sum + amt.credit, 0);
-            console.log(totalCredit);
 
             if (totalAmount <= 0) {
                 Swal.fire({

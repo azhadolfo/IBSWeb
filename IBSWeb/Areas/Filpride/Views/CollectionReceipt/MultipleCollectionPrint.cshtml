@@ -309,7 +309,7 @@
     </table>
 </div>
 
-@if (Model.Type == nameof(DocumentType.Documented))
+@if (Model.Type == nameof(DocumentType.Documented) && customerType != nameof(CustomerType.Retail))
 {
     <div class="text-center w-100" style="margin-top:10px;">
         <em class="p-4"><strong>"THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX"</strong><br/></em>

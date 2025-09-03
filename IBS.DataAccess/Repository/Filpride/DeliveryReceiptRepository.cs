@@ -897,7 +897,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .AnyAsync(dr => dr.ManualDrNo == manualDrNo);
         }
 
-        public async Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, CancellationToken cancellationToken = default)
+        public async Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, string userName, CancellationToken cancellationToken = default)
         {
             var deliveryReceipts = await GetAllAsync(x => x.CustomerOrderSlipId == customerOrderSlipId
                                                           && x.VoidedBy == null
@@ -905,27 +905,156 @@ namespace IBS.DataAccess.Repository.Filpride
 
             foreach (var deliveryReceipt in deliveryReceipts)
             {
-                deliveryReceipt.TotalAmount = deliveryReceipt.Quantity * updatedPrice;
+                var updatedAmount = deliveryReceipt.Quantity * updatedPrice;
+                var difference = updatedAmount - deliveryReceipt.TotalAmount;
+                deliveryReceipt.TotalAmount = updatedAmount;
 
                 if (deliveryReceipt.DeliveredDate == null)
                 {
                     continue;
                 }
 
-                await _db.FilprideGeneralLedgerBooks
-                    .Where(x => x.Company == deliveryReceipt.Company
-                                && x.Reference == deliveryReceipt.DeliveryReceiptNo)
-                    .ExecuteDeleteAsync(cancellationToken);
+                await CreateEntriesForUpdatingPrice(deliveryReceipt, difference, userName, cancellationToken);
 
-                var isNibitForThisPeriodLocked = await _db.FilprideMonthlyNibits
-                    .AnyAsync(x => x.Year == deliveryReceipt.Date.Year
-                                   && x.Month == deliveryReceipt.Date.Month, cancellationToken);
+            }
+        }
 
-                if (!isNibitForThisPeriodLocked)
+        private async Task CreateEntriesForUpdatingPrice(FilprideDeliveryReceipt deliveryReceipt, decimal difference, string userName, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+
+                #region General Ledger Book Recording
+
+                var ledgers = new List<FilprideGeneralLedgerBook>();
+                var (salesAcctNo, salesAcctTitle) = GetSalesAccountTitle(deliveryReceipt.CustomerOrderSlip!.Product!.ProductCode);
+                var accountTitlesDto = await GetListOfAccountTitleDto(cancellationToken);
+                var salesTitle = accountTitlesDto.Find(c => c.AccountNumber == salesAcctNo) ?? throw new ArgumentException($"Account title '{salesAcctNo}' not found.");
+                var cashInBankTitle = accountTitlesDto.Find(c => c.AccountNumber == "101010100") ?? throw new ArgumentException("Account title '101010100' not found.");
+                var arTradeTitle = accountTitlesDto.Find(c => c.AccountNumber == "101020100") ?? throw new ArgumentException("Account title '101020100' not found.");
+                var vatOutputTitle = accountTitlesDto.Find(c => c.AccountNumber == "201030100") ?? throw new ArgumentException("Account title '201030100' not found.");
+                var arTradeCwt = accountTitlesDto.Find(c => c.AccountNumber == "101020200") ?? throw new ArgumentException("Account title '101020200' not found.");
+                var arTradeCwv = accountTitlesDto.Find(c => c.AccountNumber == "101020300") ?? throw new ArgumentException("Account title '101020300' not found.");
+
+                var dateToday = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime());
+                var particulars = $"Update Price on DR#{deliveryReceipt.DeliveryReceiptNo}. DR dated {deliveryReceipt.DeliveredDate}";
+                var isIncremental = difference > 0;
+                difference = Math.Abs(difference);
+
+                var netOfVatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    ? ComputeNetOfVat(difference)
+                    : difference;
+                var vatAmount = deliveryReceipt.CustomerOrderSlip.VatType == SD.VatType_Vatable
+                    ? ComputeVatAmount(netOfVatAmount)
+                    : 0m;
+                var arTradeCwtAmount = deliveryReceipt.CustomerOrderSlip.HasEWT ? ComputeEwtAmount(difference, 0.01m) : 0m;
+                var arTradeCwvAmount = deliveryReceipt.CustomerOrderSlip.HasWVAT ? ComputeEwtAmount(difference, 0.05m) : 0m;
+                var netOfEwtAmount = arTradeCwtAmount > 0 || arTradeCwvAmount > 0
+                    ? ComputeNetOfEwt(difference, (arTradeCwtAmount + arTradeCwvAmount))
+                    : difference;
+
+                if (arTradeCwtAmount > 0)
                 {
-                    await PostAsync(deliveryReceipt, cancellationToken);
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = dateToday,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = particulars,
+                        AccountId = arTradeCwt.AccountId,
+                        AccountNo = arTradeCwt.AccountNumber,
+                        AccountTitle = arTradeCwt.AccountName,
+                        Debit = isIncremental ? arTradeCwtAmount : 0,
+                        Credit = !isIncremental ? arTradeCwtAmount : 0,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = userName,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
+                    });
                 }
 
+                if (arTradeCwvAmount > 0)
+                {
+                    ledgers.Add(new FilprideGeneralLedgerBook
+                    {
+                        Date = dateToday,
+                        Reference = deliveryReceipt.DeliveryReceiptNo,
+                        Description = particulars,
+                        AccountId = arTradeCwv.AccountId,
+                        AccountNo = arTradeCwv.AccountNumber,
+                        AccountTitle = arTradeCwv.AccountName,
+                        Debit = isIncremental ? arTradeCwvAmount : 0,
+                        Credit = !isIncremental ? arTradeCwvAmount : 0,
+                        Company = deliveryReceipt.Company,
+                        CreatedBy = userName,
+                        CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                        ModuleType = nameof(ModuleType.Sales)
+                    });
+                }
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountId : arTradeTitle.AccountId,
+                    AccountNo = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountNumber : arTradeTitle.AccountNumber,
+                    AccountTitle = deliveryReceipt.CustomerOrderSlip.Terms == SD.Terms_Cod ? cashInBankTitle.AccountName : arTradeTitle.AccountName,
+                    Debit = isIncremental ? netOfEwtAmount : 0,
+                    Credit = !isIncremental ? netOfEwtAmount : 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    CustomerId = deliveryReceipt.CustomerOrderSlip.Terms != SD.Terms_Cod ? deliveryReceipt.CustomerId : null,
+                    CustomerName = deliveryReceipt.CustomerOrderSlip.CustomerName,
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = salesTitle.AccountId,
+                    AccountNo = salesTitle.AccountNumber,
+                    AccountTitle = salesTitle.AccountName,
+                    Debit = !isIncremental ? netOfVatAmount : 0,
+                    Credit = isIncremental ? netOfVatAmount : 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                ledgers.Add(new FilprideGeneralLedgerBook
+                {
+                    Date = dateToday,
+                    Reference = deliveryReceipt.DeliveryReceiptNo,
+                    Description = particulars,
+                    AccountId = vatOutputTitle.AccountId,
+                    AccountNo = vatOutputTitle.AccountNumber,
+                    AccountTitle = vatOutputTitle.AccountName,
+                    Debit = !isIncremental ? vatAmount : 0,
+                    Credit = isIncremental ? vatAmount : 0,
+                    Company = deliveryReceipt.Company,
+                    CreatedBy = userName,
+                    CreatedDate = DateTimeHelper.GetCurrentPhilippineTime(),
+                    ModuleType = nameof(ModuleType.Sales)
+                });
+
+                if (!IsJournalEntriesBalanced(ledgers))
+                {
+                    throw new ArgumentException("Debit and Credit is not equal, check your entries.");
+                }
+
+                await _db.FilprideGeneralLedgerBooks.AddRangeAsync(ledgers, cancellationToken);
+
+                #endregion General Ledger Book Recording
+
+                await _db.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(ex.Message);
             }
         }
     }

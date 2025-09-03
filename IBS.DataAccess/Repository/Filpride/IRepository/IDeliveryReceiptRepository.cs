@@ -27,6 +27,6 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task<bool> CheckIfManualDrNoExists(string manualDrNo);
 
-        Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, CancellationToken cancellationToken = default);
+        Task RecalculateDeliveryReceipts(int customerOrderSlipId, decimal updatedPrice, string userName, CancellationToken cancellationToken = default);
     }
 }
