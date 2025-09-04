@@ -2415,8 +2415,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
-                .Where(dr => dr.Company == companyClaims && commissioneeId == dr.CommissioneeId && dr.CommissionAmount != 0
-                             && !dr.IsCommissionPaid && dr.PostedBy != null);
+                .Where(dr => companyClaims != null
+                             && dr.Company == companyClaims
+                             && commissioneeId == dr.CommissioneeId
+                             && dr.CommissionAmountPaid == 0
+                             && !dr.IsCommissionPaid
+                             && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2425,8 +2429,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
-                query = query.Union(await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAllAsync(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId), cancellationToken));
+                query = query.Union(_dbContext.FilprideDeliveryReceipts
+                    .Where(dr => commissioneeId == dr.CommissioneeId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
@@ -2470,8 +2474,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var query = _dbContext.FilprideDeliveryReceipts
-                .Where(dr => dr.Company == companyClaims && dr.HaulerId == haulerId && dr.FreightAmount != 0
-                             && !dr.IsFreightPaid && dr.PostedBy != null);
+                .Where(dr => dr.Company == companyClaims
+                             && dr.HaulerId == haulerId
+                             && dr.FreightAmountPaid == 0
+                             && !dr.IsFreightPaid
+                             && dr.PostedBy != null);
 
             if (cvId != null)
             {
@@ -2480,8 +2487,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Select(cvp => cvp.DocumentId)
                     .ToListAsync(cancellationToken);
 
-                query = query.Union(await _unitOfWork.FilprideDeliveryReceipt
-                    .GetAllAsync(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId), cancellationToken));
+                query = query.Union(_dbContext.FilprideDeliveryReceipts
+                    .Where(dr => dr.HaulerId == haulerId && drIds.Contains(dr.DeliveryReceiptId)));
             }
 
             var deliverReceipt = await query
