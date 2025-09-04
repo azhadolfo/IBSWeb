@@ -5,25 +5,6 @@
     ViewData["Title"] = "Check Voucher Non-Trade Payroll Invoice - Create";
 }
 
-<style>
-    .accounting-table-wrapper {
-        overflow: auto;
-    }
-
-    .accounting-table th,
-    .accounting-table td {
-        white-space: nowrap;
-        min-width: 100px;
-    }
-
-    @@media (max-width: 768px) {
-    .accounting-table {
-        width: 100%;
-        min-width: 600px;
-    }
-    }
-</style>
-
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -93,8 +74,8 @@
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
                         Add Entry
                     </button>
-                    <div class="table-responsive accounting-table-wrapper">
-                        <table class="table accounting-table">
+                    <div class="table-responsive">
+                        <table class="table" style="min-width: 800px">
                             <thead>
                             <tr>
                                 <th>Account No.</th>
