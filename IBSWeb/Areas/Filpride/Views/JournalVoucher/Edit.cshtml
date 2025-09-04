@@ -22,7 +22,7 @@
         <form method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input asp-for="JVId" type="hidden"/>
                     <input asp-for="JVNo" type="hidden"/>
@@ -59,11 +59,11 @@
                         <span asp-validation-for="JVReason" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-8 tradeList">
+                <div class="col-12 col-md-8 tradeList">
                     <div class="row pb-3">
 
                         <div class="table-responsive">
-                            <table class="w-100">
+                            <table style="min-width: 600px">
                                 <thead>
                                 <tr style="border: 1px solid black;">
                                     <th colspan="2" style="padding-left:20px;">I. PAYEE DETAILS</th>
@@ -89,17 +89,11 @@
                                     <td>SI # :</td>
                                     <td id="siNo"></td>
                                 </tr>
-                                <tr>
-                                    <td style="padding-left:20px;" class="text-nowrap"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="table-responsive" style="margin-top:20px;">
-                            <table class="w-100">
+                            <table style="min-width: 600px">
                                 <thead>
                                 <tr style="border: 1px solid black;">
                                     <th colspan="4" style="padding-left:20px;">II. CHECK DETAILS</th>
@@ -132,7 +126,7 @@
                         </div>
 
                         <div class="table-responsive" style="margin-top:20px;">
-                            <table class="w-100">
+                            <table style="min-width: 600px;">
                                 <thead>
                                 <tr style="border: 1px solid black;">
                                     <th colspan="4" style="padding-left:20px;">III. ACCOUNTING ENTRIES</th>
@@ -161,13 +155,17 @@
                 </div>
 
                 <br/>
-                <div class="form-group">
-                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
-                        Add Entry
-                    </button>
-                    <table class="table">
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#AddAccEntry">
+                            Add Entry
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group table-responsive">
+                    <table class="table" style="min-width: 600px">
                         <thead>
-                        <tr>
+                        <tr class="text-nowrap">
                             <th class="w-50">Account No.</th>
                             <th class="w-25">
                                 Debit
