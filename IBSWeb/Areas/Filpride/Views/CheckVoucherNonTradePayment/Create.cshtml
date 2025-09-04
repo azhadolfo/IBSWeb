@@ -4,25 +4,6 @@
     ViewData["Title"] = "Check Voucher Non-Trade Payment - Create";
 }
 
-<style>
-    .accounting-table-wrapper {
-        overflow: auto;
-    }
-
-    .accounting-table th,
-    .accounting-table td {
-        white-space: nowrap;
-        min-width: 100px;
-    }
-
-    @@media (max-width: 768px) {
-        .accounting-table {
-            width: 100%;
-            min-width: 600px;
-        }
-    }
-</style>
-
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -122,8 +103,8 @@
                     <label asp-for="Particulars" class="control-label ms-2">Particulars<span class="required">*</span></label>
                     <span asp-validation-for="Particulars" class="text-danger"></span>
                 </div>
-                <div class="form-group accounting-table-wrapper">
-                    <table class="table accounting-table">
+                <div class="form-group table-responsive">
+                    <table class="table" style="min-width: 800px">
                         <thead>
                         <tr>
                             <th>Account No.</th>
