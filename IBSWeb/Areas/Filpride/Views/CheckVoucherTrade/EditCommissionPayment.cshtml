@@ -243,7 +243,7 @@
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
                                             <td class="text-end grossAmount">${formatNumber(dr.netOfEwtAmount)}</td>
-                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}"></td>
+                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" readonly style="${display}" value="${amountPaid}"></td>
                                             <td class="text-end balance">${formatNumber(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
                                         </tr>
                                     `);
