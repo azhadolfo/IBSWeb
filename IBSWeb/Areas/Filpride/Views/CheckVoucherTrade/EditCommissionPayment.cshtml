@@ -56,7 +56,6 @@
                                 <th><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"></th>
                                 <th>DR No's</th>
                                 <th>Payment</th>
-                                <th class="text-end">Amount</th>
                                 <th class="text-end">Amount Paid</th>
                                 <th class="text-end">Balance</th>
                             </tr>
@@ -70,7 +69,7 @@
                 <div class="form-floating mb-3">
                     <input asp-for="OldCVNo" type="text" class="form-control" placeholder="" required/>
                     <span asp-validation-for="OldCVNo" class="text-danger"></span>
-                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #</label><span class="required">*</span>
+                    <label asp-for="OldCVNo" class="control-label mx-2">Old CV #<span class="required">*</span></label>
                 </div>
                 
                 <div class="form-group mb-3">
@@ -234,19 +233,18 @@
                     if (data){
                         data.forEach((dr) => {
                             let balance = parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid);
-                            const drAmount = modelDRs.get(dr.id) || 0;
-                            let amountPaid = parseNumber(dr.amountPaid) - drAmount;
-                            let checkingBalance = parseNumber(dr.netOfEwtAmount) - amountPaid;
                             
                             const isChecked = modelDRs.has(dr.id) ? 'checked' : '';
+                            let display = modelDRs.has(dr.id) ? '' : 'display: none';
+                            let inputAmountClass = modelDRs.has(dr.id) ? 'inputAmount' : '';
+                            const amountPaid = modelDRs.get(dr.id);
                             const tr = $(`
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td><input type="text" class="paymentAmount" style="display: none"></td>
-                                            <td class="text-end">${formatNumber(dr.netOfEwtAmount)}</td>
-                                            <td class="text-end">${formatNumber(dr.amountPaid)}</td>
-                                            <td class="text-end balance">${formatNumber(balance)}</td>
+                                            <td class="text-end grossAmount">${formatNumber(dr.netOfEwtAmount)}</td>
+                                            <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" style="${display}" value="${amountPaid}"></td>
+                                            <td class="text-end balance">${formatNumber(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
@@ -255,6 +253,7 @@
                             totalAmountPaid += parseNumber(dr.amountPaid);
                             totalBalance += balance;
                         });
+                        reindexSelected();
                     }
 
                     // Append Grand Total Rows
@@ -263,17 +262,17 @@
                     <td colspan="7" class="pt-1"></td>
                 </tr>
                 <tr class="sticky-bottom bg-white">
-                    <td colspan="2"></td>
+                    <td ></td>
                     <td class="fw-bold text-end p-2">Grand Total:</td>
-                    <td class="text-end" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
-                    <td class="text-end" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
-                    <td class="text-end" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
+                    <td class="text-end grandTotalGross" id="grandTotalRRAmount">${formatNumber(totalGross)}</td>
+                    <td class="text-end grandTotalAmountPaid" id="grandTotalNetAmount">${formatNumber(totalAmountPaid)}</td>
+                    <td class="text-end grandTotalBalance" id="grandTotalNetOfEWT">${formatNumber(totalBalance)}</td>
                 </tr>
             `);
                     tbody.append(totalRow);
 
                     // Ensure checkbox state is processed AFTER records are loaded
-                    initializeCheckedCheckboxes();
+                    updateAmounts();
                 },
                 error: function (xhr, status, error) {
                     console.error('Error fetching DRs:', error);
@@ -286,104 +285,70 @@
 
         function toggleSelectAll(selectAllCheckbox) {
             const isChecked = selectAllCheckbox.checked;
-            selectedRecords = isChecked ? [] : []; // Reset selected records
 
-            $('.selectCheckbox').each(function () {
-                const checkbox = $(this);
-                const drId = checkbox.val(); // Get checkbox value
-
-                if (isChecked) {
-                    if (!selectedRecords.includes(drId)) {
-                        selectedRecords.push(drId); // Add value
-                    }
-                    checkbox.prop('checked', true);
-                } else {
-                    selectedRecords = []; // Reset when deselecting all
-                    checkbox.prop('checked', false);
+            $(".selectCheckbox").each(function () {
+                if (isChecked && !this.checked) {
+                    // Check unchecked ones only
+                    $(this).prop("checked", true).trigger("change");
+                } else if (!isChecked && this.checked) {
+                    // Uncheck checked ones only
+                    $(this).prop("checked", false).trigger("change");
                 }
-
-                handleCheckboxChange(checkbox);
             });
 
             allRecordsSelected = isChecked;
         }
 
-        // Event listener to show/hide input field on checkbox toggle
-        $(document).ready(function () {
-            checkBox();
-            initializeCheckedCheckboxes(); // Call this on page load
-        });
+        $(document).on('change', '.selectCheckbox', function () {
+            const row = $(this).closest('tr');
+            const inputField = row.find('.paymentAmount');
+            const balance = parseNumber(row.find('.balance').text().trim());
+            const grossAmount = parseNumber(row.find('.grossAmount').text());
 
-        function checkBox() {
-            $(document).on('change', '.selectCheckbox', function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function initializeCheckedCheckboxes() {
-            $('.selectCheckbox:checked').each(function () {
-                handleCheckboxChange($(this));
-            });
-        }
-
-        function handleCheckboxChange(checkboxElement) {
-            const $checkbox = $(checkboxElement);
-            const $row = $checkbox.closest('tr');
-            const $inputField = $row.find('.paymentAmount');
-            const drId = $checkbox.val(); // Get checkbox value
-            const $balanceField = $row.find('.balance').text();
-
-            if ($checkbox.is(':checked')) {
-                if (!selectedRecords.includes(drId)) {
-                    selectedRecords.push(drId); // Add value
+            if (this.checked) {
+                if (!selectedRecords.includes(this.value)) {
+                    selectedRecords.push(this.value); // ✅ push instead of add
                 }
+                inputField.val(balance).addClass("inputAmount").show();
+                row.find('.balance').text(formatNumber(grossAmount - balance));
             } else {
-                selectedRecords = selectedRecords.filter(id => id !== drId); // Remove value
+                selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
+                inputField.removeAttr("name").hide().val('');
+                row.find('.selectCheckbox').removeAttr("name");
+                row.find('.balance').text(formatNumber(grossAmount));
             }
 
-            // Recalculate and update name attributes
-            selectedRecords.forEach((id, index) => {
-                const $checkboxRow = $(`.selectCheckbox[value="${id}"]`).closest('tr');
-                $checkboxRow.find('.selectCheckbox').attr("name", `DRs[${index}].Id`);
-                $checkboxRow.find('.paymentAmount').attr("name", `DRs[${index}].Amount`);
-            });
-
-            // Retrieve and apply the correct amount
-            const amountPaid = @Html.Raw(Json.Serialize(Model.DRs.ToDictionary(dr => dr.Id, dr => dr.Amount)));
-
-            if ($checkbox.is(':checked')) {
-                const amount = amountPaid[drId]; // Get amount by ID, fallback to '';
-                if (amount === undefined){
-                    $inputField.val(parseNumber($balanceField)).addClass("inputAmount").show();
-                }else{
-                    $inputField.val(amount).addClass("inputAmount").show();
-                }
-            } else {
-                $inputField.removeAttr("name").hide().val('');
-            }
-
+            reindexSelected();
             updateAmounts();
-        }
-
-        // "Select All" using event delegation
-        $(document).on('change', '#selectAllCheckbox', function () {
-            toggleSelectAll(this);
         });
+
+        function reindexSelected() {
+            $(".selectCheckbox:checked").each(function (i) {
+                const row = $(this).closest('tr');
+                const inputField = row.find('.paymentAmount');
+
+                $(this).attr("name", `DRs[${i}].Id`);
+                inputField.attr("name", `DRs[${i}].Amount`);
+            });
+        }
 
         $(document).on('input', '.inputAmount', function () {
             updateAmounts();
         });
 
         function updateAmounts() {
-            var amountInputs = document.querySelectorAll('.inputAmount');
-            var totalNetOfEWT = 0;
+            let amountInputs = document.querySelectorAll('.inputAmount');
+            let totalNetOfEWT = 0;
             amountInputs.forEach(function (input) {
-                var rawValue = input.value;
-                var drAmount = parseNumber(rawValue);
+                let rawValue = input.value;
+                let drAmount = parseNumber(rawValue);
                 
                 totalNetOfEWT += drAmount;
             });
             $(".totalNetOfEWT").val(formatNumber(totalNetOfEWT));
+            $(".grandTotalAmountPaid").text(formatNumber(totalNetOfEWT));
+            let grandTotalGross = parseNumber($(".grandTotalGross").text());
+            $(".grandTotalBalance").text(formatNumber(Math.abs(grandTotalGross - totalNetOfEWT)));
             updateTotalDebitAndCredit();
             validateDebitAndCredit();
         }
