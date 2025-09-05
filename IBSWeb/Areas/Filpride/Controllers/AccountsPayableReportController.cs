@@ -2797,10 +2797,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 using var package = new ExcelPackage();
                 var gmReportWorksheet = package.Workbook.Worksheets.Add("GMReport");
 
-                var purchaseReport = await _unitOfWork.FilprideReport
-                    .GetGrossMarginReport(model.DateFrom, model.DateTo, companyClaims, model.Customers, model.Commissionee, cancellationToken:cancellationToken);
+                var grossMarginReport = await _unitOfWork.FilprideReport
+                    .GetGrossMarginReport(model.DateFrom, model.DateTo, companyClaims,  cancellationToken:cancellationToken);
 
-                if (purchaseReport.Count == 0)
+                if (grossMarginReport.Count == 0)
                 {
                     TempData["info"] = "No Record Found";
                     return RedirectToAction(nameof(GrossMarginReport));
@@ -2808,7 +2808,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Initialize "total" Variables for operations --
 
-                var totalVolume = purchaseReport.Sum(pr => pr.Quantity);
+                var totalVolume = grossMarginReport.Sum(pr => pr.Quantity);
                 var totalCostAmount = 0m;
                 var totalNetPurchases = 0m;
                 var totalSalesAmount = 0m;
@@ -2891,34 +2891,35 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region -- Populate data rows --
 
-                foreach (var pr in purchaseReport)
+                foreach (var dr in grossMarginReport)
                 {
                     #region -- Variables and Formulas --
 
                     // calculate values, put in variables to be displayed per cell
-                    var isSupplierVatable = pr.PurchaseOrder!.VatType == SD.VatType_Vatable;
-                    var isHaulerVatable = pr.HaulerVatType == SD.VatType_Vatable;
-                    var isCustomerVatable = pr.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
-                    var volume = pr.Quantity;
-                    var cosPricePerLiter = pr.CustomerOrderSlip?.DeliveredPrice ?? 0m; // sales per liter
-                    var salesAmount = volume * cosPricePerLiter; // sales total
+                    var isSupplierVatable = dr.PurchaseOrder!.VatType == SD.VatType_Vatable;
+                    var isHaulerVatable = dr.HaulerVatType == SD.VatType_Vatable;
+                    var isCustomerVatable = dr.CustomerOrderSlip!.VatType == SD.VatType_Vatable;
+
+                    var volume = dr.Quantity;
+                    var cosPricePerLiter = dr.CustomerOrderSlip.DeliveredPrice; // sales per liter
+                    var salesAmount = dr.TotalAmount; // sales total
                     var netSales = isCustomerVatable
                         ? repoCalculator.ComputeNetOfVat(salesAmount)
                         : salesAmount;
-                    var costAmount = pr.TotalAmount; // purchase total
+                    var costAmount = dr.PurchaseOrder.FinalPrice * volume; // purchase total
                     var costPerLiter = costAmount / volume; // purchase per liter
                     var netPurchases = isSupplierVatable
                         ? repoCalculator.ComputeNetOfVat(costAmount)
                         : costAmount; // purchase total net
                     var gmAmount = netSales - netPurchases; // gross margin total
-                    var gmPerLiter = gmAmount/volume; // gross margin per liter
-                    var freightCharge = (pr?.Freight ?? 0m) + (pr?.ECC ?? 0m); // freight charge per liter
-                    var freightChargeAmount = pr?.FreightAmount ?? 0m; // freight charge total
+                    var gmPerLiter = gmAmount / volume; // gross margin per liter
+                    var freightCharge = dr.Freight + dr.ECC; // freight charge per liter
+                    var freightChargeAmount = dr.FreightAmount; // freight charge total
                     var freightChargeNet = isHaulerVatable && freightChargeAmount != 0m
                         ? repoCalculator.ComputeNetOfVat(freightChargeAmount)
                         : freightChargeAmount;
-                    var commissionPerLiter = pr?.CustomerOrderSlip?.CommissionRate ?? 0m; // commission rate
-                    var commissionAmount = volume * commissionPerLiter; // commission total
+                    var commissionPerLiter = dr.CommissionRate; // commission rate
+                    var commissionAmount = dr.CommissionAmount; // commission total
                     var netMarginAmount = gmAmount - freightChargeNet - commissionAmount;
                     var netMarginPerLiter = netMarginAmount / volume; // net margin per liter
 
@@ -2926,22 +2927,25 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Assign Values to Cells --
 
-                    if (pr != null)
+                    var rrNo = "";
+
+                    if (dr.HasReceivingReport)
                     {
-                        var getReceivingReport =
-                            await _unitOfWork.FilprideReceivingReport.GetAsync(x =>
-                                x.DeliveryReceiptId == pr.DeliveryReceiptId, cancellationToken);
-                        gmReportWorksheet.Cells[row, 1].Value = pr.Date;
-                        gmReportWorksheet.Cells[row, 2].Value = pr.PurchaseOrder?.SupplierName;
-                        gmReportWorksheet.Cells[row, 3].Value = pr.PurchaseOrder?.PurchaseOrderNo;
-                        gmReportWorksheet.Cells[row, 4].Value = getReceivingReport?.ReceivingReportNo;
-                        gmReportWorksheet.Cells[row, 5].Value = pr.DeliveryReceiptNo;
-                        gmReportWorksheet.Cells[row, 6].Value = pr.CustomerOrderSlip?.CustomerName;
-                        gmReportWorksheet.Cells[row, 7].Value = pr.PurchaseOrder?.ProductName;
-                        gmReportWorksheet.Cells[row, 8].Value = pr.CustomerOrderSlip?.AccountSpecialist;
-                        gmReportWorksheet.Cells[row, 9].Value = pr.HaulerName;
-                        gmReportWorksheet.Cells[row, 10].Value = pr.CustomerOrderSlip?.CommissioneeName;
+                        rrNo = _unitOfWork.FilprideReceivingReport.GetAsync(x =>
+                            x.DeliveryReceiptId == dr.DeliveryReceiptId, cancellationToken)
+                            .Result?.ReceivingReportNo;
                     }
+
+                    gmReportWorksheet.Cells[row, 1].Value = dr.DeliveredDate;
+                    gmReportWorksheet.Cells[row, 2].Value = dr.PurchaseOrder.SupplierName;
+                    gmReportWorksheet.Cells[row, 3].Value = dr.PurchaseOrder.PurchaseOrderNo;
+                    gmReportWorksheet.Cells[row, 4].Value = rrNo;
+                    gmReportWorksheet.Cells[row, 5].Value = dr.DeliveryReceiptNo;
+                    gmReportWorksheet.Cells[row, 6].Value = dr.CustomerOrderSlip.CustomerName;
+                    gmReportWorksheet.Cells[row, 7].Value = dr.PurchaseOrder.ProductName;
+                    gmReportWorksheet.Cells[row, 8].Value = dr.CustomerOrderSlip.AccountSpecialist;
+                    gmReportWorksheet.Cells[row, 9].Value = dr.HaulerName;
+                    gmReportWorksheet.Cells[row, 10].Value = dr.CustomerOrderSlip.CommissioneeName;
                     gmReportWorksheet.Cells[row, 11].Value = volume;
                     gmReportWorksheet.Cells[row, 12].Value = cosPricePerLiter;
                     gmReportWorksheet.Cells[row, 13].Value = salesAmount;
@@ -3280,7 +3284,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 foreach (var customerType in Enum.GetValues<CustomerType>())
                 {
-                    var list = purchaseReport.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
+                    var list = grossMarginReport.Where(s => s.Customer?.CustomerType == customerType.ToString()).ToList();
                     var listForBiodiesel = list.Where(s => s.CustomerOrderSlip!.Product?.ProductName == "BIODIESEL").ToList();
                     var listForEconogas = list.Where(s => s.CustomerOrderSlip!.Product?.ProductName == "ECONOGAS").ToList();
                     var listForEnvirogas = list.Where(s => s.CustomerOrderSlip!.Product?.ProductName == "ENVIROGAS").ToList();
