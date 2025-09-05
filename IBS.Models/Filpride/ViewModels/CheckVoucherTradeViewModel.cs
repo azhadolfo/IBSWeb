@@ -78,6 +78,8 @@ namespace IBS.Models.Filpride.ViewModels
         public List<ReceivingReportList> RRs { get; set; }
 
         public string? AdvancesCVNo { get; set; }
+
+        public string? Type { get; set; }
     }
 
     public class ReceivingReportList

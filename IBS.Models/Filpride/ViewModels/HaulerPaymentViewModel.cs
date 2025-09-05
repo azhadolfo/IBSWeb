@@ -67,5 +67,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<DRDetailsViewModel> DRs { get; set; }
 
         public string? OldCVNo { get; set; }
+
+        public string? Type { get; set; }
     }
 }

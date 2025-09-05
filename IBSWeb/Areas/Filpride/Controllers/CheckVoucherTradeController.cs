@@ -271,7 +271,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region --Saving the default entries
 
-                var generateCvNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, getPurchaseOrder.Type!, cancellationToken);
+                var generateCvNo = await _unitOfWork.FilprideCheckVoucher.GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken);
                 var cashInBank = viewModel.Credit[1];
 
                 #region -- Get Supplier
@@ -300,6 +300,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 var cvh = new FilprideCheckVoucherHeader
                 {
+                    Type = viewModel.Type!,
                     CheckVoucherHeaderNo = generateCvNo,
                     Date = viewModel.TransactionDate,
                     PONo = viewModel.POSeries,
@@ -317,7 +318,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = cashInBank,
                     CreatedBy = _userManager.GetUserName(this.User),
                     Company = companyClaims,
-                    Type = getPurchaseOrder.Type,
                     CvType = "Supplier",
                     Address = supplier.SupplierAddress,
                     Tin = supplier.SupplierTin,
@@ -2011,7 +2011,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Saving the default entries
 
                 var generateCvNo = await _unitOfWork.FilprideCheckVoucher
-                    .GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder!.Type!, cancellationToken);
+                    .GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken);
                 var cashInBank = viewModel.Credit[1];
 
                 #region -- Get Supplier
@@ -2052,7 +2052,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Total = cashInBank,
                     CreatedBy = _userManager.GetUserName(this.User),
                     Company = companyClaims,
-                    Type = getDeliveryReceipt.Type,
+                    Type = viewModel.Type,
                     CvType = "Commission",
                     SupplierName = supplier.SupplierName,
                     Address = supplier.SupplierAddress,
@@ -2262,7 +2262,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region --Saving the default entries
 
                 var generateCvNo = await _unitOfWork.FilprideCheckVoucher
-                    .GenerateCodeAsync(companyClaims, getDeliveryReceipt.PurchaseOrder!.Type!, cancellationToken);
+                    .GenerateCodeAsync(companyClaims, viewModel.Type!, cancellationToken);
                 var cashInBank = viewModel.Credit[1];
 
                 #region -- Get Supplier
@@ -2308,7 +2308,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     SupplierName = supplier.SupplierName,
                     Address = viewModel.SupplierAddress,
                     Tin = viewModel.SupplierTinNo,
-                    Type = getDeliveryReceipt.Type,
+                    Type = viewModel.Type,
                     BankAccountName = bank.AccountName,
                     BankAccountNumber = bank.AccountNo,
                     OldCvNo = viewModel.OldCVNo,
