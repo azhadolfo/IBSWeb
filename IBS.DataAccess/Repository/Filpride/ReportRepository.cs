@@ -457,6 +457,41 @@ namespace IBS.DataAccess.Repository.Filpride
             return receivingReports.OrderBy(rr => rr.Date).ToList();
         }
 
+        public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(DateOnly dateFrom,
+            DateOnly dateTo,
+            string company,
+            CancellationToken cancellationToken = default)
+        {
+            if (dateFrom > dateTo)
+            {
+                throw new ArgumentException("Date From must be greater than Date To !");
+            }
+
+            // Base query without date filter yet
+            var deliveryReceiptsQuery = _db.FilprideDeliveryReceipts
+                .Where(x => x.Company == company
+                            && x.DeliveredDate >= dateFrom && x.DeliveredDate <= dateTo
+                            && x.Status != nameof(Status.Canceled)
+                            && x.Status != nameof(Status.Voided));
+
+            // Include necessary related entities
+            var deliveryReceipts = await deliveryReceiptsQuery
+                .Include(x => x.PurchaseOrder)
+                    .ThenInclude(x => x!.Supplier)
+                .Include(x => x.PurchaseOrder)
+                    .ThenInclude(x => x!.Product)
+                .Include(x => x.CustomerOrderSlip)
+                        .ThenInclude(x => x!.PickUpPoint)
+                .Include(x => x.CustomerOrderSlip)
+                        .ThenInclude(x => x!.Commissionee)
+                .Include(x => x.Customer)
+                .Include(x => x.Hauler)
+                .ToListAsync(cancellationToken);
+
+            return deliveryReceipts.OrderBy(x => x.DeliveredDate)
+                .ThenBy(x => x.DeliveryReceiptNo).ToList();
+        }
+
         public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
