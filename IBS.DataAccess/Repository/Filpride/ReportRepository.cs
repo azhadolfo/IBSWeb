@@ -460,8 +460,6 @@ namespace IBS.DataAccess.Repository.Filpride
         public async Task<List<FilprideDeliveryReceipt>> GetGrossMarginReport(DateOnly dateFrom,
             DateOnly dateTo,
             string company,
-            List<int>? customerIds = null,
-            List<int>? commissioneeIds = null,
             CancellationToken cancellationToken = default)
         {
             if (dateFrom > dateTo)
@@ -474,9 +472,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Where(x => x.Company == company
                             && x.DeliveredDate >= dateFrom && x.DeliveredDate <= dateTo
                             && x.Status != nameof(Status.Canceled)
-                            && x.Status != nameof(Status.Voided)
-                            && (customerIds == null || customerIds.Contains(x.CustomerId))
-                            && (commissioneeIds == null || commissioneeIds.Contains(x.CommissioneeId!.Value)));
+                            && x.Status != nameof(Status.Voided));
 
             // Include necessary related entities
             var deliveryReceipts = await deliveryReceiptsQuery
@@ -484,15 +480,16 @@ namespace IBS.DataAccess.Repository.Filpride
                     .ThenInclude(x => x!.Supplier)
                 .Include(x => x.PurchaseOrder)
                     .ThenInclude(x => x!.Product)
-                    .Include(x => x.CustomerOrderSlip)
+                .Include(x => x.CustomerOrderSlip)
                         .ThenInclude(x => x!.PickUpPoint)
-                    .Include(x => x.CustomerOrderSlip)
+                .Include(x => x.CustomerOrderSlip)
                         .ThenInclude(x => x!.Commissionee)
-                    .Include(x => x.Customer)
-                    .Include(x => x.Hauler)
+                .Include(x => x.Customer)
+                .Include(x => x.Hauler)
                 .ToListAsync(cancellationToken);
 
-            return deliveryReceipts.OrderBy(x => x.Date).ToList();
+            return deliveryReceipts.OrderBy(x => x.DeliveredDate)
+                .ThenBy(x => x.DeliveryReceiptNo).ToList();
         }
 
         public async Task<List<FilprideCollectionReceipt>> GetCollectionReceiptReport(DateOnly dateFrom, DateOnly dateTo, string company, CancellationToken cancellationToken = default)
