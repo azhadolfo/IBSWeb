@@ -1208,36 +1208,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Unpost(int id, CancellationToken cancellationToken)
         {
-            var cvHeader = await _dbContext.FilprideCheckVoucherHeaders
-                .Include(cv => cv.Details)
-                .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-            if (cvHeader == null)
-            {
-                throw new NullReferenceException("CV Header not found.");
-            }
-
-            var userName = _userManager.GetUserName(this.User);
-            if (userName == null)
-            {
-                throw new NullReferenceException("User not found.");
-            }
-
-            var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
-
-            if (isPeriodClosed)
-            {
-                throw new ArgumentException("Period closed, CV cannot be unposted.");
-            }
-
-            if (cvHeader.Details!.Any(x => x.AmountPaid != 0) || cvHeader.AmountPaid != 0m)
-            {
-                throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
-            }
-
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
+                var cvHeader = await _dbContext.FilprideCheckVoucherHeaders
+                    .Include(cv => cv.Details)
+                    .FirstOrDefaultAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+                if (cvHeader == null)
+                {
+                    throw new NullReferenceException("CV Header not found.");
+                }
+
+                var userName = _userManager.GetUserName(this.User);
+                if (userName == null)
+                {
+                    throw new NullReferenceException("User not found.");
+                }
+
+                var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
+
+                if (isPeriodClosed)
+                {
+                    throw new ArgumentException("Period closed, CV cannot be unposted.");
+                }
+
+                if (cvHeader.Details!.Any(x => x.AmountPaid != 0) || cvHeader.AmountPaid != 0m)
+                {
+                    throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
+                }
+
                 cvHeader.Status = nameof(CheckVoucherInvoiceStatus.ForPosting);
                 cvHeader.PostedBy = null;
                 cvHeader.PostedDate = null;

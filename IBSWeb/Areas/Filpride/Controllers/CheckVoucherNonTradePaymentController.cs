@@ -366,38 +366,26 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Status = nameof(CheckVoucherPaymentStatus.Canceled);
                 existingHeaderModel.CancellationRemarks = cancellationRemarks;
 
-                var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
-                                                                        && existingHeaderModel.SupplierId != 133); //BIR
-
                 var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                     .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
                     .Include(cvp => cvp.CheckVoucherHeaderInvoice)
                     .Include(cvp => cvp.CheckVoucherHeaderPayment)
                     .ToListAsync(cancellationToken);
 
-                if (isForTheBir)
+                foreach (var cv in getCVs)
                 {
-                    foreach (var cv in getCVs)
-                    {
-                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
-                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
-                                        d.SupplierId == existingHeaderModel.SupplierId)
-                            .ToListAsync(cancellationToken);
+                    var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                    d.SupplierId == existingHeaderModel.SupplierId)
+                        .ToListAsync(cancellationToken);
 
-                        foreach (var existingDetail in existingDetails)
-                        {
-                            existingDetail.AmountPaid = 0;
-                        }
-
-                    }
-                }
-                else
-                {
-                    foreach (var cv in getCVs)
+                    foreach (var existingDetail in existingDetails)
                     {
-                        cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                        existingDetail.AmountPaid = 0;
                     }
+
+                    cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
+                    cv.CheckVoucherHeaderInvoice.IsPaid = false;
                 }
 
                 #region --Audit Trail Recording
@@ -439,39 +427,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var isForTheBir = existingHeaderModel.Details!.Any(x => x.SupplierId == 133
-                                                                        && existingHeaderModel.SupplierId != 133); //BIR
-
                 var getCVs = await _dbContext.FilprideMultipleCheckVoucherPayments
                     .Where(cvp => cvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
                     .Include(cvp => cvp.CheckVoucherHeaderInvoice)
                     .Include(cvp => cvp.CheckVoucherHeaderPayment)
                     .ToListAsync(cancellationToken);
 
-                if (isForTheBir)
+                foreach (var cv in getCVs)
                 {
-                    foreach (var cv in getCVs)
-                    {
-                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
-                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
-                                        d.SupplierId == existingHeaderModel.SupplierId)
-                            .ToListAsync(cancellationToken);
+                    var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                    d.SupplierId == existingHeaderModel.SupplierId)
+                        .ToListAsync(cancellationToken);
 
-                        foreach (var existingDetail in existingDetails)
-                        {
-                            existingDetail.AmountPaid = 0;
-                        }
-
-                    }
-                }
-                else
-                {
-                    foreach (var cv in getCVs)
+                    foreach (var existingDetail in existingDetails)
                     {
-                        cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
-                        cv.CheckVoucherHeaderInvoice.IsPaid = false;
-                        cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+                        existingDetail.AmountPaid = 0;
                     }
+
+                    cv.CheckVoucherHeaderInvoice!.AmountPaid -= cv.AmountPaid;
+                    cv.CheckVoucherHeaderInvoice.IsPaid = false;
+                    cv.CheckVoucherHeaderInvoice.Status = nameof(CheckVoucherInvoiceStatus.ForPayment);
+
                 }
 
                 existingHeaderModel.PostedBy = null;
@@ -696,22 +673,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .Include(cvp => cvp.CheckVoucherHeaderPayment)
                     .ToListAsync(cancellationToken);
 
-                if (existingHeaderModel.Details!.Any(x => x.SupplierId == 133
-                                                 && existingHeaderModel.SupplierId != 133))//BIR
+                foreach (var cv in getCVs)
                 {
-                    foreach (var cv in getCVs)
+                    var existingDetails = await _dbContext.FilprideCheckVoucherDetails
+                        .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
+                                    d.SupplierId == existingHeaderModel.SupplierId)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var existingDetail in existingDetails)
                     {
-                        var existingDetails = await _dbContext.FilprideCheckVoucherDetails
-                            .Where(d => d.CheckVoucherHeaderId == cv.CheckVoucherHeaderInvoiceId &&
-                                        d.SupplierId == existingHeaderModel.SupplierId)
-                            .ToListAsync(cancellationToken);
-
-                        foreach (var existingDetail in existingDetails)
-                        {
-                            existingDetail.AmountPaid = 0;
-                        }
-
+                        existingDetail.AmountPaid = 0;
                     }
+
                 }
 
                 var invoicingVoucher = (await _unitOfWork.FilprideCheckVoucher
@@ -826,7 +799,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 #region--Update invoicing voucher
 
                 var updateMultipleInvoicingVoucher = await _dbContext.FilprideMultipleCheckVoucherPayments
-                    .Where(mcvp => viewModel.MultipleCvId!.Contains(mcvp.CheckVoucherHeaderInvoiceId) && mcvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Where(mcvp => viewModel.MultipleCvId!.Contains(mcvp.CheckVoucherHeaderInvoiceId)
+                                   && mcvp.CheckVoucherHeaderPaymentId == existingHeaderModel.CheckVoucherHeaderId)
                     .Include(mcvp => mcvp.CheckVoucherHeaderInvoice)
                     .ToListAsync(cancellationToken);
 
