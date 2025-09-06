@@ -396,8 +396,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var grandTotalPurchasesAmt = 0m;
                 var grandTotalSalesQty = 0m;
                 var grandTotalSalesAmt = 0m;
-                var grandTotalInventoryBalance = 0m;
-                var grandTotalTotalBalance = 0m;
 
                 // Loop through inventory groups
                 foreach (var group in inventories)
@@ -537,9 +535,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 8], subTotalSalesQty != 0 ? subTotalSalesQty : 0, currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 9], subTotalSalesQty != 0 ? (subTotalSalesAmt / subTotalSalesQty) : 0, currencyFourDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 10], subTotalSalesAmt != 0 ? subTotalSalesAmt : 0, currencyTwoDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 11], subTotalInventoryBalance != 0 ? subTotalInventoryBalance : 0, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 11], (subTotalPurchasesQty-subTotalSalesQty), currencyTwoDecimalFormat);
                     ApplySubtotalStyle(worksheet.Cells[currentRow, 12], subTotalInventoryBalance != 0 ? (subTotalTotalBalance / subTotalInventoryBalance) : 0, currencyFourDecimalFormat);
-                    ApplySubtotalStyle(worksheet.Cells[currentRow, 13], subTotalTotalBalance != 0 ? subTotalTotalBalance : 0, currencyTwoDecimalFormat);
+                    ApplySubtotalStyle(worksheet.Cells[currentRow, 13], (subTotalPurchasesAmt-subTotalSalesAmt), currencyTwoDecimalFormat);
 
                     // Apply borders to subtotal row
                     for (int i = 1; i <= 13; i++)
@@ -548,8 +546,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
 
                     // Update grand totals
-                    grandTotalInventoryBalance += subTotalInventoryBalance; // Qty
-                    grandTotalTotalBalance += subTotalTotalBalance;         // Amt
                     grandTotalPurchasesAmt += subTotalPurchasesAmt;
                     grandTotalPurchasesQty += subTotalPurchasesQty;
                     grandTotalSalesAmt += subTotalSalesAmt;
@@ -559,6 +555,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 // Calculate averages
+                var grandTotalInventoryBalance = grandTotalPurchasesQty != 0 && grandTotalSalesQty != 0
+                    ? grandTotalPurchasesQty-grandTotalSalesQty : 0m;
+                var grandTotalTotalBalance = grandTotalPurchasesAmt != 0 && grandTotalSalesAmt != 0
+                    ? grandTotalPurchasesAmt-grandTotalSalesAmt : 0m;
                 var grandTotalAverageCost = grandTotalInventoryBalance != 0 && grandTotalTotalBalance != 0
                     ? grandTotalTotalBalance / grandTotalInventoryBalance : 0m;
                 var grandTotalPurchasesAverageCost = grandTotalPurchasesQty != 0 && grandTotalPurchasesAmt != 0
