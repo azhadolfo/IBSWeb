@@ -146,7 +146,7 @@ Balance:        <span id="balance"></span>
                     <td></td>
                     <td></td>
                     <td style="padding-left:20px; padding-top: 5px; padding-bottom: 5px;">TOTAL: </td>
-                    <td id="checkTotal" style="padding-left:20px; padding-top: 5px; padding-bottom: 5px;"></td>
+                    <td id="checkTotal" style="padding-left:15px; padding-top: 5px; padding-bottom: 5px;"></td>
                 </tr>
                 </tbody>
             </table>
@@ -401,7 +401,6 @@ Balance:        <span id="balance"></span>
                 let balanceValue = parseFloat($("#balance").text().replace(/,/g, "")) || 0;
                 let checkTotal = parseFloat($("#checkTotal").text().replace(/,/g, "")) || 0;
                 event.preventDefault();
-                console.log("checks if exceed");
                 const form = document.getElementById("myForm");
 
                 if (!form.checkValidity()) {
