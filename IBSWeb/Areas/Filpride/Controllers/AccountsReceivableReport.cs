@@ -4796,12 +4796,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["A3"].Value = "Extracted By:";
                 worksheet.Cells["A4"].Value = "Company:";
 
-                worksheet.Cells["B2"].Value = $"{DateTimeHelper.GetCurrentPhilippineTimeFormatted()}";
+                worksheet.Cells["B2"].Value = $"{DateTimeHelper.GetCurrentPhilippineTime():MMM/dd/yyyy hh:mm tt}";
                 worksheet.Cells["B3"].Value = $"{extractedBy}";
                 worksheet.Cells["B4"].Value = $"{companyClaims}";
 
                 int row = 6;
                 string currencyTwoDecimalFormat = "#,##0.00_);[Red](#,##0.00)";
+                string currencyFourDecimalFormat = "#,##0.0000_);[Red](#,##0.0000)";
 
                 worksheet.Cells[row, 1].Value = "Transaction Date";
                 worksheet.Cells[row, 2].Value = "Sales Invoice No";
@@ -4860,7 +4861,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var withHoldingTaxAmount = item.Customer!.WithHoldingTax ? _unitOfWork.FilprideSalesInvoice.ComputeEwtAmount(netOfVatAmount, 0.01m) : 0;
                     var withHoldingVatAmount = item.Customer.WithHoldingVat ? _unitOfWork.FilprideSalesInvoice.ComputeEwtAmount(netOfVatAmount, 0.05m) : 0;
 
-                    worksheet.Cells[row, 1].Value = item.TransactionDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 1].Value = item.TransactionDate.ToString("MMM/dd/yyyy");
                     worksheet.Cells[row, 2].Value = item.SalesInvoiceNo;
                     worksheet.Cells[row, 3].Value = item.Customer?.CustomerTin;
                     worksheet.Cells[row, 4].Value = item.Customer?.CustomerAddress;
@@ -4878,13 +4879,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 16].Value = item.Discount;
                     worksheet.Cells[row, 17].Value = item.AmountPaid;
                     worksheet.Cells[row, 18].Value = item.Balance;
-                    worksheet.Cells[row, 19].Value = item.DueDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[row, 19].Value = item.DueDate.ToString("MMM/dd/yyyy");
                     worksheet.Cells[row, 20].Value = item.CreatedBy;
-                    worksheet.Cells[row, 21].Value = item.CreatedDate.ToString("yyyy-MM-dd hh:mm:ss.ffffff");
+                    worksheet.Cells[row, 21].Value = item.CreatedDate.ToString("MMM/dd/yyyy hh:mm:ss tt");
                     worksheet.Cells[row, 22].Value = item.CancellationRemarks;
 
                     worksheet.Cells[row, 7].Style.Numberformat.Format = currencyTwoDecimalFormat;
-                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                    worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFourDecimalFormat;
                     worksheet.Cells[row, 9].Style.Numberformat.Format = currencyTwoDecimalFormat;
                     worksheet.Cells[row, 10].Style.Numberformat.Format = currencyTwoDecimalFormat;
                     worksheet.Cells[row, 11].Style.Numberformat.Format = currencyTwoDecimalFormat;
@@ -4920,7 +4921,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 18].Value = balanceTotal;
 
                 worksheet.Cells[row, 7].Style.Numberformat.Format = currencyTwoDecimalFormat;
-                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyTwoDecimalFormat;
+                worksheet.Cells[row, 8].Style.Numberformat.Format = currencyFourDecimalFormat;
                 worksheet.Cells[row, 9].Style.Numberformat.Format = currencyTwoDecimalFormat;
                 worksheet.Cells[row, 10].Style.Numberformat.Format = currencyTwoDecimalFormat;
                 worksheet.Cells[row, 11].Style.Numberformat.Format = currencyTwoDecimalFormat;
