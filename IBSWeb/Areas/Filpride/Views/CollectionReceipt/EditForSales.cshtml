@@ -4,6 +4,19 @@
     ViewData["Title"] = "Collection Receipt for Sales Invoice - Edit";
 }
 
+<style>
+    .table-bordered tbody tr:last-child,
+    .table-bordered tbody tr:last-child td {
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
+    }
+    .table-bordered tbody tr:last-child,
+    .table-bordered tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+</style>
+
 <link rel="stylesheet" href="~/css/form-style.css">
 
 <div class="loader-container">
@@ -32,7 +45,7 @@ Amount Paid:    <span id="amountPaid"></span>
 Balance:        <span id="balance"></span>
            </pre>
         </div>
-        <form method="post" enctype="multipart/form-data">
+        <form id="myForm" method="post" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
             <div class="col-md-4">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -126,6 +139,14 @@ Balance:        <span id="balance"></span>
                         <td><input style="border:none" class="form-control" disabled /></td>
                         <td><input asp-for="WVAT" style="border:none" class="form-control moneyInput" /></td>
                     </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="padding-left:20px; padding-top: 5px; padding-bottom: 5px;">TOTAL: </td>
+                        <td id="checkTotal" style="padding-left:15px; padding-top: 5px; padding-bottom: 5px;"></td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -179,7 +200,7 @@ Balance:        <span id="balance"></span>
             <br />
             <div class="row pt-2">
                 <div class="col-6 col-md-3">
-                    <button type="submit" class="btn btn-primary form-control">Update</button>
+                    <button type="submit" id="submitButton" class="btn btn-primary form-control">Update</button>
                 </div>
                 <div class="col-6 col-md-3">
                     <a asp-area="Filpride" asp-controller="CollectionReceipt" asp-action="Index" class="btn btn-outline-primary border  form-control ">Back to List</a>
@@ -354,5 +375,56 @@ Balance:        <span id="balance"></span>
         $('#AccountTitle').select2({
             dropdownParent: $('#AddAccEntry')
         });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $("#submitButton").on("click", checkIfExceed);
+            let inputs = document.querySelectorAll(".moneyInput");
+            let totalCell = document.getElementById("checkTotal");
+
+            function updateTotal() {
+                let total = 0;
+                inputs.forEach(input => {
+                    const value = parseFloat(input.value.replace(/,/g, "")) || 0;
+                    total += value;
+                });
+                totalCell.textContent = total.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            inputs.forEach(input => {
+                input.addEventListener("input", updateTotal);
+                input.addEventListener("change", updateTotal);
+            });
+
+            updateTotal();
+        });
+
+        function checkIfExceed (event){
+            let balanceValue = parseFloat($("#balance").text().replace(/,/g, "")) || 0;
+            let checkTotal = parseFloat($("#checkTotal").text().replace(/,/g, "")) || 0;
+            event.preventDefault();
+            console.log("checks if exceed");
+            const form = document.getElementById("myForm");
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if (checkTotal > balanceValue){
+                Swal.fire({
+                    title: "Error",
+                    text: "Total payment amount cannot exceed the balance",
+                    icon: "error"
+                });
+            }
+            else{
+                form.submit();
+            }
+        }
     </script>
 }
