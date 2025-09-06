@@ -225,17 +225,20 @@
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().show(); 
-                                    $('input[name="Freight"]').val(data.freight); 
+                                    $('input[name="ECC"]').parent().show(); 
+                                    $('input[name="Freight"]').val(data.freight);
                                     $('select[name="HaulerId"]').val(data.haulerId).change();
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
 
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
                                     $('select[name="HaulerId"]').val(data.haulerId).change();
+                                    $('input[name="ECC"]').parent().hide();
 
                                 } else {
                                     // hide the hauler list
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="ECC"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
                                 

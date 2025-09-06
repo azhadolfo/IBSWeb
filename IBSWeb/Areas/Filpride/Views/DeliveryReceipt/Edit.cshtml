@@ -255,6 +255,7 @@
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().show();
+                                    $('input[name="ECC"]').parent().show();
 
                                     // Set values based on whether it's initial load or not
                                     if (isInitialLoad && initialHaulerId) {
@@ -267,6 +268,7 @@
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="ECC"]').parent().hide();
 
                                     if (isInitialLoad && initialHaulerId) {
                                         $('select[name="HaulerId"]').val(initialHaulerId).change();
@@ -275,6 +277,7 @@
                                     }
                                 } else {
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="ECC"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
                                 
@@ -290,7 +293,7 @@
 
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="Product"]').val(formatNumber(data.product));
-                                $('input[name="RemainingVolume"]').val(remainingVolume);
+                                $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
                                 
                                 if (isInitialLoad && currentVolume) {
                                     $('input[name="Volume"]').val(currentVolume);
