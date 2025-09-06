@@ -43,10 +43,24 @@
                     <legend class="w-auto px-2">Customer Details</legend>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer List<span class="required">*</span></label>
-                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select customer</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select customer</option>
+                            </select>
+                            <input type="hidden" asp-for="CustomerId" />
+                        }
+                        else
+                        {
+                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select customer</option>
+                            </select>
+                        }
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <small class="fst-italic">Please note: Customer cannot be changed as the lifting date has already been added by TNS.</small>
+                        }
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -64,16 +78,40 @@
                     <legend class="w-auto px-2">Order Details</legend>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">COS List<span class="required">*</span></label>
-                        <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select cos</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select cos</option>
+                            </select>
+                            <input type="hidden" asp-for="CustomerOrderSlipId" />
+                        }
+                        else
+                        {
+                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select cos</option>
+                            </select>
+                        }
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <small class="fst-italic">Please note: COS cannot be changed as the lifting date has already been added by TNS.</small>
+                        }
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Appointed POs<span class="required">*</span></label>
-                        <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select po</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select po</option>
+                            </select>
+                            <input type="hidden" asp-for="PurchaseOrderId" />
+                        }
+                        else
+                        {
+                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select po</option>
+                            </select>
+                        }
                         <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
@@ -191,6 +229,9 @@
 
     <script>
         $(document).ready(function () {
+            // Check if has receiving report
+            var hasReceivingReport = @Model.HasReceivingReport.ToString().ToLower();
+            
             // Initial load for editing
             var initialCustomerId = '@Model.CustomerId';
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
@@ -290,7 +331,6 @@
                                     remainingVolume = data.remainingVolume + currentVolume;
                                 }
 
-
                                 $('input[name="CosVolume"]').val(formatNumber(data.quantity));
                                 $('input[name="Product"]').val(formatNumber(data.product));
                                 $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
@@ -335,7 +375,6 @@
                                     $poSelect.append('<option value="">No purchase orders available</option>');
                                 }
 
-
                                 calculateTotalAmount();
                             }
                         },
@@ -346,24 +385,28 @@
                 }
             }
 
-            // Event handler for customer change
-            $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
-                if (customerId !== initialCustomerId) {
-                    currentVolume = 0;
-                    initialHaulerId = null;
-                    initialFreight = null;
-                    initialPoId = null;
-                }
-                loadCustomerDetails(customerId);
-            });
+            // Event handler for customer change - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $('select[name="CustomerId"]').on('change', function () {
+                    var customerId = $(this).val();
+                    if (customerId !== initialCustomerId) {
+                        currentVolume = 0;
+                        initialHaulerId = null;
+                        initialFreight = null;
+                        initialPoId = null;
+                    }
+                    loadCustomerDetails(customerId);
+                });
+            }
 
-            // Event handler for COS change
-            $('select[name="CustomerOrderSlipId"]').on('change', function () {
-                var cosId = $(this).val();
-                var isInitialLoad = (cosId === initialCosId);
-                loadCosDetails(cosId, isInitialLoad);
-            });
+            // Event handler for COS change - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                    var cosId = $(this).val();
+                    var isInitialLoad = (cosId === initialCosId);
+                    loadCosDetails(cosId, isInitialLoad);
+                });
+            }
 
             // When Purchase Order selection changes, set max volume
             $('select[name="PurchaseOrderId"]').on('change', function() {
@@ -417,16 +460,20 @@
                 }
             }
 
-            // Calculate Total Amount
-            $('input[name="Volume"]').on('input', function () {
-                calculateTotalAmount();
-            });
+            // Calculate Total Amount - only bind if volume is not readonly
+            if (!hasReceivingReport) {
+                $('input[name="Volume"]').on('input', function () {
+                    calculateTotalAmount();
+                });
+            }
 
-            // Validate volume
-            $("#Volume").change(function () {
-                validateVolume();
-                calculateTotalAmount();
-            });
+            // Validate volume - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $("#Volume").change(function () {
+                    validateVolume();
+                    calculateTotalAmount();
+                });
+            }
 
             function calculateTotalAmount() {
                 var volume = parseNumber($('input[name="Volume"]').val());
@@ -460,7 +507,6 @@
                         type: "GET",
                         data: { manualDrNo: manualDrNo, drId: drId },
                         success: function(exists) {
-
                             const submitButton = $('button[type="submit"]');
                             
                             if (exists) {
