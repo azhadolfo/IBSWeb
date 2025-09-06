@@ -847,7 +847,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingSelection = cosAtlDetails
                     .FirstOrDefault(x => x.AppointedSupplier!.PurchaseOrderId == initialPoId
                                 && x.AuthorityToLoadId == initialAtlId);
-                existingSelection!.UnservedQuantity += (decimal)currentVolume;
+
+                if (existingSelection != null)
+                {
+                    existingSelection.UnservedQuantity += (decimal)currentVolume;
+                }
             }
 
             return Json(new

@@ -26,11 +26,9 @@
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
-                <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <input asp-for="ATLId" type="hidden" />
                 <input asp-for="IsECCEdited" type="hidden" />
                 <input asp-for="ATLNo" type="hidden" />
-                <input asp-for="PurchaseOrderId" type="hidden" />
                 <div class="form-floating col-12">
                     <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
@@ -194,12 +192,12 @@
     <script>
         $(document).ready(function () {
             // Initial load for editing
-            var initialCustomerId = $('select[name="CustomerId"]').val();
+            var initialCustomerId = '@Model.CustomerId';
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
-            var initialCosId = $("#CustomerOrderSlipId").val();
+            var initialCosId = '@Model.CustomerOrderSlipId';
             var currentVolume = parseNumber($('input[name="Volume"]').val());
-            var initialPoId = $("#PurchaseOrderId").val();
-            var initialAtlId = $("#ATLId").val();
+            var initialPoId = '@Model.PurchaseOrderId';
+            var initialAtlId = '@Model.ATLId';
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
@@ -282,18 +280,18 @@
                                 
                                 $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
                                 $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
-                                $('input[name="Product"]').val($('input[name="Product"]').val() ? $('input[name="Product"]').val() : data.product);
-                                $('input[name="CosVolume"]').val($('input[name="CosVolume"]').val() ? $('input[name="CosVolume"]').val() : formatNumber(data.quantity));
 
                                 // Handle remaining volume calculation
                                 var remainingVolume = data.remainingVolume;
                                 if (isInitialLoad && currentVolume) {
                                     remainingVolume = data.remainingVolume + currentVolume;
                                 }
-                                
 
+
+                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
+                                $('input[name="Product"]').val(formatNumber(data.product));
                                 $('input[name="RemainingVolume"]').val(remainingVolume);
-
+                                
                                 if (isInitialLoad && currentVolume) {
                                     $('input[name="Volume"]').val(currentVolume);
                                 } else {
@@ -301,7 +299,7 @@
                                 }
 
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
-                                $('input[name="Price"]').val(formatNumber(data.price));
+                                $('input[name="Price"]').val(data.price);
 
                                 // Populate Purchase Orders dropdown
                                 var $poSelect = $('select[name="PurchaseOrderId"]');
