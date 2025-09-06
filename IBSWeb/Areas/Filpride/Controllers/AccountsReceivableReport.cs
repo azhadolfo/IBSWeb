@@ -942,29 +942,30 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells["J9"].Value = "COS NO.";
                 worksheet.Cells["K9"].Value = "HAULER NAME";
                 worksheet.Cells["L9"].Value = "SUPPLIER";
-                worksheet.Cells["M9"].Value = "FREIGHT CHARGE";
-                worksheet.Cells["N9"].Value = "ECC";
-                worksheet.Cells["O9"].Value = "TOTAL FREIGHT";
+                worksheet.Cells["M9"].Value = "DELIVERY OPTION";
+                worksheet.Cells["N9"].Value = "FREIGHT CHARGE";
+                worksheet.Cells["O9"].Value = "ECC";
+                worksheet.Cells["P9"].Value = "TOTAL FREIGHT";
 
                 //TODO Remove this in the future
-                worksheet.Cells["P9"].Value = "OTC COS No.";
-                worksheet.Cells["Q9"].Value = "OTC DR No.";
+                worksheet.Cells["Q9"].Value = "OTC COS No.";
+                worksheet.Cells["R9"].Value = "OTC DR No.";
 
                 if (viewModel.ReportType == "Delivered")
                 {
-                    worksheet.Cells["R9"].Value = "DELIVERED DATE";
-                    worksheet.Cells["S9"].Value = "STATUS";
+                    worksheet.Cells["S9"].Value = "DELIVERED DATE";
+                    worksheet.Cells["T9"].Value = "STATUS";
                 }
                 else
                 {
-                    worksheet.Cells["R9"].Value = "LIFTING DATE";
-                    worksheet.Cells["S9"].Value = "LIFTING QUANTITY";
+                    worksheet.Cells["S9"].Value = "LIFTING DATE";
+                    worksheet.Cells["T9"].Value = "LIFTING QUANTITY";
                 }
 
 
                 int currentRow = 10;
-                string headerColumn = "S9";
-                int grandTotalColumn = 19;
+                string headerColumn = "T9";
+                int grandTotalColumn = 20;
                 decimal grandSumOfTotalFreightAmount = 0;
                 decimal grandTotalQuantity = 0;
                 decimal totalLiftedQuantity = 0;
@@ -997,17 +998,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         worksheet.Cells[currentRow, 10].Value = dr.CustomerOrderSlip?.CustomerOrderSlipNo;
                         worksheet.Cells[currentRow, 11].Value = dr.Hauler?.SupplierName;
                         worksheet.Cells[currentRow, 12].Value = dr.PurchaseOrder?.SupplierName;
-                        worksheet.Cells[currentRow, 13].Value = freightCharge;
-                        worksheet.Cells[currentRow, 14].Value = ecc;
-                        worksheet.Cells[currentRow, 15].Value = totalFreightAmount;
-                        worksheet.Cells[currentRow, 16].Value = dr.CustomerOrderSlip?.OldCosNo;
-                        worksheet.Cells[currentRow, 17].Value = dr.ManualDrNo;
+                        worksheet.Cells[currentRow, 13].Value = dr.CustomerOrderSlip?.DeliveryOption;
+                        worksheet.Cells[currentRow, 14].Value = freightCharge;
+                        worksheet.Cells[currentRow, 15].Value = ecc;
+                        worksheet.Cells[currentRow, 16].Value = totalFreightAmount;
+                        worksheet.Cells[currentRow, 17].Value = dr.CustomerOrderSlip?.OldCosNo;
+                        worksheet.Cells[currentRow, 18].Value = dr.ManualDrNo;
 
                         if (viewModel.ReportType == "Delivered")
                         {
-                            worksheet.Cells[currentRow, 18].Value = dr.DeliveredDate;
-                            worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                            worksheet.Cells[currentRow, 19].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
+                            worksheet.Cells[currentRow, 19].Value = dr.DeliveredDate;
+                            worksheet.Cells[currentRow, 19].Style.Numberformat.Format = "MMM/dd/yyyy";
+                            worksheet.Cells[currentRow, 20].Value = dr.Status == nameof(DRStatus.PendingDelivery) ? "IN TRANSIT" : dr.Status.ToUpper();
                         }
                         else
                         {
@@ -1015,10 +1017,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             {
                                 var getReceivingReport = _dbContext.FilprideReceivingReports.FirstOrDefault(x => x.DeliveryReceiptId == dr.DeliveryReceiptId);
                                 liftedQuantity = getReceivingReport?.QuantityReceived ?? 0m;
-                                worksheet.Cells[currentRow, 18].Value = getReceivingReport?.Date;
-                                worksheet.Cells[currentRow, 18].Style.Numberformat.Format = "MMM/dd/yyyy";
-                                worksheet.Cells[currentRow, 19].Value = liftedQuantity;
-                                worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                                worksheet.Cells[currentRow, 19].Value = getReceivingReport?.Date;
+                                worksheet.Cells[currentRow, 19].Style.Numberformat.Format = "MMM/dd/yyyy";
+                                worksheet.Cells[currentRow, 20].Value = liftedQuantity;
+                                worksheet.Cells[currentRow, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
                             }
                         }
 
@@ -1038,14 +1040,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     // Don't add record of other dates if entry is "as of" and "delivered"
                     var entriesToday = deliveryReceipts.Where(t => t.Date == viewModel.DateFrom).ToList();
                     worksheet.Cells[currentRow, 6].Value = entriesToday.Sum(dr => dr.Quantity);
-                    worksheet.Cells[currentRow, 15].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
+                    worksheet.Cells[currentRow, 16].Value = entriesToday.Sum(dr => (dr.Quantity * dr.Freight));
                 }
                 else
                 {
                     worksheet.Cells[currentRow, 6].Value = grandTotalQuantity;
-                    worksheet.Cells[currentRow, 15].Value = grandSumOfTotalFreightAmount;
-                    worksheet.Cells[currentRow, 19].Value = totalLiftedQuantity;
-                    worksheet.Cells[currentRow, 19].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    worksheet.Cells[currentRow, 16].Value = grandSumOfTotalFreightAmount;
+
+                    if (totalLiftedQuantity != 0)
+                    {
+                        worksheet.Cells[currentRow, 20].Value = totalLiftedQuantity;
+                        worksheet.Cells[currentRow, 20].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
                 }
 
                 // Adding borders and bold styling to the total row
@@ -1078,8 +1084,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[currentRow, 8].Value = "CNC SUPERVISOR";
 
                 // Styling and formatting (optional)
-                worksheet.Cells["M:N"].Style.Numberformat.Format = "#,##0.0000";
-                worksheet.Cells["F,O"].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells["N:O"].Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Cells["F,P"].Style.Numberformat.Format = "#,##0.00";
 
                 using (var range = worksheet.Cells[$"A9:{headerColumn}"])
                 {
