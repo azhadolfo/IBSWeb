@@ -1,3 +1,4 @@
+@using IBS.Utility.Constants
 @using IBS.Utility.Enums
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<ApplicationUser> SignInManager
@@ -1034,7 +1035,7 @@
                                 </li>
                             }
                             
-                            @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
+                            @if ((User.IsInRole("Admin") || userDepartment == SD.Department_RCD) && selectedCompany == "Filpride")
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Export to AAS</a>
