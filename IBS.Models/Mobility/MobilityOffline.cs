@@ -62,6 +62,7 @@ namespace IBS.Models.Mobility
 
         public string? LastUpdatedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? LastUpdatedDate { get; set; }
 
         public MobilityOffline(string stationCode, DateOnly startDate, DateOnly endDate, string product, int pump, decimal firstDsrOpening, decimal firstDsrClosing, decimal secondDsrOpening, decimal secondDsrClosing)

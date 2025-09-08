@@ -57,6 +57,7 @@ namespace IBS.Models.Mobility.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
@@ -64,6 +65,7 @@ namespace IBS.Models.Mobility.MasterFile
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
         [Column(TypeName = "varchar(20)")]
@@ -102,7 +104,7 @@ namespace IBS.Models.Mobility.MasterFile
 
         [Display(Name = "Validity Date")]
         [Column(TypeName = "date")]
-        public DateTime? ValidityDate { get; set; }
+        public DateOnly? ValidityDate { get; set; }
 
         [Display(Name = "Station Code")]
         [Column(TypeName = "varchar(3)")]

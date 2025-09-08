@@ -41,7 +41,7 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(20)]
         public string CreatedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
 
         public ICollection<FilprideBookAtlDetail> Details { get; set; }

@@ -126,7 +126,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public int NumberOfMonthsCreated { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? LastCreatedDate { get; set; }
 
         [DisplayFormat(DataFormatString = "{0:#,##0.0000;(#,##0.0000)}", ApplyFormatInEditMode = false)]

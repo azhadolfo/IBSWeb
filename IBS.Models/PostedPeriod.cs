@@ -18,7 +18,7 @@ namespace IBS.Models
 
         public bool IsPosted { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime PostedOn { get; set; }
 
         [StringLength(50)]

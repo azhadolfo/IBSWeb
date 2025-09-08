@@ -29,6 +29,7 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(50)")]
         public string? ApprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? ApprovedDate { get; set; }
     }
 }

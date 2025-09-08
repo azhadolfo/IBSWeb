@@ -34,10 +34,12 @@ namespace IBS.Models.MMSI
 
         public string? CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? CreatedDate { get; set; }
 
         public string? UpdateBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? UpdateDate { get; set; }
 
         public decimal DispatchDiscount { get; set; }

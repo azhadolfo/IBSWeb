@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models.Mobility
 {
@@ -19,6 +20,7 @@ namespace IBS.Models.Mobility
 
         public string? AdjustedValue { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime TimeStamp { get; set; }
 
         public string ModifiedBy { get; set; }

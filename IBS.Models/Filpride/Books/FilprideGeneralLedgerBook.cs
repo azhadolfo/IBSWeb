@@ -42,6 +42,7 @@ namespace IBS.Models.Filpride.Books
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         public bool IsPosted { get; set; } = true;

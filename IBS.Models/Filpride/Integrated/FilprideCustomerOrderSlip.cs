@@ -149,7 +149,7 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(100)]
         public string? OmApprovedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? OmApprovedDate { get; set; }
 
         [Column(TypeName = "date")]
@@ -171,7 +171,7 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(100)]
         public string? CncApprovedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? CncApprovedDate { get; set; }
 
         #endregion
@@ -181,7 +181,7 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(100)]
         public string? FmApprovedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? FmApprovedDate { get; set; }
 
         [StringLength(15)]
@@ -223,19 +223,19 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(100)]
         public string? CreatedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [StringLength(100)]
         public string? EditedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
         [StringLength(100)]
         public string? DisapprovedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? DisapprovedDate { get; set; }
 
         public bool IsPrinted { get; set; }

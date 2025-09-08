@@ -34,6 +34,7 @@ namespace IBS.Models.Mobility.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
@@ -41,6 +42,7 @@ namespace IBS.Models.Mobility.MasterFile
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime EditedDate { get; set; }
     }
 }

@@ -91,7 +91,7 @@ namespace IBS.Models.Filpride.Books
         [Column(TypeName = "varchar(20)")]
         public string? ValidatedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? ValidatedDate { get; set; }
 
         public int? POId { get; set; }
