@@ -680,6 +680,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var listOfDetails = await _dbContext.FilprideCollectionReceiptDetails
+                .Where(x => x.CollectionReceiptId == id).ToListAsync(cancellationToken);
+
+            var crPayments = new List<InvoicePayment>();
+
+            foreach (var detail in listOfDetails)
+            {
+                var crPayment = new InvoicePayment
+                {
+                    InvoiceId = (await _dbContext.FilprideSalesInvoices
+                            .Where(si => si.SalesInvoiceNo == detail.InvoiceNo).FirstOrDefaultAsync(cancellationToken))!
+                        .SalesInvoiceId,
+                    InvoiceNumber = detail.InvoiceNo,
+                    PaymentAmount = detail.Amount
+                };
+                crPayments.Add(crPayment);
+            }
+
             var viewModel = new CollectionReceiptMultipleSiViewModel
             {
                 CollectionReceiptId = existingModel.CollectionReceiptId,
@@ -718,6 +736,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 HasAlready2307 = existingModel.F2307FilePath != null,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 SIMultipleAmount = existingModel.SIMultipleAmount!,
+                InvoicePayments = crPayments
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
