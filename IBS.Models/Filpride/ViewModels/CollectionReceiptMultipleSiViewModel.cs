@@ -75,5 +75,16 @@ namespace IBS.Models.Filpride.ViewModels
         public bool HasAlready2307 { get; set; }
 
         public decimal[] SIMultipleAmount { get; set; }
+
+        public List<InvoicePayment>? InvoicePayments { get; set; }
+
+
+    }
+
+    public class InvoicePayment
+    {
+        public int InvoiceId { get; set; }
+        public string InvoiceNumber { get; set; }
+        public decimal PaymentAmount { get; set; }
     }
 }

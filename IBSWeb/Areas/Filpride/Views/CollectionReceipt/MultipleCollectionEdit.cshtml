@@ -259,6 +259,7 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
     // Store existing selected invoices for edit mode
     var existingSelectedInvoices = @Html.Raw(Json.Serialize(Model.MultipleSIId));
     var existingSIAmounts = @Html.Raw(Json.Serialize(Model.SIMultipleAmount));
+    var InvoicePayments = @Html.Raw(Json.Serialize(Model.InvoicePayments));
 </script>
 
 <script>
@@ -348,7 +349,37 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         const $siAmount = $(".siAmount");
 
         $invoices.change(function () {
-            const selectedInvoices = $invoices.val() || [];
+            
+            // get values in multiselect
+            let selectedInvoices = $invoices.val() || [];
+
+            // store the new invoice IDs to a variable
+            const newInvoiceIds = selectedInvoices.filter(id => !InvoicePayments.some(item => item.invoiceId === parseInt(id)));
+            
+            // remove old values from array that does not exist now in multiselect
+            InvoicePayments = InvoicePayments.filter(item => selectedInvoices.includes(item.invoiceId.toString()));
+
+            // loop through newInvoiceIds and make AJAX requests to get amount and number
+            newInvoiceIds.forEach(id => {
+                $.ajax({
+                    url: '@Url.Action("MultipleInvoiceBalance", "CollectionReceipt", new { area = "Filpride" })',
+                    method: "GET",
+                    data: { id },
+                    success: function (data) {
+                        let siNo = $invoices.find(`option[value='${siNo}']`).text();
+                        let siBalance = data.amount;
+                        InvoicePayments.push({
+                            invoiceId: 4,
+                            invoiceNumber: "INV004",
+                            paymentAmount: 300.00
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching balance:', error);
+                    }
+                });
+            });
+            
             $siList.empty();
             $siAmount.empty();
 
@@ -421,7 +452,11 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                     $(`#balance_${siNo}`).text(formatNumber(balance));
 
                     // Only set balance if no existing amount
-                    if (!existingSIAmounts[siNo]) {
+                    const existingPayment = InvoicePayments.find(item => item.invoiceId === parseInt(siNo));
+                    if (existingPayment) {
+                        $(`.paymentAmount_${siNo}`).val(formatNumber(existingPayment.paymentAmount));
+                    }
+                    else{
                         $(`.paymentAmount_${siNo}`).val(formatNumber(balance));
                     }
 
@@ -510,10 +545,10 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
             return;
         }
 
-        if (checkTotal > totalBalance){
+        if (checkTotal !== totalBalance){
             Swal.fire({
                 title: "Error",
-                text: "Total payment amount cannot exceed the total balance",
+                text: "Total payment amount should be equal to the total balance.",
                 icon: "error"
             });
         }
