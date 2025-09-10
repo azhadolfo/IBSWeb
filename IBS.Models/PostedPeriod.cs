@@ -23,5 +23,8 @@ namespace IBS.Models
 
         [StringLength(50)]
         public string PostedBy { get; set; }
+
+        [StringLength(20)]
+        public string Module { get; set; }
     }
 }

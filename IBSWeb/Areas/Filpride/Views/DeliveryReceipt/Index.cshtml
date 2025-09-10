@@ -311,17 +311,19 @@
             let currentDate = new Date();
             let lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
 
-            let supplierAtlDisplay = supplierAtlNo !== "null" ? `<strong>Supplier ATL No:</strong> ${supplierAtlNo}<br/>` : "";
+            // Convert ViewBag.MinDate to JavaScript date string format
+            let minDate = new Date('@(ViewBag.MinDate?.ToString("yyyy-MM-dd") ?? "1900-01-01")').toISOString().split('T')[0];
+            console.log('Min Date:', minDate);
 
             Swal.fire({
                 title: "Please confirm the lifting date",
                 html: `
-        <div style="text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
-            <div><strong>ATL No:</strong> ${atlNo}</div>
-            ${supplierAtlNo !== "null" ? `<div><strong>Supplier ATL No:</strong> ${supplierAtlNo}</div>` : ""}
-        </div>
-        <input type="date" id="liftingDate" class="swal2-input" value="${today}" max="${lastDayOfMonth}" required>
-    `,
+    <div style="text-align: center; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+        <div><strong>ATL No:</strong> ${atlNo}</div>
+        ${supplierAtlNo !== "null" ? `<div><strong>Supplier ATL No:</strong> ${supplierAtlNo}</div>` : ""}
+    </div>
+    <input type="date" id="liftingDate" class="swal2-input" value="${today}" min="${minDate}" max="${lastDayOfMonth}" required>
+`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -341,9 +343,15 @@
 
                     let selectedDate = new Date(liftingDate);
                     let maxDate = new Date(lastDayOfMonth);
+                    let minDateObj = new Date(minDate);
 
                     if (selectedDate > maxDate) {
                         Swal.showValidationMessage('The selected date cannot exceed the current month.');
+                        return false;
+                    }
+
+                    if (selectedDate < minDateObj) {
+                        Swal.showValidationMessage(`The selected date cannot be before ${minDateObj.toLocaleDateString()}.`);
                         return false;
                     }
 

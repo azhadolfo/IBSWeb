@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Linq.Expressions;
 using IBS.DataAccess.Data;
 using IBS.DataAccess.Repository.Bienes;
@@ -14,6 +15,7 @@ using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Filpride.MasterFile;
 using IBS.Models.Mobility.MasterFile;
 using IBS.Utility.Constants;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BankAccountRepository = IBS.DataAccess.Repository.Mobility.BankAccountRepository;
@@ -51,16 +53,22 @@ namespace IBS.DataAccess.Repository
                                && m.Year == date.Year, cancellationToken);
         }
 
-        public async Task<DateTime?> GetThePreviousPostedPeriodAsync(CancellationToken cancellationToken = default)
+        public async Task<DateTime> GetMinimumPeriodBasedOnThePostedPeriods(Module module, CancellationToken cancellationToken = default)
         {
+            if (!Enum.IsDefined(typeof(Module), module))
+            {
+                throw new InvalidEnumArgumentException(nameof(module), (int)module, typeof(Module));
+            }
+
             var period = await _db.PostedPeriods
                 .OrderByDescending(x => x.Year)
                 .ThenByDescending(x => x.Month)
-                .FirstOrDefaultAsync(x => x.IsPosted, cancellationToken);
+                .FirstOrDefaultAsync(x => x.Module == module.ToString()
+                                          && x.IsPosted, cancellationToken);
 
             if (period == null)
             {
-                return null;
+                return DateTime.MinValue;
             }
 
             return new DateOnly(period.Year, period.Month, 1)
