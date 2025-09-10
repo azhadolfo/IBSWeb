@@ -267,51 +267,65 @@
                 <td class="text-center">
                     @if (Model.CheckDate != null )
                     {
-                        <p style="height: 9px;">@Model.CheckDate</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Model.CheckDate
                     }
                 </td>
                 <td class="text-center">
                     @if (Model.CheckNo != null)
                     {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckNo)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Html.DisplayFor(model => model.CheckNo)
                     }
                 </td>
                 <td class="text-center">
-                    @if (Model.BankId != null)
+                    @if (Model.CheckBank != null)
                     {
-                        <p>@Model.BankAccountName @Model.BankAccountNumber</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Html.DisplayFor(model => model.CheckBank)
                     }
                 </td>
                 <td class="text-center">
                     @if (Model.CheckBranch != null)
                     {
-                        <p style="height: 9px;">@Html.DisplayFor(model => model.CheckBranch)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Html.DisplayFor(model => model.CheckBranch)
                     }
                 </td>
                 <td class="text-center">
                     @if (Model.CheckAmount > 0)
                     {
-                        <p style="height: 9px;">@Model.CheckAmount.ToString(decimalFormat)</p>
+                        @Model.CheckAmount.ToString(decimalFormat)
                     }
-                    else
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding-left:20px;">Manager's Check</td>
+                <td class="text-center">
+                    @if (Model.ManagersCheckDate != null)
                     {
-                        <p></p>
+                        @Model.ManagersCheckDate
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagersCheckNo != null)
+                    {
+                        @Html.DisplayFor(model => model.ManagersCheckNo)
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagersCheckBank != null)
+                    {
+                        @Model.ManagersCheckBank
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagersCheckBranch != null)
+                    {
+                        @Html.DisplayFor(model => model.ManagersCheckBranch)
+                    }
+                </td>
+                <td class="text-center">
+                    @if (Model.ManagersCheckAmount > 0)
+                    {
+                        @Model.ManagersCheckAmount.ToString(decimalFormat)
                     }
                 </td>
             </tr>
@@ -325,11 +339,7 @@
                 <td class="text-center">
                     @if (Model.EWT != 0)
                     {
-                        <p style="height: 9px;">@Model.EWT.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Model.EWT.ToString(decimalFormat)
                     }
                 </td>
             </tr>
@@ -342,11 +352,7 @@
                 <td class="text-center">
                     @if (Model.WVAT != 0)
                     {
-                        <p style="height: 9px;">@Model.WVAT.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Model.WVAT.ToString(decimalFormat)
                     }
                 </td>
             </tr>
@@ -359,11 +365,7 @@
                 <td class="text-center">
                     @if (Model.Total != 0)
                     {
-                        <p style="height: 9px;">@Model.Total.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Model.Total.ToString(decimalFormat)
                     }
                 </td>
             </tr>
