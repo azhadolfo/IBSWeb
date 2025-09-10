@@ -134,11 +134,11 @@
                 <label class="control-label">Percent</label>
                 <select asp-for="WithholdingTaxPercent" class="form-select js-select2 withHoldingTaxPercent" style="width: 100%">
                     <option value="" selected disabled>%</option>
-                    <option value="0">0%</option>
-                    <option value="0.01">1%</option>
-                    <option value="0.02">2%</option>
-                    <option value="0.05">5%</option>
-                    <option value="0.1">10%</option>
+                    <option value="0.0000">0%</option>
+                    <option value="0.0100">1%</option>
+                    <option value="0.0200">2%</option>
+                    <option value="0.0500">5%</option>
+                    <option value="0.1000">10%</option>
                 </select>
                 <span asp-validation-for="WithholdingTaxPercent" class="text-danger"></span>
             </div>
