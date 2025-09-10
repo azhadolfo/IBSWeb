@@ -159,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new CreditMemoViewModel();
             await IncludeSelectLists(viewModel, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
             return View(viewModel);
         }
 
@@ -316,6 +317,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+            if (creditMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {creditMemo.TransactionDate:MMM yyyy} is already closed.");
+            }
+
             var viewModel = new CreditMemoViewModel
             {
                 CreditMemoId = creditMemo.CreditMemoId,
@@ -329,6 +336,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Amount = creditMemo.Amount,
                 Remarks = creditMemo.Remarks,
                 Description = creditMemo.Description,
+                MinDate = minDate,
             };
 
             await IncludeSelectLists(viewModel, cancellationToken);
@@ -479,6 +487,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+                if (model.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
+                }
+
                 model.PostedBy = _userManager.GetUserName(this.User);
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);
