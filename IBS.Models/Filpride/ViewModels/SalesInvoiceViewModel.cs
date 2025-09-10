@@ -65,5 +65,7 @@ namespace IBS.Models.Filpride.ViewModels
         public List<SelectListItem>? PO { get; set; }
 
         public List<SelectListItem>? RR { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }
