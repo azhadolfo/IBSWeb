@@ -1511,7 +1511,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(salesNetOfVat != 0 ? salesNetOfVat < 0 ? $"({Math.Abs(salesNetOfVat).ToString(SD.Two_Decimal_Format)})" : salesNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(salesNetOfVat < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(freightNetOfVat != 0 ? freightNetOfVat < 0 ? $"({Math.Abs(freightNetOfVat).ToString(SD.Two_Decimal_Format)})" : freightNetOfVat.ToString(SD.Two_Decimal_Format) : null).FontColor(freightNetOfVat < 0 ? Colors.Red.Medium : Colors.Black);
                                         table.Cell().Border(0.5f).Padding(3).AlignRight().Text(record.DeliveryReceipt.CustomerOrderSlip?.CommissionRate != 0 ? record.DeliveryReceipt.CustomerOrderSlip?.CommissionRate < 0 ? $"({Math.Abs(record.DeliveryReceipt.CustomerOrderSlip.CommissionRate).ToString(SD.Four_Decimal_Format)})" : record.DeliveryReceipt.CustomerOrderSlip?.CommissionRate.ToString(SD.Four_Decimal_Format) : null).FontColor(record.DeliveryReceipt.CustomerOrderSlip?.CommissionRate < 0 ? Colors.Red.Medium : Colors.Black);
-                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.Commissionee?.SupplierName);
+                                        table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.CustomerOrderSlip?.CommissioneeName);
                                         table.Cell().Border(0.5f).Padding(3).Text(record.DeliveryReceipt.Remarks);
 
                                         overallTotalQuantity += record.DeliveryReceipt.Quantity;
@@ -1894,7 +1894,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 18].Value = salesNetOfVat;
                     worksheet.Cells[row, 19].Value = freightNetOfVat;
                     worksheet.Cells[row, 20].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissionRate;
-                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.Commissionee?.SupplierName;
+                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt.CustomerOrderSlip?.CommissioneeName;
                     worksheet.Cells[row, 22].Value = dr.DeliveryReceipt.Remarks;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
@@ -2391,7 +2391,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 18].Value = salesNetOfVat;
                     worksheet.Cells[row, 19].Value = freightNetOfVat;
                     worksheet.Cells[row, 20].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate;
-                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt?.Commissionee?.SupplierName;
+                    worksheet.Cells[row, 21].Value = dr.DeliveryReceipt?.CustomerOrderSlip?.CommissioneeName;
                     worksheet.Cells[row, 22].Value = dr.Remarks;
 
                     worksheet.Cells[row, 1].Style.Numberformat.Format = "MMM/dd/yyyy";
