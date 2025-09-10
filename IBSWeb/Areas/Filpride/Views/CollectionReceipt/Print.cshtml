@@ -108,7 +108,7 @@
                 </td>
             </tr>
             @{
-                decimal convertToWords = Model.Total;
+                decimal convertToWords = (Model.CashAmount + Model.CheckAmount + Model.ManagersCheckAmount);
 
                 int integerPart = Convert.ToInt32(Math.Floor(convertToWords));
                 decimal decimalPart = Math.Round((convertToWords - integerPart), 4);
@@ -150,7 +150,7 @@
             </tr>
             <tr>
                 <td>&nbsp;</td>
-                <td style="padding-left:10px;">(₱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  @Model.Total.ToString(decimalFormat))</td>
+                <td style="padding-left:10px;">(₱&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  @((Model.CashAmount + Model.CheckAmount + Model.ManagersCheckAmount).ToString(decimalFormat))</td>
             </tr>
             <tr>
                 <td colspan="2" style="padding-left:10px;">
@@ -253,11 +253,7 @@
                 <td class="text-center">
                     @if (Model.CashAmount > 0)
                     {
-                        <p style="height: 9px;">@Model.CashAmount.ToString(decimalFormat)</p>
-                    }
-                    else
-                    {
-                        <p></p>
+                        @Model.CashAmount.ToString(decimalFormat)
                     }
                 </td>
             </tr>
