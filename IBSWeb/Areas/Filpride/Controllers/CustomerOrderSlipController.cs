@@ -427,7 +427,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 ViewBag.FilterType = await GetCurrentFilterType();
                 var companyClaims = await GetCompanyClaimAsync();
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
 
                 if (companyClaims == null)
                 {
@@ -442,6 +441,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
                 if (existingRecord.Date < DateOnly.FromDateTime(minDate))
                 {
                     throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
@@ -1272,6 +1272,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+            if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+            }
+
             var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -1403,6 +1409,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord == null)
                 {
                     return NotFound();
+                }
+
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot reappoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
 
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
