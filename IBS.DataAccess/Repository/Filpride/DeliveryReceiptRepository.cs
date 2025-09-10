@@ -566,7 +566,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.Commissionee?.SupplierName,
+                        SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
                         ModuleType = nameof(ModuleType.Sales)
                     });
 

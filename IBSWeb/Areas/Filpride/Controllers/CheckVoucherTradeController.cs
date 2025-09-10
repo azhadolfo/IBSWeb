@@ -2453,7 +2453,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var deliverReceipt = await query
-                .Include(dr => dr.Commissionee)
+                .Include(dr => dr.CustomerOrderSlip)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
@@ -2462,15 +2462,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drList = deliverReceipt
                     .Select(dr =>
                     {
-                        var netOfVatAmount = dr.Commissionee?.VatType == SD.VatType_Vatable
+                        var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
                             : dr.CommissionAmount;
 
-                        var ewtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
+                        var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                             ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.05m)
                             : 0m;
 
-                        var netOfEwtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
+                        var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
                             : dr.CommissionAmount;
 
