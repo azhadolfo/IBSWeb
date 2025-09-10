@@ -966,6 +966,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var details = await _dbContext.FilprideCheckVoucherDetails
+                .Include(cvd => cvd.Supplier)
+                .Include(cvd => cvd.BankAccount)
+                .Include(cvd => cvd.Company)
+                .Include(cvd => cvd.Customer)
+                .Include(cvd => cvd.Employee)
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 

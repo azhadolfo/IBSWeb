@@ -247,12 +247,21 @@
 
             @foreach (var cv in Model.Details!.OrderBy(model => model.CheckVoucherDetailId))
             {
+                var subAccount = cv.Supplier?.SupplierName
+                                 ?? cv.Customer?.CustomerName
+                                 ?? cv.Company?.CompanyName
+                                 ?? (cv.Employee != null ? $"{cv.Employee.FirstName} {cv.Employee.LastName}" : null)
+                                 ?? (cv.BankAccount != null ? $"{cv.BankAccount.AccountNo} {cv.BankAccount.AccountName}" : null);
+
                 <tr>
-                    <td style="width:60%; padding-left:20px;">@cv.AccountNo&nbsp;@cv.AccountName</td>
+                    <td style="width:60%; padding-left:20px;">
+                        @($"{cv.AccountNo} {cv.AccountName}" + (subAccount != null && cv.Debit != 0 ? $" ({subAccount})" : string.Empty))
+                    </td>
                     <td class="text-end" style="width:7%;">@cv.Debit.ToString(SD.Two_Decimal_Format)</td>
                     <td class="text-end" style="width:7%;">@cv.Credit.ToString(SD.Two_Decimal_Format)</td>
                 </tr>
             }
+
 
             <tr style="border-bottom:double;"></tr>
             <tr>
