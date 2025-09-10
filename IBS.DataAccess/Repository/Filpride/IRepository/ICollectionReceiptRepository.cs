@@ -10,6 +10,10 @@ namespace IBS.DataAccess.Repository.Filpride.IRepository
 
         Task UpdateInvoice(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
 
+        Task UndoSalesInvoiceChanges(FilprideCollectionReceiptDetail collectionReceiptDetail, CancellationToken cancellationToken);
+
+        Task UndoServiceInvoiceChanges(FilprideCollectionReceiptDetail collectionReceiptDetail, CancellationToken cancellationToken);
+
         Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);
 
         Task RemoveSIPayment(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default);

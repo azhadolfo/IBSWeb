@@ -607,6 +607,44 @@ namespace IBS.DataAccess.Repository.Filpride
             }
         }
 
+        public async Task UndoSalesInvoiceChanges(FilprideCollectionReceiptDetail collectionReceiptDetail, CancellationToken cancellationToken)
+        {
+            var si = await _db
+                .FilprideSalesInvoices
+                .FirstOrDefaultAsync(si => si.SalesInvoiceNo == collectionReceiptDetail.InvoiceNo, cancellationToken);
+
+            if (si == null)
+            {
+                throw new NullReferenceException("Invoice Not Found.");
+            }
+
+            si.AmountPaid -= si.Amount;
+            si.Balance += si.Amount;
+            si.IsPaid = false;
+            si.PaymentStatus = "Pending";
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task UndoServiceInvoiceChanges(FilprideCollectionReceiptDetail collectionReceiptDetail, CancellationToken cancellationToken)
+        {
+            var sv = await _db
+                .FilprideServiceInvoices
+                .FirstOrDefaultAsync(si => si.ServiceInvoiceNo == collectionReceiptDetail.InvoiceNo, cancellationToken);
+
+            if (sv == null)
+            {
+                throw new NullReferenceException("Invoice Not Found.");
+            }
+
+            sv.AmountPaid -= sv.Total;
+            sv.Balance += sv.Total;
+            sv.IsPaid = false;
+            sv.PaymentStatus = "Pending";
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task UpdateMultipleInvoice(string[] siNo, decimal[] paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
         {
             for (var i = 0; i < siNo.Length; i++)
