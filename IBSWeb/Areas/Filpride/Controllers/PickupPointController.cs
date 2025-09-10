@@ -18,13 +18,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
 
-        private readonly ILogger<CustomerController> _logger;
+        private readonly ILogger<PickupPointController> _logger;
 
         private readonly UserManager<ApplicationUser> _userManager;
 
         private readonly ApplicationDbContext _dbContext;
 
-        public PickupPointController(IUnitOfWork unitOfWork, ILogger<CustomerController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
+        public PickupPointController(IUnitOfWork unitOfWork, ILogger<PickupPointController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
