@@ -65,5 +65,7 @@ namespace IBS.Models.Filpride.ViewModels
         public FilprideCheckVoucherHeader? Headers { get; set; }
 
         public List<AccountingEntryViewModel>? AccountingEntries { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }

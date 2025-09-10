@@ -80,6 +80,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string? AdvancesCVNo { get; set; }
 
         public string? Type { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 
     public class ReceivingReportList

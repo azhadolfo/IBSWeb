@@ -161,7 +161,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CheckVoucherTradeViewModel model = new()
             {
                 Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
             };
 
             return View(model);
@@ -563,6 +564,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+            if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+            }
+
             CheckVoucherTradeViewModel model = new()
             {
                 SupplierId = existingHeaderModel.SupplierId ?? 0,
@@ -942,6 +949,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (modelHeader.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                }
+
                 modelHeader.PostedBy = _userManager.GetUserName(this.User);
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
@@ -1310,11 +1323,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
-
-                if (isPeriodClosed)
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (cvHeader.Date < DateOnly.FromDateTime(minDate))
                 {
-                    throw new ArgumentException("Period closed, CV cannot be unposted.");
+                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
                 }
 
                 cvHeader.PostedBy = null;
@@ -1918,11 +1930,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            CommissionPaymentViewModel model = new();
-
-            model.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            CommissionPaymentViewModel model = new()
+            {
+                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
+            };
 
             return View(model);
         }
@@ -2172,11 +2185,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            HaulerPaymentViewModel model = new();
-
-            model.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            HaulerPaymentViewModel model = new()
+            {
+                Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
+            };
 
             return View(model);
         }
@@ -2555,6 +2569,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+            if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+            }
+
             CommissionPaymentViewModel model = new()
             {
                 CvId = existingHeaderModel.CheckVoucherHeaderId,
@@ -2805,6 +2825,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (existingHeaderModel == null)
             {
                 return NotFound();
+            }
+
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+            if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
             }
 
             HaulerPaymentViewModel model = new()

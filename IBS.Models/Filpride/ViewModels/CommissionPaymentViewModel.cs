@@ -69,5 +69,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string? OldCVNo { get; set; }
 
         public string? Type { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }
