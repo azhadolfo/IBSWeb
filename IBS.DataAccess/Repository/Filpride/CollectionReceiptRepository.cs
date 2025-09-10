@@ -92,6 +92,28 @@ namespace IBS.DataAccess.Repository.Filpride
             var cwt = accountTitlesDto.Find(c => c.AccountNumber == "101060400") ?? throw new ArgumentException("Account title '101060400' not found.");
             var cwv = accountTitlesDto.Find(c => c.AccountNumber == "101060600") ?? throw new ArgumentException("Account title '101060600' not found.");
             var offsetAmount = 0m;
+            string customerName = "";
+
+            if (collectionReceipt.SalesInvoiceId != null)
+            {
+                customerName = collectionReceipt.SalesInvoice!.CustomerOrderSlip!.CustomerName;
+            }
+            else if (collectionReceipt.ServiceInvoiceId != null)
+            {
+                customerName = collectionReceipt.ServiceInvoice!.CustomerName;
+            }
+            else if (collectionReceipt.MultipleSIId != null)
+            {
+                customerName = (await _db.FilprideSalesInvoices
+                    .Where(si => si.SalesInvoiceId == collectionReceipt.MultipleSIId.FirstOrDefault())
+                    .Include(si => si.CustomerOrderSlip)
+                    .FirstOrDefaultAsync(cancellationToken))!
+                    .CustomerOrderSlip!.CustomerName;
+            }
+            else
+            {
+                customerName = collectionReceipt.Customer!.CustomerName;
+            }
 
             if (collectionReceipt.CashAmount > 0 || collectionReceipt.CheckAmount > 0 || collectionReceipt.ManagersCheckAmount > 0)
             {
@@ -201,7 +223,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = collectionReceipt.PostedBy,
                         CreatedDate = collectionReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         CustomerId = collectionReceipt.CustomerId,
-                        CustomerName = collectionReceipt.SalesInvoiceId.HasValue ? collectionReceipt.SalesInvoice?.CustomerOrderSlip!.CustomerName : collectionReceipt.ServiceInvoice?.CustomerName,
+                        CustomerName = customerName,
                         ModuleType = nameof(ModuleType.Collection)
                     }
                 );
@@ -259,7 +281,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     Date = collectionReceipt.TransactionDate,
                     RefNo = collectionReceipt.CollectionReceiptNo!,
-                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                    CustomerName = customerName,
                     Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                     CheckNo = collectionReceipt.CheckNo ?? "--",
                     COA = $"{cashInBankTitle.AccountNumber} {cashInBankTitle.AccountName}",
@@ -279,7 +301,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                        CustomerName = customerName,
                         Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? "--",
                         COA = $"{cwt.AccountNumber} {cwt.AccountName}",
@@ -300,7 +322,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                        CustomerName = customerName,
                         Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? "--",
                         COA = $"{cwv.AccountNumber} {cwv.AccountName}",
@@ -324,7 +346,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                        CustomerName = customerName,
                         Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? "--",
                         COA = $"{account.AccountNumber} {account.AccountName}",
@@ -343,7 +365,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 {
                     Date = collectionReceipt.TransactionDate,
                     RefNo = collectionReceipt.CollectionReceiptNo!,
-                    CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                    CustomerName = customerName,
                     Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                     CheckNo = collectionReceipt.CheckNo ?? "--",
                     COA = $"{arTradeTitle.AccountNumber} {arTradeTitle.AccountName}",
@@ -363,7 +385,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                        CustomerName = customerName,
                         Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? "--",
                         COA = $"{arTradeCwt.AccountNumber} {arTradeCwt.AccountName}",
@@ -384,7 +406,7 @@ namespace IBS.DataAccess.Repository.Filpride
                     {
                         Date = collectionReceipt.TransactionDate,
                         RefNo = collectionReceipt.CollectionReceiptNo!,
-                        CustomerName = collectionReceipt.SalesInvoiceId != null ? collectionReceipt.SalesInvoice!.Customer!.CustomerName : collectionReceipt.MultipleSIId != null ? collectionReceipt.Customer!.CustomerName : collectionReceipt.ServiceInvoice!.Customer!.CustomerName,
+                        CustomerName = customerName,
                         Bank = collectionReceipt.BankAccount?.Bank ?? "--",
                         CheckNo = collectionReceipt.CheckNo ?? "--",
                         COA = $"{arTradeCwv.AccountNumber} {arTradeCwv.AccountName}",
