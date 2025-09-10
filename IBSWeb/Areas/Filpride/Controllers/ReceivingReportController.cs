@@ -346,6 +346,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.ReceivingReport, cancellationToken);
+            if (receivingReport.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {receivingReport.Date:MMM yyyy} is already closed.");
+            }
+
             var viewModel = new ReceivingReportViewModel
             {
                 ReceivingReportId = receivingReport.ReceivingReportId,
@@ -365,6 +371,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Remarks = receivingReport.Remarks,
                 PostedBy = receivingReport.PostedBy,
                 CostBasedOnSoa = receivingReport.CostBasedOnSoa,
+                MinDate = minDate
             };
 
             return View(viewModel);

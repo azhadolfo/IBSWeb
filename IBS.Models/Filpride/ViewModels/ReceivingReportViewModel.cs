@@ -50,5 +50,7 @@ namespace IBS.Models.Filpride.ViewModels
         public string Remarks { get; set; }
 
         public string? PostedBy { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }
