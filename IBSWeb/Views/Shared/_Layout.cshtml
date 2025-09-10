@@ -1035,7 +1035,7 @@
                                 </li>
                             }
                             
-                            @if ((User.IsInRole("Admin") || userDepartment == SD.Department_RCD) && selectedCompany == "Filpride")
+                            @if (userDepartment == SD.Department_RCD)
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Export to AAS</a>
@@ -1057,6 +1057,10 @@
                                         <li><a class="dropdown-item" asp-area="Filpride" asp-controller="ChartOfAccount" asp-action="Index" asp-route-view="@nameof(DynamicView.ChartOfAccount)">Chart Of Account</a></li>
                                     </ul>
                                 </li>
+                            }
+                            
+                            @if (User.IsInRole("Admin") && selectedCompany == "Filpride")
+                            {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">General Master File</a>
                                     <ul class="dropdown-menu">
@@ -1077,7 +1081,7 @@
                                     <a class="nav-link" asp-area="Filpride" asp-controller="MonthlyClose" asp-action="Index">Monthly Close</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" asp-area="Filpride" asp-controller="ExportToDCR" asp-action="Index">Export to DCR</a>
+                                    <a class="nav-link" asp-area="Filpride" asp-controller="PostedPeriod" asp-action="Index">Posted Period</a>
                                 </li>
                             }
                             
