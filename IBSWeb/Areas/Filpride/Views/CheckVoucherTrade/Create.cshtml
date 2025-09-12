@@ -371,11 +371,11 @@
                     traditional: true,
                     success: function(response) {
                         // If any PO has COD or PREPAID terms, show the Advances row
-                        if (response.hasCodOrPrepaid) {
+                        if (response.hasCodOrPrepaid && response.advanceAmount > 0) {
                             $("#advancesRow").show();
                             // Default values can be set based on what makes sense for your business logic
                             $("#advancesDebit").val(formatNumber(0));
-                            $("#advancesCredit").val(formatNumber(response.advanceAmount || 0));
+                            $("#advancesCredit").val(formatNumber(response.advanceAmount));
                             $("#AdvancesCVNo").val(response.advanceCVNo);
                             updateTotalDebitAndCredit();
                         } else {
