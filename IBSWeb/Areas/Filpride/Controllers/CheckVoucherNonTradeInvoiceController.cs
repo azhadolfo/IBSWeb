@@ -1046,7 +1046,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 if (modelHeader.Date < DateOnly.FromDateTime(minDate))
                 {
                     throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
