@@ -679,8 +679,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var details = new List<FilprideCheckVoucherDetail>();
 
                 var cashInBank = 0m;
-                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                for (var i = 0; i < viewModel.AccountTitle.Length; i++)
                 {
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
+                    {
+                        continue;
+                    }
+
                     cashInBank = viewModel.Credit[1];
 
                     details.Add(new FilprideCheckVoucherDetail
