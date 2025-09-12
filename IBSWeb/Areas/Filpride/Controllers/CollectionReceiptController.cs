@@ -722,6 +722,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 MultipleSIId = existingModel.MultipleSIId!,
                 SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
                         && (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!))
+                        && si.Status != "Voided"
                         && si.CustomerId == existingModel.CustomerId
                         && si.PostedBy != null, cancellationToken))
                     .OrderBy(s => s.SalesInvoiceId)
