@@ -239,7 +239,8 @@ namespace IBS.DataAccess.Repository.Filpride
                             && a.Date >= dateFrom
                             && a.Date <= dateTo
                             && a.Status != nameof(CosStatus.Closed)
-                            && a.Status != nameof(CosStatus.Completed))
+                            && a.Status != nameof(CosStatus.Completed)
+                            && a.Status != nameof(CosStatus.Disapproved))
                 .OrderBy(a => a.Date)
                 .ToListAsync();
         }
