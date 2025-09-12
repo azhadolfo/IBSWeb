@@ -1101,7 +1101,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion -- Journal Voucher Details Export --
 
-                #region -- Check Voucher Details Export (Trade and Invoicing) --
+                #region -- Check Voucher Details Export (Non-Trade or Trade Payment) --
 
                 var getCvDetails = await _dbContext.FilprideCheckVoucherDetails
                     .Where(cvd => cvNos.Contains(cvd.TransactionNo))
@@ -1130,34 +1130,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 #endregion -- Check Voucher Details Export (Trade and Invoicing) --
-
-                #region -- Check Voucher Details Export (Payment) --
-
-                var getCvPaymentDetails = await _dbContext.FilprideCheckVoucherDetails
-                    .Where(cvd => checkVoucherPayment.Select(cvh => cvh.CheckVoucherHeaderNo).Contains(cvd.TransactionNo))
-                    .OrderBy(cvd => cvd.CheckVoucherHeaderId)
-                    .ToListAsync();
-
-                foreach (var item in getCvPaymentDetails)
-                {
-                    worksheet6.Cells[cvdRow, 1].Value = item.AccountNo;
-                    worksheet6.Cells[cvdRow, 2].Value = item.AccountName;
-                    worksheet6.Cells[cvdRow, 3].Value = item.TransactionNo;
-                    worksheet6.Cells[cvdRow, 4].Value = item.Debit;
-                    worksheet6.Cells[cvdRow, 5].Value = item.Credit;
-                    worksheet6.Cells[cvdRow, 6].Value = item.CheckVoucherHeaderId;
-                    worksheet6.Cells[cvdRow, 7].Value = item.CheckVoucherDetailId;
-                    worksheet6.Cells[cvdRow, 8].Value = item.Amount;
-                    worksheet6.Cells[cvdRow, 9].Value = item.AmountPaid;
-                    worksheet6.Cells[cvdRow, 10].Value = item.SupplierId;
-                    worksheet6.Cells[cvdRow, 11].Value = item.EwtPercent;
-                    worksheet6.Cells[cvdRow, 12].Value = item.IsUserSelected;
-                    worksheet6.Cells[cvdRow, 13].Value = item.IsVatable;
-
-                    cvdRow++;
-                }
-
-                #endregion -- Check Voucher Details Export (Payment) --
 
                 #region -- Receving Report Export --
 
