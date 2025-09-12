@@ -106,8 +106,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             s.Amount?.ToString()?.Contains(searchValue) == true ||
                             s.Category.ToLower().Contains(searchValue) ||
                             s.CvType?.ToLower().Contains(searchValue) == true ||
-                            s.CreatedBy!.ToLower().Contains(searchValue) ||
-                            (s.PONo != null && s.PONo.Any(po => po != null && po.ToLower().Contains(searchValue)))
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                         )
                         .ToList();
                 }
