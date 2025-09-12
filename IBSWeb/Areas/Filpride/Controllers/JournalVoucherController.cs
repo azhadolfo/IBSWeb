@@ -268,59 +268,38 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
         }
 
-        public async Task<IActionResult> GetCV(int id)
+        public async Task<IActionResult> GetCV(int id, CancellationToken cancellationToken)
         {
-            var header = _dbContext.FilprideCheckVoucherHeaders
-                .Include(s => s.Employee)
+            var model = await _dbContext.FilprideCheckVoucherHeaders
                 .Include(s => s.Supplier)
-                .FirstOrDefault(cvh => cvh.CheckVoucherHeaderId == id);
+                .Include(cvd => cvd.Details)
+                .FirstOrDefaultAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
 
-            if (header == null)
+            if (model != null)
             {
-                return NotFound();
+                return Json(new
+                {
+                    CVNo = model.CheckVoucherHeaderNo,
+                    model.Date,
+                    Name = model.Supplier!.SupplierName,
+                    Address = model.Supplier.SupplierAddress,
+                    TinNo = model.Supplier.SupplierTin,
+                    model.PONo,
+                    model.SINo,
+                    model.Payee,
+                    Amount = model.Total,
+                    model.Particulars,
+                    model.CheckNo,
+                    AccountNo = model.Details!.Select(jvd => jvd.AccountNo),
+                    AccountName = model.Details!.Select(jvd => jvd.AccountName),
+                    Debit = model.Details!.Select(jvd => jvd.Debit),
+                    Credit = model.Details!.Select(jvd => jvd.Credit),
+                    TotalDebit = model.Details!.Select(cvd => cvd.Debit).Sum(),
+                    TotalCredit = model.Details!.Select(cvd => cvd.Credit).Sum(),
+                });
             }
 
-            var details = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
-                .ToListAsync();
-
-            var viewModel = new CheckVoucherVM
-            {
-                Header = header,
-                Details = details
-            };
-
-            var cvNo = viewModel.Header.CheckVoucherHeaderNo;
-            var date = viewModel.Header.Date;
-            var name = viewModel.Header.Payee;
-            var address = viewModel.Header.Address;
-            var tinNo = viewModel.Header.Tin;
-            var poNo = viewModel.Header.PONo;
-            var siNo = viewModel.Header.SINo;
-            var payee = viewModel.Header.Payee;
-            var amount = viewModel.Header.Total;
-            var particulars = viewModel.Header.Particulars;
-            var checkNo = viewModel.Header.CheckNo;
-            var totalDebit = viewModel.Details.Select(cvd => cvd.Debit).Sum();
-            var totalCredit = viewModel.Details.Select(cvd => cvd.Credit).Sum();
-
-            return Json(new
-            {
-                CVNo = cvNo,
-                Date = date,
-                Name = name,
-                Address = address,
-                TinNo = tinNo,
-                PONo = poNo,
-                SINo = siNo,
-                Payee = payee,
-                Amount = amount,
-                Particulars = particulars,
-                CheckNo = checkNo,
-                ViewModel = viewModel,
-                TotalDebit = totalDebit,
-                TotalCredit = totalCredit,
-            });
+            return Json(null);
         }
 
         [HttpGet]
