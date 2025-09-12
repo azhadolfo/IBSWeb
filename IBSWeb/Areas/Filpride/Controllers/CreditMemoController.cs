@@ -310,38 +310,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var creditMemo = await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
-
-            if (creditMemo == null)
+            try
             {
-                return NotFound();
+                var creditMemo =
+                    await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
+
+                if (creditMemo == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+                if (creditMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {creditMemo.TransactionDate:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new CreditMemoViewModel
+                {
+                    CreditMemoId = creditMemo.CreditMemoId,
+                    Source = creditMemo.Source,
+                    TransactionDate = creditMemo.TransactionDate,
+                    SalesInvoiceId = creditMemo.SalesInvoiceId,
+                    Quantity = creditMemo.Quantity,
+                    AdjustedPrice = creditMemo.AdjustedPrice,
+                    ServiceInvoiceId = creditMemo.ServiceInvoiceId,
+                    Period = creditMemo.Period,
+                    Amount = creditMemo.Amount,
+                    Remarks = creditMemo.Remarks,
+                    Description = creditMemo.Description,
+                    MinDate = minDate,
+                };
+
+                await IncludeSelectLists(viewModel, cancellationToken);
+
+                return View(viewModel);
             }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
-            if (creditMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+            catch (Exception ex)
             {
-                throw new ArgumentException($"Cannot edit this record because the period {creditMemo.TransactionDate:MMM yyyy} is already closed.");
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch credit memo. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
             }
-
-            var viewModel = new CreditMemoViewModel
-            {
-                CreditMemoId = creditMemo.CreditMemoId,
-                Source = creditMemo.Source,
-                TransactionDate = creditMemo.TransactionDate,
-                SalesInvoiceId = creditMemo.SalesInvoiceId,
-                Quantity = creditMemo.Quantity,
-                AdjustedPrice = creditMemo.AdjustedPrice,
-                ServiceInvoiceId = creditMemo.ServiceInvoiceId,
-                Period = creditMemo.Period,
-                Amount = creditMemo.Amount,
-                Remarks = creditMemo.Remarks,
-                Description = creditMemo.Description,
-                MinDate = minDate,
-            };
-
-            await IncludeSelectLists(viewModel, cancellationToken);
-
-            return View(viewModel);
         }
 
         [HttpPost]

@@ -851,37 +851,50 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var debitMemo = await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
-
-            if (debitMemo == null)
+            try
             {
-                return NotFound();
+                var debitMemo =
+                    await _unitOfWork.FilprideDebitMemo.GetAsync(dm => dm.DebitMemoId == id, cancellationToken);
+
+                if (debitMemo == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
+                if (debitMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {debitMemo.TransactionDate:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new DebitMemoViewModel
+                {
+                    DebitMemoId = debitMemo.DebitMemoId,
+                    Source = debitMemo.Source,
+                    TransactionDate = debitMemo.TransactionDate,
+                    SalesInvoiceId = debitMemo.SalesInvoiceId,
+                    Quantity = debitMemo.Quantity,
+                    AdjustedPrice = debitMemo.AdjustedPrice,
+                    ServiceInvoiceId = debitMemo.ServiceInvoiceId,
+                    Period = debitMemo.Period,
+                    Amount = debitMemo.Amount,
+                    Remarks = debitMemo.Remarks,
+                    Description = debitMemo.Description,
+                    MinDate = minDate,
+                };
+
+                await IncludeSelectLists(viewModel, cancellationToken);
+                return View(viewModel);
             }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
-            if (debitMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+            catch (Exception ex)
             {
-                throw new ArgumentException($"Cannot edit this record because the period {debitMemo.TransactionDate:MMM yyyy} is already closed.");
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch debit memo. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
             }
-
-            var viewModel = new DebitMemoViewModel
-            {
-                DebitMemoId = debitMemo.DebitMemoId,
-                Source = debitMemo.Source,
-                TransactionDate = debitMemo.TransactionDate,
-                SalesInvoiceId = debitMemo.SalesInvoiceId,
-                Quantity = debitMemo.Quantity,
-                AdjustedPrice = debitMemo.AdjustedPrice,
-                ServiceInvoiceId = debitMemo.ServiceInvoiceId,
-                Period = debitMemo.Period,
-                Amount = debitMemo.Amount,
-                Remarks = debitMemo.Remarks,
-                Description = debitMemo.Description,
-                MinDate = minDate,
-            };
-
-            await IncludeSelectLists(viewModel, cancellationToken);
-            return View(viewModel);
         }
 
         [HttpPost]

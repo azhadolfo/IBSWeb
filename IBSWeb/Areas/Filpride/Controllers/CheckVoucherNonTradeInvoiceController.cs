@@ -598,67 +598,81 @@ namespace IBSWeb.Areas.Filpride.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
         {
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
+            try
             {
-                return BadRequest();
-            }
+                var companyClaims = await GetCompanyClaimAsync();
 
-            var existingModel = await _unitOfWork.FilprideCheckVoucher
-                .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-
-            if (existingModel == null)
-            {
-                return NotFound();
-            }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-            if (existingModel.Date < DateOnly.FromDateTime(minDate))
-            {
-                throw new ArgumentException($"Cannot edit this record because the period {existingModel.Date:MMM yyyy} is already closed.");
-            }
-
-            var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId)
-                .ToListAsync(cancellationToken);
-
-            existingModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-            existingModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
-
-            CheckVoucherNonTradeInvoicingViewModel viewModel = new()
-            {
-                CVId = existingModel.CheckVoucherHeaderId,
-                Suppliers = existingModel.Suppliers,
-                SupplierName = existingModel.Supplier!.SupplierName,
-                ChartOfAccounts = existingModel.COA,
-                TransactionDate = existingModel.Date,
-                SupplierId = existingModel.SupplierId ?? 0,
-                SupplierAddress = existingModel.Address,
-                SupplierTinNo = existingModel.Tin,
-                PoNo = existingModel.PONo?.FirstOrDefault(),
-                SiNo = existingModel.SINo?.FirstOrDefault(),
-                Total = existingModel.Total,
-                Particulars = existingModel.Particulars!,
-                AccountingEntries = []
-            };
-
-            foreach (var details in existingDetailsModel)
-            {
-                viewModel.AccountingEntries.Add(new AccountingEntryViewModel
+                if (companyClaims == null)
                 {
-                    AccountTitle = $"{details.AccountNo} {details.AccountName}",
-                    Amount = details.IsVatable ? Math.Round(details.Debit * 1.12m, 2) : Math.Round(details.Debit, 2),
-                    Vatable = details.IsVatable,
-                    TaxPercentage = details.EwtPercent,
-                    BankMasterFileId = details.BankId,
-                    CompanyMasterFileId = details.CompanyId,
-                    EmployeeMasterFileId = details.EmployeeId,
-                    CustomerMasterFileId = details.CustomerId,
-                });
-            }
+                    return BadRequest();
+                }
 
-            return View(viewModel);
+                var existingModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
+
+                if (existingModel == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (existingModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingModel.Date:MMM yyyy} is already closed.");
+                }
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(d => d.IsUserSelected && d.CheckVoucherHeaderId == existingModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                existingModel.Suppliers =
+                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                existingModel.COA = await _unitOfWork.GetChartOfAccountListAsyncByAccountTitle(cancellationToken);
+
+                CheckVoucherNonTradeInvoicingViewModel viewModel = new()
+                {
+                    CVId = existingModel.CheckVoucherHeaderId,
+                    Suppliers = existingModel.Suppliers,
+                    SupplierName = existingModel.Supplier!.SupplierName,
+                    ChartOfAccounts = existingModel.COA,
+                    TransactionDate = existingModel.Date,
+                    SupplierId = existingModel.SupplierId ?? 0,
+                    SupplierAddress = existingModel.Address,
+                    SupplierTinNo = existingModel.Tin,
+                    PoNo = existingModel.PONo?.FirstOrDefault(),
+                    SiNo = existingModel.SINo?.FirstOrDefault(),
+                    Total = existingModel.Total,
+                    Particulars = existingModel.Particulars!,
+                    AccountingEntries = []
+                };
+
+                foreach (var details in existingDetailsModel)
+                {
+                    viewModel.AccountingEntries.Add(new AccountingEntryViewModel
+                    {
+                        AccountTitle = $"{details.AccountNo} {details.AccountName}",
+                        Amount =
+                            details.IsVatable ? Math.Round(details.Debit * 1.12m, 2) : Math.Round(details.Debit, 2),
+                        Vatable = details.IsVatable,
+                        TaxPercentage = details.EwtPercent,
+                        BankMasterFileId = details.BankId,
+                        CompanyMasterFileId = details.CompanyId,
+                        EmployeeMasterFileId = details.EmployeeId,
+                        CustomerMasterFileId = details.CustomerId,
+                    });
+                }
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch cv non trade invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -1337,71 +1351,86 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
+            try
             {
-                return NotFound();
+                var existingHeaderModel =
+                    await _unitOfWork.FilprideCheckVoucher.GetAsync(cv => cv.CheckVoucherHeaderId == id,
+                        cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
+
+                var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .ToListAsync(cancellationToken);
+
+                var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
+                var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
+                var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
+                var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
+
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var coa = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+
+                var suppliers =
+                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+
+                var details = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .Include(s => s.Supplier)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                var getSupplierId = await _dbContext.FilprideCheckVoucherDetails
+                    .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
+                    .OrderBy(s => s.CheckVoucherDetailId)
+                    .Select(s => s.SupplierId)
+                    .ToArrayAsync(cancellationToken);
+
+                CheckVoucherNonTradeInvoicingViewModel model = new()
+                {
+                    MultipleSupplierId = getSupplierId,
+                    SupplierAddress = details?.Supplier?.SupplierAddress,
+                    SupplierTinNo = details?.Supplier?.SupplierTin,
+                    Suppliers = suppliers,
+                    TransactionDate = existingHeaderModel.Date,
+                    Particulars = existingHeaderModel.Particulars!,
+                    Total = existingHeaderModel.Total,
+                    AccountNumber = accountNumbers,
+                    AccountTitle = accountTitles,
+                    Debit = debit,
+                    Credit = credit,
+                    ChartOfAccounts = coa,
+                    CVId = existingHeaderModel.CheckVoucherHeaderId,
+                    PoNo = existingHeaderModel.PONo?.First(),
+                    SiNo = existingHeaderModel.SINo?.First(),
+                    Type = existingHeaderModel.Type,
+                };
+
+                return View(model);
             }
-
-            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
-            if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+            catch (Exception ex)
             {
-                throw new ArgumentException($"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch cv non trade payroll invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
             }
-
-            var existingDetailsModel = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                .ToListAsync(cancellationToken);
-
-            var accountNumbers = existingDetailsModel.Select(model => model.AccountNo).ToArray();
-            var accountTitles = existingDetailsModel.Select(model => model.AccountName).ToArray();
-            var debit = existingDetailsModel.Select(model => model.Debit).ToArray();
-            var credit = existingDetailsModel.Select(model => model.Credit).ToArray();
-
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
-            {
-                return BadRequest();
-            }
-
-            var coa = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-
-            var suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
-            var details = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                .Include(s => s.Supplier)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            var getSupplierId = await _dbContext.FilprideCheckVoucherDetails
-                .Where(cvd => cvd.CheckVoucherHeaderId == existingHeaderModel.CheckVoucherHeaderId)
-                .OrderBy(s => s.CheckVoucherDetailId)
-                .Select(s => s.SupplierId)
-                .ToArrayAsync(cancellationToken);
-
-            CheckVoucherNonTradeInvoicingViewModel model = new()
-            {
-                MultipleSupplierId = getSupplierId,
-                SupplierAddress = details?.Supplier?.SupplierAddress,
-                SupplierTinNo = details?.Supplier?.SupplierTin,
-                Suppliers = suppliers,
-                TransactionDate = existingHeaderModel.Date,
-                Particulars = existingHeaderModel.Particulars!,
-                Total = existingHeaderModel.Total,
-                AccountNumber = accountNumbers,
-                AccountTitle = accountTitles,
-                Debit = debit,
-                Credit = credit,
-                ChartOfAccounts = coa,
-                CVId = existingHeaderModel.CheckVoucherHeaderId,
-                PoNo = existingHeaderModel.PONo?.First(),
-                SiNo = existingHeaderModel.SINo?.First(),
-                Type = existingHeaderModel.Type,
-            };
-
-            return View(model);
         }
 
         [HttpPost]

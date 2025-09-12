@@ -361,9 +361,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
             catch (Exception ex)
             {
+                TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to fetch sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                return StatusCode(500, "An error occurred. Please try again later.");
+                return RedirectToAction(nameof(Index));
             }
         }
 
