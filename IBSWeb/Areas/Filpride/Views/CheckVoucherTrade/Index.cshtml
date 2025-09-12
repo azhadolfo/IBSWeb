@@ -23,6 +23,7 @@
                         <th class="text-start">CV#</th>
                         <th class="text-start">Date</th>
                         <th class="text-start">Supplier</th>
+                        <th class="text-start">PO#</th>
                         <th class="text-start">Total</th>
                         <th class="text-start">Created By</th>
                         <th class="text-start">Status</th>
@@ -133,6 +134,21 @@
                     }
                 },
                 { "data": "supplier.supplierName" },
+                {
+                    "data": "poNo",
+                    "name": "poNo",
+                    "render": function(data, type, row) {
+                        
+                        if (row.poNo.length === 1){
+                            return `<span>${row.poNo[0]}</span>`;
+                        }
+
+                        return `<span data-bs-toggle="tooltip" title="${row.poNo.join(', ')}">
+                                        ${row.poNo.length} POs
+                                    </span>`;
+
+                    }
+                },
                 {
                     "data": "total",
                     "render": function (data, type, row) {
