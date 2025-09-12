@@ -207,6 +207,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Quantity = viewModel.Quantity,
                     UnitPrice = viewModel.UnitPrice,
                     Amount = viewModel.Quantity * viewModel.UnitPrice,
+                    Balance = viewModel.Quantity * viewModel.UnitPrice,
                     Remarks = viewModel.Remarks,
                     TransactionDate = viewModel.TransactionDate,
                     Discount = viewModel.Discount,
@@ -398,6 +399,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.Remarks = viewModel.Remarks;
                 existingRecord.Discount = viewModel.Discount;
                 existingRecord.Amount = viewModel.Quantity * viewModel.UnitPrice;
+                existingRecord.Balance = viewModel.Quantity * viewModel.UnitPrice;
                 existingRecord.ProductId = viewModel.ProductId;
                 existingRecord.ReceivingReportId = viewModel.ReceivingReportId;
                 existingRecord.CustomerOrderSlipId = viewModel.CustomerOrderSlipId;
