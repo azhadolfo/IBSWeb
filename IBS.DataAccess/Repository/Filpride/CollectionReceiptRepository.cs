@@ -618,8 +618,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new NullReferenceException("Invoice Not Found.");
             }
 
-            si.AmountPaid -= si.Amount;
-            si.Balance += si.Amount;
+            si.AmountPaid -= collectionReceiptDetail.Amount;
+            si.Balance += collectionReceiptDetail.Amount;
             si.IsPaid = false;
             si.PaymentStatus = "Pending";
 
@@ -684,8 +684,6 @@ namespace IBS.DataAccess.Repository.Filpride
                     offsetAmount = 0;
                 }
             }
-
-            await _db.SaveChangesAsync(cancellationToken);
         }
 
         public async Task UpdateSV(int id, decimal paidAmount, decimal offsetAmount, CancellationToken cancellationToken = default)
