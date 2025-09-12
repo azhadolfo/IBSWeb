@@ -295,11 +295,6 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                 }
             });
         });
-
-        // Trigger customer change on page load to populate invoices
-        if ($("#CustomerId").val()) {
-            $("#CustomerId").trigger('change');
-        }
     });
 </script>
 
@@ -349,7 +344,6 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         const $siAmount = $(".siAmount");
 
         $invoices.change(function () {
-            
             // get values in multiselect
             let selectedInvoices = $invoices.val() || [];
 
@@ -366,12 +360,13 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                     method: "GET",
                     data: { id },
                     success: function (data) {
-                        let siNo = $invoices.find(`option[value='${siNo}']`).text();
+                        let siNo = id;
+                        let siText = $invoices.find(`option[value='${id}']`).text();
                         let siBalance = data.amount;
                         InvoicePayments.push({
-                            invoiceId: 4,
-                            invoiceNumber: "INV004",
-                            paymentAmount: 300.00
+                            invoiceId: siNo,
+                            invoiceNumber: siText,
+                            paymentAmount: siBalance
                         });
                     },
                     error: function (xhr, status, error) {
@@ -496,6 +491,11 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
             $("#grandTotalNetOfEWT").text(formatNumber(grandTotalNetOfEWT));
             $("#grandTotalAmountPaid").text(formatNumber(grandTotalAmountPaid));
             $("#grandTotalBalance").text(formatNumber(grandTotalBalance));
+        }
+
+        // Trigger invoice change on page load to populate invoices
+        if ($("#CustomerId").val()) {
+            $("#invoices").trigger('change');
         }
     });
 </script>

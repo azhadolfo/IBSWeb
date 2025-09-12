@@ -706,6 +706,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 crPayments.Add(crPayment);
             }
 
+            var invoicesPaid = await _dbContext.FilprideCollectionReceiptDetails
+                .Where(crd => crd.CollectionReceiptNo == existingModel.CollectionReceiptNo)
+                .Select(crd => crd.InvoiceNo)
+                .ToListAsync(cancellationToken);
+
             var viewModel = new CollectionReceiptMultipleSiViewModel
             {
                 CollectionReceiptId = existingModel.CollectionReceiptId,
@@ -716,9 +721,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Remarks = existingModel.Remarks,
                 MultipleSIId = existingModel.MultipleSIId!,
                 SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
-                                           && !si.IsPaid
-                                           && si.CustomerId == existingModel.CustomerId
-                                           && si.PostedBy != null, cancellationToken))
+                        && (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!))
+                        && si.CustomerId == existingModel.CustomerId
+                        && si.PostedBy != null, cancellationToken))
                     .OrderBy(s => s.SalesInvoiceId)
                     .Select(s => new SelectListItem
                     {
@@ -812,6 +817,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 #region --Saving default value
 
+                // get existing details
+                var listOfDetails = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ToListAsync(cancellationToken);
+
+                foreach (var detail in listOfDetails)
+                {
+                    // based on details, revert the calculation done to sales invoices
+                    await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
+                }
+
+                // delete all details
+                await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                var details = new List<FilprideCollectionReceiptDetail>();
+
                 var bankAccount = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
 
@@ -837,21 +860,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.MultipleSI = new string[viewModel.MultipleSIId.Length];
                 existingModel.SIMultipleAmount = new decimal[viewModel.MultipleSIId.Length];
                 existingModel.MultipleTransactionDate = new DateOnly[viewModel.MultipleSIId.Length];
-
-                var listOfDetails = await _dbContext.FilprideCollectionReceiptDetails
-                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
-                    .ToListAsync(cancellationToken);
-
-                foreach (var detail in listOfDetails)
-                {
-                    await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
-                }
-
-                await _dbContext.FilprideCollectionReceiptDetails
-                    .Where(x => x.CollectionReceiptId == existingModel.CollectionReceiptId)
-                    .ExecuteDeleteAsync(cancellationToken);
-
-                var details = new List<FilprideCollectionReceiptDetail>();
 
                 // looping all the new SI
                 for (var i = 0; i < viewModel.MultipleSIId.Length; i++)
@@ -881,7 +889,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 await _dbContext.FilprideCollectionReceiptDetails.AddRangeAsync(details, cancellationToken);
-                await _unitOfWork.SaveAsync(cancellationToken);
 
                 var offset = await _unitOfWork.FilprideCollectionReceipt.GetOffsettings(existingModel.CollectionReceiptNo!, existingModel.SINo!, existingModel.Company, cancellationToken);
                 var offsetAmount = offset.Sum(o => o.Amount);
@@ -1552,6 +1559,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                // get existing details
+                var detail = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (detail == null)
+                {
+                    throw new NullReferenceException("Collection Receipt Details Not Found.");
+                }
+
+                // based on details, revert the calculation done to sales invoices
+                await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
+
                 var bankAccount = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
 
@@ -1575,17 +1595,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
-
-                var detail = await _dbContext.FilprideCollectionReceiptDetails
-                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (detail == null)
-                {
-                    throw new NullReferenceException("Collection Receipt Details Not Found.");
-                }
-
-                await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
