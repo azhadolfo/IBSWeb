@@ -98,18 +98,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     checkVoucherHeaders = checkVoucherHeaders
-                    .Where(s =>
-                        s.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) ||
-                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
-                        s.Total.ToString().Contains(searchValue) ||
-                        s.Amount?.ToString()?.Contains(searchValue) == true ||
-                        s.Category.ToLower().Contains(searchValue) ||
-                        s.CvType?.ToLower().Contains(searchValue) == true ||
-                        s.CreatedBy!.ToLower().Contains(searchValue) ||
-                        (s.PONo != null && s.PONo.Any(po => po.ToLower().Contains(searchValue)))
+                        .Where(s =>
+                            s.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                            s.Total.ToString().Contains(searchValue) ||
+                            s.Amount?.ToString()?.Contains(searchValue) == true ||
+                            s.Category.ToLower().Contains(searchValue) ||
+                            s.CvType?.ToLower().Contains(searchValue) == true ||
+                            s.CreatedBy!.ToLower().Contains(searchValue) ||
+                            (s.PONo != null && s.PONo.Any(po => po != null && po.ToLower().Contains(searchValue)))
                         )
-                    .ToList();
+                        .ToList();
                 }
 
                 // Sorting
