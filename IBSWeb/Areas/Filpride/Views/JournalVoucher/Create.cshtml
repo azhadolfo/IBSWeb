@@ -228,7 +228,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
-                        <select asp-items="@Model.Header?.COA" class="form-select" style="width: 100%" id="AccountNo">
+                        <select asp-items="@Model.Header?.COA" class="form-select js-select2" style="width: 100%" id="AccountNo">
                             <option></option>
                         </select>
                         <span class="text-danger"></span>
@@ -258,9 +258,15 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        $('#AccountNo').select({
-            dropdownParent: $('#AddAccEntry')
-        });
+        $(document).ready(function () {
+            $('#AccountNo').select2({
+                dropdownParent: $('#AddAccEntry'),
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+        })
     </script>
     <script>
         function saveAccountingEntry() {
