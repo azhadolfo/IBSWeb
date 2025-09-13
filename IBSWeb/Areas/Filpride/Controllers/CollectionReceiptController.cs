@@ -1244,17 +1244,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetSalesInvoices(int customerNo, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetSalesInvoices(int customerNo, int? crId, CancellationToken cancellationToken)
         {
             var companyClaims = await GetCompanyClaimAsync();
 
-            var invoices = (await _unitOfWork.FilprideSalesInvoice
-                .GetAllAsync(si => si.Company == companyClaims
-                                   && !si.IsPaid
-                                   && si.CustomerId == customerNo
-                                   && si.PostedBy != null, cancellationToken))
-                .OrderBy(si => si.SalesInvoiceId)
-                .ToList();
+            List<FilprideSalesInvoice> invoices;
+
+            if (crId != null)
+            {
+                var invoicesPaid = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(crd => crd.CollectionReceiptId == crId)
+                    .Select(crd => crd.InvoiceNo)
+                    .ToListAsync(cancellationToken);
+
+                invoices = (await _unitOfWork.FilprideSalesInvoice
+                        .GetAllAsync(si => si.Company == companyClaims
+                                           && (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!))
+                                           && si.CustomerId == customerNo
+                                           && si.PostedBy != null, cancellationToken))
+                    .OrderBy(si => si.SalesInvoiceId)
+                    .ToList();
+            }
+            else
+            {
+                invoices = (await _unitOfWork.FilprideSalesInvoice
+                        .GetAllAsync(si => si.Company == companyClaims
+                                           && !si.IsPaid
+                                           && si.CustomerId == customerNo
+                                           && si.PostedBy != null, cancellationToken))
+                    .OrderBy(si => si.SalesInvoiceId)
+                    .ToList();
+            }
 
             var invoiceList = invoices.Select(si => new SelectListItem
             {
@@ -2275,6 +2295,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> MultipleInvoiceBalance(int siNo)
         {
+
+
             var salesInvoice = await _unitOfWork.FilprideSalesInvoice
                 .GetAsync(si => si.SalesInvoiceId == siNo);
 
