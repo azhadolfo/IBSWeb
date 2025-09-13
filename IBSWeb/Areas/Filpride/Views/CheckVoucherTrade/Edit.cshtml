@@ -315,9 +315,9 @@
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
-                                    <td class="text-end grossAmount">${formatNumber(rr.netOfEwtAmount)}</td>
+                                    <td class="text-end grossAmount">${formatNumberToFour(rr.netOfEwtAmount)}</td>
                                     <td class="text-end"><input type="text" class="paymentAmount text-end ${inputamountClass}" readonly style="${display}" value="${amountPaid}"></td>
-                                    <td class="text-end balance">${formatNumber(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
+                                    <td class="text-end balance">${formatNumberToFour(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
                                 </tr>
                             `);
 
@@ -432,12 +432,12 @@
                     selectedRecords.push(this.value); // ✅ push instead of add
                 }
                 inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumber(grossAmount - balance));
+                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
             } else {
                 selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumber(grossAmount));
+                row.find('.balance').text(formatNumberToFour(grossAmount));
             }
 
             reindexSelected();

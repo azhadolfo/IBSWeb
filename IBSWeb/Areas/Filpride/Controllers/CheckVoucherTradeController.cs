@@ -502,8 +502,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.ReceivingReportNo,
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
-                        AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                        AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
 
