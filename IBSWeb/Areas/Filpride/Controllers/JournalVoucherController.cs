@@ -635,9 +635,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var detailsId = ids.First();
                         ids.RemoveAt(0);
                         var details = existingDetailsModel.First(o => o.JournalVoucherDetailId == detailsId);
+                        var currentAccountNumber = viewModel.AccountNumber[i];
+                        var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                            .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
 
-                        details.AccountNo = viewModel.AccountNumber[i];
-                        details.AccountName = viewModel.AccountTitle[i];
+                        details.AccountNo = currentAccountNumber;
+                        details.AccountName = accountTitle!.AccountName;
                         details.Debit = viewModel.Debit[i];
                         details.Credit = viewModel.Credit[i];
                         details.TransactionNo = viewModel.JVNo!;
@@ -650,11 +653,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                     else
                     {
+                        var currentAccountNumber = viewModel.AccountNumber[i];
+                        var accountTitle = await _unitOfWork.FilprideChartOfAccount
+                            .GetAsync(coa => coa.AccountNumber == currentAccountNumber, cancellationToken);
                         // Add new record
                         var newDetails = new FilprideJournalVoucherDetail
                         {
-                            AccountNo = viewModel.AccountNumber[i],
-                            AccountName = viewModel.AccountTitle[i],
+                            AccountNo = currentAccountNumber,
+                            AccountName = accountTitle!.AccountName,
                             Debit = viewModel.Debit[i],
                             Credit = viewModel.Credit[i],
                             TransactionNo = viewModel.JVNo!,

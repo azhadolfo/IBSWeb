@@ -185,7 +185,7 @@
                             {
                                 <tr>
                                     <input type="hidden" name="AccountNumber" value="@Model.AccountNumber[i]"/>
-                                    <td><input type="text" name="AccountTitle" value="@Model.AccountTitle[i]" class="w-100" style="border:none" readonly/></td>
+                                    <td><input type="text" name="AccountTitle" value="@Model.AccountNumber[i] @Model.AccountTitle[i]" class="w-100" style="border:none" readonly/></td>
                                     <td><input type="text" name="Debit" value="@Model.Debit[i]" class="w-100" style="border:none" readonly/></td>
                                     <td><input type="text" name="Credit" value="@Model.Credit[i]" class="w-100" style="border:none" readonly/></td>
                                     <td><button type='button' class='btn btn-danger btn-sm' onclick='removeRow(this)'>Remove</button></td>
@@ -231,7 +231,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
-                        <select asp-items="@Model?.COA" class="form-select" style="width: 100%" id="AccountNo">
+                        <select asp-items="@Model?.COA" class="form-select js-select2" style="width: 100%" id="AccountNo">
                             <option></option>
                         </select>
                         <span class="text-danger"></span>
@@ -261,9 +261,15 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        $('#AccountNo').select({
-            dropdownParent: $('#AddAccEntry')
-        });
+        $(document).ready(function () {
+            $('#AccountNo').select2({
+                dropdownParent: $('#AddAccEntry'),
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+        })
     </script>
     <script>
         $(document).ready(function () {
