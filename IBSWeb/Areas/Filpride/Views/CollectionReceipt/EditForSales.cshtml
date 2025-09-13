@@ -260,7 +260,7 @@ Balance:        <span id="balance"></span>
                     data: { customerNo: customerNo, crId: collectionReceiptId },
                     success: function (data) {
 
-                        console.log(data);
+                        console.log(JSON.stringify(data));
                         $("#invoices").empty();
 
                         // Check if data is an array and not null
