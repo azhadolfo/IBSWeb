@@ -267,11 +267,15 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         // Initialize customer change handler
         $("#CustomerId").change(function () {
             var customerNo = $(this).val();
+            var crId = '@Model.CollectionReceiptId';
 
             $.ajax({
                 url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
                 type: "GET",
-                data: { customerNo: customerNo },
+                data: {
+                    customerNo: customerNo,
+                    crId: crId
+                },
                 success: function (data) {
                     $("#invoices").empty();
 
@@ -295,6 +299,11 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                 }
             });
         });
+        
+        // Trigger customer change on page load to populate invoices
+        if ($("#CustomerId").val()) {
+            $("#CustomerId").trigger('change');
+        }
     });
 </script>
 
@@ -360,14 +369,17 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                     method: "GET",
                     data: { id },
                     success: function (data) {
-                        let siNo = id;
-                        let siText = $invoices.find(`option[value='${id}']`).text();
-                        let siBalance = data.amount;
-                        InvoicePayments.push({
-                            invoiceId: siNo,
-                            invoiceNumber: siText,
-                            paymentAmount: siBalance
-                        });
+                        console.log("data: " + data);
+                        if (data != null){
+                            let siNo = id;
+                            let siText = $invoices.find(`option[value='${id}']`).text();
+                            let siBalance = data.Amount;
+                            InvoicePayments.push({
+                                invoiceId: siNo,
+                                invoiceNumber: siText,
+                                paymentAmount: siBalance
+                            });
+                        }
                     },
                     error: function (xhr, status, error) {
                         console.error('Error fetching balance:', error);
@@ -491,11 +503,6 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
             $("#grandTotalNetOfEWT").text(formatNumber(grandTotalNetOfEWT));
             $("#grandTotalAmountPaid").text(formatNumber(grandTotalAmountPaid));
             $("#grandTotalBalance").text(formatNumber(grandTotalBalance));
-        }
-
-        // Trigger invoice change on page load to populate invoices
-        if ($("#CustomerId").val()) {
-            $("#invoices").trigger('change');
         }
     });
 </script>
