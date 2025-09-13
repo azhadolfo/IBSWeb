@@ -2496,8 +2496,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             Id = dr.DeliveryReceiptId,
                             dr.DeliveryReceiptNo,
-                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Two_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
+                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);
@@ -2557,8 +2557,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = dr.DeliveryReceiptId,
                         dr.DeliveryReceiptNo,
-                        AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                        AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
             return Json(drList);

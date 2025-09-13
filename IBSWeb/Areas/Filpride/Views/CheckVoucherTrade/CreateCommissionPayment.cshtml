@@ -244,9 +244,9 @@
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox"></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td class="text-end grossAmount">${formatNumber(dr.netOfEwtAmount)}</td>
+                                            <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end" readonly style="display: none"></td>
-                                            <td class="text-end balance">${formatNumber(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
+                                            <td class="text-end balance">${formatNumberToFour(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
@@ -306,12 +306,12 @@
             if (this.checked) {
                 selectedRecords.add(this.value);
                 inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumber(grossAmount - balance));
+                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
             } else {
                 selectedRecords.delete(this.value);
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumber(grossAmount));
+                row.find('.balance').text(formatNumberToFour(grossAmount));
             }
 
             reindexSelected();
