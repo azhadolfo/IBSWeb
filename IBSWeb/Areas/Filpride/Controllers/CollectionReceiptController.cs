@@ -1254,12 +1254,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 var invoicesPaid = await _dbContext.FilprideCollectionReceiptDetails
                     .Where(crd => crd.CollectionReceiptId == crId)
-                    .Select(crd => crd.InvoiceNo)
                     .ToListAsync(cancellationToken);
+
+                var invoiceNo = invoicesPaid
+                    .Select(crd => crd.InvoiceNo);
 
                 invoices = (await _unitOfWork.FilprideSalesInvoice
                         .GetAllAsync(si => si.Company == companyClaims
-                                           && (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!))
+                                           && (!si.IsPaid || invoiceNo.Contains(si.SalesInvoiceNo!))
                                            && si.CustomerId == customerNo
                                            && si.PostedBy != null, cancellationToken))
                     .OrderBy(si => si.SalesInvoiceId)

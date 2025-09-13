@@ -248,6 +248,8 @@ Balance:        <span id="balance"></span>
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        let collectionReceiptId = @Html.Raw(Json.Serialize(Model.CollectionReceiptId));
+        
         $(document).ready(function () {
             $("#CustomerId").change(function () {
                 var customerNo = $(this).val();
@@ -255,9 +257,10 @@ Balance:        <span id="balance"></span>
                 $.ajax({
                     url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
-                    data: { customerNo: customerNo },
+                    data: { customerNo: customerNo, crId: collectionReceiptId },
                     success: function (data) {
 
+                        console.log(data);
                         $("#invoices").empty();
 
                         // Check if data is an array and not null
@@ -283,6 +286,11 @@ Balance:        <span id="balance"></span>
                     }
                 });
             });
+
+            // Trigger customer change on page load to populate invoices
+            if ($("#CustomerId").val()) {
+                $("#CustomerId").trigger('change');
+            }
         });
     </script>
 
@@ -356,7 +364,6 @@ Balance:        <span id="balance"></span>
                     document.getElementById("total").innerHTML = data.total;
                 }
             });
-
         }
 
         $(document).ready(function () {
