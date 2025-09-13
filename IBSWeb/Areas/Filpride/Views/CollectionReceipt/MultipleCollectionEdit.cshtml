@@ -260,6 +260,7 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
     var existingSelectedInvoices = @Html.Raw(Json.Serialize(Model.MultipleSIId));
     var existingSIAmounts = @Html.Raw(Json.Serialize(Model.SIMultipleAmount));
     var InvoicePayments = @Html.Raw(Json.Serialize(Model.InvoicePayments));
+    var collectionReceiptId = @Html.Raw(Json.Serialize(Model.CollectionReceiptId));
 </script>
 
 <script>
@@ -352,7 +353,9 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         const $siList = $(".siList");
         const $siAmount = $(".siAmount");
 
+        // this function updates the second table that contains SI List and Amount
         $invoices.change(function () {
+            
             // get values in multiselect
             let selectedInvoices = $invoices.val() || [];
 
@@ -364,18 +367,18 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
 
             // loop through newInvoiceIds and make AJAX requests to get amount and number
             newInvoiceIds.forEach(id => {
+                let siNo = id;
                 $.ajax({
                     url: '@Url.Action("MultipleInvoiceBalance", "CollectionReceipt", new { area = "Filpride" })',
                     method: "GET",
-                    data: { id },
+                    data: { siNo },
                     success: function (data) {
-                        console.log("data: " + data);
+                        console.log("data: " + JSON.stringify(data));
                         if (data != null){
-                            let siNo = id;
                             let siText = $invoices.find(`option[value='${id}']`).text();
                             let siBalance = data.Amount;
                             InvoicePayments.push({
-                                invoiceId: siNo,
+                                invoiceId: id,
                                 invoiceNumber: siText,
                                 paymentAmount: siBalance
                             });
@@ -438,7 +441,7 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
             $.ajax({
                 url: '@Url.Action("MultipleInvoiceBalance", "CollectionReceipt", new { area = "Filpride" })',
                 method: "GET",
-                data: { siNo },
+                data: { siNo, collectionReceiptId },
                 success: function (data) {
                     if (!data) return;
 

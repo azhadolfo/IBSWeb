@@ -2293,17 +2293,20 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return RedirectToAction(nameof(Print), new { id });
         }
 
-        public async Task<IActionResult> MultipleInvoiceBalance(int siNo)
+        public async Task<IActionResult> MultipleInvoiceBalance(int siNo, int? collectionReceiptId, CancellationToken cancellationToken)
         {
-
-
             var salesInvoice = await _unitOfWork.FilprideSalesInvoice
-                .GetAsync(si => si.SalesInvoiceId == siNo);
+                .GetAsync(si => si.SalesInvoiceId == siNo, cancellationToken);
 
             if (salesInvoice == null)
             {
                 return Json(null);
             }
+
+            var collectionsForThisSi = await _dbContext.FilprideCollectionReceiptDetails
+                .Where(crd => crd.InvoiceNo == salesInvoice.SalesInvoiceNo
+                              && crd.CollectionReceiptId == collectionReceiptId)
+                .FirstOrDefaultAsync(cancellationToken);
 
             var vatType = salesInvoice.CustomerOrderSlip?.VatType ?? salesInvoice.Customer!.VatType;
             var hasEwt = salesInvoice.CustomerOrderSlip?.HasEWT ?? salesInvoice.Customer!.WithHoldingTax;
@@ -2325,6 +2328,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
                 : 0m;
             var balance = amount - amountPaid;
+
+            if (collectionsForThisSi != null)
+            {
+                balance += collectionsForThisSi.Amount;
+            }
 
             return Json(new
             {
