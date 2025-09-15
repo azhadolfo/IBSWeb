@@ -1825,7 +1825,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var employee = await _unitOfWork.FilprideEmployee
-                .GetAsync(e => e.EmployeeId == employeeId && e.Company == companyClaims);
+                .GetAsync(e => e.EmployeeId == employeeId);
 
             if (employee == null)
             {
