@@ -264,10 +264,9 @@ Balance:        <span id="balance"></span>
 
                         // Check if data is an array and not null
                         if (Array.isArray(data) && data.length > 0) {
-
-                            document.getElementById("amount").innerHTML = "";
-                            document.getElementById("amountPaid").innerHTML = "";
-                            document.getElementById("balance").innerHTML = "";
+                            ["amount", "ewt", "wvat", "total", "amountPaid", "balance"].forEach(id => {
+                                document.getElementById(id).innerHTML = "";
+                            });
 
                             $("#invoices").append('<option>');
 
@@ -278,8 +277,8 @@ Balance:        <span id="balance"></span>
                                     text: item.text      // Use the correct property for text
                                 }));
                             });
+                            handleInvoiceChange();
                         } else {
-                            // Handle the case where data is null or empty
                             console.log("No sales invoices found for the selected customer.");
                         }
                     }
@@ -411,10 +410,9 @@ Balance:        <span id="balance"></span>
         });
 
         function checkIfExceed (event){
-            let balanceValue = parseFloat($("#balance").text().replace(/,/g, "")) || 0;
-            let checkTotal = parseFloat($("#checkTotal").text().replace(/,/g, "")) || 0;
             event.preventDefault();
-            console.log("checks if exceed");
+            const balanceValue = parseFloat($("#balance").text().replace(/,/g, "")) || 0;
+            const checkTotal = parseFloat($("#checkTotal").text().replace(/,/g, "")) || 0;
             const form = document.getElementById("myForm");
 
             if (!form.checkValidity()) {
