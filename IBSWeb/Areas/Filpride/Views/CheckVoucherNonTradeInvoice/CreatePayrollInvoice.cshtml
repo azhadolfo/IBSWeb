@@ -158,9 +158,15 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        $('#AccountNo').select({
-            dropdownParent: $('#AddAccEntry')
-        });
+        $(document).ready(function () {
+            $('#AccountNo').select2({
+                dropdownParent: $('#AddAccEntry'),
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+        })
     </script>
     <script>
         var suppliers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Suppliers));
