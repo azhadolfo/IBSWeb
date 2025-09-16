@@ -4,8 +4,8 @@ namespace IBS.Utility.Enums
     {
         MJ,
         ELENA,
-        MARLU,
-        SMG,
+        // MARLU,
+        // SMG,
         RGI
     }
 }
