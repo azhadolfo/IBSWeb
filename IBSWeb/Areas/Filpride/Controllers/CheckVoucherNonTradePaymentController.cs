@@ -20,7 +20,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 {
     [Area(nameof(Filpride))]
     [CompanyAuthorize(nameof(Filpride))]
-    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD)]
+    [DepartmentAuthorize(SD.Department_Accounting, SD.Department_RCD, SD.Department_HRAndAdminOrLegal)]
     public class CheckVoucherNonTradePaymentController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
