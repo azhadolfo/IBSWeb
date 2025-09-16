@@ -2342,6 +2342,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (collectionsForThisSi != null)
             {
                 balance += collectionsForThisSi.Amount;
+                amountPaid -= collectionsForThisSi.Amount;
             }
 
             return Json(new
