@@ -1266,13 +1266,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     throw new NullReferenceException("User not found.");
                 }
 
-                var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
-
-                if (isPeriodClosed)
-                {
-                    throw new ArgumentException("Period closed, CV cannot be unposted.");
-                }
-
                 if (cvHeader.Details!.Any(x => x.AmountPaid != 0) || cvHeader.AmountPaid != 0m)
                 {
                     throw new ArgumentException("Payment for this invoice already exists, CV cannot be unposted.");
