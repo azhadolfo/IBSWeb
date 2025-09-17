@@ -1355,22 +1355,23 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var balance = si.Balance;
                 var amountPaid = si.AmountPaid;
 
+                // it means it is in edit
                 if (crId != null)
                 {
-                    var collectionReceiptDetail = await _dbContext.FilprideCollectionReceiptDetails
-                        .Where(crd => crd.CollectionReceiptId == crId)
-                        .FirstOrDefaultAsync(cancellationToken);
-
+                    // get the current amount of this cr
                     var collectionReceiptHeader = await _unitOfWork.FilprideCollectionReceipt
                         .GetAsync(cr => cr.CollectionReceiptId == crId, cancellationToken);
-
                     if (collectionReceiptHeader == null)
                     {
                         return NotFound();
                     }
 
-                    amountPaid -= collectionReceiptHeader.Total;
-                    balance += collectionReceiptHeader.Total;
+                    // retain the fresh value, see if the selected cr is the one used to pay this si
+                    if (collectionReceiptHeader.SalesInvoiceId == si.SalesInvoiceId)
+                    {
+                        amountPaid -= collectionReceiptHeader.Total;
+                        balance += collectionReceiptHeader.Total;
+                    }
                 }
 
                 return Json(new
@@ -1403,12 +1404,33 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var withHoldingVatAmount = sv.HasWvat
                     ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
                     : 0;
+                var balance = sv.Balance;
+                var amountPaid = sv.AmountPaid;
+
+                // it means it is in edit
+                if (crId != null)
+                {
+                    // get the current amount of this cr
+                    var collectionReceiptHeader = await _unitOfWork.FilprideCollectionReceipt
+                        .GetAsync(cr => cr.CollectionReceiptId == crId, cancellationToken);
+                    if (collectionReceiptHeader == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // retain the fresh value, see if the selected cr is the one used to pay this si
+                    if (collectionReceiptHeader.ServiceInvoiceId == sv.ServiceInvoiceId)
+                    {
+                        amountPaid -= collectionReceiptHeader.Total;
+                        balance += collectionReceiptHeader.Total;
+                    }
+                }
 
                 return Json(new
                 {
                     Amount = sv.Total.ToString(SD.Two_Decimal_Format),
-                    AmountPaid = sv.AmountPaid.ToString(SD.Two_Decimal_Format),
-                    Balance = sv.Balance.ToString(SD.Two_Decimal_Format),
+                    AmountPaid = amountPaid.ToString(SD.Two_Decimal_Format),
+                    Balance = balance.ToString(SD.Two_Decimal_Format),
                     Ewt = withHoldingTaxAmount.ToString(SD.Two_Decimal_Format),
                     Wvat = withHoldingVatAmount.ToString(SD.Two_Decimal_Format),
                     Total = (sv.Total - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
