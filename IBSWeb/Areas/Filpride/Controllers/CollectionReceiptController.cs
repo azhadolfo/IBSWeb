@@ -720,11 +720,19 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 ReferenceNo = existingModel.ReferenceNo,
                 Remarks = existingModel.Remarks,
                 MultipleSIId = existingModel.MultipleSIId!,
-                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
-                        && (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!))
-                        && si.Status != "Voided"
-                        && si.CustomerId == existingModel.CustomerId
-                        && si.PostedBy != null, cancellationToken))
+                SalesInvoices = (await _unitOfWork.FilprideSalesInvoice
+                        .GetAllAsync(si =>
+                                si.Company == companyClaims &&
+                                (
+                                    !si.IsPaid &&
+                                    si.CustomerId == existingModel.CustomerId &&
+                                    si.PostedBy != null
+                                )
+                                || (
+                                    invoicesPaid.Contains(si.SalesInvoiceNo!) &&
+                                    si.PaymentStatus != "Canceled"
+                                ),
+                            cancellationToken))
                     .OrderBy(s => s.SalesInvoiceId)
                     .Select(s => new SelectListItem
                     {
@@ -1318,7 +1326,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetInvoiceDetails(int invoiceNo, bool isSales, bool isServices, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetInvoiceDetails(int invoiceNo, bool isSales, bool isServices, int? crId, CancellationToken cancellationToken)
         {
             if (isSales && !isServices)
             {
@@ -1344,12 +1352,32 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var withHoldingVatAmount = hasWvat
                     ? _unitOfWork.FilprideCollectionReceipt.ComputeEwtAmount(netOfVatAmount, 0.05m)
                     : 0;
+                var balance = si.Balance;
+                var amountPaid = si.AmountPaid;
+
+                if (crId != null)
+                {
+                    var collectionReceiptDetail = await _dbContext.FilprideCollectionReceiptDetails
+                        .Where(crd => crd.CollectionReceiptId == crId)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    var collectionReceiptHeader = await _unitOfWork.FilprideCollectionReceipt
+                        .GetAsync(cr => cr.CollectionReceiptId == crId, cancellationToken);
+
+                    if (collectionReceiptHeader == null)
+                    {
+                        return NotFound();
+                    }
+
+                    amountPaid -= collectionReceiptHeader.Total;
+                    balance += collectionReceiptHeader.Total;
+                }
 
                 return Json(new
                 {
                     Amount = netDiscount.ToString(SD.Two_Decimal_Format),
-                    AmountPaid = si.AmountPaid.ToString(SD.Two_Decimal_Format),
-                    Balance = si.Balance.ToString(SD.Two_Decimal_Format),
+                    AmountPaid = amountPaid.ToString(SD.Two_Decimal_Format),
+                    Balance = balance.ToString(SD.Two_Decimal_Format),
                     Ewt = withHoldingTaxAmount.ToString(SD.Two_Decimal_Format),
                     Wvat = withHoldingVatAmount.ToString(SD.Two_Decimal_Format),
                     Total = (netDiscount - (withHoldingTaxAmount + withHoldingVatAmount)).ToString(SD.Two_Decimal_Format)
