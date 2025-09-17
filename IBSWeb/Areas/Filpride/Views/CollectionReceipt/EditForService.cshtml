@@ -253,12 +253,12 @@ Balance:        <span id="balance"></span>
                 var customerNo = $(this).val();
 
                 $.ajax({
-                    url: '@Url.Action("GetSalesInvoices", "CollectionReceipt", new { area = "Filpride" })',
+                    url: '@Url.Action("GetServiceInvoices", "CollectionReceipt", new { area = "Filpride" })',
                     type: "GET",
-                    data: { customerNo: customerNo },
+                    data: { customerNo: customerNo, crId: collectionReceiptId },
                     success: function (data) {
 
-                        $("#invoices").empty();
+                        $("#serviceInvoice").empty();
 
                         // Check if data is an array and not null
                         if (Array.isArray(data) && data.length > 0) {
@@ -267,11 +267,11 @@ Balance:        <span id="balance"></span>
                             document.getElementById("amountPaid").innerHTML = "";
                             document.getElementById("balance").innerHTML = "";
 
-                            $("#invoices").append('<option>');
+                            $("#serviceInvoice").append('<option>');
 
                             // Iterate over the array and append options
                             $.each(data, function (index, item) {
-                                $("#invoices").append($('<option>', {
+                                $("#serviceInvoice").append($('<option>', {
                                     value: item.value,   // Use the correct property for value
                                     text: item.text      // Use the correct property for text
                                 }));
