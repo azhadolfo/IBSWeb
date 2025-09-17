@@ -1271,14 +1271,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    !si.IsPaid &&
+                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.SalesInvoiceNo!))) &&
                                     si.CustomerId == customerNo &&
                                     si.PostedBy != null
-                                )
-                                || (
-                                    invoiceNo.Contains(si.SalesInvoiceNo!) &&
-                                    si.PaymentStatus != "Canceled"
-                                    ), // <- always include if invoiceNo matches
+                                ),
                             cancellationToken))
                     .OrderBy(si => si.SalesInvoiceId)
                     .ToList();
@@ -1573,13 +1569,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    !si.IsPaid &&
+                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.SalesInvoiceNo!))) &&
                                     si.CustomerId == existingModel.CustomerId &&
                                     si.PostedBy != null
-                                )
-                                || (
-                                    invoiceNo.Contains(si.SalesInvoiceNo!) &&
-                                    si.PaymentStatus != "Canceled"
                                 ), // <- always include if invoiceNo matches
                             cancellationToken))
                     .OrderBy(s => s.SalesInvoiceId)
@@ -1894,6 +1886,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
+            var invoicesPaid = await _dbContext.FilprideCollectionReceiptDetails
+                .Where(crd => crd.CollectionReceiptId == id)
+                .ToListAsync(cancellationToken);
+
+            var invoiceNo = invoicesPaid
+                .Select(crd => crd.InvoiceNo);
+
             var viewModel = new CollectionReceiptServiceViewModel
             {
                 CollectionReceiptId = existingModel.CollectionReceiptId,
@@ -1904,10 +1903,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Remarks = existingModel.Remarks,
                 ServiceInvoiceId = existingModel.ServiceInvoiceId ?? 0,
                 ServiceInvoices = (await _unitOfWork.FilprideServiceInvoice
-                    .GetAllAsync(si => si.Company == companyClaims
-                                 && !si.IsPaid
-                                 && si.CustomerId == existingModel.CustomerId
-                                 && si.PostedBy != null, cancellationToken))
+                        .GetAllAsync(si =>
+                                si.Company == companyClaims &&
+                                (
+                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.ServiceInvoiceNo!))) &&
+                                    si.CustomerId == existingModel.CustomerId &&
+                                    si.PostedBy != null
+                                ),
+                            cancellationToken))
                     .OrderBy(si => si.ServiceInvoiceId)
                     .Select(s => new SelectListItem
                     {
