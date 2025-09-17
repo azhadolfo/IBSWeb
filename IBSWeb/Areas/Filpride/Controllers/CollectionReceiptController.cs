@@ -724,13 +724,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    !si.IsPaid &&
+                                    (!si.IsPaid || invoicesPaid.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
                                     si.PostedBy != null
-                                )
-                                || (
-                                    invoicesPaid.Contains(si.SalesInvoiceNo!) &&
-                                    si.PaymentStatus != "Canceled"
                                 ),
                             cancellationToken))
                     .OrderBy(s => s.SalesInvoiceId)
@@ -1271,7 +1267,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.SalesInvoiceNo!))) &&
+                                    (!si.IsPaid || invoiceNo.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == customerNo &&
                                     si.PostedBy != null
                                 ),
@@ -1319,7 +1315,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.ServiceInvoiceNo!))) &&
+                                    (!si.IsPaid || invoiceNo.Contains(si.ServiceInvoiceNo!)) &&
                                     si.CustomerId == customerNo &&
                                     si.PostedBy != null
                                 ),
@@ -1569,7 +1565,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.SalesInvoiceNo!))) &&
+                                    (!si.IsPaid || invoiceNo.Contains(si.SalesInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
                                     si.PostedBy != null
                                 ), // <- always include if invoiceNo matches
@@ -1906,7 +1902,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         .GetAllAsync(si =>
                                 si.Company == companyClaims &&
                                 (
-                                    (!si.IsPaid || (si.IsPaid && invoiceNo.Contains(si.ServiceInvoiceNo!))) &&
+                                    (!si.IsPaid || invoiceNo.Contains(si.ServiceInvoiceNo!)) &&
                                     si.CustomerId == existingModel.CustomerId &&
                                     si.PostedBy != null
                                 ),
