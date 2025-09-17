@@ -248,6 +248,8 @@ Balance:        <span id="balance"></span>
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        let collectionReceiptId = @Html.Raw(Json.Serialize(Model.CollectionReceiptId));
+        
         $(document).ready(function () {
             $("#CustomerId").change(function () {
                 var customerNo = $(this).val();
@@ -283,6 +285,11 @@ Balance:        <span id="balance"></span>
                     }
                 });
             });
+
+            // Trigger customer change on page load to populate invoices
+            if ($("#serviceInvoice").val()) {
+                $("#serviceInvoice").trigger('change');
+            }
         });
     </script>
 
