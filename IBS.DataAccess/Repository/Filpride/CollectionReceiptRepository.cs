@@ -637,8 +637,8 @@ namespace IBS.DataAccess.Repository.Filpride
                 throw new NullReferenceException("Invoice Not Found.");
             }
 
-            sv.AmountPaid -= sv.Total;
-            sv.Balance += sv.Total;
+            sv.AmountPaid -= collectionReceiptDetail.Amount;
+            sv.Balance += collectionReceiptDetail.Amount;
             sv.IsPaid = false;
             sv.PaymentStatus = "Pending";
 
@@ -695,16 +695,18 @@ namespace IBS.DataAccess.Repository.Filpride
 
             if (sv != null)
             {
+                var netDiscount = sv.Total - sv.Discount;
+
                 var total = paidAmount + offsetAmount;
                 sv.AmountPaid += total;
-                sv.Balance -= sv.AmountPaid;
+                sv.Balance = netDiscount - sv.AmountPaid;
 
-                if (sv.Balance == 0 && sv.AmountPaid == (sv.Total - sv.Discount))
+                if (sv.Balance == 0 && sv.AmountPaid == netDiscount)
                 {
                     sv.IsPaid = true;
                     sv.PaymentStatus = "Paid";
                 }
-                else if (sv.AmountPaid > (sv.Total - sv.Discount))
+                else if (sv.AmountPaid > netDiscount)
                 {
                     sv.IsPaid = true;
                     sv.PaymentStatus = "OverPaid";

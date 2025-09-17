@@ -2012,6 +2012,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var detail = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (detail == null)
+                {
+                    throw new NullReferenceException("Collection Receipt Details Not Found.");
+                }
+
+                await _unitOfWork.FilprideCollectionReceipt.UndoServiceInvoiceChanges(detail, cancellationToken);
+
                 var bankAccount = await _unitOfWork.FilprideBankAccount
                     .GetAsync(b => b.BankAccountId == viewModel.BankId, cancellationToken);
 
@@ -2035,17 +2046,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingModel.EWT = viewModel.EWT;
                 existingModel.WVAT = viewModel.WVAT;
                 existingModel.Total = total;
-
-                var detail = await _dbContext.FilprideCollectionReceiptDetails
-                    .Where(crd => crd.CollectionReceiptId == existingModel.CollectionReceiptId)
-                    .FirstOrDefaultAsync(cancellationToken);
-
-                if (detail == null)
-                {
-                    throw new NullReferenceException("Collection Receipt Details Not Found.");
-                }
-
-                await _unitOfWork.FilprideCollectionReceipt.UndoServiceInvoiceChanges(detail, cancellationToken);
 
                 if (viewModel.Bir2306 != null && viewModel.Bir2306.Length > 0)
                 {
