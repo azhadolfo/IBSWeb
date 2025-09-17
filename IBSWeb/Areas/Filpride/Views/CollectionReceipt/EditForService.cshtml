@@ -345,15 +345,15 @@ Balance:        <span id="balance"></span>
     <script>
         // Function to handle invoice change event
         function handleInvoiceChange() {
-            var serviceInvoice = $("#serviceInvoice").val();
+            let serviceInvoice = $("#serviceInvoice").val();
 
             $.ajax({
                 url: '@Url.Action("GetInvoiceDetails", "CollectionReceipt", new { area = "Filpride" })',
                 type: "GET",
                 data: {
                     invoiceNo: serviceInvoice,
-                    isSales: false,      // or false based on your condition
-                    isServices: true   // or true based on your condition
+                    isServices: true, // or true based on your condition
+                    crId: collectionReceiptId
                 },
                 success: function (data) {
                     document.getElementById("amount").innerHTML = data.amount;
