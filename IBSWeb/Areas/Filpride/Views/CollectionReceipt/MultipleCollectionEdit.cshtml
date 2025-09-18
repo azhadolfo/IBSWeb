@@ -535,6 +535,13 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
+            
+            if (total === 0){
+                $("#submitButton").trigger("change").prop("disabled", true);
+            }
+            else{
+                $("#submitButton").trigger("change").prop("disabled", false);
+            }
         }
 
         inputs.forEach(input => {
