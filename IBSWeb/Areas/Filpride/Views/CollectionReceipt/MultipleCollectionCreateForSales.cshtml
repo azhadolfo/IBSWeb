@@ -437,7 +437,7 @@
                     $(`#siAmountNetOfEWT_${siNo}`).text(formatNumber(netOfEWT));
                     $(`#amountPaid_${siNo}`).text(formatNumber(amountPaid));
                     $(`#balance_${siNo}`).text(formatNumber(balance));
-                    $(`.paymentAmount_${siNo}`).val(formatNumber(balance));
+                    $(`.paymentAmount_${siNo}`).val(formatNumber(balance)).attr("data-max", balance);
 
                     calculateGrandTotalRRAmount();
                 },
@@ -524,15 +524,24 @@
                 return;
             }
 
-            if (checkTotal > totalBalance){
+            if (checkTotal !== totalBalance){
                 Swal.fire({
                     title: "Error",
-                    text: "Total payment amount cannot exceed the total balance",
+                    text: "Total payment amount should be equal to the total balance.",
                     icon: "error"
                 });
             }
             else{
-                form.submit();
+                if (checkTotal === 0 || totalBalance === 0){
+                    Swal.fire({
+                        title: "Error",
+                        text: "Total payment amount or total balance cannot be zero",
+                        icon: "error"
+                    });
+                }
+                else{
+                    form.submit();
+                }
             }
         }
         
@@ -555,5 +564,26 @@
             // Always refresh display, even if total didn't change
             $("#siTotal").text(formatNumber(totalBalance));
         }
+    </script>
+    
+    <script>
+        $(document).on("blur change", "[name='SIMultipleAmount']", function () {
+            let numValue = parseNumber($(this).val());
+            let maxValue = parseFloat($(this).attr("data-max")) || 0;
+
+            if (numValue > maxValue) {
+                $(this).val(formatNumber(maxValue)); // auto-correct
+                setTimeout(() => {
+                    updateTotal2();
+                }, 200);
+                Swal.fire({
+                    title: "Error",
+                    text: "Amount cannot exceed the balance",
+                    icon: "error"
+                });
+            } else {
+                $(this).val(formatNumber(numValue)); // format nicely on blur
+            }
+        });
     </script>
 }
