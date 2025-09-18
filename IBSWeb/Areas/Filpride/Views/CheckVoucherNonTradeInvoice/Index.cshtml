@@ -147,7 +147,7 @@
                     },
                     {
                         "data": "date",
-                        "name": "checkVoucherHeader.date",
+                        "name": "date",
                         "render": function (data, type, row) {
                             // Assuming 'Date' is in ISO format like "2024-07-12T00:00:00"
                             var date = new Date(data);
@@ -163,49 +163,31 @@
                         "name": "supplierName",
                     },
                     {
-                        "data": "invoiceAmount",
-                        "name": "checkVoucherHeader.invoiceAmount",
+                        "data": "amount",
+                        "name": "amount",
                         "render": function (data, type, row) {
-                            if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
-                            else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.invoiceAmount);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amount);
+                            return `<span class="d-block fw-medium">${amount}</span>`;
                         }
                     },
                     {
                         "data": "amountPaid",
-                        "name": "checkVoucherHeader.amountPaid",
+                        "name": "amountPaid",
                         "render": function (data, type, row) {
-                            if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.dAmountPaid);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
-                            else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.hAmountPaid);
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display(row.amountPaid);
+                            return `<span class="d-block fw-medium">${amount}</span>`;
                         }
                     },
                     {
                         "orderable": false,
                         "render": function (data, type, row) {
-                            if (row.amount > 0) {
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.amount - row.dAmountPaid));
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
-                            else{
-                                var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.invoiceAmount - row.hAmountPaid));
-                                return `<span class="d-block fw-medium">${amount}</span>`;
-                            }
+                            var amount = $.fn.dataTable.render.number(',', '.', 2).display((row.amount - row.amountPaid));
+                            return `<span class="d-block fw-medium">${amount}</span>`;
                         }
                     },
                     {
                         "data": "status",
-                        "name": "checkVoucherHeader.status",
+                        "name": "status",
                         "render": function (data, type, row) {
                             var statusClass = data === "@nameof(CheckVoucherInvoiceStatus.ForPayment)" ? "bg-info" :
                                 data === "@nameof(CheckVoucherInvoiceStatus.Voided)" ? "bg-danger" :
@@ -265,8 +247,8 @@
 
                     // Sum up columns
                     data.forEach(function (row) {
-                        var amount = row.amount > 0 ? row.amount : row.invoiceAmount;
-                        var amountPaid = row.dAmountPaid > 0 ? row.dAmountPaid : row.hAmountPaid;
+                        var amount = row.amount;
+                        var amountPaid = row.amountPaid;
                         totalAmount += amount;
                         totalAmountPaid += amountPaid;
                         totalBalance += amount - amountPaid;

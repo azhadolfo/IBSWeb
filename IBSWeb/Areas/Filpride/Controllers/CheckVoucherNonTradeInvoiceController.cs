@@ -120,10 +120,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             : x.CheckVoucherHeader!.Supplier!.SupplierName,
                         x.Supplier?.SupplierId,
                         x.CheckVoucherHeader!.Supplier,
-                        x.Amount,
-                        x.CheckVoucherHeader!.InvoiceAmount,
-                        dAmountPaid = x.AmountPaid,
-                        hAmountPaid = x.CheckVoucherHeader!.AmountPaid,
+                        Amount = x.Amount > 0
+                            ? x.Amount
+                            : x.CheckVoucherHeader!.InvoiceAmount,
+                        AmountPaid = x.Amount > 0
+                            ? x.AmountPaid
+                            : x.CheckVoucherHeader!.AmountPaid,
                         x.CheckVoucherHeader!.Status,
                         x.CheckVoucherHeader!.VoidedBy,
                         x.CheckVoucherHeader!.CanceledBy,
