@@ -110,27 +110,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     .ToList();
                 }
 
-                // Sorting
-                if (parameters.Order?.Count > 0)
-                {
-                    var orderColumn = parameters.Order[0];
-                    var columnName = parameters.Columns[orderColumn.Column].Name;
-                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
-
-                    checkVoucherDetails = checkVoucherDetails
-                        .AsQueryable()
-                        .OrderBy($"{columnName} {sortDirection}")
-                        .ToList();
-                }
-
-                var totalRecords = checkVoucherDetails.Count();
-
-                var pagedData = checkVoucherDetails
+                var projectedQuery = checkVoucherDetails
                     .Select(x => new
                     {
                         x.TransactionNo,
                         x.CheckVoucherHeader!.Date,
-                        x.Supplier?.SupplierName,
+                        SupplierName = x.Supplier != null
+                            ? x.Supplier.SupplierName
+                            : x.CheckVoucherHeader!.Supplier!.SupplierName,
                         x.Supplier?.SupplierId,
                         x.CheckVoucherHeader!.Supplier,
                         x.Amount,
@@ -144,6 +131,24 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         x.CheckVoucherHeader!.IsPaid,
                         x.CheckVoucherHeaderId
                     })
+                    .ToList();
+
+                // Sorting
+                if (parameters.Order?.Count > 0)
+                {
+                    var orderColumn = parameters.Order[0];
+                    var columnName = parameters.Columns[orderColumn.Column].Name;
+                    var sortDirection = orderColumn.Dir.ToLower() == "asc" ? "ascending" : "descending";
+
+                    projectedQuery = projectedQuery
+                        .AsQueryable()
+                        .OrderBy($"{columnName} {sortDirection}")
+                        .ToList();
+                }
+
+                var totalRecords = projectedQuery.Count;
+
+                var pagedData = projectedQuery
                     .Skip(parameters.Start)
                     .Take(parameters.Length)
                     .ToList();

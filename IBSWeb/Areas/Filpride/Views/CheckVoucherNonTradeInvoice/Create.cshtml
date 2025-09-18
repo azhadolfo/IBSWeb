@@ -116,6 +116,11 @@
                                             <option value="">-- Select Account --</option>
                                             @foreach (var account in Model.ChartOfAccounts!)
                                             {
+                                                if (account.Value.StartsWith("202010200"))
+                                                {
+                                                    continue; //Exclude the AP-Non Trade Payable
+                                                }
+                                                
                                                 <option value="@account.Value">@account.Text</option>
                                             }
                                         </select>
