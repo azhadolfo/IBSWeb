@@ -623,6 +623,18 @@ await Html.RenderPartialAsync("_ValidationScriptsPartial");
         } else {
             $(this).val(formatNumber(numValue)); // format nicely on blur
         }
+
+        if (numValue === 0){
+            $(this).val(formatNumber(1)); // auto-correct
+            setTimeout(() => {
+                updateTotal2();
+            }, 200);
+            Swal.fire({
+                title: "Error",
+                text: "Balance to pay cannot be zero",
+                icon: "error"
+            });
+        }
     });
 </script>
 }
