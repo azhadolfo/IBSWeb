@@ -2332,6 +2332,40 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                // restore the changes to the SI
+                var detail = await _dbContext.FilprideCollectionReceiptDetails
+                    .Where(crd => crd.CollectionReceiptId == model.CollectionReceiptId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (detail == null)
+                {
+                    throw new NullReferenceException("Collection Receipt Details Not Found.");
+                }
+
+                if (model.SalesInvoiceId != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(detail, cancellationToken);
+                }
+                else if (model.ServiceInvoiceId != null)
+                {
+                    await _unitOfWork.FilprideCollectionReceipt.UndoServiceInvoiceChanges(detail, cancellationToken);
+                }
+                else if (model.MultipleSIId != null)
+                {
+                    var listOfDetails = await _dbContext.FilprideCollectionReceiptDetails
+                        .Where(crd => crd.CollectionReceiptId == model.CollectionReceiptId)
+                        .ToListAsync(cancellationToken);
+
+                    foreach (var details in listOfDetails)
+                    {
+                        await _unitOfWork.FilprideCollectionReceipt.UndoSalesInvoiceChanges(details, cancellationToken);
+                    }
+                }
+                else
+                {
+                    throw new NullReferenceException("Collection Receipt Details Not Found.");
+                }
+
                 model.CanceledBy = _userManager.GetUserName(this.User);
                 model.CanceledDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Canceled);
