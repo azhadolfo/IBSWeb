@@ -623,6 +623,11 @@ namespace IBS.DataAccess.Repository.Filpride
             si.IsPaid = false;
             si.PaymentStatus = "Pending";
 
+            if (si.Balance < 0)
+            {
+                si.PaymentStatus = "OverPaid";
+            }
+
             await _db.SaveChangesAsync(cancellationToken);
         }
 
@@ -641,6 +646,11 @@ namespace IBS.DataAccess.Repository.Filpride
             sv.Balance += collectionReceiptDetail.Amount;
             sv.IsPaid = false;
             sv.PaymentStatus = "Pending";
+
+            if (sv.Balance < 0)
+            {
+                sv.PaymentStatus = "OverPaid";
+            }
 
             await _db.SaveChangesAsync(cancellationToken);
         }
