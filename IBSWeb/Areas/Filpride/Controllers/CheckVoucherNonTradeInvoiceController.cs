@@ -1112,37 +1112,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion --General Ledger Book Recording(CV)--
 
-                #region --Disbursement Book Recording(CV)--
-
-                var disbursement = new List<FilprideDisbursementBook>();
-                foreach (var details in modelDetails)
-                {
-                    var bank = await _unitOfWork.FilprideBankAccount.GetAsync(model => model.BankAccountId == modelHeader.BankId, cancellationToken);
-                    disbursement.Add(
-                        new FilprideDisbursementBook
-                        {
-                            Date = modelHeader.Date,
-                            CVNo = modelHeader.CheckVoucherHeaderNo!,
-                            Payee = modelHeader.Payee != null ? modelHeader.Payee! : modelHeader.SupplierName!,
-                            Amount = modelHeader.Total,
-                            Particulars = modelHeader.Particulars!,
-                            Bank = bank != null ? bank.Branch : "N/A",
-                            CheckNo = !string.IsNullOrEmpty(modelHeader.CheckNo) ? modelHeader.CheckNo : "N/A",
-                            CheckDate = modelHeader.CheckDate?.ToString("MM/dd/yyyy") ?? "N/A",
-                            ChartOfAccount = details.AccountNo + " " + details.AccountName,
-                            Debit = details.Debit,
-                            Credit = details.Credit,
-                            Company = modelHeader.Company,
-                            CreatedBy = modelHeader.CreatedBy,
-                            CreatedDate = modelHeader.CreatedDate
-                        }
-                    );
-                }
-
-                await _dbContext.FilprideDisbursementBooks.AddRangeAsync(disbursement, cancellationToken);
-
-                #endregion --Disbursement Book Recording(CV)--
-
                 #region --Audit Trail Recording
 
                 FilprideAuditTrail auditTrailBook = new(modelHeader.PostedBy!, $"Posted check voucher# {modelHeader.CheckVoucherHeaderNo}", "Check Voucher", modelHeader.Company);
