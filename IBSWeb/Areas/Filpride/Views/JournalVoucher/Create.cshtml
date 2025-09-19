@@ -228,7 +228,7 @@
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-group">
                         <label class="control-label">Account No.</label>
-                        <select asp-items="@Model.Header?.COA" class="form-select" style="width: 100%" id="AccountNo">
+                        <select asp-items="@Model.Header?.COA" class="form-select js-select2" style="width: 100%" id="AccountNo">
                             <option></option>
                         </select>
                         <span class="text-danger"></span>
@@ -258,9 +258,15 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        $('#AccountNo').select({
-            dropdownParent: $('#AddAccEntry')
-        });
+        $(document).ready(function () {
+            $('#AccountNo').select2({
+                dropdownParent: $('#AddAccEntry'),
+                placeholder: "Select an option...",
+                allowClear: true,
+                width: 'resolve',
+                theme: 'classic'
+            });
+        })
     </script>
     <script>
         function saveAccountingEntry() {
@@ -357,8 +363,9 @@
                         method: "GET",
                         data: { id: cvId },
                         success: function (data) {
+                            let tableBody = $("#tableBody");
+                            tableBody.empty();
                             if (data !== null) {
-                                $("#tableBody").empty();
                                 $("#cvNo").text(data.cvNo);
                                 $("#date").text(new Date(data.date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }));
                                 $("#name").text(data.name);
@@ -372,6 +379,14 @@
                                 $("#checkNo").text(data.checkNo);
                                 $("#totalDebit").text(formatNumber(data.totalDebit));
                                 $("#totalCredit").text(formatNumber(data.totalCredit));
+
+                                for (let i = 0; i < data.accountNo.length; i++) {
+                                    let row = $("<tr></tr>");
+                                    row.append("<td style='width:60%; padding-left:20px;'>" + data.accountNo[i] + " " + data.accountName[i] + "</td>");
+                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.debit[i]) + "</td>");
+                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.credit[i]) + "</td>");
+                                    tableBody.append(row);
+                                }
                             } else {
                                 $("#supplierAddress").text("");
                                 $("#supplierTinNo").text("");
@@ -388,19 +403,6 @@
                                 $("#checkNo").text("");
                                 $("#totalDebit").text("");
                                 $("#totalCredit").text("");
-                            }
-                            if (data.viewModel !== null) {
-
-                                for (let i = 0; i < data.viewModel.details.length; i++) {
-                                    var row = $("<tr></tr>");
-                                    row.append("<td style='width:60%; padding-left:20px;'>" + data.viewModel.details[i].accountNo + " " + data.viewModel.details[i].accountName + "</td>");
-                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.viewModel.details[i].debit) + "</td>");
-                                    row.append("<td class='text-end' style='width:7%;'>" + formatNumber(data.viewModel.details[i].credit) + "</td>");
-                                    $("#tableBody").append(row);
-                                }
-                            }
-                            else {
-                                console.error("Invalid data structure or lengths.");
                             }
                         },
                         error: function (xhr, status, error) {

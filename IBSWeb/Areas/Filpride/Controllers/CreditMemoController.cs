@@ -159,6 +159,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new CreditMemoViewModel();
             await IncludeSelectLists(viewModel, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
             return View(viewModel);
         }
 
@@ -309,31 +310,51 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var creditMemo = await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
-
-            if (creditMemo == null)
+            try
             {
-                return NotFound();
+                var creditMemo =
+                    await _unitOfWork.FilprideCreditMemo.GetAsync(c => c.CreditMemoId == id, cancellationToken);
+
+                if (creditMemo == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+                if (creditMemo.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {creditMemo.TransactionDate:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new CreditMemoViewModel
+                {
+                    CreditMemoId = creditMemo.CreditMemoId,
+                    Source = creditMemo.Source,
+                    TransactionDate = creditMemo.TransactionDate,
+                    SalesInvoiceId = creditMemo.SalesInvoiceId,
+                    Quantity = creditMemo.Quantity,
+                    AdjustedPrice = creditMemo.AdjustedPrice,
+                    ServiceInvoiceId = creditMemo.ServiceInvoiceId,
+                    Period = creditMemo.Period,
+                    Amount = creditMemo.Amount,
+                    Remarks = creditMemo.Remarks,
+                    Description = creditMemo.Description,
+                    MinDate = minDate,
+                };
+
+                await IncludeSelectLists(viewModel, cancellationToken);
+
+                return View(viewModel);
             }
-
-            var viewModel = new CreditMemoViewModel
+            catch (Exception ex)
             {
-                CreditMemoId = creditMemo.CreditMemoId,
-                Source = creditMemo.Source,
-                TransactionDate = creditMemo.TransactionDate,
-                SalesInvoiceId = creditMemo.SalesInvoiceId,
-                Quantity = creditMemo.Quantity,
-                AdjustedPrice = creditMemo.AdjustedPrice,
-                ServiceInvoiceId = creditMemo.ServiceInvoiceId,
-                Period = creditMemo.Period,
-                Amount = creditMemo.Amount,
-                Remarks = creditMemo.Remarks,
-                Description = creditMemo.Description,
-            };
-
-            await IncludeSelectLists(viewModel, cancellationToken);
-
-            return View(viewModel);
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch credit memo. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -479,6 +500,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+                if (model.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
+                }
+
                 model.PostedBy = _userManager.GetUserName(this.User);
                 model.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 model.Status = nameof(Status.Posted);

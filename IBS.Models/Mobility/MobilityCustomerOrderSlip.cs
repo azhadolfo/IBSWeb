@@ -53,6 +53,7 @@ namespace IBS.Models.Mobility
         public string Status { get; set; } = string.Empty;
 
         [Display(Name = "Date Loaded")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? LoadDate { get; set; }
 
         [Display(Name = "Station")]
@@ -66,26 +67,31 @@ namespace IBS.Models.Mobility
         [Column(TypeName = "varchar(100)")]
         public string? CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Column(TypeName = "varchar(100)")]
         public string? EditedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string? DisapprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? DisapprovedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string? ApprovedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? ApprovedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
         public string? UploadedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? UploadedDate { get; set; }
 
         [Display(Name = "Trip Ticket")]

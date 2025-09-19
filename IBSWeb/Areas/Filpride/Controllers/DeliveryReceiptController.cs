@@ -104,6 +104,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             await UpdateFilterTypeClaim(filterType);
             ViewBag.FilterType = filterType;
+            ViewBag.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt);
             return View();
         }
 
@@ -245,6 +246,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                 IsTheCreationLockForTheMonth = isDrLock,
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken)
             };
 
             return View(viewModel);
@@ -428,12 +430,18 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken);
                 var existingRecord = await _unitOfWork.FilprideDeliveryReceipt
                     .GetAsync(dr => dr.DeliveryReceiptId == id, cancellationToken);
 
                 if (existingRecord == null)
                 {
                     return BadRequest();
+                }
+
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
 
                 var purchaseOrders = await _dbContext.FilprideBookAtlDetails
@@ -483,6 +491,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     ATLId = existingRecord.AuthorityToLoadId,
                     ATLNo = existingRecord.AuthorityToLoadNo,
                     HasReceivingReport = existingRecord.HasReceivingReport,
+                    MinDate = minDate,
                 };
 
                 ViewBag.DeliveryOption = existingRecord.CustomerOrderSlip.DeliveryOption;
@@ -847,7 +856,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var existingSelection = cosAtlDetails
                     .FirstOrDefault(x => x.AppointedSupplier!.PurchaseOrderId == initialPoId
                                 && x.AuthorityToLoadId == initialAtlId);
-                existingSelection!.UnservedQuantity += (decimal)currentVolume;
+
+                if (existingSelection != null)
+                {
+                    existingSelection.UnservedQuantity += (decimal)currentVolume;
+                }
             }
 
             return Json(new

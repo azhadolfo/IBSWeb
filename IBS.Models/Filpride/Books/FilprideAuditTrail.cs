@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Net;
 using IBS.Utility;
 using IBS.Utility.Helpers;
@@ -11,6 +12,7 @@ namespace IBS.Models.Filpride.Books
 
         public string Username { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime Date { get; set; }
 
         [Display(Name = "Machine Name")]

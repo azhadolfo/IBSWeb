@@ -36,6 +36,7 @@ namespace IBS.Models.Mobility
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
     }
 }

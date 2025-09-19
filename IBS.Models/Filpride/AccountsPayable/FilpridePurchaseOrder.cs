@@ -87,7 +87,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsReceived { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime ReceivedDate { get; set; }
 
         private string? _supplierSalesOrderNo;

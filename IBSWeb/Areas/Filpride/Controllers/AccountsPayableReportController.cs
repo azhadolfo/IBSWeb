@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
+using IBS.Models.Filpride.Integrated;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -1638,6 +1639,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                     #region -- Populate data rows --
 
+                    FilprideAuthorityToLoad? atl;
                     foreach (var pr in purchaseReport)
                     {
                         #region -- Variables and Formulas --
@@ -1667,7 +1669,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         var costPerLiter = costAmount / volume; // sale price per liter
                         var commission = ((pr.DeliveryReceipt?.CustomerOrderSlip?.CommissionRate ?? 0m) * volume);
 
-                        atlLookup.TryGetValue(pr.AuthorityToLoadNo!, out var atl);
+                        if (pr.AuthorityToLoadNo != null)
+                        {
+                            atlLookup.TryGetValue(pr.AuthorityToLoadNo, out atl);
+                        }
+                        else
+                        {
+                            atl = null;
+                        }
 
                         #endregion
 

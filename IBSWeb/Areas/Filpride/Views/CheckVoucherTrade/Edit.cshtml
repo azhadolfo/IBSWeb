@@ -82,7 +82,10 @@
                 </div>
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" />
+                    <input asp-for="TransactionDate"
+                           type="Date"
+                           class="form-control"
+                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
 
@@ -312,9 +315,9 @@
                                     <td>${rr.purchaseOrderNo}</td>
                                     <td>${rr.receivingReportNo}</td>
                                     <td>${rr.oldRRNo}</td>
-                                    <td class="text-end grossAmount">${formatNumber(rr.netOfEwtAmount)}</td>
+                                    <td class="text-end grossAmount">${formatNumberToFour(rr.netOfEwtAmount)}</td>
                                     <td class="text-end"><input type="text" class="paymentAmount text-end ${inputamountClass}" readonly style="${display}" value="${amountPaid}"></td>
-                                    <td class="text-end balance">${formatNumber(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
+                                    <td class="text-end balance">${formatNumberToFour(parseNumber(rr.netOfEwtAmount) - parseNumber(rr.amountPaid))}</td>
                                 </tr>
                             `);
 
@@ -374,11 +377,11 @@
                     traditional: true,
                     success: function(response) {
                         // If any PO has COD or PREPAID terms, show the Advances row
-                        if (response.hasCodOrPrepaid) {
+                        if (response.hasCodOrPrepaid && response.advanceAmount > 0) {
                             $("#advancesRow").show();
                             // Default values can be set based on what makes sense for your business logic
                             $("#advancesDebit").val(formatNumber(0));
-                            $("#advancesCredit").val(formatNumber(response.advanceAmount || 0));
+                            $("#advancesCredit").val(formatNumber(response.advanceAmount));
                             $("#AdvancesCVNo").val(response.advanceCVNo);
                             updateTotalDebitAndCredit();
                         } else {
@@ -429,12 +432,12 @@
                     selectedRecords.push(this.value); // ✅ push instead of add
                 }
                 inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumber(grossAmount - balance));
+                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
             } else {
                 selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumber(grossAmount));
+                row.find('.balance').text(formatNumberToFour(grossAmount));
             }
 
             reindexSelected();

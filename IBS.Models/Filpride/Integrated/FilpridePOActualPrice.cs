@@ -31,10 +31,10 @@ namespace IBS.Models.Filpride.Integrated
         [StringLength(200)]
         public string? ApprovedBy { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? ApprovedDate { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime TriggeredDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
     }
 }

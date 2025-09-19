@@ -53,6 +53,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [StringLength(20)]

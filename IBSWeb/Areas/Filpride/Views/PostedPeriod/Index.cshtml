@@ -1,0 +1,263 @@
+@model PostedPeriodViewModel
+@{
+    ViewData["Title"] = "Post Periods";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Post Periods for Modules</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Display Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Post Period Form -->
+                    <form asp-action="PostPeriod" method="post" id="postPeriodForm">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label for="Company" class="form-label">Company</label>
+                                <input type="text" class="form-control" name="Company" value="Filpride" readonly />
+                            </div>
+                            <div class="col-md-3">
+                                <label for="Month" class="form-label">Month</label>
+                                <select name="Month" id="monthSelect" class="form-select" required>
+                                    @for (int i = 1; i <= 12; i++)
+                                    {
+                                        <option value="@i" selected="@(i == DateTime.Now.Month)">
+                                            @(new DateTime(2000, i, 1).ToString("MMMM"))
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="Year" class="form-label">Year</label>
+                                <select name="Year" id="yearSelect" class="form-select" required>
+                                    @for (int year = DateTime.Now.Year - 2; year <= DateTime.Now.Year + 1; year++)
+                                    {
+                                        <option value="@year" selected="@(year == DateTime.Now.Year)">@year</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" id="refreshModules" class="btn btn-outline-secondary d-block">
+                                    <i class="fas fa-refresh"></i> Refresh Modules
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">Select Modules to Post</label>
+                                <div id="moduleCheckboxes" class="border rounded p-3" style="min-height: 100px;">
+                                    @if (Model.AvailableModules.Any())
+                                    {
+                                        @foreach (var module in Model.AvailableModules)
+                                        {
+                                            <div class="form-check">
+                                                <input type="checkbox" name="SelectedModules" value="@module.Value" 
+                                                       class="form-check-input" id="module_@module.Value">
+                                                <label class="form-check-label" for="module_@module.Value">
+                                                    @module.Text
+                                                </label>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-0">No modules available for posting in the selected period.</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="fas fa-save"></i> Post Selected Periods
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="clearSelection()">
+                                    <i class="fas fa-times"></i> Clear Selection
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posted Periods Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recently Posted Periods</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.PostedPeriods.Any())
+                    {
+                        <div class="table-responsive">
+                            <table id="postedPeriodsTable" class="table table-striped table-hover table-bordered nowrap" style="width:100%">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Company</th>
+                                        <th>Module</th>
+                                        <th>Month</th>
+                                        <th>Year</th>
+                                        <th>Posted On</th>
+                                        <th>Posted By</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var period in Model.PostedPeriods)
+                                    {
+                                        <tr>
+                                            <td>@period.Company</td>
+                                            <td><span class="badge bg-info">@period.Module</span></td>
+                                            <td>@(new DateTime(2000, period.Month, 1).ToString("MMMM"))</td>
+                                            <td>@period.Year</td>
+                                            <td>@period.PostedOn.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@period.PostedBy</td>
+                                            <td>
+                                                <form asp-action="UnpostPeriod" method="post" style="display:inline;" 
+                                                      onsubmit="return confirm('Are you sure you want to unpost this period?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@period.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fas fa-undo"></i> Unpost
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No posted periods found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Refresh modules when month/year changes
+        document.getElementById('monthSelect').addEventListener('change', refreshAvailableModules);
+        document.getElementById('yearSelect').addEventListener('change', refreshAvailableModules);
+        document.getElementById('refreshModules').addEventListener('click', refreshAvailableModules);
+        
+        // Form validation
+        document.getElementById('postPeriodForm').addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('input[name="SelectedModules"]:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one module to post.');
+                return false;
+            }
+        });
+    });
+
+    function refreshAvailableModules() {
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearSelect').value;
+        const moduleContainer = document.getElementById('moduleCheckboxes');
+        
+        // Show loading
+        moduleContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading modules...</div>';
+
+        // Use Url.Action to properly generate the URL with area
+        const url = '@Url.Action("GetAvailableModules", "PostedPeriod", new { area = "Filpride" })';
+
+        fetch(`${url}?month=${month}&year=${year}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    moduleContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    moduleContainer.innerHTML = '<p class="text-muted mb-0">No modules available for posting in the selected period.</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach(module => {
+                    html += `
+                        <div class="form-check">
+                            <input type="checkbox" name="SelectedModules" value="${module.value}" 
+                                   class="form-check-input" id="module_${module.value}">
+                            <label class="form-check-label" for="module_${module.value}">
+                                ${module.text}
+                            </label>
+                        </div>
+                    `;
+                });
+                
+                moduleContainer.innerHTML = html;
+            })
+            .catch(error => {
+                moduleContainer.innerHTML = `<div class="alert alert-danger">Error loading modules: ${error.message}</div>`;
+            });
+    }
+
+    function clearSelection() {
+        document.querySelectorAll('input[name="SelectedModules"]').forEach(cb => {
+            cb.checked = false;
+        });
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize DataTable for Posted Periods
+        $('#postedPeriodsTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            order: [[4, 'desc']] // default order by Posted On (latest first)
+        });
+    });
+</script>
+
+<style>
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge {
+        font-size: 0.875rem;
+    }
+    
+    .table th {
+        border-top: none;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IBS.Models
 {
@@ -9,6 +10,7 @@ namespace IBS.Models
 
         public string Message { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
     }
 }

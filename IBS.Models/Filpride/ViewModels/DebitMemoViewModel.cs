@@ -57,5 +57,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         [NotMapped]
         public List<SelectListItem>? ServiceInvoices { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }

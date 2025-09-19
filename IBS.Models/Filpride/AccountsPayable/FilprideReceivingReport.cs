@@ -84,7 +84,7 @@ namespace IBS.Models.Filpride.AccountsPayable
 
         public bool IsPaid { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime PaidDate { get; set; }
 
         [Column(TypeName = "numeric(18,4)")]

@@ -19,6 +19,20 @@
 
 }
 
+@if (Model.Status == nameof(DRStatus.Canceled))
+{
+    <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+        <b>CANCELED</b>
+    </div>
+}
+
+@if (Model.Status == nameof(DRStatus.Voided))
+{
+    <div class="disapproved-indicator" style="position: absolute; top: 200px; left: 50%; transform: translate(-50%, 0); z-index: 9999; font-size: 72px; color: red; opacity: 0.5;">
+        <b>VOIDED</b>
+    </div>
+}
+
 <table class="w-100">
     <tbody>
         <tr>
@@ -135,25 +149,28 @@ else
 }
 
 <div class="row pt-2">
-    @if (Model.Status != nameof(CosStatus.ForApprovalOfOM))
+    @if (Model.Status != nameof(DRStatus.Canceled) && Model.Status != nameof(DRStatus.Voided))
     {
-        <div class="col-6 col-md-3">
-            <a onclick="confirmPrint(@Model.DeliveryReceiptId)" class="btn btn-primary form-control buttons">Print</a>
-        </div>
-    }
-    else
-    {
-        if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+        @if (Model.Status != nameof(CosStatus.ForApprovalOfOM))
         {
             <div class="col-6 col-md-3">
-                <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
+                <a onclick="confirmPrint(@Model.DeliveryReceiptId)" class="btn btn-primary form-control buttons">Print</a>
             </div>
         }
-    }
+        else
+        {
+            if (User.IsInRole("OperationManager") || User.IsInRole("Admin") || User.IsInRole("HeadApprover"))
+            {
+                <div class="col-6 col-md-3">
+                    <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Post" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Approve</a>
+                </div>
+            }
+        }
     
-    <div class="col-6 col-md-3">
-        <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
-    </div>
+        <div class="col-6 col-md-3">
+            <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="GenerateExcel" asp-route-id="@Model.DeliveryReceiptId" class="btn btn-success form-control buttons">Print Excel</a>
+        </div>
+    }
 
     <div class="col-6 col-md-3">
         <a asp-area="Filpride" asp-controller="DeliveryReceipt" asp-action="Index" asp-route-filterType="@ViewBag.FilterType" class="btn btn-outline-primary border form-control buttons">Back to List</a>

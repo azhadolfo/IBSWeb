@@ -128,7 +128,15 @@ namespace IBS.DataAccess.Repository.Filpride
             }
             else
             {
-                await DeductTheVolumeToCos(existingRecord.CustomerOrderSlipId, existingRecord.Quantity, cancellationToken);
+                await DeductTheVolumeToCos(existingRecord.CustomerOrderSlipId, viewModel.Volume, cancellationToken);
+
+                customerOrderSlip.DeliveredQuantity += viewModel.Volume;
+                customerOrderSlip.BalanceQuantity -= viewModel.Volume;
+
+                if (customerOrderSlip.BalanceQuantity <= 0)
+                {
+                    customerOrderSlip.Status = nameof(CosStatus.Completed);
+                }
             }
 
             #endregion
@@ -558,7 +566,7 @@ namespace IBS.DataAccess.Repository.Filpride
                         CreatedBy = deliveryReceipt.PostedBy,
                         CreatedDate = deliveryReceipt.PostedDate ?? DateTimeHelper.GetCurrentPhilippineTime(),
                         SupplierId = deliveryReceipt.CommissioneeId,
-                        SupplierName = deliveryReceipt.Commissionee?.SupplierName,
+                        SupplierName = deliveryReceipt.CustomerOrderSlip.CommissioneeName,
                         ModuleType = nameof(ModuleType.Sales)
                     });
 

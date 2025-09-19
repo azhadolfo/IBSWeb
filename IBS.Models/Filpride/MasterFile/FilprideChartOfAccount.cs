@@ -48,7 +48,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string? CreatedBy { get; set; }
 
         [Display(Name = "Created Date")]
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Display(Name = "Edited By")]
@@ -56,7 +56,7 @@ namespace IBS.Models.Filpride.MasterFile
         public string? EditedBy { get; set; }
 
         [Display(Name = "Edited Date")]
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime EditedDate { get; set; }
 
         public bool HasChildren { get; set; }

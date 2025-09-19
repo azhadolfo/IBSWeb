@@ -4,6 +4,7 @@ using IBS.DataAccess.Repository.MasterFile.IRepository;
 using IBS.DataAccess.Repository.MMSI.IRepository;
 using IBS.DataAccess.Repository.Mobility.IRepository;
 using IBS.Models.Mobility.MasterFile;
+using IBS.Utility.Enums;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace IBS.DataAccess.Repository.IRepository
@@ -217,6 +218,6 @@ namespace IBS.DataAccess.Repository.IRepository
 
         Task<bool> IsPeriodPostedAsync(DateOnly date, CancellationToken cancellationToken = default);
 
-        Task<DateTime?> GetThePreviousPostedPeriodAsync(CancellationToken cancellationToken = default);
+        Task<DateTime> GetMinimumPeriodBasedOnThePostedPeriods(Module module, CancellationToken cancellationToken = default);
     }
 }

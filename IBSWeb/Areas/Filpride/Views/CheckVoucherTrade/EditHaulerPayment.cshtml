@@ -73,7 +73,11 @@
                 
                 <div class="form-group mb-3">
                     <label asp-for="TransactionDate" class="control-label"></label><span class="required">*</span>
-                    <input asp-for="TransactionDate" type="Date" class="form-control" value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"/>
+                    <input asp-for="TransactionDate"
+                           type="Date"
+                           class="form-control"
+                           value="@DateTimeHelper.GetCurrentPhilippineTime().ToString("yyyy-MM-dd")"
+                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>
                     <span asp-validation-for="TransactionDate" class="text-danger"></span>
                 </div>
 
@@ -241,9 +245,9 @@
                                         <tr>
                                             <td><input type="checkbox" value="${dr.id}" class="selectCheckbox" ${isChecked}></td>
                                             <td>${dr.deliveryReceiptNo}</td>
-                                            <td class="text-end grossAmount">${formatNumber(dr.netOfEwtAmount)}</td>
+                                            <td class="text-end grossAmount">${formatNumberToFour(dr.netOfEwtAmount)}</td>
                                             <td class="text-end"><input type="text" class="paymentAmount text-end ${inputAmountClass}" readonly style="${display}" value="${amountPaid}"></td>
-                                            <td class="text-end balance">${formatNumber(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
+                                            <td class="text-end balance">${formatNumberToFour(parseNumber(dr.netOfEwtAmount) - parseNumber(dr.amountPaid))}</td>
                                         </tr>
                                     `);
                             tbody.append(tr);
@@ -308,12 +312,12 @@
                     selectedRecords.push(this.value); // ✅ push instead of add
                 }
                 inputField.val(balance).addClass("inputAmount").show();
-                row.find('.balance').text(formatNumber(grossAmount - balance));
+                row.find('.balance').text(formatNumberToFour(grossAmount - balance));
             } else {
                 selectedRecords = selectedRecords.filter(v => v !== this.value); // ✅ filter instead of delete
                 inputField.removeAttr("name").hide().val('');
                 row.find('.selectCheckbox').removeAttr("name");
-                row.find('.balance').text(formatNumber(grossAmount));
+                row.find('.balance').text(formatNumberToFour(grossAmount));
             }
 
             reindexSelected();

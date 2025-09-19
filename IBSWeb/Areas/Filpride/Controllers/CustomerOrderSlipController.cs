@@ -268,8 +268,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
                 Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
                 Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
-                // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
-                // MinDate = await _unitOfWork.GetThePreviousPostedPeriodAsync(cancellationToken) ?? DateTime.MinValue
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken)
             };
 
             return View(viewModel);
@@ -442,6 +441,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return BadRequest();
                 }
 
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot edit this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+                }
+
                 var getPurchaseOrder = await _unitOfWork.MobilityPurchaseOrder
                     .GetAsync(p => p.PurchaseOrderNo == existingRecord.CustomerPoNo, cancellationToken);
 
@@ -475,8 +480,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     CustomerType = existingRecord.CustomerType,
                     StationCode = getPurchaseOrder?.StationCode,
                     Freight = existingRecord.Freight ?? 0,
-                    // TODO uncomment this when implementing the feature to restrict the user to create for the previous posted period
-                    // MinDate = await _unitOfWork.GetThePreviousPostedPeriodAsync(cancellationToken) ?? DateTime.MinValue
+                    MinDate = minDate
                 };
 
                 // If there is uploaded, get signed URL
@@ -1268,6 +1272,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+            if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot appoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
+            }
+
             var viewModel = new CustomerOrderSlipAppointingSupplierViewModel
             {
                 CustomerOrderSlipId = existingRecord.CustomerOrderSlipId,
@@ -1399,6 +1409,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (existingRecord == null)
                 {
                     return NotFound();
+                }
+
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
+                if (existingRecord.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot reappoint this record because the period {existingRecord.Date:MMM yyyy} is already closed.");
                 }
 
                 var viewModel = new CustomerOrderSlipAppointingSupplierViewModel

@@ -104,4 +104,19 @@ namespace IBS.Utility.Enums
         Collection,
     }
 
+    public enum Module
+    {
+        CustomerOrderSlip,
+        DeliveryReceipt,
+        SalesInvoice,
+        ServiceInvoice,
+        CollectionReceipt,
+        PurchaseOrder,
+        ReceivingReport,
+        CheckVoucher,
+        JournalVoucher,
+        DebitMemo,
+        CreditMemo,
+    }
+
 }

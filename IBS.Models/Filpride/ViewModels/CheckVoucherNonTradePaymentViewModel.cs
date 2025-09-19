@@ -68,6 +68,8 @@ namespace IBS.Models.Filpride.ViewModels
 
         public List<PaymentDetail> PaymentDetails { get; set; } = [];
 
+        public DateTime MinDate { get; set; }
+
     }
 
     public class PaymentDetail

@@ -26,13 +26,15 @@
             <div class="border-2 p-3">
                 <div asp-validation-summary="ModelOnly"></div>
                 <input asp-for="DeliveryReceiptId" type="hidden" />
-                <input asp-for="CustomerOrderSlipId" type="hidden" />
                 <input asp-for="ATLId" type="hidden" />
                 <input asp-for="IsECCEdited" type="hidden" />
                 <input asp-for="ATLNo" type="hidden" />
-                <input asp-for="PurchaseOrderId" type="hidden" />
                 <div class="form-floating col-12">
-                    <input asp-for="Date" type="date" class="form-control border-0 shadow" placeholder="" />
+                    <input asp-for="Date" 
+                           type="date" 
+                           class="form-control border-0 shadow" 
+                           placeholder=""
+                           min="@Model.MinDate.ToString("yyyy-MM-dd")"/>/>
                     <label asp-for="Date" class="ms-2">Date<span class="required">*</span></label>
                     <span asp-validation-for="Date" class="text-danger"></span>
                 </div>
@@ -45,10 +47,24 @@
                     <legend class="w-auto px-2">Customer Details</legend>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Customer List<span class="required">*</span></label>
-                        <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select customer</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select customer</option>
+                            </select>
+                            <input type="hidden" asp-for="CustomerId" />
+                        }
+                        else
+                        {
+                            <select asp-for="CustomerId" asp-items="@Model.Customers" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select customer</option>
+                            </select>
+                        }
                         <span asp-validation-for="CustomerId" class="text-danger"></span>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <small class="fst-italic">Please note: Customer cannot be changed as the lifting date has already been added by TNS.</small>
+                        }
                     </div>
                     <div class="form-floating py-2 col-12">
                         <input asp-for="CustomerAddress" class="form-control border-0 shadow" placeholder="" readonly tabindex="-1" />
@@ -66,16 +82,40 @@
                     <legend class="w-auto px-2">Order Details</legend>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">COS List<span class="required">*</span></label>
-                        <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select cos</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select cos</option>
+                            </select>
+                            <input type="hidden" asp-for="CustomerOrderSlipId" />
+                        }
+                        else
+                        {
+                            <select asp-for="CustomerOrderSlipId" asp-items="@Model.CustomerOrderSlips" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select cos</option>
+                            </select>
+                        }
                         <span asp-validation-for="CustomerOrderSlipId" class="text-danger"></span>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <small class="fst-italic">Please note: COS cannot be changed as the lifting date has already been added by TNS.</small>
+                        }
                     </div>
                     <div class="form-group py-2 col-12">
                         <label class="control-label">Appointed POs<span class="required">*</span></label>
-                        <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
-                            <option value="" selected>Select po</option>
-                        </select>
+                        @if (Model.HasReceivingReport)
+                        {
+                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%" disabled>
+                                <option value="" selected>Select po</option>
+                            </select>
+                            <input type="hidden" asp-for="PurchaseOrderId" />
+                        }
+                        else
+                        {
+                            <select asp-for="PurchaseOrderId" asp-items="@Model.PurchaseOrders" class="form-select js-select2 border-0 shadow" style="width:100%">
+                                <option value="" selected>Select po</option>
+                            </select>
+                        }
                         <span asp-validation-for="PurchaseOrderId" class="text-danger"></span>
                     </div>
                     <div class="form-floating py-2 col-12">
@@ -193,13 +233,16 @@
 
     <script>
         $(document).ready(function () {
+            // Check if has receiving report
+            var hasReceivingReport = @Model.HasReceivingReport.ToString().ToLower();
+            
             // Initial load for editing
-            var initialCustomerId = $('select[name="CustomerId"]').val();
+            var initialCustomerId = '@Model.CustomerId';
             var deliveryReceiptId = $("#DeliveryReceiptId").val();
-            var initialCosId = $("#CustomerOrderSlipId").val();
+            var initialCosId = '@Model.CustomerOrderSlipId';
             var currentVolume = parseNumber($('input[name="Volume"]').val());
-            var initialPoId = $("#PurchaseOrderId").val();
-            var initialAtlId = $("#ATLId").val();
+            var initialPoId = '@Model.PurchaseOrderId';
+            var initialAtlId = '@Model.ATLId';
 
             // Store initial hauler and freight values
             var initialHaulerId = $('select[name="HaulerId"]').val();
@@ -257,6 +300,7 @@
                                 if (data.deliveryOption === "@SD.DeliveryOption_ForPickUpByHauler") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().show();
+                                    $('input[name="ECC"]').parent().show();
 
                                     // Set values based on whether it's initial load or not
                                     if (isInitialLoad && initialHaulerId) {
@@ -269,6 +313,7 @@
                                 } else if (data.deliveryOption === "@SD.DeliveryOption_DirectDelivery") {
                                     $('#haulerList').show();
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="ECC"]').parent().hide();
 
                                     if (isInitialLoad && initialHaulerId) {
                                         $('select[name="HaulerId"]').val(initialHaulerId).change();
@@ -277,23 +322,23 @@
                                     }
                                 } else {
                                     $('input[name="Freight"]').parent().hide();
+                                    $('input[name="ECC"]').parent().hide();
                                     $('#haulerList').hide();
                                 }
                                 
                                 $('input[name="Driver"]').val($('input[name="Driver"]').val() ? $('input[name="Driver"]').val() : data.driver);
                                 $('input[name="PlateNo"]').val($('input[name="PlateNo"]').val() ? $('input[name="PlateNo"]').val() : data.plateNo);
-                                $('input[name="Product"]').val($('input[name="Product"]').val() ? $('input[name="Product"]').val() : data.product);
-                                $('input[name="CosVolume"]').val($('input[name="CosVolume"]').val() ? $('input[name="CosVolume"]').val() : formatNumber(data.quantity));
 
                                 // Handle remaining volume calculation
                                 var remainingVolume = data.remainingVolume;
                                 if (isInitialLoad && currentVolume) {
                                     remainingVolume = data.remainingVolume + currentVolume;
                                 }
+
+                                $('input[name="CosVolume"]').val(formatNumber(data.quantity));
+                                $('input[name="Product"]').val(formatNumber(data.product));
+                                $('input[name="RemainingVolume"]').val(formatNumber(remainingVolume));
                                 
-
-                                $('input[name="RemainingVolume"]').val(remainingVolume);
-
                                 if (isInitialLoad && currentVolume) {
                                     $('input[name="Volume"]').val(currentVolume);
                                 } else {
@@ -301,7 +346,7 @@
                                 }
 
                                 $('input[name="DeliveryOption"]').val(data.deliveryOption);
-                                $('input[name="Price"]').val(formatNumber(data.price));
+                                $('input[name="Price"]').val(data.price);
 
                                 // Populate Purchase Orders dropdown
                                 var $poSelect = $('select[name="PurchaseOrderId"]');
@@ -334,7 +379,6 @@
                                     $poSelect.append('<option value="">No purchase orders available</option>');
                                 }
 
-
                                 calculateTotalAmount();
                             }
                         },
@@ -345,24 +389,28 @@
                 }
             }
 
-            // Event handler for customer change
-            $('select[name="CustomerId"]').on('change', function () {
-                var customerId = $(this).val();
-                if (customerId !== initialCustomerId) {
-                    currentVolume = 0;
-                    initialHaulerId = null;
-                    initialFreight = null;
-                    initialPoId = null;
-                }
-                loadCustomerDetails(customerId);
-            });
+            // Event handler for customer change - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $('select[name="CustomerId"]').on('change', function () {
+                    var customerId = $(this).val();
+                    if (customerId !== initialCustomerId) {
+                        currentVolume = 0;
+                        initialHaulerId = null;
+                        initialFreight = null;
+                        initialPoId = null;
+                    }
+                    loadCustomerDetails(customerId);
+                });
+            }
 
-            // Event handler for COS change
-            $('select[name="CustomerOrderSlipId"]').on('change', function () {
-                var cosId = $(this).val();
-                var isInitialLoad = (cosId === initialCosId);
-                loadCosDetails(cosId, isInitialLoad);
-            });
+            // Event handler for COS change - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $('select[name="CustomerOrderSlipId"]').on('change', function () {
+                    var cosId = $(this).val();
+                    var isInitialLoad = (cosId === initialCosId);
+                    loadCosDetails(cosId, isInitialLoad);
+                });
+            }
 
             // When Purchase Order selection changes, set max volume
             $('select[name="PurchaseOrderId"]').on('change', function() {
@@ -416,16 +464,20 @@
                 }
             }
 
-            // Calculate Total Amount
-            $('input[name="Volume"]').on('input', function () {
-                calculateTotalAmount();
-            });
+            // Calculate Total Amount - only bind if volume is not readonly
+            if (!hasReceivingReport) {
+                $('input[name="Volume"]').on('input', function () {
+                    calculateTotalAmount();
+                });
+            }
 
-            // Validate volume
-            $("#Volume").change(function () {
-                validateVolume();
-                calculateTotalAmount();
-            });
+            // Validate volume - only if not hasReceivingReport
+            if (!hasReceivingReport) {
+                $("#Volume").change(function () {
+                    validateVolume();
+                    calculateTotalAmount();
+                });
+            }
 
             function calculateTotalAmount() {
                 var volume = parseNumber($('input[name="Volume"]').val());
@@ -459,7 +511,6 @@
                         type: "GET",
                         data: { manualDrNo: manualDrNo, drId: drId },
                         success: function(exists) {
-
                             const submitButton = $('button[type="submit"]');
                             
                             if (exists) {

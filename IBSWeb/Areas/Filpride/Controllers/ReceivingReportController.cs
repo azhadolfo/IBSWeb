@@ -331,43 +331,63 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
+            try
             {
-                return BadRequest();
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var receivingReport = await _unitOfWork.FilprideReceivingReport
+                    .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
+
+                if (receivingReport == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.ReceivingReport,
+                        cancellationToken);
+                if (receivingReport.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {receivingReport.Date:MMM yyyy} is already closed.");
+                }
+
+                var viewModel = new ReceivingReportViewModel
+                {
+                    ReceivingReportId = receivingReport.ReceivingReportId,
+                    Date = receivingReport.Date,
+                    PurchaseOrderId = receivingReport.POId,
+                    PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                        .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
+                    ReceivedDate = receivingReport.ReceivedDate,
+                    SupplierSiNo = receivingReport.SupplierInvoiceNumber,
+                    SupplierSiDate = receivingReport.SupplierInvoiceDate,
+                    SupplierDrNo = receivingReport.SupplierDrNo,
+                    WithdrawalCertificate = receivingReport.WithdrawalCertificate,
+                    TruckOrVessels = receivingReport.TruckOrVessels,
+                    QuantityDelivered = receivingReport.QuantityDelivered,
+                    QuantityReceived = receivingReport.QuantityReceived,
+                    AuthorityToLoadNo = receivingReport.AuthorityToLoadNo,
+                    Remarks = receivingReport.Remarks,
+                    PostedBy = receivingReport.PostedBy,
+                    CostBasedOnSoa = receivingReport.CostBasedOnSoa,
+                    MinDate = minDate
+                };
+
+                return View(viewModel);
             }
-
-            var receivingReport = await _unitOfWork.FilprideReceivingReport
-                .GetAsync(x => x.ReceivingReportId == id, cancellationToken);
-
-            if (receivingReport == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch receiving report. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
-
-            var viewModel = new ReceivingReportViewModel
-            {
-                ReceivingReportId = receivingReport.ReceivingReportId,
-                Date = receivingReport.Date,
-                PurchaseOrderId = receivingReport.POId,
-                PurchaseOrders = await _unitOfWork.FilpridePurchaseOrder
-                    .GetPurchaseOrderListAsyncById(companyClaims, cancellationToken),
-                ReceivedDate = receivingReport.ReceivedDate,
-                SupplierSiNo = receivingReport.SupplierInvoiceNumber,
-                SupplierSiDate = receivingReport.SupplierInvoiceDate,
-                SupplierDrNo = receivingReport.SupplierDrNo,
-                WithdrawalCertificate = receivingReport.WithdrawalCertificate,
-                TruckOrVessels = receivingReport.TruckOrVessels,
-                QuantityDelivered = receivingReport.QuantityDelivered,
-                QuantityReceived = receivingReport.QuantityReceived,
-                AuthorityToLoadNo = receivingReport.AuthorityToLoadNo,
-                Remarks = receivingReport.Remarks,
-                PostedBy = receivingReport.PostedBy,
-                CostBasedOnSoa = receivingReport.CostBasedOnSoa,
-            };
-
-            return View(viewModel);
         }
 
         [HttpPost]

@@ -166,7 +166,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             SalesInvoiceViewModel viewModel = new()
             {
                 Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken),
-                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken)
+                Products = await _unitOfWork.GetProductListAsyncById(cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken)
             };
 
             return View(viewModel);
@@ -324,6 +325,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
+                if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
+                }
+
+
                 var viewModel = new SalesInvoiceViewModel
                 {
                     SalesInvoiceId = existingModel.SalesInvoiceId,
@@ -347,15 +355,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Terms = existingModel.Terms,
                     CustomerAddress = existingModel.CustomerAddress,
                     CustomerTin = existingModel.CustomerTin,
+                    MinDate = minDate,
                 };
 
                 return View(viewModel);
             }
             catch (Exception ex)
             {
+                TempData["error"] = ex.Message;
                 _logger.LogError(ex, "Failed to fetch sales invoice. Error: {ErrorMessage}, Stack: {StackTrace}.",
                     ex.Message, ex.StackTrace);
-                return StatusCode(500, "An error occurred. Please try again later.");
+                return RedirectToAction(nameof(Index));
             }
         }
 

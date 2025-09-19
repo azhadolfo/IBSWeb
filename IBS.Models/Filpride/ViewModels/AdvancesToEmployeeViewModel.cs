@@ -46,5 +46,7 @@ namespace IBS.Models.Filpride.ViewModels
 
         public IFormFile? SupportingFile { get; set; }
 
+        public DateTime MinDate { get; set; }
+
     }
 }

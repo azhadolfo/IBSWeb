@@ -98,17 +98,17 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var searchValue = parameters.Search.Value.ToLower();
 
                     checkVoucherHeaders = checkVoucherHeaders
-                    .Where(s =>
-                        s.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) ||
-                        s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
-                        s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
-                        s.Total.ToString().Contains(searchValue) ||
-                        s.Amount?.ToString()?.Contains(searchValue) == true ||
-                        s.Category.ToLower().Contains(searchValue) ||
-                        s.CvType?.ToLower().Contains(searchValue) == true ||
-                        s.CreatedBy!.ToLower().Contains(searchValue)
+                        .Where(s =>
+                            s.CheckVoucherHeaderNo!.ToLower().Contains(searchValue) ||
+                            s.Date.ToString(SD.Date_Format).ToLower().Contains(searchValue) ||
+                            s.Supplier?.SupplierName.ToLower().Contains(searchValue) == true ||
+                            s.Total.ToString().Contains(searchValue) ||
+                            s.Amount?.ToString()?.Contains(searchValue) == true ||
+                            s.Category.ToLower().Contains(searchValue) ||
+                            s.CvType?.ToLower().Contains(searchValue) == true ||
+                            s.CreatedBy!.ToLower().Contains(searchValue)
                         )
-                    .ToList();
+                        .ToList();
                 }
 
                 // Sorting
@@ -161,7 +161,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             CheckVoucherTradeViewModel model = new()
             {
                 Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken)
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
             };
 
             return View(model);
@@ -501,8 +502,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         rr.ReceivingReportNo,
                         rr.PurchaseOrder?.PurchaseOrderNo,
                         rr.OldRRNo,
-                        AmountPaid = rr.AmountPaid.ToString(SD.Two_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                        AmountPaid = rr.AmountPaid.ToString(SD.Four_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
 
@@ -548,72 +549,91 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
+            try
             {
-                return BadRequest();
-            }
+                var companyClaims = await GetCompanyClaimAsync();
 
-            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
-            {
-                return NotFound();
-            }
-
-            CheckVoucherTradeViewModel model = new()
-            {
-                SupplierId = existingHeaderModel.SupplierId ?? 0,
-                Payee = existingHeaderModel.Payee!,
-                SupplierAddress = existingHeaderModel.Address,
-                SupplierTinNo = existingHeaderModel.Tin,
-                POSeries = existingHeaderModel.PONo,
-                TransactionDate = existingHeaderModel.Date,
-                BankId = existingHeaderModel.BankId,
-                CheckNo = existingHeaderModel.CheckNo!,
-                CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
-                Particulars = existingHeaderModel.Particulars!,
-                CVId = existingHeaderModel.CheckVoucherHeaderId,
-                CVNo = existingHeaderModel.CheckVoucherHeaderNo,
-                CreatedBy = _userManager.GetUserName(this.User),
-                RRs = new List<ReceivingReportList>(),
-                OldCVNo = existingHeaderModel.OldCvNo,
-                Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken)
-            };
-
-            var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
-                .ToListAsync(cancellationToken);
-
-            foreach (var item in getCheckVoucherTradePayment)
-            {
-                model.RRs.Add(new ReceivingReportList
+                if (companyClaims == null)
                 {
-                    Id = item.DocumentId,
-                    Amount = item.AmountPaid
-                });
-            }
+                    return BadRequest();
+                }
 
-            model.PONo = _dbContext.FilpridePurchaseOrders
-                .Include(x => x.ReceivingReports)
-                .Where(po => po.PostedBy != null
-                             && po.QuantityReceived > 0
-                             && po.Company == companyClaims
-                             && po.ReceivingReports != null
-                             && po.ReceivingReports.Any(x => !x.IsPaid))
-                .OrderBy(s => s.PurchaseOrderNo)
-                .Select(s => new SelectListItem
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
+                if (existingHeaderModel == null)
                 {
-                    Value = s.PurchaseOrderNo,
-                    Text = s.PurchaseOrderNo
-                })
-                .ToList();
+                    return NotFound();
+                }
 
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
 
-            return View(model);
+                CheckVoucherTradeViewModel model = new()
+                {
+                    SupplierId = existingHeaderModel.SupplierId ?? 0,
+                    Payee = existingHeaderModel.Payee!,
+                    SupplierAddress = existingHeaderModel.Address,
+                    SupplierTinNo = existingHeaderModel.Tin,
+                    POSeries = existingHeaderModel.PONo,
+                    TransactionDate = existingHeaderModel.Date,
+                    BankId = existingHeaderModel.BankId,
+                    CheckNo = existingHeaderModel.CheckNo!,
+                    CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
+                    Particulars = existingHeaderModel.Particulars!,
+                    CVId = existingHeaderModel.CheckVoucherHeaderId,
+                    CVNo = existingHeaderModel.CheckVoucherHeaderNo,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    RRs = new List<ReceivingReportList>(),
+                    OldCVNo = existingHeaderModel.OldCvNo,
+                    Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims,
+                        cancellationToken)
+                };
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "RR")
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    model.RRs.Add(new ReceivingReportList
+                    {
+                        Id = item.DocumentId,
+                        Amount = item.AmountPaid
+                    });
+                }
+
+                model.PONo = _dbContext.FilpridePurchaseOrders
+                    .Include(x => x.ReceivingReports)
+                    .Where(po => po.PostedBy != null
+                                 && po.QuantityReceived > 0
+                                 && po.Company == companyClaims
+                                 && po.ReceivingReports != null
+                                 && po.ReceivingReports.Any(x => !x.IsPaid))
+                    .OrderBy(s => s.PurchaseOrderNo)
+                    .Select(s => new SelectListItem
+                    {
+                        Value = s.PurchaseOrderNo,
+                        Text = s.PurchaseOrderNo
+                    })
+                    .ToList();
+
+                model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch cv trade supplier. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -658,8 +678,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var details = new List<FilprideCheckVoucherDetail>();
 
                 var cashInBank = 0m;
-                for (int i = 0; i < viewModel.AccountTitle.Length; i++)
+                for (var i = 0; i < viewModel.AccountTitle.Length; i++)
                 {
+                    if (viewModel.Debit[i] == 0 && viewModel.Credit[i] == 0)
+                    {
+                        continue;
+                    }
+
                     cashInBank = viewModel.Credit[1];
 
                     details.Add(new FilprideCheckVoucherDetail
@@ -841,6 +866,11 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var companyClaims = await GetCompanyClaimAsync();
 
             var details = await _dbContext.FilprideCheckVoucherDetails
+                .Include(cvd => cvd.Supplier)
+                .Include(cvd => cvd.BankAccount)
+                .Include(cvd => cvd.Company)
+                .Include(cvd => cvd.Customer)
+                .Include(cvd => cvd.Employee)
                 .Where(cvd => cvd.CheckVoucherHeaderId == header.CheckVoucherHeaderId)
                 .ToListAsync(cancellationToken);
 
@@ -937,6 +967,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (modelHeader.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException($"Cannot post this record because the period {modelHeader.Date:MMM yyyy} is already closed.");
+                }
+
                 modelHeader.PostedBy = _userManager.GetUserName(this.User);
                 modelHeader.PostedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 modelHeader.Status = nameof(Status.Posted);
@@ -1305,11 +1341,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             try
             {
-                var isPeriodClosed = await _unitOfWork.IsPeriodPostedAsync(cvHeader.Date, cancellationToken);
-
-                if (isPeriodClosed)
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (cvHeader.Date < DateOnly.FromDateTime(minDate))
                 {
-                    throw new ArgumentException("Period closed, CV cannot be unposted.");
+                    throw new ArgumentException($"Cannot unpost this record because the period {cvHeader.Date:MMM yyyy} is already closed.");
                 }
 
                 cvHeader.PostedBy = null;
@@ -1913,11 +1948,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            CommissionPaymentViewModel model = new();
-
-            model.Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
-
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            CommissionPaymentViewModel model = new()
+            {
+                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
+            };
 
             return View(model);
         }
@@ -2167,11 +2203,12 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return BadRequest();
             }
 
-            HaulerPaymentViewModel model = new();
-
-            model.Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
-
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            HaulerPaymentViewModel model = new()
+            {
+                Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken)
+            };
 
             return View(model);
         }
@@ -2434,7 +2471,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var deliverReceipt = await query
-                .Include(dr => dr.Commissionee)
+                .Include(dr => dr.CustomerOrderSlip)
                 .OrderBy(dr => dr.DeliveryReceiptNo)
                 .ToListAsync(cancellationToken);
 
@@ -2443,15 +2480,15 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 var drList = deliverReceipt
                     .Select(dr =>
                     {
-                        var netOfVatAmount = dr.Commissionee?.VatType == SD.VatType_Vatable
+                        var netOfVatAmount = dr.CustomerOrderSlip!.CommissioneeVatType == SD.VatType_Vatable
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfVat(dr.CommissionAmount)
                             : dr.CommissionAmount;
 
-                        var ewtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
+                        var ewtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                             ? _unitOfWork.FilprideReceivingReport.ComputeEwtAmount(netOfVatAmount, 0.05m)
                             : 0m;
 
-                        var netOfEwtAmount = dr.Commissionee?.TaxType == SD.TaxType_WithTax
+                        var netOfEwtAmount = dr.CustomerOrderSlip!.CommissioneeTaxType == SD.TaxType_WithTax
                             ? _unitOfWork.FilprideReceivingReport.ComputeNetOfEwt(dr.CommissionAmount, ewtAmount)
                             : dr.CommissionAmount;
 
@@ -2459,8 +2496,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         {
                             Id = dr.DeliveryReceiptId,
                             dr.DeliveryReceiptNo,
-                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Two_Decimal_Format),
-                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                            AmountPaid = dr.CommissionAmountPaid.ToString(SD.Four_Decimal_Format),
+                            NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                         };
                     }).ToList();
                 return Json(drList);
@@ -2520,8 +2557,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     {
                         Id = dr.DeliveryReceiptId,
                         dr.DeliveryReceiptNo,
-                        AmountPaid = dr.FreightAmountPaid.ToString(SD.Two_Decimal_Format),
-                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Two_Decimal_Format)
+                        AmountPaid = dr.FreightAmountPaid.ToString(SD.Four_Decimal_Format),
+                        NetOfEwtAmount = netOfEwtAmount.ToString(SD.Four_Decimal_Format)
                     };
                 }).ToList();
             return Json(drList);
@@ -2535,55 +2572,74 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
+            try
             {
-                return BadRequest();
-            }
+                var companyClaims = await GetCompanyClaimAsync();
 
-            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
-            {
-                return NotFound();
-            }
-
-            CommissionPaymentViewModel model = new()
-            {
-                CvId = existingHeaderModel.CheckVoucherHeaderId,
-                SupplierId = existingHeaderModel.SupplierId ?? 0,
-                Payee = existingHeaderModel.Payee!,
-                SupplierAddress = existingHeaderModel.Supplier!.SupplierAddress,
-                SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
-                TransactionDate = existingHeaderModel.Date,
-                BankId = existingHeaderModel.BankId,
-                CheckNo = existingHeaderModel.CheckNo!,
-                CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
-                Particulars = existingHeaderModel.Particulars!,
-                CreatedBy = _userManager.GetUserName(User),
-                DRs = [],
-                Suppliers = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                OldCVNo = existingHeaderModel.OldCvNo
-            };
-
-            var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
-                .ToListAsync(cancellationToken);
-
-            foreach (var item in getCheckVoucherTradePayment)
-            {
-                model.DRs.Add(new DRDetailsViewModel
+                if (companyClaims == null)
                 {
-                    Id = item.DocumentId,
-                    Amount = item.AmountPaid
-                });
+                    return BadRequest();
+                }
+
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
+
+                CommissionPaymentViewModel model = new()
+                {
+                    CvId = existingHeaderModel.CheckVoucherHeaderId,
+                    SupplierId = existingHeaderModel.SupplierId ?? 0,
+                    Payee = existingHeaderModel.Payee!,
+                    SupplierAddress = existingHeaderModel.Supplier!.SupplierAddress,
+                    SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
+                    TransactionDate = existingHeaderModel.Date,
+                    BankId = existingHeaderModel.BankId,
+                    CheckNo = existingHeaderModel.CheckNo!,
+                    CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
+                    Particulars = existingHeaderModel.Particulars!,
+                    CreatedBy = _userManager.GetUserName(User),
+                    DRs = [],
+                    Suppliers =
+                        await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
+                    OldCVNo = existingHeaderModel.OldCvNo
+                };
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    model.DRs.Add(new DRDetailsViewModel
+                    {
+                        Id = item.DocumentId,
+                        Amount = item.AmountPaid
+                    });
+                }
+
+                model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+                return View(model);
             }
-
-            model.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
-            return View(model);
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch cv trade commission. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -2787,54 +2843,72 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
-            var companyClaims = await GetCompanyClaimAsync();
-
-            if (companyClaims == null)
+            try
             {
-                return BadRequest();
-            }
+                var companyClaims = await GetCompanyClaimAsync();
 
-            var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
-                .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
-
-            if (existingHeaderModel == null)
-            {
-                return NotFound();
-            }
-
-            HaulerPaymentViewModel model = new()
-            {
-                CvId = existingHeaderModel.CheckVoucherHeaderId,
-                SupplierId = existingHeaderModel.SupplierId ?? 0,
-                Payee = existingHeaderModel.Payee!,
-                SupplierAddress = existingHeaderModel.Supplier!.SupplierAddress,
-                SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
-                TransactionDate = existingHeaderModel.Date,
-                BankId = existingHeaderModel.BankId,
-                CheckNo = existingHeaderModel.CheckNo!,
-                CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
-                Particulars = existingHeaderModel.Particulars!,
-                CreatedBy = _userManager.GetUserName(this.User),
-                DRs = [],
-                Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
-                BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
-                OldCVNo = existingHeaderModel.OldCvNo
-            };
-
-            var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
-                .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
-                .ToListAsync(cancellationToken);
-
-            foreach (var item in getCheckVoucherTradePayment)
-            {
-                model.DRs.Add(new DRDetailsViewModel
+                if (companyClaims == null)
                 {
-                    Id = item.DocumentId,
-                    Amount = item.AmountPaid
-                });
-            }
+                    return BadRequest();
+                }
 
-            return View(model);
+                var existingHeaderModel = await _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cvh => cvh.CheckVoucherHeaderId == id, cancellationToken);
+
+                if (existingHeaderModel == null)
+                {
+                    return NotFound();
+                }
+
+                var minDate =
+                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
+                if (existingHeaderModel.Date < DateOnly.FromDateTime(minDate))
+                {
+                    throw new ArgumentException(
+                        $"Cannot edit this record because the period {existingHeaderModel.Date:MMM yyyy} is already closed.");
+                }
+
+                HaulerPaymentViewModel model = new()
+                {
+                    CvId = existingHeaderModel.CheckVoucherHeaderId,
+                    SupplierId = existingHeaderModel.SupplierId ?? 0,
+                    Payee = existingHeaderModel.Payee!,
+                    SupplierAddress = existingHeaderModel.Supplier!.SupplierAddress,
+                    SupplierTinNo = existingHeaderModel.Supplier.SupplierTin,
+                    TransactionDate = existingHeaderModel.Date,
+                    BankId = existingHeaderModel.BankId,
+                    CheckNo = existingHeaderModel.CheckNo!,
+                    CheckDate = existingHeaderModel.CheckDate ?? DateOnly.MinValue,
+                    Particulars = existingHeaderModel.Particulars!,
+                    CreatedBy = _userManager.GetUserName(this.User),
+                    DRs = [],
+                    Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
+                    BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
+                    OldCVNo = existingHeaderModel.OldCvNo
+                };
+
+                var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
+                    .Where(cv => cv.CheckVoucherId == id && cv.DocumentType == "DR")
+                    .ToListAsync(cancellationToken);
+
+                foreach (var item in getCheckVoucherTradePayment)
+                {
+                    model.DRs.Add(new DRDetailsViewModel
+                    {
+                        Id = item.DocumentId,
+                        Amount = item.AmountPaid
+                    });
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to fetch cv trade hauler. Error: {ErrorMessage}, Stack: {StackTrace}.",
+                    ex.Message, ex.StackTrace);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]

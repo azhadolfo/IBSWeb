@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using IBS.Utility;
 using IBS.Utility.Helpers;
 
@@ -10,6 +11,7 @@ namespace IBS.Models
         public Guid LogId { get; set; }
 
         //Time of log
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime TimeStamp { get; set; }
 
         //Severity level: Information, Warning, Error and etc.

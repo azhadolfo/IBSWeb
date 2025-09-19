@@ -16,7 +16,7 @@ namespace IBS.Models.Mobility.MasterFile
         [Column(TypeName = "varchar(50)")]
         public string CreatedBy { get; set; } = string.Empty;
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
 
         public int SupplierId { get; set; }

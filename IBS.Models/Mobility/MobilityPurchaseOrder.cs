@@ -81,7 +81,7 @@ namespace IBS.Models.Mobility
 
         public bool IsReceived { get; set; }
 
-        [Column(TypeName = "timestamp with time zone")]
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime ReceivedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]

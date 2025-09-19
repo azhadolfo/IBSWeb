@@ -75,10 +75,12 @@ namespace IBS.Models.MMSI
 
         public string CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; }
 
         public string? EditedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
         #region == Tariff ==
@@ -126,10 +128,12 @@ namespace IBS.Models.MMSI
 
         public string TariffBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime TariffDate { get; set; }
 
         public string TariffEditedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime TariffEditedDate { get; set; }
 
         #endregion == Tariff ==

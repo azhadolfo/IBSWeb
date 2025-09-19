@@ -100,11 +100,13 @@ namespace IBS.Models.Bienes
         [Column(TypeName = "varchar(100)")]
         public string CreatedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime CreatedDate { get; set; } = DateTimeHelper.GetCurrentPhilippineTime();
 
         [Column(TypeName = "varchar(100)")]
         public string? PostedBy { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? PostedDate { get; set; }
 
         [Column(TypeName = "varchar(100)")]
@@ -118,6 +120,7 @@ namespace IBS.Models.Bienes
 
         public bool IsLocked { get; set; }
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? LockedDate { get; set; }
 
         [Column(TypeName = "varchar(50)")]
@@ -137,6 +140,7 @@ namespace IBS.Models.Bienes
         [Column(TypeName = "varchar(50)")]
         public string EditedBy { get; set; } = string.Empty;
 
+        [Column(TypeName = "timestamp without time zone")]
         public DateTime? EditedDate { get; set; }
 
         public bool IsRolled { get; set; }
