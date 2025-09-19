@@ -661,7 +661,6 @@ namespace IBS.DataAccess.Repository.Filpride
             {
                 var siValue = siNo[i];
                 var salesInvoice = await _db.FilprideSalesInvoices
-                                       .Where(si => si.Status != "Voided")
                     .FirstOrDefaultAsync(p => p.SalesInvoiceNo == siValue, cancellationToken)
                                    ?? throw new NullReferenceException("SalesInvoice not found");
 
