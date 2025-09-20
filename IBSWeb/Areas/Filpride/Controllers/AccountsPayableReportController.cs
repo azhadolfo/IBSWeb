@@ -5065,6 +5065,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var unliftedLastMonth = 0m;
                             var liftedThisMonthRrQty = 0m;
                             var unliftedThisMonth = poTotal;
+                            var isPoCurrentlyClosed = po.IsClosed
+                                                      && po.Date.Month == monthYear.Month
+                                                      && po.Date.Year == monthYear.Year;
 
                             if (po.ReceivingReports!.Count != 0)
                             {
@@ -5080,7 +5083,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                                 liftedThisMonthRrQty = liftedThisMonth.Sum(x => x.QuantityReceived);
 
-                                unliftedThisMonth = unliftedLastMonth - liftedThisMonthRrQty;
+                                unliftedThisMonth = !isPoCurrentlyClosed ? unliftedLastMonth - liftedThisMonthRrQty : 0;
                                 grossAmount += liftedThisMonth.Sum(x => x.Amount);
                             }
 

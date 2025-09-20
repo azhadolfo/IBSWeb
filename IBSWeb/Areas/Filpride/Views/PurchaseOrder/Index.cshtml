@@ -284,7 +284,6 @@
                     "render": function (data, type, row) {
                         var dropdownContent = '';
                         const isAdmin = @User.IsInRole("Admin").ToString().ToLower();
-                        const isClosed = row.status === "@nameof(Status.Closed)";
 
                         if (row.status === "@nameof(Status.ForApprovalOfOM)") {
                             // Show only the "Preview" option when status is "ForApprovalOfOM"
@@ -317,18 +316,18 @@
                                     `;
                                 }
                                 
-                                if (!row.isReceived && !row.isSubPo && !isClosed) {
+                                if (!row.isReceived && !row.isSubPo && !row.isClosed) {
                                     dropdownContent += `
                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="initiateProductTransfer(${data}, '${row.supplierId}', '${row.supplierName}')">Product Transfer</a></li>
                                          <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmClose(${data})">Close</a></li>
                                     `;
                                 }
                                 
-                                if (row.quantityReceived === 0 && !row.isSubPo && !isClosed) {
+                                if (row.quantityReceived === 0 && !row.isSubPo && !row.isClosed) {
                                     dropdownContent += `<li><a class="dropdown-item" href="javascript:void(0);" onclick="updateSupplierSalesOrderNo(${data})">Update Sales Order#</a></li>`;
                                 }
                                 
-                                if (row.quantityReceived === 0 && !row.isSubPo && isAdmin && !isClosed) {
+                                if (row.quantityReceived === 0 && !row.isSubPo && isAdmin && !row.isClosed) {
                                     dropdownContent += `
                                         <li><a class="dropdown-item" href="javascript:void(0);" onclick="confirmVoid(${data})">Void</a></li>
                                     `;

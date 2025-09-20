@@ -197,6 +197,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                         po.PostedBy,
                         po.UnTriggeredQuantity,
                         po.IsSubPo,
+                        po.IsClosed
                     })
                     .ToList();
 
@@ -1030,6 +1031,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             try
             {
                 model.Status = nameof(Status.Closed);
+                model.IsClosed = true;
 
                 #region --Audit Trail Recording
 

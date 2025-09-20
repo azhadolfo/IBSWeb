@@ -543,7 +543,7 @@ namespace IBS.DataAccess.Repository.Filpride
                 .Include(po => po.Product)
                 .Include(po => po.Supplier)
                 .Include(po => po.PickUpPoint)
-                .Where(po => po.Status == nameof(Status.Posted)
+                .Where(po => (po.Status == nameof(Status.Posted) || po.Status == nameof(Status.Closed))
                              && (
                                  // POs created in the monthYear
                                  (po.Date.Year == monthYear.Year && po.Date.Month == monthYear.Month)
