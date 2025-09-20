@@ -119,7 +119,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 if (!string.IsNullOrEmpty(filterTypeClaim))
                 {
                     purchaseOrders = purchaseOrders
-                        .Where(po => po.Status == nameof(DRStatus.ForApprovalOfOM))
+                        .Where(po => po.Status == nameof(Status.ForApprovalOfOM))
                         .ToList();
                 }
 
@@ -127,9 +127,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     switch (filterTypeClaim)
                     {
-                        case "ForOMApproval":
+                        case nameof(Status.ForApprovalOfOM):
                             purchaseOrders = purchaseOrders
-                                .Where(rr => rr.Status == nameof(DRStatus.ForApprovalOfOM))
+                                .Where(rr => rr.Status == nameof(Status.ForApprovalOfOM))
                                 .ToList();
                             break;
                             // Add other cases as needed
@@ -831,7 +831,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     }
                 }
 
-                existingRecord.Status = nameof(DRStatus.ForApprovalOfOM);
+                existingRecord.Status = nameof(Status.ForApprovalOfOM);
 
                 await _dbContext.FilpridePOActualPrices.AddAsync(actualPrice, cancellationToken);
                 #endregion
@@ -1012,6 +1012,43 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 await transaction.RollbackAsync(cancellationToken);
                 TempData["error"] = ex.Message;
                 return Json(new { success = false, message = TempData["error"] });
+            }
+        }
+
+        public async Task<IActionResult> Close(int id, CancellationToken cancellationToken)
+        {
+            var model = await _unitOfWork.FilpridePurchaseOrder
+                .GetAsync(x => x.PurchaseOrderId == id, cancellationToken);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                model.Status = nameof(Status.Closed);
+
+                #region --Audit Trail Recording
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, $"Closed purchase order# {model.PurchaseOrderNo}", "Purchase Order", model.Company);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion --Audit Trail Recording
+
+                await transaction.CommitAsync(cancellationToken);
+                TempData["success"] = "Purchase Order has been closed.";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                _logger.LogError(ex, "Failed to close purchase order. Error: {ErrorMessage}, Stack: {StackTrace}. Closed by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                TempData["error"] = $"Error: '{ex.Message}'";
+                return RedirectToAction(nameof(Index), new { filterType = await GetCurrentFilterType() });
             }
         }
     }

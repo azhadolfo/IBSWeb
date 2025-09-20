@@ -48,7 +48,9 @@ namespace IBS.Utility.Enums
         Pending,
         Posted,
         Voided,
-        Canceled
+        Canceled,
+        Closed,
+        ForApprovalOfOM
     }
 
     public enum DRStatus
