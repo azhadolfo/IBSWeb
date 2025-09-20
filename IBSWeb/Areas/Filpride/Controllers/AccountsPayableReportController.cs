@@ -16,6 +16,7 @@ using IBS.Models;
 using IBS.Models.Filpride.AccountsPayable;
 using IBS.Models.Filpride.Books;
 using IBS.Models.Filpride.Integrated;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -5287,5 +5288,41 @@ namespace IBSWeb.Areas.Filpride.Controllers
         }
 
         #endregion
+
+        [HttpGet]
+        public async Task<IActionResult> LiquidationReport(CancellationToken cancellationToken)
+        {
+            var viewModelBook = new ViewModelBook();
+
+            var distinctSupplierIds = await _dbContext.FilpridePurchaseOrders
+                .Select(po => po.SupplierId).Distinct().ToListAsync(cancellationToken);
+
+            var suppliers = await _dbContext.FilprideSuppliers
+                .Where(s => distinctSupplierIds.Contains(s.SupplierId))
+                .ToListAsync(cancellationToken);
+
+            viewModelBook.SupplierList = suppliers.Select(s => new SelectListItem
+            {
+                Value = s.SupplierId.ToString(),
+                Text = s.SupplierName
+            }).ToList();
+
+            return View(viewModelBook);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPurchaseOrderListBySupplier(int supplierId, CancellationToken cancellationToken)
+        {
+            var purchaseOrders = await _unitOfWork.FilpridePurchaseOrder
+                .GetAllAsync(po => po.SupplierId == supplierId, cancellationToken);
+
+            var purchaseOrderList = purchaseOrders.Select(po => new SelectListItem
+                {
+                    Value = po.PurchaseOrderId.ToString(),
+                    Text = po.PurchaseOrderNo
+                }).ToList();
+
+            return Json(purchaseOrderList);
+        }
     }
 }
