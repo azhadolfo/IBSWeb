@@ -5310,6 +5310,255 @@ namespace IBSWeb.Areas.Filpride.Controllers
             return View(viewModelBook);
         }
 
+        #region -- Generate Liquidation Report Excel File --
+
+        [HttpPost]
+        public async Task<IActionResult> GenerateLiquidationReportExcelFile(int purchaseOrderId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var companyClaims = await GetCompanyClaimAsync();
+
+                if (companyClaims == null)
+                {
+                    return BadRequest();
+                }
+
+                var purchaseOrder = await _unitOfWork.FilpridePurchaseOrder
+                    .GetAsync(po => po.PurchaseOrderId == purchaseOrderId, cancellationToken);
+
+                if (purchaseOrder == null)
+                {
+                    TempData["error"] = "Purchase Order not found.";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                string currencyFormatTwoDecimal = "#,##0.00";
+
+                var receivingReports = (await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(rr => rr.POId == purchaseOrderId, cancellationToken)).ToList();
+
+                if (receivingReports.Count == 0)
+                {
+                    TempData["error"] = "No Receiving Reports found.";
+                    return RedirectToAction(nameof(ApReport));
+                }
+
+                #region == TOPSHEET ==
+
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("TOPSHEET");
+                worksheet.Cells[1, 1].Style.Numberformat.Format = currencyFormatTwoDecimal;
+                worksheet.Cells.Style.Font.Name = "Calibri";
+
+                using (var range = worksheet.Cells[3, 3, 3, 9])
+                {
+                    range.Merge = true;
+                    range.Value = "FILPRIDE RESOURCES, INC.";
+                    range.Style.Font.Size = 14;
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.UnderLine = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                using (var range = worksheet.Cells[4, 3, 4, 9])
+                {
+                    range.Merge = true;
+                    range.Value = "ACTIVITY REPORT";
+                    range.Style.Font.Size = 14;
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.UnderLine = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                var row = 7;
+
+                worksheet.Cells[row, 3].Value = "Created Date";
+                worksheet.Cells[row, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("MMM dd, yyyy");
+
+                worksheet.Cells[row, 7].Value = "Attachments:";
+                worksheet.Cells[row, 7].Style.Font.Bold = true;
+                worksheet.Cells[row, 7].Style.Font.UnderLine = true;
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Time Created";
+                worksheet.Cells[row, 4].Value = DateTimeHelper.GetCurrentPhilippineTime().ToString("h:mm:ss tt");
+                worksheet.Cells[row, 7].Value = "1";
+                worksheet.Cells[row, 8].Value = "Filpride PO";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "To:";
+                worksheet.Cells[row, 4].Value = "Operations Accounting";
+                worksheet.Cells[row, 7].Value = "2";
+                worksheet.Cells[row, 8].Value = "PO Liquidation vs UPPI Billing";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "From: ";
+                worksheet.Cells[row, 4].Value = "TNS-Operations";
+                worksheet.Cells[row, 7].Value = "3";
+                worksheet.Cells[row, 8].Value = "PO Summary from the IBS System";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "CC: ";
+                worksheet.Cells[row, 4].Value = "Chief Operation Officer";
+                worksheet.Cells[row, 7].Value = "4";
+                worksheet.Cells[row, 8].Value = "WC Distribution Summary";
+
+                row++;
+
+                worksheet.Cells[row, 7].Value = "5";
+                worksheet.Cells[row, 8].Value = "Filpride Computation-MOOPS Price";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Date Needed: ";
+                worksheet.Cells[row, 4].Value = "ASAP";
+                worksheet.Cells[row, 7].Value = "6";
+                worksheet.Cells[row, 8].Value = "UPPI Email Confirmation";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Supplier: ";
+                worksheet.Cells[row, 4].Value = purchaseOrder!.Supplier!.SupplierName;
+                worksheet.Cells[row, 7].Value = "7";
+                worksheet.Cells[row, 8].Value = "UPPI Price Computation";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "IBS PO #: ";
+                worksheet.Cells[row, 4].Value = purchaseOrder!.PurchaseOrderNo;
+                worksheet.Cells[row, 7].Value = "8";
+                worksheet.Cells[row, 8].Value = "Filpride DR";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "PO Date Created: ";
+                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.CreatedDate.ToString("MMM dd, yyyy");
+                worksheet.Cells[row, 7].Value = "9";
+                worksheet.Cells[row, 8].Value = "Filpride RR";
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Product: ";
+                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Product!.ProductName;
+                worksheet.Cells[row, 7].Value = "10";
+                worksheet.Cells[row, 8].Value = "Supplier Docs (SI, DR, WC)";
+
+                row += 2;
+
+                worksheet.Cells[row, 3].Value = "Payment Terms: ";
+                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.Supplier!.SupplierTerms;
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Due Date: ";
+                worksheet.Cells[row, 4].Value = receivingReports.FirstOrDefault()!.DueDate.ToString("MMM dd, yyyy");
+
+                using (var range = worksheet.Cells[7, 4, 20, 4])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Font.UnderLine = true;
+                }
+
+                using (var range = worksheet.Cells[8, 7, 17, 8])
+                {
+                    range.Style.Font.Bold = true;
+                }
+
+                using (var range = worksheet.Cells[8, 7, 17, 7])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                row += 2;
+
+                worksheet.Cells[row, 3].Value = "Subject: ";
+                worksheet.Cells[row, 4].Value = "Requesting to process the payment on or before the due date as stated above.";
+                worksheet.Cells[row, 4].Style.Font.Bold = true;
+
+                using (var range = worksheet.Cells[row, 4, row, 9])
+                {
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }
+
+                row += 3;
+
+                worksheet.Cells[row, 3].Value = "Summary: ";
+                worksheet.Cells[row, 3].Style.Font.Bold = true;
+
+                row += 2;
+
+                worksheet.Cells[row, 3].Value = "Classifications";
+                worksheet.Cells[row, 4].Value = "AP to Supplier";
+                worksheet.Cells[row, 5].Value = "AP to Hauler";
+                worksheet.Cells[row, 6].Value = "Total AP";
+
+                using (var range = worksheet.Cells[row, 3, row, 6])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Volume Lifted: ";
+                worksheet.Cells[row, 4].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 5].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 6].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Cost/ltr: ";
+                worksheet.Cells[row, 4].Value = purchaseOrder.Price;
+                worksheet.Cells[row, 5].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight;
+                worksheet.Cells[row, 6].Value = (purchaseOrder.Price + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight);
+
+                row++;
+
+                worksheet.Cells[row, 3].Value = "Total Amount";
+                worksheet.Cells[row, 4].Value = (purchaseOrder.Price * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 5].Value = (receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight * receivingReports.Sum(rr => rr.QuantityReceived));
+                worksheet.Cells[row, 6].Value = ((purchaseOrder.Price + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight) * receivingReports.Sum(rr => rr.QuantityReceived));
+
+                worksheet.Column(1).Width = 8.5;
+                worksheet.Column(2).Width = 4.5;
+                worksheet.Column(3).Width = 17.2;
+                worksheet.Column(4).Width = 18.3;
+                worksheet.Column(5).Width = 14;
+                worksheet.Column(6).Width = 14;
+                worksheet.Column(7).Width = 13;
+                worksheet.Column(8).Width = 13.5;
+
+                #endregion == TOPSHEET ==
+
+                #region -- Audit Trail --
+
+                FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate accounts payable report excel file", "Accounts Payable Report", companyClaims);
+                await _unitOfWork.FilprideAuditTrail.AddAsync(auditTrailBook, cancellationToken);
+
+                #endregion
+
+                var fileName = $"Liquidation_Report_{DateTimeHelper.GetCurrentPhilippineTime():yyyyddMMHHmmss}.xlsx";
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream, cancellationToken);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = ex.Message;
+                _logger.LogError(ex, "Failed to generate accounts payable report excel file. Error: {ErrorMessage}, Stack: {StackTrace}. Generated by: {UserName}",
+                    ex.Message, ex.StackTrace, _userManager.GetUserName(User));
+                return RedirectToAction(nameof(ApReport));
+            }
+        }
+
+        #endregion
+
         [HttpGet]
         public async Task<IActionResult> GetPurchaseOrderListBySupplier(int supplierId, CancellationToken cancellationToken)
         {
