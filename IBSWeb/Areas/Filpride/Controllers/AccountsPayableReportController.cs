@@ -4975,6 +4975,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 worksheet.Cells[row, 8].Value = "Chief Operating Officer";
                 worksheet.Cells[row, 11].Value = "Finance Manager";
 
+                worksheet.Column(10).Style.Numberformat.Format = "#,##0.0000";
+                worksheet.Column(11).Style.Numberformat.Format = "#,##0.0000";
+
                 worksheet.Columns.AutoFit();
                 worksheet.Column(1).Width = 8;
                 worksheet.Column(2).Width = 30;
@@ -4989,7 +4992,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     var isVatable = firstRecord!.VatType == SD.VatType_Vatable;
                     var isTaxable = firstRecord.TaxType == SD.TaxType_WithTax;
                     DateOnly monthYearTemp = new DateOnly(monthYear.Year, monthYear.Month, 1);
-                    DateOnly lastDayOfMonth = monthYearTemp.AddDays(-1);
+                    DateOnly followingMonth = monthYearTemp.AddMonths(1);
                     var poGrandTotal = 0m;
                     var unliftedLastMonthGrandTotal = 0m;
                     var liftedThisMonthGrandTotal = 0m;
@@ -5002,8 +5005,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[1, 1].Value = $"SUPPLIER: {firstRecord.Supplier!.SupplierName}";
                     worksheet.Cells[2, 1].Value = "AP MONITORING REPORT (TRADE & SUPPLY GENERATED: PER PO #)";
                     worksheet.Cells[3, 1].Value = "REF: PURCHASE ORDER REPORT-per INTEGRATED BUSINESS SYSTEM";
-                    worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM")} {monthYear.Year.ToString()}";
-                    worksheet.Cells[5, 1].Value = $"DUE DATE: {lastDayOfMonth.ToString("MMMM dd, yyyy")}";
+                    worksheet.Cells[4, 1].Value = $"FOR THE MONTH OF {monthYear.ToString("MMMM yyyy")}";
+                    worksheet.Cells[5, 1].Value = $"DUE DATE: {followingMonth.ToString("MMMM yyyy")}";
                     worksheet.Cells[1, 1, 5, 1].Style.Font.Bold = true;
                     row = 8;
                     var groupByProduct = aGroupBySupplier.GroupBy(po => po.Product!.ProductName).ToList();
@@ -5061,7 +5064,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                             var grossAmount = 0m;
                             var unliftedLastMonth = 0m;
                             var liftedThisMonthRrQty = 0m;
-                            var unliftedThisMonth = 0m;
+                            var unliftedThisMonth = poTotal;
 
                             if (po.ReceivingReports!.Count != 0)
                             {
@@ -5224,6 +5227,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     worksheet.Cells[row, 1].Value = "Pricing Specialist";
                     worksheet.Cells[row, 5].Value = "Operations Manager";
                     worksheet.Cells[row, 8].Value = "Chief Operating Officer";
+                    worksheet.Column(10).Style.Numberformat.Format = "#,##0.0000";
+                    worksheet.Column(11).Style.Numberformat.Format = "#,##0.0000";
+
                     using (var range = worksheet.Cells[row, 1, row, 8])
                     {
                         range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
