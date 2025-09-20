@@ -266,7 +266,7 @@
                     "name": "status",
                     "render": function(data, type, row) {
                         var statusClass = row.status === "@nameof(Status.Posted)" ? "bg-info" :
-                                          row.status === "@nameof(Status.Voided)" || row.status === "@nameof(DRStatus.ForApprovalOfOM)" || "@nameof(Status.Closed)" ? "bg-danger" :
+                                          row.status === "@nameof(Status.Voided)" || row.status === "@nameof(DRStatus.ForApprovalOfOM)" || row.status === "@nameof(Status.Closed)" ? "bg-danger" :
                                           row.status === "@nameof(Status.Canceled)" ? "bg-warning" : "";
 
                         if (row.isReceived && row.status === "@nameof(Status.Posted)") {
