@@ -3177,5 +3177,28 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             return (advancesVoucher.CheckVoucherHeader!.CheckVoucherHeaderNo!, advancesVoucher.CheckVoucherHeader.Total - advancesVoucher.CheckVoucherHeader.AmountPaid);
         }
+
+        public IActionResult CheckNoIsExist(string checkNo, int? cvId)
+        {
+            if (cvId.HasValue)
+            {
+                var existingCheckNo = _unitOfWork.FilprideCheckVoucher
+                    .GetAsync(cv => cv.CheckVoucherHeaderId == cvId)
+                    .Result?
+                    .CheckNo;
+
+                if (checkNo == existingCheckNo)
+                {
+                    return Json(false);
+                }
+            }
+
+            var exists = _unitOfWork.FilprideCheckVoucher
+                .GetAllAsync(cv => cv.CanceledBy == null && cv.VoidedBy == null)
+                .Result
+                .Any(cv => cv.CheckNo == checkNo);
+
+            return Json(exists);
+        }
     }
 }
