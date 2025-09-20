@@ -1036,7 +1036,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingRecord.OmApprovedBy = _userManager.GetUserName(User);
                 existingRecord.OmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                 existingRecord.OMReason = reason;
-                existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
                 existingRecord.Status = nameof(CosStatus.ForApprovalOfFM);
 
                 if (existingRecord.DeliveryOption == SD.DeliveryOption_DirectDelivery && existingRecord.Freight != 0)
@@ -1157,6 +1156,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FmApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.ForDR);
+                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
                     TempData["success"] = "Customer order slip approved by finance successfully.";
                 }
 
