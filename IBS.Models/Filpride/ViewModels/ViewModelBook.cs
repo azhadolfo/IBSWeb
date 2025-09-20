@@ -39,6 +39,14 @@ namespace IBS.Models.Filpride.ViewModels
 
         #endregion
 
+        #region Liquidation Report
+
+        public List<SelectListItem> SupplierList { get; set; }
+
+        public int? PurchaseOrderId { get; set; }
+
+        #endregion
+
 
 
         #endregion
