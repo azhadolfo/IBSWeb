@@ -27,13 +27,13 @@
                     <label class="control-label">
                         Purchase Order List
                     </label>
-                    <select id="purchase-order-list" class="form-control js-select2" style="width:100%">
+                    <select id="purchase-order-list" asp-for="PurchaseOrderId" class="form-control js-select2" style="width:100%">
                         <option></option>
                     </select>
                 </div>
                 <div class="row pt-2">
                     <div class="col-6 col-md-3">
-                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('ApReportExcelFile')"><i class="bi bi-file-text"></i> Generate</button>
+                        <button type="button" class="btn btn-primary form-control" onclick="submitForm('GenerateLiquidationReportExcelFile')"><i class="bi bi-file-text"></i> Generate</button>
                     </div>
                 </div>
             </div>
