@@ -71,5 +71,8 @@ namespace IBS.Models.Filpride.ViewModels
         public string? Type { get; set; }
 
         public DateTime MinDate { get; set; }
+
+        [Display(Name = "SI No")]
+        public string? SiNo { get; set; }
     }
 }

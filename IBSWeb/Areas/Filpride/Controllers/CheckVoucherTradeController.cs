@@ -877,24 +877,37 @@ namespace IBSWeb.Areas.Filpride.Controllers
             var getSupplier = await _unitOfWork.FilprideSupplier
                 .GetAsync(s => s.SupplierId == supplierId && (companyClaims == nameof(Filpride) ? s.IsFilpride : s.IsMobility), cancellationToken);
 
-            if (header.Category == "Trade" && header.RRNo != null)
+            if (header.CvType == "Supplier")
             {
-                var siArray = new string[header.RRNo.Length];
-                for (int i = 0; i < header.RRNo.Length; i++)
-                {
-                    var rrValue = header.RRNo[i];
+                var listOfRrIds = await _dbContext.FilprideCVTradePayments
+                    .Where(x => x.CheckVoucherId == header.CheckVoucherHeaderId)
+                    .Select(x => x.DocumentId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
 
-                    var rr = await _unitOfWork.FilprideReceivingReport
-                                .GetAsync(p => p.Company == companyClaims && p.ReceivingReportNo == rrValue, cancellationToken);
+                var rrList = await _unitOfWork.FilprideReceivingReport
+                    .GetAllAsync(x => listOfRrIds.Contains(x.ReceivingReportId) && x.Company == companyClaims, cancellationToken);
 
-                    if (rr != null)
-                    {
-                        siArray[i] = rr.SupplierInvoiceNumber ?? string.Empty;
-                    }
-                }
+                var siArray = rrList
+                    .Where(r => !string.IsNullOrWhiteSpace(r.SupplierInvoiceNumber))
+                    .OrderBy(r => r.SupplierInvoiceNumber)
+                    .Select(r => r.SupplierInvoiceNumber!.Trim())
+                    .Distinct()
+                    .ToArray();
 
                 ViewBag.SINoArray = siArray;
             }
+            else
+            {
+                ViewBag.SINoArray = header.SINo?
+                                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                                        .Select(s => s.Trim())
+                                        .Distinct()
+                                        .ToArray()
+                                    ?? Array.Empty<string>();
+            }
+
+
 
             var viewModel = new CheckVoucherVM
             {
@@ -2080,6 +2093,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Date = viewModel.TransactionDate,
                     SupplierId = viewModel.SupplierId,
                     Particulars = viewModel.Particulars,
+                    SINo = [viewModel.SiNo ?? string.Empty],
                     BankId = viewModel.BankId,
                     CheckNo = viewModel.CheckNo,
                     Category = "Trade",
@@ -2349,6 +2363,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BankAccountName = bank.AccountName,
                     BankAccountNumber = bank.AccountNo,
                     OldCvNo = viewModel.OldCVNo,
+                    SINo = [viewModel.SiNo ?? string.Empty],
                 };
 
                 await _unitOfWork.FilprideCheckVoucher.AddAsync(cvh, cancellationToken);
@@ -2613,7 +2628,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DRs = [],
                     Suppliers =
                         await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken),
-                    OldCVNo = existingHeaderModel.OldCvNo
+                    OldCVNo = existingHeaderModel.OldCvNo,
+                    SiNo = existingHeaderModel.SINo?.FirstOrDefault()
                 };
 
                 var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -2745,6 +2761,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Tin = viewModel.SupplierTinNo;
                 existingHeaderModel.BankAccountName = bank.AccountName;
                 existingHeaderModel.BankAccountNumber = bank.AccountNo;
+                existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
 
                 #endregion --Saving the default entries
 
@@ -2884,7 +2901,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     DRs = [],
                     Suppliers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken),
                     BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken),
-                    OldCVNo = existingHeaderModel.OldCvNo
+                    OldCVNo = existingHeaderModel.OldCvNo,
+                    SiNo = existingHeaderModel.SINo?.FirstOrDefault()
                 };
 
                 var getCheckVoucherTradePayment = await _dbContext.FilprideCVTradePayments
@@ -3014,6 +3032,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 existingHeaderModel.Tin = viewModel.SupplierTinNo;
                 existingHeaderModel.BankAccountName = bank.AccountName;
                 existingHeaderModel.BankAccountNumber = bank.AccountNo;
+                existingHeaderModel.SINo = [viewModel.SiNo ?? string.Empty];
 
                 #endregion --Saving the default entries
 
