@@ -5623,6 +5623,54 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #endregion == TOPSHEET ==
 
+                #region == ANNEX A-2 ==
+
+                worksheet = package.Workbook.Worksheets.Add("ANNEX A");
+
+                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 16].Value = "ANNEX A-2";
+                worksheet.Cells[4, 3].Value = "PO Liquidation Vs " + purchaseOrder.SupplierName + " Billing";
+                worksheet.Cells[5, 3].Value = "Purchases to Supplier";
+                worksheet.Cells[6, 3].Value = "Month:";
+                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[8, 3].Value = "Breakdown of purchases";
+
+                using(var range = worksheet.Cells[10, 8, 10, 10])
+                {
+                    range.Merge = true;
+                    range.Value = "FILPRIDE RECORD BASED ON SYSTEM ";
+                }
+                using(var range = worksheet.Cells[10, 11, 10, 13])
+                {
+                    range.Merge = true;
+                    range.Value = "PER SUPPLIER'S INVOICE";
+                }
+                using(var range = worksheet.Cells[10, 14, 10, 16])
+                {
+                    range.Merge = true;
+                    range.Value = "VARIANCE";
+                }
+                using(var range = worksheet.Cells[10, 8, 10, 16])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+
+                row = 11;
+                col = 3;
+
+                var arrayOfColumnNames = new[]
+                {
+                    "Lifting Date", "IBS PO #", "RR Number", "DR Number", "Product", "Qty", "Cost/ltr", "Cost Amount",
+                    "Qty", "Cost/ltr", "Cost Amount", "Qty", "Cost/ltr", "Cost Amount", "Remarks"
+                };
+
+
+
+
+
+                #endregion == ANNEX A-2 ==
+
                 #region -- Audit Trail --
 
                 FilprideAuditTrail auditTrailBook = new(User.Identity!.Name!, "Generate accounts payable report excel file", "Accounts Payable Report", companyClaims);
