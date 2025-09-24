@@ -5625,7 +5625,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
                 #region == ANNEX A-2 ==
 
-                worksheet = package.Workbook.Worksheets.Add("ANNEX A");
+                worksheet = package.Workbook.Worksheets.Add("ANNEX A-2");
 
                 worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
                 worksheet.Cells[3, 16].Value = "ANNEX A-2";
@@ -5761,6 +5761,126 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 }
 
                 #endregion == ANNEX A-2 ==
+
+                #region == ANNEX A-3 ==
+
+                worksheet = package.Workbook.Worksheets.Add("ANNEX A-3");
+
+                worksheet.Cells[3, 3].Value = "FILPRIDE RESOURCES, INC.";
+                worksheet.Cells[3, 19].Value = "ANNEX A-3";
+                worksheet.Cells[4, 3].Value = "PO Summary";
+                worksheet.Cells[5, 3].Value = "Purchases to Supplier";
+                worksheet.Cells[6, 3].Value = "Month:";
+                worksheet.Cells[6, 4].Value = purchaseOrder.CreatedDate.ToString("MMM yyyy");
+                worksheet.Cells[8, 3].Value = "Breakdown of purchases";
+
+                using(var range = worksheet.Cells[10, 3, 10, 19])
+                {
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                using(var range = worksheet.Cells[3, 3, 10, 19])
+                {
+                    range.Style.Font.Bold = true;
+                }
+
+                row = 10;
+                col = 3;
+
+                arrayOfColumnNames = new[]
+                {
+                    "Lifting Date", "IBS PO #", "FRI RR Number", "FRI DR Number", "Supplier's DR", "Supplier's Invoice",
+                    "Supplier's WC", "Client Name", "Hauler's Name", "Product", "Qty", "Cost/ltr", "Cost Amount",
+                    "Freight/ltr", "Freight Amount", "P/ltr", "Total AP/Amount"
+                };
+
+                foreach (var columnName in arrayOfColumnNames)
+                {
+                    worksheet.Cells[row, col].Value = columnName;
+                    worksheet.Cells[row, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    col++;
+                }
+
+                row++;
+
+                foreach (var rr in receivingReports)
+                {
+                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
+                    worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
+                    worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
+                    worksheet.Cells[row, 7].Value = rr.SupplierDrNo;
+                    worksheet.Cells[row, 8].Value = rr.SupplierInvoiceNumber;
+                    worksheet.Cells[row, 9].Value = rr.WithdrawalCertificate;
+                    worksheet.Cells[row, 10].Value = rr.PurchaseOrder.SupplierName;
+                    worksheet.Cells[row, 11].Value = rr.DeliveryReceipt.HaulerName;
+                    worksheet.Cells[row, 12].Value = rr.PurchaseOrder.ProductName;
+                    worksheet.Cells[row, 13].Value = rr.QuantityDelivered;
+                    worksheet.Cells[row, 14].Value = rr.PurchaseOrder.FinalPrice;
+                    worksheet.Cells[row, 15].Value = rr.Amount;
+                    worksheet.Cells[row, 16].Value = rr.DeliveryReceipt.Freight;
+                    worksheet.Cells[row, 17].Value = (rr.QuantityDelivered * rr.DeliveryReceipt.Freight);
+                    worksheet.Cells[row, 18].Value = (rr.PurchaseOrder.FinalPrice + rr.DeliveryReceipt.Freight);
+                    worksheet.Cells[row, 19].Value = (rr.QuantityDelivered * (rr.PurchaseOrder.FinalPrice + rr.DeliveryReceipt.Freight));
+
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
+
+                    using (var range = worksheet.Cells[row, 13, row, 19])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+
+                    worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatFourDecimal;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 12].Value = "Total";
+                worksheet.Cells[row, 12].Style.Font.Bold = true;
+                worksheet.Cells[row, 13].Value = receivingReports.Sum(rr => rr.QuantityDelivered);
+                worksheet.Cells[row, 14].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice;
+                worksheet.Cells[row, 15].Value = receivingReports.Sum(rr => rr.Amount);
+                worksheet.Cells[row, 16].Value = receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight;
+                worksheet.Cells[row, 17].Value = receivingReports.Sum(rr => rr.QuantityDelivered * rr.DeliveryReceipt!.Freight);
+                worksheet.Cells[row, 18].Value = (receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice + receivingReports.FirstOrDefault()!.DeliveryReceipt!.Freight);
+                worksheet.Cells[row, 19].Value = receivingReports.Sum(rr => (rr.QuantityDelivered * (rr.PurchaseOrder!.FinalPrice + rr.DeliveryReceipt!.Freight))) ;
+
+                using (var range = worksheet.Cells[row, 13, row, 19])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+                using (var range = worksheet.Cells[row, 13, row, 19])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                worksheet.Cells[row, 14].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 16].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 18].Style.Numberformat.Format = currencyFormatFourDecimal;
+
+                worksheet.Column(1).Width = 3;
+                worksheet.Column(2).Width = 3;
+                worksheet.Column(3).Width = 13;
+
+                for (int i = 4; i != 20; i++)
+                {
+                    worksheet.Column(i).AutoFit(); // max 18 min 9
+                    if (worksheet.Column(i).Width < 15)
+                    {
+                        worksheet.Column(i).Width = 15;
+                    }
+                    if (worksheet.Column(i).Width > 20)
+                    {
+                        worksheet.Column(i).Width = 20;
+                    }
+                }
+
+                #endregion == ANNEX A-3 ==
 
                 #region -- Audit Trail --
 
