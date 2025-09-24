@@ -5308,7 +5308,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 string currencyFormatFourDecimal = "#,##0.0000";
 
                 var receivingReports = (await _unitOfWork.FilprideReceivingReport
-                    .GetAllAsync(rr => rr.POId == purchaseOrderId, cancellationToken)).ToList();
+                    .GetAllAsync(rr => rr.POId == purchaseOrderId && rr.WithdrawalCertificate != null, cancellationToken)).ToList();
 
                 if (receivingReports.Count == 0)
                 {
@@ -5639,21 +5639,31 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 {
                     range.Merge = true;
                     range.Value = "FILPRIDE RECORD BASED ON SYSTEM ";
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 192, 0));
                 }
                 using(var range = worksheet.Cells[10, 11, 10, 13])
                 {
                     range.Merge = true;
                     range.Value = "PER SUPPLIER'S INVOICE";
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(255, 255, 0));
                 }
                 using(var range = worksheet.Cells[10, 14, 10, 16])
                 {
                     range.Merge = true;
                     range.Value = "VARIANCE";
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(146, 208, 80));
                 }
+
                 using(var range = worksheet.Cells[10, 8, 10, 16])
                 {
-                    range.Style.Font.Bold = true;
                     range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                }
+                using(var range = worksheet.Cells[3, 3, 11, 17])
+                {
+                    range.Style.Font.Bold = true;
                 }
 
                 row = 11;
@@ -5665,9 +5675,90 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     "Qty", "Cost/ltr", "Cost Amount", "Qty", "Cost/ltr", "Cost Amount", "Remarks"
                 };
 
+                foreach (var columnName in arrayOfColumnNames)
+                {
+                    worksheet.Cells[row, col].Value = columnName;
+                    worksheet.Cells[row, col].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    col++;
+                }
 
+                row++;
 
+                foreach (var rr in receivingReports)
+                {
+                    worksheet.Cells[row, 3].Value = rr.DeliveryReceipt!.DeliveredDate;
+                    worksheet.Cells[row, 4].Value = rr.PurchaseOrder!.PurchaseOrderNo;
+                    worksheet.Cells[row, 5].Value = rr.ReceivingReportNo;
+                    worksheet.Cells[row, 6].Value = rr.DeliveryReceipt!.DeliveryReceiptNo;
+                    worksheet.Cells[row, 7].Value = rr.PurchaseOrder!.ProductName;
+                    worksheet.Cells[row, 8].Value = rr.QuantityReceived;
+                    worksheet.Cells[row, 9].Value = rr.PurchaseOrder!.FinalPrice;
+                    worksheet.Cells[row, 10].Value = (rr.PurchaseOrder!.FinalPrice * rr.QuantityReceived);
+                    worksheet.Cells[row, 11].Value = rr.QuantityReceived;
+                    worksheet.Cells[row, 12].Value = rr.CostBasedOnSoa;
+                    worksheet.Cells[row, 13].Value = (rr.CostBasedOnSoa * rr.QuantityReceived);
+                    worksheet.Cells[row, 14].Value = 0;
+                    worksheet.Cells[row, 15].Value = (rr.PurchaseOrder.FinalPrice - rr.CostBasedOnSoa);
+                    worksheet.Cells[row, 16].Value = ((rr.PurchaseOrder!.FinalPrice * rr.QuantityReceived) - (rr.CostBasedOnSoa * rr.QuantityReceived));
 
+                    worksheet.Cells[row, 3].Style.Numberformat.Format = "MM/dd/yyyy";
+
+                    using (var range = worksheet.Cells[row, 8, row, 16])
+                    {
+                        range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                    }
+
+                    worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatFourDecimal;
+                    worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatFourDecimal;
+
+                    row++;
+                }
+
+                worksheet.Cells[row, 7].Value = "Total";
+                worksheet.Cells[row, 8].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 9].Value = receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice;
+                worksheet.Cells[row, 10].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice);
+                worksheet.Cells[row, 11].Value = receivingReports.Sum(rr => rr.QuantityReceived);
+                worksheet.Cells[row, 12].Value = receivingReports.FirstOrDefault()!.CostBasedOnSoa;
+                worksheet.Cells[row, 13].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+                worksheet.Cells[row, 14].Value = 0;
+                worksheet.Cells[row, 15].Value = (receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice - receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+                worksheet.Cells[row, 16].Value = (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.PurchaseOrder!.FinalPrice) - (receivingReports.Sum(rr => rr.QuantityReceived) * receivingReports.FirstOrDefault()!.CostBasedOnSoa);
+
+                using (var range = worksheet.Cells[row, 7, row, 16])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Border.Bottom.Style = ExcelBorderStyle.Double;
+                    range.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                }
+                using (var range = worksheet.Cells[row, 8, row, 16])
+                {
+                    range.Style.Numberformat.Format = currencyFormatTwoDecimal;
+                }
+
+                worksheet.Cells[row, 9].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 12].Style.Numberformat.Format = currencyFormatFourDecimal;
+                worksheet.Cells[row, 15].Style.Numberformat.Format = currencyFormatFourDecimal;
+
+                worksheet.Column(1).Width = 3;
+                worksheet.Column(2).Width = 3;
+                worksheet.Column(3).Width = 13;
+
+                for (int i = 4; i != 17; i++)
+                {
+                    worksheet.Column(i).AutoFit(); // max 18 min 9
+                    if (worksheet.Column(i).Width < 15)
+                    {
+                        worksheet.Column(i).Width = 15;
+                    }
+                    if (worksheet.Column(i).Width > 20)
+                    {
+                        worksheet.Column(i).Width = 20;
+                    }
+                }
 
                 #endregion == ANNEX A-2 ==
 
