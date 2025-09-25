@@ -73,5 +73,7 @@ namespace IBS.Models.Filpride.ViewModels
         public bool HasAlready2306 { get; set; }
 
         public bool HasAlready2307 { get; set; }
+
+        public DateTime MinDate { get; set; }
     }
 }

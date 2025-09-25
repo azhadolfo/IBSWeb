@@ -70,6 +70,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         public async Task<IActionResult> Index(string? view, CancellationToken cancellationToken)
         {
+            ViewBag.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
             if (view != nameof(DynamicView.CollectionReceipt))
             {
                 return View();
@@ -84,8 +86,10 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
         }
 
-        public IActionResult ServiceInvoiceIndex()
+        public async Task<IActionResult> ServiceInvoiceIndex()
         {
+            ViewBag.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt);
+
             return View();
         }
 
@@ -191,6 +195,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
             return View(viewModel);
         }
 
@@ -282,7 +288,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
-
             viewModel.SalesInvoices = (await _unitOfWork.FilprideSalesInvoice.GetAllAsync(si => si.Company == companyClaims
                     && si.Balance > 0
                     && si.CustomerId == viewModel.CustomerId
@@ -294,10 +299,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = s.SalesInvoiceNo
                 })
                 .ToList();
-
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
-
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            //viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -467,6 +471,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
 
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
             return View(viewModel);
         }
 
@@ -498,6 +504,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -688,6 +696,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
+            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
+            }
+
             var listOfDetails = await _dbContext.FilprideCollectionReceiptDetails
                 .Where(x => x.CollectionReceiptId == id).ToListAsync(cancellationToken);
 
@@ -754,7 +769,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 HasAlready2307 = existingModel.F2307FilePath != null,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 SIMultipleAmount = existingModel.SIMultipleAmount!,
-                InvoicePayments = crPayments
+                InvoicePayments = crPayments,
+                MinDate = minDate
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -807,6 +823,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -1047,6 +1065,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             return View(viewModel);
         }
@@ -1079,6 +1098,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 .ToList();
 
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -1544,10 +1564,16 @@ namespace IBSWeb.Areas.Filpride.Controllers
             }
 
             var companyClaims = await GetCompanyClaimAsync();
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             if (companyClaims == null)
             {
                 return BadRequest();
+            }
+
+            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
             }
 
             var invoicesPaid = await _dbContext.FilprideCollectionReceiptDetails
@@ -1598,7 +1624,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 WVAT = existingModel.WVAT,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 HasAlready2306 = existingModel.F2306FilePath != null,
-                HasAlready2307 = existingModel.F2307FileName != null
+                HasAlready2307 = existingModel.F2307FileName != null,
+                MinDate = minDate,
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -1652,6 +1679,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -1885,6 +1914,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 return NotFound();
             }
 
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
+            if (existingModel.TransactionDate < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot edit this record because the period {existingModel.TransactionDate:MMM yyyy} is already closed.");
+            }
+
             var companyClaims = await GetCompanyClaimAsync();
 
             if (companyClaims == null)
@@ -1940,7 +1976,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 WVAT = existingModel.WVAT,
                 ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken),
                 HasAlready2306 = existingModel.F2306FilePath != null,
-                HasAlready2307 = existingModel.F2307FileName != null
+                HasAlready2307 = existingModel.F2307FileName != null,
+                MinDate = minDate
             };
 
             var offsettings = await _dbContext.FilprideOffsettings
@@ -1995,6 +2032,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
 
             viewModel.BankAccounts = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
 
             var total = viewModel.CashAmount + viewModel.CheckAmount + viewModel.ManagersCheckAmount + viewModel.EWT + viewModel.WVAT;
             if (total == 0)
@@ -2219,6 +2258,13 @@ namespace IBSWeb.Areas.Filpride.Controllers
             if (model == null)
             {
                 return NotFound();
+            }
+
+            var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CollectionReceipt, cancellationToken);
+
+            if (model.TransactionDate < DateOnly.FromDateTime(minDate))
+            {
+                throw new ArgumentException($"Cannot post this record because the period {model.TransactionDate:MMM yyyy} is already closed.");
             }
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
