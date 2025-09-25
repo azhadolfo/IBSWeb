@@ -137,7 +137,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
         {
             var viewModel = new DebitMemoViewModel();
             await IncludeSelectLists(viewModel, cancellationToken);
-            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
             return View(viewModel);
         }
 
@@ -162,6 +161,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sv.ServiceInvoiceNo
                 })
                 .ToList();
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
         }
 
         [HttpPost]
@@ -861,8 +862,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DebitMemo, cancellationToken);
                 if (debitMemo.TransactionDate < DateOnly.FromDateTime(minDate))
                 {
                     throw new ArgumentException(

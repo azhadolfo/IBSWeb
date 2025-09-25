@@ -289,6 +289,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Commissionee = await _unitOfWork.GetFilprideCommissioneeListAsyncById(companyClaims, cancellationToken);
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(viewModel.CustomerId, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
 
             var customer = await _unitOfWork.FilprideCustomer
                 .GetAsync(x => x.CustomerId == viewModel.CustomerId, cancellationToken);
@@ -544,6 +545,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
             viewModel.Vat = _unitOfWork.FilprideCustomerOrderSlip.ComputeVatAmount((existingRecord.TotalAmount / 1.12m));
             viewModel.Branches = await _unitOfWork.FilprideCustomer.GetCustomerBranchesSelectListAsync(existingRecord.CustomerId, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CustomerOrderSlip, cancellationToken);
 
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 

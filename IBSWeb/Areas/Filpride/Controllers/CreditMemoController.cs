@@ -153,13 +153,14 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Text = sv.ServiceInvoiceNo
                 })
                 .ToList();
+
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
         }
 
         public async Task<IActionResult> Create(CancellationToken cancellationToken)
         {
             var viewModel = new CreditMemoViewModel();
             await IncludeSelectLists(viewModel, cancellationToken);
-            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
             return View(viewModel);
         }
 
@@ -320,8 +321,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     return NotFound();
                 }
 
-                var minDate =
-                    await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
+                var minDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CreditMemo, cancellationToken);
                 if (creditMemo.TransactionDate < DateOnly.FromDateTime(minDate))
                 {
                     throw new ArgumentException(

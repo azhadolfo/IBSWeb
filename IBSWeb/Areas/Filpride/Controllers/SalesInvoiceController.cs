@@ -186,9 +186,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Customers =
-                    await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                viewModel.MinDate =  await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }
@@ -382,9 +382,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Customers =
-                    await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
+                viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
                 viewModel.Products = await _unitOfWork.GetProductListAsyncById(cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.SalesInvoice, cancellationToken);
                 TempData["warning"] = "The submitted information is invalid.";
                 return View(viewModel);
             }

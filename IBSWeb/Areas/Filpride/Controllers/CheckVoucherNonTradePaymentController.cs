@@ -655,7 +655,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     MultipleSupplierId = existingHeaderModel.SupplierId ?? existingDetailsModel.SupplierId,
                     Suppliers = suppliers,
                     CvId = existingHeaderModel.CheckVoucherHeaderId,
-                    OldCVNo = existingHeaderModel.OldCvNo
+                    OldCVNo = existingHeaderModel.OldCvNo,
+                    MinDate = minDate
                 };
 
                 return View(model);
@@ -684,6 +685,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
@@ -1081,8 +1083,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 viewModel.ChartOfAccounts = await _unitOfWork.GetChartOfAccountListAsyncByNo(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-                viewModel.Suppliers =
-                    await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.Suppliers = await _unitOfWork.GetFilprideNonTradeSupplierListAsyncById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
@@ -1488,6 +1490,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["warning"] = "The information provided was invalid.";
                 viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 return View(viewModel);
             }
 
@@ -1665,7 +1668,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Banks = bankAccounts,
                     CheckNo = existingHeaderModel.CheckNo!,
                     CheckDate = existingHeaderModel.CheckDate ?? default,
-                    Particulars = existingHeaderModel.Particulars!
+                    Particulars = existingHeaderModel.Particulars!,
+                    MinDate = minDate
                 };
 
                 return View(model);
@@ -1694,6 +1698,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             {
                 viewModel.Employees = await _unitOfWork.GetFilprideEmployeeListById(cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }
@@ -1877,6 +1882,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                 TempData["warning"] = "The information provided was invalid.";
                 viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 return View(viewModel);
             }
 
@@ -2084,7 +2090,8 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     Banks = bankAccounts,
                     CheckNo = existingHeaderModel.CheckNo!,
                     CheckDate = existingHeaderModel.CheckDate ?? default,
-                    Particulars = existingHeaderModel.Particulars!
+                    Particulars = existingHeaderModel.Particulars!,
+                    MinDate = minDate
                 };
 
                 return View(model);
@@ -2111,11 +2118,9 @@ namespace IBSWeb.Areas.Filpride.Controllers
 
             if (!ModelState.IsValid)
             {
-                viewModel.Suppliers =
-                    await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
-
+                viewModel.Suppliers = await _unitOfWork.GetFilprideTradeSupplierListAsyncById(companyClaims, cancellationToken);
                 viewModel.Banks = await _unitOfWork.GetFilprideBankAccountListById(companyClaims, cancellationToken);
-
+                viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.CheckVoucher, cancellationToken);
                 TempData["warning"] = "The information provided was invalid.";
                 return View(viewModel);
             }

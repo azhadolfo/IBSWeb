@@ -266,6 +266,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            viewModel.MinDate =  await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken);
 
             if (!ModelState.IsValid)
             {
@@ -521,6 +522,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
             viewModel.Customers = await _unitOfWork.GetFilprideCustomerListAsyncById(companyClaims, cancellationToken);
             viewModel.CustomerOrderSlips = await _unitOfWork.FilprideCustomerOrderSlip.GetCosListNotDeliveredAsync(companyClaims, cancellationToken);
             viewModel.Haulers = await _unitOfWork.GetFilprideHaulerListAsyncById(companyClaims, cancellationToken);
+            viewModel.MinDate = await _unitOfWork.GetMinimumPeriodBasedOnThePostedPeriods(Module.DeliveryReceipt, cancellationToken);
 
             if (!ModelState.IsValid)
             {
