@@ -357,6 +357,7 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     BusinessStyle = customer.BusinessStyle,
                     AvailableCreditLimit = await _unitOfWork.FilprideCustomerOrderSlip
                         .GetCustomerCreditBalance(customer.CustomerId, cancellationToken),
+                    ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7)),
                 };
 
                 // Upload files if there is existing
@@ -1158,7 +1159,6 @@ namespace IBSWeb.Areas.Filpride.Controllers
                     existingRecord.FmApprovedBy = _userManager.GetUserName(User);
                     existingRecord.FmApprovedDate = DateTimeHelper.GetCurrentPhilippineTime();
                     existingRecord.Status = nameof(CosStatus.ForDR);
-                    existingRecord.ExpirationDate = DateOnly.FromDateTime(DateTimeHelper.GetCurrentPhilippineTime().AddDays(7));
                     TempData["success"] = "Customer order slip approved by finance successfully.";
                 }
 

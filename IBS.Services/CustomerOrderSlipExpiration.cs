@@ -40,7 +40,6 @@ namespace IBS.Services
 
                 var cosList = await _dbContext.FilprideCustomerOrderSlips
                     .Where(cos => cos.ExpirationDate <= today
-                                  && cos.CustomerType == nameof(CustomerType.Retail)
                                   && cos.Status != nameof(CosStatus.Completed)
                                   && cos.Status != nameof(CosStatus.Expired)
                                   && cos.Status != nameof(CosStatus.Closed)
